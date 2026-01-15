@@ -114,11 +114,11 @@
 
 ## ⚠️ CRITICAL: Single Sources of Truth
 
-**SSOT ARCHITECTURE DIAGRAM (Updated Dec 2025):**
+**SSOT ARCHITECTURE DIAGRAM (Updated Jan 2026):**
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                    ANY COMPONENT NEEDING QUOTES                             │
-│            (AdvancedQuoteBuilder, StreamlinedWizard, etc.)                  │
+│            (AdvancedQuoteBuilder, StreamlinedWizard, WizardV6)              │
 └─────────────────────────────────────┬───────────────────────────────────────┘
                                       │
                                       ▼
@@ -127,48 +127,53 @@
 │                    ✅ TRUE SSOT ENTRY POINT                                 │
 │                                                                             │
 │  Input: { storageSizeMW, durationHours, solarMW, windMW, generatorMW,      │
-│           location, electricityRate, gridConnection, useCase }              │
+│           location, zipCode, electricityRate, gridConnection, useCase,     │
+│           batteryChemistry, itcConfig, includeAdvancedAnalysis }           │
 │                                                                             │
 │  Returns: QuoteResult { equipment, costs, financials, metadata }            │
+│                                                                             │
+│  METADATA NOW INCLUDES (Jan 2026):                                          │
+│  ├── itcDetails (IRA 2022 dynamic ITC breakdown)                            │
+│  ├── utilityRates (dynamic rate lookup by zip code)                         │
+│  ├── degradation (battery chemistry + year-by-year capacity)                │
+│  ├── solarProduction (PVWatts-based estimates)                              │
+│  └── advancedAnalysis (8760 hourly + Monte Carlo if requested)              │
 └───────────────────────────────┬─────────────────────────────────────────────┘
                                 │
-           ┌────────────────────┴────────────────────┐
-           ▼                                         ▼
-┌──────────────────────────────────┐   ┌──────────────────────────────────────┐
-│  equipmentCalculations.ts        │   │  centralizedCalculations.ts          │
-│  calculateEquipmentBreakdown()   │   │  calculateFinancialMetrics()         │
-│                                  │   │                                      │
-│  Returns:                        │   │  Returns:                            │
-│  ├── batteries (NREL ATB 2024)   │   │  ├── annualSavings                   │
-│  ├── inverters (DB pricing)      │   │  ├── paybackYears                    │
-│  ├── transformers (DB pricing)   │   │  ├── NPV, IRR, ROI                   │
-│  ├── switchgear (DB pricing)     │   │  └── demandChargeSavings             │
-│  ├── solar (via useCaseService)  │   │                                      │
-│  ├── wind (via useCaseService)   │   │  Uses: Database-driven constants     │
-│  └── generators (DB pricing)     │   │  (NOT hardcoded values)              │
-└───────────────────┬──────────────┘   └──────────────────────────────────────┘
-                    │
-                    ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                      unifiedPricingService.ts                                │
-│                 getBatteryPricing() + marketIntelligence                     │
-│                                                                              │
-│  Data Sources:                                                               │
-│  ├── NREL ATB 2024 (primary)                                                 │
-│  ├── pricing_configurations table (Supabase)                                 │
-│  └── Regional adjustments by location                                        │
-└──────────────────────────────────────────────────────────────────────────────┘
+         ┌──────────────────────┼──────────────────────┐
+         ▼                      ▼                      ▼
+┌──────────────────┐  ┌────────────────────┐  ┌────────────────────────────┐
+│ Equipment Calc   │  │ Financial Calc     │  │ Dynamic Services (NEW)     │
+│                  │  │                    │  │                            │
+│ batteries        │  │ NPV, IRR, ROI      │  │ utilityRateService         │
+│ inverters        │  │ paybackYears       │  │   └─ getCommercialRateByZip│
+│ transformers     │  │ demandChargeSavings│  │ itcCalculator              │
+│ solar/wind       │  │                    │  │   └─ estimateITC           │
+│ generators       │  │                    │  │ batteryDegradationService  │
+└──────────────────┘  └────────────────────┘  │   └─ estimateDegradation   │
+                                              │ pvWattsService             │
+                                              │   └─ estimateSolarProd     │
+                                              │ hourly8760AnalysisService  │
+                                              │   └─ estimate8760Savings   │
+                                              │ monteCarloService          │
+                                              │   └─ estimateRiskMetrics   │
+                                              └────────────────────────────┘
 ```
 
-**CALCULATION ARCHITECTURE - SIX PILLARS:**
+**CALCULATION ARCHITECTURE - SIX PILLARS + JAN 2026 INTEGRATIONS:**
 
-1. **Quote Calculator** → `unifiedQuoteCalculator.ts` (Nov 28, 2025)
+1. **Quote Calculator** → `unifiedQuoteCalculator.ts` (Updated Jan 2026)
    - **USE THIS FOR ALL QUOTE CALCULATIONS**
    - `calculateQuote()` - Complete quote with equipment + financials
    - `estimatePayback()` - Quick estimate for UI previews
    - Orchestrates all other services
    - ✅ **SINGLE ENTRY POINT** for quote generation
    - ⚠️ **IMPORTANT**: NEVER call `calculateFinancialMetrics()` directly from components - always use `calculateQuote()` which orchestrates both equipment AND financial calculations
+   - **NEW INPUT OPTIONS (Jan 2026):**
+     - `zipCode` - Auto-fetches utility rates
+     - `itcConfig` - Dynamic ITC calculation per IRA 2022
+     - `batteryChemistry` - Degradation modeling (lfp, nmc, nca, flow-vrb, sodium-ion)
+     - `includeAdvancedAnalysis` - Enables 8760 hourly + Monte Carlo
 
 2. **Power/Demand Calculations** → `useCasePowerCalculations.ts`
    - Industry-standard peak demand values (ASHRAE, CBECS, Energy Star)
@@ -285,6 +290,297 @@ ALL use cases default to `'natural-gas'` for generators. This is set in:
 - `baselineService.ts` - Database-driven BESS sizing + calculateBESSSize()
 - `dataIntegrationService.ts` - Unified API (uses baselineService)
 - `marketDataIntegrationService.ts` - Market data from RSS/web sources (NEW Dec 10, 2025)
+- `utilityRateService.ts` - Dynamic utility rate lookup (NEW Jan 2026)
+- `itcCalculator.ts` - IRA 2022 Investment Tax Credit calculator (NEW Jan 2026)
+- `equipmentPricingTiersService.ts` - Equipment pricing with markup (NEW Jan 2026)
+- `batteryDegradationService.ts` - Cycle + calendar aging models (NEW Jan 2026)
+- `pvWattsService.ts` - NREL PVWatts solar production (NEW Jan 2026)
+- `hourly8760AnalysisService.ts` - Full year hourly dispatch simulation (NEW Jan 2026)
+- `monteCarloService.ts` - Probabilistic P10/P50/P90 analysis (NEW Jan 2026)
+
+**DYNAMIC UTILITY RATES (Jan 14, 2026):**
+Utility rates are now **dynamically fetched by zip code** via `utilityRateService.ts`:
+
+**Functions:**
+- `getUtilityRatesByZip(zipCode)` - Full utility data for a zip code
+- `getCommercialRateByZip(zipCode)` - Simplified commercial rate lookup
+- `getBESSSavingsOpportunity(zipCode)` - BESS ROI score by location
+
+**Database Tables:**
+- `utility_rates` - Cached rate data by zip code
+- `utility_companies` - 31 major utilities (PG&E, ConEd, FPL, etc.)
+- `utility_service_territories` - Zip-to-utility mapping
+
+**Integration with calculateQuote():**
+```typescript
+// Now accepts zipCode for dynamic rate lookup
+const result = await calculateQuote({
+  storageSizeMW: 2.0,
+  durationHours: 4,
+  zipCode: '94102',  // NEW: Auto-fetches rates from EIA/NREL
+  // electricityRate not needed - auto-looked up!
+});
+
+// Result includes rate attribution
+result.metadata.utilityRates = {
+  electricityRate: 0.2794,
+  demandCharge: 25,
+  utilityName: 'Pacific Gas & Electric',
+  source: 'eia',
+  confidence: 'high',
+  state: 'CA',
+};
+```
+
+**Data Sources:**
+- EIA State Average Rates (2024) - All 50 states + DC
+- Major utility rate schedules (30+ utilities)
+- OpenEI integration ready (requires API key)
+
+**DYNAMIC ITC CALCULATOR (Jan 14, 2026):**
+ITC is now **calculated dynamically** per IRA 2022 rules via `itcCalculator.ts`:
+
+**Previous:** Hardcoded 30% ITC for all projects
+**Now:** 6-70% based on project type, labor compliance, location bonuses
+
+**ITC Rate Structure (IRA 2022):**
+| Component | Rate | Requirements |
+|-----------|------|--------------|
+| Base Rate | 6% | All projects |
+| Prevailing Wage Bonus | +24% | Davis-Bacon wages + apprenticeship (projects ≥1 MW) |
+| Energy Community Bonus | +10% | Coal closure, brownfield, or fossil fuel employment area |
+| Domestic Content Bonus | +10% | 100% US steel, 40%+ US manufactured components |
+| Low-Income Tier 1 | +10% | Located in low-income community (<5 MW) |
+| Low-Income Tier 2 | +20% | Serves low-income residents (<5 MW) |
+
+**Functions:**
+- `calculateITC(input)` - Full ITC calculation with breakdown
+- `estimateITC(type, cost, mw, pwa)` - Quick estimate for UI
+- `isEnergyCommunity(zipCode)` - Check energy community status
+- `getMaxITCRate(type)` - Maximum possible ITC for project type
+
+**Example:**
+```typescript
+const itc = calculateITC({
+  projectType: 'bess',
+  capacityMW: 5.0,
+  totalCost: 5_000_000,
+  prevailingWage: true,
+  apprenticeship: true,
+  energyCommunity: 'coal-closure',
+  domesticContent: true,
+});
+// Returns: { totalRate: 0.50, creditAmount: 2_500_000, ... }
+```
+
+**EQUIPMENT PRICING TIERS (Jan 14, 2026):**
+Equipment pricing now supports **markup configuration** via `equipmentPricingTiersService.ts`:
+
+**Markup Percentages:**
+| Equipment Type | Markup |
+|---------------|--------|
+| EMS Software | 30% |
+| Microgrid Controller | 25% |
+| SCADA | 20% |
+| Switchgear | 20% |
+| Transformer | 18% |
+| DC/AC Panels | 18% |
+| BMS | 15% |
+| Inverter/PCS | 15% |
+| EV Charger | 15% |
+| Global Default | 15% |
+| BESS | 12% |
+| ESS Enclosure | 12% |
+| Generator | 12% |
+| Solar | 10% |
+
+**Functions:**
+- `getEquipmentPrice(type, tier, size)` - Returns `{ price, priceWithMarkup, markupPercentage }`
+- `getMarkupPercentage(equipmentType)` - Get markup % for equipment
+- `getAllMarkupConfigs()` - List all markup configurations
+- `updateMarkupConfig(type, percentage)` - Admin: update markup %
+
+**BATTERY DEGRADATION SERVICE (Jan 14, 2026):**
+Battery capacity degradation modeling via `batteryDegradationService.ts`:
+
+**Previous:** Flat capacity assumed over 25 years
+**Now:** Combined cycle + calendar aging per NREL/PNNL research
+
+**Chemistry-Specific Parameters:**
+| Chemistry | Calendar Aging | Cycles to 80% | Warranty |
+|-----------|----------------|---------------|----------|
+| LFP | 1.5%/year | 4,000 | 15 years |
+| NMC | 2.0%/year | 2,500 | 10 years |
+| NCA | 2.2%/year | 2,000 | 10 years |
+| Flow (VRB) | 0.5%/year | 20,000 | 20 years |
+| Sodium-Ion | 2.5%/year | 3,000 | 10 years |
+
+**Functions:**
+- `calculateDegradation(input)` - Full year-by-year capacity projection
+- `estimateDegradation(chemistry, years)` - Quick estimate for UI
+- `calculateDegradationFinancialImpact(degradation, revenue)` - NPV impact of degradation
+- `calculateAugmentationStrategy(degradation, minCapacity)` - When to add capacity
+
+**Example:**
+```typescript
+const degradation = calculateDegradation({
+  chemistry: 'lfp',
+  initialCapacityKWh: 4000,
+  cyclesPerYear: 365,
+  averageDoD: 0.8,
+  projectYears: 25,
+});
+// Returns: { yearlyCapacity: [...], endOfLife: { finalCapacityPct: 62.3 }, ... }
+
+// Calculate financial impact
+const impact = calculateDegradationFinancialImpact(degradation, 500000);
+// Returns: { degradationImpactPct: 18.5, withDegradationNPV: 4_100_000, ... }
+```
+
+**NREL PVWATTS INTEGRATION (Jan 14, 2026):**
+Location-specific solar production via `pvWattsService.ts`:
+
+**Previous:** Fixed capacity factor (20%) for all locations
+**Now:** Location-specific production from NREL PVWatts API
+
+**Regional Capacity Factors (fallback):**
+| Region | Capacity Factor |
+|--------|-----------------|
+| Southwest (AZ, NM, NV) | 22-23% |
+| California | 21% |
+| Texas | 19% |
+| Florida | 18% |
+| Northeast | 13-14% |
+| Pacific NW | 13-14% |
+| Hawaii | 21% |
+
+**Functions:**
+- `getPVWattsEstimate(input)` - Full API call with monthly production
+- `estimateSolarProduction(kW, state, arrayType)` - Quick estimate (no API)
+- `calculateSolarBESSIntegration(solar, bess)` - Storage utilization metrics
+
+**Example:**
+```typescript
+// Full API estimate
+const solar = await getPVWattsEstimate({
+  systemCapacityKW: 500,
+  zipCode: '94102',
+  arrayType: 2,  // 1-axis tracker
+});
+// Returns: { annualProductionKWh: 892340, capacityFactor: 20.4, monthlyProductionKWh: [...] }
+
+// Quick estimate (no API call)
+const quick = estimateSolarProduction(500, 'CA', 'tracker');
+// Returns: { annualProductionKWh: 930000, capacityFactor: 26.6 }
+```
+
+**API Requirements:**
+- Get free API key at: https://developer.nrel.gov/signup/
+- Set `VITE_NREL_API_KEY` in environment variables
+- Falls back to regional estimates if API unavailable
+
+**8760 HOURLY ANALYSIS SERVICE (Jan 14, 2026):**
+Full-year hourly simulation for accurate BESS financial analysis via `hourly8760AnalysisService.ts`:
+
+**Previous:** Annual savings = simple multipliers (not time-of-use aware)
+**Now:** 8760-hour simulation with TOU rates, load profiles, solar production
+
+**Simulation Capabilities:**
+- Time-of-Use (TOU) arbitrage: Buy low, sell/use high
+- Peak shaving: Reduce demand charges during peaks
+- Solar self-consumption: Store excess PV for later use
+- Demand response: Revenue from grid services
+
+**Load Profiles Available:**
+| Profile Type | Description |
+|-------------|-------------|
+| commercial-office | 8am-6pm weekday peak |
+| commercial-retail | 10am-9pm, higher weekends |
+| industrial | Flat 24/7 with slight daytime increase |
+| hotel | Morning and evening peaks |
+| hospital | Relatively flat |
+| data-center | Very flat 24/7 |
+| ev-charging | Evening peak (commuter charging) |
+| warehouse | Daytime operations only |
+
+**Functions:**
+- `run8760Analysis(input)` - Full year simulation with hourly dispatch
+- `estimate8760Savings(bessKWh, bessKW, loadType, rate, demandCharge)` - Quick estimate
+
+**Example:**
+```typescript
+const result = run8760Analysis({
+  bessCapacityKWh: 4000,
+  bessPowerKW: 1000,
+  loadProfileType: 'commercial-office',
+  annualLoadKWh: 2_000_000,
+  peakDemandKW: 500,
+  rateStructure: { type: 'tou', touPeriods: [...] },
+  demandCharge: 20,
+  strategy: 'hybrid',
+});
+// Returns: {
+//   summary: { annualSavings, touArbitrageSavings, peakShavingSavings, ... },
+//   monthly: [...],
+//   hourlyDispatch: [...8760 hours...],
+//   audit: { methodology, sources, ... }
+// }
+```
+
+**MONTE CARLO SENSITIVITY SERVICE (Jan 14, 2026):**
+Probabilistic analysis for bankable BESS project financials via `monteCarloService.ts`:
+
+**Previous:** Point estimates don't capture uncertainty
+**Now:** P10/P50/P90 scenarios, sensitivity tornado charts, risk metrics
+
+**Variables Modeled:**
+| Variable | Default Uncertainty |
+|----------|-------------------|
+| Electricity Rate | ±15% |
+| Battery Degradation | ±20% |
+| Capacity Factor | ±12% |
+| Equipment Cost | ±10% |
+| Demand Charges | ±15% |
+| Solar Production | ±8% |
+
+**Functions:**
+- `runMonteCarloSimulation(input)` - Full 10,000 iteration simulation
+- `estimateRiskMetrics(baseNPV, projectCost)` - Quick P10/P90 estimate
+
+**Example:**
+```typescript
+const result = runMonteCarloSimulation({
+  baseNPV: 2_500_000,
+  baseIRR: 0.12,
+  basePayback: 6.5,
+  projectCost: 5_000_000,
+  annualSavings: 500_000,
+  iterations: 10000,
+  itcConfig: { baseRate: 0.30, pwaRisk: 0.05 },
+});
+// Returns: {
+//   percentiles: {
+//     npv: { p10: 1_800_000, p50: 2_400_000, p90: 3_100_000 },
+//     irr: { p10: 8.5, p50: 11.8, p90: 15.2 },
+//     payback: { p10: 5.5, p50: 6.8, p90: 8.5 }
+//   },
+//   statistics: {
+//     probabilityPositiveNPV: 92.5,
+//     probabilityHurdleRate: 78.3,
+//     valueAtRisk95: 1_200_000,
+//   },
+//   sensitivity: [...tornado chart data...],
+//   distributions: { npv: [...histogram...], irr: [...] }
+// }
+```
+
+**Risk Metrics Provided:**
+- P10/P50/P90 for NPV, IRR, payback
+- Probability of positive NPV
+- Probability of achieving hurdle rate (8%)
+- Value at Risk (VaR) at 95% confidence
+- Conditional VaR (expected loss below VaR)
+- Sensitivity ranking (tornado chart data)
 
 **MARKET DATA SOURCES (Dec 10, 2025):**
 RSS feeds and market data sources are now **database-driven** via `market_data_sources` table:

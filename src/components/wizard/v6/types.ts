@@ -34,9 +34,16 @@ export interface WizardState {
   businessLat?: number;
   businessLng?: number;
 
+  // Step 1: Savings Preview (ESTIMATES ONLY - not SSOT)
+  savingsPreview?: SavingsPreviewEstimate;
+
   // Step 2: Industry
   industry: string;
   industryName: string;
+
+  // Step 2: Business Size (determines questionnaire depth)
+  businessSizeTier?: BusinessSizeTier;
+  questionnaireDepth?: QuestionnaireDepth;
 
   // Step 3: Facility Details
   facilityDetails: FacilityDetails;
@@ -102,6 +109,49 @@ export type EnergyGoal =
   | "grid_independence" // NEW
   | "peak_shaving" // NEW
   | "generate_revenue"; // NEW (replaces ev_ready)
+
+// ============================================================================
+// STEP 1: Savings Preview (ESTIMATES ONLY)
+// ============================================================================
+
+/**
+ * Savings Preview Estimate
+ * 
+ * ⚠️ IMPORTANT: This is NOT TrueQuote™ verified data!
+ * - Based on industry averages and heuristics
+ * - Used ONLY to show a "sneak peek" in Step 1
+ * - Clearly labeled as "Estimate" in UI
+ * - Real TrueQuote™ numbers calculated in Steps 4-6
+ */
+export interface SavingsPreviewEstimate {
+  estimatedSavingsLow: number;
+  estimatedSavingsHigh: number;
+  peakShavingSavings: number;
+  solarPotential: number;
+  backupValue: number;
+  isEstimate: true; // Always true - never SSOT
+  disclaimer: string;
+  generatedAt: number;
+}
+
+// ============================================================================
+// STEP 2: Business Size Tier
+// ============================================================================
+
+export type BusinessSizeTier = 'small' | 'medium' | 'large' | 'enterprise';
+export type QuestionnaireDepth = 'minimal' | 'standard' | 'detailed';
+
+/**
+ * Business Size Options per Industry
+ * Each industry has different size thresholds
+ */
+export interface BusinessSizeOption {
+  tier: BusinessSizeTier;
+  label: string;
+  description: string;
+  icon: string;
+  questionnaireDepth: QuestionnaireDepth;
+}
 
 // NOTE: ENERGY_GOALS array is now defined in Step1Location.tsx
 // This export is kept for backward compatibility but may be deprecated

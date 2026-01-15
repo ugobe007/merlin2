@@ -1,52 +1,110 @@
 /**
  * V6 Step 2: Industry Selection with Images
- * Updated: December 30, 2025 - Larger fonts for better readability
+ * Updated: January 14, 2026 - All 22 use cases from database
  * NOTE: MerlinAdvisor is now rendered at WizardV6 level (unified advisor)
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, Sparkles } from 'lucide-react';
-import type { WizardState } from '../types';
+import type { WizardState, BusinessSizeTier, QuestionnaireDepth } from '../types';
 import { INDUSTRY_NAMES } from '@/services/googlePlacesService';
+import { BusinessSizePanel } from '../components/BusinessSizePanel';
 
 // Industry images
 import hotelImg from '@/assets/images/hotel_motel_holidayinn_1.jpg';
 import carWashImg from '@/assets/images/Car_Wash_PitStop.jpg';
-import evChargingImg from '@/assets/images/ev_charging_station.jpg';
+import evChargingImg from '@/assets/images/ev_charging_hub2.jpg';
 import manufacturingImg from '@/assets/images/manufacturing_1.jpg';
-import dataCenterImg from '@/assets/images/data-centers/data-center-1.jpg';
+import dataCenterImg from '@/assets/images/data-center-1.jpg';
 import hospitalImg from '@/assets/images/hospital_1.jpg';
-import retailImg from '@/assets/images/retail_1.jpg';
+import retailImg from '@/assets/images/retail_2.jpg';
 import officeImg from '@/assets/images/office_building1.jpg';
 import collegeImg from '@/assets/images/college_1.jpg';
 import warehouseImg from '@/assets/images/logistics_1.jpg';
-import restaurantImg from '@/assets/images/restaurant_1.jpg';
-import agricultureImg from '@/assets/images/indoor_farm1.jpeg';
+import agricultureImg from '@/assets/images/agriculture_1.jpg';
 import truckStopImg from '@/assets/images/truck_stop.png';
+import airportImg from '@/assets/images/airport_11.jpeg';
+import indoorFarmImg from '@/assets/images/indoor_farm1.jpg';
+import shoppingCenterImg from '@/assets/images/shopping_center.jpg';
+import coldStorageImg from '@/assets/images/cold_storage.jpg';
+import apartmentImg from '@/assets/images/apartment_building.jpg';
+import residentialImg from '@/assets/images/residential.jpg';
+import restaurantImg from '@/assets/images/restaurant_1.jpg';
+import casinoImg from '@/assets/images/casino_gaming1.jpg';
 
+// All 20 use cases from database - slugs must match exactly
 const INDUSTRIES = [
+  // Commercial
   { slug: 'hotel', name: 'Hotel / Hospitality', image: hotelImg },
-  { slug: 'car_wash', name: 'Car Wash', image: carWashImg },
-  { slug: 'heavy_duty_truck_stop', name: 'Truck Stop / Travel Center', image: truckStopImg },
-  { slug: 'ev_charging', name: 'EV Charging Hub', image: evChargingImg },
-  { slug: 'manufacturing', name: 'Manufacturing', image: manufacturingImg },
-  { slug: 'data_center', name: 'Data Center', image: dataCenterImg },
-  { slug: 'hospital', name: 'Hospital / Healthcare', image: hospitalImg },
-  { slug: 'retail', name: 'Retail / Commercial', image: retailImg },
-  { slug: 'office', name: 'Office Building', image: officeImg },
-  { slug: 'college', name: 'College / University', image: collegeImg },
-  { slug: 'warehouse', name: 'Warehouse / Logistics', image: warehouseImg },
+  { slug: 'car-wash', name: 'Car Wash', image: carWashImg },
   { slug: 'restaurant', name: 'Restaurant', image: restaurantImg },
-  { slug: 'agriculture', name: 'Agriculture', image: agricultureImg },
+  { slug: 'retail', name: 'Retail / Commercial', image: retailImg },
+  { slug: 'shopping-center', name: 'Shopping Center / Mall', image: shoppingCenterImg },
+  { slug: 'office', name: 'Office Building', image: officeImg },
+  { slug: 'casino', name: 'Casino & Gaming', image: casinoImg },
+  
+  // Transportation & Logistics
+  { slug: 'heavy_duty_truck_stop', name: 'Truck Stop / Travel Center', image: truckStopImg },
+  { slug: 'ev-charging', name: 'EV Charging Hub', image: evChargingImg },
+  { slug: 'warehouse', name: 'Warehouse / Logistics', image: warehouseImg },
+  { slug: 'airport', name: 'Airport', image: airportImg },
+  
+  // Industrial
+  { slug: 'manufacturing', name: 'Manufacturing', image: manufacturingImg },
+  { slug: 'data-center', name: 'Data Center', image: dataCenterImg },
+  { slug: 'cold-storage', name: 'Cold Storage', image: coldStorageImg },
+  
+  // Institutional
+  { slug: 'hospital', name: 'Hospital / Healthcare', image: hospitalImg },
+  { slug: 'college', name: 'College / University', image: collegeImg },
+  
+  // Agricultural
+  { slug: 'agricultural', name: 'Agriculture', image: agricultureImg },
+  { slug: 'indoor-farm', name: 'Indoor / Vertical Farm', image: indoorFarmImg },
+  
+  // Residential
+  { slug: 'apartment', name: 'Apartment Complex', image: apartmentImg },
+  { slug: 'residential', name: 'Residential', image: residentialImg },
 ];
 
 interface Props {
   state: WizardState;
   updateState: (updates: Partial<WizardState>) => void;
+  onNext?: () => void;
 }
 
-export function Step2Industry({ state, updateState }: Props) {
+export function Step2Industry({ state, updateState, onNext }: Props) {
+  // Track if we should show the business size panel
+  const [showSizePanel, setShowSizePanel] = useState(false);
+  const [pendingIndustry, setPendingIndustry] = useState<{ slug: string; name: string } | null>(null);
+  
+  // If coming from Step 1 with business name (auto-detected), we already may have size info
+  // Check if businessSizeTier is already set from Step 1's savings preview
+  const hasPresetSize = state.businessName && state.businessSizeTier;
+  
   const selectIndustry = (slug: string, name: string) => {
+    // First update the industry
     updateState({ industry: slug, industryName: name });
+    
+    // If user came from business lookup with size already set, don't show panel
+    if (hasPresetSize) {
+      // Auto-proceed if onNext is provided
+      if (onNext) setTimeout(onNext, 500);
+      return;
+    }
+    
+    // Show the business size panel for manual selection
+    setPendingIndustry({ slug, name });
+    setShowSizePanel(true);
+  };
+  
+  const handleSizeSelect = (size: BusinessSizeTier, depth: QuestionnaireDepth) => {
+    updateState({ 
+      businessSizeTier: size,
+      questionnaireDepth: depth
+    });
+    setShowSizePanel(false);
+    // Auto-proceed to Step 3
+    if (onNext) setTimeout(onNext, 300);
   };
 
   // Normalize industry slug (handle both dash and underscore formats)
@@ -148,10 +206,31 @@ export function Step2Industry({ state, updateState }: Props) {
         })}
       </div>
 
-      {state.industry && (
+      {state.industry && !showSizePanel && (
         <div className="max-w-md mx-auto p-4 bg-emerald-500/20 border border-emerald-500/50 rounded-xl text-center">
           <p className="text-emerald-400 font-medium text-lg">✓ Selected: <strong>{state.industryName}</strong></p>
+          {state.businessSizeTier && (
+            <p className="text-emerald-300 text-sm mt-1">
+              Size: <strong className="capitalize">{state.businessSizeTier.replace('_', ' ')}</strong> • 
+              Questionnaire: <strong className="capitalize">{state.questionnaireDepth}</strong>
+            </p>
+          )}
         </div>
+      )}
+      
+      {/* Business Size Selection Panel */}
+      {showSizePanel && (
+        <BusinessSizePanel
+          industry={pendingIndustry?.slug || state.industry || ''}
+          industryName={pendingIndustry?.name || state.industryName || ''}
+          selectedSize={state.businessSizeTier}
+          onSelectSize={handleSizeSelect}
+          onSkip={() => {
+            // Default to 'standard' questionnaire if skipped
+            handleSizeSelect('medium', 'standard');
+          }}
+          onClose={() => setShowSizePanel(false)}
+        />
       )}
     </div>
   );

@@ -16,7 +16,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 interface Question {
   id: string;
   question_text: string;
-  question_type: 'select' | 'multiselect' | 'number' | 'boolean' | 'text';
+  question_type: 'select' | 'multiselect' | 'number' | 'boolean' | 'text' | 'range_buttons' | 'slider' | 'toggle';
   field_name: string;
   options: any;
   is_required: boolean;

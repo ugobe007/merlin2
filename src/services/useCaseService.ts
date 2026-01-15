@@ -165,15 +165,31 @@ export class UseCaseService {
    */
   async getUseCaseBySlug(slug: string): Promise<DetailedUseCase | null> {
     try {
-      const { data: useCase, error: useCaseError } = await supabase
+      // First try to find active use case
+      let { data: useCase, error: useCaseError } = await supabase
         .from("use_cases")
         .select("*")
         .eq("slug", slug)
         .eq("is_active", true)
         .single();
 
+      // If not found as active, check if it exists but is inactive (for debugging)
+      if (useCaseError?.code === 'PGRST116' || !useCase) {
+        const { data: inactiveCheck } = await supabase
+          .from("use_cases")
+          .select("slug, name, is_active")
+          .eq("slug", slug)
+          .single();
+        
+        if (inactiveCheck) {
+          console.warn(`⚠️ [useCaseService] Found use case "${slug}" but it's inactive (is_active=${inactiveCheck.is_active})`);
+        } else {
+          console.log(`🔍 [useCaseService] No use case found with slug: "${slug}"`);
+        }
+        return null;
+      }
+
       if (useCaseError) throw useCaseError;
-      if (!useCase) return null;
 
       // Fetch related data in parallel - use Promise.allSettled to handle missing tables gracefully
       const [configurationsResult, questionsResult, applicationsResult] = await Promise.allSettled([
@@ -448,30 +464,18 @@ export class UseCaseService {
 
       const allQuestions = data || [];
 
-      // Filter out inactive questions unless we're debugging
-      // TODO: Consider showing inactive questions in dev mode to help identify missing ones
-      const activeQuestions = allQuestions.filter((q: any) => q.is_active !== false);
-
-      if (activeQuestions.length !== allQuestions.length) {
-        console.warn(
-          `⚠️ [useCaseService] Found ${allQuestions.length - activeQuestions.length} inactive questions for useCaseId: ${useCaseId}`
-        );
-      }
+      // Return all questions - no is_active filter since column doesn't exist on custom_questions
+      const activeQuestions = allQuestions;
 
       // DEBUG: Log what we're returning
       if (import.meta.env.DEV) {
         console.log(
-          `📋 [useCaseService] Fetched ${activeQuestions.length} active custom questions (out of ${allQuestions.length} total) for useCaseId: ${useCaseId}`,
+          `📋 [useCaseService] Fetched ${activeQuestions.length} custom questions for useCaseId: ${useCaseId}`,
           {
-            activeCount: activeQuestions.length,
-            totalCount: allQuestions.length,
-            inactiveCount: allQuestions.length - activeQuestions.length,
+            count: activeQuestions.length,
             questionFields: activeQuestions.map(
               (q: any) => q.field_name || q.id || q.question_text?.substring(0, 30)
             ),
-            inactiveFields: allQuestions
-              .filter((q: any) => q.is_active === false)
-              .map((q: any) => q.field_name || q.id),
           }
         );
       }

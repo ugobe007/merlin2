@@ -15,7 +15,7 @@
 import type { Industry, SolarType } from '../contracts';
 import { getStateSolarData, type StateSolarData } from '../stateSolarService';
 import { getConstant } from '../calculationConstantsService';
-import { getSolarCostPerWatt, DEFAULTS } from '../data/constants';
+import { DEFAULTS } from '../data/constants';
 
 export interface SolarCalculationInput {
   peakDemandKW: number;

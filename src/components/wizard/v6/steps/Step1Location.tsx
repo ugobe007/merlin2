@@ -9,6 +9,11 @@
  * Design: Purple theme with gradient cards
  * Updated: January 2026
  * 
+ * NEW January 14, 2026: Added SavingsPreviewPanel for business lookup
+ * - Shows estimated savings (NOT SSOT!) when business is found
+ * - Clearly labeled as ESTIMATE
+ * - Real TrueQuote™ numbers come in Steps 4-6
+ * 
  * SSOT: Imports location data from @/services/data
  * NOTE: MerlinAdvisor is now rendered at WizardV6 level (unified advisor)
  */
@@ -19,7 +24,6 @@ import type { WizardState, EnergyGoal } from '../types';
 
 // SSOT Imports - All location data comes from centralized data files
 import { 
-  US_STATE_DATA, 
   getStateFromZip, 
   getStateData 
 } from '@/services/data/stateElectricityRates';
@@ -35,6 +39,9 @@ import {
   INDUSTRY_NAMES,
   type PlaceLookupResult
 } from '@/services/googlePlacesService';
+
+// Component imports
+import { SavingsPreviewPanel } from '../components/SavingsPreviewPanel';
 
 // ============================================================================
 // ENERGY GOALS
@@ -58,9 +65,11 @@ const MIN_GOALS_REQUIRED = 2;
 interface Props {
   state: WizardState;
   updateState: (updates: Partial<WizardState> | ((prev: WizardState) => Partial<WizardState>)) => void;
+  onNext?: () => void;
+  onGoToStep2?: () => void;
 }
 
-export function Step1Location({ state, updateState }: Props) {
+export function Step1Location({ state, updateState, onNext, onGoToStep2 }: Props) {
   const [region, setRegion] = useState<'us' | 'international'>('us');
   const [zipInput, setZipInput] = useState(state.zipCode || '');
   const [zipError, setZipError] = useState<string | null>(null);
@@ -229,6 +238,31 @@ export function Step1Location({ state, updateState }: Props) {
     <div className="relative">
       {/* NOTE: MerlinBar is now rendered at WizardV6 level with unified messaging */}
       
+      {/* 🔮 SAVINGS SNEAK PREVIEW - Shows ABOVE input panels when business found */}
+      {businessLookup?.found && businessLookup.industrySlug && locationData && (
+        <div className="mb-6">
+          <SavingsPreviewPanel
+            businessName={businessLookup.businessName || ''}
+            industrySlug={businessLookup.industrySlug}
+            industryName={INDUSTRY_NAMES[businessLookup.industrySlug] || businessLookup.businessType || ''}
+            electricityRate={locationData.electricityRate}
+            demandCharge={15}
+            sunHours={locationData.sunHours}
+            state={state.state}
+            onContinue={() => {
+              // Scroll to goals section
+              const goalsSection = document.getElementById('goals-section');
+              if (goalsSection) {
+                goalsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }}
+            onChangeIndustry={() => {
+              if (onGoToStep2) onGoToStep2();
+            }}
+          />
+        </div>
+      )}
+
       {/* COMPACT LOCATION STATS - Shows quick stats after location selected */}
       {locationData && (
         <div className="mb-6 flex flex-wrap gap-3 justify-center">
@@ -297,33 +331,38 @@ export function Step1Location({ state, updateState }: Props) {
         {/* US Zip Code Input */}
         {region === 'us' && (
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Enter your zip code
-            </label>
-            <input
-              type="text"
-              value={zipInput}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '').slice(0, 5);
-                setZipInput(value);
-              }}
-              placeholder="e.g., 89101"
-              className={`w-full px-4 py-4 rounded-xl border-2 text-xl font-bold text-center tracking-widest ${
-                zipError 
-                  ? 'border-red-400 bg-red-900/30 text-red-300 placeholder-red-400/50' 
-                  : zipInput.length === 5 
-                    ? 'border-green-400 bg-green-900/30 text-green-300' 
-                    : 'border-purple-400 bg-slate-700 text-white placeholder-slate-400'
-              } focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
-            />
-            {zipError && (
-              <p className="mt-2 text-sm text-red-400 font-medium">{zipError}</p>
+            {/* Only show ZIP input prominently if business not found yet */}
+            {!businessLookup?.found && (
+              <>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Enter your zip code
+                </label>
+                <input
+                  type="text"
+                  value={zipInput}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 5);
+                    setZipInput(value);
+                  }}
+                  placeholder="e.g., 89101"
+                  className={`w-full px-4 py-4 rounded-xl border-2 text-xl font-bold text-center tracking-widest ${
+                    zipError 
+                      ? 'border-red-400 bg-red-900/30 text-red-300 placeholder-red-400/50' 
+                      : zipInput.length === 5 
+                        ? 'border-green-400 bg-green-900/30 text-green-300' 
+                        : 'border-purple-400 bg-slate-700 text-white placeholder-slate-400'
+                  } focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
+                />
+                {zipError && (
+                  <p className="mt-2 text-sm text-red-400 font-medium">{zipError}</p>
+                )}
+              </>
             )}
             
-            {/* Address Lookup Section - shown after valid zip */}
-            {zipInput.length === 5 && !zipError && (
+            {/* Address Lookup Section - shown after valid zip, hidden when business found */}
+            {zipInput.length === 5 && !zipError && !businessLookup?.found && (
               <div className="mt-4">
-                {!showAddressField && !businessLookup?.found && (
+                {!showAddressField && (
                   <button
                     onClick={() => setShowAddressField(true)}
                     className="w-full py-4 px-4 rounded-xl border-2 border-purple-400 bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 hover:text-white transition-all text-base font-medium shadow-lg shadow-purple-500/20"
@@ -333,7 +372,7 @@ export function Step1Location({ state, updateState }: Props) {
                   </button>
                 )}
                 
-                {showAddressField && !businessLookup?.found && (
+                {showAddressField && (
                   <div className="space-y-4">
                     {/* Business Name Field */}
                     <div>
@@ -620,7 +659,7 @@ export function Step1Location({ state, updateState }: Props) {
       </div>
 
       {/* RIGHT COLUMN: Your Goals */}
-      <div className="bg-slate-800/80 rounded-2xl p-6 shadow-lg border border-slate-600">
+      <div id="goals-section" className="bg-slate-800/80 rounded-2xl p-6 shadow-lg border border-slate-600 scroll-mt-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">

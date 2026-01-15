@@ -13,6 +13,8 @@ import { assertNoDerivedFieldsInStep3 } from "./v6/utils/wizardStateValidator";
 
 type WizardStep3State = {
   industry?: string;
+  businessSizeTier?: 'small' | 'medium' | 'large' | 'enterprise';
+  questionnaireDepth?: 'minimal' | 'standard' | 'detailed';
   useCaseData?: Record<string, unknown> & {
     inputs?: Record<string, unknown>;
   };

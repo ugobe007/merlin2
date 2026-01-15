@@ -12,7 +12,14 @@ export interface Question {
   id: string;
   type: 'buttons' | 'auto_confirm' | 'slider' | 'number_input' | 'toggle' |
         'conditional_buttons' | 'type_then_quantity' | 'existing_then_planned' |
-        'increment_box' | 'wheel' | 'multiselect' | 'hours_grid';
+        'increment_box' | 'wheel' | 'multiselect' | 'hours_grid' | 'range_buttons';
+  // Optional: range button config from database
+  rangeConfig?: {
+    ranges: Array<{ label: string; min: number; max: number | null }>;
+    suffix?: string;
+  };
+  // Optional: field name for database mapping
+  fieldName?: string;
   section: 'facility' | 'operations' | 'equipment' | 'solar';
   title: string;
   subtitle?: string;
@@ -31,6 +38,7 @@ export interface Question {
     step: number;
   };
   unit?: string;
+  suffix?: string;  // NEW: Suffix from database options (e.g., " kW", " sq ft")
   smartDefault?: any;
   validation?: {
     required: boolean;
@@ -63,6 +71,8 @@ export interface Question {
     description?: string;
   }>;
   impactsCalculations?: string[];
+  // Optional: question tier for filtering
+  questionTier?: string;
 }
 
 export const carWashQuestionsComplete: Question[] = [

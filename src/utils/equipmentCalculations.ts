@@ -1,5 +1,6 @@
 // Equipment breakdown calculations for detailed quotes
 // ✅ Using market intelligence for pricing (database pricing deprecated)
+// ✅ Jan 2026: Integrated with equipmentPricingTiersService for NEW equipment types
 
 import {
   calculateMarketAlignedBESSPricing,
@@ -7,6 +8,23 @@ import {
 } from "../services/marketIntelligence";
 import systemControlsPricingService from "../services/systemControlsPricingService";
 import solarPricingService from "../services/solarPricingService";
+
+// NEW: Import from equipmentPricingTiersService for new equipment types
+import {
+  getMarketAdjustedPrice,
+  getMicrogridControllerPrice,
+  getBMSPrice,
+  getSCADAPrice,
+  getEMSSoftwarePrice,
+  getDCPatchPanelPrice,
+  getACPatchPanelPrice,
+  getESSEnclosurePrice,
+  getTransformerPricePerKVA,
+  getInverterPricePerKW,
+  getSwitchgearPricePerKW,
+  type EquipmentType,
+  type PricingTier,
+} from "../services/equipmentPricingTiersService";
 
 // Generator fuel type options - matches database config keys
 export type GeneratorFuelType = "diesel" | "natural-gas" | "dual-fuel";
@@ -357,24 +375,42 @@ export const calculateEquipmentBreakdown = async (
     },
   };
 
-  // ✅ SINGLE SOURCE OF TRUTH: Fetch power electronics pricing from database
-  // Config key: 'power_electronics_2025' in pricing_configurations table
+  // ✅ SINGLE SOURCE OF TRUTH: Fetch power electronics pricing
+  // PRIORITY: 1) Market data, 2) equipment_pricing_tiers, 3) pricing_configurations, 4) fallback
   let powerElectronicsConfig: any = null;
+  let inverterPerKW = 120; // Default fallback
+  let transformerPerKVA = 80;
+  let switchgearPerKW = 50;
+  
   try {
-    const { useCaseService } = await import("../services/useCaseService");
-    powerElectronicsConfig = await useCaseService.getPricingConfig("power_electronics_2025");
-  } catch (error) {
-    console.warn("⚠️ Using fallback power electronics pricing (database unavailable):", error);
+    // Try new equipment_pricing_tiers service first (market data integrated)
+    const [inverterPrice, transformerPrice, switchgearPrice] = await Promise.all([
+      getInverterPricePerKW(storageSizeMW * 1000, 'standard'),
+      getTransformerPricePerKVA(storageSizeMW * 1000, 'standard'),
+      getSwitchgearPricePerKW('standard')
+    ]);
+    
+    inverterPerKW = inverterPrice;
+    transformerPerKVA = transformerPrice;
+    switchgearPerKW = switchgearPrice;
+    
+    powerElectronicsConfig = { inverterPerKW, transformerPerKVA, switchgearPerKW };
+  } catch (newServiceError) {
+    // Fall back to legacy pricing_configurations table
+    console.warn('⚠️ equipmentPricingTiersService unavailable, trying legacy config:', newServiceError);
+    try {
+      const { useCaseService } = await import("../services/useCaseService");
+      const legacyConfig = await useCaseService.getPricingConfig("power_electronics_2025");
+      if (legacyConfig) {
+        powerElectronicsConfig = legacyConfig;
+        inverterPerKW = legacyConfig.inverterPerKW || 120;
+        transformerPerKVA = legacyConfig.transformerPerKVA || 80;
+        switchgearPerKW = legacyConfig.switchgearPerKW || 50;
+      }
+    } catch (legacyError) {
+      console.warn("⚠️ Using fallback power electronics pricing (all databases unavailable):", legacyError);
+    }
   }
-
-  // Database-driven pricing with validated fallbacks
-  // Benchmarks from professional quotes (Oct 2025):
-  // - PCS/Inverter: $120/kW (UK EV Hub quote, Hampton Heights)
-  // - Transformer: $80/kVA for utility, $50/kVA for commercial
-  // - Switchgear: $50/kW utility, $30/kW commercial
-  const inverterPerKW = powerElectronicsConfig?.inverterPerKW || 120; // $120/kW from database
-  const transformerPerKVA = powerElectronicsConfig?.transformerPerKVA || 80; // $80/kVA from database
-  const switchgearPerKW = powerElectronicsConfig?.switchgearPerKW || 50; // $50/kW from database
 
   // ============================================
   // INVERTER CALCULATIONS - SCALE TO SYSTEM SIZE
