@@ -312,27 +312,35 @@ function getMerlinMessage(props: MerlinAdvisorProps): { title: string; message: 
 export function MerlinAdvisor(props: MerlinAdvisorProps) {
   const { currentStep, state, sunHours, electricityRate, goals } = props;
   const [isMinimized, setIsMinimized] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(true); // Start OPEN by default
-  const [hasPendingSuggestion, setHasPendingSuggestion] = useState(true);
-  const [lastStep, setLastStep] = useState(currentStep);
+  const [showSuggestions, setShowSuggestions] = useState(false); // Start CLOSED - only show when user needs help
+  const [hasPendingSuggestion, setHasPendingSuggestion] = useState(false);
+  const [lastActivityTime, setLastActivityTime] = useState(Date.now());
+  const [idleWarningShown, setIdleWarningShown] = useState(false);
   
   const estimate = useMemo(() => getProgressiveEstimate(props), [props]);
   const message = useMemo(() => getMerlinMessage(props), [props]);
   
-  // AUTO-OPEN suggestions panel when step changes or important data arrives
+  // Track user activity - reset idle timer when props change (user is active)
   useEffect(() => {
-    // Only auto-open if step changed or key data changed
-    if (currentStep !== lastStep || props.industry || props.state) {
-      setHasPendingSuggestion(true);
-      setShowSuggestions(true); // AUTO-OPEN the panel!
-      setLastStep(currentStep);
+    setLastActivityTime(Date.now());
+    setIdleWarningShown(false);
+    setHasPendingSuggestion(false);
+  }, [currentStep, props.state, props.industry, props.facilitySize, props.hasSolar, props.hasGenerator, props.selectedTier]);
+  
+  // Detect when user has been idle for 20 seconds - then suggest help
+  useEffect(() => {
+    const checkIdleTimer = setInterval(() => {
+      const idleTime = Date.now() - lastActivityTime;
       
-      // Auto-dismiss the pulse (but keep panel open) after 8 seconds
-      const timer = setTimeout(() => setHasPendingSuggestion(false), 8000);
-      return () => clearTimeout(timer);
-    }
-    return undefined;
-  }, [currentStep, props.industry, props.state, lastStep]);
+      // After 20 seconds of inactivity, offer help
+      if (idleTime > 20000 && !idleWarningShown && !showSuggestions) {
+        setHasPendingSuggestion(true);
+        setIdleWarningShown(true);
+      }
+    }, 5000); // Check every 5 seconds
+    
+    return () => clearInterval(checkIdleTimer);
+  }, [lastActivityTime, idleWarningShown, showSuggestions]);
   
   // Determine which opportunities are relevant
   const relevantOpportunities = useMemo(() => {
@@ -486,10 +494,10 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
           </button>
         </div>
 
-        {/* 🔥 PROMINENT SUGGESTIONS BANNER - Always visible, auto-opens */}
+        {/* � SUGGESTIONS BANNER - Only shows when user needs help (idle 20s+) */}
         {suggestions.length > 0 && (
           <div className="relative">
-            {/* Attention-grabbing pulsing border when new */}
+            {/* Attention-grabbing pulsing border when user idle */}
             {hasPendingSuggestion && (
               <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 animate-pulse opacity-50" />
             )}
@@ -497,6 +505,7 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
               onClick={() => {
                 setShowSuggestions(!showSuggestions);
                 setHasPendingSuggestion(false);
+                setIdleWarningShown(false);
               }}
               className={`relative w-full px-4 py-3 flex items-center justify-between transition-all ${
                 hasPendingSuggestion 
@@ -525,21 +534,19 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
                 {/* Text with speech bubble feel */}
                 <div className="text-left">
                   <span className={`font-bold text-sm block ${hasPendingSuggestion ? 'text-amber-300' : 'text-purple-300'}`}>
-                    {hasPendingSuggestion ? '🧙‍♂️ Merlin says...' : 'My Suggestions'}
+                    {hasPendingSuggestion ? '🧙‍♂️ Need help?' : 'Ask for Help'}
                   </span>
                   <span className="text-xs text-slate-400">
-                    {hasPendingSuggestion ? 'I have tips for you!' : `${suggestions.length} recommendation${suggestions.length > 1 ? 's' : ''}`}
+                    {hasPendingSuggestion ? 'Click for tips!' : `${suggestions.length} tip${suggestions.length > 1 ? 's' : ''} available`}
                   </span>
                 </div>
                 
                 {/* Count badge */}
-                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                  hasPendingSuggestion 
-                    ? 'bg-amber-500 text-white animate-bounce' 
-                    : 'bg-purple-500/30 text-purple-300'
-                }`}>
-                  {suggestions.length}
-                </span>
+                {hasPendingSuggestion && (
+                  <span className="px-2 py-1 rounded-full text-xs font-bold bg-amber-500 text-white animate-bounce">
+                    {suggestions.length}
+                  </span>
+                )}
               </div>
               
               {/* Expand/collapse indicator */}
