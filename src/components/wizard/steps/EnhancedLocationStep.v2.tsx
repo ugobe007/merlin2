@@ -380,266 +380,269 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-3">
           <span className="text-white">Tell me about your </span>
-          <span className="text-violet-300">
-            location
-          </span>
+          <span className="text-violet-300">location</span>
         </h1>
         <p className="text-lg text-slate-300">
           I'll analyze your utility rates, solar potential, and energy savings opportunities
         </p>
       </div>
 
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 items-stretch">
-        {/* LEFT COLUMN: Location */}
-        <div className="space-y-6">
-          {/* Zip Code Input */}
-          <div className="bg-gradient-to-b from-white/6 to-white/2 rounded-2xl p-6 border border-white/12 shadow-[0_24px_70px_rgba(0,0,0,0.38)]">
-            <div className="flex items-center gap-2 mb-4">
-              <MapPin className="w-5 h-5 text-purple-400" />
-              <h3 className="text-lg font-semibold text-white">Your Zip Code</h3>
-            </div>
-
-            <input
-              type="text"
-              className="w-full px-4 py-3 bg-white/5 border-2 border-white/10 text-white placeholder-slate-400 rounded-xl text-lg text-center font-semibold tracking-wide focus:border-violet-300/60 focus:ring-2 focus:ring-violet-500/30 focus:outline-none transition-all shadow-[0_12px_40px_rgba(0,0,0,0.22)] hover:border-white/20"
-              placeholder="e.g., 94102"
-              maxLength={5}
-              value={zipCode}
-              onChange={(e) => {
-                const zip = e.target.value.replace(/\D/g, "");
-                setZipCode(zip);
-              }}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck="false"
-            />
-
-            {/* Before Zip: What We'll Analyze */}
-            {!utilityData && zipCode.length < 5 && (
-              <div className="mt-4 space-y-4 animate-in fade-in">
-                <div className="flex items-start gap-3 p-4 bg-slate-900/40 border border-slate-700/50 rounded-lg">
-                  <div className="text-2xl">🔍</div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-slate-200 mb-2">
-                      We'll instantly analyze:
-                    </h4>
-                    <ul className="text-sm text-slate-400 space-y-1.5">
-                      <li className="flex items-center gap-2">
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                        Your state's electricity rates
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Sun className="w-3.5 h-3.5 text-yellow-400" />
-                        Local solar potential (sun hours/day)
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Zap className="w-3.5 h-3.5 text-purple-400" />
-                        Energy arbitrage opportunities
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
-                        Utility incentives & programs
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Preview Cards */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-slate-900/20 border border-slate-700/30 rounded-lg">
-                    <div className="text-slate-500 text-xs mb-1 flex items-center gap-1">
-                      <DollarSign className="w-3 h-3" />
-                      Rate
-                    </div>
-                    <div className="text-slate-600 text-lg font-semibold">$-.--</div>
-                  </div>
-                  <div className="p-3 bg-slate-900/20 border border-slate-700/30 rounded-lg">
-                    <div className="text-slate-500 text-xs mb-1 flex items-center gap-1">
-                      <Sun className="w-3 h-3" />
-                      Sun Hours
-                    </div>
-                    <div className="text-slate-600 text-lg font-semibold">-.--</div>
-                  </div>
-                  <div className="p-3 bg-slate-900/20 border border-slate-700/30 rounded-lg">
-                    <div className="text-slate-500 text-xs mb-1 flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      State
-                    </div>
-                    <div className="text-slate-600 text-lg font-semibold">--</div>
-                  </div>
-                  <div className="p-3 bg-slate-900/20 border border-slate-700/30 rounded-lg">
-                    <div className="text-slate-500 text-xs mb-1 flex items-center gap-1">
-                      <Zap className="w-3 h-3" />
-                      Arbitrage
-                    </div>
-                    <div className="text-slate-600 text-lg font-semibold">---</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 text-xs text-slate-500 px-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                  Your data is private and never shared
-                </div>
-              </div>
-            )}
-
-            {/* Utility Data Display */}
-            {utilityData && (
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center justify-between p-3 bg-purple-900/20 rounded-lg border border-purple-500/30">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm text-slate-300">Detected State:</span>
-                  </div>
-                  <span className="text-sm font-semibold text-white">{utilityData.name}</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm text-slate-300">Utility Rate:</span>
-                  </div>
-                  <span className="text-sm font-semibold text-white">${utilityData.rate}/kWh</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Sun className="w-4 h-4 text-yellow-400" />
-                    <span className="text-sm text-slate-300">Peak Sun Hours:</span>
-                  </div>
-                  <span className="text-sm font-semibold text-white">
-                    {utilityData.sunHours} hrs/day
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm text-slate-300">Arbitrage Potential:</span>
-                  </div>
-                  <span
-                    className={`text-sm font-semibold ${
-                      utilityData.arbitrage === "High"
-                        ? "text-emerald-400"
-                        : utilityData.arbitrage === "Medium"
-                          ? "text-yellow-400"
-                          : "text-slate-400"
-                    }`}
-                  >
-                    {utilityData.arbitrage}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Optional Address Search */}
-          {showAddressSearch && (
-            <div className="bg-white/4 rounded-2xl p-6 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] animate-in fade-in slide-in-from-bottom-4">
+      {/* Two Column Layout - Wrapped in shared stage card */}
+      <div className="rounded-2xl border border-[#223453]/60 bg-[#0f1e34] shadow-[0_20px_60px_rgba(0,0,0,0.35)] p-6 md:p-7 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          {/* LEFT COLUMN: Location */}
+          <div className="space-y-6">
+            {/* Zip Code Input */}
+            <div className="bg-gradient-to-b from-white/6 to-white/2 rounded-2xl p-6 border border-white/12 shadow-[0_24px_70px_rgba(0,0,0,0.38)]">
               <div className="flex items-center gap-2 mb-4">
-                <Building2 className="w-5 h-5 text-purple-400" />
-                <h3 className="text-lg font-semibold text-white">Business Address (Optional)</h3>
+                <MapPin className="w-5 h-5 text-purple-400" />
+                <h3 className="text-lg font-semibold text-white">Your Zip Code</h3>
               </div>
 
-              <p className="text-sm text-slate-400 mb-4">
-                Add your address to auto-detect facility details and pre-fill questions
-              </p>
+              <input
+                type="text"
+                className="w-full px-4 py-3 bg-white/5 border border-[#223453]/60 text-white placeholder-slate-400 rounded-xl text-lg text-center font-semibold tracking-wide focus:border-violet-300/60 focus:ring-2 focus:ring-violet-500/30 focus:outline-none transition-all shadow-[0_12px_40px_rgba(0,0,0,0.22)] hover:border-[#33507a]/70"
+                placeholder="e.g., 94102"
+                maxLength={5}
+                value={zipCode}
+                onChange={(e) => {
+                  const zip = e.target.value.replace(/\D/g, "");
+                  setZipCode(zip);
+                }}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+              />
 
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  className="flex-1 px-4 py-2.5 bg-slate-700/50 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:border-purple-500 focus:outline-none"
-                  placeholder="e.g., 123 Main St, San Francisco, CA"
-                  value={addressQuery}
-                  onChange={(e) => setAddressQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleAddressSearch();
-                  }}
-                />
-                <button
-                  onClick={handleAddressSearch}
-                  disabled={isSearching || !addressQuery.trim()}
-                  className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  {isSearching ? "Searching..." : "Search"}
-                </button>
-              </div>
-
-              {/* Detection Result */}
-              {detectionResult && (
-                <div className="mt-4 p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+              {/* Before Zip: What We'll Analyze */}
+              {!utilityData && zipCode.length < 5 && (
+                <div className="mt-4 space-y-4 animate-in fade-in">
+                  <div className="flex items-start gap-3 p-4 bg-slate-900/40 border border-slate-700/50 rounded-lg">
+                    <div className="text-2xl">🔍</div>
                     <div>
-                      <p className="font-semibold text-white">{detectionResult.name}</p>
-                      <p className="text-sm text-slate-400">{detectionResult.address}</p>
-                      <p className="text-xs text-emerald-400 mt-1">
-                        Pre-filled {Object.keys(detectionResult.prefilledAnswers).length} questions
-                      </p>
+                      <h4 className="text-sm font-semibold text-slate-200 mb-2">
+                        We'll instantly analyze:
+                      </h4>
+                      <ul className="text-sm text-slate-400 space-y-1.5">
+                        <li className="flex items-center gap-2">
+                          <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                          Your state's electricity rates
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Sun className="w-3.5 h-3.5 text-yellow-400" />
+                          Local solar potential (sun hours/day)
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Zap className="w-3.5 h-3.5 text-purple-400" />
+                          Energy arbitrage opportunities
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
+                          Utility incentives & programs
+                        </li>
+                      </ul>
                     </div>
+                  </div>
+
+                  {/* Preview Cards */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-slate-900/20 border border-slate-700/30 rounded-lg">
+                      <div className="text-slate-500 text-xs mb-1 flex items-center gap-1">
+                        <DollarSign className="w-3 h-3" />
+                        Rate
+                      </div>
+                      <div className="text-slate-600 text-lg font-semibold">$-.--</div>
+                    </div>
+                    <div className="p-3 bg-slate-900/20 border border-slate-700/30 rounded-lg">
+                      <div className="text-slate-500 text-xs mb-1 flex items-center gap-1">
+                        <Sun className="w-3 h-3" />
+                        Sun Hours
+                      </div>
+                      <div className="text-slate-600 text-lg font-semibold">-.--</div>
+                    </div>
+                    <div className="p-3 bg-slate-900/20 border border-slate-700/30 rounded-lg">
+                      <div className="text-slate-500 text-xs mb-1 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        State
+                      </div>
+                      <div className="text-slate-600 text-lg font-semibold">--</div>
+                    </div>
+                    <div className="p-3 bg-slate-900/20 border border-slate-700/30 rounded-lg">
+                      <div className="text-slate-500 text-xs mb-1 flex items-center gap-1">
+                        <Zap className="w-3 h-3" />
+                        Arbitrage
+                      </div>
+                      <div className="text-slate-600 text-lg font-semibold">---</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-slate-500 px-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                    Your data is private and never shared
+                  </div>
+                </div>
+              )}
+
+              {/* Utility Data Display */}
+              {utilityData && (
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-purple-900/20 rounded-lg border border-purple-500/30">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <span className="text-sm text-slate-300">Detected State:</span>
+                    </div>
+                    <span className="text-sm font-semibold text-white">{utilityData.name}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-emerald-400" />
+                      <span className="text-sm text-slate-300">Utility Rate:</span>
+                    </div>
+                    <span className="text-sm font-semibold text-white">
+                      ${utilityData.rate}/kWh
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Sun className="w-4 h-4 text-yellow-400" />
+                      <span className="text-sm text-slate-300">Peak Sun Hours:</span>
+                    </div>
+                    <span className="text-sm font-semibold text-white">
+                      {utilityData.sunHours} hrs/day
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-purple-400" />
+                      <span className="text-sm text-slate-300">Arbitrage Potential:</span>
+                    </div>
+                    <span
+                      className={`text-sm font-semibold ${
+                        utilityData.arbitrage === "High"
+                          ? "text-emerald-400"
+                          : utilityData.arbitrage === "Medium"
+                            ? "text-yellow-400"
+                            : "text-slate-400"
+                      }`}
+                    >
+                      {utilityData.arbitrage}
+                    </span>
                   </div>
                 </div>
               )}
             </div>
-          )}
-        </div>
 
-        {/* RIGHT COLUMN: Energy Goals */}
-        <div className="bg-gradient-to-b from-white/4 to-white/2 rounded-2xl p-6 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.30)]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-              <Target className="w-5 h-5 text-violet-300" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-white">Energy goals</h3>
-              <p className="text-sm text-slate-400">Select all that apply</p>
-            </div>
-          </div>
+            {/* Optional Address Search */}
+            {showAddressSearch && (
+              <div className="bg-white/4 rounded-2xl p-6 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] animate-in fade-in slide-in-from-bottom-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Building2 className="w-5 h-5 text-purple-400" />
+                  <h3 className="text-lg font-semibold text-white">Business Address (Optional)</h3>
+                </div>
 
-          <div className="space-y-3">
-            {ENERGY_GOALS.map((goal) => {
-              const isSelected = selectedGoals.includes(goal.id);
-              return (
-                <button
-                  key={goal.id}
-                  onClick={() => toggleGoal(goal.id)}
-                  className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-                    isSelected
-                      ? "bg-violet-500/10 border-violet-300/30 shadow-[0_12px_40px_rgba(124,58,237,0.18)]"
-                      : "bg-white/3 border-white/10 hover:border-white/20"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl flex-shrink-0">{goal.emoji}</div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-white mb-1">{goal.label}</div>
-                      <div className="text-sm text-slate-400">{goal.description}</div>
+                <p className="text-sm text-slate-400 mb-4">
+                  Add your address to auto-detect facility details and pre-fill questions
+                </p>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    className="flex-1 px-4 py-2.5 bg-slate-700/50 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:border-purple-500 focus:outline-none"
+                    placeholder="e.g., 123 Main St, San Francisco, CA"
+                    value={addressQuery}
+                    onChange={(e) => setAddressQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleAddressSearch();
+                    }}
+                  />
+                  <button
+                    onClick={handleAddressSearch}
+                    disabled={isSearching || !addressQuery.trim()}
+                    className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors"
+                  >
+                    {isSearching ? "Searching..." : "Search"}
+                  </button>
+                </div>
+
+                {/* Detection Result */}
+                {detectionResult && (
+                  <div className="mt-4 p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-white">{detectionResult.name}</p>
+                        <p className="text-sm text-slate-400">{detectionResult.address}</p>
+                        <p className="text-xs text-emerald-400 mt-1">
+                          Pre-filled {Object.keys(detectionResult.prefilledAnswers).length}{" "}
+                          questions
+                        </p>
+                      </div>
                     </div>
-                    {isSelected && (
-                      <CheckCircle2 className="w-5 h-5 text-purple-400 flex-shrink-0 mt-1" />
-                    )}
                   </div>
-                </button>
-              );
-            })}
+                )}
+              </div>
+            )}
           </div>
 
-          {selectedGoals.length > 0 && (
-            <div className="mt-4 p-3 bg-purple-900/20 rounded-lg border border-purple-500/30 text-center">
-              <p className="text-sm text-purple-300 font-medium">
-                ✓ {selectedGoals.length} goal{selectedGoals.length !== 1 ? "s" : ""} selected
-              </p>
+          {/* RIGHT COLUMN: Energy Goals */}
+          <div className="bg-gradient-to-b from-white/4 to-white/2 rounded-2xl p-6 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.30)]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                <Target className="w-5 h-5 text-violet-300" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Energy goals</h3>
+                <p className="text-sm text-slate-400">Select all that apply</p>
+              </div>
             </div>
-          )}
+
+            <div className="space-y-3">
+              {ENERGY_GOALS.map((goal) => {
+                const isSelected = selectedGoals.includes(goal.id);
+                return (
+                  <button
+                    key={goal.id}
+                    onClick={() => toggleGoal(goal.id)}
+                    className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                      isSelected
+                        ? "bg-violet-500/10 border-violet-300/30 shadow-[0_12px_40px_rgba(124,58,237,0.18)]"
+                        : "bg-white/3 border-white/10 hover:border-[#33507a]/70"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="text-2xl flex-shrink-0">{goal.emoji}</div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-white mb-1">{goal.label}</div>
+                        <div className="text-sm text-slate-400">{goal.description}</div>
+                      </div>
+                      {isSelected && (
+                        <CheckCircle2 className="w-5 h-5 text-purple-400 flex-shrink-0 mt-1" />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectedGoals.length > 0 && (
+              <div className="mt-4 p-3 bg-purple-900/20 rounded-lg border border-purple-500/30 text-center">
+                <p className="text-sm text-purple-300 font-medium">
+                  ✓ {selectedGoals.length} goal{selectedGoals.length !== 1 ? "s" : ""} selected
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
