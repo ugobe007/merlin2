@@ -182,17 +182,20 @@ Any recommendation must point to **one measurable driver**:
 
 ### Step 3 (Details)
 
-**Warning**:
+**Warning** (DEPLOYED Jan 17, 2026):
 
 - "If operating hours are near 24/7, battery cycling will increase. Therefore model at least 1–2 cycles/day."
+- "If battery cycling is frequent and duration is short, replacement costs will accelerate. Therefore model at least 4-hour systems for daily arbitrage." ✅ LIVE
 
 ---
 
 ### Step 4 (Options)
 
-**Warning**:
+**Warning** (DEPLOYED Jan 17, 2026):
 
 - "If backup is required, inverter sizing constrains discharge power. Therefore prioritize kW before kWh."
+- "If backup is required but inverter power is undersized, critical loads may not be supported. Therefore prioritize kW before adding energy capacity." ✅ LIVE
+- "If solar capacity is high and storage duration is short, excess production will be curtailed. Therefore increase storage duration before oversizing PV." ✅ LIVE
 
 ---
 
@@ -201,9 +204,9 @@ Any recommendation must point to **one measurable driver**:
 ### Current Implementation (Jan 2026)
 
 **File**: `src/components/wizard/v6/advisor/AdvisorRail.tsx`  
-**Function**: `getMerlinInsight()` (lines 75-100)
+**Function**: `getMerlinInsight()` (lines 80-130)
 
-**Current Rules**:
+**Phase 2: Anticipation Rules (Step 1-2)**:
 
 ```typescript
 // Step 1-2: Prime mental model (after location data available)
@@ -221,6 +224,50 @@ if (currentStep <= 2 && rate != null && demand != null) {
     return "TOU pricing creates strong arbitrage potential — focus on 4-6 hour battery systems.";
   }
 }
+```
+
+**Phase 5: Trade-off Warnings (Step 3-4)** - DEPLOYED Jan 17, 2026:
+
+```typescript
+// Step 3-4: Trade-off warnings (when user selects configs)
+if (currentStep >= 3) {
+  // Warning: High solar + short storage = curtailment risk
+  if (solarKW != null && batteryHours != null && solarKW > 500 && batteryHours < 2) {
+    return "If solar capacity is high and storage duration is short, excess production will be curtailed. Therefore increase storage duration before oversizing PV.";
+  }
+
+  // Warning: Backup required + undersized inverter = load support risk
+  if (backupRequired && inverterKW != null && peakLoadKW != null && inverterKW < peakLoadKW) {
+    return "If backup is required but inverter power is undersized, critical loads may not be supported. Therefore prioritize kW before adding energy capacity.";
+  }
+
+  // Warning: High cycling + short duration = accelerated replacement
+  if (batteryHours != null && batteryHours < 4 && demand != null && demand > 20) {
+    return "If battery cycling is frequent and duration is short, replacement costs will accelerate. Therefore model at least 4-hour systems for daily arbitrage.";
+  }
+}
+```
+
+**Context Interface** (lines 22-44):
+
+```typescript
+context?: {
+  location?: { state?: string; city?: string; zip?: string; utilityName?: string };
+  utility?: { rate?: number; demandCharge?: number; hasTOU?: boolean };
+  solar?: { sunHours?: number; rating?: string };
+  weather?: { profile?: string; extremes?: string };
+  opportunities?: { arbitrage?: string; backup?: boolean; smoothing?: boolean };
+
+  // Phase 5: Step 3-4 config data for trade-off warnings
+  config?: {
+    solarKW?: number;
+    batteryKWh?: number;
+    batteryHours?: number;
+    inverterKW?: number;
+    peakLoadKW?: number;
+    backupRequired?: boolean;
+  };
+};
 ```
 
 ---
@@ -257,6 +304,10 @@ export function validateInsight(text: string): { valid: boolean; error?: string 
 - **Jan 17, 2026**: Created MERLIN_VOICE_GUIDE.md as Phase 4 SSOT
 - **Jan 17, 2026**: Deployed Phase 2 (Anticipation) with 3 strategic rules in AdvisorRail
 - **Jan 17, 2026**: Added causality explanations to opportunities section (Teen maturity)
+- **Jan 17, 2026**: Deployed Phase 5 (Trade-off Warnings) with 3 constraint detection rules for Step 3-4
+  - Curtailment warning: High solar + short storage
+  - Inverter sizing warning: Backup required + undersized inverter
+  - Cycling warning: Frequent cycling + short duration
 
 ---
 
@@ -281,18 +332,34 @@ When generating Merlin copy:
 
 ---
 
-## Next Phase: Step 3-4 Trade-off Warnings
+## Next Phase: "Merlin is watching..." Presence Cue (Phase 6 - Optional)
 
-When user selects solar/battery configs:
+**Status**: NOT YET IMPLEMENTED (Phase 5 complete as of Jan 17, 2026)
 
-- Wire config data to AdvisorRail context
-- Add trade-off logic to `getMerlinInsight()` for steps 3-4:
+One quiet line in AdvisorRail to reinforce continuous awareness:
 
-```typescript
-if (currentStep >= 3 && solarKW > 500 && batteryHours < 2) {
-  return "High solar with minimal storage often leads to curtailment during peak production hours.";
-}
+```tsx
+<div className="text-[10px] text-slate-400/60 italic">
+  Merlin is watching: demand spikes, cycling depth, TOU spread
+</div>
 ```
+
+**Benefits**:
+
+- Reinforces continuous awareness
+- Builds trust without chatter
+- Zero additional logic required
+- Visual presence cue (not interrupting)
+
+**Implementation Location**: Below "Merlin's Insight" card in AdvisorRail
+
+**Design Constraints**:
+
+- Max 1 line
+- Fade to 60% opacity
+- Italic styling
+- No action required from user
+- Updates based on current step context
 
 ---
 
