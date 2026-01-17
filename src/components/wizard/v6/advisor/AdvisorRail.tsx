@@ -149,27 +149,67 @@ export function AdvisorRail({
 
           <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
             <div className="text-[10px] text-slate-300/70">OPPORTUNITIES</div>
-            <div className="mt-1 flex flex-wrap gap-2">
-              <span className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 text-slate-200">
-                Arbitrage: <span className="font-semibold">{arbitrage || (hasTOU ? "Medium" : "Low")}</span>
-              </span>
-              <span className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 text-slate-200">
-                Backup: <span className="font-semibold">{context?.opportunities?.backup ? "High" : "Possible"}</span>
-              </span>
-              <span className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 text-slate-200">
-                Smoothing: <span className="font-semibold">{context?.opportunities?.smoothing ? "High" : "Possible"}</span>
-              </span>
+            <div className="mt-1 space-y-2">
+              {/* Arbitrage with reasoning */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-slate-300">Energy Arbitrage</span>
+                  <span className="text-[11px] font-semibold text-amber-300">
+                    {arbitrage || (hasTOU ? "Medium" : "Low")}
+                  </span>
+                </div>
+                {hasTOU && (
+                  <div className="text-[10px] text-slate-400 mt-0.5">
+                    TOU pricing detected — storage can shift off-peak energy to peak hours
+                  </div>
+                )}
+              </div>
 
-              {demand != null && (
-                <span className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 text-slate-200">
-                  Demand: <span className="font-semibold">{fmtMoney(demand)}/kW</span>
-                </span>
-              )}
+              {/* Backup with reasoning */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-slate-300">Backup Power</span>
+                  <span className="text-[11px] font-semibold text-emerald-300">
+                    {context?.opportunities?.backup ? "High" : "Possible"}
+                  </span>
+                </div>
+                {context?.opportunities?.backup && (
+                  <div className="text-[10px] text-slate-400 mt-0.5">
+                    Critical operations benefit from resilient backup systems
+                  </div>
+                )}
+              </div>
 
-              {solarRating && (
-                <span className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 text-slate-200">
-                  Solar: <span className="font-semibold">{solarRating}</span>
-                </span>
+              {/* Peak shaving with reasoning */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-slate-300">Peak Shaving</span>
+                  <span className="text-[11px] font-semibold text-blue-300">
+                    {context?.opportunities?.smoothing ? "High" : "Possible"}
+                  </span>
+                </div>
+                {demand != null && demand > 15 && (
+                  <div className="text-[10px] text-slate-400 mt-0.5">
+                    High demand charges (${demand.toFixed(0)}/kW) — battery can reduce peaks
+                  </div>
+                )}
+              </div>
+
+              {/* Solar rating with reasoning */}
+              {solarRating && sun != null && (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-slate-300">Solar Potential</span>
+                    <span className={`text-[11px] font-semibold ${
+                      sun > 5.5 ? 'text-yellow-300' : sun > 4.5 ? 'text-amber-300' : 'text-orange-300'
+                    }`}>
+                      {solarRating}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">
+                    {sun.toFixed(1)} sun hrs/day — {sun > 5 ? 'excellent' : 'good'} conditions for PV + storage pairing
+                  </div>
+                </div>
               )}
             </div>
           </div>
