@@ -108,17 +108,29 @@ export function AdvisorRail({
   // Compute PV-to-storage ratio for curtailment analysis
   const pvRatio = pvToStorageBalanceRatio({ solarKW, inverterKW, batteryHours });
 
+  // Hysteresis thresholds: prevents instant warning disappearance
+  const CURTAIL_ON = 1.55; // Turn ON warning
+  const CURTAIL_OFF = 1.45; // Turn OFF warning (requires meaningful improvement)
+
+  // Track previous curtailment state for hysteresis
+  const prevCurtailRef = useRef(false);
+
+  // Hysteresis logic: once ON, stay ON until ratio drops below CURTAIL_OFF
+  const nextCurtail = prevCurtailRef.current
+    ? pvRatio != null && pvRatio >= CURTAIL_OFF
+    : pvRatio != null && pvRatio >= CURTAIL_ON;
+
+  prevCurtailRef.current = nextCurtail;
+
   // Shared predicate: prevents drift between constraint message and driver line
   // Step gating: only show after config is set (Step 4+)
-  // Hysteresis: use 1.55 threshold (not 1.5) to prevent edge flicker
   const canShowCurtailment = currentStep >= 4;
   const isCurtailmentRisk =
     canShowCurtailment &&
     (solarKW ?? 0) >= 50 &&
     batteryHours != null &&
     batteryHours < 2 &&
-    pvRatio != null &&
-    pvRatio > 1.55;
+    nextCurtail;
 
   // ============================================================================
   // MERLIN'S INSIGHT - Phase 2: Anticipation (Step 1-2 only)
@@ -202,6 +214,14 @@ export function AdvisorRail({
       const inv = inverterKW != null ? Math.round(inverterKW) : "--";
       const h = batteryHours != null ? Number(batteryHours.toFixed(1)) : "--";
       const r = pvRatio != null ? Number(pvRatio.toFixed(2)) : "--";
+
+      // DEV: Add threshold context for debugging
+      if (isDev && pvRatio != null) {
+        const threshold = prevCurtailRef.current ? `>=${CURTAIL_OFF}` : `>=${CURTAIL_ON}`;
+        const gateStatus = canShowCurtailment ? "✓" : "✗";
+        return `Solar: ${s} kW • Inverter: ${inv} kW • Duration: ${h} h • Ratio: ${r} (${threshold}) • StepGate: ${gateStatus}`;
+      }
+
       return `Solar: ${s} kW • Inverter: ${inv} kW • Duration: ${h} h • Ratio: ${r}`;
     }
     if (backupRequired && inverterKW != null && peakLoadKW != null && inverterKW < peakLoadKW) {
