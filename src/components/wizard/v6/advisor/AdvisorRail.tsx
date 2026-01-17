@@ -31,6 +31,16 @@ interface AdvisorRailProps {
     solar?: { sunHours?: number; rating?: string };
     weather?: { profile?: string; extremes?: string };
     opportunities?: { arbitrage?: string; backup?: boolean; smoothing?: boolean };
+
+    // Phase 5: Step 3-4 config data for trade-off warnings
+    config?: {
+      solarKW?: number;
+      batteryKWh?: number;
+      batteryHours?: number;
+      inverterKW?: number;
+      peakLoadKW?: number;
+      backupRequired?: boolean;
+    };
   };
 
   onNavigate?: (step: number) => void;
@@ -56,7 +66,6 @@ export function AdvisorRail({
   const canClick = (stepNum: number) => stepNum <= currentStep;
 
   const zip = context?.location?.zip || "";
-  const city = context?.location?.city || "";
   const st = context?.location?.state || "";
   const utilityName = context?.location?.utilityName || "";
 
@@ -72,11 +81,18 @@ export function AdvisorRail({
 
   const arbitrage = context?.opportunities?.arbitrage;
 
+  // Phase 5: Config data for trade-off warnings (Step 3-4)
+  const solarKW = context?.config?.solarKW;
+  const batteryHours = context?.config?.batteryHours;
+  const inverterKW = context?.config?.inverterKW;
+  const peakLoadKW = context?.config?.peakLoadKW;
+  const backupRequired = context?.config?.backupRequired;
+
   // ============================================================================
-  // MERLIN'S INSIGHT - Phase 2: Anticipation
-  // Rules: Max 1 per step, exactly 1 sentence, purely directional
+  // MERLIN'S INSIGHT - Phase 2: Anticipation + Phase 5: Trade-off Warnings
+  // Rules: Max 1 per step, exactly 1 sentence (warnings: max 2), purely directional
   // ============================================================================
-  
+
   const getMerlinInsight = (): string | null => {
     // Step 1-2: Prime mental model (after location data available)
     if (currentStep <= 2 && rate != null && demand != null) {
@@ -94,9 +110,24 @@ export function AdvisorRail({
       }
     }
 
-    // Step 3-4: Highlight trade-offs (future - when we have solar/battery selections)
-    // Placeholder for when we wire solar/battery config data to context
-    
+    // Step 3-4: Trade-off warnings (when user selects configs)
+    if (currentStep >= 3) {
+      // Warning: High solar + short storage = curtailment risk
+      if (solarKW != null && batteryHours != null && solarKW > 500 && batteryHours < 2) {
+        return "If solar capacity is high and storage duration is short, excess production will be curtailed. Therefore increase storage duration before oversizing PV.";
+      }
+
+      // Warning: Backup required + undersized inverter = load support risk
+      if (backupRequired && inverterKW != null && peakLoadKW != null && inverterKW < peakLoadKW) {
+        return "If backup is required but inverter power is undersized, critical loads may not be supported. Therefore prioritize kW before adding energy capacity.";
+      }
+
+      // Warning: High cycling (24/7 operations) + short duration
+      if (batteryHours != null && batteryHours < 4 && demand != null && demand > 20) {
+        return "If battery cycling is frequent and duration is short, replacement costs will accelerate. Therefore model at least 4-hour systems for daily arbitrage.";
+      }
+    }
+
     return null;
   };
 
@@ -136,7 +167,9 @@ export function AdvisorRail({
             <div className="text-base font-semibold text-white leading-snug">
               {payload?.headline || "Answer a few questions to get your TrueQuote™"}
             </div>
-            {payload?.subline && <div className="mt-1 text-xs text-slate-200/80">{payload.subline}</div>}
+            {payload?.subline && (
+              <div className="mt-1 text-xs text-slate-200/80">{payload.subline}</div>
+            )}
           </div>
         </div>
 
@@ -157,12 +190,16 @@ export function AdvisorRail({
 
             <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
               <div className="text-[10px] text-slate-300/70">UTILITY RATE</div>
-              <div className="text-sm font-semibold text-white">{rate != null ? `${fmtMoney(rate)}/kWh` : "--"}</div>
+              <div className="text-sm font-semibold text-white">
+                {rate != null ? `${fmtMoney(rate)}/kWh` : "--"}
+              </div>
             </div>
 
             <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
               <div className="text-[10px] text-slate-300/70">PEAK SUN</div>
-              <div className="text-sm font-semibold text-white">{sun != null ? `${sun.toFixed(1)} hrs/day` : "--"}</div>
+              <div className="text-sm font-semibold text-white">
+                {sun != null ? `${sun.toFixed(1)} hrs/day` : "--"}
+              </div>
             </div>
           </div>
 
@@ -170,9 +207,21 @@ export function AdvisorRail({
             <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
               <div className="text-[10px] text-slate-300/70">PROFILE</div>
               <div className="mt-1 space-y-1 text-xs text-slate-200/80">
-                {utilityName && <div>Utility: <span className="text-white font-semibold">{utilityName}</span></div>}
-                {weatherProfile && <div>Weather: <span className="text-white font-semibold">{weatherProfile}</span></div>}
-                {weatherExtremes && <div>Extremes: <span className="text-white font-semibold">{weatherExtremes}</span></div>}
+                {utilityName && (
+                  <div>
+                    Utility: <span className="text-white font-semibold">{utilityName}</span>
+                  </div>
+                )}
+                {weatherProfile && (
+                  <div>
+                    Weather: <span className="text-white font-semibold">{weatherProfile}</span>
+                  </div>
+                )}
+                {weatherExtremes && (
+                  <div>
+                    Extremes: <span className="text-white font-semibold">{weatherExtremes}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -230,14 +279,21 @@ export function AdvisorRail({
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] text-slate-300">Solar Potential</span>
-                    <span className={`text-[11px] font-semibold ${
-                      sun > 5.5 ? 'text-yellow-300' : sun > 4.5 ? 'text-amber-300' : 'text-orange-300'
-                    }`}>
+                    <span
+                      className={`text-[11px] font-semibold ${
+                        sun > 5.5
+                          ? "text-yellow-300"
+                          : sun > 4.5
+                            ? "text-amber-300"
+                            : "text-orange-300"
+                      }`}
+                    >
                       {solarRating}
                     </span>
                   </div>
                   <div className="text-[10px] text-slate-400 mt-0.5">
-                    {sun.toFixed(1)} sun hrs/day — {sun > 5 ? 'excellent' : 'good'} conditions for PV + storage pairing
+                    {sun.toFixed(1)} sun hrs/day — {sun > 5 ? "excellent" : "good"} conditions for
+                    PV + storage pairing
                   </div>
                 </div>
               )}
@@ -255,9 +311,7 @@ export function AdvisorRail({
                   <div className="text-[11px] font-semibold text-amber-300 mb-1">
                     Merlin's Insight
                   </div>
-                  <div className="text-xs text-slate-200 leading-relaxed">
-                    {insight}
-                  </div>
+                  <div className="text-xs text-slate-200 leading-relaxed">{insight}</div>
                 </div>
               </div>
             </div>
@@ -295,8 +349,8 @@ export function AdvisorRail({
                       isActive
                         ? "bg-amber-400/15 border-2 border-amber-400/80"
                         : isDone
-                        ? "bg-emerald-400/10 border border-emerald-400/70"
-                        : "bg-white/5 border border-white/10"
+                          ? "bg-emerald-400/10 border border-emerald-400/70"
+                          : "bg-white/5 border border-white/10"
                     }`}
                   >
                     {isDone ? "✓" : stepNum}
@@ -326,21 +380,26 @@ export function AdvisorRail({
 
             {payload?.mode === "estimate" && payload.disclaimer && (
               <div className="mt-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-                <div className="text-[11px] font-semibold text-amber-200 mb-1">Estimate disclaimer</div>
-                <div className="text-xs text-slate-200/80 whitespace-pre-line">{payload.disclaimer}</div>
+                <div className="text-[11px] font-semibold text-amber-200 mb-1">
+                  Estimate disclaimer
+                </div>
+                <div className="text-xs text-slate-200/80 whitespace-pre-line">
+                  {payload.disclaimer}
+                </div>
               </div>
             )}
 
-            {warnings.length > 0 && (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && (
-              <div className="mt-2 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
-                <div className="text-[11px] font-semibold text-red-200 mb-1">Dev warnings</div>
-                <ul className="text-xs text-slate-200/80 list-disc ml-4 space-y-1">
-                  {warnings.map((w, i) => (
-                    <li key={i}>{w}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {warnings.length > 0 &&
+              (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && (
+                <div className="mt-2 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+                  <div className="text-[11px] font-semibold text-red-200 mb-1">Dev warnings</div>
+                  <ul className="text-xs text-slate-200/80 list-disc ml-4 space-y-1">
+                    {warnings.map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
           </div>
         </div>
       </div>
