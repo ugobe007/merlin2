@@ -443,13 +443,7 @@ body [class*="WizardBottomNav"]:not([data-wizard-v5-nav]) {
 }
 
 /* Merlin Step 1: slate-blue base with subtle vignette */
-.merlin-keylight {
-  background: #0b1626;
-  /* optional: subtle vignette */
-  background-image:
-    radial-gradient(1200px 700px at 50% -10%, rgba(120, 119, 198, 0.18), transparent 55%),
-    radial-gradient(900px 500px at 110% 20%, rgba(56, 189, 248, 0.08), transparent 60%);
-}
+.merlin-keylight{background:transparent !important;}
 
 /* Merlin breathing status indicator */
 @keyframes merlin-breathe {

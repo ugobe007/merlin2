@@ -23,11 +23,12 @@ function ModeBadge({ mode }: { mode: "estimate" | "verified" }) {
 interface AdvisorRailProps {
   currentStep?: number;
   totalSteps?: number;
+  onNavigate?: (step: number) => void;
 }
 
 const STEP_LABELS = ["Location", "Industry", "Details", "Options", "TrueQuote", "Results"];
 
-export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProps) {
+export function AdvisorRail({ currentStep = 1, totalSteps = 6, onNavigate }: AdvisorRailProps) {
   const { getCurrent, getWarnings } = useAdvisorPublisher();
   const payload = getCurrent();
   const warnings = getWarnings();
@@ -86,9 +87,12 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
               const isDone = stepNum < currentStep;
 
               return (
-                <div
+                <button
+                  type="button"
                   key={stepNum}
-                  className={`flex items-center gap-2 text-xs transition-all rounded-lg px-2 py-1.5 hover:bg-white/5 ${
+                  onClick={() => onNavigate?.(stepNum)}
+                  disabled={stepNum > currentStep}
+                  className={`flex items-center gap-2 text-xs transition-all text-left w-full rounded-lg px-2 py-1.5 hover:bg-white/5 ${stepNum > currentStep ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${
                     isActive ? "text-amber-400" : isDone ? "text-emerald-400" : "text-slate-500"
                   }`}
                 >
@@ -111,7 +115,7 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
                       Current
                     </div>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
