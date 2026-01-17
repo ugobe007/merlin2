@@ -1,9 +1,48 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { ArrowLeft, ArrowRight, Home, Sparkles, RotateCcw, X } from "lucide-react";
+import { RotateCcw, X } from "lucide-react";
 
 import type { WizardState } from "./types";
-import { INITIAL_WIZARD_STATE, WIZARD_STEPS, POWER_LEVELS } from "./types";
+import { INITIAL_WIZARD_STATE, POWER_LEVELS } from "./types";
 import { bufferService } from "@/services/bufferService";
+import { buildStep3Snapshot } from "./step3/buildStep3Snapshot";
+import { recalcWizardCalculated } from "./step3/recalcWizardCalculated";
+
+// MerlinAdvisor Rail System (Phase 1 - Jan 16, 2026)
+import { AdvisorPublisher } from "./advisor/AdvisorPublisher";
+import { AdvisorRail } from "./advisor/AdvisorRail";
+
+// ============================================================================
+// DEEP MERGE HELPER - Prevents nested state corruption
+// ============================================================================
+
+function isPlainObject(v: unknown): v is Record<string, any> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function deepMerge<T>(base: T, patch: Partial<T>): T {
+  const out: any = Array.isArray(base) ? [...(base as any)] : { ...(base as any) };
+
+  for (const [k, v] of Object.entries(patch as any)) {
+    const prev = (base as any)[k];
+
+    // arrays: replace (don't merge)
+    if (Array.isArray(v)) {
+      out[k] = v;
+      continue;
+    }
+
+    // objects: recurse
+    if (isPlainObject(v) && isPlainObject(prev)) {
+      out[k] = deepMerge(prev, v);
+      continue;
+    }
+
+    // primitives / null / undefined: assign
+    out[k] = v;
+  }
+
+  return out as T;
+}
 import RequestQuoteModal from "@/components/modals/RequestQuoteModal";
 
 import { Step1Location } from "./steps/Step1Location";
@@ -14,6 +53,12 @@ import { Step4Options } from "./steps/Step4Options";
 import { Step5MagicFit } from "./steps/Step5MagicFit";
 import { Step6Quote } from "./steps/Step6Quote";
 import { MerlinBar } from "./MerlinBar";
+
+// Enhanced components (Jan 15, 2026)
+import { EnhancedLocationStep } from "../steps/EnhancedLocationStep.v2";
+import { EnhancedStep2Industry } from "./steps/EnhancedStep2Industry";
+import { WizardBottomAdvisor } from "../shared/WizardBottomAdvisor";
+import { generateDiscoveryClues } from "@/utils/discoveryClues";
 
 // ============================================================================
 // START OVER CONFIRMATION MODAL
@@ -122,16 +167,25 @@ export default function WizardV6() {
       return 1;
     }
 
-    // Calculate step from state
+    // ✅ FIXED: Calculate step from state safely (Jan 16, 2026)
     const saved = bufferService.load();
     if (saved) {
-      // Calculate step based on state progression
+      // Basic progression rules (safer than "has some keys")
+      const hasStep1 = saved.zipCode?.length === 5 && saved.state;
+      const hasStep2 = !!saved.industry;
+      const hasStep3 = saved.useCaseData && Object.keys(saved.useCaseData).length > 0;
+      const hasStep4 = Array.isArray(saved.selectedOptions) && saved.selectedOptions.length > 0;
+      const hasStep5 = !!saved.calculations;
+      const hasStep6 = !!saved.calculations && !!saved.selectedPowerLevel;
+
       let step = 1;
-      if (saved.industry) step = 2;
-      if (saved.useCaseData && Object.keys(saved.useCaseData).length > 0) step = 3;
-      if (saved.selectedOptions && saved.selectedOptions.length > 0) step = 4;
-      if (saved.calculations) step = 5;
-      if (saved.calculations && saved.selectedPowerLevel) step = 6;
+      if (hasStep1) step = 2;
+      if (hasStep2) step = 3;
+      if (hasStep3) step = 4;
+      if (hasStep4) step = 5;
+      if (hasStep5) step = 6;
+      if (!hasStep6) step = Math.min(step, 5);
+
       const calculatedStep = Math.max(1, Math.min(step, 6));
       console.log("📊 Restored wizard state - starting at Step", calculatedStep);
       return calculatedStep;
@@ -143,6 +197,37 @@ export default function WizardV6() {
 
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showStartOverModal, setShowStartOverModal] = useState(false);
+  
+  // Step validity tracking (Jan 16, 2026 - Step 3→4→5 fix)
+  const [step3Valid, setStep3Valid] = useState(false);
+  const [step4Valid, setStep4Valid] = useState(false);
+  
+  // Bottom panel state (Jan 15, 2026)
+  const [useEnhancedUI, setUseEnhancedUI] = useState(true); // Toggle for testing
+
+  // ✅ RESTORE FIX: Validate snapshot before allowing Step 4+ restore (Jan 16, 2026)
+  useEffect(() => {
+    if (currentStep >= 4) {
+      const snap = buildStep3Snapshot(state);
+      const step3IsValid = snap.missing.length === 0 || snap.confidencePct >= 70;
+      
+      if (!step3IsValid) {
+        console.warn('⚠️ Restore teleport blocked: Step 3 invalid, forcing back');
+        setCurrentStep(3);
+      }
+    }
+  }, [currentStep, state]); // ✅ FIXED: Re-run on step change
+  
+  // ✅ FIX #2: Auto-validate Step 4 once loaded (Jan 16, 2026)
+  // IMPORTANT: Step 4 is OPT-IN for add-ons (solar/EV/generator).
+  // It's always considered valid because no selections are required.
+  // User selections flow to Step 5 via safeState and are included in quotes.
+  // DO NOT add validation here unless product requirements change.
+  useEffect(() => {
+    if (currentStep === 4) {
+      setStep4Valid(true); // Step 4 is always valid once loaded
+    }
+  }, [currentStep]);
 
   // Auto-save state to bufferService whenever it changes (debounced)
   useEffect(() => {
@@ -152,7 +237,7 @@ export default function WizardV6() {
   // Save state immediately on step change (no debounce)
   useEffect(() => {
     bufferService.save(state);
-  }, [currentStep, state]);
+  }, [currentStep]); // ✅ Only on step transitions, not every state change
 
   // Save on page unload (immediate, no debounce)
   useEffect(() => {
@@ -163,12 +248,12 @@ export default function WizardV6() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [state]);
 
-  // FIXED: Use functional updates to prevent race conditions with nested objects
+  // FIXED: Use deep merge to prevent nested state corruption (Jan 16, 2026)
   const updateState = useCallback(
     (updates: Partial<WizardState> | ((prev: WizardState) => Partial<WizardState>)) => {
       setState((prev) => {
-        const updatesObj = typeof updates === "function" ? updates(prev) : updates;
-        return { ...prev, ...updatesObj };
+        const patch = typeof updates === "function" ? updates(prev) : updates;
+        return deepMerge(prev, patch);
       });
     },
     []
@@ -196,6 +281,13 @@ export default function WizardV6() {
       return Math.max(back, 1);
     });
   const goToStep = (step: number) => setCurrentStep(step);
+
+  // Build Step 3 snapshot (Jan 16, 2026 - Step 3→4→5 fix)
+  // Steps 4 & 5 read from this snapshot, NOT raw state
+  const step3Snapshot = useMemo(() => buildStep3Snapshot(state), [state]);
+
+  // ✅ DEBUG PANEL: Toggle with ?debug=1 (Jan 16, 2026)
+  const showDebug = new URLSearchParams(window.location.search).get('debug') === '1';
 
   // Calculate values for MerlinBar (unified command center)
   const merlinBarProps = useMemo(() => {
@@ -274,9 +366,11 @@ export default function WizardV6() {
         // Industry must be selected AND business size tier must be set
         return state.industry !== "" && state.businessSizeTier !== undefined;
       case 3:
-        return true; // Database-driven questions handle their own validation
+        // ✅ FIXED: Real Step 3 gating (Jan 16, 2026)
+        return step3Valid;
       case 4:
-        return true; // Step4Options handles its own validation with forced decisions
+        // ✅ FIXED: Real Step 4 gating (Jan 16, 2026)
+        return step4Valid;
       case 5:
         return state.selectedPowerLevel !== null && state.calculations !== null;
       case 6:
@@ -289,6 +383,48 @@ export default function WizardV6() {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
+        // Use enhanced location step if testing new UI
+        if (useEnhancedUI) {
+          return (
+            <EnhancedLocationStep
+              onNext={(data) => {
+                updateState({
+                  businessName: data.businessName,
+                  businessAddress: data.address,
+                  city: data.city,
+                  state: data.state,
+                  zipCode: data.zipCode,
+                  electricityRate: data.utilityRate,
+                  solarData: {
+                    sunHours: data.sunHours,
+                    rating: data.sunHours > 5.5 ? 'Excellent' : data.sunHours > 4.5 ? 'Good' : 'Fair'
+                  },
+                  goals: data.goals as any,
+                  detectedIndustry: data.detectedInfo?.industrySlug,
+                  industry: data.detectedInfo?.industrySlug || '',
+                  industryName: data.detectedInfo?.industrySlug || '',
+                });
+                // Auto-skip to Step 3 if business detected
+                if (data.detectedInfo?.industrySlug) {
+                  goToStep(3);
+                } else {
+                  goNext();
+                }
+              }}
+              onUtilityDataUpdate={(utilityData) => {
+                // Update MerlinBar immediately when zip entered
+                updateState({
+                  state: utilityData.state,
+                  electricityRate: utilityData.rate,
+                  solarData: {
+                    sunHours: utilityData.sunHours,
+                    rating: utilityData.sunHours > 5.5 ? 'Excellent' : utilityData.sunHours > 4.5 ? 'Good' : 'Fair'
+                  },
+                });
+              }}
+            />
+          );
+        }
         return (
           <Step1Location 
             state={state} 
@@ -298,13 +434,28 @@ export default function WizardV6() {
           />
         );
       case 2:
+        // Use enhanced industry step if testing new UI
+        if (useEnhancedUI) {
+          return <EnhancedStep2Industry state={state} updateState={updateState} onNext={() => goToStep(3)} />;
+        }
         return <Step2Industry state={state} updateState={updateState} onNext={() => goToStep(3)} />;
       case 3:
-        return <Step3Details state={state} updateState={updateState} onNext={() => goToStep(4)} />;
+        return (
+          <Step3Details 
+            state={state} 
+            updateState={updateState} 
+            onNext={() => {
+              // Hard gate here too (belt + suspenders)
+              if (!step3Valid) return;
+              goToStep(4);
+            }}
+            onValidityChange={setStep3Valid}
+          />
+        );
       case 4:
-        return <Step4Options state={state} updateState={updateState} />;
+        return <Step4Options state={state} updateState={updateState} step3Snapshot={step3Snapshot} />;
       case 5:
-        return <Step5MagicFit state={state} updateState={updateState} goToStep={goToStep} />;
+        return <Step5MagicFit state={state} updateState={updateState} goToStep={goToStep} step3Snapshot={step3Snapshot} />;
       case 6:
         return <Step6Quote state={state} />;
       default:
@@ -313,158 +464,98 @@ export default function WizardV6() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* ═══════════════════════════════════════════════════════════════════════
-          HEADER - Fixed at top with z-index 100
-          ═══════════════════════════════════════════════════════════════════════ */}
-      <header
-        className="sticky top-0 bg-slate-900/95 backdrop-blur-md border-b border-purple-500/20"
-        style={{ zIndex: 100 }}
-      >
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          {/* Left: Logo + Start Over */}
-          <div className="flex items-center gap-4">
-            <a
-              href="/"
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
-            >
-              <Home className="w-5 h-5 text-purple-400" />
-              <span className="text-white font-semibold">Merlin</span>
-            </a>
-
-            {/* Start Over Button */}
-            <button
-              onClick={() => setShowStartOverModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Start Over</span>
-            </button>
-          </div>
-
-          {/* Right: Step indicator */}
-          <div className="text-purple-300 text-sm">Step {currentStep} of 6</div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="h-1 bg-slate-800">
-          <div
-            className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 transition-all duration-300"
-            style={{ width: `${(currentStep / 6) * 100}%` }}
-          />
-        </div>
-
-        {/* Step Navigation */}
-        <div className="max-w-6xl mx-auto px-4 py-2 flex justify-between text-xs">
-          {WIZARD_STEPS.map((step) => (
-            <button
-              key={step.number}
-              onClick={() => step.number < currentStep && goToStep(step.number)}
-              className={`transition-colors ${
-                step.number === currentStep
-                  ? "text-white font-semibold"
-                  : step.number < currentStep
-                    ? "text-purple-400 hover:text-purple-300 cursor-pointer"
-                    : "text-slate-500"
-              }`}
-            >
-              {step.name}
-            </button>
-          ))}
-        </div>
-      </header>
-
-      {/* ═══════════════════════════════════════════════════════════════════════
-          MERLIN BAR - Unified command center, FIXED at top below header
-          ═══════════════════════════════════════════════════════════════════════ */}
-      <div 
-        className="sticky z-40"
-        style={{ top: '105px' }} /* Below the header (~105px) */
-      >
-        <div className="max-w-6xl mx-auto">
+    <AdvisorPublisher currentStep={currentStep} options={{ clearOnStepChange: true, enableWarnings: true }}>
+      <div className="fixed inset-0 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        {/* MerlinBar at top */}
+        <div className="sticky top-0 z-40">
           <MerlinBar currentStep={currentStep} {...merlinBarProps} />
         </div>
-      </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          MAIN CONTENT - Scrollable area with padding for fixed footer
-          ═══════════════════════════════════════════════════════════════════════ */}
-      <main className="max-w-6xl mx-auto px-4 py-8" style={{ paddingBottom: "120px" }}>
-        {renderStep()}
-      </main>
+        {/* TWO-COLUMN GRID LAYOUT (Vineet's spec) */}
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="grid grid-cols-12 gap-6">
+            {/* LEFT RAIL: MerlinAdvisor (col-span-4 on lg+) */}
+            <div className="col-span-12 lg:col-span-4">
+              <AdvisorRail />
+            </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          FOOTER - Fixed at bottom with HIGH z-index
-          ═══════════════════════════════════════════════════════════════════════ */}
-      <footer
-        className="fixed bottom-0 left-0 right-0 bg-slate-900/98 backdrop-blur-md border-t border-purple-500/30"
-        style={{ zIndex: 9999 }}
-      >
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          {/* Back Button */}
-          <button
-            onClick={goBack}
-            disabled={currentStep === 1}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${
-              currentStep === 1
-                ? "bg-slate-800 text-slate-500 cursor-not-allowed"
-                : "bg-slate-700 text-white hover:bg-slate-600"
-            }`}
-          >
-            <ArrowLeft className="w-5 h-5" /> Back
-          </button>
+            {/* MAIN STAGE: Step content (col-span-8 on lg+) */}
+            <div className="col-span-12 lg:col-span-8">
+              <div style={{ paddingBottom: useEnhancedUI ? "260px" : "80px" }}>
+                {renderStep()}
+              </div>
 
-          {/* Step Indicator */}
-          <div className="text-slate-400 text-sm">Step {currentStep} of 6</div>
+              {/* Bottom Advisor Panel (if enhanced UI enabled) */}
+              {useEnhancedUI && ((() => {
+                const discoveryClues = generateDiscoveryClues({
+                  state: state.state,
+                  electricityRate: state.electricityRate,
+                  sunHours: state.solarData?.sunHours,
+                  goals: state.goals,
+                  industry: state.industry,
+                  hasSolar: state.selectedOptions?.includes('solar'),
+                  hasGenerator: state.selectedOptions?.includes('generator'),
+                  hasEv: state.selectedOptions?.includes('ev'),
+                  solarKw: state.calculations?.selected?.solarKW || 0,
+                  bessKwh: state.calculations?.selected?.bessKWh || 0,
+                  currentStep,
+                });
 
-          {/* Continue / Get Quote Button */}
-          {currentStep < 6 ? (
-            <button
-              onClick={goNext}
-              disabled={!canProceed()}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${
-                canProceed()
-                  ? "bg-gradient-to-r from-purple-600 to-cyan-600 text-white hover:from-purple-500 hover:to-cyan-500 shadow-lg shadow-purple-500/25"
-                  : "bg-slate-700 text-slate-400 cursor-not-allowed"
-              }`}
-            >
-              Continue <ArrowRight className="w-5 h-5" />
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowRequestModal(true)}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium bg-gradient-to-r from-emerald-600 to-cyan-600 text-white hover:from-emerald-500 hover:to-cyan-500 shadow-lg shadow-emerald-500/25 transition-all"
-            >
-              <Sparkles className="w-5 h-5" /> Get Official Quote
-            </button>
-          )}
+                return (
+                  <WizardBottomAdvisor
+                    currentStep={currentStep}
+                    totalSteps={6}
+                    wizardState={state}
+                    estimate={{
+                      low: 100000,
+                      high: 500000,
+                      confidence: currentStep === 1 ? 35 : currentStep === 2 ? 50 : currentStep === 3 ? 65 : 80,
+                    }}
+                    solarPotential={{
+                      systemSize: 250,
+                      coverage: 65,
+                    }}
+                    discoveryClues={discoveryClues}
+                    onExpand={() => console.log('Panel expanded')}
+                    onCollapse={() => console.log('Panel collapsed')}
+                    onBack={goBack}
+                    onContinue={goNext}
+                    onGetQuote={() => setShowRequestModal(true)}
+                    canProceed={canProceed()}
+                    quietMode={currentStep === 3}
+                    hideOnStep={currentStep === 1}
+                  />
+                );
+              })())}
+            </div>
+          </div>
         </div>
-      </footer>
 
-      {/* Start Over Confirmation Modal */}
-      <StartOverModal
-        isOpen={showStartOverModal}
-        onClose={() => setShowStartOverModal(false)}
-        onConfirm={handleStartOver}
-      />
-
-      {/* Request Quote Modal - only show when on step 6 */}
-      {currentStep === 6 && state.calculations && state.selectedPowerLevel && (
-        <RequestQuoteModal
-          isOpen={showRequestModal}
-          onClose={() => setShowRequestModal(false)}
-          quoteData={{
-            storageSizeMW: state.calculations.selected.bessKW / 1000,
-            durationHours:
-              POWER_LEVELS.find((l) => l.id === state.selectedPowerLevel)?.durationHours || 4,
-            energyCapacity: state.calculations.selected.bessKWh / 1000,
-            solarMW: state.calculations.selected.solarKW > 0 ? state.calculations.selected.solarKW / 1000 : 0,
-            totalCost: state.calculations.selected.totalInvestment,
-            industryName: state.industryName,
-            location: `${state.city || ""} ${state.state || ""}`.trim() || state.zipCode,
-          }}
+        {/* Start Over Confirmation Modal */}
+        <StartOverModal
+          isOpen={showStartOverModal}
+          onClose={() => setShowStartOverModal(false)}
+          onConfirm={handleStartOver}
         />
-      )}
-    </div>
+
+        {/* Request Quote Modal */}
+        {currentStep === 6 && state.calculations && state.selectedPowerLevel && (
+          <RequestQuoteModal
+            isOpen={showRequestModal}
+            onClose={() => setShowRequestModal(false)}
+            quoteData={{
+              storageSizeMW: state.calculations.selected.bessKW / 1000,
+              durationHours:
+                POWER_LEVELS.find((l) => l.id === state.selectedPowerLevel)?.durationHours || 4,
+              energyCapacity: state.calculations.selected.bessKWh / 1000,
+              solarMW: state.calculations.selected.solarKW > 0 ? state.calculations.selected.solarKW / 1000 : 0,
+              totalCost: state.calculations.selected.totalInvestment,
+              industryName: state.industryName,
+              location: `${state.city || ""} ${state.state || ""}`.trim() || state.zipCode,
+            }}
+          />
+        )}
+      </div>
+    </AdvisorPublisher>
   );
 }

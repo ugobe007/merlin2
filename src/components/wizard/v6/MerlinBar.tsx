@@ -574,8 +574,18 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
       setLastStep(currentStep);
       setUserDismissedThisStep(false); // Reset dismiss flag for new step
       
-      // Only auto-open if user hasn't dismissed AND we have suggestions
-      // Suggestions are always available per step, so open on step change
+      // ⚠️ DON'T auto-expand on Steps 2-5 - keep minimized so users can focus on inputs
+      // Step 2: Industry selection cards need to be clickable
+      // Step 3: Custom questions need focus
+      // Step 4: Goals/options selection needs attention
+      // Step 5: Configuration sliders need precision
+      if (currentStep >= 2 && currentStep <= 5) {
+        setHasPendingSuggestion(true); // Show pulse but stay closed
+        setIsExpanded(false); // Keep closed
+        return;
+      }
+      
+      // Only auto-open on Steps 1 and 6+ (where user needs guidance)
       setHasPendingSuggestion(true);
       setIsExpanded(true); // Auto-open on new step
       
@@ -617,7 +627,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
 
   return (
     <div 
-      className="relative z-50"
+      className="relative z-30"
       style={{
         background: 'linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,41,59,0.95))',
         backdropFilter: 'blur(16px)',
