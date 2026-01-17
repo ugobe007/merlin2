@@ -250,7 +250,7 @@ export function AdvisorRail({
   const insight = getMerlinInsight();
 
   return (
-    <aside className="w-full sticky top-4">
+    <aside className="w-full sticky top-0">
       <div
         className="relative rounded-2xl overflow-hidden flex flex-col max-h-[calc(100vh-140px)]
         border border-white/12 bg-slate-900/35 backdrop-blur-2xl
