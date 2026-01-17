@@ -265,7 +265,7 @@ export default function WizardV6() {
       return Math.min(next, 6);
     });
 
-  const _goBack = () =>
+  const goBack = () =>
     setCurrentStep((prev) => {
       const back = prev - 1;
       // When going back from Step 3, skip Step 2 if industry was auto-detected
@@ -421,9 +421,9 @@ export default function WizardV6() {
         return <EnhancedStep2Industry state={state} updateState={updateState} onNext={() => goToStep(3)} />;
       case 3:
         return (
-          <Step3Details 
-            state={state} 
+          <Step3Details state={state} 
             updateState={updateState} 
+            onBack={goBack}
             onNext={() => {
               // Hard gate here too (belt + suspenders)
               if (!step3Valid) return;
@@ -445,14 +445,14 @@ export default function WizardV6() {
 
   return (
     <AdvisorPublisher currentStep={currentStep} options={{ clearOnStepChange: true, enableWarnings: true }}>
-        <div className="fixed inset-0 overflow-y-auto merlin-keylight">
+        <div className="fixed inset-0 overflow-y-auto bg-[#0b1626]">
 
           {/* TWO-COLUMN GRID LAYOUT (Vineet's spec) */}
           <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="grid grid-cols-12 gap-6">
+            <div className="grid grid-cols-12 gap-6 items-start">
               {/* LEFT RAIL: MerlinAdvisor with step progress (col-span-4 on lg+) */}
               <div className="col-span-12 lg:col-span-4">
-                <AdvisorRail currentStep={currentStep} totalSteps={6} />
+                <AdvisorRail currentStep={currentStep} totalSteps={6} onNavigate={goToStep} />
                 </div>
 
                 {/* MAIN STAGE: Step content (col-span-8 on lg+) */}
