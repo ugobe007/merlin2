@@ -40,16 +40,16 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
   const warnings = getWarnings();
 
   return (
-    <aside className="w-full h-[calc(100vh-120px)] sticky top-6">
-      <div className="h-full rounded-2xl border border-slate-700/50 bg-slate-900 overflow-hidden flex flex-col">
+    <aside className="w-full h-[calc(100vh-48px)] sticky top-6">
+      <div className="h-full relative rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-white/2 backdrop-blur-md before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/35 before:to-transparent overflow-hidden flex flex-col">
         {/* MERLIN IDENTITY HEADER */}
-        <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
+        <div className="px-5 py-4 border-b border-white/10 flex-shrink-0">
           <div className="flex items-center gap-3 mb-4">
             <div className="relative">
               <img
                 src={avatarImg}
                 alt="Merlin"
-                className="w-14 h-14 rounded-full border-2 border-amber-400/60 shadow-[0_0_20px_rgba(251,191,36,0.25)]"
+                className="w-14 h-14 rounded-full border-2 border-amber-400/60 shadow-[0_0_28px_rgba(251,191,36,0.22)]"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove('hidden');
@@ -62,7 +62,7 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
               <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-900 merlin-breathe shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
             </div>
             <div className="flex-1">
-              <div className="text-amber-400 font-bold text-lg tracking-tight">Merlin</div>
+              <div className="text-amber-300 font-semibold text-lg tracking-tight">Merlin</div>
               <div className="text-slate-400 text-xs font-medium">AI Energy Advisor</div>
             </div>
             {payload?.mode && <ModeBadge mode={payload.mode} />}
@@ -77,9 +77,9 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
         </div>
 
         {/* STEP PROGRESS */}
-        <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
+        <div className="px-5 py-4 border-b border-white/10 flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
-            <div className="text-xs font-semibold text-slate-400">PROGRESS</div>
+            <div className="text-xs font-semibold text-slate-300 tracking-wide">PROGRESS</div>
             <div className="text-xs text-slate-500">
               Step {currentStep} of {totalSteps}
             </div>
@@ -93,12 +93,12 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
               return (
                 <div
                   key={stepNum}
-                  className={`flex items-center gap-2 text-xs transition-all ${
+                  className={`flex items-center gap-2 text-xs transition-all rounded-lg px-2 py-1.5 hover:bg-white/5 ${
                     isActive
                       ? "text-amber-400"
                       : isDone
                       ? "text-emerald-400"
-                      : "text-slate-600"
+                      : "text-slate-500"
                   }`}
                 >
                   <div
