@@ -664,7 +664,6 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-amber-400 font-semibold text-sm">Merlin</span>
-                <span className="text-slate-500 text-xs">AI Energy Advisor</span>
               </div>
               <p className="text-white text-sm truncate">{message.main}</p>
               

@@ -191,8 +191,11 @@ const detectOperatingHours = (
 ): BusinessDetectionResult["operatingHours"] => {
   if (!openingHours) return undefined;
 
+  // Cast to any to avoid type checking issues with Google Places API structure
+  const hoursData = openingHours as any;
+
   // Check if 24/7
-  const is24_7 = openingHours.periods?.length === 1 && !openingHours.periods[0].close;
+  const is24_7 = hoursData?.periods?.length === 1 && !hoursData.periods[0].close;
 
   if (is24_7) {
     return {

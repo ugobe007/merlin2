@@ -3,6 +3,7 @@
 import React from "react";
 import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
+import avatarImg from "@/assets/images/new_small_profile_.png";
 
 function ModeBadge({ mode }: { mode: "estimate" | "verified" }) {
   if (mode === "verified") {
@@ -28,8 +29,28 @@ export function AdvisorRail() {
     <aside className="w-full h-[calc(100vh-120px)] sticky top-6">
       <div className="h-full rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-700/50">
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-sm font-bold text-white">Merlin Advisor</div>
+          {/* Merlin Identity Header */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="relative">
+              <img
+                src={avatarImg}
+                alt="Merlin"
+                className="w-12 h-12 rounded-full border-2 border-amber-400/50 shadow-lg"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center border-2 border-amber-300">
+                <span className="text-2xl">🧙</span>
+              </div>
+              {/* Online indicator */}
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900" />
+            </div>
+            <div className="flex-1">
+              <div className="text-amber-400 font-bold text-base">Merlin</div>
+              <div className="text-slate-400 text-xs">AI Energy Advisor</div>
+            </div>
             {payload?.mode && <ModeBadge mode={payload.mode} />}
           </div>
 
