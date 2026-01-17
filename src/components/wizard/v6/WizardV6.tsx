@@ -503,6 +503,18 @@ export default function WizardV6() {
                     backup: state.goals?.includes("backup_power"),
                     smoothing: state.goals?.includes("peak_shaving"),
                   },
+                  // Phase 5: Config data for trade-off warnings (Steps 3-4)
+                  config: {
+                    solarKW: state.customSolarKw ?? state.calculations?.selected?.solarKW ?? 0,
+                    batteryKWh: state.calculations?.selected?.bessKWh ?? 0,
+                    batteryHours:
+                      state.calculations?.selected?.bessKWh && state.calculations?.selected?.bessKW
+                        ? state.calculations.selected.bessKWh / state.calculations.selected.bessKW
+                        : 0,
+                    inverterKW: state.calculations?.selected?.bessKW ?? 0, // PCS kW = battery discharge power
+                    peakLoadKW: state.calculations?.base?.peakDemandKW ?? 0,
+                    backupRequired: state.goals?.includes("backup_power") ?? false,
+                  },
                 }}
               />
             </div>
