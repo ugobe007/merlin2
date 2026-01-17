@@ -7,6 +7,8 @@
  */
 
 import type { WizardState } from "../types";
+import type { Step3Inputs } from "./step3Contract";
+import type { Step3Inputs } from "./step3Contract";
 
 /**
  * Calculate EV charger load from infrastructure
@@ -33,7 +35,7 @@ function _calculateEVChargerLoad(evChargers: unknown): number {
  */
 function estimateBaseBuildingLoad(state: WizardState): number {
   const industry = (state.industry || "").toLowerCase();
-  const inputs = (state.useCaseData?.inputs || {}) as unknown;
+  const inputs = (((state.useCaseData?.inputs || {}) as unknown) ?? {}) as Step3Inputs;
 
   // Hotel
   if (industry.includes("hotel")) {
@@ -92,7 +94,7 @@ export function recalcWizardCalculated(state: WizardState): WizardState["calcula
   );
 
   // Annual consumption estimate
-  const inputs = (state.useCaseData?.inputs || {}) as unknown;
+  const inputs = (((state.useCaseData?.inputs || {}) as unknown) ?? {}) as Step3Inputs;
   const operatingHours = inputs.operatingHours || 8760; // Default to full year
   const annualConsumptionKWh = Math.round(baseBuildingLoadKW * operatingHours * 0.7); // 70% capacity factor
 
