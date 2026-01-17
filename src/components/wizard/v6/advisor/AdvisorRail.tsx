@@ -251,9 +251,23 @@ export function AdvisorRail({
 
   return (
     <aside className="w-full sticky top-4">
-      <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden flex flex-col shadow-[0_12px_40px_rgba(0,0,0,0.35)] max-h-[calc(100vh-140px)]">
-        {/* Glass edge highlight overlay */}
-        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-b from-white/10 via-white/5 to-transparent" />
+      <div
+        className="relative rounded-2xl overflow-hidden flex flex-col max-h-[calc(100vh-140px)]
+        border border-white/12 bg-slate-900/35 backdrop-blur-2xl
+        shadow-[0_18px_60px_rgba(0,0,0,0.45)]
+        ring-1 ring-white/10"
+      >
+        {/* Ambient oracle glow (very subtle) */}
+        <div
+          className="pointer-events-none absolute -inset-12 opacity-60 blur-3xl
+          bg-[radial-gradient(circle_at_20%_10%,rgba(251,191,36,0.10),transparent_45%),radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.10),transparent_50%)]"
+        />
+
+        {/* Glass sheen (top-left to bottom-right) */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/14 via-white/6 to-transparent" />
+
+        {/* Crisp inner glass edge (the 'lip') */}
+        <div className="pointer-events-none absolute inset-0 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-1px_0_rgba(0,0,0,0.35)]" />
 
         {/* MERLIN IDENTITY HEADER */}
         <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
