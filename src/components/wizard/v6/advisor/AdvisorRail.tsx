@@ -109,12 +109,16 @@ export function AdvisorRail({
   const pvRatio = pvToStorageBalanceRatio({ solarKW, inverterKW, batteryHours });
 
   // Shared predicate: prevents drift between constraint message and driver line
+  // Step gating: only show after config is set (Step 4+)
+  // Hysteresis: use 1.55 threshold (not 1.5) to prevent edge flicker
+  const canShowCurtailment = currentStep >= 4;
   const isCurtailmentRisk =
+    canShowCurtailment &&
     (solarKW ?? 0) >= 50 &&
     batteryHours != null &&
     batteryHours < 2 &&
     pvRatio != null &&
-    pvRatio > 1.5;
+    pvRatio > 1.55;
 
   // ============================================================================
   // MERLIN'S INSIGHT - Phase 2: Anticipation (Step 1-2 only)
