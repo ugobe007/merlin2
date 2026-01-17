@@ -43,17 +43,28 @@ import {
 // Component imports
 import { SavingsPreviewPanel } from '../components/SavingsPreviewPanel';
 
+// ✅ NEW: Teaser Preview Service (Jan 16, 2026)
+import { 
+  calculateTeaserPreview, 
+  computeTeaserHash,
+  formatROISmart,
+  type TeaserInput 
+} from '@/services/teaserPreviewService';
+
+// ✅ NEW: Advisor Publisher Hook (Jan 16, 2026)
+import { useAdvisorPublisher } from '../advisor/AdvisorPublisher';
+
 // ============================================================================
-// ENERGY GOALS
+// ENERGY GOALS - Updated Jan 15, 2026
 // ============================================================================
 
 const ENERGY_GOALS: { id: EnergyGoal; label: string; description: string; emoji: string }[] = [
-  { id: 'reduce_costs', label: 'Cut Energy Costs', description: 'Reduce monthly electricity bills', emoji: '✂️' },
-  { id: 'backup_power', label: 'Backup Power', description: 'Stay powered during outages', emoji: '🔋' },
-  { id: 'sustainability', label: 'Sustainability', description: 'Reduce carbon footprint', emoji: '🌱' },
-  { id: 'grid_independence', label: 'Grid Independence', description: 'Less reliance on utilities', emoji: '🏠' },
-  { id: 'peak_shaving', label: 'Peak Shaving', description: 'Avoid peak rate charges', emoji: '⚡' },
-  { id: 'generate_revenue', label: 'Generate Revenue', description: 'Sell excess power back', emoji: '💵' },
+  { id: 'reduce_costs', label: 'Save Money', description: 'Lower monthly energy bills', emoji: '💰' },
+  { id: 'backup_power', label: 'Backup Power', description: 'Stay online during outages', emoji: '⚡' },
+  { id: 'grid_independence', label: 'Energy Resilience', description: 'Reduce grid dependence', emoji: '🛡️' },
+  { id: 'sustainability', label: 'Go Green', description: 'Reduce carbon footprint', emoji: '🌱' },
+  { id: 'peak_shaving', label: 'Balance Energy Loads', description: 'Avoid peak demand charges', emoji: '📊' },
+  { id: 'generate_revenue', label: 'Generate Revenue', description: 'Sell power back to grid', emoji: '💵' },
 ];
 
 const MIN_GOALS_REQUIRED = 2;
@@ -69,7 +80,10 @@ interface Props {
   onGoToStep2?: () => void;
 }
 
-export function Step1Location({ state, updateState, onNext, onGoToStep2 }: Props) {
+export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2 }: Props) {
+  // ✅ NEW: Access advisor publisher for teaser (Jan 16, 2026)
+  const { publish: publishToAdvisor } = useAdvisorPublisher();
+  
   const [region, setRegion] = useState<'us' | 'international'>('us');
   const [zipInput, setZipInput] = useState(state.zipCode || '');
   const [zipError, setZipError] = useState<string | null>(null);
@@ -138,6 +152,76 @@ export function Step1Location({ state, updateState, onNext, onGoToStep2 }: Props
           industry: result.industrySlug || '',
           industryName: result.industrySlug ? (INDUSTRY_NAMES[result.industrySlug] || result.businessType || '') : '',
         });
+        
+        // ✅ NEW: Generate teaser preview (Jan 16, 2026)
+        if (result.industrySlug && locationData) {
+          try {
+            const teaserInput: TeaserInput = {
+              zipCode: zipInput,
+              state: state.state,
+              city: state.city,
+              industrySlug: result.industrySlug,
+              businessSizeTier: state.businessSizeTier && state.businessSizeTier !== 'enterprise' 
+                ? state.businessSizeTier 
+                : 'medium', // Default to medium if undefined or enterprise
+              electricityRate: locationData.electricityRate,
+              demandCharge: 15, // Typical commercial demand charge
+              sunHours: locationData.sunHours,
+              goals: state.goals,
+            };
+            
+            // Check if inputs changed (prevents recompute churn)
+            const nextHash = computeTeaserHash(teaserInput);
+            const needsRecalculation = state.teaserPreview?.teaserHash !== nextHash;
+            
+            const teaser = needsRecalculation 
+              ? calculateTeaserPreview(teaserInput)
+              : state.teaserPreview!;
+            
+            // Save to state (only if recalculation occurred)
+            if (needsRecalculation) {
+              updateState({
+                teaserPreview: teaser,
+                teaserPreviewVersion: teaser.version,
+                teaserLastUpdatedAt: teaser.createdAt,
+                teaserIsEstimateOnly: true,
+              });
+            }
+            
+            // Publish to Advisor Rail
+            publishToAdvisor({
+              step: 1,
+              key: 'step-1-teaser',
+              mode: 'estimate',
+              headline: '🔮 Sneak Peek',
+              subline: 'Quick preview based on your location and industry',
+              cards: [
+                {
+                  id: 'solar-bess',
+                  type: 'discovery',
+                  title: '☀️ Save Money',
+                  body: `$${(teaser.solarBess.annualSavings / 1000).toFixed(0)}k/year\nTypical payback: ${formatROISmart(teaser.solarBess.roiYears, teaser.solarBess.roiCapped)}\n\n${teaser.solarBess.systemSize}`,
+                  badge: 'Estimate',
+                },
+                {
+                  id: 'generator-bess',
+                  type: 'discovery',
+                  title: '🔥 Resilience',
+                  body: `${Math.floor(teaser.generatorBess.resilienceHours)} hrs backup\n${teaser.generatorBess.roiCapped ? 'Cost recovery primarily from uptime value' : `Typical savings: $${(teaser.generatorBess.annualSavings / 1000).toFixed(0)}k/year`}\n\n${teaser.generatorBess.systemSize}`,
+                  badge: 'Estimate',
+                },
+              ],
+              disclaimer: teaser.disclaimer,
+              debug: {
+                source: 'Step1Location',
+                ts: new Date().toISOString(),
+              },
+            });
+          } catch (error) {
+            console.error('⚠️ Teaser preview calculation failed:', error);
+            // Don't block user experience if teaser fails
+          }
+        }
       }
     } catch (error) {
       console.error('Address lookup failed:', error);
@@ -167,6 +251,7 @@ export function Step1Location({ state, updateState, onNext, onGoToStep2 }: Props
 
   // Handle zip code changes with validation
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     if (region === 'us' && zipInput.length === 5) {
       const stateCode = getStateFromZip(zipInput);
       if (stateCode) {
