@@ -37,6 +37,14 @@ export interface WizardState {
   // Step 1: Savings Preview (ESTIMATES ONLY - not SSOT)
   savingsPreview?: SavingsPreviewEstimate;
 
+  // ✅ NEW: Step 1 Teaser Preview (Jan 16, 2026)
+  // Separate namespace from calculations (SSOT)
+  // Shows "Sneak Peek" estimates before facility details collected
+  teaserPreview?: TeaserPreview | null;
+  teaserPreviewVersion?: string;       // "teaser-v1"
+  teaserLastUpdatedAt?: string;        // ISO timestamp
+  teaserIsEstimateOnly?: boolean;      // Always true (reminder flag)
+
   // Step 2: Industry
   industry: string;
   industryName: string;
@@ -58,6 +66,7 @@ export interface WizardState {
   selectedOptions?: string[];
   solarTier?: string | null;
   evTier?: string | null;
+  generatorTier?: string | null; // ✅ ADDED: Persists generator selection (Jan 16, 2026)
   customSolarKw?: number;
   customEvL2?: number;
   customEvDcfc?: number;
@@ -132,6 +141,48 @@ export interface SavingsPreviewEstimate {
   isEstimate: true; // Always true - never SSOT
   disclaimer: string;
   generatedAt: number;
+}
+
+/**
+ * Teaser Preview (Jan 16, 2026)
+ * 
+ * ⚠️ IMPORTANT: This is NOT TrueQuote™ verified data!
+ * - Based on industry averages and rough heuristics
+ * - Used ONLY to show "Sneak Peek" in Step 1 after address lookup
+ * - Clearly labeled as "Estimate only — not TrueQuote Verified"
+ * - Real TrueQuote™ numbers calculated in Step 5+
+ */
+export interface TeaserPreview {
+  // Scenario 1: BESS + Solar (save money)
+  solarBess: {
+    annualSavings: number;        // $/year
+    roiYears: number;             // payback years
+    monthlyPayment: number;       // if financed
+    systemSize: string;           // "500 kW battery + 250 kW solar"
+    roiCapped: boolean;           // ⚠️ true if ROI hit safety cap (show qualitative instead)
+    savingsCapped: boolean;       // ⚠️ true if savings below threshold (unreliable)
+  };
+  
+  // Scenario 2: BESS + Generator (resilience)
+  generatorBess: {
+    annualSavings: number;        // $/year (from peak shaving)
+    roiYears: number;             // payback years
+    monthlyPayment: number;       // if financed
+    systemSize: string;           // "500 kW battery + 300 kW generator"
+    resilienceHours: number;      // hours of backup power
+    roiCapped: boolean;           // ⚠️ true if ROI hit safety cap (show qualitative instead)
+    savingsCapped: boolean;       // ⚠️ true if savings below threshold (unreliable)
+  };
+  
+  // Transparency
+  assumptions: string[];          // ["Based on 1.8M kWh/year", "State avg rate: $0.12/kWh"]
+  disclaimer: string;             // Standard disclaimer text
+  confidence: 'low' | 'medium' | 'high'; // Based on available data
+  
+  // Metadata
+  createdAt: string;              // ISO timestamp
+  version: string;                // "teaser-v1"
+  teaserHash: string;             // Hash of inputs (prevents recompute churn)
 }
 
 // ============================================================================
@@ -323,6 +374,7 @@ export interface CalculationsBase {
   // SSOT (TrueQuote baseCalculation)
   annualConsumptionKWh: number;
   peakDemandKW: number;
+  baseBuildingLoadKW?: number; // ✅ ADDED: Real base load if available (Jan 16, 2026)
 
   utilityName?: string;
   utilityRate?: number;
@@ -331,6 +383,7 @@ export interface CalculationsBase {
 
   quoteId?: string;
   pricingSources?: string[];
+  quoteInputHash?: string; // ✅ ADDED: Drift detection (Jan 16, 2026)
 }
 
 /**
