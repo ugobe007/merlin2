@@ -73,7 +73,7 @@ export function AdvisorRail({
   const arbitrage = context?.opportunities?.arbitrage;
 
   return (
-    <aside className="w-full h-[calc(100vh-120px)] sticky top-6">
+    <aside className="w-full h-[calc(100vh-120px)] sticky top-0">
       <div className="h-full rounded-2xl border border-white/10 bg-[#0f1d33]/70 backdrop-blur overflow-hidden flex flex-col shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
         {/* MERLIN IDENTITY HEADER */}
         <div className="px-5 py-4 border-b border-white/10 flex-shrink-0">
@@ -172,10 +172,6 @@ export function AdvisorRail({
                 </span>
               )}
             </div>
-          </div>
-
-          <div className="mt-2 text-[11px] text-slate-300/60">
-            Next: wire ZIP-level utility + weather. Right now this can be state averages.
           </div>
         </div>
 

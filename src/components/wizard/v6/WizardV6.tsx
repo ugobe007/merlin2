@@ -403,7 +403,7 @@ export default function WizardV6() {
               }
             }}
             onUtilityDataUpdate={(utilityData) => {
-              // Update MerlinBar immediately when zip entered
+              // Update MerlinBar immediately when zip entered (includes weather data)
               updateState({
                 state: utilityData.state,
                 electricityRate: utilityData.rate,
@@ -416,6 +416,7 @@ export default function WizardV6() {
                         ? "Good"
                         : "Fair",
                 },
+                ...(utilityData.weatherData && { weatherData: utilityData.weatherData }),
               });
             }}
           />
