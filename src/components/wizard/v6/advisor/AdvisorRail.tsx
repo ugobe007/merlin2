@@ -89,12 +89,12 @@ export function AdvisorRail({
   const backupRequired = context?.config?.backupRequired;
 
   // ============================================================================
-  // MERLIN'S INSIGHT - Phase 2: Anticipation + Phase 5: Trade-off Warnings
-  // Rules: Max 1 per step, exactly 1 sentence (warnings: max 2), purely directional
+  // MERLIN'S INSIGHT - Phase 2: Anticipation (Step 1-2 only)
+  // Rules: Max 1 per step, exactly 1 sentence, purely directional
   // ============================================================================
 
   const getMerlinInsight = (): string | null => {
-    // Step 1-2: Prime mental model (after location data available)
+    // Step 1-2 only: Anticipation insight (1 sentence)
     if (currentStep <= 2 && rate != null && demand != null) {
       // High rate + high demand → duration matters
       if (rate > 0.15 && demand > 15) {
@@ -109,8 +109,16 @@ export function AdvisorRail({
         return "TOU pricing creates strong arbitrage potential — focus on 4-6 hour battery systems.";
       }
     }
+    return null;
+  };
 
-    // Step 3-4: Trade-off warnings (when user selects configs)
+  // ============================================================================
+  // MERLIN'S CONSTRAINT - Phase 5: Trade-off Warnings (Step 3+ only)
+  // Rules: Max 2 sentences, purely directional
+  // ============================================================================
+
+  const getMerlinConstraint = (): string | null => {
+    // Step 3+ only: Trade-off warnings (max 2 sentences)
     if (currentStep >= 3) {
       // Warning: High solar + short storage = curtailment risk
       if (solarKW != null && batteryHours != null && solarKW > 500 && batteryHours < 2) {
@@ -127,11 +135,11 @@ export function AdvisorRail({
         return "If battery cycling is frequent and duration is short, replacement costs will accelerate. Therefore model at least 4-hour systems for daily arbitrage.";
       }
     }
-
     return null;
   };
 
   const insight = getMerlinInsight();
+  const constraint = getMerlinConstraint();
 
   return (
     <aside className="w-full h-[calc(100vh-120px)] sticky top-0">
@@ -298,6 +306,26 @@ export function AdvisorRail({
                 </div>
               )}
             </div>
+          </div>
+
+          {/* CONSTRAINT WARNING (Step 3+) */}
+          {constraint && (
+            <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <div className="text-[11px] font-semibold text-amber-200 mb-1">Constraint</div>
+              <div className="text-xs text-slate-200/80 whitespace-pre-line">{constraint}</div>
+
+              {(import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && (
+                <div className="mt-2 text-[10px] text-slate-400/70">
+                  cfg: solar {solarKW}kW • batt {batteryHours}h • inv {inverterKW}kW • peak{" "}
+                  {peakLoadKW}kW • backup {String(backupRequired)}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PHASE 6: Merlin presence cue (quiet) */}
+          <div className="mt-3 text-[10px] text-slate-400/60 italic">
+            Merlin is watching: demand spikes, cycling depth, TOU spread
           </div>
         </div>
 
