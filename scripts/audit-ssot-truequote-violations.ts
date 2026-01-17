@@ -68,7 +68,7 @@ const INDUSTRY_TO_UNITNAME: Record<string, string> = {
 };
 
 // Read TrueQuote Engine file to verify mappings
-let trueQuoteMappings: Record<string, { unitName?: string; method: string }> = {};
+const trueQuoteMappings: Record<string, { unitName?: string; method: string }> = {};
 try {
   const trueQuoteContent = readFileSync('src/services/TrueQuoteEngine.ts', 'utf-8');
   
@@ -89,7 +89,7 @@ try {
 }
 
 // Read Step5MagicFit to check field name mappings
-let step5Mappings: Record<string, string[]> = {};
+const step5Mappings: Record<string, string[]> = {};
 try {
   const step5Content = readFileSync('src/components/wizard/v6/steps/Step5MagicFit.tsx', 'utf-8');
   

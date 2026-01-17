@@ -12,7 +12,7 @@
  *   - equipmentPricingTiersService (equipment pricing with markup)
  */
 
-import { describe, test, expect, beforeAll } from "vitest";
+import { describe, test, expect } from "vitest";
 
 // Import services
 import { calculateITC, estimateITC, getMaxITCRate } from "@/services/itcCalculator";

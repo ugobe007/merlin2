@@ -16,7 +16,7 @@
  */
 
 import React, { useState } from "react";
-import { Check, Sparkles, Sun, DollarSign } from "lucide-react";
+import { Check, Sparkles, Sun } from "lucide-react";
 import type { WizardState, BusinessSizeTier, QuestionnaireDepth } from "../types";
 import { INDUSTRY_NAMES } from "@/services/googlePlacesService";
 import { BusinessSizePanel } from "../components/BusinessSizePanel";

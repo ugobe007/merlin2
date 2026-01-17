@@ -18,7 +18,7 @@
 const SCRIPT_URL = 'https://your-domain.com/scripts/wizard-diagnostic-enhanced.js';
 
 // Bookmarklet code (copy this):
-javascript:(function(){const s=document.createElement('script');s.src='SCRIPT_URL_HERE';s.onload=function(){console.log('✅ Diagnostic script loaded');};s.onerror=function(){console.error('❌ Failed to load script. Check URL.');};document.head.appendChild(s);})();
+(function(){const s=document.createElement('script');s.src='SCRIPT_URL_HERE';s.onload=function(){console.log('✅ Diagnostic script loaded');};s.onerror=function(){console.error('❌ Failed to load script. Check URL.');};document.head.appendChild(s);})();
 
 // Instructions:
 // 1. Replace SCRIPT_URL_HERE with your actual script URL

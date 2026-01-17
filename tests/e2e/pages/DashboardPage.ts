@@ -4,7 +4,7 @@
  * Page object for user dashboard with saved quotes
  */
 
-import { Page, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 export interface SavedQuote {

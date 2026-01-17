@@ -166,7 +166,7 @@ export class UseCaseService {
   async getUseCaseBySlug(slug: string): Promise<DetailedUseCase | null> {
     try {
       // First try to find active use case
-      let { data: useCase, error: useCaseError } = await supabase
+      const { data: useCase, error: useCaseError } = await supabase
         .from("use_cases")
         .select("*")
         .eq("slug", slug)

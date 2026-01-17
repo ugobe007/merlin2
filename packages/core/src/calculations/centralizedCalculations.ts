@@ -29,7 +29,7 @@
 
 import { supabase } from '../supabaseClient';
 import { getBatteryPricing } from '../pricing/unifiedPricingService';
-import { getConstant, getFinancialConstants } from '../constants/calculationConstantsService';
+import { getConstant } from '../constants/calculationConstantsService';
 
 // ============================================
 // INTERFACES

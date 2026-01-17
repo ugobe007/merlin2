@@ -12,8 +12,6 @@
  * Run: npx tsx scripts/calculation-accuracy-report.ts
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
 
 // ============================================================================
 // INDUSTRY BENCHMARK DATA (Sources: NREL ATB 2024, BNEF, LBNL, EIA)

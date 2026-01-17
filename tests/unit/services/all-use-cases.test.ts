@@ -16,8 +16,7 @@ import {
   getFixturesByCategory,
   getFixturesWithSolar,
   getFixturesWithGeneration,
-  validateFixtureResults,
-  type UseCaseFixture
+  validateFixtureResults
 } from '@tests/fixtures/use-cases/all-use-cases.fixture';
 
 describe('All Use Cases Comprehensive Test Suite', () => {

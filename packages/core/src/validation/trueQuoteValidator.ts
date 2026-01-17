@@ -11,7 +11,7 @@
  * This is the core of TrueQuote - our product differentiator.
  */
 
-import { validateQuote, type ValidationResult } from './calculationValidator';
+import { validateQuote } from './calculationValidator';
 import type { QuoteResult } from '../calculations/unifiedQuoteCalculator';
 
 export interface TrueQuoteComplianceResult {

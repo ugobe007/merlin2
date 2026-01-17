@@ -251,7 +251,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
 
   // Handle zip code changes with validation
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
     if (region === 'us' && zipInput.length === 5) {
       const stateCode = getStateFromZip(zipInput);
       if (stateCode) {

@@ -83,7 +83,7 @@ export function AdvisorPublisher({
   useEffect(() => {
     if (!opts.enableWarnings) return;
     if (!warnings.length) return;
-    // eslint-disable-next-line no-console
+     
     console.warn("[AdvisorRail] Budget warnings:", warnings);
   }, [warnings, opts.enableWarnings]);
 
