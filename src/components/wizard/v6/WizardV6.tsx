@@ -473,7 +473,33 @@ export default function WizardV6() {
           <div className="grid grid-cols-12 gap-6 items-start">
             {/* LEFT RAIL: MerlinAdvisor with step progress (col-span-4 on lg+) */}
             <div className="col-span-12 lg:col-span-4">
-              <AdvisorRail currentStep={currentStep} totalSteps={6} onNavigate={goToStep} />
+              <AdvisorRail
+                currentStep={currentStep}
+                totalSteps={6}
+                onNavigate={goToStep}
+                context={{
+                  location: {
+                    zip: state.zipCode,
+                    city: state.city,
+                    state: state.state,
+                    utilityName: state.calculations?.base?.utilityName,
+                  },
+                  utility: {
+                    rate: state.electricityRate ?? state.calculations?.base?.utilityRate,
+                    demandCharge: state.calculations?.base?.demandCharge,
+                    hasTOU: state.calculations?.base?.hasTOU,
+                  },
+                  solar: {
+                    sunHours: state.solarData?.sunHours,
+                    rating: state.solarData?.rating,
+                  },
+                  opportunities: {
+                    arbitrage: state.calculations?.base?.hasTOU ? "High" : "Medium",
+                    backup: state.goals?.includes("backup_power"),
+                    smoothing: state.goals?.includes("peak_shaving"),
+                  },
+                }}
+              />
             </div>
 
             {/* MAIN STAGE: Step content (col-span-8 on lg+) */}
