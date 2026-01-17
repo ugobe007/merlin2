@@ -408,24 +408,6 @@ export function EnhancedStep2Industry({ state, updateState, onNext }: Props) {
                 </div>
               )}
 
-              {/* Opportunity Preview (NEW) */}
-              <div className="absolute top-3 left-3 space-y-1.5 z-10">
-                {/* Savings Badge */}
-                <div className="flex items-center gap-1 bg-green-500/90 backdrop-blur-sm px-2 py-1 rounded-full">
-                  <DollarSign className="w-3 h-3 text-white" />
-                  <span className="text-white text-xs font-bold">
-                    ${Math.round(industry.savingsLow / 1000)}k-$
-                    {Math.round(industry.savingsHigh / 1000)}k
-                  </span>
-                </div>
-
-                {/* Solar Fit Badge */}
-                <div className="flex items-center gap-1 bg-amber-500/90 backdrop-blur-sm px-2 py-1 rounded-full">
-                  <SolarFitStars rating={industry.solarFit} />
-                  <span className="text-white text-xs font-semibold ml-0.5">Solar</span>
-                </div>
-              </div>
-
               {/* Label + Payback */}
               <div className="absolute bottom-0 left-0 right-0 p-3 space-y-1">
                 <p
