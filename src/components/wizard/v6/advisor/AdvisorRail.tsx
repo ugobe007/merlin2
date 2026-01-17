@@ -53,6 +53,23 @@ function fmtMoney(n?: number) {
   return `$${n.toFixed(2)}`;
 }
 
+function safeNum(n?: number) {
+  return typeof n === "number" && !Number.isNaN(n) ? n : null;
+}
+
+function pvToStorageBalanceRatio(params: {
+  solarKW?: number;
+  inverterKW?: number;
+  batteryHours?: number;
+}) {
+  const s = safeNum(params.solarKW);
+  const inv = safeNum(params.inverterKW);
+  const h = safeNum(params.batteryHours);
+  if (s == null || inv == null || h == null) return null;
+  if (inv <= 0 || h <= 0) return null;
+  return s / (inv * h);
+}
+
 export function AdvisorRail({
   currentStep = 1,
   totalSteps = 6,
@@ -120,9 +137,12 @@ export function AdvisorRail({
   const getMerlinConstraint = (): string | null => {
     // Step 3+ only: Trade-off warnings (max 2 sentences)
     if (currentStep >= 3) {
-      // Warning: High solar + short storage = curtailment risk
-      if (solarKW != null && batteryHours != null && solarKW > 500 && batteryHours < 2) {
-        return "If solar capacity is high and storage duration is short, excess production will be curtailed. Therefore increase storage duration before oversizing PV.";
+      // Curtailment risk: PV oversized vs storage absorption capacity
+      const pvRatio = pvToStorageBalanceRatio({ solarKW, inverterKW, batteryHours });
+
+      // Heuristic: short duration + PV-to-storage imbalance (ratio > 1.5)
+      if (batteryHours != null && batteryHours < 2 && pvRatio != null && pvRatio > 1.5) {
+        return "If solar capacity is high relative to storage absorption, excess production will be curtailed. Therefore increase storage duration or inverter power before oversizing PV.";
       }
 
       // Warning: Backup required + undersized inverter = load support risk
@@ -164,8 +184,10 @@ export function AdvisorRail({
 
   // Constraint driver: show the numbers that triggered the warning
   const constraintDriver = (() => {
-    if (solarKW != null && batteryHours != null && solarKW > 500 && batteryHours < 2) {
-      return `Solar: ${Math.round(solarKW)} kW • Duration: ${batteryHours.toFixed(1)} h`;
+    const pvRatio = pvToStorageBalanceRatio({ solarKW, inverterKW, batteryHours });
+
+    if (pvRatio != null && batteryHours != null && batteryHours < 2 && pvRatio > 1.5) {
+      return `Solar: ${Math.round(solarKW ?? 0)} kW • Inverter: ${Math.round(inverterKW ?? 0)} kW • Duration: ${batteryHours.toFixed(1)} h • Ratio: ${pvRatio.toFixed(2)}`;
     }
     if (backupRequired && inverterKW != null && peakLoadKW != null && inverterKW < peakLoadKW) {
       return `Inverter: ${Math.round(inverterKW)} kW • Peak: ${Math.round(peakLoadKW)} kW`;
