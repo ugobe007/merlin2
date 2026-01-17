@@ -1,6 +1,6 @@
 // src/components/wizard/v6/advisor/AdvisorRail.tsx
 
-import React from "react";
+import React, { useMemo, useRef } from "react";
 import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
 import avatarImg from "@/assets/images/new_small_profile_.png";
@@ -138,8 +138,59 @@ export function AdvisorRail({
     return null;
   };
 
+  // Debounce constraints: only update if message actually changed (prevents flicker)
+  const rawConstraint = getMerlinConstraint();
+  const lastConstraintRef = useRef<string | null>(null);
+  const constraint = useMemo(() => {
+    if (!rawConstraint) return null;
+    if (rawConstraint === lastConstraintRef.current) return rawConstraint;
+    lastConstraintRef.current = rawConstraint;
+    return rawConstraint;
+  }, [rawConstraint]);
+
+  // Voice rule validation (DEV only)
+  const isDev = (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV;
+
+  function sentenceCount(s: string) {
+    return s
+      .split(".")
+      .map((x) => x.trim())
+      .filter(Boolean).length;
+  }
+
+  function looksLikeConstraint(s: string) {
+    return s.startsWith("If ") && s.includes("Therefore");
+  }
+
+  // Constraint driver: show the numbers that triggered the warning
+  const constraintDriver = (() => {
+    if (solarKW != null && batteryHours != null && solarKW > 500 && batteryHours < 2) {
+      return `Solar: ${Math.round(solarKW)} kW • Duration: ${batteryHours.toFixed(1)} h`;
+    }
+    if (backupRequired && inverterKW != null && peakLoadKW != null && inverterKW < peakLoadKW) {
+      return `Inverter: ${Math.round(inverterKW)} kW • Peak: ${Math.round(peakLoadKW)} kW`;
+    }
+    if (batteryHours != null && demand != null && batteryHours < 4 && demand > 20) {
+      return `Demand charge: $${demand.toFixed(0)}/kW • Duration: ${batteryHours.toFixed(1)} h`;
+    }
+    return null;
+  })();
+
+  // DEV: Log constraint once when first triggered (helps catch state mapping drift)
+  const didLogConstraint = useRef(false);
+  if (isDev && constraint && !didLogConstraint.current) {
+    didLogConstraint.current = true;
+    console.log("[Merlin] constraint", {
+      solarKW,
+      batteryHours,
+      inverterKW,
+      peakLoadKW,
+      backupRequired,
+      demand,
+    });
+  }
+
   const insight = getMerlinInsight();
-  const constraint = getMerlinConstraint();
 
   return (
     <aside className="w-full h-[calc(100vh-120px)] sticky top-0">
@@ -314,8 +365,17 @@ export function AdvisorRail({
               <div className="text-[11px] font-semibold text-amber-200 mb-1">Constraint</div>
               <div className="text-xs text-slate-200/80 whitespace-pre-line">{constraint}</div>
 
-              {(import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && (
+              {/* Driver: show the numbers that triggered this constraint */}
+              {constraintDriver && (
+                <div className="mt-2 text-[10px] text-slate-300/70">{constraintDriver}</div>
+              )}
+
+              {/* DEV: Voice rule validation + config debug */}
+              {isDev && (
                 <div className="mt-2 text-[10px] text-slate-400/70">
+                  voice: {looksLikeConstraint(constraint) ? "ok" : "BAD"} • sentences:{" "}
+                  {sentenceCount(constraint)}
+                  {" • "}
                   cfg: solar {solarKW}kW • batt {batteryHours}h • inv {inverterKW}kW • peak{" "}
                   {peakLoadKW}kW • backup {String(backupRequired)}
                 </div>
@@ -323,9 +383,14 @@ export function AdvisorRail({
             </div>
           )}
 
-          {/* PHASE 6: Merlin presence cue (quiet) */}
+          {/* PHASE 6: Merlin presence cue (context-aware but still quiet) */}
           <div className="mt-3 text-[10px] text-slate-400/60 italic">
-            Merlin is watching: demand spikes, cycling depth, TOU spread
+            {(() => {
+              if (currentStep <= 2) return "Merlin is watching: rates, demand charges, solar yield";
+              if (currentStep <= 4)
+                return "Merlin is watching: curtailment, inverter limits, cycling";
+              return "Merlin is watching: payback drivers, constraints, sensitivity";
+            })()}
           </div>
         </div>
 
