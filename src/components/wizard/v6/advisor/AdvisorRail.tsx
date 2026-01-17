@@ -141,7 +141,14 @@ export function AdvisorRail({
       const pvRatio = pvToStorageBalanceRatio({ solarKW, inverterKW, batteryHours });
 
       // Heuristic: short duration + PV-to-storage imbalance (ratio > 1.5)
-      if (batteryHours != null && batteryHours < 2 && pvRatio != null && pvRatio > 1.5) {
+      // Minimum 50kW solar to prevent ratio spam on tiny systems
+      if (
+        (solarKW ?? 0) >= 50 &&
+        batteryHours != null &&
+        batteryHours < 2 &&
+        pvRatio != null &&
+        pvRatio > 1.5
+      ) {
         return "If solar capacity is high relative to storage absorption, excess production will be curtailed. Therefore increase storage duration or inverter power before oversizing PV.";
       }
 
@@ -186,8 +193,19 @@ export function AdvisorRail({
   const constraintDriver = (() => {
     const pvRatio = pvToStorageBalanceRatio({ solarKW, inverterKW, batteryHours });
 
-    if (pvRatio != null && batteryHours != null && batteryHours < 2 && pvRatio > 1.5) {
-      return `Solar: ${Math.round(solarKW ?? 0)} kW • Inverter: ${Math.round(inverterKW ?? 0)} kW • Duration: ${batteryHours.toFixed(1)} h • Ratio: ${pvRatio.toFixed(2)}`;
+    // Curtailment: minimum 50kW solar to prevent ratio spam on tiny systems
+    if (
+      (solarKW ?? 0) >= 50 &&
+      batteryHours != null &&
+      batteryHours < 2 &&
+      pvRatio != null &&
+      pvRatio > 1.5
+    ) {
+      const s = Math.round(solarKW ?? 0);
+      const inv = Math.round(inverterKW ?? 0);
+      const h = Number(batteryHours.toFixed(1));
+      const r = Number(pvRatio.toFixed(2));
+      return `Solar: ${s} kW • Inverter: ${inv} kW • Duration: ${h} h • Ratio: ${r}`;
     }
     if (backupRequired && inverterKW != null && peakLoadKW != null && inverterKW < peakLoadKW) {
       return `Inverter: ${Math.round(inverterKW)} kW • Peak: ${Math.round(peakLoadKW)} kW`;
