@@ -105,6 +105,17 @@ export function AdvisorRail({
   const peakLoadKW = context?.config?.peakLoadKW;
   const backupRequired = context?.config?.backupRequired;
 
+  // Compute PV-to-storage ratio for curtailment analysis
+  const pvRatio = pvToStorageBalanceRatio({ solarKW, inverterKW, batteryHours });
+
+  // Shared predicate: prevents drift between constraint message and driver line
+  const isCurtailmentRisk =
+    (solarKW ?? 0) >= 50 &&
+    batteryHours != null &&
+    batteryHours < 2 &&
+    pvRatio != null &&
+    pvRatio > 1.5;
+
   // ============================================================================
   // MERLIN'S INSIGHT - Phase 2: Anticipation (Step 1-2 only)
   // Rules: Max 1 per step, exactly 1 sentence, purely directional
@@ -138,17 +149,7 @@ export function AdvisorRail({
     // Step 3+ only: Trade-off warnings (max 2 sentences)
     if (currentStep >= 3) {
       // Curtailment risk: PV oversized vs storage absorption capacity
-      const pvRatio = pvToStorageBalanceRatio({ solarKW, inverterKW, batteryHours });
-
-      // Heuristic: short duration + PV-to-storage imbalance (ratio > 1.5)
-      // Minimum 50kW solar to prevent ratio spam on tiny systems
-      if (
-        (solarKW ?? 0) >= 50 &&
-        batteryHours != null &&
-        batteryHours < 2 &&
-        pvRatio != null &&
-        pvRatio > 1.5
-      ) {
+      if (isCurtailmentRisk) {
         return "If solar capacity is high relative to storage absorption, excess production will be curtailed. Therefore increase storage duration or inverter power before oversizing PV.";
       }
 
@@ -191,20 +192,12 @@ export function AdvisorRail({
 
   // Constraint driver: show the numbers that triggered the warning
   const constraintDriver = (() => {
-    const pvRatio = pvToStorageBalanceRatio({ solarKW, inverterKW, batteryHours });
-
-    // Curtailment: minimum 50kW solar to prevent ratio spam on tiny systems
-    if (
-      (solarKW ?? 0) >= 50 &&
-      batteryHours != null &&
-      batteryHours < 2 &&
-      pvRatio != null &&
-      pvRatio > 1.5
-    ) {
-      const s = Math.round(solarKW ?? 0);
-      const inv = Math.round(inverterKW ?? 0);
-      const h = Number(batteryHours.toFixed(1));
-      const r = Number(pvRatio.toFixed(2));
+    // Curtailment: use shared predicate (prevents drift with constraint logic)
+    if (isCurtailmentRisk) {
+      const s = solarKW != null ? Math.round(solarKW) : "--";
+      const inv = inverterKW != null ? Math.round(inverterKW) : "--";
+      const h = batteryHours != null ? Number(batteryHours.toFixed(1)) : "--";
+      const r = pvRatio != null ? Number(pvRatio.toFixed(2)) : "--";
       return `Solar: ${s} kW • Inverter: ${inv} kW • Duration: ${h} h • Ratio: ${r}`;
     }
     if (backupRequired && inverterKW != null && peakLoadKW != null && inverterKW < peakLoadKW) {
