@@ -337,7 +337,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                   ${isActive 
                     ? 'bg-purple-500/20 border-2 border-purple-500' 
                     : isAnswered
-                      ? 'bg-slate-800/50 border border-slate-700 hover:bg-slate-800'
+                      ? 'bg-white/5 border border-slate-700 hover:bg-slate-800'
                       : 'bg-slate-800/30 border border-slate-700/50 opacity-50'
                   }
                 `}
@@ -426,7 +426,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                           p-6 rounded-2xl text-left transition-all border-2
                           ${isSelected
                             ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-500 shadow-lg shadow-purple-500/25'
-                            : 'bg-slate-800/50 border-slate-700 hover:border-purple-500/50 hover:bg-slate-800'
+                            : 'bg-white/5 border-slate-700 hover:border-purple-500/50 hover:bg-slate-800'
                           }
                         `}
                       >
@@ -452,7 +452,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
               {currentQuestion.type === 'slider' && (
                 <div className="space-y-6">
                   {/* Current Value */}
-                  <div className="text-center p-8 bg-slate-800/50 rounded-2xl border border-slate-700">
+                  <div className="text-center p-8 bg-white/5 rounded-2xl border border-slate-700">
                     <span className="text-6xl font-bold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
                       {answers[currentQuestion.field] || currentQuestion.smartDefault}
                     </span>
@@ -510,7 +510,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                           aspect-square rounded-2xl text-4xl font-bold transition-all border-2
                           ${isSelected
                             ? 'bg-gradient-to-br from-purple-500 to-indigo-500 border-transparent text-white shadow-xl shadow-purple-500/30'
-                            : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-purple-500/50 hover:bg-slate-800'
+                            : 'bg-white/5 border-slate-700 text-slate-300 hover:border-purple-500/50 hover:bg-slate-800'
                           }
                         `}
                       >
@@ -529,7 +529,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                       p-8 rounded-2xl text-2xl font-bold transition-all border-2
                       ${answers[currentQuestion.field] === true
                         ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 border-transparent text-white shadow-xl shadow-emerald-500/30'
-                        : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-emerald-500/50'
+                        : 'bg-white/5 border-slate-700 text-slate-300 hover:border-emerald-500/50'
                       }
                     `}
                   >
@@ -541,7 +541,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                       p-8 rounded-2xl text-2xl font-bold transition-all border-2
                       ${answers[currentQuestion.field] === false
                         ? 'bg-slate-700 border-slate-600 text-white shadow-lg'
-                        : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-slate-600'
+                        : 'bg-white/5 border-slate-700 text-slate-300 hover:border-slate-600'
                       }
                     `}
                   >
@@ -554,7 +554,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
         </div>
 
         {/* Footer Navigation */}
-        <div className="p-6 bg-slate-800/50 border-t border-slate-700 flex items-center justify-between">
+        <div className="p-6 bg-white/5 border-t border-slate-700 flex items-center justify-between">
           <button
             onClick={() => setActiveQuestion(Math.max(1, activeQuestion - 1))}
             disabled={activeQuestion === 1}

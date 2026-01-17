@@ -578,7 +578,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                       </p>
                       
                       {/* Merlin's commitment */}
-                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-600">
+                      <div className="p-3 rounded-lg bg-white/5 border border-slate-600">
                         <p className="text-emerald-300 text-sm">
                           🧙 <span className="font-semibold">Merlin says:</span> "I'll design a custom energy solution for {businessLookup.businessName}. Select your goals and click Continue!"
                         </p>

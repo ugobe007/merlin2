@@ -72,6 +72,36 @@ export function AdvisorRail({
 
   const arbitrage = context?.opportunities?.arbitrage;
 
+  // ============================================================================
+  // MERLIN'S INSIGHT - Phase 2: Anticipation
+  // Rules: Max 1 per step, exactly 1 sentence, purely directional
+  // ============================================================================
+  
+  const getMerlinInsight = (): string | null => {
+    // Step 1-2: Prime mental model (after location data available)
+    if (currentStep <= 2 && rate != null && demand != null) {
+      // High rate + high demand → duration matters
+      if (rate > 0.15 && demand > 15) {
+        return "Because your utility uses TOU pricing and demand charges, battery duration will matter more than solar size.";
+      }
+      // Low demand → solar-first strategy
+      if (demand < 10 && rate < 0.12) {
+        return "With low demand charges, solar-first strategy makes sense — battery mainly for backup.";
+      }
+      // High TOU spread
+      if (hasTOU && rate > 0.15) {
+        return "TOU pricing creates strong arbitrage potential — focus on 4-6 hour battery systems.";
+      }
+    }
+
+    // Step 3-4: Highlight trade-offs (future - when we have solar/battery selections)
+    // Placeholder for when we wire solar/battery config data to context
+    
+    return null;
+  };
+
+  const insight = getMerlinInsight();
+
   return (
     <aside className="w-full h-[calc(100vh-120px)] sticky top-0">
       <div className="h-full rounded-2xl border border-white/10 bg-[#0f1d33]/70 backdrop-blur overflow-hidden flex flex-col shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
@@ -214,6 +244,25 @@ export function AdvisorRail({
             </div>
           </div>
         </div>
+
+        {/* MERLIN'S INSIGHT - Whisper, not interrupt */}
+        {insight && (
+          <div className="px-5 py-3 border-b border-white/10 flex-shrink-0">
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+              <div className="flex items-start gap-2">
+                <span className="text-base mt-0.5">💡</span>
+                <div className="flex-1">
+                  <div className="text-[11px] font-semibold text-amber-300 mb-1">
+                    Merlin's Insight
+                  </div>
+                  <div className="text-xs text-slate-200 leading-relaxed">
+                    {insight}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* STEP PROGRESS */}
         <div className="px-5 py-4 border-b border-white/10 flex-shrink-0">

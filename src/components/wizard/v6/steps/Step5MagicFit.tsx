@@ -41,7 +41,7 @@ const TIER_CONFIG = {
     chipBg: "bg-slate-800 border-slate-700/50",
     chipText: "text-slate-300",
     buttonClass: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20",
-    metricBg: "bg-slate-800/50",
+    metricBg: "bg-white/5",
     savingsGlow: "savings-glow-starter",
   },
   perfectFit: {
@@ -70,7 +70,7 @@ const TIER_CONFIG = {
     chipBg: "bg-slate-800 border-slate-700/50",
     chipText: "text-slate-300",
     buttonClass: "text-orange-400 bg-orange-500/10 border-orange-500/30 hover:bg-orange-500/20",
-    metricBg: "bg-slate-800/50",
+    metricBg: "bg-white/5",
     savingsGlow: "savings-glow-beast",
   },
 } as const;

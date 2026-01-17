@@ -418,7 +418,7 @@ const Step4Options = ({ state, updateState }: Props) => {
                 ))}
               </div>
               {/* Charger Types Info */}
-              <div className="mt-4 p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl">
+              <div className="mt-4 p-4 bg-white/5 border border-slate-700/50 rounded-xl">
                 <div className="text-xs font-semibold text-slate-300 mb-3">⚡ Charger Types</div>
                 <div className="grid grid-cols-3 gap-4 text-xs">
                   <div>
@@ -485,7 +485,7 @@ const Step4Options = ({ state, updateState }: Props) => {
                 ))}
               </div>
               {/* Why Backup Info */}
-              <div className="mt-4 p-4 bg-slate-800/50 border border-red-500/20 rounded-xl">
+              <div className="mt-4 p-4 bg-white/5 border border-red-500/20 rounded-xl">
                 <div className="text-xs font-semibold text-red-300 mb-2">⚠️ Why Backup Power?</div>
                 <div className="text-xs text-slate-400">
                   Hotels lose $5,000-15,000/hour during outages. A properly sized generator provides
@@ -737,7 +737,7 @@ function TierCard({ tier, isSelected, onClick, accentColor, sizeLabel, metrics }
         ${
           isSelected
             ? `bg-slate-700/80 border-2 ${accent.border} shadow-lg`
-            : "bg-slate-800/50 border border-slate-700/50 hover:bg-slate-700/50"
+            : "bg-white/5 border border-slate-700/50 hover:bg-slate-700/50"
         }
       `}
     >
