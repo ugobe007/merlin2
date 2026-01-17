@@ -30,7 +30,7 @@ export function getStep3Missing(state: WizardState): Step3MissingKey[] {
   if (!isNonEmptyString(state.industry)) missing.push("industry.type");
 
   // Facility: operating hours is anchor for most use cases
-  const inputs = state.useCaseData?.inputs || {};
+  const inputs = (state.useCaseData?.inputs || {}) as Record<string, any>;
   if (!isFiniteNumber(inputs.operatingHours)) {
     missing.push("facility.operatingHours");
   }
@@ -119,7 +119,7 @@ export function computeConfidencePct(state: WizardState, missing: Step3MissingKe
   if (hasRate) score += 10;
 
   // Operating hours (critical anchor)
-  const inputs = state.useCaseData?.inputs || {};
+  const inputs = (state.useCaseData?.inputs || {}) as Record<string, any>;
   const hasHours = typeof inputs.operatingHours === "number";
   if (hasHours) score += 25;
 

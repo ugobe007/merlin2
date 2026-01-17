@@ -2,6 +2,9 @@
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
+# IMPORTANT: This must match your Fly.io app name
+# Current app: merlin2 (main production app)
+# Alternative apps: merlin (old), merlin-bess-quote-builder (testing)
 
 app = 'merlin2'
 primary_region = 'lax'

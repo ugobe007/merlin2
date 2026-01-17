@@ -57,8 +57,6 @@ import { MerlinBar } from "./MerlinBar";
 // Enhanced components (Jan 15, 2026)
 import { EnhancedLocationStep } from "../steps/EnhancedLocationStep.v2";
 import { EnhancedStep2Industry } from "./steps/EnhancedStep2Industry";
-import { WizardBottomAdvisor } from "../shared/WizardBottomAdvisor";
-import { generateDiscoveryClues } from "@/utils/discoveryClues";
 
 // ============================================================================
 // START OVER CONFIRMATION MODAL
@@ -201,9 +199,6 @@ export default function WizardV6() {
   // Step validity tracking (Jan 16, 2026 - Step 3→4→5 fix)
   const [step3Valid, setStep3Valid] = useState(false);
   const [step4Valid, setStep4Valid] = useState(false);
-  
-  // Bottom panel state (Jan 15, 2026)
-  const [useEnhancedUI, setUseEnhancedUI] = useState(true); // Toggle for testing
 
   // ✅ RESTORE FIX: Validate snapshot before allowing Step 4+ restore (Jan 16, 2026)
   useEffect(() => {
@@ -383,62 +378,47 @@ export default function WizardV6() {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        // Use enhanced location step if testing new UI
-        if (useEnhancedUI) {
-          return (
-            <EnhancedLocationStep
-              onNext={(data) => {
-                updateState({
-                  businessName: data.businessName,
-                  businessAddress: data.address,
-                  city: data.city,
-                  state: data.state,
-                  zipCode: data.zipCode,
-                  electricityRate: data.utilityRate,
-                  solarData: {
-                    sunHours: data.sunHours,
-                    rating: data.sunHours > 5.5 ? 'Excellent' : data.sunHours > 4.5 ? 'Good' : 'Fair'
-                  },
-                  goals: data.goals as any,
-                  detectedIndustry: data.detectedInfo?.industrySlug,
-                  industry: data.detectedInfo?.industrySlug || '',
-                  industryName: data.detectedInfo?.industrySlug || '',
-                });
-                // Auto-skip to Step 3 if business detected
-                if (data.detectedInfo?.industrySlug) {
-                  goToStep(3);
-                } else {
-                  goNext();
-                }
-              }}
-              onUtilityDataUpdate={(utilityData) => {
-                // Update MerlinBar immediately when zip entered
-                updateState({
-                  state: utilityData.state,
-                  electricityRate: utilityData.rate,
-                  solarData: {
-                    sunHours: utilityData.sunHours,
-                    rating: utilityData.sunHours > 5.5 ? 'Excellent' : utilityData.sunHours > 4.5 ? 'Good' : 'Fair'
-                  },
-                });
-              }}
-            />
-          );
-        }
         return (
-          <Step1Location 
-            state={state} 
-            updateState={updateState} 
-            onNext={() => goToStep(3)}  // Skip to Step 3 if business found
-            onGoToStep2={() => goToStep(2)}  // Go to Step 2 to change industry
+          <EnhancedLocationStep
+            onNext={(data) => {
+              updateState({
+                businessName: data.businessName,
+                businessAddress: data.address,
+                city: data.city,
+                state: data.state,
+                zipCode: data.zipCode,
+                electricityRate: data.utilityRate,
+                solarData: {
+                  sunHours: data.sunHours,
+                  rating: data.sunHours > 5.5 ? 'Excellent' : data.sunHours > 4.5 ? 'Good' : 'Fair'
+                },
+                goals: data.goals as any,
+                detectedIndustry: data.detectedInfo?.industrySlug,
+                industry: data.detectedInfo?.industrySlug || '',
+                industryName: data.detectedInfo?.industrySlug || '',
+              });
+              // Auto-skip to Step 3 if business detected
+              if (data.detectedInfo?.industrySlug) {
+                goToStep(3);
+              } else {
+                goNext();
+              }
+            }}
+            onUtilityDataUpdate={(utilityData) => {
+              // Update MerlinBar immediately when zip entered
+              updateState({
+                state: utilityData.state,
+                electricityRate: utilityData.rate,
+                solarData: {
+                  sunHours: utilityData.sunHours,
+                  rating: utilityData.sunHours > 5.5 ? 'Excellent' : utilityData.sunHours > 4.5 ? 'Good' : 'Fair'
+                },
+              });
+            }}
           />
         );
       case 2:
-        // Use enhanced industry step if testing new UI
-        if (useEnhancedUI) {
-          return <EnhancedStep2Industry state={state} updateState={updateState} onNext={() => goToStep(3)} />;
-        }
-        return <Step2Industry state={state} updateState={updateState} onNext={() => goToStep(3)} />;
+        return <EnhancedStep2Industry state={state} updateState={updateState} onNext={() => goToStep(3)} />;
       case 3:
         return (
           <Step3Details 
@@ -481,52 +461,7 @@ export default function WizardV6() {
 
             {/* MAIN STAGE: Step content (col-span-8 on lg+) */}
             <div className="col-span-12 lg:col-span-8">
-              <div style={{ paddingBottom: useEnhancedUI ? "260px" : "80px" }}>
-                {renderStep()}
-              </div>
-
-              {/* Bottom Advisor Panel (if enhanced UI enabled) */}
-              {useEnhancedUI && ((() => {
-                const discoveryClues = generateDiscoveryClues({
-                  state: state.state,
-                  electricityRate: state.electricityRate,
-                  sunHours: state.solarData?.sunHours,
-                  goals: state.goals,
-                  industry: state.industry,
-                  hasSolar: state.selectedOptions?.includes('solar'),
-                  hasGenerator: state.selectedOptions?.includes('generator'),
-                  hasEv: state.selectedOptions?.includes('ev'),
-                  solarKw: state.calculations?.selected?.solarKW || 0,
-                  bessKwh: state.calculations?.selected?.bessKWh || 0,
-                  currentStep,
-                });
-
-                return (
-                  <WizardBottomAdvisor
-                    currentStep={currentStep}
-                    totalSteps={6}
-                    wizardState={state}
-                    estimate={{
-                      low: 100000,
-                      high: 500000,
-                      confidence: currentStep === 1 ? 35 : currentStep === 2 ? 50 : currentStep === 3 ? 65 : 80,
-                    }}
-                    solarPotential={{
-                      systemSize: 250,
-                      coverage: 65,
-                    }}
-                    discoveryClues={discoveryClues}
-                    onExpand={() => console.log('Panel expanded')}
-                    onCollapse={() => console.log('Panel collapsed')}
-                    onBack={goBack}
-                    onContinue={goNext}
-                    onGetQuote={() => setShowRequestModal(true)}
-                    canProceed={canProceed()}
-                    quietMode={currentStep === 3}
-                    hideOnStep={currentStep === 1}
-                  />
-                );
-              })())}
+              {renderStep()}
             </div>
           </div>
         </div>
