@@ -813,16 +813,11 @@ export function CompleteStep3Component({
         <header className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/50">
           <div className="px-6 py-2.5">
             <div className="flex items-center justify-between">
-              {/* Left: Navigation - sleeker */}
+              {/* Left: Step indicator */}
               <div className="flex items-center gap-2">
-                <button className="flex items-center gap-1.5 px-2.5 py-1.5 bg-violet-600/90 hover:bg-violet-500 rounded-lg text-white text-xs transition-all hover:scale-105 shadow-sm">
-                  <span>🏠</span>
-                  <span className="font-medium">Home</span>
-                </button>
-                <button className="flex items-center gap-1.5 px-2.5 py-1.5 bg-orange-600/80 hover:bg-orange-500 rounded-lg text-white text-xs transition-all hover:scale-105 shadow-sm">
-                  <span>🔄</span>
-                  <span className="font-medium">Start Over</span>
-                </button>
+                <div className="text-slate-400 text-xs font-medium">
+                  Step <span className="text-white">3</span> of 6
+                </div>
               </div>
 
               {/* Center: Progress Ring - compact */}
