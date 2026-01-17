@@ -493,6 +493,10 @@ export default function WizardV6() {
                     sunHours: state.solarData?.sunHours,
                     rating: state.solarData?.rating,
                   },
+                  weather: {
+                    profile: state.weatherData?.profile,
+                    extremes: state.weatherData?.extremes,
+                  },
                   opportunities: {
                     arbitrage: state.calculations?.base?.hasTOU ? "High" : "Medium",
                     backup: state.goals?.includes("backup_power"),

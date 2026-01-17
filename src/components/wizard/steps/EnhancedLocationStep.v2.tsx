@@ -30,6 +30,7 @@ import {
   type BusinessDetectionResult,
 } from "@/services/businessDetectionService";
 import { getStateUtilityData, getStateSolarData } from "@/data/utilityData";
+import { getWeatherData } from "@/services/weatherService";
 
 // ============================================
 // CONSTANTS
@@ -198,6 +199,16 @@ interface LocationStepProps {
     rate: number;
     sunHours: number;
     arbitrage: string;
+    weatherData?: {
+      profile: string;
+      extremes: string;
+      avgTempF?: number;
+      avgHighF?: number;
+      avgLowF?: number;
+      heatingDegreeDays?: number;
+      coolingDegreeDays?: number;
+      source: 'visual-crossing' | 'nws' | 'cache';
+    };
   }) => void;
   initialData?: Partial<LocationData>;
 }
@@ -288,6 +299,25 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
             hasTOU: !!hasTOU,
           });
           setShowAddressSearch(true); // Reveal address input
+
+          // Fetch weather data (async, non-blocking)
+          getWeatherData(zipCode).then((weather) => {
+            if (weather) {
+              console.log('[LocationStep] Weather data fetched:', weather);
+              // Update parent state with weather data
+              if (onUtilityDataUpdate) {
+                onUtilityDataUpdate({
+                  state: stateName,
+                  rate: utilityInfo.electricityRate,
+                  sunHours: solarInfo.peakSunHours,
+                  arbitrage,
+                  weatherData: weather,
+                });
+              }
+            }
+          }).catch((err) => {
+            console.warn('[LocationStep] Weather fetch failed:', err);
+          });
 
           // Update MerlinBar via callback
           if (onUtilityDataUpdate) {

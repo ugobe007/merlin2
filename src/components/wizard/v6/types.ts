@@ -34,6 +34,18 @@ export interface WizardState {
   businessLat?: number;
   businessLng?: number;
 
+  // Step 1: Weather data (for context display)
+  weatherData?: {
+    profile: string;
+    extremes: string;
+    avgTempF?: number;
+    avgHighF?: number;
+    avgLowF?: number;
+    heatingDegreeDays?: number;
+    coolingDegreeDays?: number;
+    source: 'visual-crossing' | 'nws' | 'cache';
+  };
+
   // Step 1: Savings Preview (ESTIMATES ONLY - not SSOT)
   savingsPreview?: SavingsPreviewEstimate;
 
