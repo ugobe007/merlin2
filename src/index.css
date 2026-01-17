@@ -442,18 +442,26 @@ body [class*="WizardBottomNav"]:not([data-wizard-v5-nav]) {
   animation: subtlePulse 2s ease-in-out infinite;
 }
 
-/* Merlin Step 1: subtle "key light" to avoid flat/sepia feel */
+/* Merlin Step 1: slate-blue base with subtle vignette */
 .merlin-keylight {
-  background:
-    radial-gradient(1200px 600px at 65% 12%, rgba(124,58,237,0.10), transparent 42%),
-    radial-gradient(900px 500px at 20% 20%, rgba(16,185,129,0.06), transparent 45%),
-    #0b1626;
+  background: #0b1626;
+  /* optional: subtle vignette */
+  background-image:
+    radial-gradient(1200px 700px at 50% -10%, rgba(120, 119, 198, 0.18), transparent 55%),
+    radial-gradient(900px 500px at 110% 20%, rgba(56, 189, 248, 0.08), transparent 60%);
 }
 
 /* Merlin breathing status indicator */
 @keyframes merlin-breathe {
-  0%, 100% { transform: scale(1); opacity: 0.65; }
-  50% { transform: scale(1.15); opacity: 1; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
 }
 .merlin-breathe {
   animation: merlin-breathe 6s ease-in-out infinite;

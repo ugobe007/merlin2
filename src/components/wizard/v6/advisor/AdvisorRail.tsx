@@ -25,14 +25,7 @@ interface AdvisorRailProps {
   totalSteps?: number;
 }
 
-const STEP_LABELS = [
-  "Location",
-  "Industry",
-  "Details",
-  "Options",
-  "TrueQuote",
-  "Results"
-];
+const STEP_LABELS = ["Location", "Industry", "Details", "Options", "TrueQuote", "Results"];
 
 export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProps) {
   const { getCurrent, getWarnings } = useAdvisorPublisher();
@@ -40,7 +33,7 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
   const warnings = getWarnings();
 
   return (
-    <aside className="w-full h-[calc(100vh-48px)] sticky top-6">
+    <aside className="w-full sticky top-6">
       <div className="h-full relative rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-white/2 backdrop-blur-md before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/35 before:to-transparent overflow-hidden flex flex-col">
         {/* MERLIN IDENTITY HEADER */}
         <div className="px-5 py-4 border-b border-white/10 flex-shrink-0">
@@ -51,8 +44,8 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
                 alt="Merlin"
                 className="w-14 h-14 rounded-full border-2 border-amber-400/60 shadow-[0_0_28px_rgba(251,191,36,0.22)]"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove('hidden');
+                  e.currentTarget.style.display = "none";
+                  (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove("hidden");
                 }}
               />
               <div className="hidden w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center border-2 border-amber-300">
@@ -72,7 +65,9 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
             <div className="text-base font-semibold text-white leading-snug">
               {payload?.headline || "Answer a few questions to get your TrueQuote™"}
             </div>
-            {payload?.subline && <div className="mt-1 text-xs text-slate-300">{payload.subline}</div>}
+            {payload?.subline && (
+              <div className="mt-1 text-xs text-slate-300">{payload.subline}</div>
+            )}
           </div>
         </div>
 
@@ -89,16 +84,12 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
               const stepNum = idx + 1;
               const isActive = stepNum === currentStep;
               const isDone = stepNum < currentStep;
-              
+
               return (
                 <div
                   key={stepNum}
                   className={`flex items-center gap-2 text-xs transition-all rounded-lg px-2 py-1.5 hover:bg-white/5 ${
-                    isActive
-                      ? "text-amber-400"
-                      : isDone
-                      ? "text-emerald-400"
-                      : "text-slate-500"
+                    isActive ? "text-amber-400" : isDone ? "text-emerald-400" : "text-slate-500"
                   }`}
                 >
                   <div
@@ -106,8 +97,8 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
                       isActive
                         ? "bg-amber-400/20 border-2 border-amber-400"
                         : isDone
-                        ? "bg-emerald-400/20 border border-emerald-400"
-                        : "bg-slate-800 border border-slate-700"
+                          ? "bg-emerald-400/20 border border-emerald-400"
+                          : "bg-slate-800 border border-slate-700"
                     }`}
                   >
                     {isDone ? "✓" : stepNum}
@@ -135,21 +126,26 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
 
             {payload?.mode === "estimate" && payload.disclaimer && (
               <div className="mt-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-                <div className="text-[11px] font-semibold text-amber-200 mb-1">Estimate disclaimer</div>
-                <div className="text-xs text-slate-300 whitespace-pre-line">{payload.disclaimer}</div>
+                <div className="text-[11px] font-semibold text-amber-200 mb-1">
+                  Estimate disclaimer
+                </div>
+                <div className="text-xs text-slate-300 whitespace-pre-line">
+                  {payload.disclaimer}
+                </div>
               </div>
             )}
 
-            {warnings.length > 0 && (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && (
-              <div className="mt-2 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
-                <div className="text-[11px] font-semibold text-red-200 mb-1">Dev warnings</div>
-                <ul className="text-xs text-slate-300 list-disc ml-4 space-y-1">
-                  {warnings.map((w, i) => (
-                    <li key={i}>{w}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {warnings.length > 0 &&
+              (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && (
+                <div className="mt-2 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+                  <div className="text-[11px] font-semibold text-red-200 mb-1">Dev warnings</div>
+                  <ul className="text-xs text-slate-300 list-disc ml-4 space-y-1">
+                    {warnings.map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
           </div>
         </div>
       </div>
