@@ -390,11 +390,11 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
       </div>
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 items-stretch">
         {/* LEFT COLUMN: Location */}
         <div className="space-y-6">
           {/* Zip Code Input */}
-          <div className="bg-white/4 rounded-2xl p-6 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+          <div className="bg-gradient-to-b from-white/6 to-white/2 rounded-2xl p-6 border border-white/12 shadow-[0_24px_70px_rgba(0,0,0,0.38)]">
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="w-5 h-5 text-purple-400" />
               <h3 className="text-lg font-semibold text-white">Your Zip Code</h3>
@@ -594,11 +594,15 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
         </div>
 
         {/* RIGHT COLUMN: Energy Goals */}
-        <div className="bg-white/3 rounded-2xl p-6 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.30)]">
-          <div className="text-center mb-6">
-            <Target className="w-10 h-10 mx-auto mb-3 text-purple-400" />
-            <h3 className="text-xl font-bold text-white mb-2">What are your energy goals?</h3>
-            <p className="text-sm text-slate-400">Select all that apply</p>
+        <div className="bg-gradient-to-b from-white/4 to-white/2 rounded-2xl p-6 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.30)]">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+              <Target className="w-5 h-5 text-violet-300" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-white">Energy goals</h3>
+              <p className="text-sm text-slate-400">Select all that apply</p>
+            </div>
           </div>
 
           <div className="space-y-3">
