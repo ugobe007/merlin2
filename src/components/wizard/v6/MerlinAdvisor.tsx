@@ -420,7 +420,7 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
           </div>
           {/* CTA tooltip */}
           <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className={`bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap border ${hasPendingSuggestion ? 'border-amber-500 bg-amber-900/50' : 'border-purple-500/30'}`}>
+            <div className={`bg-white/5 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap border ${hasPendingSuggestion ? 'border-amber-500 bg-amber-900/50' : 'border-purple-500/30'}`}>
               <ChevronLeft className="w-3 h-3 inline mr-1" />
               {hasPendingSuggestion ? '💡 See Suggestions!' : 'Ask Merlin'}
             </div>
@@ -643,7 +643,7 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
             </div>
 
             {/* Progress/Confidence indicator */}
-            <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden mb-1.5">
+            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden mb-1.5">
               <div 
                 className="h-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-500"
                 style={{ width: `${estimate.confidence * 20}%` }}
@@ -719,7 +719,7 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
                       ? 'bg-gradient-to-r from-purple-500 to-cyan-500' 
                       : s < currentStep 
                         ? 'bg-purple-500/50' 
-                        : 'bg-slate-700'
+                        : 'bg-white/5'
                   }`}
                 />
               ))}

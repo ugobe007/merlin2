@@ -283,26 +283,26 @@ const Step4Options = ({ state, updateState }: Props) => {
         </div>
 
         {/* Stats Bar */}
-        <div className="flex justify-center gap-6 p-5 bg-slate-800/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl mb-6">
+        <div className="flex justify-center gap-6 p-5 bg-white/5/80 backdrop-blur-sm border border-white/10 rounded-2xl mb-6">
           <div className="text-center px-4">
             <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Annual Usage</div>
             <div className="text-xl font-bold text-white">{(usage / 1e6).toFixed(2)}M kWh</div>
           </div>
-          <div className="w-px bg-slate-700" />
+          <div className="w-px bg-white/5" />
           <div className="text-center px-4">
             <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">
               Sun Hours/Day
             </div>
             <div className="text-xl font-bold text-amber-400">☀️ {loc.sunHours}</div>
           </div>
-          <div className="w-px bg-slate-700" />
+          <div className="w-px bg-white/5" />
           <div className="text-center px-4">
             <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">
               Property Size
             </div>
             <div className="text-xl font-bold text-white">{ind.rooms} rooms</div>
           </div>
-          <div className="w-px bg-slate-700" />
+          <div className="w-px bg-white/5" />
           <div className="text-center px-4">
             <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">
               Potential Savings
@@ -333,7 +333,7 @@ const Step4Options = ({ state, updateState }: Props) => {
             onExpand={() => setExpandedCard(expandedCard === "solar" ? null : "solar")}
             accentColor="amber"
           >
-            <div className="p-5 border-t border-slate-700/50">
+            <div className="p-5 border-t border-white/10">
               <div className="text-sm text-slate-400 mb-4 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-amber-400" />
                 Choose configuration based on {(usage / 1e6).toFixed(2)}M kWh usage:
@@ -384,7 +384,7 @@ const Step4Options = ({ state, updateState }: Props) => {
             onExpand={() => setExpandedCard(expandedCard === "ev" ? null : "ev")}
             accentColor="cyan"
           >
-            <div className="p-5 border-t border-slate-700/50">
+            <div className="p-5 border-t border-white/10">
               <div className="text-sm text-slate-400 mb-4 flex items-center gap-2">
                 <Zap className="w-4 h-4 text-cyan-400" />
                 Choose charging setup for {ind.rooms}-room property:
@@ -418,7 +418,7 @@ const Step4Options = ({ state, updateState }: Props) => {
                 ))}
               </div>
               {/* Charger Types Info */}
-              <div className="mt-4 p-4 bg-white/5 border border-slate-700/50 rounded-xl">
+              <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl">
                 <div className="text-xs font-semibold text-slate-300 mb-3">⚡ Charger Types</div>
                 <div className="grid grid-cols-3 gap-4 text-xs">
                   <div>
@@ -455,7 +455,7 @@ const Step4Options = ({ state, updateState }: Props) => {
             onExpand={() => setExpandedCard(expandedCard === "generator" ? null : "generator")}
             accentColor="red"
           >
-            <div className="p-5 border-t border-slate-700/50">
+            <div className="p-5 border-t border-white/10">
               <div className="text-sm text-slate-400 mb-4 flex items-center gap-2">
                 <Fuel className="w-4 h-4 text-red-400" />
                 Choose backup power (Peak: ~{peak} kW):
@@ -623,13 +623,13 @@ function OptionCard({
   return (
     <div
       className={`
-        bg-slate-800/80 backdrop-blur-sm rounded-2xl overflow-hidden transition-all duration-300
-        border ${isSelected ? accent.border + " ring-2 " + accent.ring : "border-slate-700/50"}
+        bg-white/5/80 backdrop-blur-sm rounded-2xl overflow-hidden transition-all duration-300
+        border ${isSelected ? accent.border + " ring-2 " + accent.ring : "border-white/10"}
       `}
     >
       {/* Header */}
       <div
-        className={`flex items-center justify-between p-5 cursor-pointer transition-colors ${isSelected ? accent.bg : "hover:bg-slate-800"}`}
+        className={`flex items-center justify-between p-5 cursor-pointer transition-colors ${isSelected ? accent.bg : "hover:bg-white/5"}`}
         onClick={onExpand}
       >
         <div className="flex items-center gap-4">
@@ -671,7 +671,7 @@ function OptionCard({
               ${
                 isSelected
                   ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25"
-                  : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                  : "bg-white/5 text-slate-300 hover:bg-slate-600"
               }
             `}
           >
@@ -736,8 +736,8 @@ function TierCard({ tier, isSelected, onClick, accentColor, sizeLabel, metrics }
         relative p-4 rounded-xl cursor-pointer transition-all
         ${
           isSelected
-            ? `bg-slate-700/80 border-2 ${accent.border} shadow-lg`
-            : "bg-white/5 border border-slate-700/50 hover:bg-slate-700/50"
+            ? `bg-white/5/80 border-2 ${accent.border} shadow-lg`
+            : "bg-white/5 border border-white/10 hover:bg-white/5"
         }
       `}
     >

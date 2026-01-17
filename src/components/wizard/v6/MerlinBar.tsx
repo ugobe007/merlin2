@@ -745,7 +745,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
                 {props.onShowSavingsBreakdown && (
                   <button
                     onClick={props.onShowSavingsBreakdown}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white text-xs transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-slate-600/50 text-slate-300 hover:text-white text-xs transition-colors"
                   >
                     <Calculator className="w-3.5 h-3.5" />
                     Breakdown
@@ -810,7 +810,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
       
       {/* Expanded Section - Discovery Panel */}
       {isExpanded && (
-        <div className="px-4 pb-4 border-t border-slate-700/50">
+        <div className="px-4 pb-4 border-t border-white/10">
           {/* Tab Selector */}
           <div className="flex gap-2 pt-3 mb-3">
             <button
@@ -818,13 +818,13 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'discoveries'
                   ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30'
-                  : 'bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700/50'
+                  : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'
               }`}
             >
               <Gift className="w-4 h-4" />
               Discoveries
               <span className={`px-1.5 py-0.5 rounded text-xs ${
-                activeTab === 'discoveries' ? 'bg-amber-500/30 text-amber-300' : 'bg-slate-700 text-slate-400'
+                activeTab === 'discoveries' ? 'bg-amber-500/30 text-amber-300' : 'bg-white/5 text-slate-400'
               }`}>
                 {unlockedClues.length}/{discoveryClues.length}
               </span>
@@ -834,7 +834,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'tips'
                   ? 'bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-purple-400 border border-purple-500/30'
-                  : 'bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700/50'
+                  : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'
               }`}
             >
               <Sparkles className="w-4 h-4" />
@@ -881,14 +881,14 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
               )}
               
               {/* Progress bar */}
-              <div className="mt-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+              <div className="mt-3 p-3 rounded-lg bg-white/5 border border-white/10">
                 <div className="flex items-center justify-between text-xs mb-2">
                   <span className="text-slate-400">Discovery Progress</span>
                   <span className="text-amber-400 font-medium">
                     {unlockedClues.length}/{discoveryClues.length} suggestions unlocked
                   </span>
                 </div>
-                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
                     style={{ width: `${(unlockedClues.length / discoveryClues.length) * 100}%` }}
@@ -917,7 +917,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
                 {opportunities.map((opp, i) => (
                   <div 
                     key={i}
-                    className="flex items-center gap-3 p-2 rounded-lg bg-slate-800/50 border border-slate-700/50"
+                    className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/10"
                   >
                     <div className={`${opp.color}`}>{opp.icon}</div>
                     <div className="flex-1">
@@ -1030,7 +1030,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
                   <div className="flex gap-2 mt-3">
                     <button
                       onClick={() => props.onJumpToStep?.(4)}
-                      className="text-xs px-3 py-1.5 rounded bg-slate-700/50 hover:bg-slate-600/50 text-slate-300"
+                      className="text-xs px-3 py-1.5 rounded bg-white/5 hover:bg-slate-600/50 text-slate-300"
                     >
                       Review Options
                     </button>
@@ -1115,7 +1115,7 @@ const DiscoveryCard: React.FC<DiscoveryCardProps> = ({ clue }) => {
   
   // Locked state
   return (
-    <div className="p-3 rounded-lg bg-slate-800/30 border border-slate-700/30 opacity-60 hover:opacity-80 transition-opacity">
+    <div className="p-3 rounded-lg bg-white/5/30 border border-white/10/30 opacity-60 hover:opacity-80 transition-opacity">
       <div className="flex items-start gap-2">
         <div className="flex-shrink-0 text-slate-500 mt-0.5">
           <Lock className="w-4 h-4" />

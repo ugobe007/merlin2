@@ -25,7 +25,7 @@ export function ToggleCard({
   noLabel = 'No'
 }: ToggleCardProps) {
   return (
-    <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700 hover:border-purple-500/50 transition-all">
+    <div className="bg-white/5 rounded-2xl p-5 border border-white/10 hover:border-purple-500/50 transition-all">
       {/* Label Row */}
       <div className="flex items-center gap-2 mb-2">
         {icon && <span className="text-2xl">{icon}</span>}
@@ -44,7 +44,7 @@ export function ToggleCard({
           className={`relative p-4 rounded-xl border-2 transition-all ${
             value === true
               ? 'bg-green-500/20 border-green-500 shadow-lg shadow-green-500/20'
-              : 'bg-slate-700/30 border-slate-600 hover:border-green-500/50 hover:bg-green-500/10'
+              : 'bg-white/5/30 border-white/10 hover:border-green-500/50 hover:bg-green-500/10'
           }`}
         >
           <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-2 ${
@@ -65,7 +65,7 @@ export function ToggleCard({
           className={`relative p-4 rounded-xl border-2 transition-all ${
             value === false
               ? 'bg-slate-600/30 border-slate-400 shadow-lg'
-              : 'bg-slate-700/30 border-slate-600 hover:border-slate-400/50 hover:bg-slate-600/20'
+              : 'bg-white/5/30 border-white/10 hover:border-slate-400/50 hover:bg-slate-600/20'
           }`}
         >
           <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-2 ${

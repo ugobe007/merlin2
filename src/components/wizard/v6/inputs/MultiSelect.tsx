@@ -41,7 +41,7 @@ export function MultiSelect({
   };
 
   return (
-    <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700">
+    <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
       {/* Label Row */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -66,7 +66,7 @@ export function MultiSelect({
               className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all ${
                 isSelected
                   ? 'bg-purple-500/20 border-purple-500 text-purple-200'
-                  : 'bg-slate-700/30 border-slate-600 text-slate-300 hover:border-purple-500/50 hover:bg-purple-500/10 disabled:opacity-40 disabled:cursor-not-allowed'
+                  : 'bg-white/5/30 border-white/10 text-slate-300 hover:border-purple-500/50 hover:bg-purple-500/10 disabled:opacity-40 disabled:cursor-not-allowed'
               }`}
             >
               {isSelected && <Check className="w-4 h-4 text-purple-400" />}

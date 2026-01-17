@@ -35,7 +35,7 @@ export function RangeSlider({
   const defaultPresets = presets || [25, 50, 75, 100].filter(p => p >= min && p <= max);
 
   return (
-    <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700 hover:border-purple-500/50 transition-all">
+    <div className="bg-white/5 rounded-2xl p-5 border border-white/10 hover:border-purple-500/50 transition-all">
       {/* Label Row */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -48,7 +48,7 @@ export function RangeSlider({
       </div>
 
       {/* Slider Track */}
-      <div className="relative h-3 bg-slate-700 rounded-full overflow-hidden">
+      <div className="relative h-3 bg-white/5 rounded-full overflow-hidden">
         {/* Filled portion */}
         <div 
           className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full transition-all"
@@ -83,7 +83,7 @@ export function RangeSlider({
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 value === preset
                   ? 'bg-purple-600 text-white'
-                  : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600 hover:text-white'
+                  : 'bg-white/5 text-slate-400 hover:bg-slate-600 hover:text-white'
               }`}
             >
               {preset}{unit}

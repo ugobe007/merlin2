@@ -139,7 +139,7 @@ export function ValidationErrorPanel({
         {import.meta.env.DEV && (
           <button
             onClick={handleCopyDebugInfo}
-            className="px-6 py-3 bg-slate-700/50 text-slate-300 rounded-xl hover:bg-slate-700/70 transition-all border border-slate-600/30 font-medium flex items-center gap-2"
+            className="px-6 py-3 bg-white/5 text-slate-300 rounded-xl hover:bg-white/5/70 transition-all border border-white/10/30 font-medium flex items-center gap-2"
           >
             <Copy className="w-4 h-4" />
             Copy Debug Info {fingerprint ? `(FP: ${fingerprint.slice(0, 16)}...)` : ""}
@@ -147,7 +147,7 @@ export function ValidationErrorPanel({
         )}
         <button
           onClick={handleResetWizard}
-          className="px-6 py-3 bg-slate-700/50 text-slate-300 rounded-xl hover:bg-slate-700/70 transition-all border border-slate-600/30 font-medium flex items-center gap-2"
+          className="px-6 py-3 bg-white/5 text-slate-300 rounded-xl hover:bg-white/5/70 transition-all border border-white/10/30 font-medium flex items-center gap-2"
         >
           <RotateCcw className="w-4 h-4" />
           Reset Wizard

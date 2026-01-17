@@ -32,7 +32,7 @@ export function NumberStepper({
   const increase = () => onChange(Math.min(max, value + step));
 
   return (
-    <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700 hover:border-purple-500/50 transition-all">
+    <div className="bg-white/5 rounded-2xl p-5 border border-white/10 hover:border-purple-500/50 transition-all">
       {/* Label Row */}
       <div className="flex items-center gap-2 mb-4">
         {icon && <span className="text-2xl">{icon}</span>}
@@ -44,7 +44,7 @@ export function NumberStepper({
         <button
           onClick={decrease}
           disabled={value <= min}
-          className="w-14 h-14 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
+          className="w-14 h-14 rounded-xl bg-white/5 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
         >
           <Minus className="w-6 h-6 text-white" />
         </button>
@@ -72,7 +72,7 @@ export function NumberStepper({
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
               value === preset
                 ? 'bg-purple-600 text-white'
-                : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600 hover:text-white'
+                : 'bg-white/5 text-slate-400 hover:bg-slate-600 hover:text-white'
             }`}
           >
             {preset.toLocaleString()}

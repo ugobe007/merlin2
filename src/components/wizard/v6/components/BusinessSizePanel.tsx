@@ -194,7 +194,7 @@ export function BusinessSizePanel({
                 className={`relative p-6 rounded-2xl border-2 transition-all duration-200 text-left ${
                   isSelected
                     ? 'border-purple-500 bg-purple-500/20 shadow-lg shadow-purple-500/20'
-                    : 'border-slate-600 bg-slate-700/50 hover:border-purple-500/50 hover:bg-slate-700'
+                    : 'border-white/10 bg-white/5 hover:border-purple-500/50 hover:bg-white/5'
                 }`}
               >
                 {/* Selected checkmark */}

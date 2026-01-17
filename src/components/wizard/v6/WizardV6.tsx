@@ -75,7 +75,7 @@ function StartOverModal({ isOpen, onClose, onConfirm }: StartOverModalProps) {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-slate-800 border border-purple-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+      <div className="relative bg-white/5 border border-purple-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -101,7 +101,7 @@ function StartOverModal({ isOpen, onClose, onConfirm }: StartOverModalProps) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-600 transition-colors"
+            className="flex-1 px-4 py-3 bg-white/5 text-white rounded-xl font-medium hover:bg-slate-600 transition-colors"
           >
             Cancel
           </button>
