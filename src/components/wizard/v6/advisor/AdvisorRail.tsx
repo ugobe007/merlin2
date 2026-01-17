@@ -251,7 +251,10 @@ export function AdvisorRail({
 
   return (
     <aside className="w-full sticky top-4">
-      <div className="rounded-2xl border border-slate-700/50 bg-slate-900/95 backdrop-blur overflow-hidden flex flex-col shadow-xl max-h-[calc(100vh-140px)]">
+      <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden flex flex-col shadow-[0_12px_40px_rgba(0,0,0,0.35)] max-h-[calc(100vh-140px)]">
+        {/* Glass edge highlight overlay */}
+        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-b from-white/10 via-white/5 to-transparent" />
+
         {/* MERLIN IDENTITY HEADER */}
         <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
           <div className="flex items-center gap-3 mb-4">
@@ -426,7 +429,7 @@ export function AdvisorRail({
 
               {/* CONSTRAINT WARNING (Step 3+) */}
               {constraint && (
-                <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 shadow-[0_0_0_1px_rgba(251,191,36,0.12),0_0_18px_rgba(251,191,36,0.06)]">
                   <div className="text-[11px] font-semibold text-amber-200 mb-1">Constraint</div>
                   <div className="text-xs text-slate-200/80 whitespace-pre-line">{constraint}</div>
 
@@ -454,7 +457,7 @@ export function AdvisorRail({
         {/* MERLIN'S INSIGHT - Whisper, not interrupt */}
         {insight && (
           <div className="px-5 py-3 border-b border-slate-700/50 flex-shrink-0">
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl shadow-[0_0_0_1px_rgba(251,191,36,0.10),0_0_16px_rgba(251,191,36,0.05)]">
               <div className="flex items-start gap-2">
                 <span className="text-base mt-0.5">💡</span>
                 <div className="flex-1">
