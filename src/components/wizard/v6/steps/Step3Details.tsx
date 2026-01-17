@@ -1,9 +1,9 @@
 /**
  * Step3Details - COMPLETE REPLACEMENT
- * 
+ *
  * Drop-in replacement for existing Step3Details.tsx
  * Uses new CompleteStep3 with full backward compatibility
- * 
+ *
  * This replaces the old questionnaire engine with the new
  * CompleteStep3 system that includes:
  * - 27 comprehensive questions
@@ -13,24 +13,20 @@
  * - Quote generation
  */
 
-import React from 'react';
-import { Step3Integration } from '../../Step3Integration';
+import React from "react";
+import { Step3Integration } from "../../Step3Integration";
 
 interface Step3DetailsProps {
-  state: any;
-  updateState: (updates: any) => void;
+  state: unknown;
+  updateState: (updates: unknown) => void;
   onNext: () => void;
   onBack?: () => void;
+  onValidityChange?: (isValid: boolean) => void;
 }
 
-export function Step3Details({
-  state,
-  updateState,
-  onNext,
-  onBack
-}: Step3DetailsProps) {
+export function Step3Details({ state, updateState, onNext, onBack }: Step3DetailsProps) {
   // Extract current answers from state
-  const initialData = (state.useCaseData?.inputs as Record<string, any>) || {};
+  const initialData = (state.useCaseData?.inputs as Record<string, unknown>) || {};
 
   return (
     <Step3Integration
@@ -42,8 +38,8 @@ export function Step3Details({
         updateState({
           useCaseData: {
             ...state.useCaseData,
-            inputs: data
-          }
+            inputs: data,
+          },
         });
       }}
       onNext={(quoteData) => {
@@ -54,7 +50,7 @@ export function Step3Details({
           useCaseData: {
             ...state.useCaseData,
             inputs: quoteData.answers,
-          }
+          },
         });
         onNext();
       }}

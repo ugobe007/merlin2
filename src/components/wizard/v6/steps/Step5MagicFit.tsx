@@ -204,8 +204,14 @@ function buildWorksheetData(
       industry: {
         type: state.industry || "",
         typeName: quoteResult.facility?.industryName || state.industry || "",
-        subtype: (state.useCaseData?.inputs as Record<string, unknown>)?.facilityType as string || state.industry || "",
-        subtypeName: (state.useCaseData?.inputs as Record<string, unknown>)?.facilitySubtype as string || state.industry || "",
+        subtype:
+          ((state.useCaseData?.inputs as Record<string, unknown>)?.facilityType as string) ||
+          state.industry ||
+          "",
+        subtypeName:
+          ((state.useCaseData?.inputs as Record<string, unknown>)?.facilitySubtype as string) ||
+          state.industry ||
+          "",
         facilityDetails: state.useCaseData || {},
       },
     },
@@ -353,6 +359,7 @@ interface Props {
   state: WizardState;
   updateState: (updates: Partial<WizardState>) => void;
   goToStep: (step: number) => void;
+  step3Snapshot?: unknown;
 }
 
 export function Step5MagicFit({ state, updateState, goToStep }: Props) {

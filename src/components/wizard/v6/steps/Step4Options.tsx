@@ -8,7 +8,7 @@
  * - Borders: Purple (purple-500/30) or slate (slate-700)
  * - Accents: Purple/violet for primary, emerald for positive, amber for highlights
  * - Text: White for headers, slate-300/400 for secondary
- * 
+ *
  * SSOT: Uses step4PreviewService for all preview calculations
  */
 
@@ -34,6 +34,7 @@ import {
 interface Props {
   state: WizardState;
   updateState: (updates: Partial<WizardState>) => void;
+  step3Snapshot?: unknown;
 }
 
 // UI display types (standalone types that include formatted strings)
@@ -44,8 +45,8 @@ interface SolarTier {
   coveragePercent: number;
   panelCount: number;
   annualProductionKwh: number;
-  annualSavings: number;  // raw number from service
-  installCost: number;    // raw number from service
+  annualSavings: number; // raw number from service
+  installCost: number; // raw number from service
   netCostAfterITC: number;
   paybackYears: number;
   co2OffsetTons: number;
@@ -154,7 +155,7 @@ function calcEv(name: string, l2: number, dc: number): EvTier {
   };
 }
 
-function calcGen(name: string, kw: number, fuel: 'diesel' | 'natural-gas'): GeneratorTier {
+function calcGen(name: string, kw: number, fuel: "diesel" | "natural-gas"): GeneratorTier {
   const result = calculateGeneratorPreview({ sizeKw: kw, fuelType: fuel }, name);
   return {
     ...result,
@@ -180,8 +181,8 @@ const Step4Options = ({ state, updateState }: Props) => {
   const [expandedCard, setExpandedCard] = useState<string | null>("solar");
 
   // Access inputs from useCaseData.inputs
-  const inputs = state.useCaseData?.inputs as Record<string, unknown> || {};
-  
+  const inputs = (state.useCaseData?.inputs as Record<string, unknown>) || {};
+
   const loc = {
     city: state.city || "Las Vegas",
     state: state.state || "NV",
@@ -232,7 +233,7 @@ const Step4Options = ({ state, updateState }: Props) => {
     (selectedOptions.includes("solar") && curSolar ? curSolar.annualSavingsRaw * 10 : 0) +
     (selectedOptions.includes("ev") && curEv ? curEv.tenYearRevenue : 0);
   const maxSolar = solarOpts.maximum.annualSavingsRaw;
-  const maxEvRevenue = evOpts.premium.monthlyRevenueRaw;
+  const _maxEvRevenue = evOpts.premium.monthlyRevenueRaw;
 
   const sync = (opts: string[], sol: string | null, ev: string | null) =>
     updateState({ selectedOptions: opts, solarTier: sol, evTier: ev });
