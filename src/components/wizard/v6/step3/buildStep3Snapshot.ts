@@ -7,7 +7,7 @@
  */
 
 import type { WizardState } from "../types";
-import type { Step3Snapshot } from "./step3Contract";
+import type { Step3Snapshot, Step3Inputs } from "./step3Contract";
 import { getStep3Missing, computeCompletenessPct, computeConfidencePct } from "./step3Validator";
 
 export function buildStep3Snapshot(state: WizardState): Step3Snapshot {
@@ -31,7 +31,7 @@ export function buildStep3Snapshot(state: WizardState): Step3Snapshot {
   };
 
   // Extract facility data
-  const inputs = (state.useCaseData?.inputs || {}) as unknown;
+  const inputs = (((state.useCaseData?.inputs || {}) as unknown) ?? {}) as Step3Inputs;
 
   // ✅ UPGRADE 1: Spread first, normalize second (avoid duplicate keys)
   const facility = {

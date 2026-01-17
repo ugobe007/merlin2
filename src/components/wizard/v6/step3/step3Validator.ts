@@ -31,7 +31,7 @@ export function getStep3Missing(state: WizardState): Step3MissingKey[] {
 
   // Facility: operating hours is anchor for most use cases
   const inputs = state.useCaseData?.inputs || {};
-  if (!isFiniteNumber((inputs as unknown).operatingHours)) {
+  if (!isFiniteNumber(inputs.operatingHours)) {
     missing.push("facility.operatingHours");
   }
 
@@ -42,14 +42,14 @@ export function getStep3Missing(state: WizardState): Step3MissingKey[] {
 
   // Hotels / multifamily
   if (industry.includes("hotel") || industry.includes("apartment")) {
-    if (!isFiniteNumber((inputs as unknown).roomCount)) {
+    if (!isFiniteNumber(inputs.roomCount)) {
       missing.push("facility.roomCount");
     }
   }
 
   // Car wash
   if (industry.includes("car wash") || industry.includes("carwash")) {
-    const bayCount = (inputs as unknown).bayCount || (inputs as unknown).bays;
+    const bayCount = inputs.bayCount || inputs.bays;
     if (!isFiniteNumber(bayCount)) {
       missing.push("facility.bayCount");
     }
@@ -57,14 +57,14 @@ export function getStep3Missing(state: WizardState): Step3MissingKey[] {
 
   // Data center
   if (industry.includes("data center") || industry.includes("datacenter")) {
-    if (!isFiniteNumber((inputs as unknown).rackCount)) {
+    if (!isFiniteNumber(inputs.rackCount)) {
       missing.push("facility.rackCount");
     }
   }
 
   // Hospital
   if (industry.includes("hospital")) {
-    if (!isFiniteNumber((inputs as unknown).bedCount)) {
+    if (!isFiniteNumber(inputs.bedCount)) {
       missing.push("facility.bedCount");
     }
   }
@@ -78,10 +78,7 @@ export function getStep3Missing(state: WizardState): Step3MissingKey[] {
     !industry.includes("hospital")
   ) {
     // Square footage is often the best baseline proxy
-    if (
-      !isFiniteNumber((inputs as unknown).squareFootage) &&
-      !isFiniteNumber((inputs as unknown).squareFeet)
-    ) {
+    if (!isFiniteNumber(inputs.squareFootage) && !isFiniteNumber(inputs.squareFeet)) {
       missing.push("facility.squareFeet");
     }
   }
@@ -123,19 +120,19 @@ export function computeConfidencePct(state: WizardState, missing: Step3MissingKe
 
   // Operating hours (critical anchor)
   const inputs = state.useCaseData?.inputs || {};
-  const hasHours = typeof (inputs as unknown).operatingHours === "number";
+  const hasHours = typeof inputs.operatingHours === "number";
   if (hasHours) score += 25;
 
   // Industry-specific anchors
   // Normalize slugs: car_wash → car wash, data_center → data center
   const industryRaw = (state.industry || "").toLowerCase();
   const industry = industryRaw.replace(/[_-]+/g, " ");
-  const hasRooms = typeof (inputs as unknown).roomCount === "number";
-  const bayCount = (inputs as unknown).bayCount || (inputs as unknown).bays;
+  const hasRooms = typeof inputs.roomCount === "number";
+  const bayCount = inputs.bayCount || inputs.bays;
   const hasBays = typeof bayCount === "number";
-  const hasRacks = typeof (inputs as unknown).rackCount === "number";
-  const hasBeds = typeof (inputs as unknown).bedCount === "number";
-  const sqft = (inputs as unknown).squareFootage || (inputs as unknown).squareFeet;
+  const hasRacks = typeof inputs.rackCount === "number";
+  const hasBeds = typeof inputs.bedCount === "number";
+  const sqft = inputs.squareFootage || inputs.squareFeet;
   const hasSqft = typeof sqft === "number";
 
   if (industry.includes("hotel") && hasRooms) score += 20;
