@@ -15,29 +15,33 @@
 
 import React from "react";
 import { Step3Integration } from "../../Step3Integration";
+import type { WizardState } from "../types";
 
 interface Step3DetailsProps {
   state: unknown;
-  updateState: (updates: unknown) => void;
+  updateState: (updates: any) => void;
   onNext: () => void;
   onBack?: () => void;
   onValidityChange?: (isValid: boolean) => void;
 }
 
 export function Step3Details({ state, updateState, onNext, onBack }: Step3DetailsProps) {
+  // Cast state to proper type
+  const wizardState = state as WizardState;
+  
   // Extract current answers from state
-  const initialData = (state.useCaseData?.inputs as Record<string, unknown>) || {};
+  const initialData = (wizardState.useCaseData?.inputs as Record<string, unknown>) || {};
 
   return (
     <Step3Integration
-      state={state}
+      state={wizardState as any}
       updateState={updateState}
       initialData={initialData}
       onComplete={(data) => {
         // Sync answers back to state as user types
         updateState({
           useCaseData: {
-            ...state.useCaseData,
+            ...wizardState.useCaseData,
             inputs: data,
           },
         });
@@ -48,7 +52,7 @@ export function Step3Details({ state, updateState, onNext, onBack }: Step3Detail
         // TrueQuote is SSOT for calculations (Step 5)
         updateState({
           useCaseData: {
-            ...state.useCaseData,
+            ...wizardState.useCaseData,
             inputs: quoteData.answers,
           },
         });

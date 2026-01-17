@@ -127,7 +127,7 @@ const getAdvisorMessage = (
     case 3: {
       // Details
       const questionsAnswered = Object.keys(wizardState.answers || {}).length;
-      const totalQuestions = wizardState.totalQuestions || 15;
+      const totalQuestions = Number(wizardState.totalQuestions || 15);
       const progress = Math.round((questionsAnswered / totalQuestions) * 100);
 
       if (progress >= 100) {
@@ -137,8 +137,9 @@ const getAdvisorMessage = (
           celebration: true,
         };
       } else if (progress >= 67) {
+        const remaining = Number(totalQuestions) - Number(questionsAnswered);
         return {
-          text: `Almost there! ${totalQuestions - questionsAnswered} questions left. Your estimate is getting very precise.`,
+          text: `Almost there! ${Math.max(0, remaining)} questions left. Your estimate is getting very precise.`,
           tip: "Pro tip: The more details you provide, the more accurate your savings calculation.",
         };
       } else if (progress >= 34) {
