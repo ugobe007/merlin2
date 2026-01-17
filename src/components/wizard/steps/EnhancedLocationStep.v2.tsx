@@ -375,12 +375,12 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
   // ============================================
 
   return (
-    <div className="max-w-6xl mx-auto py-12 px-6">
+    <div className="w-full py-6 px-2 sm:px-4 lg:px-0">
       {/* Header */}
-      <div className="text-center mb-10">
-        <h1 className="text-4xl font-bold mb-3">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-3">
           <span className="text-white">Tell me about your </span>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500">
+          <span className="text-violet-300">
             location
           </span>
         </h1>
@@ -394,7 +394,7 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
         {/* LEFT COLUMN: Location */}
         <div className="space-y-6">
           {/* Zip Code Input */}
-          <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+          <div className="bg-white/4 rounded-2xl p-6 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="w-5 h-5 text-purple-400" />
               <h3 className="text-lg font-semibold text-white">Your Zip Code</h3>
@@ -402,7 +402,7 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
 
             <input
               type="text"
-              className="w-full px-4 py-3 bg-white/5 border-2 border-white/10 text-white placeholder-slate-400 rounded-xl text-lg text-center font-semibold tracking-wide focus:border-violet-400/40 focus:ring-2 focus:ring-violet-500/30 focus:outline-none transition-all shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:border-white/20"
+              className="w-full px-4 py-3 bg-white/5 border-2 border-white/10 text-white placeholder-slate-400 rounded-xl text-lg text-center font-semibold tracking-wide focus:border-violet-300/60 focus:ring-2 focus:ring-violet-500/30 focus:outline-none transition-all shadow-[0_12px_40px_rgba(0,0,0,0.22)] hover:border-white/20"
               placeholder="e.g., 94102"
               maxLength={5}
               value={zipCode}
@@ -544,7 +544,7 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
 
           {/* Optional Address Search */}
           {showAddressSearch && (
-            <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700 animate-in fade-in slide-in-from-bottom-4">
+            <div className="bg-white/4 rounded-2xl p-6 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] animate-in fade-in slide-in-from-bottom-4">
               <div className="flex items-center gap-2 mb-4">
                 <Building2 className="w-5 h-5 text-purple-400" />
                 <h3 className="text-lg font-semibold text-white">Business Address (Optional)</h3>
@@ -594,7 +594,7 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
         </div>
 
         {/* RIGHT COLUMN: Energy Goals */}
-        <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+        <div className="bg-white/3 rounded-2xl p-6 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.30)]">
           <div className="text-center mb-6">
             <Target className="w-10 h-10 mx-auto mb-3 text-purple-400" />
             <h3 className="text-xl font-bold text-white mb-2">What are your energy goals?</h3>
@@ -610,8 +610,8 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
                   onClick={() => toggleGoal(goal.id)}
                   className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
                     isSelected
-                      ? "bg-purple-900/50 border-purple-500 shadow-lg shadow-purple-500/20"
-                      : "bg-slate-900/50 border-slate-600 hover:border-slate-500"
+                      ? "bg-violet-500/10 border-violet-300/30 shadow-[0_12px_40px_rgba(124,58,237,0.18)]"
+                      : "bg-white/3 border-white/10 hover:border-white/20"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -644,7 +644,7 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
         <button
           onClick={handleContinue}
           disabled={zipCode.length !== 5}
-          className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-xl text-lg font-bold shadow-lg shadow-purple-500/30 transition-all transform hover:scale-105 disabled:transform-none"
+          className="px-8 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-xl text-lg font-bold shadow-lg shadow-violet-500/25 transition-all transform hover:scale-105 disabled:transform-none"
         >
           Continue to Industry Selection →
         </button>
