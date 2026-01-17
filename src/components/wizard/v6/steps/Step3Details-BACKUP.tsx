@@ -311,7 +311,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
             <span className="text-sm text-slate-400">Progress</span>
             <span className="text-sm font-semibold text-white">{completionPercent}%</span>
           </div>
-          <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+          <div className="h-2 bg-white/5 rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-500"
               style={{ width: `${completionPercent}%` }}
@@ -337,8 +337,8 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                   ${isActive 
                     ? 'bg-purple-500/20 border-2 border-purple-500' 
                     : isAnswered
-                      ? 'bg-white/5 border border-slate-700 hover:bg-slate-800'
-                      : 'bg-slate-800/30 border border-slate-700/50 opacity-50'
+                      ? 'bg-white/5 border border-white/10 hover:bg-white/5'
+                      : 'bg-white/5/30 border border-white/10 opacity-50'
                   }
                 `}
               >
@@ -349,7 +349,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                       ? 'bg-emerald-500 text-white' 
                       : isActive
                         ? 'bg-purple-500 text-white'
-                        : 'bg-slate-700 text-slate-500'
+                        : 'bg-white/5 text-slate-500'
                     }
                   `}>
                     {isAnswered ? <Check className="w-4 h-4" /> : q.id}
@@ -375,7 +375,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
       {/* ═══════════════════════════════════════════════════════════
           RIGHT PANEL - Active Question
           ═══════════════════════════════════════════════════════════ */}
-      <div className="flex-1 bg-slate-900 flex flex-col">
+      <div className="flex-1 bg-[#0f1d33]/70 flex flex-col">
         {/* Question Content */}
         <div className="flex-1 flex items-center justify-center p-12">
           <div className="max-w-2xl w-full">
@@ -426,7 +426,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                           p-6 rounded-2xl text-left transition-all border-2
                           ${isSelected
                             ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-500 shadow-lg shadow-purple-500/25'
-                            : 'bg-white/5 border-slate-700 hover:border-purple-500/50 hover:bg-slate-800'
+                            : 'bg-white/5 border-white/10 hover:border-purple-500/50 hover:bg-white/5'
                           }
                         `}
                       >
@@ -452,7 +452,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
               {currentQuestion.type === 'slider' && (
                 <div className="space-y-6">
                   {/* Current Value */}
-                  <div className="text-center p-8 bg-white/5 rounded-2xl border border-slate-700">
+                  <div className="text-center p-8 bg-white/5 rounded-2xl border border-white/10">
                     <span className="text-6xl font-bold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
                       {answers[currentQuestion.field] || currentQuestion.smartDefault}
                     </span>
@@ -469,7 +469,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                     step={currentQuestion.step}
                     value={answers[currentQuestion.field] || currentQuestion.smartDefault}
                     onChange={(e) => setAnswers(prev => ({ ...prev, [currentQuestion.field]: Number(e.target.value) }))}
-                    className="w-full h-3 bg-slate-700 rounded-full appearance-none cursor-pointer
+                    className="w-full h-3 bg-white/5 rounded-full appearance-none cursor-pointer
                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-purple-500 [&::-webkit-slider-thumb]:to-indigo-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-xl
                       [&::-moz-range-thumb]:w-8 [&::-moz-range-thumb]:h-8 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-gradient-to-r [&::-moz-range-thumb]:from-purple-500 [&::-moz-range-thumb]:to-indigo-500 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-xl"
                   />
@@ -510,7 +510,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                           aspect-square rounded-2xl text-4xl font-bold transition-all border-2
                           ${isSelected
                             ? 'bg-gradient-to-br from-purple-500 to-indigo-500 border-transparent text-white shadow-xl shadow-purple-500/30'
-                            : 'bg-white/5 border-slate-700 text-slate-300 hover:border-purple-500/50 hover:bg-slate-800'
+                            : 'bg-white/5 border-white/10 text-slate-300 hover:border-purple-500/50 hover:bg-white/5'
                           }
                         `}
                       >
@@ -529,7 +529,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                       p-8 rounded-2xl text-2xl font-bold transition-all border-2
                       ${answers[currentQuestion.field] === true
                         ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 border-transparent text-white shadow-xl shadow-emerald-500/30'
-                        : 'bg-white/5 border-slate-700 text-slate-300 hover:border-emerald-500/50'
+                        : 'bg-white/5 border-white/10 text-slate-300 hover:border-emerald-500/50'
                       }
                     `}
                   >
@@ -540,8 +540,8 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                     className={`
                       p-8 rounded-2xl text-2xl font-bold transition-all border-2
                       ${answers[currentQuestion.field] === false
-                        ? 'bg-slate-700 border-slate-600 text-white shadow-lg'
-                        : 'bg-white/5 border-slate-700 text-slate-300 hover:border-slate-600'
+                        ? 'bg-white/5 border-white/10 text-white shadow-lg'
+                        : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/10'
                       }
                     `}
                   >
@@ -554,11 +554,11 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
         </div>
 
         {/* Footer Navigation */}
-        <div className="p-6 bg-white/5 border-t border-slate-700 flex items-center justify-between">
+        <div className="p-6 bg-white/5 border-t border-white/10 flex items-center justify-between">
           <button
             onClick={() => setActiveQuestion(Math.max(1, activeQuestion - 1))}
             disabled={activeQuestion === 1}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ArrowLeft className="w-4 h-4" />
             Previous
@@ -574,7 +574,7 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
                     ? 'bg-purple-500 w-8'
                     : answers[q.field] !== undefined
                       ? 'bg-emerald-500'
-                      : 'bg-slate-700'
+                      : 'bg-white/5'
                   }
                 `}
               />

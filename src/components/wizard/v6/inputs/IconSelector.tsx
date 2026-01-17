@@ -45,7 +45,7 @@ export function IconSelector({
   };
 
   return (
-    <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700">
+    <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
       {/* Label Row */}
       <div className="flex items-center gap-2 mb-4">
         {icon && <span className="text-2xl">{icon}</span>}
@@ -63,7 +63,7 @@ export function IconSelector({
               className={`relative p-4 rounded-xl border-2 transition-all text-left ${
                 isSelected
                   ? 'bg-purple-500/20 border-purple-500 shadow-lg shadow-purple-500/20'
-                  : 'bg-slate-700/30 border-slate-600 hover:border-purple-500/50 hover:bg-purple-500/10'
+                  : 'bg-white/5/30 border-white/10 hover:border-purple-500/50 hover:bg-purple-500/10'
               }`}
             >
               {/* Selected Checkmark */}

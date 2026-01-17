@@ -48,7 +48,7 @@ const COLOR_SCHEMES: ColorScheme[] = [
     primaryGradient: "from-purple-500 via-indigo-500 to-purple-600",
     border: "border-purple-300",
     borderSelected: "border-purple-500",
-    focusBorder: "focus:border-purple-500",
+    focusBorder: "focus:border-amber-400/40",
     bgSelected: "bg-gradient-to-br from-purple-500/15 via-indigo-500/10 to-purple-600/5",
     bgHover: "hover:bg-purple-50 hover:border-purple-400",
     text: "text-purple-700",
@@ -243,7 +243,7 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
               "hover:scale-[1.02] active:scale-[0.98]",
               isSelected
                 ? `border-2 ${scheme.borderSelected} bg-gradient-to-br ${scheme.primaryGradient}/10 shadow-lg shadow-violet-500/20`
-                : `border border-slate-700/50 bg-slate-800/40 hover:bg-slate-700/60 hover:border-slate-600`
+                : `border border-white/10 bg-white/5/40 hover:bg-white/5/60 hover:border-white/10`
             )}
           >
             {/* Selection indicator - sleek corner pill */}
@@ -264,7 +264,7 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
                 "w-9 h-9 rounded-lg flex items-center justify-center mb-1.5 transition-all",
                 isSelected
                   ? `bg-gradient-to-br ${scheme.primaryGradient} text-white shadow-md shadow-violet-500/30`
-                  : "bg-slate-700/60 text-slate-400 group-hover:text-slate-300 group-hover:bg-slate-700"
+                  : "bg-white/5/60 text-slate-400 group-hover:text-slate-300 group-hover:bg-white/5"
               )}
             >
               {getIcon(option.icon, "w-4 h-4", questionField, option.value)}
@@ -334,15 +334,15 @@ export const ToggleButtons: React.FC<ToggleButtonsProps> = ({
               isSelected
                 ? val
                   ? `${scheme.borderSelected} bg-gradient-to-br ${scheme.primaryGradient}/15 shadow-md shadow-emerald-500/20`
-                  : "border-slate-500 bg-slate-700/50 text-slate-300"
-                : `border-slate-700 bg-slate-800/40 hover:bg-slate-700/50 hover:border-slate-600`
+                  : "border-slate-500 bg-white/5 text-slate-300"
+                : `border-white/10 bg-white/5/40 hover:bg-white/5 hover:border-white/10`
             )}
           >
             <div className={cn(
               "w-5 h-5 rounded-full flex items-center justify-center transition-all",
               isSelected && val && `bg-gradient-to-br ${scheme.primaryGradient}`,
               isSelected && !val && "bg-slate-600",
-              !isSelected && "bg-slate-700"
+              !isSelected && "bg-white/5"
             )}>
               {getIcon(
                 icon,
@@ -422,15 +422,15 @@ export const SliderWithButtons: React.FC<SliderWithButtonsProps> = ({
           className={cn(
             "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
             safeValue <= min
-              ? "bg-slate-800 text-slate-600 cursor-not-allowed"
-              : `bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white active:scale-95`
+              ? "bg-white/5 text-slate-600 cursor-not-allowed"
+              : `bg-white/5 text-slate-300 hover:bg-slate-600 hover:text-white active:scale-95`
           )}
         >
           <LucideIcons.Minus className="w-4 h-4" />
         </button>
 
         {/* Slider track - slimmer */}
-        <div className="flex-1 relative h-2 bg-slate-700 rounded-full overflow-hidden">
+        <div className="flex-1 relative h-2 bg-white/5 rounded-full overflow-hidden">
           {/* Filled portion with gradient */}
           <div
             className={cn(
@@ -470,8 +470,8 @@ export const SliderWithButtons: React.FC<SliderWithButtonsProps> = ({
           className={cn(
             "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
             safeValue >= max
-              ? "bg-slate-800 text-slate-600 cursor-not-allowed"
-              : `bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white active:scale-95`
+              ? "bg-white/5 text-slate-600 cursor-not-allowed"
+              : `bg-white/5 text-slate-300 hover:bg-slate-600 hover:text-white active:scale-95`
           )}
         >
           <LucideIcons.Plus className="w-4 h-4" />
@@ -552,14 +552,14 @@ export const CheckboxGrid: React.FC<CheckboxGridProps> = ({
           "hover:scale-[1.01] active:scale-[0.99]",
           isSelected
             ? `border-2 ${scheme.borderSelected} bg-gradient-to-br ${scheme.primaryGradient}/10`
-            : `border border-slate-700/50 bg-slate-800/40 hover:bg-slate-700/50 hover:border-slate-600`
+            : `border border-white/10 bg-white/5/40 hover:bg-white/5 hover:border-white/10`
         )}
       >
         {/* Checkbox - sleeker */}
         <div
           className={cn(
             "w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all",
-            isSelected ? `bg-gradient-to-br ${scheme.primaryGradient}` : "border border-slate-600 bg-slate-800"
+            isSelected ? `bg-gradient-to-br ${scheme.primaryGradient}` : "border border-white/10 bg-white/5"
           )}
         >
           {isSelected && <LucideIcons.Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
@@ -570,7 +570,7 @@ export const CheckboxGrid: React.FC<CheckboxGridProps> = ({
           <div
             className={cn(
               "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0",
-              isSelected ? scheme.iconBg : "bg-slate-700/50 text-slate-400"
+              isSelected ? scheme.iconBg : "bg-white/5 text-slate-400"
             )}
           >
             {getIcon(option.icon, "w-3.5 h-3.5", undefined, option.value)}
@@ -658,8 +658,8 @@ export const NumberInput: React.FC<NumberInputProps> = ({
               "w-full px-3 py-2.5 rounded-xl text-base font-medium transition-all border",
               "focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-slate-900",
               useEstimate
-                ? "bg-slate-800 border-slate-700 text-slate-500"
-                : `bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:border-violet-500 focus:ring-violet-500/30`
+                ? "bg-white/5 border-white/10 text-slate-500"
+                : `bg-white/5/60 border-white/10 text-white placeholder:text-slate-500 focus:border-violet-500 focus:ring-amber-400/15`
             )}
           />
           {suffix && (
@@ -676,7 +676,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
             "w-4 h-4 rounded flex items-center justify-center transition-all",
             useEstimate 
               ? `bg-gradient-to-br ${scheme.primaryGradient}` 
-              : "border border-slate-600 bg-slate-800 group-hover:border-slate-500"
+              : "border border-white/10 bg-white/5 group-hover:border-slate-500"
           )}>
             {useEstimate && <LucideIcons.Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
           </div>
@@ -710,7 +710,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   const isComplete = questionCount !== undefined && completedCount === questionCount;
 
   return (
-    <div className="flex items-center justify-between py-2 border-b border-slate-700/50 mb-3">
+    <div className="flex items-center justify-between py-2 border-b border-white/10 mb-3">
       <div className="flex items-center gap-2">
         {icon && (
           <div
@@ -732,7 +732,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
             "flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full",
             isComplete 
               ? "bg-emerald-500/20 text-emerald-400" 
-              : "bg-slate-700/50 text-slate-400"
+              : "bg-white/5 text-slate-400"
           )}
         >
           {isComplete && <LucideIcons.CheckCircle2 className="w-3 h-3" />}
@@ -806,7 +806,7 @@ export const RangeButtonGroup: React.FC<RangeButtonGroupProps> = ({
                 "hover:scale-[1.02] active:scale-[0.98]",
                 isSelected
                   ? `border-2 ${scheme.borderSelected} bg-gradient-to-br ${scheme.primaryGradient}/15 shadow-lg shadow-violet-500/20`
-                  : `border border-slate-700/50 bg-slate-800/40 hover:bg-slate-700/60 hover:border-slate-600`
+                  : `border border-white/10 bg-white/5/40 hover:bg-white/5/60 hover:border-white/10`
               )}
             >
               {/* Selection indicator */}
@@ -936,15 +936,15 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
             value={(value as string) || ""}
             onChange={(e) => onChange(field_name, e.target.value)}
             className={cn(
-              "w-full px-3 py-2.5 rounded-xl border bg-slate-800/60 text-white",
-              "border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500",
+              "w-full px-3 py-2.5 rounded-xl border bg-white/5/60 text-white",
+              "border-white/10 focus:outline-none focus:ring-2 focus:ring-amber-400/15 focus:border-violet-500",
               "cursor-pointer appearance-none"
             )}
             style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1.25rem' }}
           >
-            <option value="" className="bg-slate-800">Select an option...</option>
+            <option value="" className="bg-white/5">Select an option...</option>
             {parsedOptions.map((opt) => (
-              <option key={opt.value} value={opt.value} className="bg-slate-800">
+              <option key={opt.value} value={opt.value} className="bg-white/5">
                 {opt.label}
               </option>
             ))}
@@ -1041,8 +1041,8 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
             value={(value as string) || ""}
             onChange={(e) => onChange(field_name, e.target.value)}
             className={cn(
-              "w-full px-3 py-2.5 rounded-xl border bg-slate-800/60 text-white placeholder:text-slate-500",
-              "border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500"
+              "w-full px-3 py-2.5 rounded-xl border bg-white/5/60 text-white placeholder:text-slate-500",
+              "border-white/10 focus:outline-none focus:ring-2 focus:ring-amber-400/15 focus:border-violet-500"
             )}
           />
         );

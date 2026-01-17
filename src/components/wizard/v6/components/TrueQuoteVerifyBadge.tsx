@@ -327,15 +327,15 @@ export const TrueQuoteVerifyBadge: React.FC<TrueQuoteVerifyBadgeProps> = ({
           
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="text-center p-2 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div className="text-center p-2 rounded-lg bg-white/5 border border-white/10">
               <p className="text-xs text-slate-500">Sources</p>
               <p className="text-lg font-bold text-white">{worksheetData?.sources?.length || 0}</p>
             </div>
-            <div className="text-center p-2 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div className="text-center p-2 rounded-lg bg-white/5 border border-white/10">
               <p className="text-xs text-slate-500">Steps</p>
               <p className="text-lg font-bold text-white">{worksheetData?.calculationSteps?.length || 0}</p>
             </div>
-            <div className="text-center p-2 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div className="text-center p-2 rounded-lg bg-white/5 border border-white/10">
               <p className="text-xs text-slate-500">Quote ID</p>
               <p className="text-sm font-mono text-purple-300 truncate">{quoteId}</p>
             </div>
@@ -410,7 +410,7 @@ const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({ worksheetData, onClose 
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-20 p-2 rounded-full 
-            bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600/50
+            bg-white/5 hover:bg-white/5 border border-white/10/50
             transition-all hover:scale-110"
         >
           <X className="w-5 h-5 text-slate-400" />
@@ -520,7 +520,7 @@ const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({ worksheetData, onClose 
         {/* ═══════════════════════════════════════════════════════════════════
             TAB NAVIGATION
             ═══════════════════════════════════════════════════════════════════ */}
-        <div className="flex border-b border-purple-500/20 bg-slate-900/50 flex-shrink-0">
+        <div className="flex border-b border-purple-500/20 bg-[#0f1d33]/70 flex-shrink-0">
           {[
             { id: 'summary', label: 'Summary', icon: FileCheck },
             { id: 'steps', label: 'Calculation Steps', icon: Search },
@@ -534,7 +534,7 @@ const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({ worksheetData, onClose 
                 text-sm font-semibold transition-all border-b-2
                 ${activeTab === tab.id 
                   ? 'border-purple-500 text-purple-300 bg-purple-500/10' 
-                  : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
+                  : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
                 }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -546,7 +546,7 @@ const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({ worksheetData, onClose 
         {/* ═══════════════════════════════════════════════════════════════════
             CONTENT AREA - Scrollable
             ═══════════════════════════════════════════════════════════════════ */}
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-900/30 min-h-0">
+        <div className="flex-1 overflow-y-auto p-6 bg-[#0f1d33]/70/30 min-h-0">
           {activeTab === 'summary' && <SummaryTab worksheetData={worksheetData} />}
           {activeTab === 'steps' && <StepsTab steps={worksheetData.calculationSteps} />}
           {activeTab === 'sources' && <SourcesTab sources={worksheetData.sources} />}
@@ -564,8 +564,8 @@ const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({ worksheetData, onClose 
           </div>
           
           <div className="flex items-center gap-3">
-            <button className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-sm font-medium
-              hover:bg-slate-700 transition-colors border border-slate-700">
+            <button className="px-4 py-2 rounded-lg bg-white/5 text-slate-300 text-sm font-medium
+              hover:bg-white/5 transition-colors border border-white/10">
               Export PDF
             </button>
             <button 
@@ -664,7 +664,7 @@ const SummaryTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ works
         
         {/* Base Load Calculation */}
         {baseLoadStep && (
-          <div className="mb-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+          <div className="mb-4 p-4 rounded-xl bg-white/5 border border-white/10">
             <div className="flex items-start justify-between mb-2">
               <h4 className="font-semibold text-white flex items-center gap-2">
                 <span className="text-amber-400">⚡</span> Base Load Calculation
@@ -674,7 +674,7 @@ const SummaryTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ works
               </span>
             </div>
             <p className="text-sm text-slate-400 mb-2">{baseLoadStep.description}</p>
-            <div className="p-3 rounded-lg bg-slate-900/50">
+            <div className="p-3 rounded-lg bg-[#0f1d33]/70">
               <p className="text-xs text-slate-500 mb-1">Formula</p>
               <p className="text-sm font-mono text-cyan-400">{baseLoadStep.formula}</p>
               <p className="text-sm font-mono text-purple-300 mt-1">{baseLoadStep.calculation}</p>
@@ -683,7 +683,7 @@ const SummaryTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ works
             {baseLoadStep.inputs && baseLoadStep.inputs.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {baseLoadStep.inputs.map((input, i) => (
-                  <div key={i} className="px-3 py-1.5 rounded-lg bg-slate-700/50 text-xs">
+                  <div key={i} className="px-3 py-1.5 rounded-lg bg-white/5 text-xs">
                     <span className="text-slate-400">{input.name}:</span>
                     <span className="text-white font-medium ml-1">
                       {typeof input.value === 'number' ? input.value.toLocaleString() : input.value}
@@ -704,7 +704,7 @@ const SummaryTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ works
             </h4>
             <div className="space-y-2">
               {modifierSteps.map((step, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 border border-slate-700/30">
+                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5/30 border border-white/10/30">
                   <div className="flex items-center gap-2">
                     <span className="text-purple-400">•</span>
                     <span className="text-slate-300 text-sm">{step.name.replace('Apply ', '')}</span>
@@ -774,7 +774,7 @@ const SummaryTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ works
       
       {/* Location & Facility Info */}
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
           <h4 className="text-sm font-semibold text-slate-400 mb-3 flex items-center gap-2">
             <Zap className="w-4 h-4 text-purple-400" />
             Location
@@ -799,7 +799,7 @@ const SummaryTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ works
           </div>
         </div>
         
-        <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
           <h4 className="text-sm font-semibold text-slate-400 mb-3 flex items-center gap-2">
             <Zap className="w-4 h-4 text-purple-400" />
             Facility Details
@@ -859,7 +859,7 @@ const SummaryTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ works
 
 // Result Card Component
 const ResultCard: React.FC<{ label: string; value: string; highlight?: boolean }> = ({ label, value, highlight }) => (
-  <div className={`p-3 rounded-lg ${highlight ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-slate-800/50'}`}>
+  <div className={`p-3 rounded-lg ${highlight ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-white/5'}`}>
     <p className="text-xs text-slate-500 mb-1">{label}</p>
     <p className={`text-lg font-bold ${highlight ? 'text-emerald-400' : 'text-white'}`}>{value}</p>
   </div>
@@ -892,14 +892,14 @@ const StepsTab: React.FC<{ steps: CalculationStep[] }> = ({ steps }) => {
             <h3 className="text-lg font-bold text-white mb-3">{categoryNames[category]}</h3>
             <div className="space-y-3">
               {categorySteps.map((step, i) => (
-                <div key={i} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/10">
                   <div className="flex items-start justify-between mb-2">
                     <h4 className="font-semibold text-purple-300">{step.name}</h4>
                     <span className="text-xs text-slate-500">Step {step.stepNumber}</span>
                   </div>
                   <p className="text-sm text-slate-400 mb-3">{step.description}</p>
                   
-                  <div className="p-3 rounded-lg bg-slate-900/50 mb-3">
+                  <div className="p-3 rounded-lg bg-[#0f1d33]/70 mb-3">
                     <p className="text-xs text-slate-500 mb-1">Formula</p>
                     <p className="text-sm font-mono text-cyan-400">{step.formula}</p>
                   </div>
@@ -943,7 +943,7 @@ const SourcesTab: React.FC<{ sources: SourceCitation[] }> = ({ sources }) => {
       </p>
       
       {sources.map((source, i) => (
-        <div key={source.id || i} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+        <div key={source.id || i} className="p-4 rounded-xl bg-white/5 border border-white/10">
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
               <h4 className="font-semibold text-white">{source.shortName}</h4>
@@ -984,7 +984,7 @@ const SourcesTab: React.FC<{ sources: SourceCitation[] }> = ({ sources }) => {
           {source.dataPoints && source.dataPoints.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {source.dataPoints.map((point, j) => (
-                <span key={j} className="px-2 py-1 rounded-full bg-slate-700/50 text-xs text-slate-400">
+                <span key={j} className="px-2 py-1 rounded-full bg-white/5 text-xs text-slate-400">
                   {point}
                 </span>
               ))}
@@ -993,7 +993,7 @@ const SourcesTab: React.FC<{ sources: SourceCitation[] }> = ({ sources }) => {
           
           {/* Used For (new field - only show if present) */}
           {source.usedFor && source.usedFor.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-slate-700/50">
+            <div className="mt-3 pt-3 border-t border-white/10">
               <p className="text-xs text-slate-500 mb-2">Used for:</p>
               <div className="flex flex-wrap gap-2">
                 {source.usedFor.map((item, j) => (
@@ -1067,11 +1067,11 @@ const FinancialsTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ wo
           <DollarSign className="w-5 h-5 text-purple-400" />
           Year-by-Year Cash Flow
         </h4>
-        <div className="rounded-xl border border-slate-700/50 overflow-hidden">
+        <div className="rounded-xl border border-white/10 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-slate-800/50 border-b border-slate-700/50">
+                <tr className="bg-white/5 border-b border-white/10">
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Year</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Annual Savings</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Cumulative</th>
@@ -1084,7 +1084,7 @@ const FinancialsTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ wo
                     key={i} 
                     className={row.status.includes('Profit') 
                       ? 'bg-emerald-500/5 hover:bg-emerald-500/10' 
-                      : 'hover:bg-slate-800/30'
+                      : 'hover:bg-white/5/30'
                     }
                   >
                     <td className="px-4 py-3 text-sm font-medium text-white">{row.year}</td>
@@ -1098,7 +1098,7 @@ const FinancialsTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ wo
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                         row.status.includes('Profit')
                           ? 'bg-emerald-500/20 text-emerald-400'
-                          : 'bg-slate-700/50 text-slate-400'
+                          : 'bg-white/5 text-slate-400'
                       }`}>
                         {row.status}
                       </span>
@@ -1112,7 +1112,7 @@ const FinancialsTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ wo
       </div>
       
       {/* Key Assumptions */}
-      <div className="mt-6 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+      <div className="mt-6 p-4 rounded-xl bg-white/5 border border-white/10">
         <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
           <Info className="w-4 h-4" />
           Key Assumptions

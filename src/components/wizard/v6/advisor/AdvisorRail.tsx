@@ -102,27 +102,6 @@ export function AdvisorRail({
 
   const insight = getMerlinInsight();
 
-  // ============================================================================
-  // DEBUG: Log context in DEV (Jan 17, 2026)
-  // ============================================================================
-  if (import.meta.env.DEV && currentStep <= 2) {
-    console.log('[AdvisorRail] Phase 2 Debug:', {
-      step: currentStep,
-      rate,
-      demand,
-      hasTOU,
-      zip,
-      state: st,
-      insight,
-      thresholds: {
-        highRate: rate != null && rate > 0.15,
-        highDemand: demand != null && demand > 15,
-        lowRate: rate != null && rate < 0.12,
-        lowDemand: demand != null && demand < 10,
-      },
-    });
-  }
-
   return (
     <aside className="w-full h-[calc(100vh-120px)] sticky top-0">
       <div className="h-full rounded-2xl border border-white/10 bg-[#0f1d33]/70 backdrop-blur overflow-hidden flex flex-col shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
@@ -267,14 +246,6 @@ export function AdvisorRail({
         </div>
 
         {/* MERLIN'S INSIGHT - Whisper, not interrupt */}
-        {import.meta.env.DEV && currentStep <= 2 && (
-          <div className="px-5 py-2 border-b border-red-500/20">
-            <div className="text-[10px] text-red-300/80">
-              DEBUG: rate={rate?.toFixed(3)} demand={demand?.toFixed(1)} hasTOU={String(hasTOU)} insight={insight ? 'YES' : 'NONE'}
-            </div>
-          </div>
-        )}
-        
         {insight && (
           <div className="px-5 py-3 border-b border-white/10 flex-shrink-0">
             <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">

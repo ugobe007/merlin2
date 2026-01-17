@@ -380,7 +380,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* LEFT COLUMN: Your Location */}
-      <div className="bg-slate-800/80 rounded-2xl p-6 shadow-lg border border-slate-600">
+      <div className="bg-white/5/80 rounded-2xl p-6 shadow-lg border border-white/10">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
             <MapPin className="w-5 h-5 text-purple-400" />
@@ -395,7 +395,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
             className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
               region === 'us'
                 ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-500'
+                : 'bg-white/5 text-slate-300 hover:bg-slate-600 border border-slate-500'
             }`}
           >
             🇺🇸 United States
@@ -405,7 +405,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
             className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
               region === 'international'
                 ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-500'
+                : 'bg-white/5 text-slate-300 hover:bg-slate-600 border border-slate-500'
             }`}
           >
             <Globe className="w-4 h-4 inline mr-2" />
@@ -435,8 +435,8 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                       ? 'border-red-400 bg-red-900/30 text-red-300 placeholder-red-400/50' 
                       : zipInput.length === 5 
                         ? 'border-green-400 bg-green-900/30 text-green-300' 
-                        : 'border-purple-400 bg-slate-700 text-white placeholder-slate-400'
-                  } focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
+                        : 'border-purple-400 bg-white/5 text-white placeholder-slate-400'
+                  } focus:border-amber-400/40 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
                 />
                 {zipError && (
                   <p className="mt-2 text-sm text-red-400 font-medium">{zipError}</p>
@@ -469,7 +469,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                         value={businessNameInput}
                         onChange={(e) => setBusinessNameInput(e.target.value)}
                         placeholder="e.g., WOW Carwash, Hilton Hotel, Starbucks"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all text-lg"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-white/10 bg-white/5 text-white placeholder-slate-400 focus:border-amber-400/40 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all text-lg"
                         autoFocus
                       />
                     </div>
@@ -484,7 +484,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                         value={streetAddress}
                         onChange={(e) => setStreetAddress(e.target.value)}
                         placeholder="e.g., 9860 S Maryland Pkwy"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-white/10 bg-white/5 text-white placeholder-slate-400 focus:border-amber-400/40 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all"
                         onKeyDown={(e) => e.key === 'Enter' && handleAddressLookup()}
                       />
                     </div>
@@ -538,7 +538,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                 <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/15 p-5">
                   <div className="flex items-start gap-4">
                     {/* Business Photo or Map */}
-                    <div className="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-slate-700 border-2 border-green-500/50 shadow-lg">
+                    <div className="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-white/5 border-2 border-green-500/50 shadow-lg">
                       {businessLookup.photoUrl ? (
                         <img 
                           src={businessLookup.photoUrl} 
@@ -578,7 +578,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                       </p>
                       
                       {/* Merlin's commitment */}
-                      <div className="p-3 rounded-lg bg-white/5 border border-slate-600">
+                      <div className="p-3 rounded-lg bg-white/5 border border-white/10">
                         <p className="text-emerald-300 text-sm">
                           🧙 <span className="font-semibold">Merlin says:</span> "I'll design a custom energy solution for {businessLookup.businessName}. Select your goals and click Continue!"
                         </p>
@@ -623,7 +623,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
               </label>
               <button
                 onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-slate-700 text-white flex items-center justify-between hover:border-purple-400 transition-all"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white/5 text-white flex items-center justify-between hover:border-purple-400 transition-all"
               >
                 <span className={selectedCountry ? 'text-white' : 'text-gray-400'}>
                   {selectedCountryData
@@ -634,7 +634,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
               </button>
               
               {countryDropdownOpen && (
-                <div className="absolute z-20 w-full mt-2 bg-slate-800 border border-slate-600 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                <div className="absolute z-20 w-full mt-2 bg-white/5 border border-white/10 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                   {INTERNATIONAL_DATA.map((country) => (
                     <button
                       key={country.code}
@@ -661,7 +661,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                 </label>
                 <button
                   onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-slate-700 text-white flex items-center justify-between hover:border-purple-400 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white/5 text-white flex items-center justify-between hover:border-purple-400 transition-all"
                 >
                   <span className={selectedCity ? 'text-white' : 'text-gray-400'}>
                     {selectedCity || 'Select a city...'}
@@ -670,7 +670,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                 </button>
                 
                 {cityDropdownOpen && (
-                  <div className="absolute z-20 w-full mt-2 bg-slate-800 border border-slate-600 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                  <div className="absolute z-20 w-full mt-2 bg-white/5 border border-white/10 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                     {selectedCountryData.cities.map((city) => (
                       <button
                         key={city.name}
@@ -744,7 +744,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
       </div>
 
       {/* RIGHT COLUMN: Your Goals */}
-      <div id="goals-section" className="bg-slate-800/80 rounded-2xl p-6 shadow-lg border border-slate-600 scroll-mt-4">
+      <div id="goals-section" className="bg-white/5/80 rounded-2xl p-6 shadow-lg border border-white/10 scroll-mt-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
@@ -784,7 +784,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                 className={`p-4 rounded-xl border-2 text-left transition-all ${
                   isSelected
                     ? 'border-purple-400 bg-purple-500/20 shadow-lg shadow-purple-500/20'
-                    : 'border-slate-600 bg-slate-700/50 hover:border-purple-400/50 hover:bg-slate-700'
+                    : 'border-white/10 bg-white/5 hover:border-purple-400/50 hover:bg-white/5'
                 }`}
               >
                 <div className="flex items-start gap-3">

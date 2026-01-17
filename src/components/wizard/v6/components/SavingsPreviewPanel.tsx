@@ -201,27 +201,27 @@ export function SavingsPreviewPanel({
 
         {/* Breakdown Cards - 5 columns now */}
         <div className="grid grid-cols-5 gap-2 mb-3">
-          <div className="bg-slate-800/50 rounded-lg p-2 text-center border border-slate-600/50">
+          <div className="bg-white/5 rounded-lg p-2 text-center border border-white/10/50">
             <TrendingUp className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
             <p className="text-cyan-300 font-bold text-sm">~{formatCurrency(preview.peakShavingSavings)}</p>
             <p className="text-slate-400 text-[10px]">Peak Shaving</p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-2 text-center border border-slate-600/50">
+          <div className="bg-white/5 rounded-lg p-2 text-center border border-white/10/50">
             <Sun className="w-4 h-4 text-amber-400 mx-auto mb-1" />
             <p className="text-amber-300 font-bold text-sm">~{formatCurrency(preview.solarPotential)}</p>
             <p className="text-slate-400 text-[10px]">Solar Potential</p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-2 text-center border border-slate-600/50">
+          <div className="bg-white/5 rounded-lg p-2 text-center border border-white/10/50">
             <Battery className="w-4 h-4 text-green-400 mx-auto mb-1" />
             <p className="text-green-300 font-bold text-sm">~{formatCurrency(preview.backupValue)}</p>
             <p className="text-slate-400 text-[10px]">Backup Value</p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-2 text-center border border-purple-500/50">
+          <div className="bg-white/5 rounded-lg p-2 text-center border border-purple-500/50">
             <Clock className="w-4 h-4 text-purple-400 mx-auto mb-1" />
             <p className="text-purple-300 font-bold text-sm">~{preview.paybackYears}yr</p>
             <p className="text-slate-400 text-[10px]">Payback</p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-2 text-center border border-emerald-500/50">
+          <div className="bg-white/5 rounded-lg p-2 text-center border border-emerald-500/50">
             <TrendingUp className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
             <p className="text-emerald-300 font-bold text-sm">~{preview.estimatedROI}%</p>
             <p className="text-slate-400 text-[10px]">10yr ROI</p>
@@ -229,7 +229,7 @@ export function SavingsPreviewPanel({
         </div>
 
         {/* Potential System Config - NEW */}
-        <div className="flex items-center justify-center gap-4 mb-3 py-2 px-3 bg-slate-800/60 rounded-lg border border-slate-600/50">
+        <div className="flex items-center justify-center gap-4 mb-3 py-2 px-3 bg-white/5/60 rounded-lg border border-white/10/50">
           <div className="flex items-center gap-2">
             <Battery className="w-4 h-4 text-green-400" />
             <span className="text-slate-300 text-sm">BESS: <span className="text-green-300 font-semibold">~{preview.typicalBESSKW} kW</span></span>

@@ -38,7 +38,7 @@ const TIER_CONFIG = {
     cardBg: "bg-gradient-to-b from-slate-900 to-slate-950",
     cardHover: "card-starter",
     accentColor: "text-emerald-400",
-    chipBg: "bg-slate-800 border-slate-700/50",
+    chipBg: "bg-white/5 border-white/10",
     chipText: "text-slate-300",
     buttonClass: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20",
     metricBg: "bg-white/5",
@@ -67,7 +67,7 @@ const TIER_CONFIG = {
     cardBg: "bg-gradient-to-b from-slate-900 to-slate-950",
     cardHover: "card-beast",
     accentColor: "text-orange-400",
-    chipBg: "bg-slate-800 border-slate-700/50",
+    chipBg: "bg-white/5 border-white/10",
     chipText: "text-slate-300",
     buttonClass: "text-orange-400 bg-orange-500/10 border-orange-500/30 hover:bg-orange-500/20",
     metricBg: "bg-white/5",
@@ -713,7 +713,7 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                     </div>
                   )}
                   <div
-                    className={`h-px my-2 ${isPerfectFit ? "bg-purple-500/20" : "bg-slate-800"}`}
+                    className={`h-px my-2 ${isPerfectFit ? "bg-purple-500/20" : "bg-white/5"}`}
                   />
                   <div className="flex justify-between font-semibold">
                     <span className="text-white">Net Cost</span>

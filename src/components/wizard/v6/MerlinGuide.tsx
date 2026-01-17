@@ -192,14 +192,14 @@ export function MerlinGuide({ step, industry, state, goals, sunHours, electricit
           <div className="flex items-center gap-1">
             <button
               onClick={() => setIsCollapsed(true)}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+              className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               title="Collapse"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsHidden(true)}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+              className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               title="Hide"
             >
               <X className="w-4 h-4" />
@@ -227,7 +227,7 @@ export function MerlinGuide({ step, industry, state, goals, sunHours, electricit
           
           {/* Goal Preview Section - Only on Step 1 when goals are selected */}
           {step === 1 && goals && goals.length > 0 && (
-            <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-3 space-y-2">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
               <p className="text-xs text-slate-400 font-medium">📋 Your Goals Preview:</p>
               {goals.slice(0, 3).map((goal) => {
                 const insight = GOAL_INSIGHTS[goal];
@@ -259,7 +259,7 @@ export function MerlinGuide({ step, industry, state, goals, sunHours, electricit
                     ? 'bg-gradient-to-r from-purple-500 to-cyan-500' 
                     : s < step 
                       ? 'bg-purple-500/50' 
-                      : 'bg-slate-700'
+                      : 'bg-white/5'
                 }`}
               />
             ))}
@@ -270,7 +270,7 @@ export function MerlinGuide({ step, industry, state, goals, sunHours, electricit
         {/* Click to collapse hint */}
         <button
           onClick={() => setIsCollapsed(true)}
-          className="w-full py-2 bg-slate-800/50 text-slate-500 text-xs hover:text-slate-300 hover:bg-slate-700/50 transition-colors border-t border-slate-700/50"
+          className="w-full py-2 bg-white/5 text-slate-500 text-xs hover:text-slate-300 hover:bg-white/5 transition-colors border-t border-white/10"
         >
           Click to minimize
         </button>

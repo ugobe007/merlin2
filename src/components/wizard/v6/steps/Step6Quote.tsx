@@ -48,7 +48,7 @@ export function Step6Quote({ state }: Props) {
 
   if (!calculations || !calculations.base || !calculations.selected || !powerLevel) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-6">
         <p className="text-slate-400">Please complete the previous steps first.</p>
       </div>
     );
