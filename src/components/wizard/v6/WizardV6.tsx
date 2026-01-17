@@ -1,11 +1,10 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { RotateCcw, X } from "lucide-react";
 
-import type { WizardState } from "./types";
+import type { WizardState, EnergyGoal } from "./types";
 import { INITIAL_WIZARD_STATE, POWER_LEVELS } from "./types";
 import { bufferService } from "@/services/bufferService";
 import { buildStep3Snapshot } from "./step3/buildStep3Snapshot";
-import { recalcWizardCalculated } from "./step3/recalcWizardCalculated";
 
 // MerlinAdvisor Rail System (Phase 1 - Jan 16, 2026)
 import { AdvisorPublisher } from "./advisor/AdvisorPublisher";
@@ -15,14 +14,16 @@ import { AdvisorRail } from "./advisor/AdvisorRail";
 // DEEP MERGE HELPER - Prevents nested state corruption
 // ============================================================================
 
-function isPlainObject(v: unknown): v is Record<string, any> {
+function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
 function deepMerge<T>(base: T, patch: Partial<T>): T {
-  const out: any = Array.isArray(base) ? [...(base as any)] : { ...(base as any) };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const out: any = Array.isArray(base) ? [...(base as unknown[])] : { ...(base as object) };
 
-  for (const [k, v] of Object.entries(patch as any)) {
+  for (const [k, v] of Object.entries(patch as object)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const prev = (base as any)[k];
 
     // arrays: replace (don't merge)
@@ -45,14 +46,11 @@ function deepMerge<T>(base: T, patch: Partial<T>): T {
 }
 import RequestQuoteModal from "@/components/modals/RequestQuoteModal";
 
-import { Step1Location } from "./steps/Step1Location";
-import { Step2Industry } from "./steps/Step2Industry";
 import { Step3Details } from "./steps/Step3Details";
 // Removed: Step3HotelEnergy - all industries now use Step3Details (scrolling questionnaire)
 import { Step4Options } from "./steps/Step4Options";
 import { Step5MagicFit } from "./steps/Step5MagicFit";
 import { Step6Quote } from "./steps/Step6Quote";
-import { MerlinBar } from "./MerlinBar";
 
 // Enhanced components (Jan 15, 2026)
 import { EnhancedLocationStep } from "../steps/EnhancedLocationStep.v2";
@@ -195,7 +193,7 @@ export default function WizardV6() {
 
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showStartOverModal, setShowStartOverModal] = useState(false);
-  
+
   // Step validity tracking (Jan 16, 2026 - Step 3→4→5 fix)
   const [step3Valid, setStep3Valid] = useState(false);
   const [step4Valid, setStep4Valid] = useState(false);
@@ -205,14 +203,14 @@ export default function WizardV6() {
     if (currentStep >= 4) {
       const snap = buildStep3Snapshot(state);
       const step3IsValid = snap.missing.length === 0 || snap.confidencePct >= 70;
-      
+
       if (!step3IsValid) {
-        console.warn('⚠️ Restore teleport blocked: Step 3 invalid, forcing back');
+        console.warn("⚠️ Restore teleport blocked: Step 3 invalid, forcing back");
         setCurrentStep(3);
       }
     }
   }, [currentStep, state]); // ✅ FIXED: Re-run on step change
-  
+
   // ✅ FIX #2: Auto-validate Step 4 once loaded (Jan 16, 2026)
   // IMPORTANT: Step 4 is OPT-IN for add-ons (solar/EV/generator).
   // It's always considered valid because no selections are required.
@@ -232,7 +230,7 @@ export default function WizardV6() {
   // Save state immediately on step change (no debounce)
   useEffect(() => {
     bufferService.save(state);
-  }, [currentStep]); // ✅ Only on step transitions, not every state change
+  }, [currentStep, state]);
 
   // Save on page unload (immediate, no debounce)
   useEffect(() => {
@@ -275,14 +273,14 @@ export default function WizardV6() {
       }
       return Math.max(back, 1);
     });
-  const goToStep = (step: number) => setCurrentStep(step);
+  const goToStep = useCallback((step: number) => setCurrentStep(step), []);
 
   // Build Step 3 snapshot (Jan 16, 2026 - Step 3→4→5 fix)
   // Steps 4 & 5 read from this snapshot, NOT raw state
   const step3Snapshot = useMemo(() => buildStep3Snapshot(state), [state]);
 
   // ✅ DEBUG PANEL: Toggle with ?debug=1 (Jan 16, 2026)
-  const _showDebug = new URLSearchParams(window.location.search).get('debug') === '1';
+  const _showDebug = new URLSearchParams(window.location.search).get("debug") === "1";
 
   // Calculate values for MerlinBar (unified command center)
   const _merlinBarProps = useMemo(() => {
@@ -314,12 +312,12 @@ export default function WizardV6() {
       sunHours: state.solarData?.sunHours,
       electricityRate: state.electricityRate || utilityRate,
       solarRating: state.solarData?.rating,
-      
+
       // Goals & Industry
       goals: state.goals,
       industry: state.industry,
       industryName: state.industryName,
-      
+
       // Options & Equipment
       hasSolar,
       hasGenerator,
@@ -330,16 +328,16 @@ export default function WizardV6() {
       generatorFuel: state.generatorFuel || "natural-gas",
       evL2Count,
       evDcfcCount,
-      
+
       // Baseline data
       annualEnergySpend,
       peakDemandCharges,
       annualUsageKwh: annualUsage,
-      
+
       // Selection state
-      selectedTier: state.selectedPowerLevel as 'efficient' | 'balanced' | 'maximum' | undefined,
+      selectedTier: state.selectedPowerLevel as "efficient" | "balanced" | "maximum" | undefined,
       annualSavings: state.calculations?.selected?.annualSavings,
-      
+
       // Callbacks
       onJumpToStep: goToStep,
     };
@@ -390,12 +388,12 @@ export default function WizardV6() {
                 electricityRate: data.utilityRate,
                 solarData: {
                   sunHours: data.sunHours,
-                  rating: data.sunHours > 5.5 ? 'Excellent' : data.sunHours > 4.5 ? 'Good' : 'Fair'
+                  rating: data.sunHours > 5.5 ? "Excellent" : data.sunHours > 4.5 ? "Good" : "Fair",
                 },
-                goals: data.goals as any,
+                goals: data.goals as EnergyGoal[],
                 detectedIndustry: data.detectedInfo?.industrySlug,
-                industry: data.detectedInfo?.industrySlug || '',
-                industryName: data.detectedInfo?.industrySlug || '',
+                industry: data.detectedInfo?.industrySlug || "",
+                industryName: data.detectedInfo?.industrySlug || "",
               });
               // Auto-skip to Step 3 if business detected
               if (data.detectedInfo?.industrySlug) {
@@ -411,18 +409,30 @@ export default function WizardV6() {
                 electricityRate: utilityData.rate,
                 solarData: {
                   sunHours: utilityData.sunHours,
-                  rating: utilityData.sunHours > 5.5 ? 'Excellent' : utilityData.sunHours > 4.5 ? 'Good' : 'Fair'
+                  rating:
+                    utilityData.sunHours > 5.5
+                      ? "Excellent"
+                      : utilityData.sunHours > 4.5
+                        ? "Good"
+                        : "Fair",
                 },
               });
             }}
           />
         );
       case 2:
-        return <EnhancedStep2Industry state={state} updateState={updateState} onNext={() => goToStep(3)} />;
+        return (
+          <EnhancedStep2Industry
+            state={state}
+            updateState={updateState}
+            onNext={() => goToStep(3)}
+          />
+        );
       case 3:
         return (
-          <Step3Details state={state} 
-            updateState={updateState} 
+          <Step3Details
+            state={state}
+            updateState={updateState}
             onBack={goBack}
             onNext={() => {
               // Hard gate here too (belt + suspenders)
@@ -433,9 +443,18 @@ export default function WizardV6() {
           />
         );
       case 4:
-        return <Step4Options state={state} updateState={updateState} step3Snapshot={step3Snapshot} />;
+        return (
+          <Step4Options state={state} updateState={updateState} step3Snapshot={step3Snapshot} />
+        );
       case 5:
-        return <Step5MagicFit state={state} updateState={updateState} goToStep={goToStep} step3Snapshot={step3Snapshot} />;
+        return (
+          <Step5MagicFit
+            state={state}
+            updateState={updateState}
+            goToStep={goToStep}
+            step3Snapshot={step3Snapshot}
+          />
+        );
       case 6:
         return <Step6Quote state={state} />;
       default:
@@ -444,49 +463,52 @@ export default function WizardV6() {
   };
 
   return (
-    <AdvisorPublisher currentStep={currentStep} options={{ clearOnStepChange: true, enableWarnings: true }}>
-        <div className="fixed inset-0 overflow-y-auto bg-[#0b1626]">
-
-          {/* TWO-COLUMN GRID LAYOUT (Vineet's spec) */}
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="grid grid-cols-12 gap-6 items-start">
-              {/* LEFT RAIL: MerlinAdvisor with step progress (col-span-4 on lg+) */}
-              <div className="col-span-12 lg:col-span-4">
-                <AdvisorRail currentStep={currentStep} totalSteps={6} onNavigate={goToStep} />
-                </div>
-
-                {/* MAIN STAGE: Step content (col-span-8 on lg+) */}
-                <div className="col-span-12 lg:col-span-8">
-                  {renderStep()}
-                </div>
-              </div>
+    <AdvisorPublisher
+      currentStep={currentStep}
+      options={{ clearOnStepChange: true, enableWarnings: true }}
+    >
+      <div className="fixed inset-0 overflow-y-auto bg-[#0b1626]">
+        {/* TWO-COLUMN GRID LAYOUT (Vineet's spec) */}
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="grid grid-cols-12 gap-6 items-start">
+            {/* LEFT RAIL: MerlinAdvisor with step progress (col-span-4 on lg+) */}
+            <div className="col-span-12 lg:col-span-4">
+              <AdvisorRail currentStep={currentStep} totalSteps={6} onNavigate={goToStep} />
             </div>
 
-            {/* Start Over Confirmation Modal */}
-            <StartOverModal
-              isOpen={showStartOverModal}
-              onClose={() => setShowStartOverModal(false)}
-              onConfirm={handleStartOver}
-            />
-
-            {/* Request Quote Modal */}
-            {currentStep === 6 && state.calculations && state.selectedPowerLevel && (
-              <RequestQuoteModal
-                isOpen={showRequestModal}
-                onClose={() => setShowRequestModal(false)}
-                quoteData={{
-                  storageSizeMW: state.calculations.selected.bessKW / 1000,
-                  durationHours:
-                    POWER_LEVELS.find((l) => l.id === state.selectedPowerLevel)?.durationHours || 4,
-                  energyCapacity: state.calculations.selected.bessKWh / 1000,
-                  solarMW: state.calculations.selected.solarKW > 0 ? state.calculations.selected.solarKW / 1000 : 0,
-                  totalCost: state.calculations.selected.totalInvestment,
-                  industryName: state.industryName,
-                  location: `${state.city || ""} ${state.state || ""}`.trim() || state.zipCode,
-                }}
-              />
-            )}
+            {/* MAIN STAGE: Step content (col-span-8 on lg+) */}
+            <div className="col-span-12 lg:col-span-8">{renderStep()}</div>
           </div>
-        </AdvisorPublisher>
-      );
-    }
+        </div>
+
+        {/* Start Over Confirmation Modal */}
+        <StartOverModal
+          isOpen={showStartOverModal}
+          onClose={() => setShowStartOverModal(false)}
+          onConfirm={handleStartOver}
+        />
+
+        {/* Request Quote Modal */}
+        {currentStep === 6 && state.calculations && state.selectedPowerLevel && (
+          <RequestQuoteModal
+            isOpen={showRequestModal}
+            onClose={() => setShowRequestModal(false)}
+            quoteData={{
+              storageSizeMW: state.calculations.selected.bessKW / 1000,
+              durationHours:
+                POWER_LEVELS.find((l) => l.id === state.selectedPowerLevel)?.durationHours || 4,
+              energyCapacity: state.calculations.selected.bessKWh / 1000,
+              solarMW:
+                state.calculations.selected.solarKW > 0
+                  ? state.calculations.selected.solarKW / 1000
+                  : 0,
+              totalCost: state.calculations.selected.totalInvestment,
+              industryName: state.industryName,
+              location: `${state.city || ""} ${state.state || ""}`.trim() || state.zipCode,
+            }}
+          />
+        )}
+      </div>
+    </AdvisorPublisher>
+  );
+}
