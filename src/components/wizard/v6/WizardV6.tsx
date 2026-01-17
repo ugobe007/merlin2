@@ -445,8 +445,7 @@ export default function WizardV6() {
 
   return (
     <AdvisorPublisher currentStep={currentStep} options={{ clearOnStepChange: true, enableWarnings: true }}>
-        <div className="fixed inset-0 overflow-y-auto bg-[#0b1626]">
-          {/* MerlinBar removed - now integrated into AdvisorRail */}
+        <div className="fixed inset-0 overflow-y-auto merlin-keylight">
 
           {/* TWO-COLUMN GRID LAYOUT (Vineet's spec) */}
           <div className="max-w-7xl mx-auto px-4 py-6">

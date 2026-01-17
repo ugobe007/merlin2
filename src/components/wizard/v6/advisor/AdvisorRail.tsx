@@ -49,21 +49,21 @@ export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProp
               <img
                 src={avatarImg}
                 alt="Merlin"
-                className="w-12 h-12 rounded-full border-2 border-amber-400/50 shadow-lg"
+                className="w-14 h-14 rounded-full border-2 border-amber-400/60 shadow-[0_0_20px_rgba(251,191,36,0.25)]"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove('hidden');
                 }}
               />
-              <div className="hidden w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center border-2 border-amber-300">
+              <div className="hidden w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center border-2 border-amber-300">
                 <span className="text-2xl">🧙</span>
               </div>
-              {/* Online indicator */}
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900" />
+              {/* Online indicator with breathing animation */}
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-900 merlin-breathe shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
             </div>
             <div className="flex-1">
-              <div className="text-amber-400 font-bold text-base">Merlin</div>
-              <div className="text-slate-400 text-xs">AI Energy Advisor</div>
+              <div className="text-amber-400 font-bold text-lg tracking-tight">Merlin</div>
+              <div className="text-slate-400 text-xs font-medium">AI Energy Advisor</div>
             </div>
             {payload?.mode && <ModeBadge mode={payload.mode} />}
           </div>
