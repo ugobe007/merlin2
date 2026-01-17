@@ -5,7 +5,10 @@
  * to provide climate context for energy system sizing.
  * 
  * Created: Jan 17, 2026
+ * Updated: Jan 17, 2026 - Added Google Geocoding for precise coordinates
  */
+
+import { getCoordinatesFromZip } from './geocodingService';
 
 const VISUAL_CROSSING_API_KEY = 'HQLBWQ3D3YLYKF2NLJL68EW4C';
 
@@ -183,7 +186,11 @@ async function fetchNWS(lat: number, lon: number): Promise<WeatherData | null> {
 /**
  * Get weather data for a location
  * 
- * Tries Visual Crossing first (30-day history), falls back to NWS
+ * Strategy:
+ * 1. Try Visual Crossing with ZIP code (30-day history)
+ * 2. If that fails, geocode ZIP to get coordinates
+ * 3. Use coordinates with NWS API
+ * 4. Fall back to regional estimates if all else fails
  */
 export async function getWeatherData(
   zipCode: string,
@@ -196,9 +203,15 @@ export async function getWeatherData(
     return vcData;
   }
 
-  // Fallback to NWS if we have coordinates
-  if (lat && lon) {
-    const nwsData = await fetchNWS(lat, lon);
+  // If no coordinates provided, geocode the ZIP code
+  let coords = lat && lon ? { lat, lon } : null;
+  if (!coords) {
+    coords = await getCoordinatesFromZip(zipCode);
+  }
+
+  // Try NWS with coordinates
+  if (coords) {
+    const nwsData = await fetchNWS(coords.lat, coords.lon);
     if (nwsData) {
       return nwsData;
     }
