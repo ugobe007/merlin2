@@ -265,7 +265,7 @@ export default function WizardV6() {
       return Math.min(next, 6);
     });
 
-  const goBack = () =>
+  const _goBack = () =>
     setCurrentStep((prev) => {
       const back = prev - 1;
       // When going back from Step 3, skip Step 2 if industry was auto-detected
@@ -282,10 +282,10 @@ export default function WizardV6() {
   const step3Snapshot = useMemo(() => buildStep3Snapshot(state), [state]);
 
   // ✅ DEBUG PANEL: Toggle with ?debug=1 (Jan 16, 2026)
-  const showDebug = new URLSearchParams(window.location.search).get('debug') === '1';
+  const _showDebug = new URLSearchParams(window.location.search).get('debug') === '1';
 
   // Calculate values for MerlinBar (unified command center)
-  const merlinBarProps = useMemo(() => {
+  const _merlinBarProps = useMemo(() => {
     // Base data from Step 5 calculations.base (SSOT)
     const annualUsage = state.calculations?.base?.annualConsumptionKWh || 0;
     const peakDemand = state.calculations?.base?.peakDemandKW || 0;
@@ -353,7 +353,7 @@ export default function WizardV6() {
     setShowStartOverModal(false);
   };
 
-  const canProceed = (): boolean => {
+  const _canProceed = (): boolean => {
     switch (currentStep) {
       case 1:
         return state.zipCode.length === 5 && state.state !== "" && state.goals.length >= 2;
@@ -445,52 +445,49 @@ export default function WizardV6() {
 
   return (
     <AdvisorPublisher currentStep={currentStep} options={{ clearOnStepChange: true, enableWarnings: true }}>
-      <div className="fixed inset-0 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        {/* MerlinBar at top */}
-        <div className="sticky top-0 z-40">
-          <MerlinBar currentStep={currentStep} {...merlinBarProps} />
-        </div>
+        <div className="fixed inset-0 overflow-y-auto bg-[#0b1626]">
+          {/* MerlinBar removed - now integrated into AdvisorRail */}
 
-        {/* TWO-COLUMN GRID LAYOUT (Vineet's spec) */}
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="grid grid-cols-12 gap-6">
-            {/* LEFT RAIL: MerlinAdvisor (col-span-4 on lg+) */}
-            <div className="col-span-12 lg:col-span-4">
-              <AdvisorRail />
+          {/* TWO-COLUMN GRID LAYOUT (Vineet's spec) */}
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            <div className="grid grid-cols-12 gap-6">
+              {/* LEFT RAIL: MerlinAdvisor with step progress (col-span-4 on lg+) */}
+              <div className="col-span-12 lg:col-span-4">
+                <AdvisorRail currentStep={currentStep} totalSteps={6} />
+                </div>
+
+                {/* MAIN STAGE: Step content (col-span-8 on lg+) */}
+                <div className="col-span-12 lg:col-span-8">
+                  {renderStep()}
+                </div>
+              </div>
             </div>
 
-            {/* MAIN STAGE: Step content (col-span-8 on lg+) */}
-            <div className="col-span-12 lg:col-span-8">
-              {renderStep()}
-            </div>
+            {/* Start Over Confirmation Modal */}
+            <StartOverModal
+              isOpen={showStartOverModal}
+              onClose={() => setShowStartOverModal(false)}
+              onConfirm={handleStartOver}
+            />
+
+            {/* Request Quote Modal */}
+            {currentStep === 6 && state.calculations && state.selectedPowerLevel && (
+              <RequestQuoteModal
+                isOpen={showRequestModal}
+                onClose={() => setShowRequestModal(false)}
+                quoteData={{
+                  storageSizeMW: state.calculations.selected.bessKW / 1000,
+                  durationHours:
+                    POWER_LEVELS.find((l) => l.id === state.selectedPowerLevel)?.durationHours || 4,
+                  energyCapacity: state.calculations.selected.bessKWh / 1000,
+                  solarMW: state.calculations.selected.solarKW > 0 ? state.calculations.selected.solarKW / 1000 : 0,
+                  totalCost: state.calculations.selected.totalInvestment,
+                  industryName: state.industryName,
+                  location: `${state.city || ""} ${state.state || ""}`.trim() || state.zipCode,
+                }}
+              />
+            )}
           </div>
-        </div>
-
-        {/* Start Over Confirmation Modal */}
-        <StartOverModal
-          isOpen={showStartOverModal}
-          onClose={() => setShowStartOverModal(false)}
-          onConfirm={handleStartOver}
-        />
-
-        {/* Request Quote Modal */}
-        {currentStep === 6 && state.calculations && state.selectedPowerLevel && (
-          <RequestQuoteModal
-            isOpen={showRequestModal}
-            onClose={() => setShowRequestModal(false)}
-            quoteData={{
-              storageSizeMW: state.calculations.selected.bessKW / 1000,
-              durationHours:
-                POWER_LEVELS.find((l) => l.id === state.selectedPowerLevel)?.durationHours || 4,
-              energyCapacity: state.calculations.selected.bessKWh / 1000,
-              solarMW: state.calculations.selected.solarKW > 0 ? state.calculations.selected.solarKW / 1000 : 0,
-              totalCost: state.calculations.selected.totalInvestment,
-              industryName: state.industryName,
-              location: `${state.city || ""} ${state.state || ""}`.trim() || state.zipCode,
-            }}
-          />
-        )}
-      </div>
-    </AdvisorPublisher>
-  );
-}
+        </AdvisorPublisher>
+      );
+    }

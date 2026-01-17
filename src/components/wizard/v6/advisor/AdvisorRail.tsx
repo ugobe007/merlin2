@@ -20,16 +20,30 @@ function ModeBadge({ mode }: { mode: "estimate" | "verified" }) {
   );
 }
 
-export function AdvisorRail() {
+interface AdvisorRailProps {
+  currentStep?: number;
+  totalSteps?: number;
+}
+
+const STEP_LABELS = [
+  "Location",
+  "Industry",
+  "Details",
+  "Options",
+  "TrueQuote",
+  "Results"
+];
+
+export function AdvisorRail({ currentStep = 1, totalSteps = 6 }: AdvisorRailProps) {
   const { getCurrent, getWarnings } = useAdvisorPublisher();
   const payload = getCurrent();
   const warnings = getWarnings();
 
   return (
     <aside className="w-full h-[calc(100vh-120px)] sticky top-6">
-      <div className="h-full rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-700/50">
-          {/* Merlin Identity Header */}
+      <div className="h-full rounded-2xl border border-slate-700/50 bg-slate-900 overflow-hidden flex flex-col">
+        {/* MERLIN IDENTITY HEADER */}
+        <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
           <div className="flex items-center gap-3 mb-4">
             <div className="relative">
               <img
@@ -62,28 +76,81 @@ export function AdvisorRail() {
           </div>
         </div>
 
-        <div className="p-5 space-y-3 overflow-auto h-[calc(100%-140px)]">
-          {(payload?.cards || []).map((c) => (
-            <AdvisorCard key={c.id} card={c} />
-          ))}
-
-          {payload?.mode === "estimate" && payload.disclaimer && (
-            <div className="mt-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-              <div className="text-[11px] font-semibold text-amber-200 mb-1">Estimate disclaimer</div>
-              <div className="text-xs text-slate-300 whitespace-pre-line">{payload.disclaimer}</div>
+        {/* STEP PROGRESS */}
+        <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-xs font-semibold text-slate-400">PROGRESS</div>
+            <div className="text-xs text-slate-500">
+              Step {currentStep} of {totalSteps}
             </div>
-          )}
+          </div>
+          <div className="space-y-2">
+            {STEP_LABELS.slice(0, totalSteps).map((label, idx) => {
+              const stepNum = idx + 1;
+              const isActive = stepNum === currentStep;
+              const isDone = stepNum < currentStep;
+              
+              return (
+                <div
+                  key={stepNum}
+                  className={`flex items-center gap-2 text-xs transition-all ${
+                    isActive
+                      ? "text-amber-400"
+                      : isDone
+                      ? "text-emerald-400"
+                      : "text-slate-600"
+                  }`}
+                >
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                      isActive
+                        ? "bg-amber-400/20 border-2 border-amber-400"
+                        : isDone
+                        ? "bg-emerald-400/20 border border-emerald-400"
+                        : "bg-slate-800 border border-slate-700"
+                    }`}
+                  >
+                    {isDone ? "✓" : stepNum}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium">{label}</div>
+                  </div>
+                  {isActive && (
+                    <div className="text-[9px] px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300">
+                      Current
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-          {warnings.length > 0 && (import.meta as any).env?.DEV && (
-            <div className="mt-2 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
-              <div className="text-[11px] font-semibold text-red-200 mb-1">Dev warnings</div>
-              <ul className="text-xs text-slate-300 list-disc ml-4 space-y-1">
-                {warnings.map((w, i) => (
-                  <li key={i}>{w}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+        {/* SCROLLABLE CONTENT AREA */}
+        <div className="flex-1 overflow-auto">
+          <div className="p-5 space-y-3">
+            {(payload?.cards || []).map((c) => (
+              <AdvisorCard key={c.id} card={c} />
+            ))}
+
+            {payload?.mode === "estimate" && payload.disclaimer && (
+              <div className="mt-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                <div className="text-[11px] font-semibold text-amber-200 mb-1">Estimate disclaimer</div>
+                <div className="text-xs text-slate-300 whitespace-pre-line">{payload.disclaimer}</div>
+              </div>
+            )}
+
+            {warnings.length > 0 && (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && (
+              <div className="mt-2 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+                <div className="text-[11px] font-semibold text-red-200 mb-1">Dev warnings</div>
+                <ul className="text-xs text-slate-300 list-disc ml-4 space-y-1">
+                  {warnings.map((w, i) => (
+                    <li key={i}>{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </aside>
