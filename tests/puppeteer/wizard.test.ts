@@ -10,8 +10,6 @@
  */
 
 import puppeteer, { Browser, Page } from 'puppeteer';
-import fs from 'fs';
-import path from 'path';
 
 // ============================================================================
 // CONFIGURATION

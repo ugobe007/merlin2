@@ -5,7 +5,7 @@
  * Handles step-by-step navigation and form completion
  */
 
-import { Page, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 export interface WizardStep1Data {

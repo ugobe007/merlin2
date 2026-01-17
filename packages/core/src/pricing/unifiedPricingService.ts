@@ -28,18 +28,15 @@
 
 import { supabase } from '../supabaseClient';
 import { 
-  getConstant, 
-  getPricingConstants,
+  getConstant,
   clearConstantsCache 
 } from '../constants/calculationConstantsService';
 import { 
-  getMarketAdjustedPrice, 
-  getMarketPriceSummary,
+  getMarketAdjustedPrice,
   clearMarketDataCache
 } from './marketDataIntegrationService';
-import { 
-  getVendorPricing 
-} from './vendorPricingIntegrationService';
+
+
 import type {
   BatteryPricing,
   InverterPricing,
@@ -213,7 +210,7 @@ async function fetchBatteryPricingFromDB(
     
     // PRIORITY 2: Try calculation_constants table (database SSOT)
     let pricePerKWh: number | null = null;
-    let dataSource: 'database' | 'nrel' = 'database';
+    const dataSource: 'database' | 'nrel' = 'database';
     
     if (energyKWh >= 10000) {
       // 10+ MWh = large utility scale

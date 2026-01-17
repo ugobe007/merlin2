@@ -6,8 +6,7 @@ import {
   calculateEVHubPower, 
   calculateEVHubCosts, 
   calculateEVHubBESSSize,
-  WEST_LONDON_EV_HUB_CONFIG,
-  EV_CHARGER_SPECS
+  WEST_LONDON_EV_HUB_CONFIG
 } from '../src/services/evChargingCalculations';
 
 console.log('='.repeat(70));

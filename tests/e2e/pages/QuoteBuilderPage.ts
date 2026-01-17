@@ -5,7 +5,7 @@
  * Provides methods for interacting with quote generation flow
  */
 
-import { Page, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 export interface FacilityDetails {

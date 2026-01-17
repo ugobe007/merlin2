@@ -33,11 +33,11 @@ import { calculateFinancialMetrics } from "./centralizedCalculations";
 import { getBatteryPricing } from "./unifiedPricingService";
 import { AUTHORITATIVE_SOURCES, PRICING_BENCHMARKS, CURRENT_BENCHMARK_VERSION } from "./benchmarkSources";
 import { getUtilityRatesByZip, getCommercialRateByZip } from "./utilityRateService";
-import { estimateITC, type ITCEstimateResult } from "./itcCalculator";
+import { estimateITC } from "./itcCalculator";
 import { estimateDegradation, type BatteryChemistry } from "./batteryDegradationService";
 import { estimateSolarProduction } from "./pvWattsService";
-import { estimate8760Savings, type HourlyAnalysisResult } from "./hourly8760AnalysisService";
-import { estimateRiskMetrics, type MonteCarloResult } from "./monteCarloService";
+import { estimate8760Savings } from "./hourly8760AnalysisService";
+import { estimateRiskMetrics } from "./monteCarloService";
 
 // ============================================
 // INTERFACES

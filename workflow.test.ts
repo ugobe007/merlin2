@@ -1,13 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { renderHook, act } from '@testing-library/react-hooks';
 import {
   MockBaselineService,
   MockAIDataCollectionService,
   MockCacheService,
-  mockUseCaseData,
-  mockBaselineResults,
-  mockAIDataCollectionResults
+  mockUseCaseData
 } from '../utils/test-helpers';
 
 /**

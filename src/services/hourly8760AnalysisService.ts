@@ -306,7 +306,7 @@ export function run8760Analysis(input: HourlyAnalysisInput): HourlyAnalysisResul
   let totalSavings = 0;
   let touArbitrageSavings = 0;
   let peakShavingSavings = 0;
-  let solarSelfConsumptionSavings = 0;
+  const solarSelfConsumptionSavings = 0;
   let totalEnergyMWh = 0;
   let maxDemandReduction = 0;
   let totalSOC = 0;

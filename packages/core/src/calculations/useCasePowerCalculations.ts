@@ -5537,7 +5537,7 @@ export function calculateUseCasePower(
       // Add equipment-specific power loads
       // Equipment power values from ASHRAE healthcare standards
       let equipmentLoadKW = 0;
-      let equipmentDetails: string[] = [];
+      const equipmentDetails: string[] = [];
       
       // Surgical suites: 30-50 kW each (lighting, equipment, HVAC)
       const surgicalSuites = parseInt(useCaseData.surgicalSuites) || parseInt(useCaseData.operatingRooms) || 0;

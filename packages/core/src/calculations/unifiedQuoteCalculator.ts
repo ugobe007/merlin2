@@ -29,17 +29,12 @@
  */
 
 import { calculateEquipmentBreakdown, type EquipmentBreakdown } from './equipmentCalculations';
-import { calculateFinancialMetrics, type FinancialCalculationResult } from './centralizedCalculations';
+import { calculateFinancialMetrics } from './centralizedCalculations';
 import { getBatteryPricing } from '../pricing/unifiedPricingService';
 import { 
   AUTHORITATIVE_SOURCES, 
-  PRICING_BENCHMARKS, 
-  METHODOLOGY_REFERENCES,
-  CURRENT_BENCHMARK_VERSION,
-  getSourceAttribution,
-  generateQuoteAuditMetadata,
-  type QuoteAuditMetadata,
-  type BenchmarkSource
+  PRICING_BENCHMARKS,
+  CURRENT_BENCHMARK_VERSION
 } from '../validation/benchmarkSources';
 
 // ============================================

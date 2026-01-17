@@ -1,4 +1,3 @@
-/* eslint-env node */
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
@@ -7,7 +6,11 @@ import tseslint from 'typescript-eslint'
 import unusedImports from 'eslint-plugin-unused-imports'
 
 export default [
-  { ignores: ['dist', 'html/assets/**', 'html/**/*.js', 'build', 'coverage', '.next', 'node_modules'] },
+  {
+    files: ["eslint.config.js", "**/*.config.{js,ts}", "**/*.cjs", "**/*.mjs", "scripts/**/*.{js,ts}"],
+    languageOptions: { globals: globals.node },
+  },
+  { ignores: ['dist', 'html/assets/**', 'html/**/*.js', 'build', 'coverage', '.next', 'node_modules', "/*.js", "/comprehensive_pricing_demo.js", "**/*.js", "**/*.{mjs,cjs}", "tests/**/*"] },
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {

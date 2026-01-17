@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+ 
 /**
  * ESLint auto-fix pass 2
  * Goals:

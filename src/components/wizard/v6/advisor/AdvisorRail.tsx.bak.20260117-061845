@@ -24,15 +24,15 @@ interface AdvisorRailProps {
   currentStep?: number;
   totalSteps?: number;
 
-  // Step context to make Merlin feel aware
+  // Optional: pass real step context so Merlin feels "aware"
   context?: {
-    location?: { state?: string; city?: string; zip?: string; utilityName?: string };
+    location?: { state?: string; city?: string; zip?: string };
     utility?: { rate?: number; demandCharge?: number; hasTOU?: boolean };
     solar?: { sunHours?: number; rating?: string };
-    weather?: { profile?: string; extremes?: string };
     opportunities?: { arbitrage?: string; backup?: boolean; smoothing?: boolean };
   };
 
+  // Optional navigation wiring
   onNavigate?: (step: number) => void;
 }
 
@@ -58,7 +58,6 @@ export function AdvisorRail({
   const zip = context?.location?.zip || "";
   const city = context?.location?.city || "";
   const st = context?.location?.state || "";
-  const utilityName = context?.location?.utilityName || "";
 
   const rate = context?.utility?.rate;
   const demand = context?.utility?.demandCharge;
@@ -67,13 +66,11 @@ export function AdvisorRail({
   const sun = context?.solar?.sunHours;
   const solarRating = context?.solar?.rating;
 
-  const weatherProfile = context?.weather?.profile;
-  const weatherExtremes = context?.weather?.extremes;
-
   const arbitrage = context?.opportunities?.arbitrage;
 
   return (
     <aside className="w-full h-[calc(100vh-120px)] sticky top-6">
+      {/* NOTE: SLATE-BLUE PANEL (not slate grey) */}
       <div className="h-full rounded-2xl border border-white/10 bg-[#0f1d33]/70 backdrop-blur overflow-hidden flex flex-col shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
         {/* MERLIN IDENTITY HEADER */}
         <div className="px-5 py-4 border-b border-white/10 flex-shrink-0">
@@ -110,7 +107,7 @@ export function AdvisorRail({
           </div>
         </div>
 
-        {/* LOCATION / UTILITY CONTEXT */}
+        {/* LOCATION / UTILITY CONTEXT (makes Merlin feel “present”) */}
         <div className="px-5 py-4 border-b border-white/10 flex-shrink-0">
           <div className="text-xs font-semibold text-slate-300/70 mb-3">LOCATION SNAPSHOT</div>
 
@@ -136,17 +133,6 @@ export function AdvisorRail({
             </div>
           </div>
 
-          {(utilityName || weatherProfile || weatherExtremes) && (
-            <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-              <div className="text-[10px] text-slate-300/70">PROFILE</div>
-              <div className="mt-1 space-y-1 text-xs text-slate-200/80">
-                {utilityName && <div>Utility: <span className="text-white font-semibold">{utilityName}</span></div>}
-                {weatherProfile && <div>Weather: <span className="text-white font-semibold">{weatherProfile}</span></div>}
-                {weatherExtremes && <div>Extremes: <span className="text-white font-semibold">{weatherExtremes}</span></div>}
-              </div>
-            </div>
-          )}
-
           <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
             <div className="text-[10px] text-slate-300/70">OPPORTUNITIES</div>
             <div className="mt-1 flex flex-wrap gap-2">
@@ -154,28 +140,34 @@ export function AdvisorRail({
                 Arbitrage: <span className="font-semibold">{arbitrage || (hasTOU ? "Medium" : "Low")}</span>
               </span>
               <span className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 text-slate-200">
-                Backup: <span className="font-semibold">{context?.opportunities?.backup ? "High" : "Possible"}</span>
+                Backup power: <span className="font-semibold">{context?.opportunities?.backup ? "High" : "Possible"}</span>
               </span>
               <span className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 text-slate-200">
-                Smoothing: <span className="font-semibold">{context?.opportunities?.smoothing ? "High" : "Possible"}</span>
+                Load smoothing: <span className="font-semibold">{context?.opportunities?.smoothing ? "High" : "Possible"}</span>
               </span>
-
               {demand != null && (
                 <span className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 text-slate-200">
                   Demand: <span className="font-semibold">{fmtMoney(demand)}/kW</span>
                 </span>
               )}
-
               {solarRating && (
                 <span className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 text-slate-200">
                   Solar: <span className="font-semibold">{solarRating}</span>
                 </span>
               )}
+              {city && (
+                <span className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 text-slate-200">
+                  City: <span className="font-semibold">{city}</span>
+                </span>
+              )}
+              <span className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 text-slate-200">
+                Weather profile: <span className="font-semibold">Typical (state avg)</span>
+              </span>
             </div>
           </div>
 
           <div className="mt-2 text-[11px] text-slate-300/60">
-            Next: wire ZIP-level utility + weather. Right now this can be state averages.
+            (Next: we can swap “state avg” weather for a real ZIP-level profile once we wire a data source.)
           </div>
         </div>
 
@@ -202,7 +194,11 @@ export function AdvisorRail({
                   onClick={() => (clickable ? onNavigate?.(stepNum) : undefined)}
                   disabled={!clickable}
                   className={`w-full flex items-center gap-2 text-xs transition-all text-left ${
-                    isActive ? "text-amber-300" : isDone ? "text-emerald-300" : "text-slate-400/40"
+                    isActive
+                      ? "text-amber-300"
+                      : isDone
+                      ? "text-emerald-300"
+                      : "text-slate-400/40"
                   } ${clickable ? "cursor-pointer hover:opacity-95" : "opacity-60 cursor-not-allowed"}`}
                 >
                   <div
@@ -232,7 +228,7 @@ export function AdvisorRail({
           </div>
         </div>
 
-        {/* SCROLLABLE CONTENT */}
+        {/* SCROLLABLE CONTENT AREA */}
         <div className="flex-1 overflow-auto">
           <div className="p-5 space-y-3">
             {(payload?.cards || []).map((c) => (

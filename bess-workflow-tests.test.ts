@@ -1,6 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { renderHook, act } from '@testing-library/react-hooks';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 /**
  * Test Suite for BESS Quote Builder Workflows

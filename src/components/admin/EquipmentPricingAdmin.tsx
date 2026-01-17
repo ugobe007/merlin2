@@ -22,7 +22,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Settings,
-  DollarSign,
   Database,
   Save,
   RefreshCw,
@@ -38,22 +37,16 @@ import {
   Wind,
   Cpu,
   Shield,
-  Info,
   Edit2,
   X,
-  Filter,
   Loader2,
-  Plus,
-  Trash2,
   ExternalLink,
   Download,
-  Upload,
   Package,
   Server,
   Boxes,
   Monitor
 } from 'lucide-react';
-import { supabase } from '@/services/supabaseClient';
 import { adminAuthService } from '@/services/adminAuthService';
 import { clearAllPricingCaches } from '@/services/unifiedPricingService';
 import equipmentPricingService, { 

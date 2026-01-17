@@ -11,19 +11,9 @@ import solarPricingService from "../services/solarPricingService";
 
 // NEW: Import from equipmentPricingTiersService for new equipment types
 import {
-  getMarketAdjustedPrice,
-  getMicrogridControllerPrice,
-  getBMSPrice,
-  getSCADAPrice,
-  getEMSSoftwarePrice,
-  getDCPatchPanelPrice,
-  getACPatchPanelPrice,
-  getESSEnclosurePrice,
   getTransformerPricePerKVA,
   getInverterPricePerKW,
   getSwitchgearPricePerKW,
-  type EquipmentType,
-  type PricingTier,
 } from "../services/equipmentPricingTiersService";
 
 // Generator fuel type options - matches database config keys

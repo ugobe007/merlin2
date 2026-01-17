@@ -12,8 +12,7 @@ import { describe, it, expect } from 'vitest';
 import { calculateTrueQuote } from '@/services/_deprecated/TrueQuoteEngine';
 import {
   BENCHMARKS,
-  validateAgainstBenchmark,
-  ValidationResult
+  validateAgainstBenchmark
 } from './TrueQuoteValidationSuite';
 
 describe('TrueQuote Engine Validation', () => {

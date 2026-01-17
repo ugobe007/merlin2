@@ -985,7 +985,7 @@ export const calculateEquipmentBreakdown = async (
   // Sources: NREL O&M benchmarks, industry standard warranties
   
   // useCaseService not available in packages/core - using industry-validated fallback values
-  let annualConfig: any = null; // Using fallback values below
+  const annualConfig: any = null; // Using fallback values below
   
   // Operations & Maintenance - Ongoing monitoring, preventive maintenance
   // Typically 1-2% of battery system capex annually

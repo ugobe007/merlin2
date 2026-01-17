@@ -4,7 +4,7 @@
  * Uses React Testing Library to measure actual render times
  */
 
-import { render, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { performance } from 'perf_hooks';
 import React from 'react';
 
