@@ -31,6 +31,7 @@ import {
 } from "@/services/businessDetectionService";
 import { getStateUtilityData, getStateSolarData } from "@/data/utilityData";
 import { getWeatherData } from "@/services/weatherService";
+import { geocodeLocation } from "@/services/geocodingService";
 
 // ============================================
 // CONSTANTS
@@ -300,26 +301,53 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
           });
           setShowAddressSearch(true); // Reveal address input
 
-          // Fetch weather data (async, non-blocking)
-          getWeatherData(zipCode).then((weather) => {
-            if (weather) {
-              console.log('[LocationStep] Weather data fetched:', weather);
-              // Update parent state with weather data
-              if (onUtilityDataUpdate) {
-                onUtilityDataUpdate({
-                  state: stateName,
-                  rate: utilityInfo.electricityRate,
-                  sunHours: solarInfo.peakSunHours,
-                  arbitrage,
-                  weatherData: weather,
-                });
-              }
+          // Geocode ZIP to get city name and precise coordinates
+          geocodeLocation(zipCode).then((geocode) => {
+            if (geocode) {
+              console.log('[LocationStep] Geocoded:', geocode);
+              
+              // Fetch weather data with precise coordinates
+              getWeatherData(zipCode, geocode.lat, geocode.lon).then((weather) => {
+                if (weather) {
+                  console.log('[LocationStep] Weather data fetched:', weather);
+                  // Update parent state with weather data
+                  if (onUtilityDataUpdate) {
+                    onUtilityDataUpdate({
+                      state: stateName,
+                      rate: utilityInfo.electricityRate,
+                      sunHours: solarInfo.peakSunHours,
+                      arbitrage,
+                      weatherData: weather,
+                    });
+                  }
+                }
+              }).catch((err) => {
+                console.warn('[LocationStep] Weather fetch failed:', err);
+              });
             }
           }).catch((err) => {
-            console.warn('[LocationStep] Weather fetch failed:', err);
+            console.warn('[LocationStep] Geocoding failed:', err);
+            
+            // Fallback: fetch weather without precise coordinates
+            getWeatherData(zipCode).then((weather) => {
+              if (weather) {
+                console.log('[LocationStep] Weather data fetched (fallback):', weather);
+                if (onUtilityDataUpdate) {
+                  onUtilityDataUpdate({
+                    state: stateName,
+                    rate: utilityInfo.electricityRate,
+                    sunHours: solarInfo.peakSunHours,
+                    arbitrage,
+                    weatherData: weather,
+                  });
+                }
+              }
+            }).catch((weatherErr) => {
+              console.warn('[LocationStep] Weather fetch failed:', weatherErr);
+            });
           });
 
-          // Update MerlinBar via callback
+          // Update MerlinBar via callback (immediate utility data)
           if (onUtilityDataUpdate) {
             onUtilityDataUpdate({
               state: stateName,
