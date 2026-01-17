@@ -402,7 +402,7 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
 
             <input
               type="text"
-              className="w-full px-4 py-3 bg-slate-700/50 border-2 border-slate-600 text-white placeholder-slate-400 rounded-xl text-lg text-center focus:border-purple-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 bg-white/5 border-2 border-white/10 text-white placeholder-slate-400 rounded-xl text-lg text-center font-semibold tracking-wide focus:border-violet-400/40 focus:ring-2 focus:ring-violet-500/30 focus:outline-none transition-all shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:border-white/20"
               placeholder="e.g., 94102"
               maxLength={5}
               value={zipCode}
