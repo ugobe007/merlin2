@@ -468,59 +468,75 @@ export default function WizardV6() {
       currentStep={currentStep}
       options={{ clearOnStepChange: true, enableWarnings: true }}
     >
-      <div className="fixed inset-0 overflow-y-auto bg-[#0b1626]">
-        {/* TWO-COLUMN GRID LAYOUT (Vineet's spec) */}
+      <div className="fixed inset-0 overflow-y-auto bg-gradient-to-br from-[#050B16] via-[#071226] to-[#050B16]">
+        {/* INTEGRATED GLASS SHELL: AdvisorRail + Step content */}
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="grid grid-cols-12 gap-6 items-start">
-            {/* LEFT RAIL: MerlinAdvisor with step progress (col-span-4 on lg+) */}
-            <div className="col-span-12 lg:col-span-4">
-              <AdvisorRail
-                currentStep={currentStep}
-                totalSteps={6}
-                onNavigate={goToStep}
-                context={{
-                  location: {
-                    zip: state.zipCode,
-                    city: state.city,
-                    state: state.state,
-                    utilityName: state.calculations?.base?.utilityName,
-                  },
-                  utility: {
-                    rate: state.electricityRate ?? state.calculations?.base?.utilityRate,
-                    demandCharge: state.calculations?.base?.demandCharge,
-                    hasTOU: state.calculations?.base?.hasTOU,
-                  },
-                  solar: {
-                    sunHours: state.solarData?.sunHours,
-                    rating: state.solarData?.rating,
-                  },
-                  weather: {
-                    profile: state.weatherData?.profile,
-                    extremes: state.weatherData?.extremes,
-                  },
-                  opportunities: {
-                    arbitrage: state.calculations?.base?.hasTOU ? "High" : "Medium",
-                    backup: state.goals?.includes("backup_power"),
-                    smoothing: state.goals?.includes("peak_shaving"),
-                  },
-                  // Phase 5: Config data for trade-off warnings (Steps 3-4)
-                  config: {
-                    solarKW: state.customSolarKw ?? state.calculations?.selected?.solarKW ?? 0,
-                    batteryKWh: state.calculations?.selected?.bessKWh ?? 0,
-                    batteryHours:
-                      state.calculations?.selected?.bessKWh && state.calculations?.selected?.bessKW
-                        ? state.calculations.selected.bessKWh / state.calculations.selected.bessKW
-                        : 0,
-                    inverterKW: state.calculations?.selected?.bessKW ?? 0, // PCS kW = battery discharge power
-                    peakLoadKW: state.calculations?.base?.peakDemandKW ?? 0,
-                    backupRequired: state.goals?.includes("backup_power") ?? false,
-                  },
-                }}
-              />
-            </div>
+          <div className="relative rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-2xl overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
+            {/* Glow blobs */}
+            <div className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl" />
+            <div className="pointer-events-none absolute -top-20 -right-28 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
 
-            {/* MAIN STAGE: Step content (col-span-8 on lg+) */}
-            <div className="col-span-12 lg:col-span-8">{renderStep()}</div>
+            {/* Glass sheen */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/12 via-white/5 to-transparent" />
+
+            {/* Inner glass lip */}
+            <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(0,0,0,0.35)]" />
+
+            <div className="relative grid grid-cols-1 lg:grid-cols-3">
+              {/* LEFT: AdvisorRail (no extra outer panel) */}
+              <div className="p-5 lg:border-r border-white/10">
+                <AdvisorRail
+                  currentStep={currentStep}
+                  totalSteps={6}
+                  onNavigate={goToStep}
+                  context={{
+                    location: {
+                      zip: state.zipCode,
+                      city: state.city,
+                      state: state.state,
+                      utilityName: state.calculations?.base?.utilityName,
+                    },
+                    utility: {
+                      rate: state.electricityRate ?? state.calculations?.base?.utilityRate,
+                      demandCharge: state.calculations?.base?.demandCharge,
+                      hasTOU: state.calculations?.base?.hasTOU,
+                    },
+                    solar: {
+                      sunHours: state.solarData?.sunHours,
+                      rating: state.solarData?.rating,
+                    },
+                    weather: {
+                      profile: state.weatherData?.profile,
+                      extremes: state.weatherData?.extremes,
+                    },
+                    opportunities: {
+                      arbitrage: state.calculations?.base?.hasTOU ? "High" : "Medium",
+                      backup: state.goals?.includes("backup_power"),
+                      smoothing: state.goals?.includes("peak_shaving"),
+                    },
+                    config: {
+                      solarKW: state.customSolarKw ?? state.calculations?.selected?.solarKW ?? 0,
+                      batteryKWh: state.calculations?.selected?.bessKWh ?? 0,
+                      batteryHours:
+                        state.calculations?.selected?.bessKWh &&
+                        state.calculations?.selected?.bessKW
+                          ? state.calculations.selected.bessKWh / state.calculations.selected.bessKW
+                          : 0,
+                      inverterKW: state.calculations?.selected?.bessKW ?? 0,
+                      peakLoadKW: state.calculations?.base?.peakDemandKW ?? 0,
+                      backupRequired: state.goals?.includes("backup_power") ?? false,
+                    },
+                  }}
+                />
+              </div>
+
+              {/* RIGHT: Step content */}
+              <div className="p-5 lg:col-span-2">
+                <div className="rounded-2xl border border-white/10 bg-slate-900/25 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]">
+                  {renderStep()}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
