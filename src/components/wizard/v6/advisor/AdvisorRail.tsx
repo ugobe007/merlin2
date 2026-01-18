@@ -300,7 +300,7 @@ export function AdvisorRail({
 
       {/* LOCATION / UTILITY CONTEXT */}
       <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
-        {/* EMPTY STATE: no ZIP yet */}
+        {/* EMPTY STATE: no ZIP yet → INTELLIGENCE-DRIVEN DISCOVERY */}
         {!zip && !st ? (
           <>
             <div className="text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 mb-2 animate-pulse">
@@ -320,32 +320,116 @@ export function AdvisorRail({
                 sources, not estimates.
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <div className="rounded-xl border border-amber-400/25 bg-gradient-to-br from-amber-400/15 to-amber-400/5 px-3 py-2.5 transition-all hover:shadow-[0_0_20px_rgba(251,191,36,0.15)] hover:scale-[1.02]">
-                  <div className="text-[10px] font-semibold text-amber-300/90 mb-0.5">
-                    ⚡ Your Energy Rate
+              {/* VALUE TEASER: Sites like yours typically... */}
+              {context?.intelligence?.valueTeaser &&
+                context.intelligence.valueTeaser.length > 0 && (
+                  <div className="mt-4 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-cyan-400/10 to-cyan-400/5 p-3">
+                    <div className="text-[10px] font-bold text-cyan-300/90 mb-2 flex items-center gap-1.5">
+                      <span>📊</span>
+                      <span>Sites like yours typically see:</span>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {context.intelligence.valueTeaser.map((metric, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-xs text-cyan-100/90">
+                          <span className="text-cyan-300 mt-0.5">•</span>
+                          <span>
+                            <span className="font-semibold text-white">{metric.displayText}</span>
+                            {metric.confidence && (
+                              <span className="text-[10px] text-cyan-200/60 ml-1">
+                                ({metric.confidence} confidence)
+                              </span>
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    {context.intelligence.valueTeaser[0]?.source && (
+                      <div className="mt-2 text-[9px] text-cyan-300/50 italic">
+                        Source: {context.intelligence.valueTeaser[0].source}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-xs text-amber-100/70">Ready to analyze...</div>
-                </div>
-                <div className="rounded-xl border border-violet-400/25 bg-gradient-to-br from-violet-400/15 to-violet-400/5 px-3 py-2.5 transition-all hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] hover:scale-[1.02]">
-                  <div className="text-[10px] font-semibold text-violet-300/90 mb-0.5">
-                    📊 Demand Charges
+                )}
+
+              {/* AUTO-SUGGESTED GOALS */}
+              {context?.intelligence?.suggestedGoals &&
+                context.intelligence.suggestedGoals.length > 0 && (
+                  <div className="mt-3 rounded-xl border border-amber-400/20 bg-gradient-to-br from-amber-400/10 to-amber-400/5 p-3">
+                    <div className="text-[10px] font-bold text-amber-300/90 mb-2 flex items-center gap-1.5">
+                      <span>🎯</span>
+                      <span>Merlin suggests these priorities:</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {context.intelligence.suggestedGoals.map((goal) => (
+                        <div
+                          key={goal.goalId}
+                          className="flex items-start gap-2 text-xs text-amber-100/90"
+                        >
+                          <span className="text-amber-300 mt-0.5">✓</span>
+                          <div className="flex-1">
+                            <div className="font-semibold text-white">{goal.goalName}</div>
+                            {goal.rationale && (
+                              <div className="text-[10px] text-amber-200/60 mt-0.5 leading-relaxed">
+                                {goal.rationale}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-[9px] px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-200 border border-amber-400/20">
+                            {Math.round((goal.confidence || 0) * 100)}%
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="text-xs text-violet-100/70">Ready to analyze...</div>
-                </div>
-                <div className="rounded-xl border border-sky-400/25 bg-gradient-to-br from-sky-400/15 to-sky-400/5 px-3 py-2.5 transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:scale-[1.02]">
-                  <div className="text-[10px] font-semibold text-sky-300/90 mb-0.5">
-                    ☀️ Your Solar Power
+                )}
+
+              {/* WEATHER RISK → ROI SIGNAL (Inline, not hover) */}
+              {context?.intelligence?.weatherImpact &&
+                context.intelligence.weatherImpact.length > 0 && (
+                  <div className="mt-3 rounded-xl border border-orange-400/20 bg-gradient-to-br from-orange-400/10 to-orange-400/5 p-3">
+                    <div className="text-[10px] font-bold text-orange-300/90 mb-2 flex items-center gap-1.5">
+                      <span>🌡️</span>
+                      <span>Climate impact on your business:</span>
+                    </div>
+                    <div className="text-xs text-orange-100/90">
+                      <div className="font-semibold text-white">
+                        {context.intelligence.weatherImpact[0].impactDescription}
+                      </div>
+                      {context.intelligence.weatherImpact[0].whyItMatters && (
+                        <div className="text-[10px] text-orange-200/60 mt-1.5 leading-relaxed">
+                          {context.intelligence.weatherImpact[0].whyItMatters}
+                        </div>
+                      )}
+                    </div>
+                    {context.intelligence.weatherImpact[0].source && (
+                      <div className="mt-2 text-[9px] text-orange-300/50 italic">
+                        Source: {context.intelligence.weatherImpact[0].source}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-xs text-sky-100/70">Ready to analyze...</div>
-                </div>
-                <div className="rounded-xl border border-emerald-400/25 bg-gradient-to-br from-emerald-400/15 to-emerald-400/5 px-3 py-2.5 transition-all hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:scale-[1.02]">
-                  <div className="text-[10px] font-semibold text-emerald-300/90 mb-0.5">
-                    🌤️ Your Climate
+                )}
+
+              {/* INDUSTRY PRE-SELECTION HINT */}
+              {context?.intelligence?.inferredIndustry && (
+                <div className="mt-3 rounded-xl border border-fuchsia-400/20 bg-gradient-to-br from-fuchsia-400/10 to-fuchsia-400/5 p-3">
+                  <div className="text-[10px] font-bold text-fuchsia-300/90 mb-1.5 flex items-center gap-1.5">
+                    <span>🏢</span>
+                    <span>Industry detected:</span>
                   </div>
-                  <div className="text-xs text-emerald-100/70">Ready to analyze...</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-semibold text-white">
+                      {context.intelligence.inferredIndustry.industryName}
+                    </div>
+                    <div className="text-[9px] px-1.5 py-0.5 rounded bg-fuchsia-400/15 text-fuchsia-200 border border-fuchsia-400/20">
+                      {Math.round((context.intelligence.inferredIndustry.confidence || 0) * 100)}%
+                      match
+                    </div>
+                  </div>
+                  <div className="mt-1.5 text-[10px] text-fuchsia-200/60">
+                    Recommended based on your business profile
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="mt-4 flex items-center justify-between">
                 <div className="text-[10px] text-violet-300/60 italic flex items-center gap-1.5">
