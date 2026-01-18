@@ -299,126 +299,152 @@ export function AdvisorRail({
         {/* EMPTY STATE: no ZIP yet */}
         {!zip && !st ? (
           <>
-            <div className="text-xs font-semibold text-slate-300/70 mb-2">MERLIN CONTEXT</div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
-              <div className="text-[11px] font-semibold text-white">
-                Enter your ZIP to load drivers.
+            <div className="text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 mb-2 animate-pulse">
+              ✨ UNLOCK YOUR ENERGY ADVANTAGE
+            </div>
+            <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-transparent p-5 shadow-[0_0_30px_rgba(139,92,246,0.15)]">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">📍</span>
+                <div className="text-sm font-bold text-white">
+                  You're about to see something no one else can show you
+                </div>
               </div>
-              <div className="mt-1 text-xs text-slate-200/80">
-                Rates, demand charges, solar yield, and climate profile.
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">Utility rate</div>
-                  <div className="text-xs text-slate-200/80">—</div>
-                </div>
-                <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">Demand charge</div>
-                  <div className="text-xs text-slate-200/80">—</div>
-                </div>
-                <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">Peak sun</div>
-                  <div className="text-xs text-slate-200/80">—</div>
-                </div>
-                <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">Weather</div>
-                  <div className="text-xs text-slate-200/80">—</div>
-                </div>
+              <div className="mt-2 text-xs text-violet-200/90 leading-relaxed">
+                Enter your ZIP code to unlock{" "}
+                <span className="font-semibold text-violet-300">TrueQuote™</span> intelligence:
+                verified rates, solar potential, and climate advantages—backed by authoritative
+                sources, not estimates.
               </div>
 
-              <div className="mt-3 text-[10px] text-slate-400/60 italic">
-                Merlin is watching: rates, demand charges, solar yield
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-amber-400/25 bg-gradient-to-br from-amber-400/15 to-amber-400/5 px-3 py-2.5 transition-all hover:shadow-[0_0_20px_rgba(251,191,36,0.15)] hover:scale-[1.02]">
+                  <div className="text-[10px] font-semibold text-amber-300/90 mb-0.5">
+                    ⚡ Your Energy Rate
+                  </div>
+                  <div className="text-xs text-amber-100/70">Ready to analyze...</div>
+                </div>
+                <div className="rounded-xl border border-violet-400/25 bg-gradient-to-br from-violet-400/15 to-violet-400/5 px-3 py-2.5 transition-all hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] hover:scale-[1.02]">
+                  <div className="text-[10px] font-semibold text-violet-300/90 mb-0.5">
+                    📊 Demand Charges
+                  </div>
+                  <div className="text-xs text-violet-100/70">Ready to analyze...</div>
+                </div>
+                <div className="rounded-xl border border-sky-400/25 bg-gradient-to-br from-sky-400/15 to-sky-400/5 px-3 py-2.5 transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:scale-[1.02]">
+                  <div className="text-[10px] font-semibold text-sky-300/90 mb-0.5">
+                    ☀️ Your Solar Power
+                  </div>
+                  <div className="text-xs text-sky-100/70">Ready to analyze...</div>
+                </div>
+                <div className="rounded-xl border border-emerald-400/25 bg-gradient-to-br from-emerald-400/15 to-emerald-400/5 px-3 py-2.5 transition-all hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:scale-[1.02]">
+                  <div className="text-[10px] font-semibold text-emerald-300/90 mb-0.5">
+                    🌤️ Your Climate
+                  </div>
+                  <div className="text-xs text-emerald-100/70">Ready to analyze...</div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between">
+                <div className="text-[10px] text-violet-300/60 italic flex items-center gap-1.5">
+                  <span className="text-sm">🔮</span>
+                  <span>TrueQuote™ intelligence ready...</span>
+                </div>
+                <div className="text-[9px] px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-semibold">
+                  FIRST in market
+                </div>
               </div>
             </div>
           </>
         ) : (
           <>
-            <div className="text-[11px] font-semibold tracking-wide text-slate-300/70 mb-2">
-              INSTRUMENT PANEL
+            <div className="text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">✨</span>
+                <span>YOUR ENERGY ADVANTAGE</span>
+              </div>
+              <div className="text-[9px] px-2 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold animate-pulse">
+                TrueQuote™
+              </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.035] to-transparent p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_14px_30px_rgba(0,0,0,0.35)]">
+            <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-500/8 via-fuchsia-500/4 to-transparent p-4 shadow-[0_0_30px_rgba(139,92,246,0.12),inset_0_1px_0_rgba(255,255,255,0.08)]">
               {/* Top row: ZIP / State / Utility */}
               <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">ZIP</div>
-                  <div className="text-sm font-semibold text-white">{zip || "--"}</div>
+                <div className="rounded-xl border border-cyan-400/20 bg-gradient-to-br from-cyan-400/10 to-cyan-400/5 px-3 py-2">
+                  <div className="text-[10px] font-semibold text-cyan-300/80">📍 ZIP</div>
+                  <div className="text-sm font-bold text-white">{zip || "--"}</div>
                 </div>
 
-                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">STATE</div>
-                  <div className="text-sm font-semibold text-white">{st || "--"}</div>
+                <div className="rounded-xl border border-violet-400/20 bg-gradient-to-br from-violet-400/10 to-violet-400/5 px-3 py-2">
+                  <div className="text-[10px] font-semibold text-violet-300/80">🗺️ STATE</div>
+                  <div className="text-sm font-bold text-white">{st || "--"}</div>
                 </div>
 
-                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">UTILITY</div>
-                  <div className="text-sm font-semibold text-white truncate">
-                    {utilityName || "—"}
-                  </div>
+                <div className="rounded-xl border border-fuchsia-400/20 bg-gradient-to-br from-fuchsia-400/10 to-fuchsia-400/5 px-3 py-2">
+                  <div className="text-[10px] font-semibold text-fuchsia-300/80">⚡ UTILITY</div>
+                  <div className="text-sm font-bold text-white truncate">{utilityName || "—"}</div>
                 </div>
               </div>
 
-              {/* Middle row: "dials" */}
+              {/* Middle row: "dials" - Your Energy Powers */}
               <div className="mt-3 grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2">
-                  <div className="text-[10px] text-amber-200/80">RATE</div>
-                  <div className="text-sm font-extrabold text-white">
+                <div className="rounded-xl border border-amber-400/30 bg-gradient-to-br from-amber-400/15 to-amber-400/8 px-3 py-2.5 shadow-[0_0_15px_rgba(251,191,36,0.1)]">
+                  <div className="text-[10px] font-bold text-amber-300/90 mb-0.5">⚡ RATE</div>
+                  <div className="text-base font-extrabold text-white">
                     {rate != null ? `${fmtMoney(rate)}/kWh` : "—"}
                   </div>
-                  <div className="text-[10px] text-slate-200/70">energy price</div>
+                  <div className="text-[10px] text-amber-200/60">what you pay</div>
                 </div>
 
-                <div className="rounded-xl border border-violet-400/20 bg-violet-400/10 px-3 py-2">
-                  <div className="text-[10px] text-violet-200/80">DEMAND</div>
-                  <div className="text-sm font-extrabold text-white">
+                <div className="rounded-xl border border-violet-400/30 bg-gradient-to-br from-violet-400/15 to-violet-400/8 px-3 py-2.5 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
+                  <div className="text-[10px] font-bold text-violet-300/90 mb-0.5">📊 DEMAND</div>
+                  <div className="text-base font-extrabold text-white">
                     {demand != null ? `$${demand.toFixed(0)}/kW` : "—"}
                   </div>
-                  <div className="text-[10px] text-slate-200/70">monthly peak</div>
+                  <div className="text-[10px] text-violet-200/60">peak charges</div>
                 </div>
 
-                <div className="rounded-xl border border-sky-400/20 bg-sky-400/10 px-3 py-2">
-                  <div className="text-[10px] text-sky-200/80">SUN</div>
-                  <div className="text-sm font-extrabold text-white">
+                <div className="rounded-xl border border-sky-400/30 bg-gradient-to-br from-sky-400/15 to-sky-400/8 px-3 py-2.5 shadow-[0_0_15px_rgba(56,189,248,0.1)]">
+                  <div className="text-[10px] font-bold text-sky-300/90 mb-0.5">☀️ SUN</div>
+                  <div className="text-base font-extrabold text-white">
                     {sun != null ? `${sun.toFixed(1)} hrs/day` : "—"}
                   </div>
-                  <div className="text-[10px] text-slate-200/70">solar yield</div>
+                  <div className="text-[10px] text-sky-200/60">solar power</div>
                 </div>
               </div>
 
               {/* Bottom row: Weather + Opportunity */}
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">WEATHER</div>
-                  <div className="mt-1 text-xs text-white font-semibold">
-                    {weatherProfile || "—"}
-                  </div>
+                <div className="rounded-xl border border-emerald-400/25 bg-gradient-to-br from-emerald-400/10 to-emerald-400/5 px-3 py-2.5">
+                  <div className="text-[10px] font-bold text-emerald-300/90 mb-1">🌤️ CLIMATE</div>
+                  <div className="text-xs text-white font-semibold">{weatherProfile || "—"}</div>
                   {weatherExtremes && (
-                    <div className="mt-1 text-[10px] text-slate-200/70">
-                      Extremes: <span className="text-slate-100">{weatherExtremes}</span>
+                    <div className="mt-1 text-[10px] text-emerald-200/60">
+                      <span className="text-emerald-100">{weatherExtremes}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">OPPORTUNITY</div>
+                <div className="rounded-xl border border-fuchsia-400/25 bg-gradient-to-br from-fuchsia-400/10 to-fuchsia-400/5 px-3 py-2.5">
+                  <div className="text-[10px] font-bold text-fuchsia-300/90 mb-1">
+                    💎 OPPORTUNITIES
+                  </div>
 
-                  <div className="mt-1 space-y-1.5">
+                  <div className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-slate-200/80">Arbitrage</span>
-                      <span className="text-[11px] font-semibold text-amber-200">
+                      <span className="text-[11px] text-fuchsia-100/70">Arbitrage</span>
+                      <span className="text-[11px] font-bold text-amber-300">
                         {arbitrage || (hasTOU ? "Medium" : "Low")}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-slate-200/80">Backup</span>
-                      <span className="text-[11px] font-semibold text-emerald-200">
+                      <span className="text-[11px] text-fuchsia-100/70">Backup</span>
+                      <span className="text-[11px] font-bold text-emerald-300">
                         {context?.opportunities?.backup ? "High" : "Possible"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-slate-200/80">Peak Shaving</span>
-                      <span className="text-[11px] font-semibold text-sky-200">
+                      <span className="text-[11px] text-fuchsia-100/70">Peak Shaving</span>
+                      <span className="text-[11px] font-bold text-sky-300">
                         {context?.opportunities?.smoothing ? "High" : "Possible"}
                       </span>
                     </div>
@@ -426,8 +452,12 @@ export function AdvisorRail({
                 </div>
               </div>
 
-              <div className="mt-3 text-[10px] text-slate-300/60 italic">
-                Merlin is watching: rate spreads, demand peaks, solar yield, constraints
+              <div className="mt-3 flex items-center justify-between">
+                <div className="text-[10px] text-violet-300/60 italic flex items-center gap-1.5">
+                  <span className="text-sm">🔮</span>
+                  <span>Every number backed by authoritative sources</span>
+                </div>
+                <div className="text-[9px] text-violet-400/70 font-semibold">SSOT</div>
               </div>
             </div>
 
