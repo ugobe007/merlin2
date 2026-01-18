@@ -2,71 +2,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap");
 
-/* Step Hero - Tight hierarchy with pop */
-.stepHero {
-  margin-bottom: 18px;
-}
-
-.stepHero__title {
-  font-size: 44px;
-  line-height: 1.05;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: rgba(255, 255, 255, 0.96);
-  margin: 0 0 10px 0;
-}
-
-.stepHero__stack {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.stepHero__line {
-  font-size: 18px;
-  line-height: 1.2;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.stepHero__line--accent {
-  color: rgba(168, 139, 255, 0.95);
-}
-
-.stepHero__line--muted {
-  color: rgba(255, 255, 255, 0.62);
-  font-weight: 500;
-}
-
-.stepHero__micro {
-  font-size: 13px;
-  line-height: 1.2;
-  color: rgba(255, 255, 255, 0.48);
-}
-
-/* Subtle glow behind hero for stage light effect */
-.stepHeaderGlow {
-  position: relative;
-}
-
-.stepHeaderGlow:before {
-  content: "";
-  position: absolute;
-  inset: -18px -18px auto -18px;
-  height: 140px;
-  background: radial-gradient(circle at 20% 30%, rgba(168, 139, 255, 0.22), transparent 55%);
-  pointer-events: none;
-  filter: blur(2px);
-}
-
-/* Responsive: smaller screens */
-@media (max-width: 900px) {
-  .stepHero__title {
-    font-size: 34px;
-  }
-}
-
 /* Smooth scrolling for the entire app */
 html {
   scroll-behavior: smooth;
@@ -590,22 +525,25 @@ body [class*="WizardBottomNav"]:not([data-wizard-v5-nav]) {
 /* STAGE LIGHTING: Dual radial glows behind headline */
 .stepHeaderGlow {
   position: relative;
-  z-index: 1;
+  isolation: isolate;
 }
 
 .stepHeaderGlow:before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 180px;
+  inset: -16px -16px auto -16px;
+  height: 200px;
   background:
-    radial-gradient(circle at 25% 20%, rgba(168, 139, 255, 0.28), transparent 50%),
-    radial-gradient(circle at 75% 25%, rgba(100, 150, 255, 0.18), transparent 55%);
-  filter: blur(3px);
+    radial-gradient(circle at 20% 25%, rgba(168, 139, 255, 0.34), transparent 52%),
+    radial-gradient(circle at 78% 22%, rgba(90, 160, 255, 0.2), transparent 58%);
+  filter: blur(4px);
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
+}
+
+.stepHeaderGlow > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* 3-TIER CARD DEPTH SYSTEM */
@@ -618,20 +556,21 @@ body [class*="WizardBottomNav"]:not([data-wizard-v5-nav]) {
 
 /* Tier 1: Standard interactive cards */
 .card-tier-1 {
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.25),
-    0 1px 2px rgba(0, 0, 0, 0.15);
+    0 4px 14px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* Tier 2: Hero/primary action cards (highest depth) */
 .card-tier-2 {
-  background: rgba(51, 65, 85, 0.45);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(51, 65, 85, 0.62);
+  border: 2px solid rgba(255, 255, 255, 0.22);
   box-shadow:
-    0 0 20px rgba(251, 191, 36, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    0 0 28px rgba(168, 139, 255, 0.1),
+    0 10px 26px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* SHADOW SYSTEM: Directional depth */
@@ -656,4 +595,31 @@ body [class*="WizardBottomNav"]:not([data-wizard-v5-nav]) {
   box-shadow:
     0 0 20px rgba(251, 191, 36, 0.2),
     0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ✅ HOVER UTILITIES (works reliably) */
+.u-hover-lift {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+.u-hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.35),
+    0 2px 5px rgba(0, 0, 0, 0.22);
+}
+
+.u-hover-glow {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+.u-hover-glow:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 26px rgba(251, 191, 36, 0.22),
+    0 8px 18px rgba(0, 0, 0, 0.35);
 }
