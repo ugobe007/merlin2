@@ -112,6 +112,100 @@ const INDUSTRY_LOAD_FACTORS: Record<
     loadFactor: 0.25,
     profile: "peaky",
   },
+  // ========== ADDED: Missing industries (Dec 2025 audit) ==========
+  airport: {
+    method: "per_sqft",
+    wattsPerSqft: 25, // Terminals, lighting, HVAC, security systems
+    loadFactor: 0.6,
+    profile: "peaky",
+  },
+  casino: {
+    method: "per_sqft",
+    wattsPerSqft: 40, // Gaming floor, HVAC, lighting, 24/7 operation
+    loadFactor: 0.7,
+    profile: "flat",
+  },
+  apartment: {
+    method: "per_unit",
+    unitName: "units",
+    wattsPerUnit: 1500, // 1.5 kW per unit average
+    loadFactor: 0.4,
+    profile: "peaky",
+  },
+  cold_storage: {
+    method: "per_sqft",
+    wattsPerSqft: 45, // High refrigeration load
+    loadFactor: 0.75,
+    profile: "flat",
+  },
+  "cold-storage": {
+    method: "per_sqft",
+    wattsPerSqft: 45,
+    loadFactor: 0.75,
+    profile: "flat",
+  },
+  indoor_farm: {
+    method: "per_sqft",
+    wattsPerSqft: 80, // LED grow lights, climate control
+    loadFactor: 0.8,
+    profile: "flat",
+  },
+  "indoor-farm": {
+    method: "per_sqft",
+    wattsPerSqft: 80,
+    loadFactor: 0.8,
+    profile: "flat",
+  },
+  agricultural: {
+    method: "per_sqft",
+    wattsPerSqft: 10, // Processing, irrigation pumps
+    loadFactor: 0.35,
+    profile: "seasonal",
+  },
+  gas_station: {
+    method: "per_unit",
+    unitName: "dispensers",
+    wattsPerUnit: 5000, // Lighting, pumps, convenience store
+    loadFactor: 0.35,
+    profile: "peaky",
+  },
+  "gas-station": {
+    method: "per_unit",
+    unitName: "dispensers",
+    wattsPerUnit: 5000,
+    loadFactor: 0.35,
+    profile: "peaky",
+  },
+  shopping_center: {
+    method: "per_sqft",
+    wattsPerSqft: 18, // Common areas, anchor stores, HVAC
+    loadFactor: 0.45,
+    profile: "peaky",
+  },
+  "shopping-center": {
+    method: "per_sqft",
+    wattsPerSqft: 18,
+    loadFactor: 0.45,
+    profile: "peaky",
+  },
+  government: {
+    method: "per_sqft",
+    wattsPerSqft: 15, // Office-like, some specialized
+    loadFactor: 0.4,
+    profile: "peaky",
+  },
+  microgrid: {
+    method: "fixed",
+    baseKW: 1000, // Highly variable, needs custom input
+    loadFactor: 0.5,
+    profile: "flat",
+  },
+  residential: {
+    method: "per_sqft",
+    wattsPerSqft: 4, // Home electrical load
+    loadFactor: 0.3,
+    profile: "peaky",
+  },
 };
 
 /**
@@ -267,10 +361,28 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
       break;
     }
     case "per_sqft": {
-      // Check multiple field name variations from questionnaires
+      // Check ALL field name variations from questionnaires (23 industries)
+      // Priority order: industry-specific → generic → fallback
       const sqft =
+        // Industry-specific sqft field names (from DB custom_questions)
+        parseFloat(input.useCaseData.warehouseSqFt || "0") ||      // warehouse
+        parseFloat(input.useCaseData.manufacturingSqFt || "0") ||  // manufacturing
+        parseFloat(input.useCaseData.officeSqFt || "0") ||         // office
+        parseFloat(input.useCaseData.retailSqFt || "0") ||         // retail
+        parseFloat(input.useCaseData.storeSqFt || "0") ||          // retail
+        parseFloat(input.useCaseData.mallSqFt || "0") ||           // shopping-center
+        parseFloat(input.useCaseData.governmentSqFt || "0") ||     // government
+        parseFloat(input.useCaseData.terminalSqFt || "0") ||       // airport
+        parseFloat(input.useCaseData.gamingFloorSqFt || "0") ||    // casino
+        parseFloat(input.useCaseData.growingAreaSqFt || "0") ||    // indoor-farm
+        parseFloat(input.useCaseData.buildingSqFt || "0") ||       // generic
+        parseFloat(input.useCaseData.facilitySqFt || "0") ||       // generic
+        parseFloat(input.useCaseData.totalFacilitySqFt || "0") ||  // generic
+        // Legacy/generic field names
         parseFloat(input.useCaseData.squareFootage || "0") ||
+        parseFloat(input.useCaseData.squareFeet || "0") ||
         parseFloat(input.useCaseData.totalSqFt || "0") ||
+        parseFloat(input.useCaseData.sqFt || "0") ||
         parseFloat(input.useCaseData.facilitySize || "0") ||
         parseFloat(input.useCaseData.buildingSize || "0") ||
         parseFloat(input.useCaseData.warehouseSize || "0") ||
@@ -305,7 +417,8 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
 
         if (itLoadKW > 0) {
           // PUE (Power Usage Effectiveness) adds cooling/overhead
-          const pue = parseFloat(input.useCaseData.pue || "1.5") || 1.5;
+          // Check both pue and pueTarget field names (DB uses pueTarget)
+          const pue = parseFloat(input.useCaseData.pue || input.useCaseData.pueTarget || "1.5") || 1.5;
           peakDemandKW = Math.round(itLoadKW * pue);
           calculationMethod = `IT Load: ${itLoadKW} kW × PUE ${pue} = ${peakDemandKW} kW`;
           breakdown.push({ category: "IT Equipment", kW: itLoadKW, percentage: 0 });
@@ -393,16 +506,29 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
 
 /**
  * Extract unit count based on industry
+ * Handles ALL field name variations from 23 industries
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractUnitCount(industry: Industry, data: Record<string, any>): number {
   switch (industry) {
     case "hotel":
-      return data.roomCount || data.numberOfRooms || data.rooms || data.guestRooms || 100;
+      return parseInt(data.roomCount || data.numberOfRooms || data.rooms || data.guestRooms || "100") || 100;
     case "hospital":
-      return data.bedCount || data.beds || data.licensedBeds || 200;
+      return parseInt(data.bedCount || data.beds || data.licensedBeds || "200") || 200;
     case "college":
-      return data.students || data.enrollment || 5000;
+      return parseInt(data.studentCount || data.studentEnrollment || data.students || data.enrollment || "5000") || 5000;
+    case "apartment":
+      return parseInt(data.unitCount || data.units || data.apartments || "100") || 100;
+    case "airport":
+      // Use annual passengers in millions as a proxy for load (1M passengers ≈ 500 kW base)
+      return parseInt(data.annualPassengers || data.gateCount || "10") || 10;
+    case "casino":
+      // Gaming machines as proxy (each machine ≈ 0.5 kW)
+      return parseInt(data.gamingMachines || data.slotMachines || "500") || 500;
+    case "gas_station":
+      return parseInt(data.dispenserCount || data.fuelDispensers || data.pumps || "8") || 8;
+    case "residential":
+      return parseInt(data.squareFootage || data.sqFt || "2500") || 2500;
     default:
       return 100;
   }

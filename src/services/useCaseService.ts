@@ -464,8 +464,61 @@ export class UseCaseService {
 
       const allQuestions = data || [];
 
-      // Return all questions - no is_active filter since column doesn't exist on custom_questions
-      const activeQuestions = allQuestions;
+      // DEDUPLICATE by field_name - keep the one with lower display_order (Jan 18, 2026 fix)
+      const seenFields = new Map<string, any>();
+      for (const q of allQuestions) {
+        const fieldName = q.field_name;
+        if (!fieldName) continue;
+        
+        if (!seenFields.has(fieldName)) {
+          seenFields.set(fieldName, q);
+        } else {
+          // Keep the one with lower display_order
+          const existing = seenFields.get(fieldName);
+          if ((q.display_order ?? 999) < (existing.display_order ?? 999)) {
+            seenFields.set(fieldName, q);
+          }
+        }
+      }
+      
+      // ALSO deduplicate by question_text (semantic duplicates - Jan 19, 2026 fix)
+      // This catches cases like "buildingSqFt" vs "squareFeet" both asking same question
+      const seenTexts = new Map<string, any>();
+      for (const [fieldName, q] of seenFields.entries()) {
+        const text = (q.question_text || '').toLowerCase().trim();
+        if (!text) {
+          seenTexts.set(fieldName, q); // Keep questions without text
+          continue;
+        }
+        
+        // Check if we've seen this text before
+        let isDupe = false;
+        for (const [existingField, existingQ] of seenTexts.entries()) {
+          const existingText = (existingQ.question_text || '').toLowerCase().trim();
+          if (existingText === text) {
+            // Keep the one with lower display_order
+            if ((q.display_order ?? 999) < (existingQ.display_order ?? 999)) {
+              seenTexts.delete(existingField);
+              seenTexts.set(fieldName, q);
+            }
+            isDupe = true;
+            break;
+          }
+        }
+        
+        if (!isDupe) {
+          seenTexts.set(fieldName, q);
+        }
+      }
+      
+      // Convert back to array and sort by display_order
+      const activeQuestions = Array.from(seenTexts.values())
+        .sort((a, b) => (a.display_order ?? 999) - (b.display_order ?? 999));
+
+      // Log deduplication if any
+      if (allQuestions.length !== activeQuestions.length && import.meta.env.DEV) {
+        console.warn(`⚠️ [useCaseService] Deduplicated ${allQuestions.length - activeQuestions.length} duplicate questions for useCaseId: ${useCaseId}`);
+      }
 
       // DEBUG: Log what we're returning
       if (import.meta.env.DEV) {
