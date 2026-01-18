@@ -71,18 +71,33 @@ CREATE POLICY "Users can view their session events"
   TO authenticated
   USING (user_session_id = current_setting('app.user_session_id', true));
 
--- Admin full access
-CREATE POLICY "Admins have full access"
-  ON intelligence_events
-  FOR ALL
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE users.id::text = auth.uid()::text
-      AND users.tier = 'ADMIN'
-    )
-  );
+-- Admin full access (CONDITIONAL - only if users table exists with tier column)
+-- If users table doesn't exist yet, this policy will be skipped
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+    AND table_name = 'users'
+  ) AND EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+    AND table_name = 'users'
+    AND column_name = 'tier'
+  ) THEN
+    EXECUTE 'CREATE POLICY "Admins have full access"
+      ON intelligence_events
+      FOR ALL
+      TO authenticated
+      USING (
+        EXISTS (
+          SELECT 1 FROM users
+          WHERE users.id::text = auth.uid()::text
+          AND users.tier = ''ADMIN''
+        )
+      )';
+  END IF;
+END $$;
 
 -- Add comment for documentation
 COMMENT ON TABLE intelligence_events IS 'Captures all user interactions with intelligence layer for ML training and model improvement. No PII stored - uses anonymous session IDs.';
