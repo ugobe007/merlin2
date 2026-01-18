@@ -357,83 +357,27 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
 
   const selectedCountryData = selectedCountry ? getCountryData(selectedCountry) : null;
 
-  // Helper: can continue if location valid + enough goals
-  const canContinueLocation =
-    region === "us" ? zipInput.length === 5 && !zipError : Boolean(selectedCountry && selectedCity);
-
-  const canContinue = canContinueLocation && hasEnoughGoals;
-
-  const handleContinue = () => {
-    if (!canContinue) return;
-    if (onGoToStep2) onGoToStep2();
-    if (typeof _onNext === "function") _onNext();
-  };
-
-  // Proof tiles with fallback placeholders (teaser preview optional)
-  const PROOF_TILES = [
-    {
-      label: "Hotels",
-      metric: "$38k/yr",
-      sub: "Payback: 2.4 yr",
-    },
-    {
-      label: "Car Wash",
-      metric: "Payback: 2.1 yr",
-      sub: "Peak shaving + TOU",
-    },
-    {
-      label: "Warehouses",
-      metric: "Demand ↓ 30%",
-      sub: "Avoid peak charges",
-    },
-    {
-      label: "EV Hubs",
-      metric: "Arbitrage + backup",
-      sub: "Cut demand spikes",
-    },
-  ];
+  // Removed: canContinueLocation, canContinue, handleContinue, PROOF_TILES (tight headline only)
 
   return (
     <div className="text-white">
       {/* HERO (headline ABOVE panels) */}
-      <div className="text-center mb-10 px-4">
-        <h1 className="text-5xl md:text-6xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-violet-200 to-amber-200 leading-tight">
-          Let's slash your energy costs
-        </h1>
-        <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-8">
-          Enter your location, select 2+ goals, and we'll design your custom BESS solution in under
-          90 seconds
-        </p>
-        <button
-          onClick={handleContinue}
-          disabled={!canContinue}
-          className={`px-10 py-5 rounded-2xl font-bold text-lg transition-all ${
-            canContinue
-              ? "bg-gradient-to-r from-amber-400 to-amber-300 text-slate-900 shadow-[0_18px_50px_rgba(251,191,36,0.22)] hover:shadow-[0_24px_60px_rgba(251,191,36,0.28)] hover:scale-105"
-              : "bg-slate-700 text-slate-400 cursor-not-allowed"
-          }`}
-        >
-          {canContinue ? "✨ Generate My Quote →" : "📍 Complete location & goals to continue"}
-        </button>
-      </div>
+      <div className="stepHeaderGlow mb-7 px-4">
+        <div className="stepHero">
+          <h1 className="stepHero__title">Slash your energy costs.</h1>
 
-      {/* PROOF STRIP (above panels) */}
-      <div className="mb-10 px-4">
-        <div className="flex gap-4 overflow-x-auto pb-2 justify-center hide-scrollbar">
-          {PROOF_TILES.map((tile, idx) => (
-            <div
-              key={idx}
-              className="min-w-[220px] flex-shrink-0 rounded-2xl border border-white/10 bg-white/[0.06] backdrop-blur-xl p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]"
-            >
-              <div className="text-sm text-slate-400 mb-1">{tile.label}</div>
-              <div className="text-2xl font-bold text-white mb-1">{tile.metric}</div>
-              <div className="text-xs text-slate-500">{tile.sub}</div>
+          <div className="stepHero__stack">
+            <div className="stepHero__line stepHero__line--accent">
+              Methodically. Intelligently.
             </div>
-          ))}
+            <div className="stepHero__line stepHero__line--muted">One step at a time.</div>
+          </div>
+
+          <div className="stepHero__micro">Location → rates → savings model → payback estimate</div>
         </div>
       </div>
 
-      {/* 🔮 SAVINGS SNEAK PREVIEW (between hero and shell) */}
+      {/* 🔮 SAVINGS SNEAK PREVIEW (between hero and panels) */}
       {businessLookup?.found && businessLookup.industrySlug && locationData && (
         <div className="mb-8 px-4">
           <SavingsPreviewPanel
