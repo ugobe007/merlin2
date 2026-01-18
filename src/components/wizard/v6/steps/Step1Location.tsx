@@ -284,6 +284,7 @@ export function Step1Location({
   };
 
   // Clear business lookup when zip changes
+
   useEffect(() => {
     if (businessLookup) {
       setBusinessLookup(null);
@@ -416,10 +417,44 @@ export function Step1Location({
             </div>
           </div>
 
-          <div className="text-[13px] text-slate-400/80 leading-relaxed">
+          {/* Auto-populate hint */}
+          <div className="text-[13px] text-slate-400/80 leading-relaxed mt-4">
             🤖 Merlin auto-populates: utility territory, climate zone, grid stress, solar/weather
             risk, industry inference
           </div>
+
+          {/* COCKPIT DIALS - Persistent context across all steps (Jan 18, 2026) */}
+          {locationData && (
+            <div className="mt-5 flex flex-wrap gap-3 justify-center">
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/15 border border-amber-400/30 shadow-[0_0_15px_rgba(251,191,36,0.1)]">
+                <Zap className="w-4 h-4 text-amber-400" />
+                <div>
+                  <div className="text-[10px] font-bold text-amber-300/90">RATE</div>
+                  <div className="text-sm font-extrabold text-white">
+                    ${locationData.electricityRate.toFixed(4)}/kWh
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-500/15 border border-violet-400/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
+                <span className="text-lg">📊</span>
+                <div>
+                  <div className="text-[10px] font-bold text-violet-300/90">DEMAND</div>
+                  <div className="text-sm font-extrabold text-white">$15/kW</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-500/15 border border-sky-400/30 shadow-[0_0_15px_rgba(56,189,248,0.1)]">
+                <Sun className="w-4 h-4 text-sky-400" />
+                <div>
+                  <div className="text-[10px] font-bold text-sky-300/90">SUN</div>
+                  <div className="text-sm font-extrabold text-white">
+                    {locationData.sunHours} hrs/day
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -449,53 +484,7 @@ export function Step1Location({
         </div>
       )}
 
-      {/* COMPACT LOCATION PILLS (tightened spacing) */}
-      {locationData && (
-        <div className="mb-5 flex flex-wrap gap-3 justify-center px-4">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30">
-            <Sun className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-200 text-sm font-medium">
-              {locationData.sunHours} hrs/day
-            </span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/30">
-            <Zap className="w-4 h-4 text-yellow-400" />
-            <span className="text-yellow-200 text-sm font-medium">
-              ${locationData.electricityRate.toFixed(4)}/kWh
-            </span>
-          </div>
-          <div
-            className={`flex items-center gap-2 px-4 py-2 rounded-full ${
-              locationData.solarRating === "A"
-                ? "bg-green-500/10 border border-green-500/30"
-                : locationData.solarRating === "B"
-                  ? "bg-amber-500/10 border border-amber-500/30"
-                  : "bg-blue-500/10 border border-blue-500/30"
-            }`}
-          >
-            <Star
-              className={`w-4 h-4 ${
-                locationData.solarRating === "A"
-                  ? "text-green-400"
-                  : locationData.solarRating === "B"
-                    ? "text-amber-400"
-                    : "text-blue-400"
-              }`}
-            />
-            <span
-              className={`text-sm font-medium ${
-                locationData.solarRating === "A"
-                  ? "text-green-200"
-                  : locationData.solarRating === "B"
-                    ? "text-amber-200"
-                    : "text-blue-200"
-              }`}
-            >
-              {locationData.solarRating} - {locationData.solarLabel}
-            </span>
-          </div>
-        </div>
-      )}
+      {/* Removed: COMPACT LOCATION PILLS - Now in header as cockpit dials */}
 
       {/* PANELS GRID (tightened spacing) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
