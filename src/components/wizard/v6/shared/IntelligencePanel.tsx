@@ -13,6 +13,7 @@
  */
 
 import React from "react";
+import { TrendingUp, Target, CloudRain, Building2 } from "lucide-react";
 import { TrueQuoteBadge } from "@/components/shared/TrueQuoteBadge";
 import { SourceAttributionTooltip } from "@/components/quotes/SourceAttributionTooltip";
 import type {
@@ -58,7 +59,7 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
       >
         <div className="flex items-center justify-between mb-2">
           <div className="text-[11px] font-bold text-cyan-300/90 flex items-center gap-1.5">
-            <span>📊</span>
+            <TrendingUp className="w-3.5 h-3.5" />
             <span>Sites like yours typically see:</span>
           </div>
           <TrueQuoteBadge size="sm" variant="pill" className="scale-90" />
@@ -114,7 +115,7 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
       >
         <div className="flex items-center justify-between mb-3">
           <div className="text-[11px] font-bold text-amber-300/90 flex items-center gap-1.5">
-            <span>🎯</span>
+            <Target className="w-3.5 h-3.5" />
             <span>Merlin recommends these priorities:</span>
           </div>
           <TrueQuoteBadge size="sm" variant="pill" className="scale-90" />
@@ -174,7 +175,7 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
       >
         <div className="flex items-center justify-between mb-2">
           <div className="text-[11px] font-bold text-orange-300/90 flex items-center gap-1.5">
-            <span>🌡️</span>
+            <CloudRain className="w-3.5 h-3.5" />
             <span>Climate impact on your business:</span>
           </div>
           <TrueQuoteBadge size="sm" variant="pill" className="scale-90" />
@@ -205,7 +206,7 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
         className={`mt-4 rounded-xl border border-fuchsia-400/20 bg-gradient-to-br from-fuchsia-400/10 to-fuchsia-400/5 p-4 animate-fade-in ${className}`}
       >
         <div className="text-[11px] font-bold text-fuchsia-300/90 mb-2 flex items-center gap-1.5">
-          <span>🏢</span>
+          <Building2 className="w-3.5 h-3.5" />
           <span>Industry detected from your business name:</span>
         </div>
         <div className="flex items-center justify-between">

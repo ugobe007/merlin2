@@ -368,23 +368,56 @@ export function Step1Location({
 
   const selectedCountryData = selectedCountry ? getCountryData(selectedCountry) : null;
 
+  // ✅ VINEET'S VISION: Single Site vs Portfolio (Jan 18, 2026)
+  const [siteMode, setSiteMode] = useState<"single" | "portfolio">("single");
+
   // Removed: canContinueLocation, canContinue, handleContinue, PROOF_TILES (tight headline only)
 
   return (
     <div className="text-white">
-      {/* HERO (headline ABOVE panels) */}
+      {/* 🎯 SITE INTELLIGENCE SNAPSHOT - Vineet's Vision (Jan 18, 2026) */}
       <div className="stepHeaderGlow mb-7 px-4">
         <div className="stepHero">
-          <h1 className="stepHero__title">Slash your energy costs.</h1>
-
-          <div className="stepHero__stack">
-            <div className="stepHero__line stepHero__line--accent">
-              Methodically. Intelligently.
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[11px] font-semibold text-violet-300/80 mb-1.5 tracking-wide uppercase">
+                Step 1 of 6
+              </div>
+              <h1 className="stepHero__title mb-2">Site Intelligence Snapshot</h1>
+              <div className="text-[15px] text-slate-300/70 font-medium">
+                Where am I and what matters here?
+              </div>
             </div>
-            <div className="stepHero__line stepHero__line--muted">One step at a time.</div>
+
+            {/* Single Site / Portfolio Toggle */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSiteMode("single")}
+                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  siteMode === "single"
+                    ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/30"
+                    : "bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10"
+                }`}
+              >
+                Single Site
+              </button>
+              <button
+                onClick={() => setSiteMode("portfolio")}
+                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  siteMode === "portfolio"
+                    ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/30"
+                    : "bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10"
+                }`}
+              >
+                Portfolio / Expansion
+              </button>
+            </div>
           </div>
 
-          <div className="stepHero__micro">Location → rates → savings model → payback estimate</div>
+          <div className="text-[13px] text-slate-400/80 leading-relaxed">
+            🤖 Merlin auto-populates: utility territory, climate zone, grid stress, solar/weather
+            risk, industry inference
+          </div>
         </div>
       </div>
 
