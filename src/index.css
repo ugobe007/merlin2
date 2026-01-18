@@ -185,6 +185,22 @@ input[type="range"].slider-input::-moz-range-track {
   }
 }
 
+/* ✅ PHASE 2A: Intelligence Panel Fade-in Animation (Jan 18, 2026) */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
 @keyframes float {
   0%,
   100% {

@@ -1,0 +1,146 @@
+// src/components/wizard/v6/shared/IntelligencePanel.tsx
+
+import React from "react";
+import type {
+  ValueTeaserMetric,
+  GoalSuggestion,
+  WeatherImpact,
+  IndustryInference,
+} from "@/types/intelligence.types";
+
+interface IntelligencePanelProps {
+  type: "valueTeaser" | "suggestedGoals" | "weatherImpact" | "industryHint";
+  data: ValueTeaserMetric[] | GoalSuggestion[] | WeatherImpact[] | IndustryInference | null;
+  className?: string;
+}
+
+export function IntelligencePanel({ type, data, className = "" }: IntelligencePanelProps) {
+  if (!data) return null;
+
+  // VALUE TEASER PANEL
+  if (type === "valueTeaser" && Array.isArray(data) && data.length > 0) {
+    const metrics = data as ValueTeaserMetric[];
+    return (
+      <div
+        className={`mt-4 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-cyan-400/10 to-cyan-400/5 p-4 animate-fade-in ${className}`}
+      >
+        <div className="text-[11px] font-bold text-cyan-300/90 mb-2 flex items-center gap-1.5">
+          <span>📊</span>
+          <span>Sites like yours typically see:</span>
+        </div>
+        <ul className="space-y-2">
+          {metrics.map((metric, idx) => (
+            <li key={idx} className="flex items-start gap-2 text-xs text-cyan-100/90">
+              <span className="text-cyan-300 mt-0.5">•</span>
+              <span>
+                <span className="font-semibold text-white">{metric.displayText}</span>
+                {metric.sampleSize && (
+                  <span className="text-[10px] text-cyan-200/60 ml-1.5">
+                    ({metric.sampleSize} projects)
+                  </span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {metrics[0]?.source && (
+          <div className="mt-3 text-[9px] text-cyan-300/50 italic">Source: {metrics[0].source}</div>
+        )}
+      </div>
+    );
+  }
+
+  // SUGGESTED GOALS PANEL
+  if (type === "suggestedGoals" && Array.isArray(data) && data.length > 0) {
+    const goals = data as GoalSuggestion[];
+    return (
+      <div
+        className={`mt-4 rounded-xl border border-amber-400/20 bg-gradient-to-br from-amber-400/10 to-amber-400/5 p-4 animate-fade-in ${className}`}
+      >
+        <div className="text-[11px] font-bold text-amber-300/90 mb-3 flex items-center gap-1.5">
+          <span>🎯</span>
+          <span>Merlin recommends these priorities:</span>
+        </div>
+        <div className="space-y-3">
+          {goals.map((goal) => (
+            <div key={goal.goalId} className="flex items-start gap-2 text-xs text-amber-100/90">
+              <span className="text-amber-300 mt-0.5 text-sm">✓</span>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold text-white">{goal.goalName}</div>
+                  <div className="text-[9px] px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-200 border border-amber-400/20 ml-2">
+                    {Math.round((goal.confidence || 0) * 100)}%
+                  </div>
+                </div>
+                {goal.rationale && (
+                  <div className="text-[10px] text-amber-200/60 mt-1 leading-relaxed">
+                    → {goal.rationale}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // WEATHER IMPACT PANEL
+  if (type === "weatherImpact" && Array.isArray(data) && data.length > 0) {
+    const impact = (data as WeatherImpact[])[0]; // Use first/primary impact
+    return (
+      <div
+        className={`mt-4 rounded-xl border border-orange-400/20 bg-gradient-to-br from-orange-400/10 to-orange-400/5 p-4 animate-fade-in ${className}`}
+      >
+        <div className="text-[11px] font-bold text-orange-300/90 mb-2 flex items-center gap-1.5">
+          <span>🌡️</span>
+          <span>Climate impact on your business:</span>
+        </div>
+        <div className="text-xs text-orange-100/90">
+          <div className="font-semibold text-white leading-relaxed">{impact.impactDescription}</div>
+          {impact.whyItMatters && (
+            <div className="text-[10px] text-orange-200/60 mt-2 leading-relaxed">
+              Why it matters: {impact.whyItMatters}
+            </div>
+          )}
+        </div>
+        {impact.source && (
+          <div className="mt-3 text-[9px] text-orange-300/50 italic">Source: {impact.source}</div>
+        )}
+      </div>
+    );
+  }
+
+  // INDUSTRY HINT PANEL
+  if (type === "industryHint" && !Array.isArray(data)) {
+    const industry = data as IndustryInference;
+    return (
+      <div
+        className={`mt-4 rounded-xl border border-fuchsia-400/20 bg-gradient-to-br from-fuchsia-400/10 to-fuchsia-400/5 p-4 animate-fade-in ${className}`}
+      >
+        <div className="text-[11px] font-bold text-fuchsia-300/90 mb-2 flex items-center gap-1.5">
+          <span>🏢</span>
+          <span>Industry detected from your business name:</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold text-white">{industry.industryName}</div>
+          <div className="text-[9px] px-2 py-1 rounded bg-fuchsia-400/15 text-fuchsia-200 border border-fuchsia-400/20">
+            {Math.round((industry.confidence || 0) * 100)}% match
+          </div>
+        </div>
+        <div className="mt-2 text-[10px] text-fuchsia-200/60">
+          We'll pre-select this in the next step (you can change it)
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// Fade-in animation (add to your global CSS or Tailwind config)
+// @keyframes fade-in {
+//   from { opacity: 0; transform: translateY(-8px); }
+//   to { opacity: 1; transform: translateY(0); }
+// }
+// .animate-fade-in { animation: fade-in 0.4s ease-out; }
