@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS goal_suggestion_rules (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_goal_rules_industry_climate ON goal_suggestion_rules(industry_slug, climate_risk);
-CREATE INDEX idx_goal_rules_active ON goal_suggestion_rules(active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_goal_rules_industry_climate ON goal_suggestion_rules(industry_slug, climate_risk);
+CREATE INDEX IF NOT EXISTS idx_goal_rules_active ON goal_suggestion_rules(active) WHERE active = TRUE;
 
 COMMENT ON TABLE goal_suggestion_rules IS 'SSOT for goal auto-suggestion based on industry, climate, and grid context';
 COMMENT ON COLUMN goal_suggestion_rules.suggested_goals IS 'Array of goal IDs matching wizard goal options';
@@ -49,8 +49,8 @@ CREATE TABLE IF NOT EXISTS peer_benchmarks (
   UNIQUE(industry_slug, state, metric_name)
 );
 
-CREATE INDEX idx_peer_benchmarks_lookup ON peer_benchmarks(industry_slug, state, metric_name);
-CREATE INDEX idx_peer_benchmarks_active ON peer_benchmarks(active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_peer_benchmarks_lookup ON peer_benchmarks(industry_slug, state, metric_name);
+CREATE INDEX IF NOT EXISTS idx_peer_benchmarks_active ON peer_benchmarks(active) WHERE active = TRUE;
 
 COMMENT ON TABLE peer_benchmarks IS 'SSOT for peer comparison metrics shown in value teaser';
 COMMENT ON COLUMN peer_benchmarks.state IS 'State code or ALL for national benchmarks';
@@ -76,8 +76,8 @@ CREATE TABLE IF NOT EXISTS weather_impact_coefficients (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_weather_impact_lookup ON weather_impact_coefficients(weather_risk_type, industry_slug);
-CREATE INDEX idx_weather_impact_active ON weather_impact_coefficients(active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_weather_impact_lookup ON weather_impact_coefficients(weather_risk_type, industry_slug);
+CREATE INDEX IF NOT EXISTS idx_weather_impact_active ON weather_impact_coefficients(active) WHERE active = TRUE;
 
 COMMENT ON TABLE weather_impact_coefficients IS 'SSOT for converting passive weather risk to actionable ROI metrics';
 COMMENT ON COLUMN weather_impact_coefficients.industry_slug IS 'NULL = universal impact, specific = industry-targeted';
@@ -98,8 +98,8 @@ CREATE TABLE IF NOT EXISTS industry_keyword_mappings (
   UNIQUE(keyword, industry_slug)
 );
 
-CREATE INDEX idx_industry_keywords_lookup ON industry_keyword_mappings(keyword, industry_slug);
-CREATE INDEX idx_industry_keywords_active ON industry_keyword_mappings(active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_industry_keywords_lookup ON industry_keyword_mappings(keyword, industry_slug);
+CREATE INDEX IF NOT EXISTS idx_industry_keywords_active ON industry_keyword_mappings(active) WHERE active = TRUE;
 
 COMMENT ON TABLE industry_keyword_mappings IS 'SSOT for inferring industry from business name';
 COMMENT ON COLUMN industry_keyword_mappings.is_exact_match IS 'TRUE requires exact match, FALSE allows partial';
@@ -144,7 +144,8 @@ INSERT INTO goal_suggestion_rules (industry_slug, climate_risk, grid_stress, sug
    ARRAY['energy_cost_reduction', 'demand_response'],
    0.88,
    'Stable grid with TOU rates. Arbitrage + demand response revenue potential.',
-   'CBECS Office Building Energy Survey 2024');
+   'CBECS Office Building Energy Survey 2024')
+ON CONFLICT DO NOTHING;
 
 -- Peer Benchmarks (Sample data for Car Wash + Hotel + Hospital)
 INSERT INTO peer_benchmarks (industry_slug, state, metric_name, value_min, value_max, unit, sample_size, confidence, display_text, source) VALUES
@@ -161,7 +162,8 @@ INSERT INTO peer_benchmarks (industry_slug, state, metric_name, value_min, value
   -- Hospital Benchmarks
   ('hospital', 'ALL', 'backup_hours_critical', 12, 24, 'hours', 89, 'high', '12–24 hr backup critical', 'Joint Commission Standards + CMS Requirements'),
   ('hospital', 'ALL', 'demand_charge_reduction_pct', 30, 50, '%', 76, 'high', '30–50% outage cost prevention', 'ASHE Hospital Energy Study 2024'),
-  ('hospital', 'TX', 'grid_services_revenue', 25000, 60000, '$', 34, 'medium', '$25K–$60K annual grid services revenue', 'ERCOT Demand Response Programs 2024');
+  ('hospital', 'TX', 'grid_services_revenue', 25000, 60000, '$', 34, 'medium', '$25K–$60K annual grid services revenue', 'ERCOT Demand Response Programs 2024')
+ON CONFLICT (industry_slug, state, metric_name) DO NOTHING;
 
 -- Weather Impact Coefficients (Universal + Industry-specific)
 INSERT INTO weather_impact_coefficients (weather_risk_type, industry_slug, impact_metric, impact_min, impact_max, unit, impact_description, why_it_matters, source) VALUES
@@ -176,7 +178,8 @@ INSERT INTO weather_impact_coefficients (weather_risk_type, industry_slug, impac
   ('hurricane', 'hotel', 'revenue_loss_per_outage', 15000, 40000, '$', 'Revenue loss: $15K–$40K per extended outage', 'Hotels lose room revenue + F&B during power failures', 'AHLA Hurricane Readiness Report 2023'),
   
   -- Extreme Cold (Manufacturing)
-  ('extreme_cold', 'manufacturing', 'demand_spike_pct', 40, 60, '%', 'Extreme cold triggers 40–60% demand spikes', 'Process heating + HVAC load spikes can trigger high peak charges', 'DOE Industrial Energy Study 2024');
+  ('extreme_cold', 'manufacturing', 'demand_spike_pct', 40, 60, '%', 'Extreme cold triggers 40–60% demand spikes', 'Process heating + HVAC load spikes can trigger high peak charges', 'DOE Industrial Energy Study 2024')
+ON CONFLICT DO NOTHING;
 
 -- Industry Keyword Mappings (Business name → Industry inference)
 INSERT INTO industry_keyword_mappings (keyword, industry_slug, confidence_weight, is_exact_match, case_sensitive) VALUES
@@ -230,7 +233,8 @@ INSERT INTO industry_keyword_mappings (keyword, industry_slug, confidence_weight
   ('warehouse', 'warehouse', 1.00, FALSE, FALSE),
   ('distribution center', 'warehouse', 0.95, TRUE, FALSE),
   ('logistics', 'warehouse', 0.85, FALSE, FALSE),
-  ('fulfillment', 'warehouse', 0.90, FALSE, FALSE);
+  ('fulfillment', 'warehouse', 0.90, FALSE, FALSE)
+ON CONFLICT (keyword, industry_slug) DO NOTHING;
 
 -- ============================================================================
 -- TRIGGERS: Auto-update timestamps
@@ -244,11 +248,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS goal_suggestion_rules_updated ON goal_suggestion_rules;
 CREATE TRIGGER goal_suggestion_rules_updated
   BEFORE UPDATE ON goal_suggestion_rules
   FOR EACH ROW
   EXECUTE FUNCTION update_intelligence_timestamp();
 
+DROP TRIGGER IF EXISTS weather_impact_coefficients_updated ON weather_impact_coefficients;
 CREATE TRIGGER weather_impact_coefficients_updated
   BEFORE UPDATE ON weather_impact_coefficients
   FOR EACH ROW
