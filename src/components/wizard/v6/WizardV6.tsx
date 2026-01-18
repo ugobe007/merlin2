@@ -546,9 +546,10 @@ export default function WizardV6() {
             {/* Inner glass lip */}
             <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(0,0,0,0.35)]" />
 
-            <div className="relative grid grid-cols-1 lg:grid-cols-3">
-              {/* LEFT: AdvisorRail (no extra outer panel) */}
-              <div className="p-5 lg:border-r border-white/10">
+            {/* ✅ PHASE 2B: Changed from grid-cols-3 to custom layout - narrower sidebar */}
+            <div className="relative flex flex-col lg:flex-row">
+              {/* LEFT: AdvisorRail (280px - reduced from ~380px) */}
+              <div className="lg:w-[280px] lg:flex-shrink-0 p-5 lg:border-r border-white/10">
                 <AdvisorRail
                   currentStep={currentStep}
                   totalSteps={6}
@@ -596,11 +597,10 @@ export default function WizardV6() {
                 />
               </div>
 
-              {/* RIGHT: Step content */}
-              <div className="p-5 lg:col-span-2">
-                <div className="rounded-2xl border border-white/10 bg-slate-900/25 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]">
-                  {renderStep()}
-                </div>
+              {/* RIGHT: Step content (flex-1 takes remaining space) */}
+              <div className="flex-1 p-5">
+                {/* No extra nested panel - Step1Location provides its own structure */}
+                {renderStep()}
               </div>
             </div>
           </div>
