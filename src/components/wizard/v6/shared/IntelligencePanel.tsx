@@ -55,14 +55,18 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
 
     return (
       <div
-        className={`mt-4 rounded-xl border border-violet-400/20 bg-gradient-to-br from-violet-400/10 to-blue-400/5 p-4 animate-fade-in ${className}`}
+        className={`mt-4 rounded-xl border border-violet-400/20 bg-gradient-to-br from-violet-400/10 to-blue-400/5 backdrop-blur-xl p-4 shadow-lg shadow-violet-500/10 animate-fade-in ${className}`}
       >
         <div className="flex items-center justify-between mb-2">
           <div className="text-[11px] font-bold text-violet-300/90 flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Sites like yours typically see:</span>
           </div>
-          <TrueQuoteBadge size="sm" variant="pill" className="scale-90" />
+          <TrueQuoteBadge
+            size="sm"
+            variant="pill"
+            className="scale-90 shadow-lg shadow-purple-500/30"
+          />
         </div>
         <ul className="space-y-2">
           {metrics.map((metric, idx) => (
@@ -111,14 +115,18 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
 
     return (
       <div
-        className={`mt-4 rounded-xl border border-amber-400/20 bg-gradient-to-br from-amber-400/10 to-amber-400/5 p-4 animate-fade-in ${className}`}
+        className={`mt-4 rounded-xl border border-amber-400/20 bg-gradient-to-br from-amber-400/10 to-amber-400/5 backdrop-blur-xl p-4 shadow-lg shadow-amber-500/20 animate-fade-in ${className}`}
       >
         <div className="flex items-center justify-between mb-3">
           <div className="text-[11px] font-bold text-amber-300/90 flex items-center gap-1.5">
             <Target className="w-3.5 h-3.5" />
             <span>Merlin recommends these priorities:</span>
           </div>
-          <TrueQuoteBadge size="sm" variant="pill" className="scale-90" />
+          <TrueQuoteBadge
+            size="sm"
+            variant="pill"
+            className="scale-90 shadow-lg shadow-purple-500/30"
+          />
         </div>
         <div className="space-y-3">
           {goals.map((goal) => (
@@ -171,14 +179,18 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
 
     return (
       <div
-        className={`mt-4 rounded-xl border border-slate-400/20 bg-gradient-to-br from-slate-400/10 to-slate-400/5 p-4 animate-fade-in ${className}`}
+        className={`mt-4 rounded-xl border border-slate-400/20 bg-gradient-to-br from-slate-400/10 to-slate-400/5 backdrop-blur-xl p-4 shadow-lg shadow-slate-500/10 animate-fade-in ${className}`}
       >
         <div className="flex items-center justify-between mb-2">
           <div className="text-[11px] font-bold text-slate-300/90 flex items-center gap-1.5">
             <CloudRain className="w-3.5 h-3.5" />
             <span>Climate impact on your business:</span>
           </div>
-          <TrueQuoteBadge size="sm" variant="pill" className="scale-90" />
+          <TrueQuoteBadge
+            size="sm"
+            variant="pill"
+            className="scale-90 shadow-lg shadow-purple-500/30"
+          />
         </div>
         <div className="text-xs text-slate-100/90">
           <div className="font-semibold text-white leading-relaxed">{impact.impactDescription}</div>
@@ -203,7 +215,7 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
     const industry = data as IndustryInference;
     return (
       <div
-        className={`mt-4 rounded-xl border border-purple-600/20 bg-gradient-to-br from-purple-600/10 to-purple-600/5 p-4 animate-fade-in ${className}`}
+        className={`mt-4 rounded-xl border border-purple-600/20 bg-gradient-to-br from-purple-600/10 to-purple-600/5 backdrop-blur-xl p-4 shadow-lg shadow-purple-600/15 animate-fade-in ${className}`}
       >
         <div className="text-[11px] font-bold text-purple-300/90 mb-2 flex items-center gap-1.5">
           <Building2 className="w-3.5 h-3.5" />
