@@ -91,7 +91,7 @@ export function AdvisorRail({
   const hasTOU = context?.utility?.hasTOU;
 
   const sun = context?.solar?.sunHours;
-  const solarRating = context?.solar?.rating;
+  const _solarRating = context?.solar?.rating;
 
   const weatherProfile = context?.weather?.profile;
   const weatherExtremes = context?.weather?.extremes;
@@ -300,7 +300,7 @@ export function AdvisorRail({
         {!zip && !st ? (
           <>
             <div className="text-xs font-semibold text-slate-300/70 mb-2">MERLIN CONTEXT</div>
-            <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-4 py-3">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
               <div className="text-[11px] font-semibold text-white">
                 Enter your ZIP to load drivers.
               </div>
@@ -309,19 +309,19 @@ export function AdvisorRail({
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
+                <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2">
                   <div className="text-[10px] text-slate-300/70">Utility rate</div>
                   <div className="text-xs text-slate-200/80">—</div>
                 </div>
-                <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
+                <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2">
                   <div className="text-[10px] text-slate-300/70">Demand charge</div>
                   <div className="text-xs text-slate-200/80">—</div>
                 </div>
-                <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
+                <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2">
                   <div className="text-[10px] text-slate-300/70">Peak sun</div>
                   <div className="text-xs text-slate-200/80">—</div>
                 </div>
-                <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
+                <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2">
                   <div className="text-[10px] text-slate-300/70">Weather</div>
                   <div className="text-xs text-slate-200/80">—</div>
                 </div>
@@ -334,99 +334,102 @@ export function AdvisorRail({
           </>
         ) : (
           <>
-            <div className="text-xs font-semibold text-slate-300/70 mb-3">LOCATION SNAPSHOT</div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                <div className="text-[10px] text-slate-300/70">ZIP</div>
-                <div className="text-sm font-semibold text-white">{zip || "--"}</div>
-              </div>
-
-              <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                <div className="text-[10px] text-slate-300/70">STATE</div>
-                <div className="text-sm font-semibold text-white">{st || "--"}</div>
-              </div>
-
-              {rate != null && (
-                <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">UTILITY RATE</div>
-                  <div className="text-sm font-semibold text-white">{`${fmtMoney(rate)}/kWh`}</div>
-                </div>
-              )}
-
-              {sun != null && (
-                <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">PEAK SUN</div>
-                  <div className="text-sm font-semibold text-white">{`${sun.toFixed(1)} hrs/day`}</div>
-                </div>
-              )}
+            <div className="text-[11px] font-semibold tracking-wide text-slate-300/70 mb-2">
+              INSTRUMENT PANEL
             </div>
 
-            {(utilityName || weatherProfile || weatherExtremes) && (
-              <div className="mt-3 rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                <div className="text-[10px] text-slate-300/70">PROFILE</div>
-                <div className="mt-1 space-y-1 text-xs text-slate-200/80">
-                  {utilityName && (
-                    <div>
-                      Utility: <span className="text-white font-semibold">{utilityName}</span>
-                    </div>
-                  )}
-                  {weatherProfile && (
-                    <div>
-                      Weather: <span className="text-white font-semibold">{weatherProfile}</span>
-                    </div>
-                  )}
+            <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.035] to-transparent p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_14px_30px_rgba(0,0,0,0.35)]">
+              {/* Top row: ZIP / State / Utility */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                  <div className="text-[10px] text-slate-300/70">ZIP</div>
+                  <div className="text-sm font-semibold text-white">{zip || "--"}</div>
+                </div>
+
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                  <div className="text-[10px] text-slate-300/70">STATE</div>
+                  <div className="text-sm font-semibold text-white">{st || "--"}</div>
+                </div>
+
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                  <div className="text-[10px] text-slate-300/70">UTILITY</div>
+                  <div className="text-sm font-semibold text-white truncate">
+                    {utilityName || "—"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Middle row: "dials" */}
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2">
+                  <div className="text-[10px] text-amber-200/80">RATE</div>
+                  <div className="text-sm font-extrabold text-white">
+                    {rate != null ? `${fmtMoney(rate)}/kWh` : "—"}
+                  </div>
+                  <div className="text-[10px] text-slate-200/70">energy price</div>
+                </div>
+
+                <div className="rounded-xl border border-violet-400/20 bg-violet-400/10 px-3 py-2">
+                  <div className="text-[10px] text-violet-200/80">DEMAND</div>
+                  <div className="text-sm font-extrabold text-white">
+                    {demand != null ? `$${demand.toFixed(0)}/kW` : "—"}
+                  </div>
+                  <div className="text-[10px] text-slate-200/70">monthly peak</div>
+                </div>
+
+                <div className="rounded-xl border border-sky-400/20 bg-sky-400/10 px-3 py-2">
+                  <div className="text-[10px] text-sky-200/80">SUN</div>
+                  <div className="text-sm font-extrabold text-white">
+                    {sun != null ? `${sun.toFixed(1)} hrs/day` : "—"}
+                  </div>
+                  <div className="text-[10px] text-slate-200/70">solar yield</div>
+                </div>
+              </div>
+
+              {/* Bottom row: Weather + Opportunity */}
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                  <div className="text-[10px] text-slate-300/70">WEATHER</div>
+                  <div className="mt-1 text-xs text-white font-semibold">
+                    {weatherProfile || "—"}
+                  </div>
                   {weatherExtremes && (
-                    <div>
-                      Extremes: <span className="text-white font-semibold">{weatherExtremes}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* OPPORTUNITIES only when we have real drivers */}
-            {(rate != null || demand != null || hasTOU || sun != null || solarRating) && (
-              <div className="mt-3 rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                <div className="text-[10px] text-slate-300/70">OPPORTUNITIES</div>
-                <div className="mt-1 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-slate-300">Energy Arbitrage</span>
-                    <span className="text-[11px] font-semibold text-amber-300">
-                      {arbitrage || (hasTOU ? "Medium" : "Low")}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-slate-300">Backup Power</span>
-                    <span className="text-[11px] font-semibold text-emerald-300">
-                      {context?.opportunities?.backup ? "High" : "Possible"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-slate-300">Peak Shaving</span>
-                    <span className="text-[11px] font-semibold text-blue-300">
-                      {context?.opportunities?.smoothing ? "High" : "Possible"}
-                    </span>
-                  </div>
-
-                  {demand != null && demand > 15 && (
-                    <div className="text-[10px] text-slate-400 mt-0.5">
-                      Demand charge: ${demand.toFixed(0)}/kW
+                    <div className="mt-1 text-[10px] text-slate-200/70">
+                      Extremes: <span className="text-slate-100">{weatherExtremes}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="mt-3 text-[10px] text-slate-400/60 italic">
-                  {currentStep <= 2
-                    ? "Merlin is watching: rates, demand charges, solar yield"
-                    : currentStep <= 4
-                      ? "Merlin is watching: curtailment, inverter limits, cycling"
-                      : "Merlin is watching: payback drivers, constraints, sensitivity"}
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                  <div className="text-[10px] text-slate-300/70">OPPORTUNITY</div>
+
+                  <div className="mt-1 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-slate-200/80">Arbitrage</span>
+                      <span className="text-[11px] font-semibold text-amber-200">
+                        {arbitrage || (hasTOU ? "Medium" : "Low")}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-slate-200/80">Backup</span>
+                      <span className="text-[11px] font-semibold text-emerald-200">
+                        {context?.opportunities?.backup ? "High" : "Possible"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-slate-200/80">Peak Shaving</span>
+                      <span className="text-[11px] font-semibold text-sky-200">
+                        {context?.opportunities?.smoothing ? "High" : "Possible"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
+
+              <div className="mt-3 text-[10px] text-slate-300/60 italic">
+                Merlin is watching: rate spreads, demand peaks, solar yield, constraints
+              </div>
+            </div>
 
             {/* CONSTRAINT WARNING (Step 3+) */}
             {constraint && (
@@ -504,7 +507,7 @@ export function AdvisorRail({
                       ? "bg-amber-400/15 border-2 border-amber-400/80"
                       : isDone
                         ? "bg-emerald-400/10 border border-emerald-400/70"
-                        : "bg-slate-800/30 border border-slate-700/40"
+                        : "bg-white/[0.04] border border-white/10"
                   }`}
                 >
                   {isDone ? "✓" : stepNum}
