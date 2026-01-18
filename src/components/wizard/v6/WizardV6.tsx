@@ -10,6 +10,15 @@ import { buildStep3Snapshot } from "./step3/buildStep3Snapshot";
 import { AdvisorPublisher } from "./advisor/AdvisorPublisher";
 import { AdvisorRail } from "./advisor/AdvisorRail";
 
+// Intelligence Layer (Phase 1: Adaptive UX - Jan 18, 2026)
+import {
+  suggestGoals,
+  inferIndustry,
+  getPrimaryWeatherImpact,
+  calculateValueTeaser,
+  type IntelligenceContext,
+} from "@/services/intelligence";
+
 // ============================================================================
 // DEEP MERGE HELPER - Prevents nested state corruption
 // ============================================================================
@@ -194,6 +203,9 @@ export default function WizardV6() {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showStartOverModal, setShowStartOverModal] = useState(false);
 
+  // Intelligence Layer State (Jan 18, 2026 - Phase 1: Adaptive UX)
+  const [intelligence, setIntelligence] = useState<IntelligenceContext>({});
+
   // Step validity tracking (Jan 16, 2026 - Step 3→4→5 fix)
   const [step3Valid, setStep3Valid] = useState(false);
   const [step4Valid, setStep4Valid] = useState(false);
@@ -240,6 +252,86 @@ export default function WizardV6() {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [state]);
+
+  // ============================================================================
+  // INTELLIGENCE LAYER ORCHESTRATION (Jan 18, 2026 - Phase 1: Adaptive UX)
+  // Trigger when ZIP + industry + weather data is available
+  // ============================================================================
+
+  useEffect(() => {
+    const zipCode = state.zipCode;
+    const stateCode = state.state;
+    const businessName = state.businessName;
+    const industrySlug = state.industry || state.detectedIndustry;
+    const weatherRisk = state.weatherData?.extremes?.toLowerCase().replace(/\s+/g, "_"); // "Extreme Heat" → "extreme_heat"
+
+    // Require minimum data to run intelligence
+    if (!zipCode || !stateCode || !industrySlug || zipCode.length !== 5) {
+      return;
+    }
+
+    console.log("[Intelligence] Orchestrating intelligence layer:", {
+      zipCode,
+      stateCode,
+      industrySlug,
+      weatherRisk,
+    });
+
+    // Run all intelligence services in parallel (non-blocking)
+    Promise.all([
+      // 1. Industry Inference (from business name)
+      businessName
+        ? inferIndustry({ businessName })
+        : Promise.resolve({ success: true, data: null }),
+
+      // 2. Goal Suggestion (from industry + climate + grid)
+      weatherRisk
+        ? suggestGoals({
+            zipCode,
+            industrySlug,
+            climateRisk: weatherRisk,
+            gridStress: undefined, // TODO: Add grid stress detection later
+          })
+        : Promise.resolve({ success: true, data: [] }),
+
+      // 3. Weather Impact Translation (from weather risk + industry)
+      weatherRisk ? getPrimaryWeatherImpact({ weatherRisk, industrySlug }) : Promise.resolve(null),
+
+      // 4. Value Teaser (peer benchmarks)
+      calculateValueTeaser({
+        zipCode,
+        state: stateCode,
+        industrySlug,
+        climateProfile: weatherRisk || "moderate",
+      }),
+    ])
+      .then(([industryResult, goalsResult, weatherImpact, valueTeaserResult]) => {
+        console.log("[Intelligence] Results:", {
+          industry: industryResult.data,
+          goals: goalsResult.data,
+          weatherImpact,
+          valueTeaser: valueTeaserResult.data,
+        });
+
+        // Update intelligence context for AdvisorRail
+        setIntelligence({
+          inferredIndustry: industryResult.data || undefined,
+          suggestedGoals: Array.isArray(goalsResult.data) ? goalsResult.data : undefined,
+          weatherImpact: weatherImpact ? [weatherImpact] : undefined,
+          valueTeaser: valueTeaserResult.data || undefined,
+        });
+      })
+      .catch((err) => {
+        console.error("[Intelligence] Orchestration failed:", err);
+      });
+  }, [
+    state.zipCode,
+    state.state,
+    state.businessName,
+    state.industry,
+    state.detectedIndustry,
+    state.weatherData?.extremes,
+  ]);
 
   // FIXED: Use deep merge to prevent nested state corruption (Jan 16, 2026)
   const updateState = useCallback(
@@ -526,6 +618,8 @@ export default function WizardV6() {
                       peakLoadKW: state.calculations?.base?.peakDemandKW ?? 0,
                       backupRequired: state.goals?.includes("backup_power") ?? false,
                     },
+                    // Phase 1: Intelligence Layer (Jan 18, 2026)
+                    intelligence,
                   }}
                 />
               </div>
