@@ -64,6 +64,8 @@ import { useAdvisorPublisher } from "../advisor/AdvisorPublisher";
 
 // ✅ PHASE 2A: Intelligence Panel Component (Jan 18, 2026)
 import { IntelligencePanel } from "../shared/IntelligencePanel";
+import { GridStressIndicator } from "../shared/GridStressIndicator";
+import { calculateGridStress } from "@/services/gridStressCalculator";
 import type { IntelligenceContext } from "@/types/intelligence.types";
 
 // ============================================================================
@@ -566,6 +568,18 @@ export function Step1Location({
                 {/* ✅ PHASE 2A: Intelligence Panels After Valid ZIP (Jan 18, 2026) */}
                 {zipInput.length === 5 && !zipError && !businessLookup?.found && (
                   <div className="mt-5 space-y-4">
+                    {/* Grid Stress Index - Automated Output (Task 5) */}
+                    {state.state &&
+                      (() => {
+                        const gridStress = calculateGridStress(state.state);
+                        return (
+                          <GridStressIndicator
+                            stressLevel={gridStress.stressLevel}
+                            confidence={gridStress.confidence}
+                          />
+                        );
+                      })()}
+
                     <IntelligencePanel
                       type="valueTeaser"
                       data={intelligence?.valueTeaser || null}
