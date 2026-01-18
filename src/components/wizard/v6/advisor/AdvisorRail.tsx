@@ -52,11 +52,6 @@ interface AdvisorRailProps {
 
 const STEP_LABELS = ["Location", "Industry", "Details", "Options", "TrueQuote", "Results"];
 
-function fmtMoney(n?: number) {
-  if (n == null || Number.isNaN(n)) return "--";
-  return `$${n.toFixed(2)}`;
-}
-
 function safeNum(n?: number) {
   return typeof n === "number" && !Number.isNaN(n) ? n : null;
 }
@@ -94,7 +89,8 @@ export function AdvisorRail({
   const demand = context?.utility?.demandCharge;
   const hasTOU = context?.utility?.hasTOU;
 
-  const sun = context?.solar?.sunHours;
+  // sun moved to header dials - prefix with _ to mark unused
+  const _sun = context?.solar?.sunHours;
   const _solarRating = context?.solar?.rating;
 
   const weatherProfile = context?.weather?.profile;
@@ -360,32 +356,7 @@ export function AdvisorRail({
                 </div>
               </div>
 
-              {/* Middle row: "dials" - Your Energy Powers */}
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-amber-400/30 bg-gradient-to-br from-amber-400/15 to-amber-400/8 px-3 py-2.5 shadow-[0_0_15px_rgba(251,191,36,0.1)]">
-                  <div className="text-[10px] font-bold text-amber-300/90 mb-0.5">⚡ RATE</div>
-                  <div className="text-base font-extrabold text-white">
-                    {rate != null ? `${fmtMoney(rate)}/kWh` : "—"}
-                  </div>
-                  <div className="text-[10px] text-amber-200/60">what you pay</div>
-                </div>
-
-                <div className="rounded-xl border border-violet-400/30 bg-gradient-to-br from-violet-400/15 to-violet-400/8 px-3 py-2.5 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
-                  <div className="text-[10px] font-bold text-violet-300/90 mb-0.5">📊 DEMAND</div>
-                  <div className="text-base font-extrabold text-white">
-                    {demand != null ? `$${demand.toFixed(0)}/kW` : "—"}
-                  </div>
-                  <div className="text-[10px] text-violet-200/60">peak charges</div>
-                </div>
-
-                <div className="rounded-xl border border-sky-400/30 bg-gradient-to-br from-sky-400/15 to-sky-400/8 px-3 py-2.5 shadow-[0_0_15px_rgba(56,189,248,0.1)]">
-                  <div className="text-[10px] font-bold text-sky-300/90 mb-0.5">☀️ SUN</div>
-                  <div className="text-base font-extrabold text-white">
-                    {sun != null ? `${sun.toFixed(1)} hrs/day` : "—"}
-                  </div>
-                  <div className="text-[10px] text-sky-200/60">solar power</div>
-                </div>
-              </div>
+              {/* Dials moved to header bar - More space for step intelligence below */}
 
               {/* Bottom row: Weather + Opportunity */}
               <div className="mt-3 grid grid-cols-2 gap-2">
