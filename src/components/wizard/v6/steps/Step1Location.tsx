@@ -510,7 +510,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                           ? "border-red-400/40 bg-red-900/30 text-red-300 placeholder-red-400/50"
                           : zipInput.length === 5
                             ? "border-emerald-400/40 bg-emerald-900/30 text-emerald-300 shadow-glow"
-                            : "text-white placeholder-slate-400 hover:shadow-tight-hover"
+                            : "text-white placeholder-slate-400 u-hover-lift"
                       } focus:border-amber-400/60 focus:ring-2 focus:ring-amber-500/40 focus:shadow-glow outline-none`}
                     />
                     {zipError && (
@@ -896,8 +896,8 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                     onClick={() => toggleGoal(goal.id)}
                     className={`relative p-3.5 rounded-xl text-left transition-all ${
                       isSelected
-                        ? "bg-gradient-to-r from-amber-500/15 to-amber-500/5 border-2 border-amber-400/60 shadow-glow hover:shadow-tight-hover"
-                        : "card-tier-1 hover:bg-slate-700/40 hover:border-white/20 hover:shadow-tight-hover"
+                        ? "bg-gradient-to-r from-amber-500/15 to-amber-500/5 border-2 border-amber-400/60 shadow-glow u-hover-glow"
+                        : "card-tier-1 u-hover-lift hover:bg-slate-700/40"
                     }`}
                   >
                     {/* Left accent bar when selected */}
