@@ -62,6 +62,10 @@ import {
 // ✅ NEW: Advisor Publisher Hook (Jan 16, 2026)
 import { useAdvisorPublisher } from "../advisor/AdvisorPublisher";
 
+// ✅ PHASE 2A: Intelligence Panel Component (Jan 18, 2026)
+import { IntelligencePanel } from "../shared/IntelligencePanel";
+import type { IntelligenceContext } from "@/types/intelligence.types";
+
 // ============================================================================
 // ENERGY GOALS - Updated Jan 15, 2026
 // ============================================================================
@@ -111,11 +115,18 @@ interface Props {
   updateState: (
     updates: Partial<WizardState> | ((prev: WizardState) => Partial<WizardState>)
   ) => void;
+  intelligence?: IntelligenceContext; // ✅ PHASE 2A: Intelligence data (Jan 18, 2026)
   onNext?: () => void;
   onGoToStep2?: () => void;
 }
 
-export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2 }: Props) {
+export function Step1Location({
+  state,
+  updateState,
+  intelligence,
+  onNext: _onNext,
+  onGoToStep2,
+}: Props) {
   // ✅ NEW: Access advisor publisher for teaser (Jan 16, 2026)
   const { publish: publishToAdvisor } = useAdvisorPublisher();
 
@@ -519,6 +530,20 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                   </>
                 )}
 
+                {/* ✅ PHASE 2A: Intelligence Panels After Valid ZIP (Jan 18, 2026) */}
+                {zipInput.length === 5 && !zipError && !businessLookup?.found && (
+                  <div className="mt-5 space-y-4">
+                    <IntelligencePanel
+                      type="valueTeaser"
+                      data={intelligence?.valueTeaser || null}
+                    />
+                    <IntelligencePanel
+                      type="weatherImpact"
+                      data={intelligence?.weatherImpact || null}
+                    />
+                  </div>
+                )}
+
                 {/* Address Lookup Section - shown after valid zip, hidden when business found */}
                 {zipInput.length === 5 && !zipError && !businessLookup?.found && (
                   <div className="mt-4">
@@ -667,6 +692,16 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                           </div>
                         </div>
                       </div>
+
+                      {/* ✅ PHASE 2A: Industry Detection Intelligence (Jan 18, 2026) */}
+                      {intelligence?.inferredIndustry && (
+                        <div className="mt-4">
+                          <IntelligencePanel
+                            type="industryHint"
+                            data={intelligence.inferredIndustry}
+                          />
+                        </div>
+                      )}
 
                       {/* Wrong business link - subtle, not a big button */}
                       <div className="mt-4 text-center">
@@ -868,6 +903,13 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                 {selectedGoalsCount}/{MIN_GOALS_REQUIRED} selected
               </div>
             </div>
+
+            {/* ✅ PHASE 2A: Suggested Goals Intelligence (Jan 18, 2026) */}
+            {intelligence?.suggestedGoals && intelligence.suggestedGoals.length > 0 && (
+              <div className="mb-5">
+                <IntelligencePanel type="suggestedGoals" data={intelligence.suggestedGoals} />
+              </div>
+            )}
 
             {/* Always visible instruction - prominent */}
             <div

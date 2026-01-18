@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { RotateCcw, X } from "lucide-react";
 
-import type { WizardState, EnergyGoal } from "./types";
+import type { WizardState } from "./types";
 import { INITIAL_WIZARD_STATE, POWER_LEVELS } from "./types";
 import { bufferService } from "@/services/bufferService";
 import { buildStep3Snapshot } from "./step3/buildStep3Snapshot";
@@ -62,7 +62,8 @@ import { Step5MagicFit } from "./steps/Step5MagicFit";
 import { Step6Quote } from "./steps/Step6Quote";
 
 // Enhanced components (Jan 15, 2026)
-import { EnhancedLocationStep } from "../steps/EnhancedLocationStep.v2";
+// import { EnhancedLocationStep } from "../steps/EnhancedLocationStep.v2"; // DEPRECATED - See Step1Location
+import { Step1Location } from "./steps/Step1Location"; // ✅ PHASE 2A: Updated Jan 18, 2026
 import { EnhancedStep2Industry } from "./steps/EnhancedStep2Industry";
 
 // ============================================================================
@@ -469,47 +470,18 @@ export default function WizardV6() {
     switch (currentStep) {
       case 1:
         return (
-          <EnhancedLocationStep
-            onNext={(data) => {
-              updateState({
-                businessName: data.businessName,
-                businessAddress: data.address,
-                city: data.city,
-                state: data.state,
-                zipCode: data.zipCode,
-                electricityRate: data.utilityRate,
-                solarData: {
-                  sunHours: data.sunHours,
-                  rating: data.sunHours > 5.5 ? "Excellent" : data.sunHours > 4.5 ? "Good" : "Fair",
-                },
-                goals: data.goals as EnergyGoal[],
-                detectedIndustry: data.detectedInfo?.industrySlug,
-                industry: data.detectedInfo?.industrySlug || "",
-                industryName: data.detectedInfo?.industrySlug || "",
-              });
+          <Step1Location
+            state={state}
+            updateState={updateState}
+            intelligence={intelligence} // ✅ PHASE 2A: Pass intelligence (Jan 18, 2026)
+            onGoToStep2={() => goToStep(2)}
+            onNext={() => {
               // Auto-skip to Step 3 if business detected
-              if (data.detectedInfo?.industrySlug) {
+              if (state.detectedIndustry) {
                 goToStep(3);
               } else {
                 goNext();
               }
-            }}
-            onUtilityDataUpdate={(utilityData) => {
-              // Update MerlinBar immediately when zip entered (includes weather data)
-              updateState({
-                state: utilityData.state,
-                electricityRate: utilityData.rate,
-                solarData: {
-                  sunHours: utilityData.sunHours,
-                  rating:
-                    utilityData.sunHours > 5.5
-                      ? "Excellent"
-                      : utilityData.sunHours > 4.5
-                        ? "Good"
-                        : "Fair",
-                },
-                ...(utilityData.weatherData && { weatherData: utilityData.weatherData }),
-              });
             }}
           />
         );
