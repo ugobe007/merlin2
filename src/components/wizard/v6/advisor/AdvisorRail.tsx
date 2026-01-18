@@ -4,6 +4,7 @@ import React, { useMemo, useRef } from "react";
 import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
 import avatarImg from "@/assets/images/new_small_profile_.png";
+import type { IntelligenceContext } from "@/types/intelligence.types";
 
 function ModeBadge({ mode }: { mode: "estimate" | "verified" }) {
   if (mode === "verified") {
@@ -41,6 +42,9 @@ interface AdvisorRailProps {
       peakLoadKW?: number;
       backupRequired?: boolean;
     };
+
+    // Phase 1: Intelligence Layer (Jan 18, 2026)
+    intelligence?: IntelligenceContext;
   };
 
   onNavigate?: (step: number) => void;
