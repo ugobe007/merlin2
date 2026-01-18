@@ -250,7 +250,11 @@ export function AdvisorRail({
   const insight = getMerlinInsight();
 
   return (
-    <div className="flex flex-col max-h-[calc(100vh-140px)] overflow-hidden">
+    <div className="relative flex flex-col max-h-[calc(100vh-140px)] overflow-hidden">
+      {/* KEYLIGHT GLOW */}
+      <div className="pointer-events-none absolute top-0 left-0 h-56 w-56 bg-amber-400/10 blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute top-10 right-0 h-64 w-64 bg-violet-500/10 blur-3xl rounded-full" />
+
       {/* MERLIN IDENTITY HEADER */}
       <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
         <div className="flex items-center gap-3 mb-4">
@@ -278,12 +282,14 @@ export function AdvisorRail({
           {payload?.mode && <ModeBadge mode={payload.mode} />}
         </div>
 
-        <div className="mt-3">
-          <div className="text-base font-semibold text-white leading-snug">
+        <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.04] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="text-[15px] font-extrabold text-white leading-snug tracking-tight">
             {payload?.headline || "Answer a few questions to get your TrueQuote™"}
           </div>
           {payload?.subline && (
-            <div className="mt-1 text-xs text-slate-200/80">{payload.subline}</div>
+            <div className="mt-1 text-xs text-slate-200/80 whitespace-pre-line">
+              {payload.subline}
+            </div>
           )}
         </div>
       </div>
