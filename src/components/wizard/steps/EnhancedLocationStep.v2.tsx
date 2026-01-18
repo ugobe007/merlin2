@@ -32,6 +32,7 @@ import {
 import { getStateUtilityData, getStateSolarData } from "@/data/utilityData";
 import { getWeatherData } from "@/services/weatherService";
 import { geocodeLocation } from "@/services/geocodingService";
+import { useAdvisorPublisher } from "@/components/wizard/v6/advisor/AdvisorPublisher";
 
 // ============================================
 // CONSTANTS
@@ -208,7 +209,7 @@ interface LocationStepProps {
       avgLowF?: number;
       heatingDegreeDays?: number;
       coolingDegreeDays?: number;
-      source: 'visual-crossing' | 'nws' | 'cache';
+      source: "visual-crossing" | "nws" | "cache";
     };
   }) => void;
   initialData?: Partial<LocationData>;
@@ -235,6 +236,9 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
   onUtilityDataUpdate,
   initialData,
 }) => {
+  // Advisor publisher for headline
+  const { publish } = useAdvisorPublisher();
+
   // State
   const [zipCode, setZipCode] = useState(initialData?.zipCode || "");
   const [stateCode, setStateCode] = useState(initialData?.state || "");
@@ -252,6 +256,22 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [detectionResult, setDetectionResult] = useState<BusinessDetectionResult | null>(null);
   const [selectedGoals, setSelectedGoals] = useState<string[]>(initialData?.goals || []);
+
+  // ============================================
+  // PUBLISH STEP 1 HEADLINE ON MOUNT
+  // ============================================
+
+  useEffect(() => {
+    publish({
+      step: 1,
+      key: "step-1-headline",
+      mode: "estimate",
+      headline: "Slash your energy costs.",
+      subline: "Methodically. Intelligently.\nOne step at a time.",
+      cards: [],
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ============================================
   // ZIP CODE HANDLER - Lookup utility data from comprehensive national database
@@ -302,50 +322,56 @@ export const EnhancedLocationStep: React.FC<LocationStepProps> = ({
           setShowAddressSearch(true); // Reveal address input
 
           // Geocode ZIP to get city name and precise coordinates
-          geocodeLocation(zipCode).then((geocode) => {
-            if (geocode) {
-              console.log('[LocationStep] Geocoded:', geocode);
-              
-              // Fetch weather data with precise coordinates
-              getWeatherData(zipCode, geocode.lat, geocode.lon).then((weather) => {
-                if (weather) {
-                  console.log('[LocationStep] Weather data fetched:', weather);
-                  // Update parent state with weather data
-                  if (onUtilityDataUpdate) {
-                    onUtilityDataUpdate({
-                      state: stateName,
-                      rate: utilityInfo.electricityRate,
-                      sunHours: solarInfo.peakSunHours,
-                      arbitrage,
-                      weatherData: weather,
-                    });
-                  }
-                }
-              }).catch((err) => {
-                console.warn('[LocationStep] Weather fetch failed:', err);
-              });
-            }
-          }).catch((err) => {
-            console.warn('[LocationStep] Geocoding failed:', err);
-            
-            // Fallback: fetch weather without precise coordinates
-            getWeatherData(zipCode).then((weather) => {
-              if (weather) {
-                console.log('[LocationStep] Weather data fetched (fallback):', weather);
-                if (onUtilityDataUpdate) {
-                  onUtilityDataUpdate({
-                    state: stateName,
-                    rate: utilityInfo.electricityRate,
-                    sunHours: solarInfo.peakSunHours,
-                    arbitrage,
-                    weatherData: weather,
+          geocodeLocation(zipCode)
+            .then((geocode) => {
+              if (geocode) {
+                console.log("[LocationStep] Geocoded:", geocode);
+
+                // Fetch weather data with precise coordinates
+                getWeatherData(zipCode, geocode.lat, geocode.lon)
+                  .then((weather) => {
+                    if (weather) {
+                      console.log("[LocationStep] Weather data fetched:", weather);
+                      // Update parent state with weather data
+                      if (onUtilityDataUpdate) {
+                        onUtilityDataUpdate({
+                          state: stateName,
+                          rate: utilityInfo.electricityRate,
+                          sunHours: solarInfo.peakSunHours,
+                          arbitrage,
+                          weatherData: weather,
+                        });
+                      }
+                    }
+                  })
+                  .catch((err) => {
+                    console.warn("[LocationStep] Weather fetch failed:", err);
                   });
-                }
               }
-            }).catch((weatherErr) => {
-              console.warn('[LocationStep] Weather fetch failed:', weatherErr);
+            })
+            .catch((err) => {
+              console.warn("[LocationStep] Geocoding failed:", err);
+
+              // Fallback: fetch weather without precise coordinates
+              getWeatherData(zipCode)
+                .then((weather) => {
+                  if (weather) {
+                    console.log("[LocationStep] Weather data fetched (fallback):", weather);
+                    if (onUtilityDataUpdate) {
+                      onUtilityDataUpdate({
+                        state: stateName,
+                        rate: utilityInfo.electricityRate,
+                        sunHours: solarInfo.peakSunHours,
+                        arbitrage,
+                        weatherData: weather,
+                      });
+                    }
+                  }
+                })
+                .catch((weatherErr) => {
+                  console.warn("[LocationStep] Weather fetch failed:", weatherErr);
+                });
             });
-          });
 
           // Update MerlinBar via callback (immediate utility data)
           if (onUtilityDataUpdate) {
