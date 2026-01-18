@@ -55,10 +55,10 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
 
     return (
       <div
-        className={`mt-4 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-cyan-400/10 to-cyan-400/5 p-4 animate-fade-in ${className}`}
+        className={`mt-4 rounded-xl border border-violet-400/20 bg-gradient-to-br from-violet-400/10 to-blue-400/5 p-4 animate-fade-in ${className}`}
       >
         <div className="flex items-center justify-between mb-2">
-          <div className="text-[11px] font-bold text-cyan-300/90 flex items-center gap-1.5">
+          <div className="text-[11px] font-bold text-violet-300/90 flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Sites like yours typically see:</span>
           </div>
@@ -66,12 +66,12 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
         </div>
         <ul className="space-y-2">
           {metrics.map((metric, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-xs text-cyan-100/90">
-              <span className="text-cyan-300 mt-0.5">•</span>
+            <li key={idx} className="flex items-start gap-2 text-xs text-violet-100/90">
+              <span className="text-violet-300 mt-0.5">•</span>
               <span>
                 <span className="font-semibold text-white">{metric.displayText}</span>
                 {metric.sampleSize && (
-                  <span className="text-[10px] text-cyan-200/60 ml-1.5">
+                  <span className="text-[10px] text-violet-200/60 ml-1.5">
                     ({metric.sampleSize} projects)
                   </span>
                 )}
@@ -82,7 +82,7 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
         {benchmarkSource && (
           <div className="mt-3 flex items-center gap-2">
             <SourceAttributionTooltip source={benchmarkSource} iconSize="sm" />
-            <span className="text-[9px] text-cyan-300/50 italic">Hover for source details</span>
+            <span className="text-[9px] text-violet-300/50 italic">Hover for source details</span>
           </div>
         )}
       </div>
@@ -171,19 +171,19 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
 
     return (
       <div
-        className={`mt-4 rounded-xl border border-orange-400/20 bg-gradient-to-br from-orange-400/10 to-orange-400/5 p-4 animate-fade-in ${className}`}
+        className={`mt-4 rounded-xl border border-slate-400/20 bg-gradient-to-br from-slate-400/10 to-slate-400/5 p-4 animate-fade-in ${className}`}
       >
         <div className="flex items-center justify-between mb-2">
-          <div className="text-[11px] font-bold text-orange-300/90 flex items-center gap-1.5">
+          <div className="text-[11px] font-bold text-slate-300/90 flex items-center gap-1.5">
             <CloudRain className="w-3.5 h-3.5" />
             <span>Climate impact on your business:</span>
           </div>
           <TrueQuoteBadge size="sm" variant="pill" className="scale-90" />
         </div>
-        <div className="text-xs text-orange-100/90">
+        <div className="text-xs text-slate-100/90">
           <div className="font-semibold text-white leading-relaxed">{impact.impactDescription}</div>
           {impact.whyItMatters && (
-            <div className="text-[10px] text-orange-200/60 mt-2 leading-relaxed">
+            <div className="text-[10px] text-slate-200/60 mt-2 leading-relaxed">
               Why it matters: {impact.whyItMatters}
             </div>
           )}
@@ -191,7 +191,7 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
         {weatherSource && (
           <div className="mt-3 flex items-center gap-2">
             <SourceAttributionTooltip source={weatherSource} iconSize="sm" />
-            <span className="text-[9px] text-orange-300/50 italic">Climate risk data</span>
+            <span className="text-[9px] text-slate-300/50 italic">Climate risk data</span>
           </div>
         )}
       </div>
@@ -203,19 +203,19 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
     const industry = data as IndustryInference;
     return (
       <div
-        className={`mt-4 rounded-xl border border-fuchsia-400/20 bg-gradient-to-br from-fuchsia-400/10 to-fuchsia-400/5 p-4 animate-fade-in ${className}`}
+        className={`mt-4 rounded-xl border border-purple-600/20 bg-gradient-to-br from-purple-600/10 to-purple-600/5 p-4 animate-fade-in ${className}`}
       >
-        <div className="text-[11px] font-bold text-fuchsia-300/90 mb-2 flex items-center gap-1.5">
+        <div className="text-[11px] font-bold text-purple-300/90 mb-2 flex items-center gap-1.5">
           <Building2 className="w-3.5 h-3.5" />
           <span>Industry detected from your business name:</span>
         </div>
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold text-white">{industry.industryName}</div>
-          <div className="text-[9px] px-2 py-1 rounded bg-fuchsia-400/15 text-fuchsia-200 border border-fuchsia-400/20">
+          <div className="text-[9px] px-2 py-1 rounded bg-purple-600/15 text-purple-200 border border-purple-600/20">
             {Math.round((industry.confidence || 0) * 100)}% match
           </div>
         </div>
-        <div className="mt-2 text-[10px] text-fuchsia-200/60">
+        <div className="mt-2 text-[10px] text-purple-200/60">
           We'll pre-select this in the next step (you can change it)
         </div>
       </div>
