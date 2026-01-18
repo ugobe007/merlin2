@@ -403,9 +403,9 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
         </div>
       )}
 
-      {/* COMPACT LOCATION PILLS (between hero and shell) */}
+      {/* COMPACT LOCATION PILLS (tightened spacing) */}
       {locationData && (
-        <div className="mb-8 flex flex-wrap gap-3 justify-center px-4">
+        <div className="mb-5 flex flex-wrap gap-3 justify-center px-4">
           <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30">
             <Sun className="w-4 h-4 text-amber-400" />
             <span className="text-amber-200 text-sm font-medium">
@@ -451,16 +451,16 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
         </div>
       )}
 
-      {/* PANELS GRID (no shell - WizardV6 provides it) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {/* PANELS GRID (tightened spacing) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* LEFT COLUMN: Your Location */}
         <div>
-          <div className="relative p-6 bg-slate-900/25 border border-white/10 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="relative p-5 card-tier-1 rounded-2xl shadow-tight">
+            <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
                 <MapPin className="w-5 h-5 text-amber-400" />
               </div>
-              <h2 className="text-xl font-semibold text-white">Your Location</h2>
+              <h2 className="text-lg font-semibold text-white">Your Location</h2>
             </div>
 
             {/* Region Toggle */}
@@ -494,7 +494,7 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                 {/* Only show ZIP input prominently if business not found yet */}
                 {!businessLookup?.found && (
                   <>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-sm font-semibold text-slate-200 mb-2.5">
                       Enter your zip code
                     </label>
                     <input
@@ -505,13 +505,13 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
                         setZipInput(value);
                       }}
                       placeholder="e.g., 89101"
-                      className={`w-full px-4 py-4 rounded-xl border-2 text-xl font-bold text-center tracking-widest ${
+                      className={`w-full px-4 py-4 rounded-xl text-xl font-bold text-center tracking-widest card-tier-2 transition-all ${
                         zipError
                           ? "border-red-400/40 bg-red-900/30 text-red-300 placeholder-red-400/50"
                           : zipInput.length === 5
-                            ? "border-emerald-400/40 bg-emerald-900/30 text-emerald-300"
-                            : "bg-white/5 border-white/10 text-white placeholder-slate-400"
-                      } focus:border-amber-400/50 focus:ring-2 focus:ring-amber-500/30 outline-none transition-all`}
+                            ? "border-emerald-400/40 bg-emerald-900/30 text-emerald-300 shadow-glow"
+                            : "text-white placeholder-slate-400 hover:shadow-tight-hover"
+                      } focus:border-amber-400/60 focus:ring-2 focus:ring-amber-500/40 focus:shadow-glow outline-none`}
                     />
                     {zipError && (
                       <p className="mt-2 text-sm text-red-400 font-medium">{zipError}</p>
@@ -846,17 +846,17 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
         </div>
 
         {/* RIGHT COLUMN: Your Goals */}
-        <div className="p-5">
+        <div>
           <div
             id="goals-section"
-            className="relative p-6 bg-slate-900/25 border border-white/10 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.10)] scroll-mt-4"
+            className="relative p-5 card-tier-1 rounded-2xl shadow-tight scroll-mt-4"
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
                   <Check className="w-5 h-5 text-amber-400" />
                 </div>
-                <h2 className="text-xl font-semibold text-white">Your Goals</h2>
+                <h2 className="text-lg font-semibold text-white">Your Goals</h2>
               </div>
               <div
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -886,29 +886,36 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
               </p>
             </div>
 
-            {/* Goals Grid */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Goals Grid - Decision cards with left accent bar */}
+            <div className="grid grid-cols-2 gap-2.5">
               {ENERGY_GOALS.map((goal) => {
                 const isSelected = state.goals?.includes(goal.id);
                 return (
                   <button
                     key={goal.id}
                     onClick={() => toggleGoal(goal.id)}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                    className={`relative p-3.5 rounded-xl text-left transition-all ${
                       isSelected
-                        ? "border-amber-400/50 bg-amber-400/10 shadow-[0_0_0_1px_rgba(251,191,36,0.20),0_12px_30px_rgba(0,0,0,0.35)]"
-                        : "border-white/10 bg-white/5 hover:border-amber-400/30 hover:bg-white/7"
+                        ? "bg-gradient-to-r from-amber-500/15 to-amber-500/5 border-2 border-amber-400/60 shadow-glow hover:shadow-tight-hover"
+                        : "card-tier-1 hover:bg-slate-700/40 hover:border-white/20 hover:shadow-tight-hover"
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">{goal.emoji}</span>
+                    {/* Left accent bar when selected */}
+                    {isSelected && (
+                      <div className="absolute left-0 top-3 bottom-3 w-1 bg-amber-400 rounded-r" />
+                    )}
+
+                    <div className="flex items-start gap-2.5">
+                      <span className="text-xl flex-shrink-0">{goal.emoji}</span>
                       <div className="flex-1 min-w-0">
                         <div
-                          className={`font-medium ${isSelected ? "text-amber-200" : "text-white"}`}
+                          className={`font-semibold text-sm leading-tight mb-1 ${
+                            isSelected ? "text-amber-100" : "text-white"
+                          }`}
                         >
                           {goal.label}
                         </div>
-                        <div className="text-xs text-slate-400 mt-1 line-clamp-2">
+                        <div className="text-[11px] text-slate-400 leading-snug line-clamp-2">
                           {goal.description}
                         </div>
                       </div>
