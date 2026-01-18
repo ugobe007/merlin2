@@ -270,35 +270,15 @@ export const Step3Container: React.FC<Step3ContainerProps> = ({
         })}
       </div>
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 px-6 py-3 text-slate-600 hover:text-slate-800 transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          Back
-        </button>
-
-        {!completionStatus.isComplete && completionStatus.total > 0 && (
-          <span className="text-sm text-amber-600">
+      {/* Navigation removed - using floating nav bar in WizardV6 (Jan 18, 2026) */}
+      {/* Show progress indicator if questions remaining */}
+      {!completionStatus.isComplete && completionStatus.total > 0 && (
+        <div className="mt-6 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-center">
+          <span className="text-sm text-amber-400">
             ⚠️ {completionStatus.total - completionStatus.completed} required fields remaining
           </span>
-        )}
-
-        <button
-          onClick={onNext}
-          disabled={!completionStatus.isComplete && completionStatus.total > 0}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${
-            completionStatus.isComplete || completionStatus.total === 0
-              ? 'bg-violet-500 text-white hover:bg-violet-600 shadow-lg shadow-violet-500/25'
-              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-          }`}
-        >
-          Next
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   );
 };

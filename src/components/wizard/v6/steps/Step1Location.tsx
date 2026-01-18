@@ -69,9 +69,28 @@ import { calculateGridStress } from "@/services/gridStressCalculator";
 import type { IntelligenceContext } from "@/types/intelligence.types";
 
 // ============================================================================
-// ENERGY GOALS - Updated Jan 15, 2026
+// ENERGY GOALS - Updated Jan 18, 2026
+// Primary goal pre-selected, others are optional
 // ============================================================================
 
+// PRIMARY GOAL - Everyone wants this, pre-selected
+const PRIMARY_GOAL = {
+  id: "reduce_costs" as EnergyGoal,
+  label: "Save on Energy Costs",
+  description: "Lower your monthly bills with intelligent energy management",
+  emoji: "💰",
+};
+
+// OPTIONAL GOALS - User can add if they want
+const OPTIONAL_GOALS: { id: EnergyGoal; label: string; emoji: string }[] = [
+  { id: "backup_power", label: "Backup Power", emoji: "⚡" },
+  { id: "grid_independence", label: "Energy Resilience", emoji: "🛡️" },
+  { id: "sustainability", label: "Go Green", emoji: "🌱" },
+  { id: "peak_shaving", label: "Peak Shaving", emoji: "📊" },
+  { id: "generate_revenue", label: "Sell to Grid", emoji: "💵" },
+];
+
+// Legacy array for compatibility
 const ENERGY_GOALS: { id: EnergyGoal; label: string; description: string; emoji: string }[] = [
   {
     id: "reduce_costs",
@@ -106,7 +125,7 @@ const ENERGY_GOALS: { id: EnergyGoal; label: string; description: string; emoji:
   },
 ];
 
-const MIN_GOALS_REQUIRED = 2;
+const MIN_GOALS_REQUIRED = 1; // Only need 1 now (primary is pre-selected)
 
 // ============================================================================
 // COMPONENT
@@ -357,6 +376,14 @@ export function Step1Location({
     }
   }, [selectedCountry, selectedCity, region, updateState]);
 
+  // Pre-select PRIMARY_GOAL on mount (Jan 18, 2026)
+  useEffect(() => {
+    const currentGoals = state.goals || [];
+    if (!currentGoals.includes(PRIMARY_GOAL.id)) {
+      updateState({ goals: [PRIMARY_GOAL.id, ...currentGoals] });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Toggle goal selection
   const toggleGoal = (goalId: EnergyGoal) => {
     const currentGoals = state.goals || [];
@@ -371,56 +398,23 @@ export function Step1Location({
 
   const selectedCountryData = selectedCountry ? getCountryData(selectedCountry) : null;
 
-  // ✅ VINEET'S VISION: Single Site vs Portfolio (Jan 18, 2026)
-  const [siteMode, setSiteMode] = useState<"single" | "portfolio">("single");
+  // Removed: siteMode state - enterprise feature, not needed for MVP
 
   // Removed: canContinueLocation, canContinue, handleContinue, PROOF_TILES (tight headline only)
 
   return (
     <div className="text-white">
-      {/* 🎯 SITE INTELLIGENCE SNAPSHOT - Vineet's Vision (Jan 18, 2026) */}
+      {/* 🎯 SITE INTELLIGENCE SNAPSHOT - Clean Professional Layout (Jan 18, 2026) */}
       <div className="stepHeaderGlow mb-7 px-4">
         <div className="stepHero">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="text-[11px] font-semibold text-violet-300/80 mb-1.5 tracking-wide uppercase">
-                Step 1 of 6
-              </div>
-              <h1 className="stepHero__title mb-2">Site Intelligence Snapshot</h1>
-              <div className="text-[15px] text-slate-300/70 font-medium">
-                Where am I and what matters here?
-              </div>
+          <div className="mb-3">
+            <div className="text-[11px] font-semibold text-violet-300/80 mb-1.5 tracking-wide uppercase">
+              Step 1 of 6
             </div>
-
-            {/* Single Site / Portfolio Toggle */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSiteMode("single")}
-                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  siteMode === "single"
-                    ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/30"
-                    : "bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10"
-                }`}
-              >
-                Single Site
-              </button>
-              <button
-                onClick={() => setSiteMode("portfolio")}
-                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  siteMode === "portfolio"
-                    ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/30"
-                    : "bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10"
-                }`}
-              >
-                Portfolio / Expansion
-              </button>
+            <h1 className="stepHero__title mb-2">Where is your site?</h1>
+            <div className="text-[15px] text-slate-300/70 font-medium">
+              Enter your location to unlock verified utility rates and solar potential
             </div>
-          </div>
-
-          {/* Auto-populate hint */}
-          <div className="text-[13px] text-slate-400/80 leading-relaxed mt-4">
-            🤖 Merlin auto-populates: utility territory, climate zone, grid stress, solar/weather
-            risk, industry inference
           </div>
 
           {/* COCKPIT DIALS - Persistent context across all steps (Jan 18, 2026) */}
@@ -540,6 +534,11 @@ export function Step1Location({
                         setZipInput(value);
                       }}
                       placeholder="e.g., 89101"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      data-form-type="other"
                       className={`w-full px-4 py-4 rounded-xl text-xl font-bold text-center tracking-widest card-tier-2 transition-all ${
                         zipError
                           ? "border-red-400/40 bg-red-900/30 text-red-300 placeholder-red-400/50"
@@ -849,7 +848,7 @@ export function Step1Location({
 
             {/* Location Details Card */}
             {locationData && (
-              <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl p-5 border border-amber-400/30">
+              <div className="bg-gradient-to-br from-purple-500/10 to-violet-500/10 rounded-xl p-5 border border-purple-400/30">
                 <h3 className="font-semibold text-white mb-4">
                   📍{" "}
                   {region === "us"
@@ -916,97 +915,89 @@ export function Step1Location({
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Your Goals */}
+        {/* RIGHT COLUMN: Your Goals - Simplified (Jan 18, 2026) */}
         <div>
           <div
             id="goals-section"
             className="relative p-5 card-tier-1 rounded-2xl shadow-tight scroll-mt-4"
           >
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
-                  <Check className="w-5 h-5 text-amber-400" />
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">Your Goals</h2>
+              {selectedGoalsCount > 1 && (
+                <div className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                  +{selectedGoalsCount - 1} more
                 </div>
-                <h2 className="text-lg font-semibold text-white">Your Goals</h2>
-              </div>
-              <div
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  hasEnoughGoals
-                    ? "bg-green-500/20 text-green-400 border border-green-500/50"
-                    : "bg-amber-500/20 text-amber-400 border border-amber-500/50"
+              )}
+            </div>
+
+            {/* PRIMARY GOAL - Pre-selected, always at top */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleGoal(PRIMARY_GOAL.id)}
+                className={`w-full relative p-4 rounded-xl text-left transition-all ${
+                  state.goals?.includes(PRIMARY_GOAL.id)
+                    ? "bg-gradient-to-r from-purple-500/20 to-violet-500/10 border-2 border-purple-400/60 shadow-[0_0_20px_rgba(147,51,234,0.15)]"
+                    : "bg-white/5 border-2 border-white/10 hover:border-purple-400/40"
                 }`}
               >
-                {selectedGoalsCount}/{MIN_GOALS_REQUIRED} selected
-              </div>
-            </div>
-
-            {/* ✅ PHASE 2A: Suggested Goals Intelligence (Jan 18, 2026) */}
-            {intelligence?.suggestedGoals && intelligence.suggestedGoals.length > 0 && (
-              <div className="mb-5">
-                <IntelligencePanel type="suggestedGoals" data={intelligence.suggestedGoals} />
-              </div>
-            )}
-
-            {/* Always visible instruction - prominent */}
-            <div
-              className={`mb-5 p-4 rounded-xl text-center ${
-                hasEnoughGoals
-                  ? "bg-green-500/20 border-2 border-green-500/50"
-                  : "bg-amber-500/20 border-2 border-amber-400/50 animate-pulse"
-              }`}
-            >
-              <p
-                className={`text-base font-semibold ${hasEnoughGoals ? "text-green-300" : "text-amber-300"}`}
-              >
-                {hasEnoughGoals
-                  ? `✓ Great! You've selected ${selectedGoalsCount} goals`
-                  : `👆 Select ${MIN_GOALS_REQUIRED - selectedGoalsCount} more goal${MIN_GOALS_REQUIRED - selectedGoalsCount > 1 ? "s" : ""} to continue`}
-              </p>
-            </div>
-
-            {/* Goals Grid - Decision cards with left accent bar */}
-            <div className="grid grid-cols-2 gap-2.5">
-              {ENERGY_GOALS.map((goal) => {
-                const isSelected = state.goals?.includes(goal.id);
-                return (
-                  <button
-                    key={goal.id}
-                    onClick={() => toggleGoal(goal.id)}
-                    className={`relative p-3.5 rounded-xl text-left transition-all ${
-                      isSelected
-                        ? "bg-gradient-to-r from-amber-500/15 to-amber-500/5 border-2 border-amber-400/60 shadow-glow u-hover-glow"
-                        : "card-tier-1 u-hover-lift hover:bg-slate-700/40"
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{PRIMARY_GOAL.emoji}</span>
+                  <div className="flex-1">
+                    <div className="font-bold text-base text-white mb-0.5">
+                      {PRIMARY_GOAL.label}
+                    </div>
+                    <div className="text-xs text-slate-400">{PRIMARY_GOAL.description}</div>
+                  </div>
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                      state.goals?.includes(PRIMARY_GOAL.id)
+                        ? "bg-purple-500"
+                        : "bg-white/10 border border-white/20"
                     }`}
                   >
-                    {/* Left accent bar when selected */}
-                    {isSelected && (
-                      <div className="absolute left-0 top-3 bottom-3 w-1 bg-amber-400 rounded-r" />
+                    {state.goals?.includes(PRIMARY_GOAL.id) && (
+                      <Check className="w-4 h-4 text-white" />
                     )}
-
-                    <div className="flex items-start gap-2.5">
-                      <span className="text-xl flex-shrink-0">{goal.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <div
-                          className={`font-semibold text-sm leading-tight mb-1 ${
-                            isSelected ? "text-amber-100" : "text-white"
-                          }`}
-                        >
-                          {goal.label}
-                        </div>
-                        <div className="text-[11px] text-slate-400 leading-snug line-clamp-2">
-                          {goal.description}
-                        </div>
-                      </div>
-                      {isSelected && (
-                        <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
+                  </div>
+                </div>
+              </button>
             </div>
+
+            {/* OPTIONAL GOALS - Smaller buttons */}
+            <div className="mb-4">
+              <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                Optional Goals
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {OPTIONAL_GOALS.map((goal) => {
+                  const isSelected = state.goals?.includes(goal.id);
+                  return (
+                    <button
+                      key={goal.id}
+                      onClick={() => toggleGoal(goal.id)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                        isSelected
+                          ? "bg-cyan-500/20 border border-cyan-400/50 text-cyan-300"
+                          : "bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:border-cyan-400/30"
+                      }`}
+                    >
+                      <span className="text-base">{goal.emoji}</span>
+                      <span>{goal.label}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Status - Only show if no goals selected */}
+            {!hasEnoughGoals && (
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-400/30 text-center">
+                <p className="text-sm text-amber-300">
+                  👆 Select at least one goal to continue
+                </p>
+              </div>
+            )}
 
             {/* Progress Bar */}
             <div className="mt-6">

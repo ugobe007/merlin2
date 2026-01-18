@@ -5,6 +5,7 @@ import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
 import avatarImg from "@/assets/images/new_small_profile_.png";
 import type { IntelligenceContext } from "@/types/intelligence.types";
+import type { SiteScoreResult } from "@/services/calculators/siteScoreCalculator";
 
 function ModeBadge({ mode }: { mode: "estimate" | "verified" }) {
   if (mode === "verified") {
@@ -45,6 +46,9 @@ interface AdvisorRailProps {
 
     // Phase 1: Intelligence Layer (Jan 18, 2026)
     intelligence?: IntelligenceContext;
+    
+    // Site Score™ (Jan 18, 2026 - Merlin IP)
+    siteScore?: SiteScoreResult | null;
   };
 
   onNavigate?: (step: number) => void;
@@ -262,16 +266,16 @@ export function AdvisorRail({
             <img
               src={avatarImg}
               alt="Merlin"
-              className="w-14 h-14 rounded-full border-2 border-amber-400/60 shadow-[0_0_20px_rgba(251,191,36,0.25)]"
+              className="w-16 h-16 rounded-full border-2 border-amber-400/60 shadow-[0_0_24px_rgba(251,191,36,0.3)]"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
                 (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove("hidden");
               }}
             />
-            <div className="hidden w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center border-2 border-amber-300">
-              <span className="text-2xl">🧙</span>
+            <div className="hidden w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center border-2 border-amber-300">
+              <span className="text-3xl">🧙</span>
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#0f1d33] merlin-breathe shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0f1d33] merlin-breathe shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
           </div>
 
           <div className="flex-1">
@@ -294,118 +298,147 @@ export function AdvisorRail({
         </div>
       </div>
 
-      {/* LOCATION / UTILITY CONTEXT */}
+      {/* LOCATION / UTILITY CONTEXT - Tight Professional Layout */}
       <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
-        {/* EMPTY STATE: no ZIP yet → INTELLIGENCE-DRIVEN DISCOVERY */}
+        {/* EMPTY STATE: no ZIP yet */}
         {!zip && !st ? (
-          <>
-            <div className="text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 mb-2 animate-pulse">
-              ✨ UNLOCK YOUR ENERGY ADVANTAGE
+          <div className="rounded-xl border border-violet-500/25 bg-gradient-to-br from-violet-500/10 to-transparent p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl">📍</span>
+              <div className="text-sm font-semibold text-white">Enter your location</div>
             </div>
-            <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-transparent p-5 shadow-[0_0_30px_rgba(139,92,246,0.15)]">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">📍</span>
-                <div className="text-sm font-bold text-white">
-                  You're about to see something no one else can show you
-                </div>
-              </div>
-              <div className="mt-2 text-xs text-violet-200/90 leading-relaxed">
-                Enter your ZIP code to unlock{" "}
-                <span className="font-semibold text-violet-300">TrueQuote™</span> intelligence:
-                verified rates, solar potential, and climate advantages—backed by authoritative
-                sources, not estimates.
-              </div>
-
-              {/* ✅ PHASE 2B: Intelligence panels removed - now shown inline in step content */}
-              <div className="mt-4 flex items-center justify-center">
-                <div className="text-[10px] text-violet-300/60 italic flex items-center gap-1.5">
-                  <span className="text-sm">🔮</span>
-                  <span>Intelligence appears inline as you progress...</span>
-                </div>
-              </div>
+            <div className="text-xs text-slate-300/80 leading-relaxed">
+              Merlin will show you verified utility rates, solar potential, and savings
+              opportunities for your site.
             </div>
-          </>
+          </div>
         ) : (
           <>
-            <div className="text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 mb-2 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm">✨</span>
-                <span>YOUR ENERGY ADVANTAGE</span>
+            {/* LOCATION HEADER - Tight single line */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-base">📍</span>
+                <div className="text-sm font-bold text-white">
+                  {zip} • {st}
+                </div>
+                {utilityName && (
+                  <div className="text-xs text-slate-400 truncate max-w-[120px]">
+                    {utilityName}
+                  </div>
+                )}
               </div>
-              <div className="text-[9px] px-2 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold animate-pulse">
-                TrueQuote™
+              {/* Site Score Badge - Compact */}
+              {context?.siteScore && (
+                <div
+                  className={`px-2 py-1 rounded-lg text-[11px] font-bold border ${
+                    context.siteScore.scoreLabel === "exceptional" ||
+                    context.siteScore.scoreLabel === "strong"
+                      ? "bg-emerald-500/15 border-emerald-400/30 text-emerald-400"
+                      : context.siteScore.scoreLabel === "good"
+                        ? "bg-amber-500/15 border-amber-400/30 text-amber-300"
+                        : "bg-orange-500/15 border-orange-400/30 text-orange-300"
+                  }`}
+                >
+                  {context.siteScore.totalScore}{" "}
+                  {context.siteScore.scoreLabel.charAt(0).toUpperCase() +
+                    context.siteScore.scoreLabel.slice(1)}
+                </div>
+              )}
+            </div>
+
+            {/* KEY METRICS - 4 tight rows */}
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center justify-between py-1.5 border-b border-slate-700/30">
+                <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                  <span className="text-amber-400">⚡</span> Utility Rate
+                </span>
+                <span className="text-sm font-bold text-white">
+                  ${rate?.toFixed(4) || "0.12"}/kWh
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between py-1.5 border-b border-slate-700/30">
+                <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                  <span className="text-violet-400">📊</span> Demand Charge
+                </span>
+                <span className="text-sm font-bold text-white">${demand || 15}/kW</span>
+              </div>
+
+              <div className="flex items-center justify-between py-1.5 border-b border-slate-700/30">
+                <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                  <span className="text-sky-400">☀️</span> Solar Hours
+                </span>
+                <span className="text-sm font-bold text-white">
+                  {context?.solar?.sunHours?.toFixed(1) || "5.5"} hrs/day
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between py-1.5">
+                <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                  <span className="text-emerald-400">🌡️</span> Climate
+                </span>
+                <span className="text-xs font-semibold text-white">
+                  {weatherProfile || "Moderate"}
+                </span>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-500/8 via-fuchsia-500/4 to-transparent p-4 shadow-[0_0_30px_rgba(139,92,246,0.12),inset_0_1px_0_rgba(255,255,255,0.08)]">
-              {/* Top row: ZIP / State / Utility */}
-              <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-cyan-400/20 bg-gradient-to-br from-cyan-400/10 to-cyan-400/5 px-3 py-2">
-                  <div className="text-[10px] font-semibold text-cyan-300/80">📍 ZIP</div>
-                  <div className="text-sm font-bold text-white">{zip || "--"}</div>
-                </div>
-
-                <div className="rounded-xl border border-violet-400/20 bg-gradient-to-br from-violet-400/10 to-violet-400/5 px-3 py-2">
-                  <div className="text-[10px] font-semibold text-violet-300/80">🗺️ STATE</div>
-                  <div className="text-sm font-bold text-white">{st || "--"}</div>
-                </div>
-
-                <div className="rounded-xl border border-fuchsia-400/20 bg-gradient-to-br from-fuchsia-400/10 to-fuchsia-400/5 px-3 py-2">
-                  <div className="text-[10px] font-semibold text-fuchsia-300/80">⚡ UTILITY</div>
-                  <div className="text-sm font-bold text-white truncate">{utilityName || "—"}</div>
-                </div>
+            {/* ENERGY SPOTLIGHT - Opportunities at a glance */}
+            <div className="rounded-lg border border-fuchsia-400/20 bg-fuchsia-500/5 p-3">
+              <div className="text-[10px] font-bold text-fuchsia-300/90 mb-2 flex items-center gap-1.5">
+                <span>💡</span> ENERGY SPOTLIGHT
               </div>
-
-              {/* Dials moved to header bar - More space for step intelligence below */}
-
-              {/* Bottom row: Weather + Opportunity */}
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <div className="rounded-xl border border-emerald-400/25 bg-gradient-to-br from-emerald-400/10 to-emerald-400/5 px-3 py-2.5">
-                  <div className="text-[10px] font-bold text-emerald-300/90 mb-1">🌤️ CLIMATE</div>
-                  <div className="text-xs text-white font-semibold">{weatherProfile || "—"}</div>
-                  {weatherExtremes && (
-                    <div className="mt-1 text-[10px] text-emerald-200/60">
-                      <span className="text-emerald-100">{weatherExtremes}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded-xl border border-fuchsia-400/25 bg-gradient-to-br from-fuchsia-400/10 to-fuchsia-400/5 px-3 py-2.5">
-                  <div className="text-[10px] font-bold text-fuchsia-300/90 mb-1">
-                    💎 OPPORTUNITIES
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div
+                    className={`text-[11px] font-bold ${
+                      demand && demand > 15
+                        ? "text-emerald-400"
+                        : demand && demand > 10
+                          ? "text-amber-300"
+                          : "text-slate-400"
+                    }`}
+                  >
+                    {demand && demand > 15 ? "High" : demand && demand > 10 ? "Medium" : "Low"}
                   </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-fuchsia-100/70">Arbitrage</span>
-                      <span className="text-[11px] font-bold text-amber-300">
-                        {arbitrage || (hasTOU ? "Medium" : "Low")}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-fuchsia-100/70">Backup</span>
-                      <span className="text-[11px] font-bold text-emerald-300">
-                        {context?.opportunities?.backup ? "High" : "Possible"}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-fuchsia-100/70">Peak Shaving</span>
-                      <span className="text-[11px] font-bold text-sky-300">
-                        {context?.opportunities?.smoothing ? "High" : "Possible"}
-                      </span>
-                    </div>
+                  <div className="text-[9px] text-slate-500">Peak Shaving</div>
+                </div>
+                <div>
+                  <div
+                    className={`text-[11px] font-bold ${hasTOU ? "text-emerald-400" : "text-slate-400"}`}
+                  >
+                    {hasTOU ? "Yes" : "Limited"}
                   </div>
+                  <div className="text-[9px] text-slate-500">Arbitrage</div>
                 </div>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between">
-                <div className="text-[10px] text-violet-300/60 italic flex items-center gap-1.5">
-                  <span className="text-sm">🔮</span>
-                  <span>Every number backed by authoritative sources</span>
+                <div>
+                  <div
+                    className={`text-[11px] font-bold ${
+                      context?.siteScore?.riskResilience?.score &&
+                      context.siteScore.riskResilience.score > 12
+                        ? "text-emerald-400"
+                        : "text-amber-300"
+                    }`}
+                  >
+                    {context?.siteScore?.riskResilience?.score &&
+                    context.siteScore.riskResilience.score > 12
+                      ? "Important"
+                      : "Possible"}
+                  </div>
+                  <div className="text-[9px] text-slate-500">Backup</div>
                 </div>
-                <div className="text-[9px] text-violet-400/70 font-semibold">SSOT</div>
               </div>
             </div>
+
+            {/* MERLIN SAYS - One insight only when Site Score available */}
+            {context?.siteScore?.merlinSays && (
+              <div className="mt-3 p-2.5 bg-amber-500/8 border border-amber-500/15 rounded-lg">
+                <div className="text-[11px] text-amber-200/90 leading-relaxed">
+                  💬 <span className="font-semibold text-amber-300">Merlin:</span>{" "}
+                  {context.siteScore.merlinSays}
+                </div>
+              </div>
+            )}
 
             {/* CONSTRAINT WARNING (Step 3+) */}
             {constraint && (

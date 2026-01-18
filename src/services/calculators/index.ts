@@ -11,3 +11,4 @@ export * from './solarCalculator';
 export * from './generatorCalculator';
 export * from './evCalculator';
 export * from './financialCalculator';
+export * from './siteScoreCalculator';
