@@ -498,7 +498,7 @@ export default function WizardV6() {
                     },
                     utility: {
                       rate: state.electricityRate ?? state.calculations?.base?.utilityRate,
-                      demandCharge: state.calculations?.base?.demandCharge,
+                      demandCharge: state.calculations?.base?.demandCharge ?? 15,
                       hasTOU: state.calculations?.base?.hasTOU,
                     },
                     solar: {
