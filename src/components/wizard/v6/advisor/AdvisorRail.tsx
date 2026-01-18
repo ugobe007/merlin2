@@ -250,326 +250,306 @@ export function AdvisorRail({
   const insight = getMerlinInsight();
 
   return (
-    <aside className="w-full sticky top-0">
-      <div
-        className="relative rounded-2xl overflow-hidden flex flex-col max-h-[calc(100vh-140px)]
-        border border-white/12 bg-slate-900/35 backdrop-blur-2xl
-        shadow-[0_18px_60px_rgba(0,0,0,0.45)]
-        ring-1 ring-white/10"
-      >
-        {/* Ambient oracle glow (very subtle) */}
-        <div
-          className="pointer-events-none absolute -inset-12 opacity-60 blur-3xl
-          bg-[radial-gradient(circle_at_20%_10%,rgba(251,191,36,0.10),transparent_45%),radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.10),transparent_50%)]"
-        />
-
-        {/* Glass sheen (top-left to bottom-right) */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/14 via-white/6 to-transparent" />
-
-        {/* Crisp inner glass edge (the 'lip') */}
-        <div className="pointer-events-none absolute inset-0 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-1px_0_rgba(0,0,0,0.35)]" />
-
-        {/* MERLIN IDENTITY HEADER */}
-        <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="relative">
-              <img
-                src={avatarImg}
-                alt="Merlin"
-                className="w-14 h-14 rounded-full border-2 border-amber-400/60 shadow-[0_0_20px_rgba(251,191,36,0.25)]"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove("hidden");
-                }}
-              />
-              <div className="hidden w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center border-2 border-amber-300">
-                <span className="text-2xl">🧙</span>
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#0f1d33] merlin-breathe shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+    <div className="flex flex-col max-h-[calc(100vh-140px)] overflow-hidden">
+      {/* MERLIN IDENTITY HEADER */}
+      <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="relative">
+            <img
+              src={avatarImg}
+              alt="Merlin"
+              className="w-14 h-14 rounded-full border-2 border-amber-400/60 shadow-[0_0_20px_rgba(251,191,36,0.25)]"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+                (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove("hidden");
+              }}
+            />
+            <div className="hidden w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center border-2 border-amber-300">
+              <span className="text-2xl">🧙</span>
             </div>
-
-            <div className="flex-1">
-              <div className="text-amber-400 font-bold text-lg tracking-tight">Merlin</div>
-              <div className="text-slate-300/80 text-xs font-medium">AI Energy Advisor</div>
-            </div>
-
-            {payload?.mode && <ModeBadge mode={payload.mode} />}
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#0f1d33] merlin-breathe shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
           </div>
 
-          <div className="mt-3">
-            <div className="text-base font-semibold text-white leading-snug">
-              {payload?.headline || "Answer a few questions to get your TrueQuote™"}
-            </div>
-            {payload?.subline && (
-              <div className="mt-1 text-xs text-slate-200/80">{payload.subline}</div>
-            )}
+          <div className="flex-1">
+            <div className="text-amber-400 font-bold text-lg tracking-tight">Merlin</div>
+            <div className="text-slate-300/80 text-xs font-medium">AI Energy Advisor</div>
           </div>
+
+          {payload?.mode && <ModeBadge mode={payload.mode} />}
         </div>
 
-        {/* LOCATION / UTILITY CONTEXT */}
-        <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
-          {/* EMPTY STATE: no ZIP yet */}
-          {!zip && !st ? (
-            <>
-              <div className="text-xs font-semibold text-slate-300/70 mb-2">MERLIN CONTEXT</div>
-              <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-4 py-3">
-                <div className="text-[11px] font-semibold text-white">
-                  Enter your ZIP to load drivers.
-                </div>
-                <div className="mt-1 text-xs text-slate-200/80">
-                  Rates, demand charges, solar yield, and climate profile.
-                </div>
+        <div className="mt-3">
+          <div className="text-base font-semibold text-white leading-snug">
+            {payload?.headline || "Answer a few questions to get your TrueQuote™"}
+          </div>
+          {payload?.subline && (
+            <div className="mt-1 text-xs text-slate-200/80">{payload.subline}</div>
+          )}
+        </div>
+      </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
-                    <div className="text-[10px] text-slate-300/70">Utility rate</div>
-                    <div className="text-xs text-slate-200/80">—</div>
+      {/* LOCATION / UTILITY CONTEXT */}
+      <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
+        {/* EMPTY STATE: no ZIP yet */}
+        {!zip && !st ? (
+          <>
+            <div className="text-xs font-semibold text-slate-300/70 mb-2">MERLIN CONTEXT</div>
+            <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-4 py-3">
+              <div className="text-[11px] font-semibold text-white">
+                Enter your ZIP to load drivers.
+              </div>
+              <div className="mt-1 text-xs text-slate-200/80">
+                Rates, demand charges, solar yield, and climate profile.
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
+                  <div className="text-[10px] text-slate-300/70">Utility rate</div>
+                  <div className="text-xs text-slate-200/80">—</div>
+                </div>
+                <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
+                  <div className="text-[10px] text-slate-300/70">Demand charge</div>
+                  <div className="text-xs text-slate-200/80">—</div>
+                </div>
+                <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
+                  <div className="text-[10px] text-slate-300/70">Peak sun</div>
+                  <div className="text-xs text-slate-200/80">—</div>
+                </div>
+                <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
+                  <div className="text-[10px] text-slate-300/70">Weather</div>
+                  <div className="text-xs text-slate-200/80">—</div>
+                </div>
+              </div>
+
+              <div className="mt-3 text-[10px] text-slate-400/60 italic">
+                Merlin is watching: rates, demand charges, solar yield
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-xs font-semibold text-slate-300/70 mb-3">LOCATION SNAPSHOT</div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
+                <div className="text-[10px] text-slate-300/70">ZIP</div>
+                <div className="text-sm font-semibold text-white">{zip || "--"}</div>
+              </div>
+
+              <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
+                <div className="text-[10px] text-slate-300/70">STATE</div>
+                <div className="text-sm font-semibold text-white">{st || "--"}</div>
+              </div>
+
+              {rate != null && (
+                <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
+                  <div className="text-[10px] text-slate-300/70">UTILITY RATE</div>
+                  <div className="text-sm font-semibold text-white">{`${fmtMoney(rate)}/kWh`}</div>
+                </div>
+              )}
+
+              {sun != null && (
+                <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
+                  <div className="text-[10px] text-slate-300/70">PEAK SUN</div>
+                  <div className="text-sm font-semibold text-white">{`${sun.toFixed(1)} hrs/day`}</div>
+                </div>
+              )}
+            </div>
+
+            {(utilityName || weatherProfile || weatherExtremes) && (
+              <div className="mt-3 rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
+                <div className="text-[10px] text-slate-300/70">PROFILE</div>
+                <div className="mt-1 space-y-1 text-xs text-slate-200/80">
+                  {utilityName && (
+                    <div>
+                      Utility: <span className="text-white font-semibold">{utilityName}</span>
+                    </div>
+                  )}
+                  {weatherProfile && (
+                    <div>
+                      Weather: <span className="text-white font-semibold">{weatherProfile}</span>
+                    </div>
+                  )}
+                  {weatherExtremes && (
+                    <div>
+                      Extremes: <span className="text-white font-semibold">{weatherExtremes}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* OPPORTUNITIES only when we have real drivers */}
+            {(rate != null || demand != null || hasTOU || sun != null || solarRating) && (
+              <div className="mt-3 rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
+                <div className="text-[10px] text-slate-300/70">OPPORTUNITIES</div>
+                <div className="mt-1 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-slate-300">Energy Arbitrage</span>
+                    <span className="text-[11px] font-semibold text-amber-300">
+                      {arbitrage || (hasTOU ? "Medium" : "Low")}
+                    </span>
                   </div>
-                  <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
-                    <div className="text-[10px] text-slate-300/70">Demand charge</div>
-                    <div className="text-xs text-slate-200/80">—</div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-slate-300">Backup Power</span>
+                    <span className="text-[11px] font-semibold text-emerald-300">
+                      {context?.opportunities?.backup ? "High" : "Possible"}
+                    </span>
                   </div>
-                  <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
-                    <div className="text-[10px] text-slate-300/70">Peak sun</div>
-                    <div className="text-xs text-slate-200/80">—</div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-slate-300">Peak Shaving</span>
+                    <span className="text-[11px] font-semibold text-blue-300">
+                      {context?.opportunities?.smoothing ? "High" : "Possible"}
+                    </span>
                   </div>
-                  <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
-                    <div className="text-[10px] text-slate-300/70">Weather</div>
-                    <div className="text-xs text-slate-200/80">—</div>
-                  </div>
+
+                  {demand != null && demand > 15 && (
+                    <div className="text-[10px] text-slate-400 mt-0.5">
+                      Demand charge: ${demand.toFixed(0)}/kW
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-3 text-[10px] text-slate-400/60 italic">
-                  Merlin is watching: rates, demand charges, solar yield
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-xs font-semibold text-slate-300/70 mb-3">LOCATION SNAPSHOT</div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">ZIP</div>
-                  <div className="text-sm font-semibold text-white">{zip || "--"}</div>
-                </div>
-
-                <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">STATE</div>
-                  <div className="text-sm font-semibold text-white">{st || "--"}</div>
-                </div>
-
-                {rate != null && (
-                  <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                    <div className="text-[10px] text-slate-300/70">UTILITY RATE</div>
-                    <div className="text-sm font-semibold text-white">{`${fmtMoney(rate)}/kWh`}</div>
-                  </div>
-                )}
-
-                {sun != null && (
-                  <div className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                    <div className="text-[10px] text-slate-300/70">PEAK SUN</div>
-                    <div className="text-sm font-semibold text-white">{`${sun.toFixed(1)} hrs/day`}</div>
-                  </div>
-                )}
-              </div>
-
-              {(utilityName || weatherProfile || weatherExtremes) && (
-                <div className="mt-3 rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">PROFILE</div>
-                  <div className="mt-1 space-y-1 text-xs text-slate-200/80">
-                    {utilityName && (
-                      <div>
-                        Utility: <span className="text-white font-semibold">{utilityName}</span>
-                      </div>
-                    )}
-                    {weatherProfile && (
-                      <div>
-                        Weather: <span className="text-white font-semibold">{weatherProfile}</span>
-                      </div>
-                    )}
-                    {weatherExtremes && (
-                      <div>
-                        Extremes:{" "}
-                        <span className="text-white font-semibold">{weatherExtremes}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* OPPORTUNITIES only when we have real drivers */}
-              {(rate != null || demand != null || hasTOU || sun != null || solarRating) && (
-                <div className="mt-3 rounded-xl border border-slate-700/40 bg-slate-800/40 px-3 py-2">
-                  <div className="text-[10px] text-slate-300/70">OPPORTUNITIES</div>
-                  <div className="mt-1 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-slate-300">Energy Arbitrage</span>
-                      <span className="text-[11px] font-semibold text-amber-300">
-                        {arbitrage || (hasTOU ? "Medium" : "Low")}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-slate-300">Backup Power</span>
-                      <span className="text-[11px] font-semibold text-emerald-300">
-                        {context?.opportunities?.backup ? "High" : "Possible"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-slate-300">Peak Shaving</span>
-                      <span className="text-[11px] font-semibold text-blue-300">
-                        {context?.opportunities?.smoothing ? "High" : "Possible"}
-                      </span>
-                    </div>
-
-                    {demand != null && demand > 15 && (
-                      <div className="text-[10px] text-slate-400 mt-0.5">
-                        Demand charge: ${demand.toFixed(0)}/kW
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-3 text-[10px] text-slate-400/60 italic">
-                    {currentStep <= 2
-                      ? "Merlin is watching: rates, demand charges, solar yield"
-                      : currentStep <= 4
-                        ? "Merlin is watching: curtailment, inverter limits, cycling"
-                        : "Merlin is watching: payback drivers, constraints, sensitivity"}
-                  </div>
-                </div>
-              )}
-
-              {/* CONSTRAINT WARNING (Step 3+) */}
-              {constraint && (
-                <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 shadow-[0_0_0_1px_rgba(251,191,36,0.12),0_0_18px_rgba(251,191,36,0.06)]">
-                  <div className="text-[11px] font-semibold text-amber-200 mb-1">Constraint</div>
-                  <div className="text-xs text-slate-200/80 whitespace-pre-line">{constraint}</div>
-
-                  {/* Driver: show the numbers that triggered this constraint */}
-                  {constraintDriver && (
-                    <div className="mt-2 text-[10px] text-slate-300/70">{constraintDriver}</div>
-                  )}
-
-                  {/* DEV: Voice rule validation + config debug */}
-                  {isDev && (
-                    <div className="mt-2 text-[10px] text-slate-400/70">
-                      voice: {looksLikeConstraint(constraint) ? "ok" : "BAD"} • sentences:{" "}
-                      {sentenceCount(constraint)}
-                      {" • "}
-                      cfg: solar {solarKW}kW • batt {batteryHours}h • inv {inverterKW}kW • peak{" "}
-                      {peakLoadKW}kW • backup {String(backupRequired)}
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* MERLIN'S INSIGHT - Whisper, not interrupt */}
-        {insight && (
-          <div className="px-5 py-3 border-b border-slate-700/50 flex-shrink-0">
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl shadow-[0_0_0_1px_rgba(251,191,36,0.10),0_0_16px_rgba(251,191,36,0.05)]">
-              <div className="flex items-start gap-2">
-                <span className="text-base mt-0.5">💡</span>
-                <div className="flex-1">
-                  <div className="text-[11px] font-semibold text-amber-300 mb-1">
-                    Merlin's Insight
-                  </div>
-                  <div className="text-xs text-slate-200 leading-relaxed">{insight}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STEP PROGRESS */}
-        <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-xs font-semibold text-slate-300/70">PROGRESS</div>
-            <div className="text-xs text-slate-300/50">
-              Step {currentStep} of {totalSteps}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            {STEP_LABELS.slice(0, totalSteps).map((label, idx) => {
-              const stepNum = idx + 1;
-              const isActive = stepNum === currentStep;
-              const isDone = stepNum < currentStep;
-              const clickable = !!onNavigate && canClick(stepNum);
-
-              return (
-                <button
-                  key={stepNum}
-                  type="button"
-                  onClick={() => (clickable ? onNavigate?.(stepNum) : undefined)}
-                  disabled={!clickable}
-                  className={`w-full flex items-center gap-2 text-xs transition-all text-left ${
-                    isActive ? "text-amber-300" : isDone ? "text-emerald-300" : "text-slate-400/40"
-                  } ${clickable ? "cursor-pointer hover:opacity-95" : "opacity-60 cursor-not-allowed"}`}
-                >
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
-                      isActive
-                        ? "bg-amber-400/15 border-2 border-amber-400/80"
-                        : isDone
-                          ? "bg-emerald-400/10 border border-emerald-400/70"
-                          : "bg-slate-800/30 border border-slate-700/40"
-                    }`}
-                  >
-                    {isDone ? "✓" : stepNum}
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="font-medium">{label}</div>
-                  </div>
-
-                  {isActive && (
-                    <div className="text-[9px] px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-200 border border-amber-400/20">
-                      Current
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* SCROLLABLE CONTENT */}
-        <div className="flex-1 overflow-auto">
-          <div className="p-5 space-y-3">
-            {(payload?.cards || []).map((c) => (
-              <AdvisorCard key={c.id} card={c} />
-            ))}
-
-            {payload?.mode === "estimate" && payload.disclaimer && (
-              <div className="mt-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-                <div className="text-[11px] font-semibold text-amber-200 mb-1">
-                  Estimate disclaimer
-                </div>
-                <div className="text-xs text-slate-200/80 whitespace-pre-line">
-                  {payload.disclaimer}
+                  {currentStep <= 2
+                    ? "Merlin is watching: rates, demand charges, solar yield"
+                    : currentStep <= 4
+                      ? "Merlin is watching: curtailment, inverter limits, cycling"
+                      : "Merlin is watching: payback drivers, constraints, sensitivity"}
                 </div>
               </div>
             )}
 
-            {warnings.length > 0 &&
-              (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && (
-                <div className="mt-2 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
-                  <div className="text-[11px] font-semibold text-red-200 mb-1">Dev warnings</div>
-                  <ul className="text-xs text-slate-200/80 list-disc ml-4 space-y-1">
-                    {warnings.map((w, i) => (
-                      <li key={i}>{w}</li>
-                    ))}
-                  </ul>
+            {/* CONSTRAINT WARNING (Step 3+) */}
+            {constraint && (
+              <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 shadow-[0_0_0_1px_rgba(251,191,36,0.12),0_0_18px_rgba(251,191,36,0.06)]">
+                <div className="text-[11px] font-semibold text-amber-200 mb-1">Constraint</div>
+                <div className="text-xs text-slate-200/80 whitespace-pre-line">{constraint}</div>
+
+                {/* Driver: show the numbers that triggered this constraint */}
+                {constraintDriver && (
+                  <div className="mt-2 text-[10px] text-slate-300/70">{constraintDriver}</div>
+                )}
+
+                {/* DEV: Voice rule validation + config debug */}
+                {isDev && (
+                  <div className="mt-2 text-[10px] text-slate-400/70">
+                    voice: {looksLikeConstraint(constraint) ? "ok" : "BAD"} • sentences:{" "}
+                    {sentenceCount(constraint)}
+                    {" • "}
+                    cfg: solar {solarKW}kW • batt {batteryHours}h • inv {inverterKW}kW • peak{" "}
+                    {peakLoadKW}kW • backup {String(backupRequired)}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* MERLIN'S INSIGHT - Whisper, not interrupt */}
+      {insight && (
+        <div className="px-5 py-3 border-b border-slate-700/50 flex-shrink-0">
+          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl shadow-[0_0_0_1px_rgba(251,191,36,0.10),0_0_16px_rgba(251,191,36,0.05)]">
+            <div className="flex items-start gap-2">
+              <span className="text-base mt-0.5">💡</span>
+              <div className="flex-1">
+                <div className="text-[11px] font-semibold text-amber-300 mb-1">
+                  Merlin's Insight
                 </div>
-              )}
+                <div className="text-xs text-slate-200 leading-relaxed">{insight}</div>
+              </div>
+            </div>
           </div>
         </div>
+      )}
+
+      {/* STEP PROGRESS */}
+      <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-xs font-semibold text-slate-300/70">PROGRESS</div>
+          <div className="text-xs text-slate-300/50">
+            Step {currentStep} of {totalSteps}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {STEP_LABELS.slice(0, totalSteps).map((label, idx) => {
+            const stepNum = idx + 1;
+            const isActive = stepNum === currentStep;
+            const isDone = stepNum < currentStep;
+            const clickable = !!onNavigate && canClick(stepNum);
+
+            return (
+              <button
+                key={stepNum}
+                type="button"
+                onClick={() => (clickable ? onNavigate?.(stepNum) : undefined)}
+                disabled={!clickable}
+                className={`w-full flex items-center gap-2 text-xs transition-all text-left ${
+                  isActive ? "text-amber-300" : isDone ? "text-emerald-300" : "text-slate-400/40"
+                } ${clickable ? "cursor-pointer hover:opacity-95" : "opacity-60 cursor-not-allowed"}`}
+              >
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                    isActive
+                      ? "bg-amber-400/15 border-2 border-amber-400/80"
+                      : isDone
+                        ? "bg-emerald-400/10 border border-emerald-400/70"
+                        : "bg-slate-800/30 border border-slate-700/40"
+                  }`}
+                >
+                  {isDone ? "✓" : stepNum}
+                </div>
+
+                <div className="flex-1">
+                  <div className="font-medium">{label}</div>
+                </div>
+
+                {isActive && (
+                  <div className="text-[9px] px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-200 border border-amber-400/20">
+                    Current
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </aside>
+
+      {/* SCROLLABLE CONTENT */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-5 space-y-3">
+          {(payload?.cards || []).map((c) => (
+            <AdvisorCard key={c.id} card={c} />
+          ))}
+
+          {payload?.mode === "estimate" && payload.disclaimer && (
+            <div className="mt-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <div className="text-[11px] font-semibold text-amber-200 mb-1">
+                Estimate disclaimer
+              </div>
+              <div className="text-xs text-slate-200/80 whitespace-pre-line">
+                {payload.disclaimer}
+              </div>
+            </div>
+          )}
+
+          {warnings.length > 0 &&
+            (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && (
+              <div className="mt-2 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+                <div className="text-[11px] font-semibold text-red-200 mb-1">Dev warnings</div>
+                <ul className="text-xs text-slate-200/80 list-disc ml-4 space-y-1">
+                  {warnings.map((w, i) => (
+                    <li key={i}>{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+        </div>
+      </div>
+    </div>
   );
 }

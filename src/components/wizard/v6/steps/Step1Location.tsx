@@ -394,8 +394,8 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
   ];
 
   return (
-    <div className="min-h-[calc(100vh-120px)] bg-gradient-to-br from-[#050B16] via-[#071226] to-[#050B16] text-white pb-16">
-      {/* HERO SECTION (above panels) */}
+    <div className="text-white">
+      {/* HERO (headline ABOVE panels) */}
       <div className="text-center mb-10 px-4">
         <h1 className="text-5xl md:text-6xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-violet-200 to-amber-200 leading-tight">
           Let's slash your energy costs
@@ -507,504 +507,489 @@ export function Step1Location({ state, updateState, onNext: _onNext, onGoToStep2
         </div>
       )}
 
-      {/* INTEGRATED GLASS SHELL */}
-      <div className="relative rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-2xl shadow-[0_30px_90px_rgba(0,0,0,0.55)] overflow-hidden mx-4 lg:mx-8">
-        {/* Glow blobs inside shell */}
-        <div className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl" />
-        <div className="pointer-events-none absolute -top-20 -right-28 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
-
-        {/* Glass sheen */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/12 via-white/5 to-transparent" />
-
-        {/* Inner glass lip */}
-        <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(0,0,0,0.35)]" />
-
-        {/* Content grid */}
-        <div className="relative grid grid-cols-1 lg:grid-cols-2">
-          {/* LEFT COLUMN: Your Location */}
-          <div className="p-5 lg:border-r border-white/10">
-            <div className="relative p-6 bg-slate-900/25 border border-white/10 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-amber-400" />
-                </div>
-                <h2 className="text-xl font-semibold text-white">Your Location</h2>
+      {/* PANELS GRID (no shell - WizardV6 provides it) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* LEFT COLUMN: Your Location */}
+        <div>
+          <div className="relative p-6 bg-slate-900/25 border border-white/10 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
+                <MapPin className="w-5 h-5 text-amber-400" />
               </div>
+              <h2 className="text-xl font-semibold text-white">Your Location</h2>
+            </div>
 
-              {/* Region Toggle */}
-              <div className="flex gap-2 mb-6">
-                <button
-                  onClick={() => setRegion("us")}
-                  className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
-                    region === "us"
-                      ? "bg-amber-600 text-white shadow-lg shadow-amber-500/30"
-                      : "bg-white/5 text-slate-300 hover:bg-white/7 border border-white/10"
-                  }`}
-                >
-                  🇺🇸 United States
-                </button>
-                <button
-                  onClick={() => setRegion("international")}
-                  className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
-                    region === "international"
-                      ? "bg-amber-600 text-white shadow-lg shadow-amber-500/30"
-                      : "bg-white/5 text-slate-300 hover:bg-white/7 border border-white/10"
-                  }`}
-                >
-                  <Globe className="w-4 h-4 inline mr-2" />
-                  International
-                </button>
-              </div>
+            {/* Region Toggle */}
+            <div className="flex gap-2 mb-6">
+              <button
+                onClick={() => setRegion("us")}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+                  region === "us"
+                    ? "bg-amber-600 text-white shadow-lg shadow-amber-500/30"
+                    : "bg-white/5 text-slate-300 hover:bg-white/7 border border-white/10"
+                }`}
+              >
+                🇺🇸 United States
+              </button>
+              <button
+                onClick={() => setRegion("international")}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+                  region === "international"
+                    ? "bg-amber-600 text-white shadow-lg shadow-amber-500/30"
+                    : "bg-white/5 text-slate-300 hover:bg-white/7 border border-white/10"
+                }`}
+              >
+                <Globe className="w-4 h-4 inline mr-2" />
+                International
+              </button>
+            </div>
 
-              {/* US Zip Code Input */}
-              {region === "us" && (
-                <div className="mb-6">
-                  {/* Only show ZIP input prominently if business not found yet */}
-                  {!businessLookup?.found && (
-                    <>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">
-                        Enter your zip code
-                      </label>
-                      <input
-                        type="text"
-                        value={zipInput}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "").slice(0, 5);
-                          setZipInput(value);
-                        }}
-                        placeholder="e.g., 89101"
-                        className={`w-full px-4 py-4 rounded-xl border-2 text-xl font-bold text-center tracking-widest ${
-                          zipError
-                            ? "border-red-400/40 bg-red-900/30 text-red-300 placeholder-red-400/50"
-                            : zipInput.length === 5
-                              ? "border-emerald-400/40 bg-emerald-900/30 text-emerald-300"
-                              : "bg-white/5 border-white/10 text-white placeholder-slate-400"
-                        } focus:border-amber-400/50 focus:ring-2 focus:ring-amber-500/30 outline-none transition-all`}
-                      />
-                      {zipError && (
-                        <p className="mt-2 text-sm text-red-400 font-medium">{zipError}</p>
-                      )}
-                    </>
-                  )}
+            {/* US Zip Code Input */}
+            {region === "us" && (
+              <div className="mb-6">
+                {/* Only show ZIP input prominently if business not found yet */}
+                {!businessLookup?.found && (
+                  <>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Enter your zip code
+                    </label>
+                    <input
+                      type="text"
+                      value={zipInput}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "").slice(0, 5);
+                        setZipInput(value);
+                      }}
+                      placeholder="e.g., 89101"
+                      className={`w-full px-4 py-4 rounded-xl border-2 text-xl font-bold text-center tracking-widest ${
+                        zipError
+                          ? "border-red-400/40 bg-red-900/30 text-red-300 placeholder-red-400/50"
+                          : zipInput.length === 5
+                            ? "border-emerald-400/40 bg-emerald-900/30 text-emerald-300"
+                            : "bg-white/5 border-white/10 text-white placeholder-slate-400"
+                      } focus:border-amber-400/50 focus:ring-2 focus:ring-amber-500/30 outline-none transition-all`}
+                    />
+                    {zipError && (
+                      <p className="mt-2 text-sm text-red-400 font-medium">{zipError}</p>
+                    )}
+                  </>
+                )}
 
-                  {/* Address Lookup Section - shown after valid zip, hidden when business found */}
-                  {zipInput.length === 5 && !zipError && !businessLookup?.found && (
-                    <div className="mt-4">
-                      {!showAddressField && (
-                        <button
-                          onClick={() => setShowAddressField(true)}
-                          className="w-full py-4 px-4 rounded-xl border-2 border-amber-400/50 bg-amber-500/20 text-amber-200 hover:bg-amber-500/30 hover:text-white transition-all text-base font-medium shadow-lg shadow-amber-500/20"
-                        >
-                          <Building2 className="w-5 h-5 inline mr-2" />
-                          🏢 Add your business name & address for personalized recommendations
-                        </button>
-                      )}
-                      {showAddressField && (
-                        <div className="space-y-4">
-                          {/* Business Name Field */}
-                          <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                              Business Name <span className="text-amber-400">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={businessNameInput}
-                              onChange={(e) => setBusinessNameInput(e.target.value)}
-                              placeholder="e.g., WOW Carwash, Hilton Hotel, Starbucks"
-                              className="w-full px-4 py-3 rounded-xl border-2 border-white/10 bg-white/5 text-white placeholder-slate-400 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-500/30 outline-none transition-all text-lg"
-                              autoFocus
-                            />
-                          </div>
-
-                          {/* Street Address Field */}
-                          <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                              Street Address{" "}
-                              <span className="text-slate-500">(optional, improves accuracy)</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={streetAddress}
-                              onChange={(e) => setStreetAddress(e.target.value)}
-                              placeholder="e.g., 9860 S Maryland Pkwy"
-                              className="w-full px-4 py-3 rounded-xl border-2 border-white/10 bg-white/5 text-white placeholder-slate-400 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-500/30 outline-none transition-all"
-                              onKeyDown={(e) => e.key === "Enter" && handleAddressLookup()}
-                            />
-                          </div>
-
-                          {/* Search Button */}
-                          <button
-                            onClick={handleAddressLookup}
-                            disabled={isLookingUp || !businessNameInput.trim()}
-                            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold hover:from-amber-700 hover:to-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/30"
-                          >
-                            {isLookingUp ? (
-                              <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                <span>Finding your business...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Search className="w-5 h-5" />
-                                <span>Find My Business</span>
-                              </>
-                            )}
-                          </button>
-
-                          <p className="text-xs text-slate-400 text-center">
-                            🧙 Merlin will identify your business and customize your energy solution
-                          </p>
+                {/* Address Lookup Section - shown after valid zip, hidden when business found */}
+                {zipInput.length === 5 && !zipError && !businessLookup?.found && (
+                  <div className="mt-4">
+                    {!showAddressField && (
+                      <button
+                        onClick={() => setShowAddressField(true)}
+                        className="w-full py-4 px-4 rounded-xl border-2 border-amber-400/50 bg-amber-500/20 text-amber-200 hover:bg-amber-500/30 hover:text-white transition-all text-base font-medium shadow-lg shadow-amber-500/20"
+                      >
+                        <Building2 className="w-5 h-5 inline mr-2" />
+                        🏢 Add your business name & address for personalized recommendations
+                      </button>
+                    )}
+                    {showAddressField && (
+                      <div className="space-y-4">
+                        {/* Business Name Field */}
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">
+                            Business Name <span className="text-amber-400">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={businessNameInput}
+                            onChange={(e) => setBusinessNameInput(e.target.value)}
+                            placeholder="e.g., WOW Carwash, Hilton Hotel, Starbucks"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-white/10 bg-white/5 text-white placeholder-slate-400 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-500/30 outline-none transition-all text-lg"
+                            autoFocus
+                          />
                         </div>
-                      )}
-                    </div>
-                  )}
 
-                  {/* Business Found Display - Auto-confirmed, user can change on Step 2 */}
-                  {businessLookup?.found && (
-                    <div className="mt-4 rounded-xl overflow-hidden border-2 border-green-500 shadow-xl shadow-green-500/20">
-                      {/* Header with Success Message */}
-                      <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">✅</span>
-                            <span className="text-white font-bold text-lg">
-                              Business Confirmed!
+                        {/* Street Address Field */}
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">
+                            Street Address{" "}
+                            <span className="text-slate-500">(optional, improves accuracy)</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={streetAddress}
+                            onChange={(e) => setStreetAddress(e.target.value)}
+                            placeholder="e.g., 9860 S Maryland Pkwy"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-white/10 bg-white/5 text-white placeholder-slate-400 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-500/30 outline-none transition-all"
+                            onKeyDown={(e) => e.key === "Enter" && handleAddressLookup()}
+                          />
+                        </div>
+
+                        {/* Search Button */}
+                        <button
+                          onClick={handleAddressLookup}
+                          disabled={isLookingUp || !businessNameInput.trim()}
+                          className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold hover:from-amber-700 hover:to-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/30"
+                        >
+                          {isLookingUp ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              <span>Finding your business...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Search className="w-5 h-5" />
+                              <span>Find My Business</span>
+                            </>
+                          )}
+                        </button>
+
+                        <p className="text-xs text-slate-400 text-center">
+                          🧙 Merlin will identify your business and customize your energy solution
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Business Found Display - Auto-confirmed, user can change on Step 2 */}
+                {businessLookup?.found && (
+                  <div className="mt-4 rounded-xl overflow-hidden border-2 border-green-500 shadow-xl shadow-green-500/20">
+                    {/* Header with Success Message */}
+                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">✅</span>
+                          <span className="text-white font-bold text-lg">Business Confirmed!</span>
+                        </div>
+                        {locationData && (
+                          <div className="flex items-center gap-3 text-sm">
+                            <span className="text-green-100">
+                              ⚡ ${locationData.electricityRate.toFixed(4)}/kWh
+                            </span>
+                            <span className="text-green-100">
+                              ☀️ {locationData.sunHours} hrs/day
                             </span>
                           </div>
-                          {locationData && (
-                            <div className="flex items-center gap-3 text-sm">
-                              <span className="text-green-100">
-                                ⚡ ${locationData.electricityRate.toFixed(4)}/kWh
-                              </span>
-                              <span className="text-green-100">
-                                ☀️ {locationData.sunHours} hrs/day
-                              </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/15 p-5">
+                      <div className="flex items-start gap-4">
+                        {/* Business Photo or Map */}
+                        <div className="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-white/5 border-2 border-green-500/50 shadow-lg">
+                          {businessLookup.photoUrl ? (
+                            <img
+                              src={businessLookup.photoUrl}
+                              alt={businessLookup.businessName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : businessLookup.lat && businessLookup.lng ? (
+                            <img
+                              src={getStaticMapUrl(businessLookup.lat, businessLookup.lng, 17)}
+                              alt="Location map"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Building2 className="w-12 h-12 text-slate-500" />
                             </div>
                           )}
                         </div>
-                      </div>
 
-                      <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/15 p-5">
-                        <div className="flex items-start gap-4">
-                          {/* Business Photo or Map */}
-                          <div className="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-white/5 border-2 border-green-500/50 shadow-lg">
-                            {businessLookup.photoUrl ? (
-                              <img
-                                src={businessLookup.photoUrl}
-                                alt={businessLookup.businessName}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : businessLookup.lat && businessLookup.lng ? (
-                              <img
-                                src={getStaticMapUrl(businessLookup.lat, businessLookup.lng, 17)}
-                                alt="Location map"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Building2 className="w-12 h-12 text-slate-500" />
-                              </div>
-                            )}
-                          </div>
+                        {/* Business Info */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-2xl font-bold text-white mb-2">
+                            {businessLookup.businessName}
+                          </h3>
 
-                          {/* Business Info */}
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-2xl font-bold text-white mb-2">
-                              {businessLookup.businessName}
-                            </h3>
-
-                            {businessLookup.industrySlug && (
-                              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/30 border border-amber-400 mb-3">
-                                <span className="text-amber-200 font-semibold">
-                                  {INDUSTRY_NAMES[businessLookup.industrySlug] ||
-                                    businessLookup.businessType}
-                                </span>
-                                <Check className="w-4 h-4 text-green-400" />
-                              </div>
-                            )}
-
-                            <p className="text-slate-300 text-sm mb-3">
-                              📍 {businessLookup.formattedAddress}
-                            </p>
-
-                            {/* Merlin's commitment */}
-                            <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                              <p className="text-emerald-300 text-sm">
-                                🧙 <span className="font-semibold">Merlin says:</span> "I'll design
-                                a custom energy solution for {businessLookup.businessName}. Select
-                                your goals and click Continue!"
-                              </p>
+                          {businessLookup.industrySlug && (
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/30 border border-amber-400 mb-3">
+                              <span className="text-amber-200 font-semibold">
+                                {INDUSTRY_NAMES[businessLookup.industrySlug] ||
+                                  businessLookup.businessType}
+                              </span>
+                              <Check className="w-4 h-4 text-green-400" />
                             </div>
+                          )}
+
+                          <p className="text-slate-300 text-sm mb-3">
+                            📍 {businessLookup.formattedAddress}
+                          </p>
+
+                          {/* Merlin's commitment */}
+                          <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                            <p className="text-emerald-300 text-sm">
+                              🧙 <span className="font-semibold">Merlin says:</span> "I'll design a
+                              custom energy solution for {businessLookup.businessName}. Select your
+                              goals and click Continue!"
+                            </p>
                           </div>
                         </div>
-
-                        {/* Wrong business link - subtle, not a big button */}
-                        <div className="mt-4 text-center">
-                          <button
-                            onClick={() => {
-                              setBusinessLookup(null);
-                              setBusinessNameInput("");
-                              setStreetAddress("");
-                              setShowAddressField(true);
-                              updateState({
-                                businessName: undefined,
-                                businessAddress: undefined,
-                                detectedIndustry: undefined,
-                                industry: "",
-                                industryName: "",
-                              });
-                            }}
-                            className="text-slate-400 text-sm hover:text-white transition-colors underline"
-                          >
-                            Not your business? Search again
-                          </button>
-                        </div>
                       </div>
+
+                      {/* Wrong business link - subtle, not a big button */}
+                      <div className="mt-4 text-center">
+                        <button
+                          onClick={() => {
+                            setBusinessLookup(null);
+                            setBusinessNameInput("");
+                            setStreetAddress("");
+                            setShowAddressField(true);
+                            updateState({
+                              businessName: undefined,
+                              businessAddress: undefined,
+                              detectedIndustry: undefined,
+                              industry: "",
+                              industryName: "",
+                            });
+                          }}
+                          className="text-slate-400 text-sm hover:text-white transition-colors underline"
+                        >
+                          Not your business? Search again
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* International Dropdowns */}
+            {region === "international" && (
+              <div className="space-y-4 mb-6">
+                {/* Country Dropdown */}
+                <div className="relative">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Select Country
+                  </label>
+                  <button
+                    onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-white/10 bg-white/5 text-white flex items-center justify-between hover:border-amber-400/50 transition-all"
+                  >
+                    <span className={selectedCountry ? "text-white" : "text-gray-400"}>
+                      {selectedCountryData
+                        ? `${selectedCountryData.flag} ${selectedCountryData.name}`
+                        : "Select a country..."}
+                    </span>
+                    <ChevronDown
+                      className={`w-5 h-5 text-gray-400 transition-transform ${countryDropdownOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {countryDropdownOpen && (
+                    <div className="absolute z-20 w-full mt-2 bg-slate-800 border border-white/10 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                      {INTERNATIONAL_DATA.map((country) => (
+                        <button
+                          key={country.code}
+                          onClick={() => {
+                            setSelectedCountry(country.code);
+                            setSelectedCity("");
+                            setCountryDropdownOpen(false);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-amber-500/20 flex items-center gap-3 transition-colors"
+                        >
+                          <span className="text-xl">{country.flag}</span>
+                          <span className="text-white">{country.name}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
-              )}
 
-              {/* International Dropdowns */}
-              {region === "international" && (
-                <div className="space-y-4 mb-6">
-                  {/* Country Dropdown */}
+                {/* City Dropdown */}
+                {selectedCountryData && (
                   <div className="relative">
                     <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Select Country
+                      Select City
                     </label>
                     <button
-                      onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
+                      onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
                       className="w-full px-4 py-3 rounded-xl border-2 border-white/10 bg-white/5 text-white flex items-center justify-between hover:border-amber-400/50 transition-all"
                     >
-                      <span className={selectedCountry ? "text-white" : "text-gray-400"}>
-                        {selectedCountryData
-                          ? `${selectedCountryData.flag} ${selectedCountryData.name}`
-                          : "Select a country..."}
+                      <span className={selectedCity ? "text-white" : "text-gray-400"}>
+                        {selectedCity || "Select a city..."}
                       </span>
                       <ChevronDown
-                        className={`w-5 h-5 text-gray-400 transition-transform ${countryDropdownOpen ? "rotate-180" : ""}`}
+                        className={`w-5 h-5 text-gray-400 transition-transform ${cityDropdownOpen ? "rotate-180" : ""}`}
                       />
                     </button>
 
-                    {countryDropdownOpen && (
+                    {cityDropdownOpen && (
                       <div className="absolute z-20 w-full mt-2 bg-slate-800 border border-white/10 rounded-xl shadow-lg max-h-64 overflow-y-auto">
-                        {INTERNATIONAL_DATA.map((country) => (
+                        {selectedCountryData.cities.map((city) => (
                           <button
-                            key={country.code}
+                            key={city.name}
                             onClick={() => {
-                              setSelectedCountry(country.code);
-                              setSelectedCity("");
-                              setCountryDropdownOpen(false);
+                              setSelectedCity(city.name);
+                              setCityDropdownOpen(false);
                             }}
-                            className="w-full px-4 py-3 text-left hover:bg-amber-500/20 flex items-center gap-3 transition-colors"
+                            className="w-full px-4 py-3 text-left hover:bg-amber-500/20 transition-colors"
                           >
-                            <span className="text-xl">{country.flag}</span>
-                            <span className="text-white">{country.name}</span>
+                            <span className="text-white">{city.name}</span>
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
+                )}
+              </div>
+            )}
 
-                  {/* City Dropdown */}
-                  {selectedCountryData && (
-                    <div className="relative">
-                      <label className="block text-sm font-medium text-slate-300 mb-2">
-                        Select City
-                      </label>
-                      <button
-                        onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-white/10 bg-white/5 text-white flex items-center justify-between hover:border-amber-400/50 transition-all"
-                      >
-                        <span className={selectedCity ? "text-white" : "text-gray-400"}>
-                          {selectedCity || "Select a city..."}
-                        </span>
-                        <ChevronDown
-                          className={`w-5 h-5 text-gray-400 transition-transform ${cityDropdownOpen ? "rotate-180" : ""}`}
-                        />
-                      </button>
+            {/* Location Details Card */}
+            {locationData && (
+              <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl p-5 border border-amber-400/30">
+                <h3 className="font-semibold text-white mb-4">
+                  📍{" "}
+                  {region === "us"
+                    ? `${state.city || state.state}, ${state.state}`
+                    : `${selectedCity}, ${selectedCountryData?.name}`}
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                      <Zap className="w-5 h-5 text-yellow-400" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400">Electricity Rate</div>
+                      <div className="font-semibold text-white">
+                        ${locationData.electricityRate.toFixed(4)}/kWh
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center">
+                      <Sun className="w-5 h-5 text-orange-400" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400">Sun Hours</div>
+                      <div className="font-semibold text-white">
+                        {locationData.sunHours} hrs/day
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 col-span-2">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        locationData.solarRating === "A"
+                          ? "bg-green-500/20"
+                          : locationData.solarRating === "B"
+                            ? "bg-blue-500/20"
+                            : locationData.solarRating === "C"
+                              ? "bg-yellow-500/20"
+                              : "bg-gray-500/20"
+                      }`}
+                    >
+                      <Star
+                        className={`w-5 h-5 ${
+                          locationData.solarRating === "A"
+                            ? "text-green-400"
+                            : locationData.solarRating === "B"
+                              ? "text-blue-400"
+                              : locationData.solarRating === "C"
+                                ? "text-yellow-400"
+                                : "text-slate-400"
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400">Solar Potential</div>
+                      <div className="font-semibold text-white">
+                        {locationData.solarRating} - {locationData.solarLabel}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
-                      {cityDropdownOpen && (
-                        <div className="absolute z-20 w-full mt-2 bg-slate-800 border border-white/10 rounded-xl shadow-lg max-h-64 overflow-y-auto">
-                          {selectedCountryData.cities.map((city) => (
-                            <button
-                              key={city.name}
-                              onClick={() => {
-                                setSelectedCity(city.name);
-                                setCityDropdownOpen(false);
-                              }}
-                              className="w-full px-4 py-3 text-left hover:bg-amber-500/20 transition-colors"
-                            >
-                              <span className="text-white">{city.name}</span>
-                            </button>
-                          ))}
+        {/* RIGHT COLUMN: Your Goals */}
+        <div className="p-5">
+          <div
+            id="goals-section"
+            className="relative p-6 bg-slate-900/25 border border-white/10 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.10)] scroll-mt-4"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
+                  <Check className="w-5 h-5 text-amber-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-white">Your Goals</h2>
+              </div>
+              <div
+                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  hasEnoughGoals
+                    ? "bg-green-500/20 text-green-400 border border-green-500/50"
+                    : "bg-amber-500/20 text-amber-400 border border-amber-500/50"
+                }`}
+              >
+                {selectedGoalsCount}/{MIN_GOALS_REQUIRED} selected
+              </div>
+            </div>
+
+            {/* Always visible instruction - prominent */}
+            <div
+              className={`mb-5 p-4 rounded-xl text-center ${
+                hasEnoughGoals
+                  ? "bg-green-500/20 border-2 border-green-500/50"
+                  : "bg-amber-500/20 border-2 border-amber-400/50 animate-pulse"
+              }`}
+            >
+              <p
+                className={`text-base font-semibold ${hasEnoughGoals ? "text-green-300" : "text-amber-300"}`}
+              >
+                {hasEnoughGoals
+                  ? `✓ Great! You've selected ${selectedGoalsCount} goals`
+                  : `👆 Select ${MIN_GOALS_REQUIRED - selectedGoalsCount} more goal${MIN_GOALS_REQUIRED - selectedGoalsCount > 1 ? "s" : ""} to continue`}
+              </p>
+            </div>
+
+            {/* Goals Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {ENERGY_GOALS.map((goal) => {
+                const isSelected = state.goals?.includes(goal.id);
+                return (
+                  <button
+                    key={goal.id}
+                    onClick={() => toggleGoal(goal.id)}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      isSelected
+                        ? "border-amber-400/50 bg-amber-400/10 shadow-[0_0_0_1px_rgba(251,191,36,0.20),0_12px_30px_rgba(0,0,0,0.35)]"
+                        : "border-white/10 bg-white/5 hover:border-amber-400/30 hover:bg-white/7"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">{goal.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className={`font-medium ${isSelected ? "text-amber-200" : "text-white"}`}
+                        >
+                          {goal.label}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-1 line-clamp-2">
+                          {goal.description}
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Check className="w-3 h-3 text-white" />
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
-              )}
-
-              {/* Location Details Card */}
-              {locationData && (
-                <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl p-5 border border-amber-400/30">
-                  <h3 className="font-semibold text-white mb-4">
-                    📍{" "}
-                    {region === "us"
-                      ? `${state.city || state.state}, ${state.state}`
-                      : `${selectedCity}, ${selectedCountryData?.name}`}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                        <Zap className="w-5 h-5 text-yellow-400" />
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-400">Electricity Rate</div>
-                        <div className="font-semibold text-white">
-                          ${locationData.electricityRate.toFixed(4)}/kWh
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center">
-                        <Sun className="w-5 h-5 text-orange-400" />
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-400">Sun Hours</div>
-                        <div className="font-semibold text-white">
-                          {locationData.sunHours} hrs/day
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 col-span-2">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          locationData.solarRating === "A"
-                            ? "bg-green-500/20"
-                            : locationData.solarRating === "B"
-                              ? "bg-blue-500/20"
-                              : locationData.solarRating === "C"
-                                ? "bg-yellow-500/20"
-                                : "bg-gray-500/20"
-                        }`}
-                      >
-                        <Star
-                          className={`w-5 h-5 ${
-                            locationData.solarRating === "A"
-                              ? "text-green-400"
-                              : locationData.solarRating === "B"
-                                ? "text-blue-400"
-                                : locationData.solarRating === "C"
-                                  ? "text-yellow-400"
-                                  : "text-slate-400"
-                          }`}
-                        />
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-400">Solar Potential</div>
-                        <div className="font-semibold text-white">
-                          {locationData.solarRating} - {locationData.solarLabel}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+                  </button>
+                );
+              })}
             </div>
-          </div>
 
-          {/* RIGHT COLUMN: Your Goals */}
-          <div className="p-5">
-            <div
-              id="goals-section"
-              className="relative p-6 bg-slate-900/25 border border-white/10 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.10)] scroll-mt-4"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
-                    <Check className="w-5 h-5 text-amber-400" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-white">Your Goals</h2>
-                </div>
+            {/* Progress Bar */}
+            <div className="mt-6">
+              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
                 <div
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    hasEnoughGoals
-                      ? "bg-green-500/20 text-green-400 border border-green-500/50"
-                      : "bg-amber-500/20 text-amber-400 border border-amber-500/50"
+                  className={`h-full transition-all duration-300 ${
+                    hasEnoughGoals ? "bg-green-500" : "bg-amber-500"
                   }`}
-                >
-                  {selectedGoalsCount}/{MIN_GOALS_REQUIRED} selected
-                </div>
-              </div>
-
-              {/* Always visible instruction - prominent */}
-              <div
-                className={`mb-5 p-4 rounded-xl text-center ${
-                  hasEnoughGoals
-                    ? "bg-green-500/20 border-2 border-green-500/50"
-                    : "bg-amber-500/20 border-2 border-amber-400/50 animate-pulse"
-                }`}
-              >
-                <p
-                  className={`text-base font-semibold ${hasEnoughGoals ? "text-green-300" : "text-amber-300"}`}
-                >
-                  {hasEnoughGoals
-                    ? `✓ Great! You've selected ${selectedGoalsCount} goals`
-                    : `👆 Select ${MIN_GOALS_REQUIRED - selectedGoalsCount} more goal${MIN_GOALS_REQUIRED - selectedGoalsCount > 1 ? "s" : ""} to continue`}
-                </p>
-              </div>
-
-              {/* Goals Grid */}
-              <div className="grid grid-cols-2 gap-3">
-                {ENERGY_GOALS.map((goal) => {
-                  const isSelected = state.goals?.includes(goal.id);
-                  return (
-                    <button
-                      key={goal.id}
-                      onClick={() => toggleGoal(goal.id)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${
-                        isSelected
-                          ? "border-amber-400/50 bg-amber-400/10 shadow-[0_0_0_1px_rgba(251,191,36,0.20),0_12px_30px_rgba(0,0,0,0.35)]"
-                          : "border-white/10 bg-white/5 hover:border-amber-400/30 hover:bg-white/7"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl">{goal.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <div
-                            className={`font-medium ${isSelected ? "text-amber-200" : "text-white"}`}
-                          >
-                            {goal.label}
-                          </div>
-                          <div className="text-xs text-slate-400 mt-1 line-clamp-2">
-                            {goal.description}
-                          </div>
-                        </div>
-                        {isSelected && (
-                          <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mt-6">
-                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-300 ${
-                      hasEnoughGoals ? "bg-green-500" : "bg-amber-500"
-                    }`}
-                    style={{
-                      width: `${Math.min(100, (selectedGoalsCount / MIN_GOALS_REQUIRED) * 100)}%`,
-                    }}
-                  />
-                </div>
+                  style={{
+                    width: `${Math.min(100, (selectedGoalsCount / MIN_GOALS_REQUIRED) * 100)}%`,
+                  }}
+                />
               </div>
             </div>
           </div>
