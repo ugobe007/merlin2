@@ -46,7 +46,7 @@ interface AdvisorRailProps {
 
     // Phase 1: Intelligence Layer (Jan 18, 2026)
     intelligence?: IntelligenceContext;
-    
+
     // Site Score™ (Jan 18, 2026 - Merlin IP)
     siteScore?: SiteScoreResult | null;
   };
@@ -100,7 +100,7 @@ export function AdvisorRail({
   const weatherProfile = context?.weather?.profile;
   const weatherExtremes = context?.weather?.extremes;
 
-  const arbitrage = context?.opportunities?.arbitrage;
+  const _arbitrage = context?.opportunities?.arbitrage;
 
   // Phase 5: Config data for trade-off warnings (Step 3-4)
   const solarKW = context?.config?.solarKW;
@@ -254,39 +254,42 @@ export function AdvisorRail({
   const insight = getMerlinInsight();
 
   return (
-    <div className="relative flex flex-col max-h-[calc(100vh-140px)] overflow-hidden">
-      {/* KEYLIGHT GLOW */}
-      <div className="pointer-events-none absolute top-0 left-0 h-56 w-56 bg-amber-400/10 blur-3xl rounded-full" />
-      <div className="pointer-events-none absolute top-10 right-0 h-64 w-64 bg-violet-500/10 blur-3xl rounded-full" />
+    <div className="relative flex flex-col h-full min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-500/50 scrollbar-track-transparent bg-gradient-to-b from-slate-800/40 via-slate-900/60 to-slate-950/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)]">
+      {/* GLASSMORPHIC AMBIENT GLOW */}
+      <div className="pointer-events-none absolute top-0 left-0 h-48 w-48 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-transparent blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute top-20 right-0 h-56 w-56 bg-gradient-to-bl from-violet-500/20 via-purple-500/15 to-transparent blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute bottom-20 left-10 h-40 w-40 bg-gradient-to-tr from-amber-400/15 to-transparent blur-2xl rounded-full" />
 
       {/* MERLIN IDENTITY HEADER */}
-      <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
+      <div className="px-5 py-4 border-b border-white/10 flex-shrink-0 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
         <div className="flex items-center gap-3 mb-4">
           <div className="relative">
             <img
               src={avatarImg}
               alt="Merlin"
-              className="w-16 h-16 rounded-full border-2 border-amber-400/60 shadow-[0_0_24px_rgba(251,191,36,0.3)]"
+              className="w-16 h-16 rounded-full border-2 border-cyan-400/60 shadow-[0_0_24px_rgba(34,211,238,0.4),0_0_48px_rgba(147,51,234,0.2)]"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
                 (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove("hidden");
               }}
             />
-            <div className="hidden w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center border-2 border-amber-300">
+            <div className="hidden w-16 h-16 rounded-full bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center border-2 border-cyan-300">
               <span className="text-3xl">🧙</span>
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0f1d33] merlin-breathe shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-slate-900 merlin-breathe shadow-[0_0_12px_rgba(16,185,129,0.8)]" />
           </div>
 
           <div className="flex-1">
-            <div className="text-amber-400 font-bold text-lg tracking-tight">Merlin</div>
+            <div className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 font-bold text-lg tracking-tight">
+              Merlin
+            </div>
             <div className="text-slate-300/80 text-xs font-medium">AI Energy Advisor</div>
           </div>
 
           {payload?.mode && <ModeBadge mode={payload.mode} />}
         </div>
 
-        <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.04] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+        <div className="mt-3 rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-slate-800/50 to-violet-500/10 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_16px_rgba(0,0,0,0.2)] backdrop-blur-sm">
           <div className="text-[15px] font-extrabold text-white leading-snug tracking-tight">
             {payload?.headline || "Answer a few questions to get your TrueQuote™"}
           </div>
@@ -298,11 +301,11 @@ export function AdvisorRail({
         </div>
       </div>
 
-      {/* LOCATION / UTILITY CONTEXT - Tight Professional Layout */}
-      <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
+      {/* LOCATION / UTILITY CONTEXT - Glassmorphic Layout */}
+      <div className="px-5 py-4 border-b border-white/10 flex-shrink-0 bg-gradient-to-b from-transparent to-slate-900/30">
         {/* EMPTY STATE: no ZIP yet */}
         {!zip && !st ? (
-          <div className="rounded-xl border border-violet-500/25 bg-gradient-to-br from-violet-500/10 to-transparent p-4">
+          <div className="rounded-xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 via-slate-800/50 to-violet-500/10 p-4 backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xl">📍</span>
               <div className="text-sm font-semibold text-white">Enter your location</div>
@@ -317,20 +320,18 @@ export function AdvisorRail({
             {/* LOCATION HEADER - Tight single line */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="text-base">📍</span>
-                <div className="text-sm font-bold text-white">
+                <span className="text-lg">📍</span>
+                <div className="text-base font-bold text-white">
                   {zip} • {st}
                 </div>
                 {utilityName && (
-                  <div className="text-xs text-slate-400 truncate max-w-[120px]">
-                    {utilityName}
-                  </div>
+                  <div className="text-sm text-slate-400 truncate max-w-[120px]">{utilityName}</div>
                 )}
               </div>
               {/* Site Score Badge - Compact */}
               {context?.siteScore && (
                 <div
-                  className={`px-2 py-1 rounded-lg text-[11px] font-bold border ${
+                  className={`px-2.5 py-1.5 rounded-lg text-sm font-bold border ${
                     context.siteScore.scoreLabel === "exceptional" ||
                     context.siteScore.scoreLabel === "strong"
                       ? "bg-emerald-500/15 border-emerald-400/30 text-emerald-400"
@@ -346,52 +347,62 @@ export function AdvisorRail({
               )}
             </div>
 
-            {/* KEY METRICS - 4 tight rows */}
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center justify-between py-1.5 border-b border-slate-700/30">
-                <span className="text-xs text-slate-400 flex items-center gap-1.5">
-                  <span className="text-amber-400">⚡</span> Utility Rate
-                </span>
-                <span className="text-sm font-bold text-white">
-                  ${rate?.toFixed(4) || "0.12"}/kWh
-                </span>
+            {/* OPPORTUNITIES & INSIGHTS - Unique content (not duplicating header pills) */}
+            <div className="space-y-3 mb-4">
+              {/* Weather Impact */}
+              <div className="rounded-lg bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-400/20 p-3">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-base">🌡️</span>
+                  <span className="text-sm font-semibold text-orange-300">Weather Impact</span>
+                </div>
+                <div className="text-xs text-slate-300 leading-relaxed">
+                  {weatherExtremes ||
+                    (weatherProfile === "Hot"
+                      ? "High cooling demand increases peak loads. BESS can shift AC usage to off-peak hours."
+                      : weatherProfile === "Cold"
+                        ? "Heating demand spikes in winter. Battery storage helps manage peak heating costs."
+                        : "Moderate climate = stable energy costs. Ideal for maximizing solar self-consumption.")}
+                </div>
               </div>
 
-              <div className="flex items-center justify-between py-1.5 border-b border-slate-700/30">
-                <span className="text-xs text-slate-400 flex items-center gap-1.5">
-                  <span className="text-violet-400">📊</span> Demand Charge
-                </span>
-                <span className="text-sm font-bold text-white">${demand || 15}/kW</span>
+              {/* EV Charging Opportunity */}
+              <div className="rounded-lg bg-gradient-to-r from-emerald-500/15 to-cyan-500/10 border border-emerald-400/25 p-3 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-base">🔌</span>
+                  <span className="text-sm font-semibold text-emerald-300">EV Opportunity</span>
+                </div>
+                <div className="text-xs text-slate-300 leading-relaxed">
+                  {st === "CA" || st === "NV" || st === "TX" || st === "FL" || st === "NY"
+                    ? "High EV adoption area. Adding charging can attract customers and generate revenue."
+                    : "Growing EV market. Early charging infrastructure = competitive advantage."}
+                </div>
               </div>
 
-              <div className="flex items-center justify-between py-1.5 border-b border-slate-700/30">
-                <span className="text-xs text-slate-400 flex items-center gap-1.5">
-                  <span className="text-sky-400">☀️</span> Solar Hours
-                </span>
-                <span className="text-sm font-bold text-white">
-                  {context?.solar?.sunHours?.toFixed(1) || "5.5"} hrs/day
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-1.5">
-                <span className="text-xs text-slate-400 flex items-center gap-1.5">
-                  <span className="text-emerald-400">🌡️</span> Climate
-                </span>
-                <span className="text-xs font-semibold text-white">
-                  {weatherProfile || "Moderate"}
-                </span>
+              {/* Savings Potential */}
+              <div className="rounded-lg bg-gradient-to-r from-violet-500/15 to-fuchsia-500/10 border border-violet-400/25 p-3 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-base">💰</span>
+                  <span className="text-sm font-semibold text-violet-300">Savings Potential</span>
+                </div>
+                <div className="text-xs text-slate-300 leading-relaxed">
+                  {demand && demand > 15
+                    ? `High demand charges ($${demand}/kW) = strong peak shaving ROI. Typical savings: 20-40%.`
+                    : rate && rate > 0.12
+                      ? `Above-average rates mean faster payback. Solar+storage can cut bills 30-50%.`
+                      : "Moderate rates favor long-term savings. Focus on demand charge reduction."}
+                </div>
               </div>
             </div>
 
             {/* ENERGY SPOTLIGHT - Opportunities at a glance */}
-            <div className="rounded-lg border border-fuchsia-400/20 bg-fuchsia-500/5 p-3">
-              <div className="text-[10px] font-bold text-fuchsia-300/90 mb-2 flex items-center gap-1.5">
+            <div className="rounded-lg border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 via-slate-800/30 to-violet-500/10 p-3 backdrop-blur-sm">
+              <div className="text-xs font-bold text-cyan-300 mb-2 flex items-center gap-1.5">
                 <span>💡</span> ENERGY SPOTLIGHT
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
                   <div
-                    className={`text-[11px] font-bold ${
+                    className={`text-[13px] font-bold ${
                       demand && demand > 15
                         ? "text-emerald-400"
                         : demand && demand > 10
@@ -401,19 +412,19 @@ export function AdvisorRail({
                   >
                     {demand && demand > 15 ? "High" : demand && demand > 10 ? "Medium" : "Low"}
                   </div>
-                  <div className="text-[9px] text-slate-500">Peak Shaving</div>
+                  <div className="text-[11px] text-slate-400">Peak Shaving</div>
                 </div>
                 <div>
                   <div
-                    className={`text-[11px] font-bold ${hasTOU ? "text-emerald-400" : "text-slate-400"}`}
+                    className={`text-[13px] font-bold ${hasTOU ? "text-emerald-400" : "text-slate-400"}`}
                   >
                     {hasTOU ? "Yes" : "Limited"}
                   </div>
-                  <div className="text-[9px] text-slate-500">Arbitrage</div>
+                  <div className="text-[11px] text-slate-400">Arbitrage</div>
                 </div>
                 <div>
                   <div
-                    className={`text-[11px] font-bold ${
+                    className={`text-[13px] font-bold ${
                       context?.siteScore?.riskResilience?.score &&
                       context.siteScore.riskResilience.score > 12
                         ? "text-emerald-400"
@@ -425,7 +436,7 @@ export function AdvisorRail({
                       ? "Important"
                       : "Possible"}
                   </div>
-                  <div className="text-[9px] text-slate-500">Backup</div>
+                  <div className="text-[11px] text-slate-400">Backup</div>
                 </div>
               </div>
             </div>
@@ -537,37 +548,40 @@ export function AdvisorRail({
         </div>
       </div>
 
-      {/* SCROLLABLE CONTENT */}
-      <div className="flex-1 overflow-auto">
-        <div className="p-5 space-y-3">
-          {(payload?.cards || []).map((c) => (
-            <AdvisorCard key={c.id} card={c} />
-          ))}
+      {/* SCROLLABLE CONTENT - Only show if there are cards or disclaimers */}
+      {((payload?.cards && payload.cards.length > 0) ||
+        (payload?.mode === "estimate" && payload.disclaimer)) && (
+        <div className="flex-1 overflow-auto">
+          <div className="p-5 space-y-3">
+            {(payload?.cards || []).map((c) => (
+              <AdvisorCard key={c.id} card={c} />
+            ))}
 
-          {payload?.mode === "estimate" && payload.disclaimer && (
-            <div className="mt-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-              <div className="text-[11px] font-semibold text-amber-200 mb-1">
-                Estimate disclaimer
-              </div>
-              <div className="text-xs text-slate-200/80 whitespace-pre-line">
-                {payload.disclaimer}
-              </div>
-            </div>
-          )}
-
-          {warnings.length > 0 &&
-            (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && (
-              <div className="mt-2 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
-                <div className="text-[11px] font-semibold text-red-200 mb-1">Dev warnings</div>
-                <ul className="text-xs text-slate-200/80 list-disc ml-4 space-y-1">
-                  {warnings.map((w, i) => (
-                    <li key={i}>{w}</li>
-                  ))}
-                </ul>
+            {payload?.mode === "estimate" && payload.disclaimer && (
+              <div className="mt-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                <div className="text-[11px] font-semibold text-amber-200 mb-1">
+                  Estimate disclaimer
+                </div>
+                <div className="text-xs text-slate-200/80 whitespace-pre-line">
+                  {payload.disclaimer}
+                </div>
               </div>
             )}
+
+            {warnings.length > 0 &&
+              (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && (
+                <div className="mt-2 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+                  <div className="text-[11px] font-semibold text-red-200 mb-1">Dev warnings</div>
+                  <ul className="text-xs text-slate-200/80 list-disc ml-4 space-y-1">
+                    {warnings.map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
