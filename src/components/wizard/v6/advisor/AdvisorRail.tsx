@@ -254,14 +254,14 @@ export function AdvisorRail({
   const insight = getMerlinInsight();
 
   return (
-    <div className="relative flex flex-col h-full min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-500/50 scrollbar-track-transparent bg-gradient-to-b from-slate-800/40 via-slate-900/60 to-slate-950/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)]">
-      {/* GLASSMORPHIC AMBIENT GLOW */}
-      <div className="pointer-events-none absolute top-0 left-0 h-48 w-48 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-transparent blur-3xl rounded-full" />
-      <div className="pointer-events-none absolute top-20 right-0 h-56 w-56 bg-gradient-to-bl from-violet-500/20 via-purple-500/15 to-transparent blur-3xl rounded-full" />
-      <div className="pointer-events-none absolute bottom-20 left-10 h-40 w-40 bg-gradient-to-tr from-amber-400/15 to-transparent blur-2xl rounded-full" />
+    <div className="relative flex flex-col h-full min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-500/50 scrollbar-track-transparent bg-gradient-to-b from-blue-950/80 via-slate-900/90 to-indigo-950/80 backdrop-blur-xl rounded-2xl border border-blue-500/20 shadow-[0_8px_32px_rgba(59,130,246,0.15),inset_0_1px_0_rgba(147,197,253,0.15)]">
+      {/* GLASSMORPHIC AMBIENT GLOW - More blue */}
+      <div className="pointer-events-none absolute top-0 left-0 h-56 w-56 bg-gradient-to-br from-blue-400/30 via-cyan-500/20 to-transparent blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute top-20 right-0 h-64 w-64 bg-gradient-to-bl from-indigo-500/25 via-violet-500/20 to-transparent blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute bottom-20 left-10 h-48 w-48 bg-gradient-to-tr from-blue-500/20 via-cyan-400/15 to-transparent blur-2xl rounded-full" />
 
       {/* MERLIN IDENTITY HEADER */}
-      <div className="px-5 py-4 border-b border-white/10 flex-shrink-0 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
+      <div className="px-5 py-4 border-b border-blue-500/20 flex-shrink-0 bg-gradient-to-r from-blue-900/40 via-slate-900/50 to-indigo-900/40">
         <div className="flex items-center gap-3 mb-4">
           <div className="relative">
             <img
@@ -302,13 +302,13 @@ export function AdvisorRail({
       </div>
 
       {/* LOCATION / UTILITY CONTEXT - Simplified */}
-      <div className="px-5 py-3 border-b border-white/10 flex-shrink-0">
+      <div className="px-5 py-3 border-b border-blue-500/20 flex-shrink-0">
         {/* EMPTY STATE: no ZIP yet */}
         {!zip && !st ? (
-          <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
+          <div className="rounded-lg border border-blue-500/25 bg-blue-500/10 p-3">
             <div className="flex items-center gap-2">
               <span className="text-lg">📍</span>
-              <div className="text-sm text-slate-300">Enter your location to see savings</div>
+              <div className="text-sm text-blue-200">Enter your location to see savings</div>
             </div>
           </div>
         ) : (
@@ -341,18 +341,18 @@ export function AdvisorRail({
 
             {/* KEY METRICS - 3 compact pills */}
             <div className="flex gap-2 text-[11px]">
-              <div className="flex-1 text-center px-2 py-1.5 rounded bg-slate-800/50 border border-slate-700/50">
-                <div className="text-slate-400">Rate</div>
+              <div className="flex-1 text-center px-2 py-1.5 rounded bg-blue-900/40 border border-blue-500/30">
+                <div className="text-blue-300/80">Rate</div>
                 <div className="font-semibold text-white">
                   {rate ? `$${rate.toFixed(2)}` : "--"}
                 </div>
               </div>
-              <div className="flex-1 text-center px-2 py-1.5 rounded bg-slate-800/50 border border-slate-700/50">
-                <div className="text-slate-400">Demand</div>
+              <div className="flex-1 text-center px-2 py-1.5 rounded bg-blue-900/40 border border-blue-500/30">
+                <div className="text-blue-300/80">Demand</div>
                 <div className="font-semibold text-white">{demand ? `$${demand}` : "--"}</div>
               </div>
-              <div className="flex-1 text-center px-2 py-1.5 rounded bg-slate-800/50 border border-slate-700/50">
-                <div className="text-slate-400">TOU</div>
+              <div className="flex-1 text-center px-2 py-1.5 rounded bg-blue-900/40 border border-blue-500/30">
+                <div className="text-blue-300/80">TOU</div>
                 <div className={`font-semibold ${hasTOU ? "text-emerald-400" : "text-slate-400"}`}>
                   {hasTOU ? "Yes" : "No"}
                 </div>
@@ -385,21 +385,21 @@ export function AdvisorRail({
 
       {/* MERLIN'S INSIGHT - Only show if we have one */}
       {insight && (
-        <div className="px-5 py-3 border-b border-slate-700/50 flex-shrink-0">
-          <div className="p-2.5 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+        <div className="px-5 py-3 border-b border-blue-500/20 flex-shrink-0">
+          <div className="p-2.5 bg-blue-500/10 border border-blue-400/25 rounded-lg">
             <div className="flex items-start gap-2">
               <span className="text-sm">💡</span>
-              <div className="text-xs text-slate-200 leading-relaxed">{insight}</div>
+              <div className="text-xs text-blue-100 leading-relaxed">{insight}</div>
             </div>
           </div>
         </div>
       )}
 
       {/* STEP PROGRESS */}
-      <div className="px-5 py-4 border-b border-slate-700/50 flex-shrink-0">
+      <div className="px-5 py-4 border-b border-blue-500/20 flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
-          <div className="text-xs font-semibold text-slate-300/70">PROGRESS</div>
-          <div className="text-xs text-slate-300/50">
+          <div className="text-xs font-semibold text-blue-300/80">PROGRESS</div>
+          <div className="text-xs text-blue-200/60">
             Step {currentStep} of {totalSteps}
           </div>
         </div>
