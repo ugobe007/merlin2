@@ -20,7 +20,11 @@ import {
 } from "@/services/intelligence";
 
 // Site Score™ Calculator (Jan 18, 2026 - Merlin IP)
-import { calculateSiteScore, estimateSiteScore, type SiteScoreResult } from "@/services/calculators/siteScoreCalculator";
+import {
+  calculateSiteScore,
+  estimateSiteScore,
+  type SiteScoreResult,
+} from "@/services/calculators/siteScoreCalculator";
 
 // ============================================================================
 // DEEP MERGE HELPER - Prevents nested state corruption
@@ -371,10 +375,32 @@ export default function WizardV6() {
         merlinSays: quickScore.quickInsight,
         keyDrivers: [],
         suggestedGoals: [],
-        economicOpportunity: { score: 0, breakdown: { rateLevel: 0, rateTrajectory: 0, demandChargeSeverity: 0, touSpread: 0, incentivesAvailable: 0 }, insights: [] },
-        siteFit: { score: 0, breakdown: { powerDensityMatch: 0, solarPotential: 0, loadProfileFit: 0 }, insights: [] },
-        riskResilience: { score: 0, breakdown: { gridReliability: 0, climateExposure: 0, businessCriticality: 0 }, insights: [] },
-        feasibility: { score: 0, breakdown: { permittingComplexity: 0, interconnectionQueue: 0, constructionAccess: 0 }, insights: [] },
+        economicOpportunity: {
+          score: 0,
+          breakdown: {
+            rateLevel: 0,
+            rateTrajectory: 0,
+            demandChargeSeverity: 0,
+            touSpread: 0,
+            incentivesAvailable: 0,
+          },
+          insights: [],
+        },
+        siteFit: {
+          score: 0,
+          breakdown: { powerDensityMatch: 0, solarPotential: 0, loadProfileFit: 0 },
+          insights: [],
+        },
+        riskResilience: {
+          score: 0,
+          breakdown: { gridReliability: 0, climateExposure: 0, businessCriticality: 0 },
+          insights: [],
+        },
+        feasibility: {
+          score: 0,
+          breakdown: { permittingComplexity: 0, interconnectionQueue: 0, constructionAccess: 0 },
+          insights: [],
+        },
         calculatedAt: new Date().toISOString(),
         dataConfidence: "low",
         dataSources: [],
@@ -452,11 +478,9 @@ export default function WizardV6() {
   const goBack = () =>
     setCurrentStep((prev) => {
       const back = prev - 1;
-      // When going back from Step 3, skip Step 2 if industry was auto-detected
-      if (prev === 3 && state.detectedIndustry && state.industry) {
-        console.log("🧙 Skipping Step 2 on back - Industry auto-detected");
-        return 1; // Go back to Step 1
-      }
+      // Always go to the previous step (no more skipping)
+      // User can click step indicators to jump to any completed step
+      console.log(`🔙 Going back from Step ${prev} to Step ${back}`);
       return Math.max(back, 1);
     });
   const goToStep = useCallback((step: number) => setCurrentStep(step), []);
@@ -727,9 +751,19 @@ export default function WizardV6() {
                 Back
               </button>
 
-              {/* Step indicator */}
-              <div className="px-4 py-2 rounded-full bg-slate-800/90 backdrop-blur-sm border border-white/10 text-sm text-slate-300 shadow-lg">
-                Step {currentStep} of 6
+              {/* Step indicator + Start Over */}
+              <div className="flex items-center gap-3">
+                <div className="px-4 py-2 rounded-full bg-slate-800/90 backdrop-blur-sm border border-white/10 text-sm text-slate-300 shadow-lg">
+                  Step {currentStep} of 6
+                </div>
+                <button
+                  onClick={() => setShowStartOverModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800/70 text-slate-400 hover:text-white hover:bg-slate-700/80 border border-white/5 text-xs transition-all"
+                  title="Clear progress and start fresh"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Start Over</span>
+                </button>
               </div>
 
               {/* Next button */}
