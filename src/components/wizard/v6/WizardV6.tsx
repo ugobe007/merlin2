@@ -758,7 +758,7 @@ export default function WizardV6() {
                 </div>
                 <button
                   onClick={() => setShowStartOverModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800/70 text-slate-400 hover:text-white hover:bg-slate-700/80 border border-white/5 text-xs transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-500 hover:to-purple-500 border border-violet-400/30 text-xs font-semibold transition-all shadow-[0_0_15px_rgba(139,92,246,0.4)] hover:shadow-[0_0_25px_rgba(139,92,246,0.6)]"
                   title="Clear progress and start fresh"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
