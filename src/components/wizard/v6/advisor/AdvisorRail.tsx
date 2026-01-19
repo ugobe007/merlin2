@@ -87,7 +87,7 @@ export function AdvisorRail({
 
   const zip = context?.location?.zip || "";
   const st = context?.location?.state || "";
-  const utilityName = context?.location?.utilityName || "";
+  const _utilityName = context?.location?.utilityName || "";
 
   const rate = context?.utility?.rate;
   const demand = context?.utility?.demandCharge;
@@ -97,8 +97,8 @@ export function AdvisorRail({
   const _sun = context?.solar?.sunHours;
   const _solarRating = context?.solar?.rating;
 
-  const weatherProfile = context?.weather?.profile;
-  const weatherExtremes = context?.weather?.extremes;
+  const _weatherProfile = context?.weather?.profile;
+  const _weatherExtremes = context?.weather?.extremes;
 
   const _arbitrage = context?.opportunities?.arbitrage;
 
@@ -199,14 +199,14 @@ export function AdvisorRail({
   // Voice rule validation (DEV only)
   const isDev = (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV;
 
-  function sentenceCount(s: string) {
+  function _sentenceCount(s: string) {
     return s
       .split(".")
       .map((x) => x.trim())
       .filter(Boolean).length;
   }
 
-  function looksLikeConstraint(s: string) {
+  function _looksLikeConstraint(s: string) {
     return s.startsWith("If ") && s.includes("Therefore");
   }
 
@@ -301,43 +301,35 @@ export function AdvisorRail({
         </div>
       </div>
 
-      {/* LOCATION / UTILITY CONTEXT - Glassmorphic Layout */}
-      <div className="px-5 py-4 border-b border-white/10 flex-shrink-0 bg-gradient-to-b from-transparent to-slate-900/30">
+      {/* LOCATION / UTILITY CONTEXT - Simplified */}
+      <div className="px-5 py-3 border-b border-white/10 flex-shrink-0">
         {/* EMPTY STATE: no ZIP yet */}
         {!zip && !st ? (
-          <div className="rounded-xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 via-slate-800/50 to-violet-500/10 p-4 backdrop-blur-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">📍</span>
-              <div className="text-sm font-semibold text-white">Enter your location</div>
-            </div>
-            <div className="text-xs text-slate-300/80 leading-relaxed">
-              Merlin will show you verified utility rates, solar potential, and savings
-              opportunities for your site.
+          <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📍</span>
+              <div className="text-sm text-slate-300">Enter your location to see savings</div>
             </div>
           </div>
         ) : (
           <>
-            {/* LOCATION HEADER - Tight single line */}
-            <div className="flex items-center justify-between mb-3">
+            {/* LOCATION + SITE SCORE - Compact */}
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="text-lg">📍</span>
-                <div className="text-base font-bold text-white">
+                <span className="text-base">📍</span>
+                <div className="text-sm font-semibold text-white">
                   {zip} • {st}
                 </div>
-                {utilityName && (
-                  <div className="text-sm text-slate-400 truncate max-w-[120px]">{utilityName}</div>
-                )}
               </div>
-              {/* Site Score Badge - Compact */}
               {context?.siteScore && (
                 <div
-                  className={`px-2.5 py-1.5 rounded-lg text-sm font-bold border ${
+                  className={`px-2 py-1 rounded text-xs font-bold ${
                     context.siteScore.scoreLabel === "exceptional" ||
                     context.siteScore.scoreLabel === "strong"
-                      ? "bg-emerald-500/15 border-emerald-400/30 text-emerald-400"
+                      ? "bg-emerald-500/15 text-emerald-400"
                       : context.siteScore.scoreLabel === "good"
-                        ? "bg-amber-500/15 border-amber-400/30 text-amber-300"
-                        : "bg-orange-500/15 border-orange-400/30 text-orange-300"
+                        ? "bg-amber-500/15 text-amber-300"
+                        : "bg-orange-500/15 text-orange-300"
                   }`}
                 >
                   {context.siteScore.totalScore}{" "}
@@ -347,101 +339,27 @@ export function AdvisorRail({
               )}
             </div>
 
-            {/* OPPORTUNITIES & INSIGHTS - Unique content (not duplicating header pills) */}
-            <div className="space-y-3 mb-4">
-              {/* Weather Impact */}
-              <div className="rounded-lg bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-400/20 p-3">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-base">🌡️</span>
-                  <span className="text-sm font-semibold text-orange-300">Weather Impact</span>
-                </div>
-                <div className="text-xs text-slate-300 leading-relaxed">
-                  {weatherExtremes ||
-                    (weatherProfile === "Hot"
-                      ? "High cooling demand increases peak loads. BESS can shift AC usage to off-peak hours."
-                      : weatherProfile === "Cold"
-                        ? "Heating demand spikes in winter. Battery storage helps manage peak heating costs."
-                        : "Moderate climate = stable energy costs. Ideal for maximizing solar self-consumption.")}
+            {/* KEY METRICS - 3 compact pills */}
+            <div className="flex gap-2 text-[11px]">
+              <div className="flex-1 text-center px-2 py-1.5 rounded bg-slate-800/50 border border-slate-700/50">
+                <div className="text-slate-400">Rate</div>
+                <div className="font-semibold text-white">
+                  {rate ? `$${rate.toFixed(2)}` : "--"}
                 </div>
               </div>
-
-              {/* EV Charging Opportunity */}
-              <div className="rounded-lg bg-gradient-to-r from-emerald-500/15 to-cyan-500/10 border border-emerald-400/25 p-3 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-base">🔌</span>
-                  <span className="text-sm font-semibold text-emerald-300">EV Opportunity</span>
-                </div>
-                <div className="text-xs text-slate-300 leading-relaxed">
-                  {st === "CA" || st === "NV" || st === "TX" || st === "FL" || st === "NY"
-                    ? "High EV adoption area. Adding charging can attract customers and generate revenue."
-                    : "Growing EV market. Early charging infrastructure = competitive advantage."}
-                </div>
+              <div className="flex-1 text-center px-2 py-1.5 rounded bg-slate-800/50 border border-slate-700/50">
+                <div className="text-slate-400">Demand</div>
+                <div className="font-semibold text-white">{demand ? `$${demand}` : "--"}</div>
               </div>
-
-              {/* Savings Potential */}
-              <div className="rounded-lg bg-gradient-to-r from-violet-500/15 to-fuchsia-500/10 border border-violet-400/25 p-3 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-base">💰</span>
-                  <span className="text-sm font-semibold text-violet-300">Savings Potential</span>
-                </div>
-                <div className="text-xs text-slate-300 leading-relaxed">
-                  {demand && demand > 15
-                    ? `High demand charges ($${demand}/kW) = strong peak shaving ROI. Typical savings: 20-40%.`
-                    : rate && rate > 0.12
-                      ? `Above-average rates mean faster payback. Solar+storage can cut bills 30-50%.`
-                      : "Moderate rates favor long-term savings. Focus on demand charge reduction."}
+              <div className="flex-1 text-center px-2 py-1.5 rounded bg-slate-800/50 border border-slate-700/50">
+                <div className="text-slate-400">TOU</div>
+                <div className={`font-semibold ${hasTOU ? "text-emerald-400" : "text-slate-400"}`}>
+                  {hasTOU ? "Yes" : "No"}
                 </div>
               </div>
             </div>
 
-            {/* ENERGY SPOTLIGHT - Opportunities at a glance */}
-            <div className="rounded-lg border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 via-slate-800/30 to-violet-500/10 p-3 backdrop-blur-sm">
-              <div className="text-xs font-bold text-cyan-300 mb-2 flex items-center gap-1.5">
-                <span>💡</span> ENERGY SPOTLIGHT
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <div
-                    className={`text-[13px] font-bold ${
-                      demand && demand > 15
-                        ? "text-emerald-400"
-                        : demand && demand > 10
-                          ? "text-amber-300"
-                          : "text-slate-400"
-                    }`}
-                  >
-                    {demand && demand > 15 ? "High" : demand && demand > 10 ? "Medium" : "Low"}
-                  </div>
-                  <div className="text-[11px] text-slate-400">Peak Shaving</div>
-                </div>
-                <div>
-                  <div
-                    className={`text-[13px] font-bold ${hasTOU ? "text-emerald-400" : "text-slate-400"}`}
-                  >
-                    {hasTOU ? "Yes" : "Limited"}
-                  </div>
-                  <div className="text-[11px] text-slate-400">Arbitrage</div>
-                </div>
-                <div>
-                  <div
-                    className={`text-[13px] font-bold ${
-                      context?.siteScore?.riskResilience?.score &&
-                      context.siteScore.riskResilience.score > 12
-                        ? "text-emerald-400"
-                        : "text-amber-300"
-                    }`}
-                  >
-                    {context?.siteScore?.riskResilience?.score &&
-                    context.siteScore.riskResilience.score > 12
-                      ? "Important"
-                      : "Possible"}
-                  </div>
-                  <div className="text-[11px] text-slate-400">Backup</div>
-                </div>
-              </div>
-            </div>
-
-            {/* MERLIN SAYS - One insight only when Site Score available */}
+            {/* MERLIN SAYS - One insight when Site Score available */}
             {context?.siteScore?.merlinSays && (
               <div className="mt-3 p-2.5 bg-amber-500/8 border border-amber-500/15 rounded-lg">
                 <div className="text-[11px] text-amber-200/90 leading-relaxed">
@@ -453,24 +371,11 @@ export function AdvisorRail({
 
             {/* CONSTRAINT WARNING (Step 3+) */}
             {constraint && (
-              <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 shadow-[0_0_0_1px_rgba(251,191,36,0.12),0_0_18px_rgba(251,191,36,0.06)]">
-                <div className="text-[11px] font-semibold text-amber-200 mb-1">Constraint</div>
-                <div className="text-xs text-slate-200/80 whitespace-pre-line">{constraint}</div>
-
-                {/* Driver: show the numbers that triggered this constraint */}
+              <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                <div className="text-[11px] font-semibold text-amber-200 mb-1">⚠️ Heads up</div>
+                <div className="text-xs text-slate-200/80">{constraint}</div>
                 {constraintDriver && (
-                  <div className="mt-2 text-[10px] text-slate-300/70">{constraintDriver}</div>
-                )}
-
-                {/* DEV: Voice rule validation + config debug */}
-                {isDev && (
-                  <div className="mt-2 text-[10px] text-slate-400/70">
-                    voice: {looksLikeConstraint(constraint) ? "ok" : "BAD"} • sentences:{" "}
-                    {sentenceCount(constraint)}
-                    {" • "}
-                    cfg: solar {solarKW}kW • batt {batteryHours}h • inv {inverterKW}kW • peak{" "}
-                    {peakLoadKW}kW • backup {String(backupRequired)}
-                  </div>
+                  <div className="mt-1.5 text-[10px] text-slate-400">{constraintDriver}</div>
                 )}
               </div>
             )}
@@ -478,18 +383,13 @@ export function AdvisorRail({
         )}
       </div>
 
-      {/* MERLIN'S INSIGHT - Whisper, not interrupt */}
+      {/* MERLIN'S INSIGHT - Only show if we have one */}
       {insight && (
         <div className="px-5 py-3 border-b border-slate-700/50 flex-shrink-0">
-          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl shadow-[0_0_0_1px_rgba(251,191,36,0.10),0_0_16px_rgba(251,191,36,0.05)]">
+          <div className="p-2.5 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
             <div className="flex items-start gap-2">
-              <span className="text-base mt-0.5">💡</span>
-              <div className="flex-1">
-                <div className="text-[11px] font-semibold text-amber-300 mb-1">
-                  Merlin's Insight
-                </div>
-                <div className="text-xs text-slate-200 leading-relaxed">{insight}</div>
-              </div>
+              <span className="text-sm">💡</span>
+              <div className="text-xs text-slate-200 leading-relaxed">{insight}</div>
             </div>
           </div>
         </div>
