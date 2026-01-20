@@ -670,11 +670,9 @@ export default function WizardV6() {
                 <div className="h-[72px] px-6 flex items-center gap-6">
                   {/* LEFT: Merlin Identity */}
                   <div className="flex items-center gap-2 min-w-[160px]">
-                    <img
-                      src="/images/wizard_icon.jpg"
-                      alt="Merlin"
-                      className="w-7 h-7 rounded-lg object-cover shadow-lg flex-shrink-0"
-                    />
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                      <span className="text-lg">🧙</span>
+                    </div>
                     <div>
                       <div className="text-white font-semibold text-sm leading-none">
                         Merlin Intelligence
