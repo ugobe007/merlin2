@@ -25,7 +25,7 @@ interface Step3DetailsProps {
   onValidityChange?: (isValid: boolean) => void;
 }
 
-export function Step3Details({ state, updateState, onNext, onBack }: Step3DetailsProps) {
+export function Step3Details({ state, updateState, onNext, onBack, onValidityChange }: Step3DetailsProps) {
   // Cast state to proper type
   const wizardState = state as WizardState;
   
@@ -59,6 +59,7 @@ export function Step3Details({ state, updateState, onNext, onBack }: Step3Detail
         onNext();
       }}
       onBack={onBack}
+      onValidityChange={onValidityChange}
     />
   );
 }
