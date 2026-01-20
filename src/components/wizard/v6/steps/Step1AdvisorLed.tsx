@@ -501,32 +501,56 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
                       <Check className="w-3.5 h-3.5" />
                       Climate + solar data loaded
                     </div>
+                    {/* Accuracy improvement hint */}
+                    <div className="mt-3 text-xs text-blue-300/80 border-t border-blue-500/20 pt-3">
+                      ℹ️ ZIP-level estimates loaded. Add address or business name for building-level accuracy (optional).
+                    </div>
                   </div>
                 )}
 
-                {/* Address and Business Name - Right after ZIP validation */}
+                {/* Optional Details Expander - Collapsed by default */}
                 {enrichedData && (
-                  <div className="mt-6 space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-300 mb-2">Address (Optional)</label>
-                      <input
-                        type="text"
-                        value={streetAddress}
-                        onChange={(e) => setStreetAddress(e.target.value)}
-                        placeholder="123 Main St"
-                        className="w-full px-4 py-3.5 rounded-xl border-2 border-blue-500/30 bg-slate-800/50 text-white placeholder-slate-500 focus:border-blue-500/50 focus:bg-slate-800/70 outline-none transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-300 mb-2">Business Name (Optional)</label>
-                      <input
-                        type="text"
-                        value={businessNameInput}
-                        onChange={(e) => setBusinessNameInput(e.target.value)}
-                        placeholder="Acme Corporation"
-                        className="w-full px-4 py-3.5 rounded-xl border-2 border-blue-500/30 bg-slate-800/50 text-white placeholder-slate-500 focus:border-blue-500/50 focus:bg-slate-800/70 outline-none transition-all"
-                      />
-                    </div>
+                  <div className="mt-6">
+                    <button
+                      type="button"
+                      onClick={() => setShowDetails(!showDetails)}
+                      className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+                    >
+                      <span>Add details (optional)</span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${showDetails ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {showDetails && (
+                      <div className="mt-4 space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-300 mb-2">Address (Optional)</label>
+                          <input
+                            type="text"
+                            value={streetAddress}
+                            onChange={(e) => setStreetAddress(e.target.value)}
+                            placeholder="123 Main St"
+                            className="w-full px-4 py-3.5 rounded-xl border-2 border-blue-500/30 bg-slate-800/50 text-white placeholder-slate-500 focus:border-blue-500/50 focus:bg-slate-800/70 outline-none transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-300 mb-2">Business Name (Optional)</label>
+                          <input
+                            type="text"
+                            value={businessNameInput}
+                            onChange={(e) => setBusinessNameInput(e.target.value)}
+                            placeholder="Acme Corporation"
+                            onKeyDown={(e) => e.key === "Enter" && businessNameInput.trim() && handleAddressLookup()}
+                            className="w-full px-4 py-3.5 rounded-xl border-2 border-blue-500/30 bg-slate-800/50 text-white placeholder-slate-500 focus:border-blue-500/50 focus:bg-slate-800/70 outline-none transition-all"
+                          />
+                          {businessNameInput.trim() && (
+                            <div className="mt-2 text-xs text-emerald-300 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" />
+                              Accuracy improved (business-level signals)
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
