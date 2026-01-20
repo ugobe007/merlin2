@@ -27,6 +27,7 @@ interface Step3IntegrationProps {
   initialData?: Record<string, unknown>;
   onBack?: () => void;
   onNext?: (quoteData: { answers: Record<string, unknown>; timestamp: string }) => void;
+  onValidityChange?: (isValid: boolean) => void;
 }
 
 export function Step3Integration({
@@ -36,6 +37,7 @@ export function Step3Integration({
   initialData = {},
   onBack,
   onNext,
+  onValidityChange,
 }: Step3IntegrationProps) {
   const [answers, setAnswers] = useState<Record<string, unknown>>(() => {
     const fromInitial = initialData && Object.keys(initialData).length > 0 ? initialData : null;
@@ -152,6 +154,7 @@ export function Step3Integration({
           // This will be handled by handleComplete
           handleComplete();
         }}
+        onValidityChange={onValidityChange}
       />
 
       {/* Overlay for completion state */}

@@ -390,6 +390,7 @@ interface CompleteStep3ComponentProps {
   onAnswersChange?: (answers: Record<string, unknown>) => void;
   onComplete?: () => void;
   onBack?: () => void;
+  onValidityChange?: (isValid: boolean) => void;
 }
 
 export function CompleteStep3Component({
@@ -400,6 +401,7 @@ export function CompleteStep3Component({
   onAnswersChange,
   onComplete,
   onBack,
+  onValidityChange,
 }: CompleteStep3ComponentProps) {
   // ============================================================================
   // STATE MANAGEMENT
@@ -577,6 +579,41 @@ export function CompleteStep3Component({
       onAnswersChange(answers);
     }
   }, [answers, onAnswersChange]);
+
+  // ============================================================================
+  // VALIDITY TRACKING - Notify parent when questionnaire becomes valid
+  // ============================================================================
+  useEffect(() => {
+    if (!onValidityChange) return;
+
+    // Count required questions (essential tier questions)
+    const requiredQuestions = questions.filter(q => {
+      // Only count questions that are visible based on depth
+      if (!shouldShowByDepth(q.questionTier)) return false;
+      // Only count questions that pass conditional logic
+      if (q.conditionalLogic) {
+        const dependentValue = answers[q.conditionalLogic.dependsOn];
+        if (!q.conditionalLogic.showIf(dependentValue)) return false;
+      }
+      // Essential tier questions are required
+      return q.questionTier === 'essential' || !q.questionTier;
+    });
+
+    const answeredRequired = requiredQuestions.filter(q => answers[q.id] !== undefined && answers[q.id] !== '');
+    const requiredProgress = requiredQuestions.length > 0 ? (answeredRequired.length / requiredQuestions.length) * 100 : 0;
+
+    // Consider valid if:
+    // - At least 70% of required questions are answered, OR
+    // - All essential questions are answered
+    const isValid = requiredProgress >= 70;
+
+    // DEBUG: Log validity status
+    if (import.meta.env.DEV) {
+      console.log(`📊 Step 3 Validity: ${Math.round(requiredProgress)}% (${answeredRequired.length}/${requiredQuestions.length} required) - ${isValid ? '✅ VALID' : '❌ INVALID'}`);
+    }
+
+    onValidityChange(isValid);
+  }, [answers, questions, onValidityChange]);
 
   // Load initial answers
   useEffect(() => {
