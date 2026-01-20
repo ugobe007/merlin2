@@ -735,7 +735,7 @@ export default function WizardV6() {
                       <span className="text-emerald-400 text-sm">🛡️</span>
                       <span className="text-slate-400 text-xs">Grid:</span>
                       <span className="text-white font-semibold text-sm">
-                        {state.calculations?.base?.gridReliability || 'Reliable'}
+                        {state.weatherData?.extremes ? 'Moderate' : 'Reliable'}
                       </span>
                     </div>
                   </div>
