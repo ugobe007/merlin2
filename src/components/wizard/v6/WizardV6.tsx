@@ -701,6 +701,36 @@ export default function WizardV6() {
                       </div>
                     )}
 
+                    {state.zipCode && state.solarData?.sunHours && (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="text-violet-400 text-sm">🔋</span>
+                          <span className="text-slate-400 text-xs">Storage:</span>
+                          <span className="text-white font-semibold text-sm">
+                            {state.calculations?.selected?.bessKWh 
+                              ? `${Math.round(state.calculations.selected.bessKWh)} kWh`
+                              : '200–400 kWh'}
+                          </span>
+                          {!state.calculations?.selected?.bessKWh && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">est.</span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-indigo-400 text-sm">⚡</span>
+                          <span className="text-slate-400 text-xs">Peak:</span>
+                          <span className="text-white font-semibold text-sm">
+                            {state.calculations?.selected?.bessKW
+                              ? `${Math.round(state.calculations.selected.bessKW)} kW`
+                              : '80–120 kW'}
+                          </span>
+                          {!state.calculations?.selected?.bessKW && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">est.</span>
+                          )}
+                        </div>
+                      </>
+                    )}
+
                     <div className="flex items-center gap-2">
                       <span className="text-emerald-400 text-sm">🛡️</span>
                       <span className="text-slate-400 text-xs">Grid:</span>
@@ -837,17 +867,8 @@ export default function WizardV6() {
                 Back
               </button>
 
-              {/* Start Over button only - step progress shown in left rail */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowStartOverModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-500 hover:to-purple-500 border border-violet-400/30 text-xs font-semibold transition-all shadow-[0_0_15px_rgba(139,92,246,0.4)] hover:shadow-[0_0_25px_rgba(139,92,246,0.6)]"
-                  title="Clear progress and start fresh"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Start Over</span>
-                </button>
-              </div>
+              {/* Spacer - navigation is now just Back + Next */}
+              <div></div>
 
               {/* Next button */}
               <button
