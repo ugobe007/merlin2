@@ -710,11 +710,23 @@ export default function WizardV6() {
                     </div>
                   </div>
 
-                  {/* RIGHT: Location + Site Score */}
+                  {/* RIGHT: Business Name / Location + Site Score */}
                   <div className="text-right min-w-[200px]">
-                    <div className="text-white text-sm font-medium leading-tight">
-                      {state.zipCode} • {state.state}
-                    </div>
+                    {state.businessName ? (
+                      <>
+                        <div className="text-white text-sm font-bold leading-tight flex items-center justify-end gap-1">
+                          <span className="text-violet-400 text-xs">🏢</span>
+                          {state.businessName}
+                        </div>
+                        <div className="text-slate-400 text-xs mt-0.5">
+                          {state.zipCode} • {state.state}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-white text-sm font-medium leading-tight">
+                        {state.zipCode} • {state.state}
+                      </div>
+                    )}
                     {siteScore && (
                       <div className="text-xs mt-0.5">
                         <span className="text-slate-400">Score: </span>

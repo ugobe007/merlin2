@@ -120,6 +120,13 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
   
   // Business lookup state
   const [businessNameInput, setBusinessNameInput] = useState("");
+  
+  // Sync business name to state as user types (for live header update)
+  useEffect(() => {
+    if (businessNameInput.trim()) {
+      updateState({ businessName: businessNameInput.trim() });
+    }
+  }, [businessNameInput]); // eslint-disable-line
   const [streetAddress, setStreetAddress] = useState("");
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [businessLookup, setBusinessLookup] = useState<PlaceLookupResult | null>(null);
