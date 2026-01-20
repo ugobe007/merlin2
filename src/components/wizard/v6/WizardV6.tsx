@@ -70,7 +70,9 @@ import { Step6Quote } from "./steps/Step6Quote";
 
 // Enhanced components (Jan 15, 2026)
 // import { EnhancedLocationStep } from "../steps/EnhancedLocationStep.v2"; // DEPRECATED - See Step1Location
-import { Step1Location } from "./steps/Step1Location"; // ✅ PHASE 2A: Updated Jan 18, 2026
+// import { Step1Location } from "./steps/Step1Location"; // DEPRECATED - See Step1AdvisorLed
+// import { Step1LocationRedesign } from "./steps/Step1LocationRedesign"; // DEPRECATED - See Step1AdvisorLed
+import { Step1AdvisorLed } from "./steps/Step1AdvisorLed"; // ✅ ADVISOR-LED: 2-panel design (Jan 19, 2026)
 import { EnhancedStep2Industry } from "./steps/EnhancedStep2Industry";
 
 // ============================================================================
@@ -587,10 +589,10 @@ export default function WizardV6() {
     switch (currentStep) {
       case 1:
         return (
-          <Step1Location
+          <Step1AdvisorLed
             state={state}
             updateState={updateState}
-            intelligence={intelligence} // ✅ PHASE 2A: Pass intelligence (Jan 18, 2026)
+            intelligence={intelligence} // ✅ Pass intelligence context for auto-goal selection
             onGoToStep2={() => goToStep(2)}
             onNext={() => {
               // Auto-skip to Step 3 if business detected
@@ -649,9 +651,9 @@ export default function WizardV6() {
       currentStep={currentStep}
       options={{ clearOnStepChange: true, enableWarnings: true }}
     >
-      <div className="fixed inset-0 overflow-y-auto bg-gradient-to-br from-[#050B16] via-[#071226] to-[#050B16]">
+      <div className="fixed inset-0 bg-gradient-to-br from-[#050B16] via-[#071226] to-[#050B16]">
         {/* INTEGRATED GLASS SHELL: AdvisorRail + Step content */}
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className={`max-w-7xl mx-auto px-4 ${currentStep === 1 ? "py-3" : "py-6"}`}>
           <div className="relative rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-2xl overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
             {/* Glow blobs */}
             <div className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl" />
@@ -663,63 +665,66 @@ export default function WizardV6() {
             {/* Inner glass lip */}
             <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(0,0,0,0.35)]" />
 
-            {/* ✅ PHASE 2B: Changed from grid-cols-3 to custom layout - narrower sidebar */}
-            <div className="relative flex flex-col lg:flex-row">
-              {/* LEFT: AdvisorRail (280px - reduced from ~380px) */}
-              <div className="lg:w-[280px] lg:flex-shrink-0 p-5 lg:border-r border-white/10">
-                <AdvisorRail
-                  currentStep={currentStep}
-                  totalSteps={6}
-                  onNavigate={goToStep}
-                  context={{
-                    location: {
-                      zip: state.zipCode,
-                      city: state.city,
-                      state: state.state,
-                      utilityName: state.calculations?.base?.utilityName,
-                    },
-                    utility: {
-                      rate: state.electricityRate ?? state.calculations?.base?.utilityRate,
-                      demandCharge: state.calculations?.base?.demandCharge ?? 15,
-                      hasTOU: state.calculations?.base?.hasTOU,
-                    },
-                    solar: {
-                      sunHours: state.solarData?.sunHours,
-                      rating: state.solarData?.rating,
-                    },
-                    weather: {
-                      profile: state.weatherData?.profile,
-                      extremes: state.weatherData?.extremes,
-                    },
-                    opportunities: {
-                      arbitrage: state.calculations?.base?.hasTOU ? "High" : "Medium",
-                      backup: state.goals?.includes("backup_power"),
-                      smoothing: state.goals?.includes("peak_shaving"),
-                    },
-                    config: {
-                      solarKW: state.customSolarKw ?? state.calculations?.selected?.solarKW ?? 0,
-                      batteryKWh: state.calculations?.selected?.bessKWh ?? 0,
-                      batteryHours:
-                        state.calculations?.selected?.bessKWh &&
-                        state.calculations?.selected?.bessKW
-                          ? state.calculations.selected.bessKWh / state.calculations.selected.bessKW
-                          : 0,
-                      inverterKW: state.calculations?.selected?.bessKW ?? 0,
-                      peakLoadKW: state.calculations?.base?.peakDemandKW ?? 0,
-                      backupRequired: state.goals?.includes("backup_power") ?? false,
-                    },
-                    // Phase 1: Intelligence Layer (Jan 18, 2026)
-                    intelligence,
-                    // Site Score™ (Jan 18, 2026 - Merlin IP)
-                    siteScore,
-                  }}
-                />
+            {/* ✅ PHASE 2B: Full-height shell with separate scroll regions */}
+            <div className="relative flex h-[calc(100vh-48px)] flex-col lg:flex-row">
+              {/* LEFT: Cockpit - Wider and more integrated */}
+              <div className="lg:w-[450px] lg:flex-shrink-0 border-white/10 lg:border-r">
+                <div className="h-full p-6 overflow-y-auto">
+                  <AdvisorRail
+                    currentStep={currentStep}
+                    totalSteps={6}
+                    onNavigate={goToStep}
+                    context={{
+                      location: {
+                        zip: state.zipCode,
+                        city: state.city,
+                        state: state.state,
+                        utilityName: state.calculations?.base?.utilityName,
+                      },
+                      utility: {
+                        rate: state.electricityRate ?? state.calculations?.base?.utilityRate,
+                        demandCharge: state.calculations?.base?.demandCharge ?? 15,
+                        hasTOU: state.calculations?.base?.hasTOU,
+                      },
+                      solar: {
+                        sunHours: state.solarData?.sunHours,
+                        rating: state.solarData?.rating,
+                      },
+                      weather: {
+                        profile: state.weatherData?.profile,
+                        extremes: state.weatherData?.extremes,
+                      },
+                      opportunities: {
+                        arbitrage: state.calculations?.base?.hasTOU ? "High" : "Medium",
+                        backup: state.goals?.includes("backup_power"),
+                        smoothing: state.goals?.includes("peak_shaving"),
+                      },
+                      config: {
+                        solarKW: state.customSolarKw ?? state.calculations?.selected?.solarKW ?? 0,
+                        batteryKWh: state.calculations?.selected?.bessKWh ?? 0,
+                        batteryHours:
+                          state.calculations?.selected?.bessKWh &&
+                          state.calculations?.selected?.bessKW
+                            ? state.calculations.selected.bessKWh / state.calculations.selected.bessKW
+                            : 0,
+                        inverterKW: state.calculations?.selected?.bessKW ?? 0,
+                        peakLoadKW: state.calculations?.base?.peakDemandKW ?? 0,
+                        backupRequired: state.goals?.includes("backup_power") ?? false,
+                      },
+                      // Phase 1: Intelligence Layer (Jan 18, 2026)
+                      intelligence,
+                      // Site Score™ (Jan 18, 2026 - Merlin IP)
+                      siteScore,
+                    }}
+                  />
+                </div>
               </div>
 
-              {/* RIGHT: Step content (flex-1 takes remaining space) */}
-              <div className="flex-1 p-5 pb-24">
-                {/* No extra nested panel - Step1Location provides its own structure */}
-                {renderStep()}
+              {/* RIGHT: Workspace */}
+              <div className="flex-1 min-w-0">
+                <div className="h-full overflow-y-auto p-6 pb-28">
+                  {renderStep()}
+                </div>
               </div>
             </div>
           </div>

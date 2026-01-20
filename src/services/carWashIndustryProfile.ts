@@ -481,8 +481,13 @@ export interface CarWashInputs {
   monthlyEnergySpend?: number;
   currentBackup: "none" | "partial" | "full" | "notSure";
   outageImpact?: "immediateClose" | "finishQueue" | "continueOperating";
-  energyGoals?: string[];
+  energyGoals?: string[];  // Now multiselect array
   priorities: string[];
+  // Operating model affects energy calculations
+  operatingModel?: "attended_full" | "attended_partial" | "unattended" | "hybrid";
+  // User-provided or "unknown" for auto-estimate
+  peakDemand?: number | "unknown";
+  gridCapacity?: "unknown" | "small" | "medium" | "large" | "xlarge" | "utility";
 }
 
 export interface CarWashCalculations {
@@ -551,11 +556,26 @@ export function calculateCarWashProfile(inputs: CarWashInputs): CarWashCalculati
     estimatedPeakKw *= 1.2;
   }
 
+  // Operating model adjustment (affects HVAC and lighting base load)
+  const operatingModelMultiplier = {
+    attended_full: 1.15,    // +15% for lobby HVAC
+    attended_partial: 1.10, // +10% moderate HVAC
+    unattended: 1.05,       // +5% 24/7 security lighting
+    hybrid: 1.10,           // +10% mixed
+  };
+  const modelMultiplier = operatingModelMultiplier[inputs.operatingModel || "hybrid"] || 1.10;
+  estimatedPeakKw *= modelMultiplier;
+
   // Operating hours adjustment
   const opHoursStr = inputs.operatingHours || "14";
   const opHours = Number(opHoursStr);
   const hoursMultiplier = opHours / 14; // Normalize to 14-hour baseline
   estimatedAnnualKwh *= hoursMultiplier;
+
+  // If user provided actual peak demand (not "unknown"), use it
+  if (inputs.peakDemand && inputs.peakDemand !== "unknown" && typeof inputs.peakDemand === "number") {
+    estimatedPeakKw = inputs.peakDemand;
+  }
 
   // Energy spend
   const utilityRate = 0.12;
