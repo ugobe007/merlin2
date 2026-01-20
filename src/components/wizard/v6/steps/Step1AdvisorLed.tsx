@@ -25,6 +25,7 @@ import {
   AlertCircle,
   X,
 } from "lucide-react";
+import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import type { WizardState, EnergyGoal } from "../types";
 
 // Live API Services
@@ -296,13 +297,9 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
         {/* Welcome & Introduction */}
         <div className="mb-4">
           {/* TrueQuote Badge - Clickable */}
-          <button
-            onClick={() => setShowTrueQuoteModal(true)}
-            className="inline-flex items-center gap-2 bg-violet-500/15 border border-violet-500/25 rounded-full px-4 py-2 text-sm font-semibold text-violet-300 mb-4 hover:bg-violet-500/20 hover:border-violet-500/35 transition-all cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4" />
-            TrueQuote™ — Source-backed estimates
-          </button>
+          <div onClick={() => setShowTrueQuoteModal(true)} className="inline-block mb-4 cursor-pointer">
+            <TrueQuoteBadgeCanonical showTooltip={false} />
+          </div>
 
           {/* Compact Instrument Header (≤64px total) */}
           <h1 className="text-3xl font-black text-white mb-1 leading-tight">
@@ -682,121 +679,7 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
           )}
         </section>
 
-        {/* Refine with Your Facility (Recommended) - collapsed by default */}
-        {locationData && (
-          <section className="mb-6">
-            <button
-              type="button"
-              onClick={() => setShowFacilityRefine((v) => !v)}
-              className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-5 py-4 hover:bg-white/[0.06]"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-violet-500/15 flex items-center justify-center">
-                  <Search className="w-5 h-5 text-violet-400" />
-                </div>
-                <div className="text-left">
-                  <div className="text-lg font-black text-white">
-                    Refine with Your Facility <span className="text-violet-400">(Recommended)</span>
-                  </div>
-                  <div className="text-sm text-slate-500">
-                    Improve accuracy by loading building type and utility profile
-                  </div>
-                </div>
-              </div>
-              <ChevronDown
-                className={`w-5 h-5 text-slate-400 transition-transform ${showFacilityRefine ? "rotate-180" : ""}`}
-              />
-            </button>
-
-            {showFacilityRefine && (
-              <div className="mt-4 animate-fade-in">
-                <div className="max-w-[600px] space-y-4">
-                  {/* Business Name field removed - NOT NEEDED (Jan 20, 2026) */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">
-                      Street Address <span className="text-slate-600">(optional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={streetAddress}
-                      onChange={(e) => setStreetAddress(e.target.value)}
-                      placeholder="123 Main St"
-                      className="w-full px-4 py-3.5 rounded-xl border-2 border-slate-700/50 bg-slate-800/50 text-white placeholder-slate-500 focus:border-violet-500/50 focus:bg-slate-800/70 outline-none transition-all"
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && businessNameInput.trim() && handleAddressLookup()
-                      }
-                    />
-                  </div>
-
-                  {streetAddress.trim() && !businessLookup?.found && (
-                    <button
-                      onClick={handleAddressLookup}
-                      disabled={isLookingUp}
-                      className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-violet-500 to-violet-600 text-white font-bold hover:from-violet-400 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-500/25 flex items-center justify-center gap-2"
-                    >
-                      {isLookingUp ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Finding...
-                        </>
-                      ) : (
-                        <>
-                          <Search className="w-4 h-4" />
-                          Find Business
-                        </>
-                      )}
-                    </button>
-                  )}
-
-                  {businessLookup?.found && (
-                    <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/30 rounded-xl p-5 shadow-lg">
-                      <div className="flex items-center gap-4">
-                        {businessLookup.photoUrl ? (
-                          <img
-                            src={businessLookup.photoUrl}
-                            alt=""
-                            className="w-16 h-16 rounded-xl object-cover"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                            <Building2 className="w-7 h-7 text-emerald-400" />
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Check className="w-4 h-4 text-emerald-400" />
-                            <div className="text-lg font-bold text-white">
-                              {businessLookup.businessName}
-                            </div>
-                          </div>
-                          <div className="text-sm text-slate-400 mb-2">
-                            {businessLookup.formattedAddress}
-                          </div>
-                          {businessLookup.industrySlug && (
-                            <span className="inline-block px-3 py-1 bg-violet-500/20 border border-violet-500/30 rounded-full text-xs font-semibold text-violet-300">
-                              {INDUSTRY_NAMES[businessLookup.industrySlug] ||
-                                businessLookup.businessType}
-                            </span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => {
-                            setBusinessLookup(null);
-                            setBusinessNameInput("");
-                            setStreetAddress("");
-                          }}
-                          className="text-slate-500 hover:text-white text-sm underline"
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </section>
-        )}
+        {/* Refine with Your Facility section removed - Jan 20, 2026 */}
 
         {/* Continue Button - HIDDEN: Use bottom nav instead to avoid duplicate CTAs */}
         {false && canProceed && (
