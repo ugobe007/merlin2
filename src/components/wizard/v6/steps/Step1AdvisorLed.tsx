@@ -297,8 +297,13 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
         {/* Welcome & Introduction */}
         <div className="mb-4">
           {/* TrueQuote Badge - Clickable */}
-          <div onClick={() => setShowTrueQuoteModal(true)} className="inline-block mb-4 cursor-pointer">
+          <div onClick={() => setShowTrueQuoteModal(true)} className="inline-block mb-2 cursor-pointer">
             <TrueQuoteBadgeCanonical showTooltip={false} />
+          </div>
+          
+          {/* Identity Line - What is this product */}
+          <div className="text-xs text-slate-500 mb-6 font-medium">
+            Source-backed energy savings model
           </div>
 
           {/* Compact Instrument Header (≤64px total) */}
@@ -306,7 +311,7 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
             Start saving on your energy bill.
           </h1>
           <p className="text-sm text-slate-400">
-            Enter your location to load utility rates, solar yield, and climate risk.
+            Enter your location to load local rates and estimate your savings.
           </p>
 
           {/* TrueQuote Explanation Card - REMOVED, now in modal */}
@@ -548,21 +553,11 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
                 </p>
               )}
 
-              {/* Validation Micro-Feedback (3-line confirmation) */}
+              {/* Validation Micro-Feedback (single line, calm) */}
               {enrichedData && (
-                <div className="validation-feedback">
-                  <div className="validation-line">
-                    <Check className="w-3.5 h-3.5" />
-                    {enrichedData.city}, {enrichedData.stateCode} detected
-                  </div>
-                  <div className="validation-line">
-                    <Check className="w-3.5 h-3.5" />
-                    {enrichedData.utility.name} commercial territory
-                  </div>
-                  <div className="validation-line">
-                    <Check className="w-3.5 h-3.5" />
-                    Climate + solar data loaded
-                  </div>
+                <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  Local utility + climate data loaded
                 </div>
               )}
 
@@ -574,8 +569,8 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
                       <Building2 className="w-5 h-5 text-blue-400" />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-white">Find Your Business</h3>
-                      <p className="text-xs text-slate-400">Improve accuracy with building-level data</p>
+                      <h3 className="text-base font-bold text-white">Refine Your Savings Model <span className="text-xs text-slate-500 font-normal">(Recommended)</span></h3>
+                      <p className="text-xs text-slate-400">Load building type and utility profile for higher accuracy</p>
                     </div>
                   </div>
 

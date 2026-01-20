@@ -26,6 +26,8 @@ export interface TelemetryChipProps {
   };
   /** Icon color theme */
   iconColor?: 'cyan' | 'amber' | 'violet' | 'emerald' | 'indigo' | 'slate';
+  /** Visual hierarchy: primary (brightest), secondary (dimmed), tertiary (most subdued) */
+  hierarchy?: 'primary' | 'secondary' | 'tertiary';
   /** Optional click handler */
   onClick?: () => void;
   /** Additional CSS classes */
@@ -74,13 +76,22 @@ export const TelemetryChip: React.FC<TelemetryChipProps> = ({
   label,
   badge,
   iconColor = 'slate',
+  hierarchy = 'primary',
   onClick,
   className = '',
 }) => {
   const isClickable = !!onClick;
+  
+  // Visual hierarchy: primary = brightest, secondary = dimmed, tertiary = subdued
+  const hierarchyStyles = {
+    primary: 'bg-slate-800/50 border-indigo-500/25',
+    secondary: 'bg-slate-800/35 border-indigo-500/15',
+    tertiary: 'bg-slate-800/25 border-indigo-500/10',
+  };
+  
   const baseClasses = `
-    inline-flex items-center gap-2 h-8 px-3 rounded-lg
-    bg-slate-800/40 border border-indigo-500/20
+    inline-flex items-center gap-1.5 h-8 px-3 rounded-lg
+    ${hierarchyStyles[hierarchy]}
     backdrop-blur-sm
     transition-all duration-200
     ${isClickable ? 'cursor-pointer hover:bg-slate-800/60 hover:border-indigo-500/30 hover:shadow-[0_0_12px_rgba(99,102,241,0.15)]' : ''}
@@ -94,24 +105,24 @@ export const TelemetryChip: React.FC<TelemetryChipProps> = ({
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
     >
-      {/* Icon */}
+      {/* Icon - standardized 16px */}
       <Icon className={`w-4 h-4 flex-shrink-0 ${iconColorClasses[iconColor]}`} />
 
       {/* Label (optional) */}
       {label && (
-        <span className="text-xs text-slate-400 font-medium">
+        <span className="text-[11px] text-slate-400 font-medium">
           {label}
         </span>
       )}
 
-      {/* Value */}
-      <span className="text-white font-semibold text-sm tabular-nums">
+      {/* Value - standardized 12px */}
+      <span className="text-white font-semibold text-xs tabular-nums">
         {value}
       </span>
 
       {/* Unit (optional) */}
       {unit && (
-        <span className="text-slate-400 text-xs font-medium">
+        <span className="text-slate-400 text-[11px] font-medium">
           {unit}
         </span>
       )}

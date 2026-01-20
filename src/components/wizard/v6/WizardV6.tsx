@@ -672,86 +672,99 @@ export default function WizardV6() {
             {state.zipCode && state.electricityRate && (
               <div className="relative border-b border-white/10 bg-gradient-to-r from-slate-800/40 via-slate-900/50 to-slate-800/40 backdrop-blur-sm">
                 <div className="h-[72px] px-6 flex items-center gap-4">
-                  {/* LEFT: Merlin Identity + TrueQuote Anchor */}
-                  <div className="flex items-center gap-3 min-w-[260px]">
+                  {/* LEFT: Merlin Identity + TrueQuote Anchor + Model Active */}
+                  <div className="flex items-center gap-3 min-w-[280px]">
                     <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
                       <span className="text-lg">🧙</span>
                     </div>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5">
                       <div className="text-white font-semibold text-sm leading-none">
                         Merlin Intelligence
                       </div>
-                      <TrueQuoteBadgeCanonical showTooltip={false} />
+                      <div className="flex items-center gap-2">
+                        <TrueQuoteBadgeCanonical showTooltip={false} />
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                          <span className="font-medium">Model Active</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* CENTER: Unified Telemetry Chips */}
-                  <div className="flex-1 flex items-center gap-3 flex-wrap">
-                    {/* Rate Chip */}
-                    <TelemetryChip
-                      icon={Zap}
-                      value={`$${state.electricityRate?.toFixed(3) || "0.000"}`}
-                      unit="/kWh"
-                      iconColor="cyan"
-                    />
-
-                    {/* Solar Chip */}
-                    {state.solarData?.sunHours && (
-                      <TelemetryChip
-                        icon={Sun}
-                        value={state.solarData.sunHours.toFixed(1)}
-                        unit="hrs/day"
-                        iconColor="amber"
-                      />
-                    )}
-
-                    {/* Storage Chip */}
-                    {state.zipCode && state.solarData?.sunHours && (
-                      <TelemetryChip
-                        icon={Battery}
-                        label="Storage:"
-                        value={
-                          state.calculations?.selected?.bessKWh
-                            ? `${Math.round(state.calculations.selected.bessKWh)}`
-                            : "200–400"
-                        }
-                        unit="kWh"
-                        badge={
-                          !state.calculations?.selected?.bessKWh
-                            ? { text: "est.", variant: "estimate" }
-                            : undefined
-                        }
-                        iconColor="violet"
-                      />
-                    )}
-
-                    {/* Power Chip */}
-                    {state.zipCode && state.solarData?.sunHours && (
+                  {/* CENTER: Clustered Telemetry Chips - 3 Logical Groups */}
+                  <div className="flex-1 flex items-center gap-6">
+                    {/* CLUSTER 1: ECONOMICS (Rate + Peak) */}
+                    <div className="flex items-center gap-2">
                       <TelemetryChip
                         icon={Zap}
-                        label="Peak:"
-                        value={
-                          state.calculations?.selected?.bessKW
-                            ? `${Math.round(state.calculations.selected.bessKW)}`
-                            : "80–120"
-                        }
-                        unit="kW"
-                        badge={
-                          !state.calculations?.selected?.bessKW
-                            ? { text: "est.", variant: "estimate" }
-                            : undefined
-                        }
-                        iconColor="indigo"
+                        value={`$${state.electricityRate?.toFixed(3) || "0.000"}`}
+                        unit="/kWh"
+                        iconColor="cyan"
+                        hierarchy="primary"
                       />
-                    )}
+                      {state.zipCode && state.solarData?.sunHours && (
+                        <TelemetryChip
+                          icon={Zap}
+                          label="Peak:"
+                          value={
+                            state.calculations?.selected?.bessKW
+                              ? `${Math.round(state.calculations.selected.bessKW)}`
+                              : "80–120"
+                          }
+                          unit="kW"
+                          badge={
+                            !state.calculations?.selected?.bessKW
+                              ? { text: "est.", variant: "estimate" }
+                              : undefined
+                          }
+                          iconColor="indigo"
+                          hierarchy="primary"
+                        />
+                      )}
+                    </div>
 
-                    {/* Risk Chip */}
-                    <TelemetryChip
-                      icon={Shield}
-                      label="Grid:"
-                      value={state.weatherData?.extremes ? "Moderate" : "Reliable"}
-                      iconColor="emerald"
-                    />
+                    {/* CLUSTER 2: ENVIRONMENT/YIELD (Sun + Grid) */}
+                    <div className="flex items-center gap-2">
+                      {state.solarData?.sunHours && (
+                        <TelemetryChip
+                          icon={Sun}
+                          value={state.solarData.sunHours.toFixed(1)}
+                          unit="hrs/day"
+                          iconColor="amber"
+                          hierarchy="secondary"
+                        />
+                      )}
+                      <TelemetryChip
+                        icon={Shield}
+                        label="Grid:"
+                        value={state.weatherData?.extremes ? "Moderate" : "Reliable"}
+                        iconColor="emerald"
+                        hierarchy="secondary"
+                      />
+                    </div>
+
+                    {/* CLUSTER 3: SYSTEM PREVIEW (Storage) */}
+                    {state.zipCode && state.solarData?.sunHours && (
+                      <div className="flex items-center">
+                        <TelemetryChip
+                          icon={Battery}
+                          label="Storage:"
+                          value={
+                            state.calculations?.selected?.bessKWh
+                              ? `${Math.round(state.calculations.selected.bessKWh)}`
+                              : "200–400"
+                          }
+                          unit="kWh"
+                          badge={
+                            !state.calculations?.selected?.bessKWh
+                              ? { text: "est.", variant: "estimate" }
+                              : undefined
+                          }
+                          iconColor="violet"
+                          hierarchy="primary"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* RIGHT: Business Name / Location + Site Score */}
@@ -884,7 +897,14 @@ export default function WizardV6() {
               </button>
 
               {/* Spacer - navigation is now just Back + Next */}
-              <div></div>
+              <div className="flex-1">
+                {/* Outcome hint - only show on Step 1 */}
+                {currentStep === 1 && (
+                  <div className="text-xs text-slate-500 text-center">
+                    Next: industry + load profile → savings estimate
+                  </div>
+                )}
+              </div>
 
               {/* Next button */}
               <button
