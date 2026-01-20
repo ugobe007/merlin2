@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { RotateCcw, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { RotateCcw, X, ChevronLeft, ChevronRight, Zap, Sun, Battery, Shield } from "lucide-react";
 
 import type { WizardState } from "./types";
 import { INITIAL_WIZARD_STATE, POWER_LEVELS } from "./types";
@@ -9,6 +9,10 @@ import { buildStep3Snapshot } from "./step3/buildStep3Snapshot";
 // MerlinAdvisor Rail System (Phase 1 - Jan 16, 2026)
 import { AdvisorPublisher } from "./advisor/AdvisorPublisher";
 import { AdvisorRail } from "./advisor/AdvisorRail";
+
+// TrueQuote™ Brand Assets (Jan 20, 2026)
+import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
+import { TelemetryChip } from "@/components/shared/TelemetryChip";
 
 // Intelligence Layer (Phase 1: Adaptive UX - Jan 18, 2026)
 import {
@@ -664,85 +668,90 @@ export default function WizardV6() {
             {/* Inner glass lip */}
             <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(0,0,0,0.35)]" />
 
-            {/* TOP: Intelligence Header - Always visible with key metrics */}
+            {/* TOP: Intelligence Header - Capital-Grade Instrument Panel (Jan 20, 2026) */}
             {state.zipCode && state.electricityRate && (
               <div className="relative border-b border-white/10 bg-gradient-to-r from-slate-800/40 via-slate-900/50 to-slate-800/40 backdrop-blur-sm">
-                <div className="h-[72px] px-6 flex items-center gap-6">
-                  {/* LEFT: Merlin Identity */}
-                  <div className="flex items-center gap-2 min-w-[160px]">
+                <div className="h-[72px] px-6 flex items-center gap-4">
+                  {/* LEFT: Merlin Identity + TrueQuote Anchor */}
+                  <div className="flex items-center gap-3 min-w-[260px]">
                     <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
                       <span className="text-lg">🧙</span>
                     </div>
-                    <div>
+                    <div className="flex flex-col gap-1">
                       <div className="text-white font-semibold text-sm leading-none">
                         Merlin Intelligence
                       </div>
-                      <span className="text-[10px] mt-0.5 inline-flex items-center gap-1 text-emerald-400">
-                        <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
-                        LIVE
-                      </span>
+                      <TrueQuoteBadgeCanonical showTooltip={false} />
                     </div>
                   </div>
 
-                  {/* CENTER: Key Metrics */}
-                  <div className="flex-1 flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <span className="text-cyan-400 font-mono text-sm">⚡</span>
-                      <span className="text-white font-semibold text-sm tabular-nums">
-                        ${state.electricityRate?.toFixed(3) || "0.000"}/kWh
-                      </span>
-                    </div>
+                  {/* CENTER: Unified Telemetry Chips */}
+                  <div className="flex-1 flex items-center gap-3 flex-wrap">
+                    {/* Rate Chip */}
+                    <TelemetryChip
+                      icon={Zap}
+                      value={`$${state.electricityRate?.toFixed(3) || "0.000"}`}
+                      unit="/kWh"
+                      iconColor="cyan"
+                    />
 
+                    {/* Solar Chip */}
                     {state.solarData?.sunHours && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-amber-400 text-sm">☀️</span>
-                        <span className="text-white font-semibold text-sm tabular-nums">
-                          {state.solarData.sunHours.toFixed(1)} hrs/day
-                        </span>
-                      </div>
+                      <TelemetryChip
+                        icon={Sun}
+                        value={state.solarData.sunHours.toFixed(1)}
+                        unit="hrs/day"
+                        iconColor="amber"
+                      />
                     )}
 
+                    {/* Storage Chip */}
                     {state.zipCode && state.solarData?.sunHours && (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <span className="text-violet-400 text-sm">🔋</span>
-                          <span className="text-slate-400 text-xs">Storage:</span>
-                          <span className="text-white font-semibold text-sm">
-                            {state.calculations?.selected?.bessKWh
-                              ? `${Math.round(state.calculations.selected.bessKWh)} kWh`
-                              : "200–400 kWh"}
-                          </span>
-                          {!state.calculations?.selected?.bessKWh && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">
-                              est.
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span className="text-indigo-400 text-sm">⚡</span>
-                          <span className="text-slate-400 text-xs">Peak:</span>
-                          <span className="text-white font-semibold text-sm">
-                            {state.calculations?.selected?.bessKW
-                              ? `${Math.round(state.calculations.selected.bessKW)} kW`
-                              : "80–120 kW"}
-                          </span>
-                          {!state.calculations?.selected?.bessKW && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">
-                              est.
-                            </span>
-                          )}
-                        </div>
-                      </>
+                      <TelemetryChip
+                        icon={Battery}
+                        label="Storage:"
+                        value={
+                          state.calculations?.selected?.bessKWh
+                            ? `${Math.round(state.calculations.selected.bessKWh)}`
+                            : "200–400"
+                        }
+                        unit="kWh"
+                        badge={
+                          !state.calculations?.selected?.bessKWh
+                            ? { text: "est.", variant: "estimate" }
+                            : undefined
+                        }
+                        iconColor="violet"
+                      />
                     )}
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-emerald-400 text-sm">🛡️</span>
-                      <span className="text-slate-400 text-xs">Grid:</span>
-                      <span className="text-white font-semibold text-sm">
-                        {state.weatherData?.extremes ? "Moderate" : "Reliable"}
-                      </span>
-                    </div>
+                    {/* Power Chip */}
+                    {state.zipCode && state.solarData?.sunHours && (
+                      <TelemetryChip
+                        icon={Zap}
+                        label="Peak:"
+                        value={
+                          state.calculations?.selected?.bessKW
+                            ? `${Math.round(state.calculations.selected.bessKW)}`
+                            : "80–120"
+                        }
+                        unit="kW"
+                        badge={
+                          !state.calculations?.selected?.bessKW
+                            ? { text: "est.", variant: "estimate" }
+                            : undefined
+                        }
+                        iconColor="indigo"
+                      />
+                    )}
+
+                    {/* Risk Chip */}
+                    <TelemetryChip
+                      icon={Shield}
+                      label="Grid:"
+                      value={state.weatherData?.extremes ? "Moderate" : "Reliable"}
+                      iconColor="emerald"
+                    />
                   </div>
 
                   {/* RIGHT: Business Name / Location + Site Score */}
