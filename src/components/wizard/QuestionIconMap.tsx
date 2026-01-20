@@ -56,7 +56,46 @@ const QUESTION_ICON_MAP: Record<string, IconMapping> = {
   'energyGoals': { type: 'emoji', value: '🎯' },
 
   // ============================================================================
-  // CAR WASH - FACILITY TYPES
+  // CAR WASH - QUESTION FIELDS
+  // ============================================================================
+  'tunnelBayLength': { type: 'emoji', value: '📏' },
+  'tunnelLength': { type: 'emoji', value: '📏' },
+  'bayLength': { type: 'emoji', value: '📏' },
+  'numberOfVacuums': { type: 'emoji', value: '💨' },
+  'vacuumStations': { type: 'emoji', value: '💨' },
+  'vacuumCount': { type: 'emoji', value: '💨' },
+  'dailyVehicles': { type: 'emoji', value: '🚗' },
+  'carsPerDay': { type: 'emoji', value: '🚗' },
+  'vehiclesPerDay': { type: 'emoji', value: '🚗' },
+  'washesPerDay': { type: 'emoji', value: '🚗' },
+  'highPressurePumps': { type: 'emoji', value: '💪' },
+  'pumpConfiguration': { type: 'emoji', value: '⚙️' },
+  'facilityType': { type: 'emoji', value: '🏢' },
+  'carWashType': { type: 'emoji', value: '🏢' },
+  'washType': { type: 'emoji', value: '🏢' },
+  'conveyerType': { type: 'emoji', value: '🔄' },
+  'conveyorType': { type: 'emoji', value: '🔄' },
+  'additionalServices': { type: 'emoji', value: '✨' },
+  'services': { type: 'emoji', value: '✨' },
+  'primaryEnergyGoal': { type: 'emoji', value: '🎯' },
+  'dryerType': { type: 'emoji', value: '💨' },
+  'dryerCount': { type: 'emoji', value: '💨' },
+  'waterHeatingFuel': { type: 'emoji', value: '🔥' },
+  'reclaimSystem': { type: 'emoji', value: '♻️' },
+  'daysPerWeek': { type: 'emoji', value: '📅' },
+  'hasGasLine': { type: 'emoji', value: '🔥' },
+  'naturalGasLine': { type: 'emoji', value: '🔥' },
+  'evChargers': { type: 'emoji', value: '🔌' },
+  'evLevel2Count': { type: 'emoji', value: '🔌' },
+  'lighting': { type: 'emoji', value: '💡' },
+  'signage': { type: 'emoji', value: '📺' },
+  'blowerConfiguration': { type: 'emoji', value: '💨' },
+  'dryerConfiguration': { type: 'emoji', value: '💨' },
+  'tunnelOrBayCount': { type: 'emoji', value: '🛿' },
+  'numberOfBays': { type: 'emoji', value: '🛿' },
+
+  // ============================================================================
+  // CAR WASH - FACILITY TYPES (Option Values)
   // ============================================================================
   'express_tunnel': { type: 'emoji', value: '🚗' },
   'tunnel_express': { type: 'emoji', value: '🚗' },
@@ -131,7 +170,6 @@ const QUESTION_ICON_MAP: Record<string, IconMapping> = {
   // ============================================================================
   'evL2Count': { type: 'emoji', value: '🔌' },
   'evDcfcCount': { type: 'emoji', value: '⚡' },
-  'evChargers': { type: 'emoji', value: '🔋' },
   'hubSize': { type: 'emoji', value: '🔌' },
 
   // ============================================================================

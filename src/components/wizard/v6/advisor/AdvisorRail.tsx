@@ -3,7 +3,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
-import { X, MapPin, Zap, Sun, Cloud, Lightbulb, AlertTriangle } from "lucide-react";
+import { X, MapPin, Compass, Zap, Sun, Cloud, Lightbulb, AlertTriangle } from "lucide-react";
 import avatarImg from "@/assets/images/new_small_profile_.png";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import type { IntelligenceContext } from "@/types/intelligence.types";
@@ -107,7 +107,7 @@ interface AdvisorRailProps {
 
   // Step context to make Merlin feel aware
   context?: {
-    location?: { state?: string; city?: string; zip?: string; utilityName?: string };
+    location?: { state?: string; city?: string; zip?: string; utilityName?: string; businessName?: string };
     utility?: { rate?: number; demandCharge?: number; hasTOU?: boolean };
     solar?: { sunHours?: number; rating?: string };
     weather?: { profile?: string; extremes?: string };
@@ -368,6 +368,12 @@ export function AdvisorRail({
               Merlin
             </div>
             <div className="text-slate-300/80 text-sm font-medium">AI Energy Advisor</div>
+            {context?.location?.businessName && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-white text-sm font-bold">
+                <span className="text-violet-400 text-xs">🏢</span>
+                <span className="truncate" title={context.location.businessName}>{context.location.businessName}</span>
+              </div>
+            )}
           </div>
 
           {payload?.mode && <ModeBadge mode={payload.mode} />}
@@ -376,10 +382,10 @@ export function AdvisorRail({
 
       {/* LOCATION ANALYSIS CARD - Core Intelligence (Jan 20, 2026) */}
       <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
-        <div className="rounded-xl border border-violet-500/30 bg-gradient-to-br from-slate-700/50 via-slate-800/60 to-violet-900/40 p-4 shadow-[inset_0_1px_0_rgba(167,139,250,0.15),0_0_16px_rgba(99,102,241,0.08)]">{/*Card Header */}
+        <div className="rounded-xl border border-violet-500/35 bg-gradient-to-br from-slate-800/70 via-slate-900/80 to-violet-950/60 p-4 shadow-[inset_0_1px_0_rgba(167,139,250,0.2),0_0_24px_rgba(99,102,241,0.15),0_0_48px_rgba(139,92,246,0.08)]">{/*Card Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-violet-400" />
+              <Compass className="w-4 h-4 text-violet-400" />
               <h3 className="text-sm font-bold text-white">Location Analysis</h3>
             </div>
             {/* LIVE badge - only show when ZIP validated */}
@@ -395,7 +401,7 @@ export function AdvisorRail({
           {!zip ? (
             /* BEFORE ZIP: Placeholder */
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <MapPin className="w-12 h-12 text-violet-400/40 mb-3" />
+              <Compass className="w-12 h-12 text-violet-400/40 mb-3" />
               <div className="text-xs text-slate-400 mb-1">Enter your ZIP to load</div>
               <div className="text-sm text-slate-300">utility rates, solar yield, and climate risk.</div>
             </div>
@@ -405,7 +411,7 @@ export function AdvisorRail({
               {/* 2x2 Metrics Grid */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {/* Peak Sun */}
-                <div className="relative rounded-lg border border-indigo-500/25 bg-gradient-to-br from-slate-700/60 to-blue-900/40 p-3">
+                <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
                   <Sun className="absolute top-2 right-2 w-3 h-3 text-slate-400 hover:text-white cursor-help" />
                   <div className="text-[10px] text-violet-300/70 font-semibold mb-1">PEAK SUN</div>
                   <div className="text-2xl font-black text-white tabular-nums drop-shadow-sm">
@@ -415,7 +421,7 @@ export function AdvisorRail({
                 </div>
 
                 {/* Electricity Rate */}
-                <div className="relative rounded-lg border border-indigo-500/25 bg-gradient-to-br from-slate-700/60 to-blue-900/40 p-3">
+                <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
                   <Zap className="absolute top-2 right-2 w-3 h-3 text-slate-400 hover:text-white cursor-help" />
                   <div className="text-[10px] text-violet-300/70 font-semibold mb-1">ELECTRICITY</div>
                   <div className="text-2xl font-black text-white tabular-nums drop-shadow-sm">
@@ -425,7 +431,7 @@ export function AdvisorRail({
                 </div>
 
                 {/* Weather Risk */}
-                <div className="relative rounded-lg border border-indigo-500/25 bg-gradient-to-br from-slate-700/60 to-blue-900/40 p-3">
+                <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
                   <button 
                     onClick={() => setShowWeatherRiskModal(true)}
                     className="absolute top-2 right-2 transition-colors"
@@ -438,7 +444,7 @@ export function AdvisorRail({
                 </div>
 
                 {/* Solar Rating */}
-                <div className="relative rounded-lg border border-indigo-500/25 bg-gradient-to-br from-slate-700/60 to-blue-900/40 p-3">
+                <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
                   <Sun className="absolute top-2 right-2 w-3 h-3 text-slate-400 hover:text-white cursor-help" />
                   <div className="text-[10px] text-violet-300/70 font-semibold mb-1">SOLAR RATING</div>
                   <div className="text-2xl font-black text-white drop-shadow-sm">

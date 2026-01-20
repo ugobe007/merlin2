@@ -683,9 +683,10 @@ export default function WizardV6() {
                       </div>
                       <div className="flex items-center gap-2">
                         <TrueQuoteBadgeCanonical showTooltip={false} />
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                          <span className="font-medium">Model Active</span>
+                        {/* Model Active Indicator - Animated glow so users know it's activated */}
+                        <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-md bg-indigo-500/25 text-indigo-100 border border-indigo-400/50 shadow-[0_0_16px_rgba(99,102,241,0.5)] animate-pulse">
+                          <span className="w-2 h-2 rounded-full bg-indigo-300 shadow-[0_0_8px_rgba(165,180,252,0.9)] animate-pulse" />
+                          <span className="font-semibold">Model Active</span>
                         </div>
                       </div>
                     </div>
@@ -767,23 +768,11 @@ export default function WizardV6() {
                     )}
                   </div>
 
-                  {/* RIGHT: Business Name / Location + Site Score */}
-                  <div className="text-right min-w-[200px]">
-                    {state.businessName ? (
-                      <>
-                        <div className="text-white text-sm font-bold leading-tight flex items-center justify-end gap-1">
-                          <span className="text-violet-400 text-xs">🏢</span>
-                          {state.businessName}
-                        </div>
-                        <div className="text-slate-400 text-xs mt-0.5">
-                          {state.zipCode} • {state.state}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-white text-sm font-medium leading-tight">
-                        {state.zipCode} • {state.state}
-                      </div>
-                    )}
+                  {/* RIGHT: Location + Site Score */}
+                  <div className="text-right min-w-[150px]">
+                    <div className="text-white text-sm font-medium leading-tight">
+                      {state.zipCode} • {state.state}
+                    </div>
                     {siteScore && (
                       <div className="text-xs mt-0.5">
                         <span className="text-slate-400">Score: </span>
@@ -821,6 +810,7 @@ export default function WizardV6() {
                         city: state.city,
                         state: state.state,
                         utilityName: state.calculations?.base?.utilityName,
+                        businessName: state.businessName,
                       },
                       utility: {
                         rate: state.electricityRate ?? state.calculations?.base?.utilityRate,
