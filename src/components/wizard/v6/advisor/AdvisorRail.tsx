@@ -336,16 +336,18 @@ export function AdvisorRail({
   const insight = getMerlinInsight();
 
   return (
-    <div className="relative flex flex-col h-full min-h-0 overflow-hidden bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-violet-500/25 shadow-[0_8px_32px_rgba(139,92,246,0.2),inset_0_1px_0_rgba(168,85,247,0.15)]">
+    <div className="relative flex flex-col h-full min-h-0 overflow-hidden bg-white/[0.06] backdrop-blur-xl rounded-2xl border border-violet-500/30 shadow-[0_8px_32px_rgba(139,92,246,0.25),0_0_24px_rgba(99,102,241,0.12),inset_0_1px_0_rgba(168,85,247,0.18)]">
       {/* GLASSMORPHIC AMBIENT GLOW - Purple/Blue/Indigo magic */}
       <div className="pointer-events-none absolute top-0 left-0 h-56 w-56 bg-gradient-to-br from-violet-400/30 via-purple-500/25 to-transparent blur-3xl rounded-full" />
       <div className="pointer-events-none absolute top-20 right-0 h-64 w-64 bg-gradient-to-bl from-indigo-500/30 via-blue-500/20 to-transparent blur-3xl rounded-full" />
       <div className="pointer-events-none absolute bottom-20 left-10 h-48 w-48 bg-gradient-to-tr from-fuchsia-500/20 via-violet-400/15 to-transparent blur-2xl rounded-full" />
 
-      {/* MERLIN IDENTITY HEADER */}
-      <div className="px-6 py-5 border-b border-violet-500/20 flex-shrink-0 bg-gradient-to-r from-violet-900/70 via-indigo-900/80 to-blue-900/70">
+      {/* MERLIN IDENTITY HEADER - Soft focal point, not dominant */}
+      <div className="px-6 py-5 border-b border-violet-500/20 flex-shrink-0 bg-gradient-to-r from-violet-900/40 via-indigo-900/50 to-blue-900/40">
         <div className="flex items-center gap-4 mb-4">
           <div className="relative">
+            {/* Pulsing advisor activity ring */}
+            <div className="absolute inset-0 rounded-full border-2 border-indigo-400/40 animate-pulse" />
             <img
               src={avatarImg}
               alt="Merlin"
@@ -358,7 +360,7 @@ export function AdvisorRail({
             <div className="hidden w-20 h-20 rounded-full bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center border-2 border-violet-300">
               <span className="text-4xl">🧙</span>
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border-2 border-slate-900 merlin-breathe shadow-[0_0_12px_rgba(16,185,129,0.8)]" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border-2 border-slate-900 shadow-[0_0_16px_rgba(16,185,129,0.9)] animate-pulse" />
           </div>
 
           <div className="flex-1">
@@ -374,7 +376,7 @@ export function AdvisorRail({
 
       {/* LOCATION ANALYSIS CARD - Core Intelligence (Jan 20, 2026) */}
       <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
-        <div className="rounded-xl border border-violet-500/25 bg-gradient-to-br from-slate-700/40 via-slate-800/50 to-violet-900/30 p-4 shadow-[inset_0_1px_0_rgba(167,139,250,0.1)]">{/*Card Header */}
+        <div className="rounded-xl border border-violet-500/30 bg-gradient-to-br from-slate-700/50 via-slate-800/60 to-violet-900/40 p-4 shadow-[inset_0_1px_0_rgba(167,139,250,0.15),0_0_16px_rgba(99,102,241,0.08)]">{/*Card Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-violet-400" />
@@ -403,27 +405,27 @@ export function AdvisorRail({
               {/* 2x2 Metrics Grid */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {/* Peak Sun */}
-                <div className="relative rounded-lg border border-indigo-500/20 bg-slate-800/50 p-3">
+                <div className="relative rounded-lg border border-indigo-500/25 bg-gradient-to-br from-slate-700/60 to-blue-900/40 p-3">
                   <Sun className="absolute top-2 right-2 w-3 h-3 text-slate-400 hover:text-white cursor-help" />
                   <div className="text-[10px] text-violet-300/70 font-semibold mb-1">PEAK SUN</div>
-                  <div className="text-2xl font-black text-white tabular-nums">
+                  <div className="text-2xl font-black text-white tabular-nums drop-shadow-sm">
                     {context?.solar?.sunHours?.toFixed(1) || '—'}
                   </div>
                   <div className="text-[10px] text-slate-400 mt-0.5">hrs/day</div>
                 </div>
 
                 {/* Electricity Rate */}
-                <div className="relative rounded-lg border border-indigo-500/20 bg-slate-800/50 p-3">
+                <div className="relative rounded-lg border border-indigo-500/25 bg-gradient-to-br from-slate-700/60 to-blue-900/40 p-3">
                   <Zap className="absolute top-2 right-2 w-3 h-3 text-slate-400 hover:text-white cursor-help" />
                   <div className="text-[10px] text-violet-300/70 font-semibold mb-1">ELECTRICITY</div>
-                  <div className="text-2xl font-black text-white tabular-nums">
+                  <div className="text-2xl font-black text-white tabular-nums drop-shadow-sm">
                     ${(rate || 0).toFixed(2)}
                   </div>
                   <div className="text-[10px] text-slate-400 mt-0.5">$/kWh</div>
                 </div>
 
                 {/* Weather Risk */}
-                <div className="relative rounded-lg border border-indigo-500/20 bg-slate-800/50 p-3">
+                <div className="relative rounded-lg border border-indigo-500/25 bg-gradient-to-br from-slate-700/60 to-blue-900/40 p-3">
                   <button 
                     onClick={() => setShowWeatherRiskModal(true)}
                     className="absolute top-2 right-2 transition-colors"
@@ -431,15 +433,15 @@ export function AdvisorRail({
                     <Cloud className="w-3 h-3 text-slate-400 hover:text-white cursor-pointer" />
                   </button>
                   <div className="text-[10px] text-violet-300/70 font-semibold mb-1">WEATHER RISK</div>
-                  <div className="text-2xl font-black text-white">Low</div>
+                  <div className="text-2xl font-black text-white drop-shadow-sm">Low</div>
                   <div className="text-[10px] text-slate-400 mt-0.5">grid + climate</div>
                 </div>
 
                 {/* Solar Rating */}
-                <div className="relative rounded-lg border border-indigo-500/20 bg-slate-800/50 p-3">
+                <div className="relative rounded-lg border border-indigo-500/25 bg-gradient-to-br from-slate-700/60 to-blue-900/40 p-3">
                   <Sun className="absolute top-2 right-2 w-3 h-3 text-slate-400 hover:text-white cursor-help" />
                   <div className="text-[10px] text-violet-300/70 font-semibold mb-1">SOLAR RATING</div>
-                  <div className="text-2xl font-black text-white">
+                  <div className="text-2xl font-black text-white drop-shadow-sm">
                     {context?.solar?.rating || 'A+'}
                   </div>
                   <div className="text-[10px] text-slate-400 mt-0.5">yield score</div>
