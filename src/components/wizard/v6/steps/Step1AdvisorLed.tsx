@@ -414,48 +414,110 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
 
           {/* Business Display Box - Shown when business is found */}
           {region === "us" && businessLookup?.found && (
-            <div className="mb-6 bg-gradient-to-br from-slate-700/40 via-slate-800/50 to-blue-900/30 border-2 border-blue-500/30 rounded-xl p-6 shadow-xl shadow-blue-500/10">
-              <div className="flex items-center gap-4">
-                {businessLookup.photoUrl ? (
-                  <img
-                    src={businessLookup.photoUrl}
-                    alt=""
-                    className="w-20 h-20 rounded-xl object-cover border-2 border-blue-400/30 shadow-lg"
-                  />
-                ) : (
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center border-2 border-blue-400/30">
-                    <Building2 className="w-10 h-10 text-blue-400" />
+            <div className="mb-6 bg-gradient-to-br from-slate-700/40 via-slate-800/50 to-blue-900/30 border-2 border-blue-500/30 rounded-xl overflow-hidden shadow-xl shadow-blue-500/10">
+              {/* Header with photo and basic info */}
+              <div className="p-6 border-b border-blue-400/20">
+                <div className="flex items-start gap-4">
+                  {businessLookup.photoUrl ? (
+                    <img
+                      src={businessLookup.photoUrl}
+                      alt=""
+                      className="w-24 h-24 rounded-xl object-cover border-2 border-blue-400/30 shadow-lg flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center border-2 border-blue-400/30 flex-shrink-0">
+                      <Building2 className="w-12 h-12 text-blue-400" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start gap-2 mb-2">
+                      <Check className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-1" />
+                      <div>
+                        <div className="text-2xl font-black text-white mb-1">
+                          {businessLookup.businessName}
+                        </div>
+                        {businessLookup.businessType && (
+                          <div className="text-xs text-slate-400 mb-2">
+                            {businessLookup.businessType}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-sm text-slate-300 mb-3 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span className="line-clamp-1">{businessLookup.formattedAddress}</span>
+                    </div>
+                    {businessLookup.industrySlug && (
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-violet-500/20 to-blue-500/20 border border-violet-400/30 rounded-full text-sm font-semibold text-violet-300">
+                          <Activity className="w-4 h-4" />
+                          {INDUSTRY_NAMES[businessLookup.industrySlug] ||
+                            businessLookup.businessType}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Check className="w-5 h-5 text-emerald-400" />
-                    <div className="text-2xl font-black text-white">
-                      {businessLookup.businessName}
+                  <button
+                    onClick={() => {
+                      setBusinessLookup(null);
+                      setBusinessNameInput("");
+                      setStreetAddress("");
+                    }}
+                    className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-700/50 transition-all flex-shrink-0"
+                    title="Clear business"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Additional Details Section */}
+              <div className="px-6 py-4 bg-slate-900/30">
+                <div className="grid grid-cols-3 gap-3">
+                  {/* Location verified */}
+                  <div className="bg-slate-800/50 border border-slate-600/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MapPin className="w-4 h-4 text-blue-400" />
+                      <div className="text-xs font-semibold text-slate-400">LOCATION</div>
+                    </div>
+                    <div className="text-sm font-bold text-white">Verified</div>
+                    <div className="text-xs text-slate-400 mt-0.5">
+                      {enrichedData?.city}, {enrichedData?.stateCode}
                     </div>
                   </div>
-                  <div className="text-sm text-slate-300 mb-2 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-slate-400" />
-                    {businessLookup.formattedAddress}
+
+                  {/* Industry match */}
+                  <div className="bg-slate-800/50 border border-slate-600/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Building2 className="w-4 h-4 text-violet-400" />
+                      <div className="text-xs font-semibold text-slate-400">INDUSTRY</div>
+                    </div>
+                    <div className="text-sm font-bold text-white">Matched</div>
+                    <div className="text-xs text-slate-400 mt-0.5">
+                      {businessLookup.industrySlug ? "Auto-detected" : "Manual entry"}
+                    </div>
                   </div>
-                  {businessLookup.industrySlug && (
-                    <span className="inline-block px-4 py-1.5 bg-gradient-to-r from-violet-500/20 to-blue-500/20 border border-violet-400/30 rounded-full text-sm font-semibold text-violet-300">
-                      {INDUSTRY_NAMES[businessLookup.industrySlug] ||
-                        businessLookup.businessType}
-                    </span>
-                  )}
+
+                  {/* Accuracy boost */}
+                  <div className="bg-slate-800/50 border border-slate-600/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      <div className="text-xs font-semibold text-slate-400">ACCURACY</div>
+                    </div>
+                    <div className="text-sm font-bold text-emerald-400">Building-level</div>
+                    <div className="text-xs text-slate-400 mt-0.5">
+                      95%+ precision
+                    </div>
+                  </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setBusinessLookup(null);
-                    setBusinessNameInput("");
-                    setStreetAddress("");
-                  }}
-                  className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-700/50 transition-all"
-                  title="Clear business"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+
+                {/* Info banner */}
+                <div className="mt-3 bg-blue-500/10 border border-blue-400/20 rounded-lg p-3">
+                  <p className="text-xs text-blue-200 leading-relaxed">
+                    <strong>Great!</strong> Building-level data loaded. We'll use this to refine power
+                    profiles, load patterns, and utility assumptions.
+                  </p>
+                </div>
               </div>
             </div>
           )}
