@@ -592,7 +592,6 @@ export default function WizardV6() {
           <Step1AdvisorLed
             state={state}
             updateState={updateState}
-            intelligence={intelligence} // ✅ Pass intelligence context for auto-goal selection
             onGoToStep2={() => goToStep(2)}
             onNext={() => {
               // Auto-skip to Step 3 if business detected
@@ -675,7 +674,9 @@ export default function WizardV6() {
                       ✨
                     </div>
                     <div>
-                      <div className="text-white font-semibold text-sm leading-none">Merlin Intelligence</div>
+                      <div className="text-white font-semibold text-sm leading-none">
+                        Merlin Intelligence
+                      </div>
                       <span className="text-[10px] mt-0.5 inline-flex items-center gap-1 text-emerald-400">
                         <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
                         LIVE
@@ -688,7 +689,7 @@ export default function WizardV6() {
                     <div className="flex items-center gap-2">
                       <span className="text-cyan-400 font-mono text-sm">⚡</span>
                       <span className="text-white font-semibold text-sm tabular-nums">
-                        ${state.electricityRate?.toFixed(3) || '0.000'}/kWh
+                        ${state.electricityRate?.toFixed(3) || "0.000"}/kWh
                       </span>
                     </div>
 
@@ -707,12 +708,14 @@ export default function WizardV6() {
                           <span className="text-violet-400 text-sm">🔋</span>
                           <span className="text-slate-400 text-xs">Storage:</span>
                           <span className="text-white font-semibold text-sm">
-                            {state.calculations?.selected?.bessKWh 
+                            {state.calculations?.selected?.bessKWh
                               ? `${Math.round(state.calculations.selected.bessKWh)} kWh`
-                              : '200–400 kWh'}
+                              : "200–400 kWh"}
                           </span>
                           {!state.calculations?.selected?.bessKWh && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">est.</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">
+                              est.
+                            </span>
                           )}
                         </div>
 
@@ -722,10 +725,12 @@ export default function WizardV6() {
                           <span className="text-white font-semibold text-sm">
                             {state.calculations?.selected?.bessKW
                               ? `${Math.round(state.calculations.selected.bessKW)} kW`
-                              : '80–120 kW'}
+                              : "80–120 kW"}
                           </span>
                           {!state.calculations?.selected?.bessKW && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">est.</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">
+                              est.
+                            </span>
                           )}
                         </div>
                       </>
@@ -735,7 +740,7 @@ export default function WizardV6() {
                       <span className="text-emerald-400 text-sm">🛡️</span>
                       <span className="text-slate-400 text-xs">Grid:</span>
                       <span className="text-white font-semibold text-sm">
-                        {state.weatherData?.extremes ? 'Moderate' : 'Reliable'}
+                        {state.weatherData?.extremes ? "Moderate" : "Reliable"}
                       </span>
                     </div>
                   </div>
@@ -760,13 +765,16 @@ export default function WizardV6() {
                     {siteScore && (
                       <div className="text-xs mt-0.5">
                         <span className="text-slate-400">Score: </span>
-                        <span className={`font-bold ${
-                          siteScore.scoreLabel === 'exceptional' || siteScore.scoreLabel === 'strong' 
-                            ? 'text-emerald-400' 
-                            : siteScore.scoreLabel === 'good' 
-                            ? 'text-amber-400' 
-                            : 'text-orange-400'
-                        }`}>
+                        <span
+                          className={`font-bold ${
+                            siteScore.scoreLabel === "exceptional" ||
+                            siteScore.scoreLabel === "strong"
+                              ? "text-emerald-400"
+                              : siteScore.scoreLabel === "good"
+                                ? "text-amber-400"
+                                : "text-orange-400"
+                          }`}
+                        >
                           {siteScore.totalScore}
                         </span>
                       </div>
@@ -816,7 +824,8 @@ export default function WizardV6() {
                         batteryHours:
                           state.calculations?.selected?.bessKWh &&
                           state.calculations?.selected?.bessKW
-                            ? state.calculations.selected.bessKWh / state.calculations.selected.bessKW
+                            ? state.calculations.selected.bessKWh /
+                              state.calculations.selected.bessKW
                             : 0,
                         inverterKW: state.calculations?.selected?.bessKW ?? 0,
                         peakLoadKW: state.calculations?.base?.peakDemandKW ?? 0,
@@ -833,9 +842,7 @@ export default function WizardV6() {
 
               {/* RIGHT: Workspace */}
               <div className="flex-1 min-w-0">
-                <div className="h-full overflow-y-auto p-6 pb-28">
-                  {renderStep()}
-                </div>
+                <div className="h-full overflow-y-auto p-6 pb-28">{renderStep()}</div>
               </div>
             </div>
           </div>
