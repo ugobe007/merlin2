@@ -254,7 +254,7 @@ export function AdvisorRail({
   const insight = getMerlinInsight();
 
   return (
-    <div className="relative flex flex-col h-full min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-500/50 scrollbar-track-transparent bg-gradient-to-b from-blue-950/80 via-slate-900/90 to-indigo-950/80 backdrop-blur-xl rounded-2xl border border-blue-500/20 shadow-[0_8px_32px_rgba(59,130,246,0.15),inset_0_1px_0_rgba(147,197,253,0.15)]">
+    <div className="relative flex flex-col h-full min-h-0 overflow-hidden bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-blue-500/20 shadow-[0_8px_32px_rgba(59,130,246,0.15),inset_0_1px_0_rgba(147,197,253,0.15)]">
       {/* GLASSMORPHIC AMBIENT GLOW - More blue */}
       <div className="pointer-events-none absolute top-0 left-0 h-56 w-56 bg-gradient-to-br from-blue-400/30 via-cyan-500/20 to-transparent blur-3xl rounded-full" />
       <div className="pointer-events-none absolute top-20 right-0 h-64 w-64 bg-gradient-to-bl from-indigo-500/25 via-violet-500/20 to-transparent blur-3xl rounded-full" />
@@ -290,110 +290,16 @@ export function AdvisorRail({
         </div>
 
         <div className="mt-3 rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-slate-800/50 to-violet-500/10 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_16px_rgba(0,0,0,0.2)] backdrop-blur-sm">
-          <div className="text-[15px] font-extrabold text-white leading-snug tracking-tight">
-            {payload?.headline || "Answer a few questions to get your TrueQuote™"}
+          <div className="text-[15px] font-extrabold text-white leading-snug tracking-tight line-clamp-2">
+            {payload?.headline || "Let's maximize your energy savings."}
           </div>
           {payload?.subline && (
-            <div className="mt-1 text-xs text-slate-200/80 whitespace-pre-line">
+            <div className="mt-1 text-xs text-slate-200/80 whitespace-pre-line line-clamp-3">
               {payload.subline}
             </div>
           )}
         </div>
       </div>
-
-      {/* LOCATION / UTILITY CONTEXT - Simplified */}
-      <div className="px-5 py-3 border-b border-blue-500/20 flex-shrink-0">
-        {/* EMPTY STATE: no ZIP yet */}
-        {!zip && !st ? (
-          <div className="rounded-lg border border-blue-500/25 bg-blue-500/10 p-3">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">📍</span>
-              <div className="text-sm text-blue-200">Enter your location to see savings</div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* LOCATION + SITE SCORE - Compact */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-base">📍</span>
-                <div className="text-sm font-semibold text-white">
-                  {zip} • {st}
-                </div>
-              </div>
-              {context?.siteScore && (
-                <div
-                  className={`px-2 py-1 rounded text-xs font-bold ${
-                    context.siteScore.scoreLabel === "exceptional" ||
-                    context.siteScore.scoreLabel === "strong"
-                      ? "bg-emerald-500/15 text-emerald-400"
-                      : context.siteScore.scoreLabel === "good"
-                        ? "bg-amber-500/15 text-amber-300"
-                        : "bg-orange-500/15 text-orange-300"
-                  }`}
-                >
-                  {context.siteScore.totalScore}{" "}
-                  {context.siteScore.scoreLabel.charAt(0).toUpperCase() +
-                    context.siteScore.scoreLabel.slice(1)}
-                </div>
-              )}
-            </div>
-
-            {/* KEY METRICS - 3 compact pills */}
-            <div className="flex gap-2 text-[11px]">
-              <div className="flex-1 text-center px-2 py-1.5 rounded bg-blue-900/40 border border-blue-500/30">
-                <div className="text-blue-300/80">Rate</div>
-                <div className="font-semibold text-white">
-                  {rate ? `$${rate.toFixed(2)}` : "--"}
-                </div>
-              </div>
-              <div className="flex-1 text-center px-2 py-1.5 rounded bg-blue-900/40 border border-blue-500/30">
-                <div className="text-blue-300/80">Demand</div>
-                <div className="font-semibold text-white">{demand ? `$${demand}` : "--"}</div>
-              </div>
-              <div className="flex-1 text-center px-2 py-1.5 rounded bg-blue-900/40 border border-blue-500/30">
-                <div className="text-blue-300/80">TOU</div>
-                <div className={`font-semibold ${hasTOU ? "text-emerald-400" : "text-slate-400"}`}>
-                  {hasTOU ? "Yes" : "No"}
-                </div>
-              </div>
-            </div>
-
-            {/* MERLIN SAYS - One insight when Site Score available */}
-            {context?.siteScore?.merlinSays && (
-              <div className="mt-3 p-2.5 bg-amber-500/8 border border-amber-500/15 rounded-lg">
-                <div className="text-[11px] text-amber-200/90 leading-relaxed">
-                  💬 <span className="font-semibold text-amber-300">Merlin:</span>{" "}
-                  {context.siteScore.merlinSays}
-                </div>
-              </div>
-            )}
-
-            {/* CONSTRAINT WARNING (Step 3+) */}
-            {constraint && (
-              <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-                <div className="text-[11px] font-semibold text-amber-200 mb-1">⚠️ Heads up</div>
-                <div className="text-xs text-slate-200/80">{constraint}</div>
-                {constraintDriver && (
-                  <div className="mt-1.5 text-[10px] text-slate-400">{constraintDriver}</div>
-                )}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* MERLIN'S INSIGHT - Only show if we have one */}
-      {insight && (
-        <div className="px-5 py-3 border-b border-blue-500/20 flex-shrink-0">
-          <div className="p-2.5 bg-blue-500/10 border border-blue-400/25 rounded-lg">
-            <div className="flex items-start gap-2">
-              <span className="text-sm">💡</span>
-              <div className="text-xs text-blue-100 leading-relaxed">{insight}</div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* STEP PROGRESS */}
       <div className="px-5 py-4 border-b border-blue-500/20 flex-shrink-0">
@@ -447,6 +353,86 @@ export function AdvisorRail({
           })}
         </div>
       </div>
+
+      {/* LOCATION / UTILITY CONTEXT - Simplified */}
+      <div className="px-5 py-3 border-b border-blue-500/20 flex-shrink-0">
+        {/* EMPTY STATE: no ZIP yet */}
+        {!zip && !st ? (
+          <div className="rounded-lg border border-blue-500/25 bg-blue-500/10 p-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📍</span>
+              <div className="text-sm text-blue-200">Enter your location to see savings</div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* LOCATION + SITE SCORE - Compact */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-base">📍</span>
+                <div className="text-sm font-semibold text-white">
+                  {zip} • {st}
+                </div>
+              </div>
+              {context?.siteScore && (
+                <div
+                  className={`px-2 py-1 rounded text-xs font-bold ${
+                    context.siteScore.scoreLabel === "exceptional" ||
+                    context.siteScore.scoreLabel === "strong"
+                      ? "bg-emerald-500/15 text-emerald-400"
+                      : context.siteScore.scoreLabel === "good"
+                        ? "bg-amber-500/15 text-amber-300"
+                        : "bg-orange-500/15 text-orange-300"
+                  }`}
+                >
+                  {context.siteScore.totalScore}{" "}
+                  {context.siteScore.scoreLabel.charAt(0).toUpperCase() +
+                    context.siteScore.scoreLabel.slice(1)}
+                </div>
+              )}
+            </div>
+
+            {/* Utility context line */}
+            <div className="mt-2 text-[11px] text-blue-200/70">
+              {context?.location?.utilityName ? context.location.utilityName : "Utility territory"}{" "}
+              {context?.location?.city ? `• ${context.location.city}` : ""}
+            </div>
+
+            {/* MERLIN SAYS - One insight when Site Score available */}
+            {context?.siteScore?.merlinSays && (
+              <div className="mt-3 p-2.5 bg-amber-500/8 border border-amber-500/15 rounded-lg">
+                <div className="text-[11px] text-amber-200/90 leading-relaxed">
+                  💬 <span className="font-semibold text-amber-300">Merlin:</span>{" "}
+                  {context.siteScore.merlinSays}
+                </div>
+              </div>
+            )}
+
+            {/* CONSTRAINT WARNING (Step 3+) */}
+            {constraint && (
+              <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                <div className="text-[11px] font-semibold text-amber-200 mb-1">⚠️ Heads up</div>
+                <div className="text-xs text-slate-200/80">{constraint}</div>
+                {constraintDriver && (
+                  <div className="mt-1.5 text-[10px] text-slate-400">{constraintDriver}</div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* MERLIN'S INSIGHT - Only show if we have one */}
+      {insight && (
+        <div className="px-5 py-3 border-b border-blue-500/20 flex-shrink-0">
+          <div className="p-2.5 bg-blue-500/10 border border-blue-400/25 rounded-lg">
+            <div className="flex items-start gap-2">
+              <span className="text-sm">💡</span>
+              <div className="text-xs text-blue-100 leading-relaxed">{insight}</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SCROLLABLE CONTENT - Only show if there are cards or disclaimers */}
       {((payload?.cards && payload.cards.length > 0) ||
