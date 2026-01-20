@@ -365,7 +365,7 @@ export function AdvisorRail({
             <div className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 font-bold text-xl tracking-tight">
               Merlin
             </div>
-            <div className="text-slate-300/80 text-sm font-medium">AI Energy Advisor</div>
+            <div className="text-slate-100 text-sm font-semibold">AI Energy Advisor</div>
           </div>
 
           {payload?.mode && <ModeBadge mode={payload.mode} />}

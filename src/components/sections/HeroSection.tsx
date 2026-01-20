@@ -6,6 +6,7 @@ import { QuoteEngine } from "@/core/calculations";
 import merlinImage from "../../assets/images/new_profile_merlin.png";
 import { MethodologyStatement } from "../shared/IndustryComplianceBadges";
 import { TrueQuoteModal } from "../shared/TrueQuoteModal";
+import { TrueQuoteBadgeCanonical } from "../shared/TrueQuoteBadgeCanonical";
 import badgeGoldIcon from "../../assets/images/badge_gold_icon.jpg";
 import badgeIcon from "../../assets/images/badge_icon.jpg";
 
@@ -551,22 +552,17 @@ export default function HeroSection({
                 >
                   Get your custom energy savings quote in 5 easy steps. See exactly how much you'll
                   save with battery storage.{" "}
-                  <button
+                  <span
                     onClick={() => setShowTrueQuoteModal(true)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold transition-all duration-200 hover:scale-105"
                     style={{
-                      background: "linear-gradient(135deg, #1C1917 0%, #292524 100%)",
-                      border: "1.5px solid #D97706",
-                      boxShadow: "0 2px 8px rgba(217, 119, 6, 0.3)",
-                      fontSize: "11px",
                       verticalAlign: "middle",
                       display: "inline-flex",
                       marginLeft: "4px",
+                      cursor: "pointer",
                     }}
                   >
-                    <img src={badgeGoldIcon} alt="TrueQuote" className="w-4 h-4 object-contain" />
-                    <span style={{ color: "#FBBF24", fontWeight: 600 }}>TrueQuote™</span>
-                  </button>
+                    <TrueQuoteBadgeCanonical showTooltip={false} />
+                  </span>
                 </div>
 
                 {/* CTA Button - Professional Typography */}
