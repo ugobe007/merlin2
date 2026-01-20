@@ -667,7 +667,7 @@ export default function WizardV6() {
             {/* TOP: Intelligence Header - Always visible with key metrics */}
             {state.zipCode && state.electricityRate && (
               <div className="relative border-b border-white/10 bg-gradient-to-r from-slate-800/40 via-slate-900/50 to-slate-800/40 backdrop-blur-sm">
-                <div className="h-[60px] px-6 flex items-center gap-6">
+                <div className="h-[72px] px-6 flex items-center gap-6">
                   {/* LEFT: Merlin Identity */}
                   <div className="flex items-center gap-2 min-w-[160px]">
                     <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-lg shadow-lg flex-shrink-0">

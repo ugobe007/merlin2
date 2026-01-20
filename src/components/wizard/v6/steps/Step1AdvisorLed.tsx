@@ -711,18 +711,7 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
             {showFacilityRefine && (
               <div className="mt-4 animate-fade-in">
                 <div className="max-w-[600px] space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">
-                      Business Name
-                    </label>
-                    <input
-                      type="text"
-                      value={businessNameInput}
-                      onChange={(e) => setBusinessNameInput(e.target.value)}
-                      placeholder="e.g., Marriott, Walmart, Your Company Name"
-                      className="w-full px-4 py-3.5 rounded-xl border-2 border-slate-700/50 bg-slate-800/50 text-white placeholder-slate-500 focus:border-violet-500/50 focus:bg-slate-800/70 outline-none transition-all"
-                    />
-                  </div>
+                  {/* Business Name field removed - NOT NEEDED (Jan 20, 2026) */}
                   <div>
                     <label className="block text-sm font-medium text-slate-400 mb-2">
                       Street Address <span className="text-slate-600">(optional)</span>
@@ -739,7 +728,7 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
                     />
                   </div>
 
-                  {businessNameInput.trim() && !businessLookup?.found && (
+                  {streetAddress.trim() && !businessLookup?.found && (
                     <button
                       onClick={handleAddressLookup}
                       disabled={isLookingUp}
