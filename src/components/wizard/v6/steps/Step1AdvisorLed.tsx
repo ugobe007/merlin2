@@ -412,6 +412,54 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
             </button>
           </div>
 
+          {/* Business Display Box - Shown when business is found */}
+          {region === "us" && businessLookup?.found && (
+            <div className="mb-6 bg-gradient-to-br from-slate-700/40 via-slate-800/50 to-blue-900/30 border-2 border-blue-500/30 rounded-xl p-6 shadow-xl shadow-blue-500/10">
+              <div className="flex items-center gap-4">
+                {businessLookup.photoUrl ? (
+                  <img
+                    src={businessLookup.photoUrl}
+                    alt=""
+                    className="w-20 h-20 rounded-xl object-cover border-2 border-blue-400/30 shadow-lg"
+                  />
+                ) : (
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center border-2 border-blue-400/30">
+                    <Building2 className="w-10 h-10 text-blue-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Check className="w-5 h-5 text-emerald-400" />
+                    <div className="text-2xl font-black text-white">
+                      {businessLookup.businessName}
+                    </div>
+                  </div>
+                  <div className="text-sm text-slate-300 mb-2 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-slate-400" />
+                    {businessLookup.formattedAddress}
+                  </div>
+                  {businessLookup.industrySlug && (
+                    <span className="inline-block px-4 py-1.5 bg-gradient-to-r from-violet-500/20 to-blue-500/20 border border-violet-400/30 rounded-full text-sm font-semibold text-violet-300">
+                      {INDUSTRY_NAMES[businessLookup.industrySlug] ||
+                        businessLookup.businessType}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    setBusinessLookup(null);
+                    setBusinessNameInput("");
+                    setStreetAddress("");
+                  }}
+                  className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-700/50 transition-all"
+                  title="Clear business"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* US ZIP Input - Hero Command Bar (64px) */}
           {region === "us" && (
             <div className="w-full">
@@ -460,8 +508,34 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
               )}
 
               {/* Address + Business Name - Always Visible After ZIP */}
-              {enrichedData && (
-                <div className="mt-6 space-y-4">
+              {enrichedData && !businessLookup?.found && (
+                <div className="mt-6 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-600/30 rounded-xl p-6 space-y-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center border border-blue-400/30">
+                      <Building2 className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white">Find Your Business</h3>
+                      <p className="text-xs text-slate-400">Improve accuracy with building-level data</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                      Business / Facility Name
+                    </label>
+                    <input
+                      type="text"
+                      value={businessNameInput}
+                      onChange={(e) => setBusinessNameInput(e.target.value)}
+                      placeholder="e.g., WOW Carwash, Marriott, Walmart"
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && businessNameInput.trim() && handleAddressLookup()
+                      }
+                      className="w-full px-4 py-3.5 rounded-xl border-2 border-blue-500/30 bg-slate-800/50 text-white placeholder-slate-500 focus:border-blue-400/50 focus:bg-slate-800/70 outline-none transition-all hover:border-blue-500/40 shadow-inner"
+                    />
+                  </div>
+
                   <div>
                     <label className="block text-sm font-semibold text-slate-300 mb-2">
                       Street Address <span className="text-slate-500 font-normal">(optional)</span>
@@ -471,37 +545,35 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
                       value={streetAddress}
                       onChange={(e) => setStreetAddress(e.target.value)}
                       placeholder="123 Main St"
-                      className="w-full px-4 py-3.5 rounded-xl border-2 border-indigo-500/30 bg-slate-800/40 text-white placeholder-slate-500 focus:border-indigo-400/50 focus:bg-slate-800/60 outline-none transition-all hover:border-indigo-500/40"
-                    />
-                    <p className="mt-1.5 text-xs text-slate-400">
-                      Improves accuracy (utility + solar + load assumptions).
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-300 mb-2">
-                      Business / Facility Name{" "}
-                      <span className="text-slate-500 font-normal">(optional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={businessNameInput}
-                      onChange={(e) => setBusinessNameInput(e.target.value)}
-                      placeholder="Acme Corporation"
                       onKeyDown={(e) =>
                         e.key === "Enter" && businessNameInput.trim() && handleAddressLookup()
                       }
-                      className="w-full px-4 py-3.5 rounded-xl border-2 border-indigo-500/30 bg-slate-800/40 text-white placeholder-slate-500 focus:border-indigo-400/50 focus:bg-slate-800/60 outline-none transition-all hover:border-indigo-500/40"
+                      className="w-full px-4 py-3.5 rounded-xl border-2 border-slate-600/30 bg-slate-800/50 text-white placeholder-slate-500 focus:border-slate-500/50 focus:bg-slate-800/70 outline-none transition-all hover:border-slate-600/40 shadow-inner"
                     />
                     <p className="mt-1.5 text-xs text-slate-400">
-                      Helps match building type and typical load profile.
+                      Improves location precision for utility rates and solar yield
                     </p>
-                    {businessNameInput.trim() && (
-                      <div className="mt-2 text-xs text-emerald-300 flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" />
-                        Building-level accuracy loaded
-                      </div>
-                    )}
                   </div>
+
+                  {businessNameInput.trim() && (
+                    <button
+                      onClick={handleAddressLookup}
+                      disabled={isLookingUp}
+                      className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold hover:from-blue-400 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 flex items-center justify-center gap-2 text-lg"
+                    >
+                      {isLookingUp ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Searching...
+                        </>
+                      ) : (
+                        <>
+                          <Search className="w-5 h-5" />
+                          Find My Business
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
