@@ -97,9 +97,6 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
   // TrueQuote modal state
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   
-  // Details accordion state
-  const [showDetails, setShowDetails] = useState(false);
-  
   // Facility refine toggle state
   const [showFacilityRefine, setShowFacilityRefine] = useState(false);
   
@@ -371,10 +368,10 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
             
             {/* Compact Instrument Header (≤64px total) */}
             <h1 className="text-3xl font-black text-white mb-1 leading-tight">
-              Let's maximize your energy savings
+              Start saving on your energy bill.
             </h1>
             <p className="text-sm text-slate-400">
-              Start with your ZIP code — we'll load utility rates, solar potential, and climate risk.
+              Enter your location to load utility rates, solar yield, and climate risk.
             </p>
 
             {/* TrueQuote Explanation Card - REMOVED, now in modal */}
@@ -501,56 +498,49 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
                       <Check className="w-3.5 h-3.5" />
                       Climate + solar data loaded
                     </div>
-                    {/* Accuracy improvement hint */}
-                    <div className="mt-3 text-xs text-blue-300/80 border-t border-blue-500/20 pt-3">
-                      ℹ️ ZIP-level estimates loaded. Add address or business name for building-level accuracy (optional).
-                    </div>
                   </div>
                 )}
 
-                {/* Optional Details Expander - Collapsed by default */}
+                {/* Address + Business Name - Always Visible After ZIP */}
                 {enrichedData && (
-                  <div className="mt-6">
-                    <button
-                      type="button"
-                      onClick={() => setShowDetails(!showDetails)}
-                      className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
-                    >
-                      <span>Add details (optional)</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showDetails ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {showDetails && (
-                      <div className="mt-4 space-y-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-slate-300 mb-2">Address (Optional)</label>
-                          <input
-                            type="text"
-                            value={streetAddress}
-                            onChange={(e) => setStreetAddress(e.target.value)}
-                            placeholder="123 Main St"
-                            className="w-full px-4 py-3.5 rounded-xl border-2 border-blue-500/30 bg-slate-800/50 text-white placeholder-slate-500 focus:border-blue-500/50 focus:bg-slate-800/70 outline-none transition-all"
-                          />
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        Street Address <span className="text-slate-500 font-normal">(optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={streetAddress}
+                        onChange={(e) => setStreetAddress(e.target.value)}
+                        placeholder="123 Main St"
+                        className="w-full px-4 py-3.5 rounded-xl border-2 border-indigo-500/30 bg-slate-800/40 text-white placeholder-slate-500 focus:border-indigo-400/50 focus:bg-slate-800/60 outline-none transition-all hover:border-indigo-500/40"
+                      />
+                      <p className="mt-1.5 text-xs text-slate-400">
+                        Improves accuracy (utility + solar + load assumptions).
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        Business / Facility Name <span className="text-slate-500 font-normal">(optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={businessNameInput}
+                        onChange={(e) => setBusinessNameInput(e.target.value)}
+                        placeholder="Acme Corporation"
+                        onKeyDown={(e) => e.key === "Enter" && businessNameInput.trim() && handleAddressLookup()}
+                        className="w-full px-4 py-3.5 rounded-xl border-2 border-indigo-500/30 bg-slate-800/40 text-white placeholder-slate-500 focus:border-indigo-400/50 focus:bg-slate-800/60 outline-none transition-all hover:border-indigo-500/40"
+                      />
+                      <p className="mt-1.5 text-xs text-slate-400">
+                        Helps match building type and typical load profile.
+                      </p>
+                      {businessNameInput.trim() && (
+                        <div className="mt-2 text-xs text-emerald-300 flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" />
+                          Building-level accuracy loaded
                         </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-slate-300 mb-2">Business Name (Optional)</label>
-                          <input
-                            type="text"
-                            value={businessNameInput}
-                            onChange={(e) => setBusinessNameInput(e.target.value)}
-                            placeholder="Acme Corporation"
-                            onKeyDown={(e) => e.key === "Enter" && businessNameInput.trim() && handleAddressLookup()}
-                            className="w-full px-4 py-3.5 rounded-xl border-2 border-blue-500/30 bg-slate-800/50 text-white placeholder-slate-500 focus:border-blue-500/50 focus:bg-slate-800/70 outline-none transition-all"
-                          />
-                          {businessNameInput.trim() && (
-                            <div className="mt-2 text-xs text-emerald-300 flex items-center gap-1">
-                              <Sparkles className="w-3 h-3" />
-                              Accuracy improved (business-level signals)
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 )}
 
