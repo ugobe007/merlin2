@@ -11,7 +11,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { TrustBadgesGrid } from "./shared/IndustryComplianceBadges";
-import { TrueQuoteBadge } from "./shared/TrueQuoteBadge";
+import { TrueQuoteBadgeCanonical } from "./shared/TrueQuoteBadgeCanonical";
 import { TrueQuoteModal } from "./shared/TrueQuoteModal";
 
 interface AboutMerlinProps {
@@ -295,7 +295,7 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
               onClick={() => setShowTrueQuoteModal(true)}
               className="hover:scale-105 transition-transform"
             >
-              <TrueQuoteBadge size="lg" showTooltip={false} />
+              <TrueQuoteBadgeCanonical showTooltip={false} />
             </button>
           </div>
 
