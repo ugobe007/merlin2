@@ -497,57 +497,6 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
                   </div>
                 )}
 
-                {/* Location Intelligence Dashboard - Immediate Reward (Jan 19, 2026) */}
-                {locationData && (
-                  <div className="mt-4 mb-4">
-                    {/* Intelligence Bar - Fixed Layout */}
-                    <div className="h-[60px] w-full rounded-xl px-5 py-3 bg-slate-700/55 border border-white/15 shadow-[0_2px_10px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.06)] flex items-center gap-6">
-                      {/* LEFT: Identity */}
-                      <div className="flex items-center gap-2 min-w-[180px]">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-lg shadow-lg flex-shrink-0">
-                          ✨
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-white font-semibold text-sm leading-none">Merlin</div>
-                          <span className="text-[10px] mt-0.5 inline-flex items-center gap-1 text-emerald-400">
-                            <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
-                            LIVE ANALYSIS
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* CENTER: Signals */}
-                      <div className="flex-1 flex items-center gap-6">
-                        <div className="flex items-center gap-2">
-                          <Zap className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                          <span className="text-white font-semibold text-sm tabular-nums">${locationData.electricityRate.toFixed(3)}/kWh</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <Sun className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                          <span className="text-white font-semibold text-sm tabular-nums">{locationData.sunHours.toFixed(1)} hrs/day</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <Shield className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                          <span className="text-slate-400 text-xs">Reliability:</span>
-                          <span className="text-white font-semibold text-sm">High</span>
-                        </div>
-                      </div>
-
-                      {/* RIGHT: Utility + Grade */}
-                      <div className="text-right min-w-[200px]">
-                        <div className="text-white text-sm font-medium leading-tight">
-                          {locationData.utilityName} • Commercial
-                        </div>
-                        <div className="text-xs mt-0.5">
-                          <span className="text-slate-400">Grade: </span>
-                          <span className="text-emerald-400 font-semibold">{locationData.solarLabel}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 

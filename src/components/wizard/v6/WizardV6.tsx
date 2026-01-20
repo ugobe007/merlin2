@@ -665,8 +665,77 @@ export default function WizardV6() {
             {/* Inner glass lip */}
             <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(0,0,0,0.35)]" />
 
+            {/* TOP: Intelligence Header - Always visible with key metrics */}
+            {state.zipCode && state.electricityRate && (
+              <div className="relative border-b border-white/10 bg-gradient-to-r from-slate-800/40 via-slate-900/50 to-slate-800/40 backdrop-blur-sm">
+                <div className="h-[60px] px-6 flex items-center gap-6">
+                  {/* LEFT: Merlin Identity */}
+                  <div className="flex items-center gap-2 min-w-[160px]">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-lg shadow-lg flex-shrink-0">
+                      ✨
+                    </div>
+                    <div>
+                      <div className="text-white font-semibold text-sm leading-none">Merlin Intelligence</div>
+                      <span className="text-[10px] mt-0.5 inline-flex items-center gap-1 text-emerald-400">
+                        <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                        LIVE
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* CENTER: Key Metrics */}
+                  <div className="flex-1 flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <span className="text-cyan-400 font-mono text-sm">⚡</span>
+                      <span className="text-white font-semibold text-sm tabular-nums">
+                        ${state.electricityRate?.toFixed(3) || '0.000'}/kWh
+                      </span>
+                    </div>
+
+                    {state.solarData?.sunHours && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-400 text-sm">☀️</span>
+                        <span className="text-white font-semibold text-sm tabular-nums">
+                          {state.solarData.sunHours.toFixed(1)} hrs/day
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-400 text-sm">🛡️</span>
+                      <span className="text-slate-400 text-xs">Grid:</span>
+                      <span className="text-white font-semibold text-sm">
+                        {state.calculations?.base?.gridReliability || 'Reliable'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* RIGHT: Location + Site Score */}
+                  <div className="text-right min-w-[200px]">
+                    <div className="text-white text-sm font-medium leading-tight">
+                      {state.zipCode} • {state.state}
+                    </div>
+                    {siteScore && (
+                      <div className="text-xs mt-0.5">
+                        <span className="text-slate-400">Score: </span>
+                        <span className={`font-bold ${
+                          siteScore.scoreLabel === 'exceptional' || siteScore.scoreLabel === 'strong' 
+                            ? 'text-emerald-400' 
+                            : siteScore.scoreLabel === 'good' 
+                            ? 'text-amber-400' 
+                            : 'text-orange-400'
+                        }`}>
+                          {siteScore.totalScore}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ✅ PHASE 2B: Full-height shell with separate scroll regions */}
-            <div className="relative flex h-[calc(100vh-48px)] flex-col lg:flex-row">
+            <div className="relative flex h-[calc(100vh-108px)] flex-col lg:flex-row">
               {/* LEFT: Cockpit - Wider and more integrated */}
               <div className="lg:w-[450px] lg:flex-shrink-0 border-white/10 lg:border-r">
                 <div className="h-full p-6 overflow-y-auto">
