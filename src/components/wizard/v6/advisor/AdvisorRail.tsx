@@ -1,8 +1,9 @@
 // src/components/wizard/v6/advisor/AdvisorRail.tsx
 
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
+import { X } from "lucide-react";
 import avatarImg from "@/assets/images/new_small_profile_.png";
 import type { IntelligenceContext } from "@/types/intelligence.types";
 import type { SiteScoreResult } from "@/services/calculators/siteScoreCalculator";
@@ -19,6 +20,86 @@ function ModeBadge({ mode }: { mode: "estimate" | "verified" }) {
     <span className="text-[11px] px-2 py-1 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/25">
       ⚠️ Estimate
     </span>
+  );
+}
+
+// Weather Risk Modal Component
+function WeatherRiskModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null;
+
+  const riskFactors = [
+    { name: "Storm frequency", level: 20, color: "emerald" },
+    { name: "Extreme heat events", level: 35, color: "amber" },
+    { name: "Grid reliability", level: 15, color: "emerald" },
+    { name: "Extreme cold events", level: 10, color: "emerald" },
+    { name: "Wind/tornado risk", level: 25, color: "amber" },
+  ];
+
+  const overallRisk = Math.round(riskFactors.reduce((sum, f) => sum + f.level, 0) / riskFactors.length);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-slate-900 rounded-2xl p-6 max-w-lg w-full mx-4 border border-blue-500/30 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h3 className="text-2xl font-black text-white mb-1">Weather Risk</h3>
+            <p className="text-sm text-slate-400">Grid + climate stability</p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Overall Risk Banner */}
+        <div className={`mb-6 p-4 rounded-xl border-2 ${
+          overallRisk < 30 
+            ? 'border-emerald-500/30 bg-emerald-500/10' 
+            : overallRisk < 60 
+            ? 'border-amber-500/30 bg-amber-500/10' 
+            : 'border-red-500/30 bg-red-500/10'
+        }`}>
+          <div className={`text-center font-black text-lg ${
+            overallRisk < 30 
+              ? 'text-emerald-400' 
+              : overallRisk < 60 
+              ? 'text-amber-400' 
+              : 'text-red-400'
+          }`}>
+            {overallRisk < 30 ? 'LOW OVERALL RISK' : overallRisk < 60 ? 'MODERATE RISK' : 'HIGH RISK'}
+          </div>
+        </div>
+
+        {/* Risk Factor Bars */}
+        <div className="space-y-4 mb-6">
+          {riskFactors.map((factor, idx) => (
+            <div key={idx}>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm text-slate-300">{factor.name}</span>
+                <span className="text-xs text-slate-400">{factor.level}%</span>
+              </div>
+              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full ${
+                    factor.color === 'emerald' 
+                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' 
+                      : 'bg-gradient-to-r from-amber-500 to-amber-400'
+                  }`}
+                  style={{ width: `${factor.level}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Recommendation */}
+        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+          <div className="text-xs text-blue-200 leading-relaxed">
+            <strong>Recommendation:</strong> Reliable grid + strong solar = prioritize peak shaving + solar-ready storage.
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -82,6 +163,9 @@ export function AdvisorRail({
   const { getCurrent, getWarnings } = useAdvisorPublisher();
   const payload = getCurrent();
   const warnings = getWarnings();
+
+  // Modal state (Jan 20, 2026 - Vineet UX)
+  const [showWeatherRiskModal, setShowWeatherRiskModal] = useState(false);
 
   const canClick = (stepNum: number) => stepNum <= currentStep;
 
@@ -343,7 +427,12 @@ export function AdvisorRail({
 
                 {/* Weather Risk */}
                 <div className="relative rounded-lg border border-blue-500/20 bg-slate-800/40 p-3">
-                  <button className="absolute top-2 right-2 text-slate-400 hover:text-white text-xs">ⓘ</button>
+                  <button 
+                    onClick={() => setShowWeatherRiskModal(true)}
+                    className="absolute top-2 right-2 text-slate-400 hover:text-white text-xs transition-colors"
+                  >
+                    ⓘ
+                  </button>
                   <div className="text-[10px] text-blue-300/70 font-semibold mb-1">WEATHER RISK</div>
                   <div className="text-2xl font-black text-white">Low</div>
                   <div className="text-[10px] text-slate-400 mt-0.5">grid + climate</div>
@@ -525,6 +614,9 @@ export function AdvisorRail({
           </div>
         </div>
       )}
+
+      {/* WEATHER RISK MODAL (Jan 20, 2026 - Vineet UX) */}
+      <WeatherRiskModal isOpen={showWeatherRiskModal} onClose={() => setShowWeatherRiskModal(false)} />
     </div>
   );
 }
