@@ -675,8 +675,8 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
           </section>
         )}
 
-        {/* Continue Button */}
-        {canProceed && (
+        {/* Continue Button - HIDDEN: Use bottom nav instead to avoid duplicate CTAs */}
+        {false && canProceed && (
           <div className="flex items-center justify-end">
             <button
               onClick={() => {
