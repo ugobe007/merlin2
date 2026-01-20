@@ -5,16 +5,13 @@ import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
 import { X } from "lucide-react";
 import avatarImg from "@/assets/images/new_small_profile_.png";
+import { TrueQuoteBadge } from "@/components/shared/TrueQuoteBadge";
 import type { IntelligenceContext } from "@/types/intelligence.types";
 import type { SiteScoreResult } from "@/services/calculators/siteScoreCalculator";
 
 function ModeBadge({ mode }: { mode: "estimate" | "verified" }) {
   if (mode === "verified") {
-    return (
-      <span className="text-[11px] px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
-        ✅ TrueQuote Verified
-      </span>
-    );
+    return <TrueQuoteBadge size="sm" variant="minimal" verified={true} showTooltip={false} />;
   }
   return (
     <span className="text-[11px] px-2 py-1 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/25">
@@ -135,7 +132,7 @@ interface AdvisorRailProps {
   onNavigate?: (step: number) => void;
 }
 
-const STEP_LABELS = ["Location", "Industry", "Details", "Options", "TrueQuote", "Results"];
+const STEP_LABELS = ["Location", "Industry", "Details", "Options", "TrueQuote™", "Results"];
 
 function safeNum(n?: number) {
   return typeof n === "number" && !Number.isNaN(n) ? n : null;
@@ -376,8 +373,7 @@ export function AdvisorRail({
 
       {/* LOCATION ANALYSIS CARD - Core Intelligence (Jan 20, 2026) */}
       <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
-        <div className="rounded-xl border border-violet-500/25 bg-gradient-to-br from-violet-500/8 via-indigo-800/40 to-blue-500/8 p-4 shadow-[inset_0_1px_0_rgba(167,139,250,0.1)]">
-          {/* Card Header */}
+        <div className="rounded-xl border border-violet-500/25 bg-gradient-to-br from-slate-700/40 via-slate-800/50 to-violet-900/30 p-4 shadow-[inset_0_1px_0_rgba(167,139,250,0.1)]">{/*Card Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-lg">📍</span>
@@ -451,7 +447,7 @@ export function AdvisorRail({
 
               {/* Utility Identified Row */}
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/30 mb-3">
-                <span className="text-cyan-400">⚡</span>
+                <span className="text-violet-400">⚡</span>
                 <div className="flex-1">
                   <div className="text-[9px] text-slate-400 uppercase tracking-wide">Utility Territory</div>
                   <div className="text-xs text-white font-semibold">
