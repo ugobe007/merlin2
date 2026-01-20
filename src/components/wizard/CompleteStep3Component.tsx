@@ -953,49 +953,7 @@ export function CompleteStep3Component({
           </div>
         </main>
 
-        {/* Fixed Bottom Navigation */}
-        <footer className="sticky bottom-0 z-40 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800 px-6 py-3">
-          <div className="max-w-3xl mx-auto flex items-center justify-between">
-            {/* Back Button - Compact */}
-            <button
-              onClick={goToPreviousQuestion}
-              className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-all text-sm"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="font-medium">Back</span>
-            </button>
-
-            {/* Progress Indicator - Minimal */}
-            <div className="text-center">
-              <div className="text-xs text-slate-400">
-                <span className="text-white font-medium">{currentQuestionIndex + 1}</span>
-                <span className="text-slate-500 mx-1">/</span>
-                <span>{totalQuestions}</span>
-              </div>
-            </div>
-
-            {/* Next/Finish Button - Compact with glow */}
-            {currentQuestionIndex < totalQuestions - 1 ? (
-              <button
-                onClick={goToNextQuestion}
-                disabled={!answers[currentQuestion?.id]}
-                className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all hover:scale-105 shadow-md shadow-violet-500/25"
-              >
-                <span>Continue</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                onClick={handleComplete}
-                disabled={!canProceed()}
-                className="flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg font-bold text-sm transition-all hover:scale-105 shadow-md shadow-violet-500/25"
-              >
-                <span>Continue</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </footer>
+        {/* Fixed Bottom Navigation - REMOVED: WizardV6 has floating navigation (Jan 20, 2026) */}
       </div>
     </div>
   );
