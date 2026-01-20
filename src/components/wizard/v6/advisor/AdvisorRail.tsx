@@ -571,6 +571,10 @@ export function AdvisorRail({
           </div>
         </div>
       )}
+
+      {/* MERLIN'S INSIGHT - Only show if we have one */}
+      {insight && (
+        <div className="px-5 py-3 border-b border-blue-500/20 flex-shrink-0">
           <div className="p-2.5 bg-blue-500/10 border border-blue-400/25 rounded-lg">
             <div className="flex items-start gap-2">
               <span className="text-sm">💡</span>
