@@ -855,7 +855,7 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
                 }}
                 className="px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-lg font-black shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all flex items-center gap-2"
               >
-                Next Step
+                Continue to Industry
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
