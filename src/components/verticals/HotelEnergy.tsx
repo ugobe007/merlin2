@@ -17,7 +17,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { DollarSign, CheckCircle, ArrowRight, Sun, Sparkles, X, Battery, Building2, Car, Leaf, Receipt } from 'lucide-react';
+import { DollarSign, CheckCircle, ArrowRight, Sun, Sparkles, X, Battery, Building2, Car, Leaf, Receipt, MapPin, Plug, Zap } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { calculateHotelPowerSimple, type HotelClassSimple, type HotelAmenitySimple } from '@/services/useCasePowerCalculations';
@@ -893,7 +893,10 @@ export default function HotelEnergy() {
 
               {/* Location - Full Width */}
               <div className="mb-4">
-                <label className="text-gray-300 text-sm font-semibold mb-1.5 block">📍 Location</label>
+                <label className="text-gray-300 text-sm font-semibold mb-1.5 flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-violet-400" />
+                  <span>Location</span>
+                </label>
                 <select
                   value={inputs.state}
                   onChange={(e) => setInputs({ ...inputs, state: e.target.value })}
@@ -1043,7 +1046,17 @@ export default function HotelEnergy() {
                     }`}
                     style={{ animationDuration: '2s' }}
                   >
-                    {inputs.hasEVCharging ? '✓ EV Enabled' : '⚡ + Add EV'}
+                    {inputs.hasEVCharging ? (
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle className="w-4 h-4" />
+                        EV Enabled
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5">
+                        <Plug className="w-4 h-4" />
+                        + Add EV
+                      </span>
+                    )}
                   </button>
                 </div>
                 {inputs.hasEVCharging && (

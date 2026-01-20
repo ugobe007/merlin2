@@ -17,7 +17,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Calculator, CheckCircle, ArrowRight, Phone, Sun, TrendingDown, Shield, Sparkles, X, Battery, Bolt, Gauge, ChevronDown } from 'lucide-react';
+import { Calculator, CheckCircle, ArrowRight, Phone, Sun, TrendingDown, Shield, Sparkles, X, Battery, Bolt, Gauge, ChevronDown, Zap, Check } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { calculateEVChargingPowerSimple } from '@/services/evChargingCalculations';
@@ -383,7 +383,10 @@ export default function EVChargingEnergy() {
             </div>
             <div>
               <h1 className="text-xl font-black text-white tracking-tight">EV<span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">ChargingPower</span></h1>
-              <p className="text-xs text-emerald-300 font-medium">⚡ Battery Storage for EV Stations</p>
+              <p className="text-xs text-emerald-300 font-medium flex items-center gap-1.5">
+                <Zap className="w-3 h-3" />
+                Battery Storage for EV Stations
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -586,7 +589,10 @@ export default function EVChargingEnergy() {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-emerald-500/20 px-4 py-2 rounded-full border border-emerald-400/40 mb-4">
               <Bolt className="w-5 h-5 text-emerald-400" />
-              <span className="text-emerald-200 text-sm font-bold">⚡ EV STATION CALCULATOR</span>
+              <span className="text-emerald-200 text-sm font-bold flex items-center gap-1.5">
+                <Zap className="w-4 h-4" />
+                EV STATION CALCULATOR
+              </span>
             </div>
             <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
               Calculate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-400 to-cyan-300">Savings</span>
@@ -710,7 +716,10 @@ export default function EVChargingEnergy() {
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className="bg-emerald-500/20 rounded-xl p-3 border border-emerald-400/30">
                     <p className="text-3xl font-black text-emerald-400">{peakKW} kW</p>
-                    <p className="text-xs text-emerald-200 font-semibold">⚡ Peak Demand</p>
+                    <p className="text-xs text-emerald-200 font-semibold flex items-center gap-1.5">
+                      <Zap className="w-3 h-3" />
+                      Peak Demand
+                    </p>
                   </div>
                   <div className="bg-red-500/20 rounded-xl p-3 border border-red-400/30">
                     <p className="text-3xl font-black text-red-400">${demandChargeImpact.toLocaleString()}</p>
@@ -723,7 +732,9 @@ export default function EVChargingEnergy() {
             {/* Results Card */}
             <div className="relative bg-gradient-to-br from-slate-900 via-emerald-900/50 to-teal-900/40 backdrop-blur-xl rounded-3xl p-8 border-3 border-emerald-400/60 shadow-2xl shadow-emerald-500/30">
               {/* Static decorations */}
-              <div className="absolute top-3 right-3 text-2xl">⚡</div>
+              <div className="absolute top-3 right-3">
+                <Zap className="w-8 h-8 text-emerald-400/30" />
+              </div>
               <div className="absolute top-3 left-3 text-xl animate-bounce">💰</div>
               <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/50 border-2 border-emerald-300/50">
@@ -741,7 +752,11 @@ export default function EVChargingEnergy() {
                   {/* Main Savings - HERO NUMBER */}
                   <div className="relative bg-gradient-to-br from-emerald-600/30 via-teal-600/20 to-emerald-600/30 rounded-2xl p-8 text-center border border-emerald-400/40">
                     <p className="text-sm text-emerald-300 uppercase tracking-[0.2em] mb-3 font-bold">
-                      ⚡ ANNUAL SAVINGS ⚡
+                      <span className="flex items-center gap-2 justify-center">
+                        <Zap className="w-5 h-5 text-emerald-400" />
+                        <span>ANNUAL SAVINGS</span>
+                        <Zap className="w-5 h-5 text-emerald-400" />
+                      </span>
                     </p>
                     <p className="text-6xl md:text-7xl font-black text-emerald-400 drop-shadow-lg">
                       ${Math.round(quoteResult.financials.annualSavings).toLocaleString()}
@@ -822,7 +837,16 @@ export default function EVChargingEnergy() {
                   </div>
                   
                   <p className="text-center text-white/50 text-sm">
-                    ✓ Free consultation • ✓ No obligation • ✓ Takes 2 minutes
+                    <div className="flex items-center gap-2 text-emerald-200 text-xs">
+                      <Check className="w-3 h-3" />
+                      <span>Free consultation</span>
+                      <span>•</span>
+                      <Check className="w-3 h-3" />
+                      <span>No obligation</span>
+                      <span>•</span>
+                      <Check className="w-3 h-3" />
+                      <span>Takes 2 minutes</span>
+                    </div>
                   </p>
                 </div>
               ) : (
@@ -844,7 +868,10 @@ export default function EVChargingEnergy() {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-teal-500/20 px-4 py-2 rounded-full border border-teal-400/40 mb-4">
               <Battery className="w-5 h-5 text-teal-400" />
-              <span className="text-teal-200 text-sm font-bold">🔋 HOW IT WORKS</span>
+              <span className="text-teal-200 text-sm font-bold flex items-center gap-1.5">
+                <Battery className="w-4 h-4" />
+                HOW IT WORKS
+              </span>
             </div>
             <h2 className="text-3xl font-black text-white">
               How Battery Storage <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300">Saves You Money</span>
@@ -1012,8 +1039,8 @@ export default function EVChargingEnergy() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
           <div className="bg-gradient-to-br from-slate-900 via-emerald-900/50 to-slate-900 rounded-3xl p-8 max-w-md w-full border-3 border-emerald-400/60 shadow-2xl shadow-emerald-500/30 relative">
             {/* Decorative corners */}
-            <div className="absolute top-2 left-2 text-2xl">⚡</div>
-            <div className="absolute top-2 right-12 text-xl">🔋</div>
+            <Zap className="absolute top-2 left-2 w-8 h-8 text-emerald-400/20" />
+            <Battery className="absolute top-2 right-12 w-6 h-6 text-teal-400/20" />
             <button onClick={() => setShowLeadForm(false)} className="absolute top-3 right-3 p-2 text-white/70 hover:text-white hover:bg-emerald-500/30 rounded-xl transition-all border border-transparent hover:border-emerald-400/50">
               <X className="w-6 h-6" />
             </button>
