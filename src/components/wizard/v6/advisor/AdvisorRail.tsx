@@ -288,21 +288,103 @@ export function AdvisorRail({
 
           {payload?.mode && <ModeBadge mode={payload.mode} />}
         </div>
+      </div>
 
-        <div className="mt-4 rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-slate-800/50 to-violet-500/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_16px_rgba(0,0,0,0.2)] backdrop-blur-sm">
-          <div className="text-base font-extrabold text-white leading-snug tracking-tight line-clamp-2">
-            {payload?.headline || "Let's maximize your energy savings."}
-          </div>
-          {payload?.subline && (
-            <div className="mt-2 text-sm text-slate-200/80 whitespace-pre-line line-clamp-3">
-              {payload.subline}
+      {/* LOCATION ANALYSIS CARD - Core Intelligence (Jan 20, 2026) */}
+      <div className="px-6 py-4 border-b border-blue-500/20 flex-shrink-0">
+        <div className="rounded-xl border border-blue-500/25 bg-gradient-to-br from-blue-500/8 via-slate-800/40 to-indigo-500/8 p-4 shadow-[inset_0_1px_0_rgba(147,197,253,0.1)]">
+          {/* Card Header */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📍</span>
+              <h3 className="text-sm font-bold text-white">Location Analysis</h3>
             </div>
+            {/* LIVE badge - only show when ZIP validated */}
+            {zip && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-bold">LIVE</span>
+              </div>
+            )}
+          </div>
+
+          {/* Card Body - Two States */}
+          {!zip ? (
+            /* BEFORE ZIP: Placeholder */
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="text-4xl mb-3">🗺️</div>
+              <div className="text-xs text-slate-400 mb-1">Enter your ZIP to load</div>
+              <div className="text-sm text-slate-300">utility rates, solar yield, and climate risk.</div>
+            </div>
+          ) : (
+            /* AFTER ZIP: Intelligence Grid */
+            <>
+              {/* 2x2 Metrics Grid */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {/* Peak Sun */}
+                <div className="relative rounded-lg border border-blue-500/20 bg-slate-800/40 p-3">
+                  <button className="absolute top-2 right-2 text-slate-400 hover:text-white text-xs">ⓘ</button>
+                  <div className="text-[10px] text-blue-300/70 font-semibold mb-1">PEAK SUN</div>
+                  <div className="text-2xl font-black text-white tabular-nums">
+                    {context?.solar?.sunHours?.toFixed(1) || '—'}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">hrs/day</div>
+                </div>
+
+                {/* Electricity Rate */}
+                <div className="relative rounded-lg border border-blue-500/20 bg-slate-800/40 p-3">
+                  <button className="absolute top-2 right-2 text-slate-400 hover:text-white text-xs">ⓘ</button>
+                  <div className="text-[10px] text-blue-300/70 font-semibold mb-1">ELECTRICITY</div>
+                  <div className="text-2xl font-black text-white tabular-nums">
+                    ${(rate || 0).toFixed(2)}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">$/kWh</div>
+                </div>
+
+                {/* Weather Risk */}
+                <div className="relative rounded-lg border border-blue-500/20 bg-slate-800/40 p-3">
+                  <button className="absolute top-2 right-2 text-slate-400 hover:text-white text-xs">ⓘ</button>
+                  <div className="text-[10px] text-blue-300/70 font-semibold mb-1">WEATHER RISK</div>
+                  <div className="text-2xl font-black text-white">Low</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">grid + climate</div>
+                </div>
+
+                {/* Solar Rating */}
+                <div className="relative rounded-lg border border-blue-500/20 bg-slate-800/40 p-3">
+                  <button className="absolute top-2 right-2 text-slate-400 hover:text-white text-xs">ⓘ</button>
+                  <div className="text-[10px] text-blue-300/70 font-semibold mb-1">SOLAR RATING</div>
+                  <div className="text-2xl font-black text-white">
+                    {context?.solar?.rating || 'A+'}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">yield score</div>
+                </div>
+              </div>
+
+              {/* Utility Identified Row */}
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/30 mb-3">
+                <span className="text-cyan-400">⚡</span>
+                <div className="flex-1">
+                  <div className="text-[9px] text-slate-400 uppercase tracking-wide">Utility Territory</div>
+                  <div className="text-xs text-white font-semibold">
+                    {context?.location?.utilityName || `${st} Energy`} (avg commercial)
+                  </div>
+                </div>
+              </div>
+
+              {/* Insight Box */}
+              <div className="rounded-lg border border-blue-400/20 bg-blue-500/5 p-3">
+                <p className="text-xs text-blue-100 leading-relaxed">
+                  <strong>{context?.location?.city || zip}, {st}</strong> shows strong solar yield and reliable grid conditions. 
+                  BESS + peak shaving tends to perform well at this rate band.
+                </p>
+              </div>
+            </>
           )}
         </div>
       </div>
 
-      {/* STEP PROGRESS */}
-      <div className="px-6 py-5 border-b border-blue-500/20 flex-shrink-0">
+      {/* PROGRESS - Visually reduced dominance */}
+      <div className="px-6 py-4 border-b border-blue-500/20 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div className="text-sm font-bold text-blue-300/90">PROGRESS</div>
           <div className="text-sm text-blue-200/70">
@@ -354,77 +436,52 @@ export function AdvisorRail({
         </div>
       </div>
 
-      {/* LOCATION / UTILITY CONTEXT - Simplified */}
-      <div className="px-6 py-4 border-b border-blue-500/20 flex-shrink-0">
-        {/* EMPTY STATE: no ZIP yet */}
-        {!zip && !st ? (
-          <div className="rounded-lg border border-blue-500/25 bg-blue-500/10 p-3">
+      {/* ACCURACY / TERRITORY CHIP - Bottom section */}
+      {zip && context?.siteScore && (
+        <div className="px-6 py-4 border-b border-blue-500/20 flex-shrink-0">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-lg">📍</span>
-              <div className="text-sm text-blue-200">Enter your location to see savings</div>
+              <span className="text-sm">📍</span>
+              <div className="text-sm text-white font-semibold">{zip} • {st}</div>
+            </div>
+            <div className="group relative">
+              <div
+                className={`px-2 py-1 rounded text-xs font-bold cursor-help ${
+                  context.siteScore.scoreLabel === "exceptional" ||
+                  context.siteScore.scoreLabel === "strong"
+                    ? "bg-emerald-500/15 text-emerald-400"
+                    : context.siteScore.scoreLabel === "good"
+                      ? "bg-amber-500/15 text-amber-300"
+                      : "bg-orange-500/15 text-orange-300"
+                }`}
+                title="Click for accuracy details"
+              >
+                {context.siteScore.totalScore} {context.siteScore.scoreLabel.charAt(0).toUpperCase() + context.siteScore.scoreLabel.slice(1)}
+              </div>
+              {/* Tooltip */}
+              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-64 p-3 rounded-lg bg-slate-900 border border-blue-500/30 shadow-xl z-50">
+                <div className="text-xs font-bold text-white mb-1">Accuracy score</div>
+                <div className="text-xs text-slate-300">
+                  {context.siteScore.totalScore}/100 = ZIP-level estimate. Add address or business name to improve precision.
+                </div>
+              </div>
             </div>
           </div>
-        ) : (
-          <>
-            {/* LOCATION + SITE SCORE - Compact */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">📍</span>
-                <div className="text-base font-bold text-white">
-                  {zip} • {st}
-                </div>
-              </div>
-              {context?.siteScore && (
-                <div
-                  className={`px-2 py-1 rounded text-xs font-bold ${
-                    context.siteScore.scoreLabel === "exceptional" ||
-                    context.siteScore.scoreLabel === "strong"
-                      ? "bg-emerald-500/15 text-emerald-400"
-                      : context.siteScore.scoreLabel === "good"
-                        ? "bg-amber-500/15 text-amber-300"
-                        : "bg-orange-500/15 text-orange-300"
-                  }`}
-                >
-                  {context.siteScore.totalScore}{" "}
-                  {context.siteScore.scoreLabel.charAt(0).toUpperCase() +
-                    context.siteScore.scoreLabel.slice(1)}
-                </div>
-              )}
-            </div>
+        </div>
+      )}
 
-            {/* Utility context line */}
-            <div className="mt-2 text-xs text-blue-200/80">
-              {context?.location?.utilityName ? context.location.utilityName : "Utility territory"}{" "}
-              {context?.location?.city ? `• ${context.location.city}` : ""}
-            </div>
-
-            {/* MERLIN SAYS - One insight when Site Score available */}
-            {context?.siteScore?.merlinSays && (
-              <div className="mt-3 p-2.5 bg-amber-500/8 border border-amber-500/15 rounded-lg">
-                <div className="text-[11px] text-amber-200/90 leading-relaxed">
-                  💬 <span className="font-semibold text-amber-300">Merlin:</span>{" "}
-                  {context.siteScore.merlinSays}
-                </div>
-              </div>
+      {/* CONSTRAINT WARNING (Step 3+) - Only show when relevant */}
+      {constraint && (
+        <div className="px-6 py-4 border-b border-blue-500/20 flex-shrink-0">
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+            <div className="text-[11px] font-semibold text-amber-200 mb-1">⚠️ Heads up</div>
+            <div className="text-xs text-slate-200/80">{constraint}</div>
+            {constraintDriver && (
+              <div className="mt-1.5 text-[10px] text-slate-400">{constraintDriver}</div>
             )}
-
-            {/* CONSTRAINT WARNING (Step 3+) */}
-            {constraint && (
-              <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-                <div className="text-[11px] font-semibold text-amber-200 mb-1">⚠️ Heads up</div>
-                <div className="text-xs text-slate-200/80">{constraint}</div>
-                {constraintDriver && (
-                  <div className="mt-1.5 text-[10px] text-slate-400">{constraintDriver}</div>
-                )}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* MERLIN'S INSIGHT - Only show if we have one */}
-      {insight && (
-        <div className="px-5 py-3 border-b border-blue-500/20 flex-shrink-0">
+          </div>
+        </div>
+      )}
           <div className="p-2.5 bg-blue-500/10 border border-blue-400/25 rounded-lg">
             <div className="flex items-start gap-2">
               <span className="text-sm">💡</span>

@@ -837,11 +837,8 @@ export default function WizardV6() {
                 Back
               </button>
 
-              {/* Step indicator + Start Over */}
+              {/* Start Over button only - step progress shown in left rail */}
               <div className="flex items-center gap-3">
-                <div className="px-4 py-2 rounded-full bg-slate-800/90 backdrop-blur-sm border border-white/10 text-sm text-slate-300 shadow-lg">
-                  Step {currentStep} of 6
-                </div>
                 <button
                   onClick={() => setShowStartOverModal(true)}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-500 hover:to-purple-500 border border-violet-400/30 text-xs font-semibold transition-all shadow-[0_0_15px_rgba(139,92,246,0.4)] hover:shadow-[0_0_25px_rgba(139,92,246,0.6)]"
