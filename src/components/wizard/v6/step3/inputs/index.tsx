@@ -927,6 +927,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
               value={value as string | null}
               onChange={(v) => onChange(field_name, v)}
               colorScheme={scheme}
+              questionField={field_name}
             />
           );
         }
