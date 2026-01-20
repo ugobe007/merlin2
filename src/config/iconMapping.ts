@@ -93,7 +93,6 @@ import {
   // Tools & Equipment
   Wrench,
   Hammer,
-  Tool,
   
   type LucideIcon,
 } from "lucide-react";
