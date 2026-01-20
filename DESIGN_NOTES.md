@@ -1,8 +1,102 @@
 # Merlin Energy - UI/UX Design Notes
 
-**Last Updated:** December 21, 2025 (New 6-Step Workflow)  
+**Last Updated:** January 20, 2026 (Advisor-Led Two-Panel Layout)  
 **Purpose:** This file serves as persistent design memory for AI assistants working on this project.  
 **⚠️ AI AGENTS: READ THIS ENTIRE FILE BEFORE MAKING ANY UI CHANGES!**
+
+---
+
+## 🚀 LATEST: Advisor-Led Step 1 (January 20, 2026)
+
+### Step 1 Adopted — Advisor-Led Two-Panel Layout
+
+The wizard now uses an advisor-led 2-panel design for Step 1 with Merlin in a persistent sidebar and the user’s input workspace on the right.
+
+Layout:
+```
+┌──────────────────┬────────────────────────────────────────────┐
+│ MERLIN SIDEBAR   │ MAIN WORKSPACE                             │
+│ (340px fixed)    │ (Flexible)                                 │
+│                  │                                            │
+│ • Avatar/Name    │ • Step Header                              │
+│ • Live Insight   │ • US/International Toggle                  │
+│ • Site Intel     │ • ZIP/Location Input                       │
+│ • Suggestions    │ • Business Lookup (near location)          │
+│ • Site Score™    │ • Goals Grid (2x2)                         │
+│ • Progress       │ • Continue Button                          │
+└──────────────────┴────────────────────────────────────────────┘
+```
+
+Component: [src/components/wizard/v6/steps/Step1AdvisorLed.tsx](src/components/wizard/v6/steps/Step1AdvisorLed.tsx)
+
+Wizard Integration: [src/components/wizard/v6/WizardV6.tsx](src/components/wizard/v6/WizardV6.tsx)
+
+Key directives implemented:
+- Business lookup placed adjacent to location input (header/main panel)
+- Merlin Site Score™ retained and displayed in sidebar
+- Comprehensive Site Intelligence preserved (utility, rate, demand, solar, climate)
+- Auto-goal selection based on climate and rate signals
+- US/International toggle with country/city lookup; state synced for calculations
+
+TrueQuote™ Compliance:
+- All displayed metrics show source attribution (EIA, NREL PVWatts, Visual Crossing)
+- No quote or financial calculations are performed in Step 1; services provide data enrichment only
+
+---
+
+## 🚀 LATEST: 3-COLUMN SITE INTELLIGENCE (January 19, 2026)
+
+### Step 1 Redesigned - Site Intelligence Layout
+
+Step 1 now uses a 3-column "Site Intelligence" layout that shows VALUE FIRST:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         ZIP CODE INPUT (centered)                           │
+│                         [_____89052_____] ✓                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────┬─────────────────────┬───────────────────┐
+│ SITE FACTS      │ MERLIN INSIGHT      │ YOUR GOALS        │
+│ (Auto-filled)   │ (Value First)       │ (Auto-selected)   │
+├─────────────────┼─────────────────────┼───────────────────┤
+│ 📍 Location     │ 🧠 Merlin says:     │ ✓ Cost Savings   │
+│ Henderson, NV   │ "Sites like this    │ ✓ Peak Shaving   │
+│ Utility: NV     │ typically face high │ □ ESG / Carbon   │
+│ Energy          │ summer demand..."   │ □ Backup Power   │
+│                 │                     │ □ Resilience     │
+│ ⚡ Grid Status  │ Key Drivers:        │ □ Grid Revenue   │
+│ High Demand     │ • Extreme heat      │                   │
+│ Charges         │ • High rates        │ Auto-selected    │
+│                 │ • Strong solar      │ based on climate │
+│ 🌡️ Climate      │                     │                   │
+│ Frequent        │ Opportunity Range:  │                   │
+│ heatwaves       │ • 20-35% peak cost  │                   │
+│                 │   reduction         │                   │
+│ ☀️ Solar        │ • 4-8 hrs backup    │                   │
+│ Excellent       │                     │                   │
+│ 5.8 peak hrs    │ Source: NREL, EIA   │                   │
+└─────────────────┴─────────────────────┴───────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ⭐ Merlin Site Score™ (Preview): 72 / 100 ↔ Strong Candidate               │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Component**: `src/components/wizard/v6/steps/Step1LocationRedesign.tsx`
+
+**Features**:
+- **Progressive Discovery**: ZIP → API enrichment → Site Facts populate
+- **Auto-Goal Selection**: Goals pre-checked based on climate signals
+- **Merlin Insight**: Context-aware messaging based on location data
+- **Site Score™**: 0-100 score preview (rate, solar, demand charge factors)
+- **TrueQuote™ Sources**: Every metric shows data sources
+
+**Data Flow**:
+1. User enters ZIP → `enrichLocationData()` API call
+2. Live data from: Google Geocoding, EIA rates, NREL PVWatts, Visual Crossing
+3. Climate parsing → auto-goal selection (heat → Cost+Peak, hurricane → Backup+Resilience)
+4. Merlin Insight generated based on conditions
 
 ---
 
@@ -15,18 +109,19 @@
 │                         MERLIN WIZARD - 6 STEPS                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  STEP 1: LOCATION + GOALS                                                   │
-│  └─ State selector, electricity rates, primary goals                        │
-│  └─ Component: Step1LocationGoals.tsx                                       │
+│  STEP 1: SITE INTELLIGENCE                                                  │
+│  └─ ZIP input → 3-column layout (Facts | Insight | Goals)                   │
+│  └─ Auto-fill site data, auto-suggest goals                                 │
+│  └─ Component: Step1LocationRedesign.tsx                                    │
 │                                                                             │
 │  STEP 2: INDUSTRY                                                           │
 │  └─ Industry selection (Commercial, Industrial, Housing tabs)               │
-│  └─ Component: Step2IndustrySize.tsx                                        │
+│  └─ Component: EnhancedStep2Industry.tsx                                    │
 │                                                                             │
 │  STEP 3: INPUTS (Facility Details)                                          │
 │  └─ Custom questions based on industry                                      │
 │  └─ Premium slider inputs with +/- controls                                 │
-│  └─ Component: Step3FacilityDetails.tsx                                     │
+│  └─ Component: Step3Details.tsx                                             │
 │                                                                             │
 │  STEP 4: REVIEW & CONFIGURE (Magic Fit™)                                    │
 │  └─ Merlin's 3 AI recommendations (Savings, Balanced, Resilient)            │

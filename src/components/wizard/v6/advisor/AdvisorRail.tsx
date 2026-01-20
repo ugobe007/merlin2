@@ -261,40 +261,40 @@ export function AdvisorRail({
       <div className="pointer-events-none absolute bottom-20 left-10 h-48 w-48 bg-gradient-to-tr from-blue-500/20 via-cyan-400/15 to-transparent blur-2xl rounded-full" />
 
       {/* MERLIN IDENTITY HEADER */}
-      <div className="px-5 py-4 border-b border-blue-500/20 flex-shrink-0 bg-gradient-to-r from-blue-900/40 via-slate-900/50 to-indigo-900/40">
-        <div className="flex items-center gap-3 mb-4">
+      <div className="px-6 py-5 border-b border-blue-500/20 flex-shrink-0 bg-gradient-to-r from-blue-900/40 via-slate-900/50 to-indigo-900/40">
+        <div className="flex items-center gap-4 mb-4">
           <div className="relative">
             <img
               src={avatarImg}
               alt="Merlin"
-              className="w-16 h-16 rounded-full border-2 border-cyan-400/60 shadow-[0_0_24px_rgba(34,211,238,0.4),0_0_48px_rgba(147,51,234,0.2)]"
+              className="w-20 h-20 rounded-full border-2 border-cyan-400/60 shadow-[0_0_24px_rgba(34,211,238,0.4),0_0_48px_rgba(147,51,234,0.2)]"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
                 (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove("hidden");
               }}
             />
-            <div className="hidden w-16 h-16 rounded-full bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center border-2 border-cyan-300">
-              <span className="text-3xl">🧙</span>
+            <div className="hidden w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center border-2 border-cyan-300">
+              <span className="text-4xl">🧙</span>
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-slate-900 merlin-breathe shadow-[0_0_12px_rgba(16,185,129,0.8)]" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border-2 border-slate-900 merlin-breathe shadow-[0_0_12px_rgba(16,185,129,0.8)]" />
           </div>
 
           <div className="flex-1">
-            <div className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 font-bold text-lg tracking-tight">
+            <div className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 font-bold text-xl tracking-tight">
               Merlin
             </div>
-            <div className="text-slate-300/80 text-xs font-medium">AI Energy Advisor</div>
+            <div className="text-slate-300/80 text-sm font-medium">AI Energy Advisor</div>
           </div>
 
           {payload?.mode && <ModeBadge mode={payload.mode} />}
         </div>
 
-        <div className="mt-3 rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-slate-800/50 to-violet-500/10 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_16px_rgba(0,0,0,0.2)] backdrop-blur-sm">
-          <div className="text-[15px] font-extrabold text-white leading-snug tracking-tight line-clamp-2">
+        <div className="mt-4 rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-slate-800/50 to-violet-500/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_16px_rgba(0,0,0,0.2)] backdrop-blur-sm">
+          <div className="text-base font-extrabold text-white leading-snug tracking-tight line-clamp-2">
             {payload?.headline || "Let's maximize your energy savings."}
           </div>
           {payload?.subline && (
-            <div className="mt-1 text-xs text-slate-200/80 whitespace-pre-line line-clamp-3">
+            <div className="mt-2 text-sm text-slate-200/80 whitespace-pre-line line-clamp-3">
               {payload.subline}
             </div>
           )}
@@ -302,15 +302,15 @@ export function AdvisorRail({
       </div>
 
       {/* STEP PROGRESS */}
-      <div className="px-5 py-4 border-b border-blue-500/20 flex-shrink-0">
-        <div className="flex items-center justify-between mb-3">
-          <div className="text-xs font-semibold text-blue-300/80">PROGRESS</div>
-          <div className="text-xs text-blue-200/60">
+      <div className="px-6 py-5 border-b border-blue-500/20 flex-shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-sm font-bold text-blue-300/90">PROGRESS</div>
+          <div className="text-sm text-blue-200/70">
             Step {currentStep} of {totalSteps}
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {STEP_LABELS.slice(0, totalSteps).map((label, idx) => {
             const stepNum = idx + 1;
             const isActive = stepNum === currentStep;
@@ -323,12 +323,12 @@ export function AdvisorRail({
                 type="button"
                 onClick={() => (clickable ? onNavigate?.(stepNum) : undefined)}
                 disabled={!clickable}
-                className={`w-full flex items-center gap-2 text-xs transition-all text-left ${
+                className={`w-full flex items-center gap-3 text-sm transition-all text-left ${
                   isActive ? "text-amber-300" : isDone ? "text-emerald-300" : "text-slate-400/40"
                 } ${clickable ? "cursor-pointer hover:opacity-95" : "opacity-60 cursor-not-allowed"}`}
               >
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                     isActive
                       ? "bg-amber-400/15 border-2 border-amber-400/80"
                       : isDone
@@ -340,11 +340,11 @@ export function AdvisorRail({
                 </div>
 
                 <div className="flex-1">
-                  <div className="font-medium">{label}</div>
+                  <div className="font-semibold">{label}</div>
                 </div>
 
                 {isActive && (
-                  <div className="text-[9px] px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-200 border border-amber-400/20">
+                  <div className="text-[10px] px-2 py-0.5 rounded bg-amber-400/15 text-amber-200 border border-amber-400/20">
                     Current
                   </div>
                 )}
@@ -355,7 +355,7 @@ export function AdvisorRail({
       </div>
 
       {/* LOCATION / UTILITY CONTEXT - Simplified */}
-      <div className="px-5 py-3 border-b border-blue-500/20 flex-shrink-0">
+      <div className="px-6 py-4 border-b border-blue-500/20 flex-shrink-0">
         {/* EMPTY STATE: no ZIP yet */}
         {!zip && !st ? (
           <div className="rounded-lg border border-blue-500/25 bg-blue-500/10 p-3">
@@ -369,8 +369,8 @@ export function AdvisorRail({
             {/* LOCATION + SITE SCORE - Compact */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="text-base">📍</span>
-                <div className="text-sm font-semibold text-white">
+                <span className="text-lg">📍</span>
+                <div className="text-base font-bold text-white">
                   {zip} • {st}
                 </div>
               </div>
@@ -393,7 +393,7 @@ export function AdvisorRail({
             </div>
 
             {/* Utility context line */}
-            <div className="mt-2 text-[11px] text-blue-200/70">
+            <div className="mt-2 text-xs text-blue-200/80">
               {context?.location?.utilityName ? context.location.utilityName : "Utility territory"}{" "}
               {context?.location?.city ? `• ${context.location.city}` : ""}
             </div>
