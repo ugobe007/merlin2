@@ -3,19 +3,20 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
-import { X, MapPin, Zap, Sun, Cloud, Lightbulb } from "lucide-react";
+import { X, MapPin, Zap, Sun, Cloud, Lightbulb, AlertTriangle } from "lucide-react";
 import avatarImg from "@/assets/images/new_small_profile_.png";
-import { TrueQuoteBadge } from "@/components/shared/TrueQuoteBadge";
+import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import type { IntelligenceContext } from "@/types/intelligence.types";
 import type { SiteScoreResult } from "@/services/calculators/siteScoreCalculator";
 
 function ModeBadge({ mode }: { mode: "estimate" | "verified" }) {
   if (mode === "verified") {
-    return <TrueQuoteBadge size="sm" variant="minimal" verified={true} showTooltip={false} />;
+    return <TrueQuoteBadgeCanonical showTooltip={false} />;
   }
   return (
-    <span className="text-[11px] px-2 py-1 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/25">
-      ⚠️ Estimate
+    <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/25">
+      <AlertTriangle className="w-3 h-3" />
+      <span>Estimate</span>
     </span>
   );
 }

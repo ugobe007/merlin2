@@ -27,7 +27,7 @@ import evChargingImage from '@/assets/images/ev_charging_station.jpg';
 import evChargingHotelImage from '@/assets/images/ev_charging_hotel.jpg';
 // V5 Wizard (Clean Build Dec 21, 2025)
 import WizardV6 from '@/components/wizard/v6/WizardV6';
-import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
+import { TrueQuoteBadgeCanonical } from '@/components/shared/TrueQuoteBadgeCanonical';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 
 // ============================================
@@ -470,7 +470,7 @@ export default function EVChargingEnergy() {
                   onClick={() => setShowTrueQuoteModal(true)}
                   className="hover:scale-105 transition-transform cursor-pointer"
                 >
-                  <TrueQuoteBadge size="sm" />
+                  <TrueQuoteBadgeCanonical />
                 </button>
                 <button 
                   onClick={() => setShowTrueQuoteModal(true)}

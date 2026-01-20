@@ -37,7 +37,7 @@ import carWashPitStop5 from '@/assets/images/Car_Wash_PitStop5.jpg';
 import carWashPreen from '@/assets/images/Car_Wash_Preen.jpg';
 // V6 Wizard (Updated Dec 2025)
 import WizardV6 from '@/components/wizard/v6/WizardV6';
-import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
+import { TrueQuoteBadgeCanonical } from '@/components/shared/TrueQuoteBadgeCanonical';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 
 // ============================================
@@ -520,7 +520,7 @@ export default function CarWashEnergy() {
                   onClick={() => setShowTrueQuoteModal(true)}
                   className="hover:scale-105 transition-transform cursor-pointer"
                 >
-                  <TrueQuoteBadge size="sm" />
+                  <TrueQuoteBadgeCanonical />
                 </button>
                 <button 
                   onClick={() => setShowTrueQuoteModal(true)}
