@@ -343,7 +343,7 @@ export function AdvisorRail({
       <div className="pointer-events-none absolute bottom-20 left-10 h-48 w-48 bg-gradient-to-tr from-fuchsia-500/20 via-violet-400/15 to-transparent blur-2xl rounded-full" />
 
       {/* MERLIN IDENTITY HEADER */}
-      <div className="px-6 py-5 border-b border-violet-500/20 flex-shrink-0 bg-gradient-to-r from-violet-900/40 via-indigo-900/50 to-blue-900/40">
+      <div className="px-6 py-5 border-b border-violet-500/20 flex-shrink-0 bg-gradient-to-r from-violet-900/70 via-indigo-900/80 to-blue-900/70">
         <div className="flex items-center gap-4 mb-4">
           <div className="relative">
             <img
@@ -365,7 +365,7 @@ export function AdvisorRail({
             <div className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 font-bold text-xl tracking-tight">
               Merlin
             </div>
-            <div className="text-slate-100 text-sm font-semibold">AI Energy Advisor</div>
+            <div className="text-slate-300/80 text-sm font-medium">AI Energy Advisor</div>
           </div>
 
           {payload?.mode && <ModeBadge mode={payload.mode} />}
