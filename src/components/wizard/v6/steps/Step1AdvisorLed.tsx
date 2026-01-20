@@ -434,7 +434,7 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
           {/* Location Input Section */}
           <section className="mb-6 mt-3">
             {/* US / International Toggle */}
-            <div className="inline-flex bg-slate-800/50 rounded-xl p-1 border border-slate-700/50 mb-8 shadow-lg">
+            <div className="inline-flex bg-blue-900/30 rounded-xl p-1 border border-blue-500/30 mb-8 shadow-lg">
               <button
                 onClick={() => setRegion("us")}
                 className={`px-6 py-3 rounded-lg text-sm font-bold transition-all ${
@@ -493,6 +493,32 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
                     <div className="validation-line">
                       <Check className="w-3.5 h-3.5" />
                       Climate + solar data loaded
+                    </div>
+                  </div>
+                )}
+
+                {/* Address and Business Name - Right after ZIP validation */}
+                {enrichedData && (
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-300 mb-2">Address (Optional)</label>
+                      <input
+                        type="text"
+                        value={streetAddress}
+                        onChange={(e) => setStreetAddress(e.target.value)}
+                        placeholder="123 Main St"
+                        className="w-full px-4 py-3.5 rounded-xl border-2 border-blue-500/30 bg-slate-800/50 text-white placeholder-slate-500 focus:border-blue-500/50 focus:bg-slate-800/70 outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-300 mb-2">Business Name (Optional)</label>
+                      <input
+                        type="text"
+                        value={businessNameInput}
+                        onChange={(e) => setBusinessNameInput(e.target.value)}
+                        placeholder="Acme Corporation"
+                        className="w-full px-4 py-3.5 rounded-xl border-2 border-blue-500/30 bg-slate-800/50 text-white placeholder-slate-500 focus:border-blue-500/50 focus:bg-slate-800/70 outline-none transition-all"
+                      />
                     </div>
                   </div>
                 )}
