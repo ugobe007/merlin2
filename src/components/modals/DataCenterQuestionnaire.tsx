@@ -20,7 +20,17 @@ import {
   ChevronUp,
   Info,
   Sparkles,
-  Check
+  Check,
+  Building2,
+  Cloud,
+  Bot,
+  Beaker,
+  Link,
+  Monitor,
+  Wind,
+  Droplet,
+  RefreshCw,
+  Waves,
 } from 'lucide-react';
 
 // ============================================================================
@@ -70,12 +80,12 @@ const TIER_OPTIONS = [
 ];
 
 const WORKLOAD_OPTIONS = [
-  { id: 'general', label: 'General Purpose', powerDensity: 5, icon: '🖥️' },
-  { id: 'enterprise', label: 'Enterprise IT', powerDensity: 8, icon: '🏢' },
-  { id: 'cloud', label: 'Cloud/Hyperscale', powerDensity: 12, icon: '☁️' },
-  { id: 'ai-ml', label: 'AI/ML Training', powerDensity: 30, icon: '🤖' },
-  { id: 'hpc', label: 'HPC/Scientific', powerDensity: 25, icon: '🔬' },
-  { id: 'colocation', label: 'Colocation', powerDensity: 10, icon: '🔗' }
+  { id: 'general', label: 'General Purpose', powerDensity: 5, Icon: Monitor },
+  { id: 'enterprise', label: 'Enterprise IT', powerDensity: 8, Icon: Building2 },
+  { id: 'cloud', label: 'Cloud/Hyperscale', powerDensity: 12, Icon: Cloud },
+  { id: 'ai-ml', label: 'AI/ML Training', powerDensity: 30, Icon: Bot },
+  { id: 'hpc', label: 'HPC/Scientific', powerDensity: 25, Icon: Beaker },
+  { id: 'colocation', label: 'Colocation', powerDensity: 10, Icon: Link }
 ];
 
 const UPTIME_OPTIONS = [
@@ -86,10 +96,10 @@ const UPTIME_OPTIONS = [
 ];
 
 const COOLING_OPTIONS = [
-  { id: 'air', label: 'Air Cooled', icon: '💨' },
-  { id: 'liquid', label: 'Liquid Cooled', icon: '💧' },
-  { id: 'hybrid', label: 'Hybrid', icon: '🔄' },
-  { id: 'immersion', label: 'Immersion', icon: '🛁' }
+  { id: 'air', label: 'Air Cooled', Icon: Wind },
+  { id: 'liquid', label: 'Liquid Cooled', Icon: Droplet },
+  { id: 'hybrid', label: 'Hybrid', Icon: RefreshCw },
+  { id: 'immersion', label: 'Immersion', Icon: Waves }
 ];
 
 const GRID_OPTIONS = [
@@ -263,21 +273,24 @@ export const DataCenterQuestionnaire: React.FC<DataCenterQuestionnaireProps> = (
       content: (
         <div className="space-y-6">
           <div className="grid grid-cols-3 gap-3">
-            {WORKLOAD_OPTIONS.map(workload => (
-              <button
-                key={workload.id}
-                onClick={() => updateConfig('workloadType', workload.id as DataCenterConfig['workloadType'])}
-                className={`p-3 rounded-xl text-center transition-all ${
-                  config.workloadType === workload.id
-                    ? 'bg-purple-600 text-white border-2 border-purple-400'
-                    : 'bg-purple-900/40 text-gray-300 border-2 border-purple-700/50 hover:border-purple-500'
-                }`}
-              >
-                <div className="text-2xl mb-1">{workload.icon}</div>
-                <div className="text-sm font-medium">{workload.label}</div>
-                <div className="text-xs opacity-60">{workload.powerDensity} kW/rack</div>
-              </button>
-            ))}
+            {WORKLOAD_OPTIONS.map(workload => {
+              const IconComponent = workload.Icon;
+              return (
+                <button
+                  key={workload.id}
+                  onClick={() => updateConfig('workloadType', workload.id as DataCenterConfig['workloadType'])}
+                  className={`p-3 rounded-xl text-center transition-all ${
+                    config.workloadType === workload.id
+                      ? 'bg-purple-600 text-white border-2 border-purple-400'
+                      : 'bg-purple-900/40 text-gray-300 border-2 border-purple-700/50 hover:border-purple-500'
+                  }`}
+                >
+                  <IconComponent className="w-6 h-6 mx-auto mb-1" />
+                  <div className="text-sm font-medium">{workload.label}</div>
+                  <div className="text-xs opacity-60">{workload.powerDensity} kW/rack</div>
+                </button>
+              );
+            })}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -384,20 +397,23 @@ export const DataCenterQuestionnaire: React.FC<DataCenterQuestionnaireProps> = (
           <div>
             <label className="block text-sm text-gray-400 mb-2">Cooling Technology</label>
             <div className="grid grid-cols-4 gap-2">
-              {COOLING_OPTIONS.map(cooling => (
-                <button
-                  key={cooling.id}
-                  onClick={() => updateConfig('coolingType', cooling.id as DataCenterConfig['coolingType'])}
-                  className={`p-3 rounded-lg text-center transition-all ${
-                    config.coolingType === cooling.id
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-purple-900/40 text-gray-300 hover:bg-purple-800/50'
-                  }`}
-                >
-                  <div className="text-xl">{cooling.icon}</div>
-                  <div className="text-xs mt-1">{cooling.label}</div>
-                </button>
-              ))}
+              {COOLING_OPTIONS.map(cooling => {
+                const IconComponent = cooling.Icon;
+                return (
+                  <button
+                    key={cooling.id}
+                    onClick={() => updateConfig('coolingType', cooling.id as DataCenterConfig['coolingType'])}
+                    className={`p-3 rounded-lg text-center transition-all ${
+                      config.coolingType === cooling.id
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-purple-900/40 text-gray-300 hover:bg-purple-800/50'
+                    }`}
+                  >
+                    <IconComponent className="w-5 h-5 mx-auto" />
+                    <div className="text-xs mt-1">{cooling.label}</div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
