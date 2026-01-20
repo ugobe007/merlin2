@@ -692,23 +692,7 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
             </section>
           )}
 
-          {/* OLD DETAIL SECTIONS - HIDDEN (replaced by always-visible address fields)
-          {/* Show Details Toggle - Now positioned after dashboard *}
-          {locationData && false && (
-            <div className="mb-6">
-              <button
-                type="button"
-                onClick={() => setShowDetails((v) => !v)}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-white/[0.06]"
-              >
-                {showDetails ? "Hide details" : "Show details"}
-                <ChevronDown className={`w-4 h-4 transition-transform ${showDetails ? "rotate-180" : ""}`} />
-              </button>
-            </div>
-          )}
-
-          {/* System Snapshot Cards (4-card grid) */}
-          {false && locationData && (
+          {showDetails && locationData && (
             <div className="snapshot-grid">
               <div className="snapshot-card">
                 <div className="flex items-center gap-2 text-amber-400 text-sm mb-3">
@@ -749,7 +733,7 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
           )}
 
           {/* Merlin Strategic Insight Panel */}
-          {false && locationData && (
+          {showDetails && locationData && (
             <div className="insight-panel">
               <div className="insight-title">MERLIN'S EARLY INSIGHT</div>
               <p className="insight-text">
@@ -767,7 +751,7 @@ export function Step1AdvisorLed({ state, updateState, intelligence, onNext, onGo
           )}
 
           {/* Savings Sneak Preview */}
-          {false && locationData && teaserPreview && (
+          {showDetails && locationData && teaserPreview && (
             <div className="mb-10">
               <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden shadow-xl">
                 {/* Header */}
