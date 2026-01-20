@@ -39,7 +39,7 @@ function WeatherRiskModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-slate-900 rounded-2xl p-6 max-w-lg w-full mx-4 border border-blue-500/30 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-slate-900 rounded-2xl p-6 max-w-lg w-full mx-4 border border-indigo-500/30 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
@@ -338,33 +338,33 @@ export function AdvisorRail({
   const insight = getMerlinInsight();
 
   return (
-    <div className="relative flex flex-col h-full min-h-0 overflow-hidden bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-blue-500/20 shadow-[0_8px_32px_rgba(59,130,246,0.15),inset_0_1px_0_rgba(147,197,253,0.15)]">
-      {/* GLASSMORPHIC AMBIENT GLOW - More blue */}
-      <div className="pointer-events-none absolute top-0 left-0 h-56 w-56 bg-gradient-to-br from-blue-400/30 via-cyan-500/20 to-transparent blur-3xl rounded-full" />
-      <div className="pointer-events-none absolute top-20 right-0 h-64 w-64 bg-gradient-to-bl from-indigo-500/25 via-violet-500/20 to-transparent blur-3xl rounded-full" />
-      <div className="pointer-events-none absolute bottom-20 left-10 h-48 w-48 bg-gradient-to-tr from-blue-500/20 via-cyan-400/15 to-transparent blur-2xl rounded-full" />
+    <div className="relative flex flex-col h-full min-h-0 overflow-hidden bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-violet-500/25 shadow-[0_8px_32px_rgba(139,92,246,0.2),inset_0_1px_0_rgba(168,85,247,0.15)]">
+      {/* GLASSMORPHIC AMBIENT GLOW - Purple/Blue/Indigo magic */}
+      <div className="pointer-events-none absolute top-0 left-0 h-56 w-56 bg-gradient-to-br from-violet-400/30 via-purple-500/25 to-transparent blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute top-20 right-0 h-64 w-64 bg-gradient-to-bl from-indigo-500/30 via-blue-500/20 to-transparent blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute bottom-20 left-10 h-48 w-48 bg-gradient-to-tr from-fuchsia-500/20 via-violet-400/15 to-transparent blur-2xl rounded-full" />
 
       {/* MERLIN IDENTITY HEADER */}
-      <div className="px-6 py-5 border-b border-blue-500/20 flex-shrink-0 bg-gradient-to-r from-blue-900/40 via-slate-900/50 to-indigo-900/40">
+      <div className="px-6 py-5 border-b border-violet-500/20 flex-shrink-0 bg-gradient-to-r from-violet-900/40 via-indigo-900/50 to-blue-900/40">
         <div className="flex items-center gap-4 mb-4">
           <div className="relative">
             <img
               src={avatarImg}
               alt="Merlin"
-              className="w-20 h-20 rounded-full border-2 border-cyan-400/60 shadow-[0_0_24px_rgba(34,211,238,0.4),0_0_48px_rgba(147,51,234,0.2)]"
+              className="w-20 h-20 rounded-full border-2 border-violet-400/70 shadow-[0_0_24px_rgba(139,92,246,0.5),0_0_48px_rgba(168,85,247,0.3)]"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
                 (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove("hidden");
               }}
             />
-            <div className="hidden w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center border-2 border-cyan-300">
+            <div className="hidden w-20 h-20 rounded-full bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center border-2 border-violet-300">
               <span className="text-4xl">🧙</span>
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border-2 border-slate-900 merlin-breathe shadow-[0_0_12px_rgba(16,185,129,0.8)]" />
           </div>
 
           <div className="flex-1">
-            <div className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 font-bold text-xl tracking-tight">
+            <div className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 font-bold text-xl tracking-tight">
               Merlin
             </div>
             <div className="text-slate-300/80 text-sm font-medium">AI Energy Advisor</div>
@@ -375,8 +375,8 @@ export function AdvisorRail({
       </div>
 
       {/* LOCATION ANALYSIS CARD - Core Intelligence (Jan 20, 2026) */}
-      <div className="px-6 py-4 border-b border-blue-500/20 flex-shrink-0">
-        <div className="rounded-xl border border-blue-500/25 bg-gradient-to-br from-blue-500/8 via-slate-800/40 to-indigo-500/8 p-4 shadow-[inset_0_1px_0_rgba(147,197,253,0.1)]">
+      <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
+        <div className="rounded-xl border border-violet-500/25 bg-gradient-to-br from-violet-500/8 via-indigo-800/40 to-blue-500/8 p-4 shadow-[inset_0_1px_0_rgba(167,139,250,0.1)]">
           {/* Card Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -406,9 +406,9 @@ export function AdvisorRail({
               {/* 2x2 Metrics Grid */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {/* Peak Sun */}
-                <div className="relative rounded-lg border border-blue-500/20 bg-slate-800/40 p-3">
+                <div className="relative rounded-lg border border-indigo-500/20 bg-slate-800/50 p-3">
                   <button className="absolute top-2 right-2 text-slate-400 hover:text-white text-xs">ⓘ</button>
-                  <div className="text-[10px] text-blue-300/70 font-semibold mb-1">PEAK SUN</div>
+                  <div className="text-[10px] text-violet-300/70 font-semibold mb-1">PEAK SUN</div>
                   <div className="text-2xl font-black text-white tabular-nums">
                     {context?.solar?.sunHours?.toFixed(1) || '—'}
                   </div>
@@ -416,9 +416,9 @@ export function AdvisorRail({
                 </div>
 
                 {/* Electricity Rate */}
-                <div className="relative rounded-lg border border-blue-500/20 bg-slate-800/40 p-3">
+                <div className="relative rounded-lg border border-indigo-500/20 bg-slate-800/50 p-3">
                   <button className="absolute top-2 right-2 text-slate-400 hover:text-white text-xs">ⓘ</button>
-                  <div className="text-[10px] text-blue-300/70 font-semibold mb-1">ELECTRICITY</div>
+                  <div className="text-[10px] text-violet-300/70 font-semibold mb-1">ELECTRICITY</div>
                   <div className="text-2xl font-black text-white tabular-nums">
                     ${(rate || 0).toFixed(2)}
                   </div>
@@ -426,22 +426,22 @@ export function AdvisorRail({
                 </div>
 
                 {/* Weather Risk */}
-                <div className="relative rounded-lg border border-blue-500/20 bg-slate-800/40 p-3">
+                <div className="relative rounded-lg border border-indigo-500/20 bg-slate-800/50 p-3">
                   <button 
                     onClick={() => setShowWeatherRiskModal(true)}
                     className="absolute top-2 right-2 text-slate-400 hover:text-white text-xs transition-colors"
                   >
                     ⓘ
                   </button>
-                  <div className="text-[10px] text-blue-300/70 font-semibold mb-1">WEATHER RISK</div>
+                  <div className="text-[10px] text-violet-300/70 font-semibold mb-1">WEATHER RISK</div>
                   <div className="text-2xl font-black text-white">Low</div>
                   <div className="text-[10px] text-slate-400 mt-0.5">grid + climate</div>
                 </div>
 
                 {/* Solar Rating */}
-                <div className="relative rounded-lg border border-blue-500/20 bg-slate-800/40 p-3">
+                <div className="relative rounded-lg border border-indigo-500/20 bg-slate-800/50 p-3">
                   <button className="absolute top-2 right-2 text-slate-400 hover:text-white text-xs">ⓘ</button>
-                  <div className="text-[10px] text-blue-300/70 font-semibold mb-1">SOLAR RATING</div>
+                  <div className="text-[10px] text-violet-300/70 font-semibold mb-1">SOLAR RATING</div>
                   <div className="text-2xl font-black text-white">
                     {context?.solar?.rating || 'A+'}
                   </div>
@@ -461,8 +461,8 @@ export function AdvisorRail({
               </div>
 
               {/* Insight Box */}
-              <div className="rounded-lg border border-blue-400/20 bg-blue-500/5 p-3">
-                <p className="text-xs text-blue-100 leading-relaxed">
+              <div className="rounded-lg border border-violet-400/20 bg-violet-500/8 p-3">
+                <p className="text-xs text-violet-100 leading-relaxed">
                   <strong>{context?.location?.city || zip}, {st}</strong> shows strong solar yield and reliable grid conditions. 
                   BESS + peak shaving tends to perform well at this rate band.
                 </p>
@@ -473,10 +473,10 @@ export function AdvisorRail({
       </div>
 
       {/* PROGRESS - Visually reduced dominance */}
-      <div className="px-6 py-4 border-b border-blue-500/20 flex-shrink-0">
+      <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-sm font-bold text-blue-300/90">PROGRESS</div>
-          <div className="text-sm text-blue-200/70">
+          <div className="text-sm font-bold text-violet-300/90">PROGRESS</div>
+          <div className="text-sm text-indigo-200/70">
             Step {currentStep} of {totalSteps}
           </div>
         </div>
@@ -527,7 +527,7 @@ export function AdvisorRail({
 
       {/* ACCURACY / TERRITORY CHIP - Bottom section */}
       {zip && context?.siteScore && (
-        <div className="px-6 py-4 border-b border-blue-500/20 flex-shrink-0">
+        <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm">📍</span>
@@ -548,7 +548,7 @@ export function AdvisorRail({
                 {context.siteScore.totalScore} {context.siteScore.scoreLabel.charAt(0).toUpperCase() + context.siteScore.scoreLabel.slice(1)}
               </div>
               {/* Tooltip */}
-              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-64 p-3 rounded-lg bg-slate-900 border border-blue-500/30 shadow-xl z-50">
+              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-64 p-3 rounded-lg bg-slate-900 border border-indigo-500/30 shadow-xl z-50">
                 <div className="text-xs font-bold text-white mb-1">Accuracy score</div>
                 <div className="text-xs text-slate-300">
                   {context.siteScore.totalScore}/100 = ZIP-level estimate. Add address or business name to improve precision.
@@ -561,7 +561,7 @@ export function AdvisorRail({
 
       {/* CONSTRAINT WARNING (Step 3+) - Only show when relevant */}
       {constraint && (
-        <div className="px-6 py-4 border-b border-blue-500/20 flex-shrink-0">
+        <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
           <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
             <div className="text-[11px] font-semibold text-amber-200 mb-1">⚠️ Heads up</div>
             <div className="text-xs text-slate-200/80">{constraint}</div>
@@ -574,11 +574,11 @@ export function AdvisorRail({
 
       {/* MERLIN'S INSIGHT - Only show if we have one */}
       {insight && (
-        <div className="px-5 py-3 border-b border-blue-500/20 flex-shrink-0">
-          <div className="p-2.5 bg-blue-500/10 border border-blue-400/25 rounded-lg">
+        <div className="px-5 py-3 border-b border-violet-500/20 flex-shrink-0">
+          <div className="p-2.5 bg-violet-500/10 border border-violet-400/25 rounded-lg">
             <div className="flex items-start gap-2">
               <span className="text-sm">💡</span>
-              <div className="text-xs text-blue-100 leading-relaxed">{insight}</div>
+              <div className="text-xs text-violet-100 leading-relaxed">{insight}</div>
             </div>
           </div>
         </div>
