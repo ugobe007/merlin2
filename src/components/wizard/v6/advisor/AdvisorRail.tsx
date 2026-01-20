@@ -4,7 +4,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
 import { X, MapPin, Zap, Sun, Cloud, Lightbulb, AlertTriangle } from "lucide-react";
-import avatarImg from "@/assets/images/wizard_icon.jpg";
+import avatarImg from "@/assets/images/new_small_profile_.png";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import type { IntelligenceContext } from "@/types/intelligence.types";
 import type { SiteScoreResult } from "@/services/calculators/siteScoreCalculator";
