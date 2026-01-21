@@ -15,11 +15,17 @@
  * ✅ NEW (Jan 21, 2026): Includes ProgressiveModelPanel for TrueQuote™ accuracy
  * - Collects service size, demand charge, HVAC type via micro-prompts
  * - Improves peakDemand and gridCapacity inference without form bloat
+ * 
+ * ✅ NEW (Jan 21, 2026 - Phase 5): LiveSystemPreview + PowerProfileChart
+ * - Real-time BESS sizing recommendations with confidence bands
+ * - 24-hour load curve visualization with peak shaving preview
  */
 
 import React from "react";
 import { Step3Integration } from "../../Step3Integration";
 import { ProgressiveModelPanel } from "../micro-prompts";
+import { LiveSystemPreview } from "../LiveSystemPreview";
+import { PowerProfileChart } from "../PowerProfileChart";
 import type {
   WizardState,
   ServiceSizeOption,
@@ -27,6 +33,7 @@ import type {
   HVACTypeOption,
   GeneratorCapacityBand,
 } from "../types";
+import type { TrueQuoteSizing, LoadCurve } from "@/services/truequote";
 
 interface Step3DetailsProps {
   state: unknown;
@@ -34,6 +41,10 @@ interface Step3DetailsProps {
   onNext: () => void;
   onBack?: () => void;
   onValidityChange?: (isValid: boolean) => void;
+  /** TrueQuote™ sizing recommendation (Phase 5) */
+  trueQuoteSizing?: TrueQuoteSizing | null;
+  /** Load curve for visualization (Phase 5) */
+  loadCurve?: LoadCurve | null;
 }
 
 export function Step3Details({
@@ -42,6 +53,8 @@ export function Step3Details({
   onNext,
   onBack,
   onValidityChange,
+  trueQuoteSizing,
+  loadCurve,
 }: Step3DetailsProps) {
   // Cast state to proper type
   const wizardState = state as WizardState;
@@ -120,6 +133,28 @@ export function Step3Details({
           });
         }}
       />
+
+      {/* ========================================================================
+          TRUEQUOTE™ LIVE PREVIEW (Phase 5 - Jan 21, 2026)
+          Real-time sizing recommendations + load curve visualization
+          ======================================================================== */}
+      {(trueQuoteSizing || loadCurve) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Live System Preview - Sizing recommendations with bands */}
+          {trueQuoteSizing && (
+            <LiveSystemPreview sizing={trueQuoteSizing} />
+          )}
+          
+          {/* Power Profile Chart - 24-hour load curve */}
+          {loadCurve && (
+            <PowerProfileChart 
+              loadCurve={loadCurve} 
+              targetCapKW={trueQuoteSizing?.constraints.targetCapKW}
+              height={220}
+            />
+          )}
+        </div>
+      )}
 
       {/* ========================================================================
           STEP 3 QUESTIONNAIRE - Industry-specific questions

@@ -32,6 +32,15 @@ import {
   type SiteScoreResult,
 } from "@/services/calculators/siteScoreCalculator";
 
+// TrueQuote™ Sizing Engine (Jan 21, 2026 - Phase 5)
+import {
+  computeTrueQuoteSizing,
+  buildLoadCurve,
+  type TrueQuoteSizing,
+  type LoadCurve,
+} from "@/services/truequote";
+import { calculateModelConfidence } from "./types";
+
 // ============================================================================
 // DEEP MERGE HELPER - Prevents nested state corruption
 // ============================================================================
@@ -1851,6 +1860,127 @@ export default function WizardV6() {
     state.demandChargeBand,
   ]);
 
+  // ============================================================================
+  // TRUEQUOTE™ LIVE SIZING ENGINE (Jan 21, 2026 - Phase 5)
+  // Computes recommended BESS sizing with confidence-aware bands
+  // Updates in real-time as user answers micro-prompts
+  // ============================================================================
+
+  const trueQuoteSizing = useMemo<TrueQuoteSizing | null>(() => {
+    const industry = state.industry || state.detectedIndustry;
+    
+    // Need at least peak demand to compute sizing
+    if (!estimatedPowerMetrics.peakDemandKW || estimatedPowerMetrics.peakDemandKW < 10) {
+      return null;
+    }
+    
+    // Calculate model confidence from progressive model state
+    const modelConfidence = calculateModelConfidence(
+      state.serviceSize,
+      state.hasDemandCharge,
+      state.demandChargeBand,
+      state.hvacType,
+      state.hasBackupGenerator,
+      state.generatorCapacityBand,
+      industry?.includes('hospital') || industry?.includes('data') // Show generator for critical industries
+    );
+    
+    // Infer grid capacity from service size (if not directly provided)
+    const SERVICE_SIZE_CAPACITY: Record<string, number> = {
+      "200A-single": 48,
+      "400A-three": 277,
+      "800A-three": 553,
+      "1000A-plus": 1000,
+    };
+    const inferredGridCapacity = state.serviceSize && state.serviceSize !== 'unsure'
+      ? SERVICE_SIZE_CAPACITY[state.serviceSize] || 0
+      : 0;
+    
+    // Infer generator capacity from band
+    const GENERATOR_BAND_KW: Record<string, number> = {
+      "under-50": 35,
+      "50-150": 100,
+      "150-500": 300,
+      "500-plus": 750,
+    };
+    const inferredGeneratorKW = state.generatorCapacityBand && state.generatorCapacityBand !== 'not-sure'
+      ? GENERATOR_BAND_KW[state.generatorCapacityBand] || 0
+      : 0;
+    
+    // HVAC multiplier from type
+    const HVAC_MULTIPLIERS: Record<string, number> = {
+      rtu: 1.0,
+      chiller: 1.15,
+      'heat-pump': 0.9,
+    };
+    const hvacMultiplier = state.hvacType && state.hvacType !== 'not-sure'
+      ? HVAC_MULTIPLIERS[state.hvacType] || 1.0
+      : 1.0;
+    
+    return computeTrueQuoteSizing({
+      gridCapacityKW: inferredGridCapacity || undefined,
+      peakDemandKW: estimatedPowerMetrics.peakDemandKW,
+      demandChargeBand: state.demandChargeBand,
+      hvacMultiplier,
+      generatorCapacityKW: inferredGeneratorKW || undefined,
+      hasBackupGenerator: state.hasBackupGenerator,
+      goals: state.goals,
+      industry,
+      confidence: modelConfidence.score,
+    });
+  }, [
+    state.industry,
+    state.detectedIndustry,
+    state.serviceSize,
+    state.hasDemandCharge,
+    state.demandChargeBand,
+    state.hvacType,
+    state.hasBackupGenerator,
+    state.generatorCapacityBand,
+    state.goals,
+    estimatedPowerMetrics.peakDemandKW,
+  ]);
+
+  // ============================================================================
+  // TRUEQUOTE™ LOAD CURVE VISUALIZATION (Jan 21, 2026 - Phase 5)
+  // Generates 24-hour load curve for power profile chart
+  // ============================================================================
+
+  const loadCurve = useMemo<LoadCurve | null>(() => {
+    const industry = state.industry || state.detectedIndustry;
+    
+    if (!estimatedPowerMetrics.peakDemandKW || estimatedPowerMetrics.peakDemandKW < 10) {
+      return null;
+    }
+    
+    // HVAC multiplier
+    const HVAC_MULTIPLIERS: Record<string, number> = {
+      rtu: 1.0,
+      chiller: 1.15,
+      'heat-pump': 0.9,
+    };
+    const hvacMultiplier = state.hvacType && state.hvacType !== 'not-sure'
+      ? HVAC_MULTIPLIERS[state.hvacType] || 1.0
+      : 1.0;
+    
+    return buildLoadCurve({
+      industry,
+      peakDemandKW: estimatedPowerMetrics.peakDemandKW,
+      bessCapacityKWh: trueQuoteSizing?.recommended.energyKWh.best,
+      bessDischargeKW: trueQuoteSizing?.recommended.powerKW.best,
+      targetCapKW: trueQuoteSizing?.constraints.targetCapKW,
+      hvacMultiplier,
+    });
+  }, [
+    state.industry,
+    state.detectedIndustry,
+    state.hvacType,
+    estimatedPowerMetrics.peakDemandKW,
+    trueQuoteSizing?.recommended.energyKWh.best,
+    trueQuoteSizing?.recommended.powerKW.best,
+    trueQuoteSizing?.constraints.targetCapKW,
+  ]);
+
   // Auto-save state to bufferService whenever it changes (debounced)
   useEffect(() => {
     bufferService.autoSave(state, 1000); // 1 second debounce
@@ -2224,6 +2354,8 @@ export default function WizardV6() {
               goToStep(4);
             }}
             onValidityChange={setStep3Valid}
+            trueQuoteSizing={trueQuoteSizing}
+            loadCurve={loadCurve}
           />
         );
       case 4:
