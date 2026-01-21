@@ -506,16 +506,17 @@ export default function WizardV6() {
     
     // ========================================================================
     // EV CHARGING: charger counts by type + ALL power-relevant fields
-    // DB fields: level2Count, dcfc50Count, dcfcHighCount, ultraFastCount, megawattCount,
+    // DB fields: level2Count, dcfc50Count, dcfcHighCount, dcfc350, ultraFastCount, megawattCount,
     //   hubType, hubSize, stationSize, siteSqFt, operatingHours, serviceVoltage,
     //   gridCapacity, hasExistingSolar, existingSolarKW
     // ========================================================================
     else if (industry.includes('ev') || industry.includes('charging')) {
-      const l2 = Number(inputs.level2Count || 12);
+      const l2 = Number(inputs.level2Count || inputs.level2 || 12);
       const dcfc50 = Number(inputs.dcfc50Count || 0);
       const dcfcHigh = Number(inputs.dcfcHighCount || inputs.dcFastCount || 0);
-      const ultraFast = Number(inputs.ultraFastCount || 0);
-      const megawatt = Number(inputs.megawattCount || 0);
+      // CRITICAL: dcfc350 is the field name for 350 kW chargers in truck stops and some EV stations
+      const ultraFast = Number(inputs.ultraFastCount || inputs.dcfc350 || 0);
+      const megawatt = Number(inputs.megawattCount || inputs.mcsChargers || 0);
       const hubType = String(inputs.hubType || 'public').toLowerCase();
       const serviceVoltage = String(inputs.serviceVoltage || '480').toLowerCase();
       const gridCapacity = Number(inputs.gridCapacity || inputs.gridCapacityKW || 0);
@@ -527,7 +528,7 @@ export default function WizardV6() {
       basePeakKW += dcfc50 * 50;         // DCFC 50 kW
       basePeakKW += dcfcHigh * 150;      // DCFC 150 kW
       basePeakKW += ultraFast * 350;     // Ultra-fast 350 kW
-      basePeakKW += megawatt * 1000;     // Megawatt (trucking) 1 MW
+      basePeakKW += megawatt * 1250;     // Megawatt (MCS trucking) 1.25 MW each
       
       // Hub type affects concurrency
       let concurrency = 0.6;
@@ -1343,7 +1344,7 @@ export default function WizardV6() {
     
     // ========================================================================
     // TRUCK STOP: chargers + ALL power-relevant fields
-    // DB fields: mcsChargers, level2, truckWashBays, serviceBays, peakDemandKW,
+    // DB fields: mcsChargers, dcfc350, level2, truckWashBays, serviceBays, peakDemandKW,
     //   gridCapacityKW, operatingHours, hasShowers, hasLaundry, existingSolarKW
     // ========================================================================
     else if (industry.includes('truck') && industry.includes('stop')) {
@@ -1352,6 +1353,8 @@ export default function WizardV6() {
         estimatedPeakKW = Number(inputs.peakDemandKW);
       } else {
         const mcsChargers = Number(inputs.mcsChargers || 0);
+        // CRITICAL: dcfc350 = 350 kW DC Fast Chargers (question #13 in UI)
+        const dcfc350Chargers = Number(inputs.dcfc350 || inputs.dcFastChargers || 0);
         const l2Chargers = Number(inputs.level2 || 0);
         const truckWash = Number(inputs.truckWashBays || 0);
         const serviceBays = Number(inputs.serviceBays || 0);
@@ -1360,8 +1363,9 @@ export default function WizardV6() {
         const operatingHours = inputs.operatingHours || 24;
         
         let basePeakKW = 0;
-        basePeakKW += mcsChargers * 1000; // MCS: 1 MW each
-        basePeakKW += l2Chargers * 7.2;
+        basePeakKW += mcsChargers * 1250;    // MCS: 1.25 MW each (NEC 2023)
+        basePeakKW += dcfc350Chargers * 350; // DCFC 350 kW each (CRITICAL FIX)
+        basePeakKW += l2Chargers * 19.2;     // Level 2: 19.2 kW (truck stop spec)
         basePeakKW += truckWash * 100;
         basePeakKW += serviceBays * 20;
         
@@ -1372,7 +1376,8 @@ export default function WizardV6() {
         basePeakKW *= getOperatingHoursFactor(operatingHours);
         basePeakKW += getExistingLoadAdjustment();
         
-        estimatedPeakKW = basePeakKW * 0.75; // 75% concurrency
+        // Apply diversity factor: 85% for truck stops (high simultaneous usage)
+        estimatedPeakKW = basePeakKW * 0.85;
       }
     }
     
