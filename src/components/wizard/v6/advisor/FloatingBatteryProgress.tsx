@@ -39,7 +39,7 @@ export function FloatingBatteryProgress({ currentStep, onNavigate }: FloatingBat
   const clickable = (stepNum: number) => stepNum <= currentStep;
 
   return (
-    <div className="group fixed top-24 right-8 z-40 flex items-center gap-3 animate-fade-in">
+    <div className="group fixed top-24 right-4 z-40 flex items-center gap-3 animate-fade-in">
       {/* Battery Container */}
       <div className="relative w-10 h-32 bg-slate-900/90 border-2 border-cyan-400/70 rounded-lg shadow-[0_0_24px_rgba(6,182,212,0.4)] backdrop-blur-sm">
         {/* Battery Terminal */}
@@ -55,7 +55,7 @@ export function FloatingBatteryProgress({ currentStep, onNavigate }: FloatingBat
           }}
         />
 
-        {/* Step Letters (M-E-R-L-I-N) */}
+        {/* Step Letters (M-E-R-L-I-N) with cyan backglow */}
         <div className="absolute inset-0 flex flex-col justify-around py-2">
           {steps.map((step) => {
             const isActive = step.number === currentStep;
@@ -69,11 +69,15 @@ export function FloatingBatteryProgress({ currentStep, onNavigate }: FloatingBat
                 disabled={!canClick}
                 className={`text-xs font-black transition-all duration-300 ${
                   isActive 
-                    ? 'text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]' 
+                    ? 'text-white scale-110 drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]' 
                     : isCompleted 
-                      ? 'text-cyan-300 hover:scale-105 cursor-pointer' 
+                      ? 'text-cyan-300 hover:scale-105 cursor-pointer drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]' 
                       : 'text-slate-500 cursor-not-allowed'
                 } ${canClick ? 'hover:bg-cyan-500/20 rounded' : ''}`}
+                style={{
+                  textShadow: isActive ? '0 0 16px rgba(6, 182, 212, 0.8), 0 0 24px rgba(6, 182, 212, 0.5)' : 
+                              isCompleted ? '0 0 10px rgba(6, 182, 212, 0.6)' : 'none'
+                }}
                 title={`${step.label}${canClick ? ' - click to navigate' : ''}`}
               >
                 {step.short}

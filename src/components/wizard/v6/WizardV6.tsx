@@ -761,10 +761,10 @@ export default function WizardV6() {
                       </div>
                       <div className="flex items-center gap-2">
                         <TrueQuoteBadgeCanonical showTooltip={false} />
-                        {/* Model Active Indicator - Animated glow so users know it's activated */}
-                        <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-md bg-indigo-500/25 text-indigo-100 border border-indigo-400/50 shadow-[0_0_16px_rgba(99,102,241,0.5)] animate-pulse">
-                          <span className="w-2 h-2 rounded-full bg-indigo-300 shadow-[0_0_8px_rgba(165,180,252,0.9)] animate-pulse" />
-                          <span className="font-semibold">Model Active</span>
+                        {/* Model Active Indicator - Green glow = system is ON */}
+                        <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-md bg-transparent text-emerald-300 border-2 border-emerald-400/70 shadow-[0_0_20px_rgba(16,185,129,0.6),0_0_40px_rgba(16,185,129,0.3)] animate-pulse">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,1)] animate-pulse" />
+                          <span className="font-bold tracking-wide">Model Active</span>
                         </div>
                       </div>
                     </div>
