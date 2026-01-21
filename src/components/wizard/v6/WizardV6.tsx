@@ -230,6 +230,16 @@ export default function WizardV6() {
   // Blocked feedback state (Jan 19, 2026 - Shows message when Next is blocked)
   const [showBlockedFeedback, setShowBlockedFeedback] = useState(false);
 
+  // ✅ FIX: Real-time metrics from Step 3 inputs (Jan 20, 2026)
+  // Calculate power metrics immediately when user answers questions
+  // This makes intelligence header responsive to inputs
+  const [estimatedMetrics, setEstimatedMetrics] = useState<{
+    peakDemandKW: number;
+    annualConsumptionKWh: number;
+    bessKW: number;
+    bessKWh: number;
+  } | null>(null);
+
   // ✅ RESTORE FIX: Validate snapshot before allowing Step 4+ restore (Jan 16, 2026)
   useEffect(() => {
     if (currentStep >= 4) {
@@ -253,6 +263,73 @@ export default function WizardV6() {
       setStep4Valid(true); // Step 4 is always valid once loaded
     }
   }, [currentStep]);
+
+  // ============================================================================
+  // INTELLIGENCE HEADER METRICS CALCULATION (Jan 20, 2026)
+  // Calculate real-time power metrics from Step 3 inputs for intelligence header
+  // ============================================================================
+  useEffect(() => {
+    // Only calculate if we have Step 3 data
+    if (!state.industry || !state.useCaseData?.inputs) {
+      setEstimatedMetrics(null);
+      return;
+    }
+
+    const inputs = state.useCaseData.inputs as Record<string, any>;
+    
+    // Extract key facility data (industry-specific)
+    const roomCount = inputs.roomCount || inputs.numberOfRooms || 0;
+    const bedCount = inputs.bedCount || 0;
+    const bayCount = inputs.bayCount || inputs.bays || 0;
+    const rackCount = inputs.rackCount || 0;
+    const squareFeet = inputs.squareFootage || inputs.squareFeet || inputs.totalSqFt || inputs.facilitySqFt || 0;
+    const operatingHours = inputs.operatingHours || 12;
+
+    // Calculate peak demand based on industry (simplified SSOT logic)
+    let peakDemandKW = 0;
+
+    if (state.industry === 'hospital' && bedCount > 0) {
+      // Hospital: 5-10 kW per bed depending on facility type
+      peakDemandKW = bedCount * 7.5; // Mid-range estimate
+    } else if (state.industry === 'hotel' && roomCount > 0) {
+      // Hotel: 3-5 kW per room depending on class
+      peakDemandKW = roomCount * 4; // Mid-range estimate
+    } else if (state.industry === 'car-wash' && bayCount > 0) {
+      // Car wash: 20-50 kW per bay depending on type
+      peakDemandKW = bayCount * 35; // Mid-range estimate
+    } else if (state.industry === 'data-center' && rackCount > 0) {
+      // Data center: 5-10 kW per rack
+      peakDemandKW = rackCount * 7.5; // Mid-range estimate
+    } else if (squareFeet > 0) {
+      // Generic: 10-30 W per sq ft depending on industry
+      peakDemandKW = (squareFeet * 0.020); // 20 W/sq ft average
+    }
+
+    // Calculate annual consumption (simplified)
+    const annualConsumptionKWh = peakDemandKW * operatingHours * 365 * 0.6; // 60% load factor
+
+    // Calculate recommended BESS sizing (40% of peak for peak shaving)
+    const bessKW = Math.round(peakDemandKW * 0.4);
+    const bessKWh = Math.round(bessKW * 4); // 4-hour duration
+
+    setEstimatedMetrics({
+      peakDemandKW: Math.round(peakDemandKW),
+      annualConsumptionKWh: Math.round(annualConsumptionKWh),
+      bessKW,
+      bessKWh,
+    });
+
+    console.log('📊 Intelligence Header Metrics Updated:', {
+      industry: state.industry,
+      inputs: { roomCount, bedCount, bayCount, rackCount, squareFeet, operatingHours },
+      calculated: {
+        peakDemandKW: Math.round(peakDemandKW),
+        annualConsumptionKWh: Math.round(annualConsumptionKWh),
+        bessKW,
+        bessKWh,
+      }
+    });
+  }, [state.industry, state.useCaseData?.inputs]);
 
   // Auto-save state to bufferService whenever it changes (debounced)
   useEffect(() => {
@@ -671,7 +748,7 @@ export default function WizardV6() {
             {/* TOP: Intelligence Header - Capital-Grade Instrument Panel (Jan 20, 2026) */}
             {state.zipCode && state.electricityRate && (
               <div className="relative border-b border-white/10 bg-gradient-to-r from-slate-800/40 via-slate-900/50 to-slate-800/40 backdrop-blur-sm">
-                <div className="h-[72px] px-6 flex items-center gap-4">
+                <div className="h-[100px] px-6 flex items-center gap-5">
                   {/* LEFT: Merlin Identity + TrueQuote Anchor + Model Active */}
                   <div className="flex items-center gap-3 min-w-[280px]">
                     <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
@@ -693,7 +770,7 @@ export default function WizardV6() {
                   </div>
 
                   {/* CENTER: Clustered Telemetry Chips - 3 Logical Groups */}
-                  <div className="flex-1 flex items-center gap-6">
+                  <div className="flex-1 flex items-center gap-7 justify-start">
                     {/* CLUSTER 1: ECONOMICS (Rate + Peak) */}
                     <div className="flex items-center gap-2">
                       <TelemetryChip
@@ -708,15 +785,20 @@ export default function WizardV6() {
                           icon={Zap}
                           label="Peak:"
                           value={
+                            // Priority: 1) Step 5 calculations, 2) Step 3 estimated metrics, 3) Fallback
                             state.calculations?.selected?.bessKW
                               ? `${Math.round(state.calculations.selected.bessKW)}`
-                              : "80–120"
+                              : estimatedMetrics?.peakDemandKW
+                                ? `${estimatedMetrics.peakDemandKW}`
+                                : "80–120"
                           }
                           unit="kW"
                           badge={
-                            !state.calculations?.selected?.bessKW
+                            !state.calculations?.selected?.bessKW && !estimatedMetrics?.peakDemandKW
                               ? { text: "est.", variant: "estimate" }
-                              : undefined
+                              : state.calculations?.selected?.bessKW
+                                ? undefined
+                                : { text: "calc.", variant: "verified" }
                           }
                           iconColor="indigo"
                           hierarchy="primary"
@@ -751,15 +833,20 @@ export default function WizardV6() {
                           icon={Battery}
                           label="Storage:"
                           value={
+                            // Priority: 1) Step 5 calculations, 2) Step 3 estimated metrics, 3) Fallback
                             state.calculations?.selected?.bessKWh
                               ? `${Math.round(state.calculations.selected.bessKWh)}`
-                              : "200–400"
+                              : estimatedMetrics?.bessKWh
+                                ? `${estimatedMetrics.bessKWh}`
+                                : "200–400"
                           }
                           unit="kWh"
                           badge={
-                            !state.calculations?.selected?.bessKWh
+                            !state.calculations?.selected?.bessKWh && !estimatedMetrics?.bessKWh
                               ? { text: "est.", variant: "estimate" }
-                              : undefined
+                              : state.calculations?.selected?.bessKWh
+                                ? undefined
+                                : { text: "calc.", variant: "verified" }
                           }
                           iconColor="violet"
                           hierarchy="primary"
@@ -769,8 +856,8 @@ export default function WizardV6() {
                   </div>
 
                   {/* RIGHT: Location + Site Score */}
-                  <div className="text-right min-w-[150px]">
-                    <div className="text-white text-sm font-medium leading-tight">
+                  <div className="text-right min-w-[120px] max-w-[180px] flex-shrink-0">
+                    <div className="text-white text-sm font-medium leading-tight truncate">
                       {state.zipCode} • {state.state}
                     </div>
                     {siteScore && (
