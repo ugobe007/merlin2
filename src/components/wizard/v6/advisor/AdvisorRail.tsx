@@ -351,8 +351,8 @@ export function AdvisorRail({
       <div className="pointer-events-none absolute top-20 right-0 h-64 w-64 bg-gradient-to-bl from-indigo-500/30 via-blue-500/20 to-transparent blur-3xl rounded-full" />
       <div className="pointer-events-none absolute bottom-20 left-10 h-48 w-48 bg-gradient-to-tr from-fuchsia-500/20 via-violet-400/15 to-transparent blur-2xl rounded-full" />
 
-      {/* MERLIN IDENTITY HEADER - Soft focal point, not dominant */}
-      <div className="px-6 py-5 border-b border-violet-500/20 flex-shrink-0 bg-gradient-to-r from-violet-900/40 via-indigo-900/50 to-blue-900/40">
+      {/* MERLIN IDENTITY HEADER - Dark blue for contrast */}
+      <div className="px-6 py-5 border-b border-violet-500/20 flex-shrink-0 bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950">
         <div className="flex items-center gap-4 mb-4">
           <div className="relative">
             {/* Pulsing advisor activity ring */}
