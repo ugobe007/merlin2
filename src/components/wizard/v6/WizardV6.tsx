@@ -9,7 +9,6 @@ import { buildStep3Snapshot } from "./step3/buildStep3Snapshot";
 // MerlinAdvisor Rail System (Phase 1 - Jan 16, 2026)
 import { AdvisorPublisher } from "./advisor/AdvisorPublisher";
 import { AdvisorRail } from "./advisor/AdvisorRail";
-import { FloatingBatteryProgress } from "./advisor/FloatingBatteryProgress";
 import { PowerGaugeWidget } from "./advisor/PowerGaugeWidget";
 
 // TrueQuote™ Brand Assets (Jan 20, 2026)
