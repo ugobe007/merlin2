@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { RotateCcw, X, ChevronLeft, ChevronRight, Zap, Sun, Battery, Shield, Activity } from "lucide-react";
+import { RotateCcw, X, ChevronLeft, ChevronRight, Zap, Sun, Shield } from "lucide-react";
 
 import type { WizardState } from "./types";
 import { INITIAL_WIZARD_STATE, POWER_LEVELS } from "./types";
@@ -232,18 +232,7 @@ export default function WizardV6() {
   // Blocked feedback state (Jan 19, 2026 - Shows message when Next is blocked)
   const [showBlockedFeedback, setShowBlockedFeedback] = useState(false);
 
-  // Expandable intelligence panel state (Jan 20, 2026 - Power details panel)
-  const [showDetailsPanel, setShowDetailsPanel] = useState(false);
-
-  // ✅ FIX: Real-time metrics from Step 3 inputs (Jan 20, 2026)
-  // Calculate power metrics immediately when user answers questions
-  // This makes intelligence header responsive to inputs
-  const [estimatedMetrics, setEstimatedMetrics] = useState<{
-    peakDemandKW: number;
-    annualConsumptionKWh: number;
-    bessKW: number;
-    bessKWh: number;
-  } | null>(null);
+  // REMOVED: Power details panel (Jan 20, 2026 - User requested removal)
 
   // ✅ RESTORE FIX: Validate snapshot before allowing Step 4+ restore (Jan 16, 2026)
   useEffect(() => {
@@ -270,71 +259,9 @@ export default function WizardV6() {
   }, [currentStep]);
 
   // ============================================================================
-  // INTELLIGENCE HEADER METRICS CALCULATION (Jan 20, 2026)
-  // Calculate real-time power metrics from Step 3 inputs for intelligence header
+  // POWER METRICS REMOVED (Jan 20, 2026)
+  // Calculations moved to AdvisorRail and PowerGaugeWidget
   // ============================================================================
-  useEffect(() => {
-    // Only calculate if we have Step 3 data
-    if (!state.industry || !state.useCaseData?.inputs) {
-      setEstimatedMetrics(null);
-      return;
-    }
-
-    const inputs = state.useCaseData.inputs as Record<string, any>;
-    
-    // Extract key facility data (industry-specific)
-    const roomCount = inputs.roomCount || inputs.numberOfRooms || 0;
-    const bedCount = inputs.bedCount || 0;
-    const bayCount = inputs.bayCount || inputs.bays || 0;
-    const rackCount = inputs.rackCount || 0;
-    const squareFeet = inputs.squareFootage || inputs.squareFeet || inputs.totalSqFt || inputs.facilitySqFt || 0;
-    const operatingHours = inputs.operatingHours || 12;
-
-    // Calculate peak demand based on industry (simplified SSOT logic)
-    let peakDemandKW = 0;
-
-    if (state.industry === 'hospital' && bedCount > 0) {
-      // Hospital: 5-10 kW per bed depending on facility type
-      peakDemandKW = bedCount * 7.5; // Mid-range estimate
-    } else if (state.industry === 'hotel' && roomCount > 0) {
-      // Hotel: 3-5 kW per room depending on class
-      peakDemandKW = roomCount * 4; // Mid-range estimate
-    } else if (state.industry === 'car-wash' && bayCount > 0) {
-      // Car wash: 20-50 kW per bay depending on type
-      peakDemandKW = bayCount * 35; // Mid-range estimate
-    } else if (state.industry === 'data-center' && rackCount > 0) {
-      // Data center: 5-10 kW per rack
-      peakDemandKW = rackCount * 7.5; // Mid-range estimate
-    } else if (squareFeet > 0) {
-      // Generic: 10-30 W per sq ft depending on industry
-      peakDemandKW = (squareFeet * 0.020); // 20 W/sq ft average
-    }
-
-    // Calculate annual consumption (simplified)
-    const annualConsumptionKWh = peakDemandKW * operatingHours * 365 * 0.6; // 60% load factor
-
-    // Calculate recommended BESS sizing (40% of peak for peak shaving)
-    const bessKW = Math.round(peakDemandKW * 0.4);
-    const bessKWh = Math.round(bessKW * 4); // 4-hour duration
-
-    setEstimatedMetrics({
-      peakDemandKW: Math.round(peakDemandKW),
-      annualConsumptionKWh: Math.round(annualConsumptionKWh),
-      bessKW,
-      bessKWh,
-    });
-
-    console.log('📊 Intelligence Header Metrics Updated:', {
-      industry: state.industry,
-      inputs: { roomCount, bedCount, bayCount, rackCount, squareFeet, operatingHours },
-      calculated: {
-        peakDemandKW: Math.round(peakDemandKW),
-        annualConsumptionKWh: Math.round(annualConsumptionKWh),
-        bessKW,
-        bessKWh,
-      }
-    });
-  }, [state.industry, state.useCaseData?.inputs]);
 
   // Auto-save state to bufferService whenever it changes (debounced)
   useEffect(() => {
@@ -809,25 +736,12 @@ export default function WizardV6() {
 
                     {/* CLUSTER 3: POWER GAUGE - Inline mini speedometer */}
                     <div className="flex items-center">
-                      <PowerGaugeWidget 
-                        batteryKW={state.calculations?.selected?.bessKW ?? 0} 
+                      <PowerGaugeWidget
+                        batteryKW={state.calculations?.selected?.bessKW ?? 0}
                         peakLoadKW={state.calculations?.base?.peakDemandKW ?? 100}
                         compact={true}
                       />
                     </div>
-
-                    {/* Expandable Details Tab - Shows when Step 3+ has data */}
-                    {currentStep >= 3 && estimatedMetrics && (
-                      <button
-                        onClick={() => setShowDetailsPanel(!showDetailsPanel)}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-400/40 text-violet-200 hover:bg-violet-500/30 transition-all group shadow-[0_0_16px_rgba(167,139,250,0.4)]"
-                        title="Click to expand power details panel"
-                      >
-                        <Battery className="w-4 h-4 animate-pulse" />
-                        <span className="text-xs font-semibold">{showDetailsPanel ? 'Hide' : 'Power'} Details</span>
-                        <div className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_12px_rgba(167,139,250,0.9)] animate-pulse" />
-                      </button>
-                    )}
                   </div>
 
                   {/* RIGHT: Location + Site Score */}
@@ -855,54 +769,7 @@ export default function WizardV6() {
                   </div>
                 </div>
 
-                {/* EXPANDABLE POWER DETAILS PANEL - Slides down below intelligence header */}
-                {showDetailsPanel && currentStep >= 3 && (
-                  <div className="border-t border-white/10 bg-gradient-to-br from-slate-800/70 via-slate-900/80 to-violet-950/60 p-6 shadow-[inset_0_1px_0_rgba(167,139,250,0.2),0_0_24px_rgba(99,102,241,0.15)] animate-slide-down">
-                    <div className="grid grid-cols-2 gap-6">
-                      {/* LEFT: Power Gauge Odometer */}
-                      <div>
-                        <h3 className="text-sm font-bold text-violet-300 mb-3 flex items-center gap-2">
-                          <Zap className="w-4 h-4" />
-                          Power Coverage
-                        </h3>
-                        <PowerGaugeWidget 
-                          batteryKW={state.calculations?.selected?.bessKW ?? 0} 
-                          peakLoadKW={state.calculations?.base?.peakDemandKW ?? 100} 
-                        />
-                      </div>
-
-                      {/* RIGHT: Key Metrics */}
-                      <div className="space-y-3">
-                        <h3 className="text-sm font-bold text-violet-300 mb-3 flex items-center gap-2">
-                          <Activity className="w-4 h-4" />
-                          System Metrics
-                        </h3>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-400">Peak Demand</span>
-                            <span className="text-sm font-bold text-white">{Math.round(state.calculations?.base?.peakDemandKW ?? 0)} kW</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-400">BESS Power</span>
-                            <span className="text-sm font-bold text-white">{Math.round(state.calculations?.selected?.bessKW ?? 0)} kW</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-400">Storage Capacity</span>
-                            <span className="text-sm font-bold text-white">{Math.round(state.calculations?.selected?.bessKWh ?? 0)} kWh</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-400">Duration</span>
-                            <span className="text-sm font-bold text-white">
-                              {state.calculations?.selected?.bessKWh && state.calculations?.selected?.bessKW
-                                ? (state.calculations.selected.bessKWh / state.calculations.selected.bessKW).toFixed(1)
-                                : '0'} hours
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* POWER DETAILS PANEL REMOVED - User requested removal (Jan 20, 2026) */}
               </div>
             )}
 
@@ -911,9 +778,9 @@ export default function WizardV6() {
                 ====================================================================== */}
             <div className="relative flex h-[calc(100vh-108px)] flex-col lg:flex-row">
               {/* FLOATING BATTERY PROGRESS - Top right, always visible */}
-              <FloatingBatteryProgress 
-                currentStep={currentStep} 
-                onNavigate={(step) => setCurrentStep(step)} 
+              <FloatingBatteryProgress
+                currentStep={currentStep}
+                onNavigate={(step) => setCurrentStep(step)}
               />
 
               {/* LEFT: Cockpit - Wider and more integrated */}
