@@ -347,10 +347,54 @@ export default function WizardV6() {
       const sqft = Number(inputs.gamingFloorSqft || inputs.squareFootage || 100000);
       estimatedPeakKW = sqft * 0.05; // 50 W/sqft
     }
-    // Restaurant: sqft × 50-100 W/sqft
+    // Restaurant: base sqft + kitchen equipment loads
     else if (industry.includes('restaurant')) {
-      const sqft = Number(inputs.squareFootage || inputs.diningAreaSqft || 5000);
-      estimatedPeakKW = sqft * 0.075; // 75 W/sqft
+      const sqft = Number(inputs.squareFootage || inputs.diningAreaSqft || 3000);
+      const seats = Number(inputs.seatCount || 80);
+      
+      // Base load: 50 W/sqft for HVAC + lighting
+      let basePeakKW = sqft * 0.05;
+      
+      // Kitchen equipment loads (from primaryCookingEquipment multi-select)
+      const cookingEquipment = inputs.primaryCookingEquipment as string[] | string | undefined;
+      const equipmentArray = Array.isArray(cookingEquipment) 
+        ? cookingEquipment 
+        : typeof cookingEquipment === 'string' 
+          ? cookingEquipment.split(',') 
+          : [];
+      
+      // Equipment power ratings (kW per unit)
+      const equipmentPower: Record<string, number> = {
+        'gas_range': 15,        // Gas range (lower electric, but ventilation)
+        'electric_range': 25,   // Electric range/oven
+        'fryers': 20,           // Deep fryers
+        'flat_griddle': 15,     // Flat top griddle
+        'pizza_oven': 30,       // Pizza oven
+        'convection_oven': 12,  // Convection oven
+      };
+      
+      equipmentArray.forEach(eq => {
+        const key = eq.toLowerCase().replace(/[^a-z_]/g, '_');
+        basePeakKW += equipmentPower[key] || 10;
+      });
+      
+      // Kitchen hood exhaust: 5-10 kW
+      if (inputs.hasKitchenHood || inputs.hasCommercialKitchenHood) {
+        basePeakKW += 8;
+      }
+      
+      // Walk-in refrigeration: 3-8 kW
+      if (inputs.hasWalkInFreezer || inputs.hasWalkInRefrigeration) {
+        basePeakKW += 6;
+      }
+      if (inputs.hasWalkInCooler) {
+        basePeakKW += 4;
+      }
+      
+      // Scale by seat count (more seats = more equipment)
+      const seatMultiplier = seats > 150 ? 1.3 : seats > 75 ? 1.1 : 1.0;
+      
+      estimatedPeakKW = basePeakKW * seatMultiplier * 0.8; // 80% diversity
     }
     // Apartment: units × 3-5 kW/unit
     else if (industry.includes('apartment') || industry.includes('residential')) {
@@ -373,6 +417,17 @@ export default function WizardV6() {
     
     // BESS sizing: typically 30-50% of peak demand for peak shaving
     const bessKW = estimatedPeakKW * 0.4;
+    
+    // DEV: Log power estimates for debugging
+    if (import.meta.env.DEV && industry) {
+      console.log('[PowerGauge] Estimated:', { 
+        industry, 
+        peakDemandKW: Math.round(estimatedPeakKW), 
+        bessKW: Math.round(bessKW),
+        inputKeys: Object.keys(inputs),
+        inputs: inputs
+      });
+    }
     
     return {
       peakDemandKW: Math.round(estimatedPeakKW),
