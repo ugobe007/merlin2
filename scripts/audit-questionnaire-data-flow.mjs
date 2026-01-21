@@ -57,35 +57,150 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // =============================================================================
 // EXPECTED FIELD NAMES BY INDUSTRY (from WizardV6.tsx estimatedPowerMetrics)
-// Updated Jan 20, 2026 to match actual DB field names
+// Updated Jan 20, 2026 - COMPREHENSIVE: ALL power-relevant fields now handled
 // =============================================================================
 
 const CODE_EXPECTED_FIELDS = {
-  'hotel': ['roomCount', 'numberOfRooms', 'facilitySize', 'hotelCategory', 'hotelClass', 'facilityType'],
-  'hospital': ['bedCount', 'numberOfBeds', 'facilitySize', 'icuBeds', 'operatingRooms', 'totalSqFt'],
-  'data-center': ['itLoadKW', 'totalITLoad', 'powerCapacity', 'currentPUE', 'pue', 'rackCount', 'tierLevel'],
-  'car-wash': ['bayCount', 'numberOfBays', 'facilityType', 'washType', 'operatingModel'],
-  'ev-charging': ['level2Count', 'level2Chargers', 'l2Count', 'dcfc50Count', 'dcfcHighCount', 'dcFastCount', 'dcfcChargers', 'dcfcCount', 'ultraFastCount', 'megawattCount', 'hpcChargers', 'hpcCount'],
-  'manufacturing': ['manufacturingSqFt', 'facilitySqFt', 'squareFootage', 'manufacturingType'],
-  'warehouse': ['warehouseSqFt', 'facilitySqFt', 'squareFootage', 'hasColdStorage', 'refrigeratedArea', 'warehouseType'],
-  'office': ['officeSqFt', 'totalSqFt', 'buildingSqFt', 'squareFootage', 'facilitySqFt', 'buildingClass'],
-  'retail': ['retailSqFt', 'storeSqFt', 'squareFootage', 'totalSqFt'],
-  'shopping-center': ['retailSqFt', 'storeSqFt', 'mallSqFt', 'glaSqFt', 'totalSqFt', 'squareFootage'],
-  'college': ['studentPopulation', 'studentEnrollment', 'studentCount', 'enrollment', 'totalSqFt'],
-  'university': ['studentPopulation', 'studentEnrollment', 'studentCount', 'enrollment', 'totalSqFt'],
-  'airport': ['annualPassengers', 'terminalSqFt', 'gateCount'],
-  'casino': ['gamingFloorSqft', 'gamingFloorSize', 'totalSqFt', 'squareFootage', 'hotelRooms', 'slotMachines'],
-  'restaurant': ['squareFootage', 'diningAreaSqft', 'seatCount', 'kitchenEquipment', 'primaryCookingEquipment', 'hasKitchenHood', 'hasCommercialKitchenHood', 'hasWalkInFreezer', 'hasWalkInRefrigeration', 'hasWalkInCooler', 'refrigerationCount', 'restaurantType'],
-  'apartment': ['totalUnits', 'unitCount', 'numberOfUnits', 'homeSqFt', 'avgUnitSize', 'buildingCount'],
-  'residential': ['totalUnits', 'unitCount', 'numberOfUnits', 'homeSqFt'],
-  // NEW: Added handlers Jan 20, 2026
-  'cold-storage': ['refrigeratedSqFt', 'totalSqFt', 'squareFootage', 'storageCapacity', 'palletCapacity'],
-  'gas-station': ['dispenserCount', 'storeSqFt', 'stationType'],
-  'government': ['totalSqFt', 'governmentSqFt', 'facilitySqFt', 'buildingCount'],
-  'indoor-farm': ['growingAreaSqFt', 'growingLevels', 'lightingLoadPercent', 'farmType'],
-  'agricultural': ['totalAcres', 'irrigationType', 'majorEquipment'],
-  'heavy_duty_truck_stop': ['mcsChargers', 'level2', 'truckWashBays', 'serviceBays', 'peakDemandKW', 'gridCapacityKW'],
-  'microgrid': ['sitePeakLoad', 'criticalLoadPercent', 'existingCapacity', 'criticalLoads'],
+  'hotel': [
+    'roomCount', 'hotelCategory', 'floorCount', 'operatingHours', 'hvacType',
+    'equipmentTier', 'elevatorCount', 'efficientElevators', 'poolType', 'parkingType',
+    'exteriorLoads', 'hasExistingSolar', 'existingSolarKW', 'hasExistingEV', 'existingEVChargers',
+    'gridCapacity', 'needsBackupPower', 'rooftopSqFt'
+  ],
+  'hospital': [
+    'bedCount', 'icuBeds', 'operatingRooms', 'buildingCount', 'imagingEquipment',
+    'hvacType', 'equipmentTier', 'generatorCapacity', 'operatingHours', 'totalSqFt',
+    'hospitalType', 'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'data-center': [
+    'itLoadKW', 'currentPUE', 'rackCount', 'tierLevel', 'dcType', 'workloadTypes',
+    'generatorCapacity', 'powerInfrastructure', 'freeCooling', 'hvacType', 'operatingHours',
+    'equipmentTier', 'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'car-wash': [
+    'bayCount', 'facilityType', 'operatingModel', 'operatingHours', 'blowerType',
+    'waterHeaterType', 'lightingType', 'conveyorMotorType', 'equipmentTier', 'roofSqFt',
+    'hvacType', 'hasNaturalGas', 'evL2Count', 'evDcfcCount', 'hasExistingSolar',
+    'existingSolarKW', 'gridCapacity', 'needsBackupPower', 'hasExistingEV', 'existingEVChargers'
+  ],
+  'ev-charging': [
+    'level2Count', 'dcfc50Count', 'dcfcHighCount', 'dcFastCount', 'ultraFastCount', 'megawattCount',
+    'hubType', 'hubSize', 'stationSize', 'siteSqFt', 'operatingHours', 'serviceVoltage',
+    'hvacType', 'gridCapacity', 'equipmentTier', 'needsBackupPower', 'hasExistingSolar',
+    'existingSolarKW', 'gridCapacityKW', 'hasExistingEV', 'existingEVChargers'
+  ],
+  'manufacturing': [
+    'manufacturingSqFt', 'facilitySqFt', 'manufacturingType', 'shiftsPerDay',
+    'operatingHours', 'powerQualitySensitivity', 'hvacType', 'equipmentTier', 'majorEquipment',
+    'powerFactor', 'hasExistingSolar', 'existingSolarKW', 'evFleet', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'warehouse': [
+    'warehouseSqFt', 'facilitySqFt', 'warehouseType', 'shiftsPerDay', 'operatingHours',
+    'automationLevel', 'mheEquipment', 'fleetSize', 'hvacType', 'equipmentTier', 'lightingType',
+    'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'office': [
+    'officeSqFt', 'totalSqFt', 'buildingSqFt', 'buildingClass', 'floorCount',
+    'operatingHours', 'elevatorCount', 'lightingType', 'hvacType', 'equipmentTier',
+    'tenantTypes', 'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'retail': [
+    'retailSqFt', 'storeSqFt', 'totalSqFt', 'retailType', 'specialEquipment', 'refrigeration',
+    'operatingHours', 'equipmentTier', 'parkingType', 'hvacType', 'lightingType',
+    'locationCount', 'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'shopping-center': [
+    'mallSqFt', 'glaSqFt', 'totalSqFt', 'retailSqFt', 'propertyType', 'tenantCount',
+    'anchorTypes', 'operatingHours', 'equipmentTier', 'hvacType', 'lightingType',
+    'commonAreas', 'parkingType', 'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'college': [
+    'studentPopulation', 'studentEnrollment', 'studentCount', 'totalSqFt', 'institutionType',
+    'buildingCount', 'hvacAge', 'hvacType', 'equipmentTier', 'operatingHours',
+    'facilityTypes', 'evInfrastructure', 'backupPowerStatus', 'hasExistingSolar', 'existingSolarKW',
+    'gridCapacity', 'needsBackupPower', 'hasExistingEV', 'existingEVChargers'
+  ],
+  'university': [
+    'studentPopulation', 'studentEnrollment', 'studentCount', 'totalSqFt', 'institutionType',
+    'buildingCount', 'hvacAge', 'hvacType', 'equipmentTier', 'operatingHours',
+    'facilityTypes', 'evInfrastructure', 'backupPowerStatus', 'hasExistingSolar', 'existingSolarKW',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'airport': [
+    'annualPassengers', 'terminalSqFt', 'gateCount', 'airportType', 'terminalCount',
+    'publicEvChargers', 'operatingHours', 'equipmentTier', 'hvacType',
+    'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'casino': [
+    'gamingFloorSqFt', 'gamingFloorSize', 'totalSqFt', 'hotelRooms', 'slotMachines',
+    'casinoType', 'operatingHours', 'equipmentTier', 'hvacType', 'parkingType',
+    'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'restaurant': [
+    'squareFootage', 'restaurantType', 'seatCount', 'hasWalkInFreezer', 'hasKitchenHood',
+    'kitchenEquipment', 'refrigerationCount', 'operatingHours', 'hvacType',
+    'hasOutdoorSeating', 'hasBarService', 'dishwasherType', 'hasWalkInCooler',
+    'hasExistingSolar', 'existingSolarKW', 'hasExistingEV', 'existingEVChargers'
+  ],
+  'apartment': [
+    'totalUnits', 'homeSqFt', 'avgUnitSize', 'buildingCount', 'propertyType',
+    'waterHeating', 'hvacType', 'elevatorCount', 'inUnitLaundry', 'parkingType',
+    'communityAmenities', 'commonAreaCost', 'evChargingInterest', 'equipmentTier', 'operatingHours',
+    'hasExistingSolar', 'existingSolarKW', 'hasExistingEV', 'existingEVChargers', 'gridCapacity', 'needsBackupPower'
+  ],
+  'residential': [
+    'homeSqFt', 'totalUnits', 'hvacType', 'operatingHours', 'equipmentTier',
+    'gridCapacity', 'gridCapacityKW', 'needsBackupPower', 'hasExistingSolar', 'existingSolarKW',
+    'hasExistingEV', 'existingEVChargers', 'facilitySubtype', 'annualOutageHours', 'hasEVCharging'
+  ],
+  'cold-storage': [
+    'totalSqFt', 'refrigeratedSqFt', 'storageCapacity', 'palletCapacity', 'facilityType',
+    'productTypes', 'refrigerationSystem', 'operatingHours', 'hvacType', 'equipmentTier',
+    'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower', 'squareFootage',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'gas-station': [
+    'dispenserCount', 'storeSqFt', 'stationType', 'fuelTypes', 'refrigeration',
+    'lightingType', 'operatingHours', 'equipmentTier', 'hvacType', 'locationCount',
+    'existingEvCharging', 'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'government': [
+    'totalSqFt', 'governmentSqFt', 'facilitySqFt', 'buildingCount', 'facilityType',
+    'governmentLevel', 'fleetSize', 'operatingHours', 'equipmentTier', 'backupPower',
+    'hvacType', 'lightingType', 'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'indoor-farm': [
+    'growingAreaSqFt', 'farmType', 'growingLevels', 'lightingLoadPercent', 'cropTypes',
+    'operatingSchedule', 'automationLevel', 'lightingType', 'operatingHours', 'hvacType',
+    'equipmentTier', 'hasExistingSolar', 'existingSolarKW', 'gridCapacity', 'needsBackupPower',
+    'hasExistingEV', 'existingEVChargers'
+  ],
+  'agricultural': [
+    'totalAcres', 'irrigationType', 'majorEquipment', 'farmType', 'operatingHours',
+    'equipmentTier', 'hvacType', 'gridCapacity', 'needsBackupPower', 'backupPower',
+    'hasExistingSolar', 'existingSolarKW', 'hasExistingEV', 'existingEVChargers'
+  ],
+  'heavy_duty_truck_stop': [
+    'mcsChargers', 'level2', 'truckWashBays', 'serviceBays', 'peakDemandKW', 'gridCapacityKW',
+    'operatingHours', 'hasShowers', 'hasLaundry', 'existingSolarKW',
+    'hasExistingSolar', 'gridCapacity', 'needsBackupPower', 'hasExistingEV', 'existingEVChargers'
+  ],
+  'microgrid': [
+    'sitePeakLoad', 'criticalLoadPercent', 'criticalLoads', 'existingCapacity',
+    'operatingHours', 'hvacType', 'equipmentTier', 'gridCapacity', 'needsBackupPower',
+    'hasExistingSolar', 'existingSolarKW', 'hasExistingEV', 'existingEVChargers'
+  ],
 };
 
 // Power-relevant field patterns (fields that affect energy calculations)
