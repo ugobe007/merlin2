@@ -1942,6 +1942,37 @@ export default function WizardV6() {
   ]);
 
   // ============================================================================
+  // TRUEQUOTE™ MODEL CONFIDENCE (Jan 21, 2026 - Phase 5)
+  // Single source of truth for confidence score across all UI components
+  // ============================================================================
+
+  const modelConfidenceScore = useMemo<number>(() => {
+    const industry = state.industry || state.detectedIndustry;
+    const showGenerator = industry?.includes('hospital') || industry?.includes('data') || industry?.includes('critical');
+    
+    const mc = calculateModelConfidence(
+      state.serviceSize,
+      state.hasDemandCharge,
+      state.demandChargeBand,
+      state.hvacType,
+      state.hasBackupGenerator,
+      state.generatorCapacityBand,
+      showGenerator
+    );
+    
+    return mc.score;
+  }, [
+    state.industry,
+    state.detectedIndustry,
+    state.serviceSize,
+    state.hasDemandCharge,
+    state.demandChargeBand,
+    state.hvacType,
+    state.hasBackupGenerator,
+    state.generatorCapacityBand,
+  ]);
+
+  // ============================================================================
   // TRUEQUOTE™ LOAD CURVE VISUALIZATION (Jan 21, 2026 - Phase 5)
   // Generates 24-hour load curve for power profile chart
   // ============================================================================
@@ -2356,6 +2387,7 @@ export default function WizardV6() {
             onValidityChange={setStep3Valid}
             trueQuoteSizing={trueQuoteSizing}
             loadCurve={loadCurve}
+            modelConfidenceScore={modelConfidenceScore}
           />
         );
       case 4:
@@ -2555,29 +2587,44 @@ export default function WizardV6() {
                       // Site Score™ (Jan 18, 2026 - Merlin IP)
                       siteScore,
                       // Progressive Model (Jan 21, 2026 - TrueQuote™ Accuracy)
-                      progressiveModel: state.serviceSize || state.hasDemandCharge || state.hvacType ? {
-                        serviceSize: state.serviceSize,
-                        gridCapacityKW: state.serviceSize && state.serviceSize !== 'unsure' 
-                          ? ({ '200A-single': 48, '400A-three': 277, '800A-three': 553, '1000A-plus': 1000 } as Record<string, number>)[state.serviceSize]
-                          : undefined,
-                        hasDemandCharge: state.hasDemandCharge,
-                        demandChargeBand: state.demandChargeBand,
-                        hvacType: state.hvacType,
-                        hvacMultiplier: state.hvacType && state.hvacType !== 'not-sure'
-                          ? ({ 'rtu': 1.0, 'chiller': 1.15, 'heat-pump': 0.90 } as Record<string, number>)[state.hvacType]
-                          : undefined,
-                        hasBackupGenerator: state.hasBackupGenerator,
-                        generatorCapacityKW: state.generatorCapacityBand && state.generatorCapacityBand !== 'not-sure'
-                          ? ({ 'under-100': 50, '100-500': 250, '500-plus': 750 } as Record<string, number>)[state.generatorCapacityBand]
-                          : undefined,
-                        confidence: (() => {
-                          const count = (state.progressiveFieldsAnswered || []).length;
-                          if (count >= 4) return 'high' as const;
-                          if (count >= 2) return 'medium' as const;
-                          return 'low' as const;
-                        })(),
-                        fieldsAnswered: (state.progressiveFieldsAnswered || []).length,
-                      } : undefined,
+                      progressiveModel: (() => {
+                        // Calculate model confidence using the SSOT function
+                        const industry = state.industry || state.detectedIndustry;
+                        const showGenerator = industry?.includes('hospital') || industry?.includes('data') || industry?.includes('critical');
+                        const modelConf = calculateModelConfidence(
+                          state.serviceSize,
+                          state.hasDemandCharge,
+                          state.demandChargeBand,
+                          state.hvacType,
+                          state.hasBackupGenerator,
+                          state.generatorCapacityBand,
+                          showGenerator
+                        );
+                        
+                        return {
+                          serviceSize: state.serviceSize,
+                          gridCapacityKW: state.serviceSize && state.serviceSize !== 'unsure' 
+                            ? ({ '200A-single': 48, '400A-three': 277, '800A-three': 553, '1000A-plus': 1000 } as Record<string, number>)[state.serviceSize]
+                            : undefined,
+                          hasDemandCharge: state.hasDemandCharge,
+                          demandChargeBand: state.demandChargeBand,
+                          hvacType: state.hvacType,
+                          hvacMultiplier: state.hvacType && state.hvacType !== 'not-sure'
+                            ? ({ 'rtu': 1.0, 'chiller': 1.15, 'heat-pump': 0.90 } as Record<string, number>)[state.hvacType]
+                            : undefined,
+                          hasBackupGenerator: state.hasBackupGenerator,
+                          generatorCapacityKW: state.generatorCapacityBand && state.generatorCapacityBand !== 'not-sure'
+                            ? ({ 'under-100': 50, '100-500': 250, '500-plus': 750 } as Record<string, number>)[state.generatorCapacityBand]
+                            : undefined,
+                          // Phase 4: Numeric confidence from TrueQuote™ SSOT
+                          modelConfidenceScore: modelConf.score,
+                          modelCompleteness: modelConf.completeness,
+                          lastLearningMessage: modelConf.lastLearningMessage,
+                          // Legacy (deprecated)
+                          confidence: modelConf.score >= 75 ? 'high' as const : modelConf.score >= 55 ? 'medium' as const : 'low' as const,
+                          fieldsAnswered: (state.progressiveFieldsAnswered || []).length,
+                        };
+                      })(),
                     }}
                   />
                 </div>

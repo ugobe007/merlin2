@@ -48,6 +48,8 @@ interface Step3DetailsProps {
   trueQuoteSizing?: TrueQuoteSizing | null;
   /** Load curve for visualization (Phase 5) */
   loadCurve?: LoadCurve | null;
+  /** Model confidence score (0-90) from TrueQuote™ SSOT */
+  modelConfidenceScore?: number;
 }
 
 export function Step3Details({
@@ -58,6 +60,7 @@ export function Step3Details({
   onValidityChange,
   trueQuoteSizing,
   loadCurve,
+  modelConfidenceScore,
 }: Step3DetailsProps) {
   // Cast state to proper type
   const wizardState = state as WizardState;
@@ -158,6 +161,7 @@ export function Step3Details({
               sizing={trueQuoteSizing}
               overrides={wizardState.sizingOverrides}
               onCustomize={() => setShowSizingModal(true)}
+              modelConfidence={modelConfidenceScore}
             />
           )}
 
