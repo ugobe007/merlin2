@@ -7,10 +7,11 @@
  * Shows 2-4 questions max, with live inferred power profile.
  *
  * Created: January 21, 2026
+ * Updated: January 21, 2026 - Phase 4: Added Model Completeness bar + learning feedback
  */
 
-import React, { useMemo } from "react";
-import { Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Sparkles, ChevronDown, ChevronUp, Brain } from "lucide-react";
 import { ServiceSizePrompt } from "./ServiceSizePrompt";
 import { DemandChargePrompt } from "./DemandChargePrompt";
 import { HVACTypePrompt } from "./HVACTypePrompt";
@@ -21,10 +22,12 @@ import {
   type HVACTypeOption,
   type GeneratorCapacityBand,
   type ProgressiveModelInference,
+  type ModelConfidence,
   SERVICE_SIZE_TO_CAPACITY,
   DEMAND_CHARGE_BAND_TO_RATE,
   HVAC_TYPE_MULTIPLIERS,
   GENERATOR_BAND_TO_KW,
+  calculateModelConfidence,
 } from "../types";
 
 interface ProgressiveModelPanelProps {
@@ -43,6 +46,9 @@ interface ProgressiveModelPanelProps {
   onHVACTypeChange: (value: HVACTypeOption) => void;
   onHasBackupGeneratorChange: (value: "yes" | "no" | "planned") => void;
   onGeneratorCapacityBandChange: (value: GeneratorCapacityBand) => void;
+  
+  // NEW: Model confidence callback (Phase 4)
+  onModelConfidenceChange?: (confidence: ModelConfidence) => void;
 
   // Context
   industry?: string;
@@ -166,13 +172,26 @@ export function ProgressiveModelPanel({
   onHVACTypeChange,
   onHasBackupGeneratorChange,
   onGeneratorCapacityBandChange,
+  onModelConfidenceChange,
   industry,
   industryName,
   expanded = true,
   onToggleExpanded,
   compact = false,
 }: ProgressiveModelPanelProps) {
-  // Compute inference from current answers
+  // Track learning messages for transient display
+  const [learningMessage, setLearningMessage] = useState<string | null>(null);
+  const [showLearning, setShowLearning] = useState(false);
+
+  // Should we show generator prompt? Only for relevant industries
+  const normalizedIndustry = industry?.toLowerCase().replace(/[_\s]/g, "-") || "";
+  const showGenerator =
+    industry &&
+    GENERATOR_RELEVANT_INDUSTRIES.some((ind) =>
+      normalizedIndustry.includes(ind.replace(/[_]/g, "-"))
+    );
+
+  // Compute inference from current answers (legacy format)
   const inference = useMemo(
     () =>
       computeInference(
@@ -193,13 +212,45 @@ export function ProgressiveModelPanel({
     ]
   );
 
-  // Should we show generator prompt? Only for relevant industries
-  const normalizedIndustry = industry?.toLowerCase().replace(/[_\s]/g, "-") || "";
-  const showGenerator =
-    industry &&
-    GENERATOR_RELEVANT_INDUSTRIES.some((ind) =>
-      normalizedIndustry.includes(ind.replace(/[_]/g, "-"))
-    );
+  // NEW: Calculate model confidence (Phase 4)
+  const modelConfidence = useMemo(
+    () =>
+      calculateModelConfidence(
+        serviceSize,
+        hasDemandCharge,
+        demandChargeBand,
+        hvacType,
+        hasBackupGenerator,
+        generatorCapacityBand,
+        !!showGenerator
+      ),
+    [
+      serviceSize,
+      hasDemandCharge,
+      demandChargeBand,
+      hvacType,
+      hasBackupGenerator,
+      generatorCapacityBand,
+      showGenerator,
+    ]
+  );
+
+  // Notify parent of confidence changes
+  useEffect(() => {
+    onModelConfidenceChange?.(modelConfidence);
+  }, [modelConfidence, onModelConfidenceChange]);
+
+  // Show learning message when it changes
+  useEffect(() => {
+    if (modelConfidence.lastLearningMessage) {
+      setLearningMessage(modelConfidence.lastLearningMessage);
+      setShowLearning(true);
+      // Auto-hide after 4 seconds
+      const timer = setTimeout(() => setShowLearning(false), 4000);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [modelConfidence.lastLearningMessage]);
 
   // Estimate peak for demand charge calculation
   const estimatedPeakKW = inference.peakDemandRange
@@ -215,32 +266,32 @@ export function ProgressiveModelPanel({
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
-            <Sparkles className="w-5 h-5 text-white" />
+            <Brain className="w-5 h-5 text-white" />
           </div>
           <div className="text-left">
             <div className="text-sm font-bold text-white">Help Merlin Size Your System</div>
             <div className="text-xs text-slate-400">
-              {inference.fieldsCollected.length === 0
+              {modelConfidence.score < 50
                 ? "Answer a few quick questions for accurate sizing"
-                : `${inference.fieldsCollected.length} of ${showGenerator ? 4 : 3} answered • ${inference.confidence} confidence`}
+                : `Model ${modelConfidence.score}% confident`}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {/* Confidence Badge */}
+          {/* Model Confidence Percentage */}
           <div
             className={`
-            px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide
+            px-3 py-1.5 rounded-full text-sm font-black tabular-nums
             ${
-              inference.confidence === "high"
-                ? "bg-emerald-500/20 text-emerald-400"
-                : inference.confidence === "medium"
-                  ? "bg-amber-500/20 text-amber-400"
-                  : "bg-slate-500/20 text-slate-400"
+              modelConfidence.score >= 75
+                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                : modelConfidence.score >= 55
+                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                  : "bg-slate-500/20 text-slate-400 border border-slate-500/30"
             }
           `}
           >
-            {inference.confidence}
+            {modelConfidence.score}%
           </div>
           {expanded ? (
             <ChevronUp className="w-5 h-5 text-slate-400" />
@@ -249,6 +300,36 @@ export function ProgressiveModelPanel({
           )}
         </div>
       </button>
+
+      {/* Model Completeness Progress Bar */}
+      <div className="px-5 py-2 bg-slate-900/50 border-b border-violet-500/20">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[10px] text-slate-400 font-medium">Model Completeness</span>
+          <span className="text-[10px] text-slate-500">{modelConfidence.completeness}%</span>
+        </div>
+        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div 
+            className={`h-full transition-all duration-500 ease-out rounded-full ${
+              modelConfidence.score >= 75
+                ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
+                : modelConfidence.score >= 55
+                  ? "bg-gradient-to-r from-amber-500 to-yellow-400"
+                  : "bg-gradient-to-r from-slate-500 to-slate-400"
+            }`}
+            style={{ width: `${modelConfidence.completeness}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Learning Feedback Message (transient) */}
+      {showLearning && learningMessage && (
+        <div className="px-5 py-3 bg-indigo-500/10 border-b border-indigo-500/20 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+            <span className="text-sm text-indigo-200">{learningMessage}</span>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       {expanded && (
@@ -356,21 +437,21 @@ export function ProgressiveModelPanel({
                   <div className="text-[10px] text-slate-500">
                     Model confidence:{" "}
                     <span
-                      className={
-                        inference.confidence === "high"
+                      className={`font-bold ${
+                        modelConfidence.score >= 75
                           ? "text-emerald-400"
-                          : inference.confidence === "medium"
+                          : modelConfidence.score >= 55
                             ? "text-amber-400"
                             : "text-slate-400"
-                      }
+                      }`}
                     >
-                      {inference.confidence}
+                      {modelConfidence.score}%
                     </span>
                   </div>
                   <div className="text-[10px] text-indigo-400">
-                    {3 - inference.fieldsCollected.length > 0
-                      ? `Answer ${3 - inference.fieldsCollected.length} more for higher accuracy`
-                      : "✓ Full profile collected"}
+                    {modelConfidence.score < 75
+                      ? `Answer more for ${75 - modelConfidence.score}% boost`
+                      : "✓ High confidence model"}
                   </div>
                 </div>
               </div>

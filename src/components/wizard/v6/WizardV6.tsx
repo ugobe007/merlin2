@@ -2422,6 +2422,30 @@ export default function WizardV6() {
                       intelligence,
                       // Site Score™ (Jan 18, 2026 - Merlin IP)
                       siteScore,
+                      // Progressive Model (Jan 21, 2026 - TrueQuote™ Accuracy)
+                      progressiveModel: state.serviceSize || state.hasDemandCharge || state.hvacType ? {
+                        serviceSize: state.serviceSize,
+                        gridCapacityKW: state.serviceSize && state.serviceSize !== 'unsure' 
+                          ? ({ '200A-single': 48, '400A-three': 277, '800A-three': 553, '1000A-plus': 1000 } as Record<string, number>)[state.serviceSize]
+                          : undefined,
+                        hasDemandCharge: state.hasDemandCharge,
+                        demandChargeBand: state.demandChargeBand,
+                        hvacType: state.hvacType,
+                        hvacMultiplier: state.hvacType && state.hvacType !== 'not-sure'
+                          ? ({ 'rtu': 1.0, 'chiller': 1.15, 'heat-pump': 0.90 } as Record<string, number>)[state.hvacType]
+                          : undefined,
+                        hasBackupGenerator: state.hasBackupGenerator,
+                        generatorCapacityKW: state.generatorCapacityBand && state.generatorCapacityBand !== 'not-sure'
+                          ? ({ 'under-100': 50, '100-500': 250, '500-plus': 750 } as Record<string, number>)[state.generatorCapacityBand]
+                          : undefined,
+                        confidence: (() => {
+                          const count = (state.progressiveFieldsAnswered || []).length;
+                          if (count >= 4) return 'high' as const;
+                          if (count >= 2) return 'medium' as const;
+                          return 'low' as const;
+                        })(),
+                        fieldsAnswered: (state.progressiveFieldsAnswered || []).length,
+                      } : undefined,
                     }}
                   />
                 </div>

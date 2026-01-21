@@ -68,7 +68,7 @@ export function HVACTypePrompt({ value, onChange, compact = false }: HVACTypePro
       className={`rounded-xl border border-violet-500/20 bg-slate-800/50 ${compact ? "p-3" : "p-4"}`}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2">
         <Thermometer className="w-4 h-4 text-cyan-400" />
         <span className={`font-semibold text-white ${compact ? "text-xs" : "text-sm"}`}>
           Primary HVAC type?
@@ -82,6 +82,10 @@ export function HVACTypePrompt({ value, onChange, compact = false }: HVACTypePro
             </div>
           </div>
         </div>
+      </div>
+      {/* Rationale: Why this matters */}
+      <div className="text-[11px] text-slate-400 mb-3 leading-relaxed">
+        This affects your daily load curve — HVAC is typically 30-50% of commercial loads.
       </div>
 
       {/* Options */}

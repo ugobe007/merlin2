@@ -5,7 +5,7 @@ import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
 import { SolarOpportunityWidget } from "./SolarOpportunityWidget";
 import { PowerGaugeWidget } from "./PowerGaugeWidget";
-import { X, MapPin, Compass, Zap, Sun, Cloud, Lightbulb, AlertTriangle } from "lucide-react";
+import { X, MapPin, Compass, Zap, Sun, Cloud, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
 import avatarImg from "@/assets/images/new_small_profile_.png";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import type { IntelligenceContext } from "@/types/intelligence.types";
@@ -170,12 +170,32 @@ interface AdvisorRailProps {
 
     // Site Score™ (Jan 18, 2026 - Merlin IP)
     siteScore?: SiteScoreResult | null;
+
+    // Progressive Model (Jan 21, 2026 - TrueQuote™ Accuracy)
+    // Phase 4: Enhanced with ModelConfidence
+    progressiveModel?: {
+      serviceSize?: string;
+      gridCapacityKW?: number;
+      hasDemandCharge?: 'yes' | 'no' | 'not-sure';
+      demandChargeBand?: string;
+      hvacType?: string;
+      hvacMultiplier?: number;
+      hasBackupGenerator?: 'yes' | 'no' | 'planned';
+      generatorCapacityKW?: number;
+      // Legacy confidence (deprecated, use modelConfidence.score)
+      confidence?: 'low' | 'medium' | 'high';
+      fieldsAnswered?: number;
+      // Phase 4: ModelConfidence (Jan 21, 2026)
+      modelConfidenceScore?: number; // 0-90
+      modelCompleteness?: number; // 0-100
+      lastLearningMessage?: string;
+    };
   };
 
   onNavigate?: (step: number) => void;
 }
 
-const STEP_LABELS = ["Location", "Industry", "Details", "Options", "TrueQuote™", "Results"];
+const _STEP_LABELS = ["Location", "Industry", "Details", "Options", "TrueQuote™", "Results"];
 
 function safeNum(n?: number) {
   return typeof n === "number" && !Number.isNaN(n) ? n : null;
@@ -196,9 +216,8 @@ function pvToStorageBalanceRatio(params: {
 
 export function AdvisorRail({
   currentStep = 1,
-  totalSteps = 6,
+  // totalSteps and onNavigate reserved for future step navigation
   context,
-  onNavigate,
 }: AdvisorRailProps) {
   const { getCurrent, getWarnings } = useAdvisorPublisher();
   const payload = getCurrent();
@@ -207,7 +226,7 @@ export function AdvisorRail({
   // Modal state (Jan 20, 2026 - Vineet UX)
   const [showWeatherRiskModal, setShowWeatherRiskModal] = useState(false);
 
-  const canClick = (stepNum: number) => stepNum <= currentStep;
+  const _canClick = (stepNum: number) => stepNum <= currentStep;
 
   const zip = context?.location?.zip || "";
   const st = context?.location?.state || "";
@@ -218,19 +237,22 @@ export function AdvisorRail({
   const hasTOU = context?.utility?.hasTOU;
   const utilityName = context?.location?.utilityName || "";
 
-  // Solar data from SSOT (NREL PVWatts)
-  const sunHours = context?.solar?.sunHours;
-  const solarRating = context?.solar?.rating;
+  // Solar data from SSOT (NREL PVWatts) - used via context?.solar in JSX
+  const _sunHours = context?.solar?.sunHours;
+  const _solarRating = context?.solar?.rating;
 
   // Weather data from SSOT (Visual Crossing / NWS)
   const weatherProfile = context?.weather?.profile;
-  const weatherExtremes = context?.weather?.extremes;
+  const _weatherExtremes = context?.weather?.extremes;
 
-  // Opportunities from SSOT analysis
-  const arbitrageOpportunity = context?.opportunities?.arbitrage;
+  // Opportunities from SSOT analysis - reserved for future widgets
+  const _arbitrageOpportunity = context?.opportunities?.arbitrage;
 
   // Site Score from SSOT calculator
   const siteScore = context?.siteScore;
+
+  // Progressive Model from micro-prompts (Jan 21, 2026)
+  const progressiveModel = context?.progressiveModel;
 
   // Derive weather risk label from actual data
   const weatherRiskLabel = (() => {
@@ -551,7 +573,7 @@ export function AdvisorRail({
             </>
           )}
 
-          {/* STEP 3: Facility Details - Show progress */}
+          {/* STEP 3: Facility Details - Show progress + Progressive Model */}
           {currentStep === 3 && (
             <>
               <div className="flex items-center justify-between mb-3">
@@ -559,23 +581,119 @@ export function AdvisorRail({
                   <Lightbulb className="w-4 h-4 text-amber-400" />
                   <h3 className="text-sm font-bold text-white">Your Facility</h3>
                 </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                  <span className="text-[10px] font-bold">COLLECTING</span>
+                {/* Phase 4: Model Confidence Percentage Chip */}
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-black tabular-nums ${
+                  (progressiveModel?.modelConfidenceScore ?? 40) >= 75 
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : (progressiveModel?.modelConfidenceScore ?? 40) >= 55
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                }`}>
+                  <span className="text-lg">{progressiveModel?.modelConfidenceScore ?? 40}%</span>
+                  <span className="text-[10px] font-medium opacity-80">confident</span>
                 </div>
               </div>
+              
+              {/* Model Completeness Progress Bar */}
+              <div className="mb-4 px-1">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] text-slate-400 font-medium">Model Completeness</span>
+                  <span className="text-[10px] text-slate-500">{progressiveModel?.modelCompleteness ?? 44}%</span>
+                </div>
+                <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-500 ease-out rounded-full ${
+                      (progressiveModel?.modelConfidenceScore ?? 40) >= 75
+                        ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
+                        : (progressiveModel?.modelConfidenceScore ?? 40) >= 55
+                          ? "bg-gradient-to-r from-amber-500 to-yellow-400"
+                          : "bg-gradient-to-r from-slate-500 to-slate-400"
+                    }`}
+                    style={{ width: `${progressiveModel?.modelCompleteness ?? 44}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Learning Feedback Message */}
+              {progressiveModel?.lastLearningMessage && (
+                <div className="mb-3 p-2.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
+                    <span className="text-xs text-indigo-200">{progressiveModel.lastLearningMessage}</span>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-3">
+                {/* Progressive Model Inferred Values - Now with uncertainty styling */}
+                {progressiveModel && (progressiveModel.gridCapacityKW || progressiveModel.hvacMultiplier) && (
+                  <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-3">
+                    <div className="text-[10px] text-violet-200 font-semibold mb-2">🎯 INFERRED FROM YOUR ANSWERS</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {progressiveModel.gridCapacityKW && (
+                        <div>
+                          <div className="text-[9px] text-slate-500 uppercase">Grid Capacity</div>
+                          <div className={`text-sm font-bold ${
+                            (progressiveModel?.modelConfidenceScore ?? 40) >= 75 
+                              ? 'text-white' 
+                              : 'text-slate-300 border-b border-dotted border-slate-500'
+                          }`}>
+                            {(progressiveModel?.modelConfidenceScore ?? 40) < 75 && '≈ '}
+                            {progressiveModel.gridCapacityKW} kW
+                            {(progressiveModel?.modelConfidenceScore ?? 40) < 75 && <span className="text-[9px] text-slate-500 ml-1">est.</span>}
+                          </div>
+                        </div>
+                      )}
+                      {progressiveModel.hvacMultiplier && progressiveModel.hvacMultiplier !== 1.0 && (
+                        <div>
+                          <div className="text-[9px] text-slate-500 uppercase">HVAC Load Factor</div>
+                          <div className="text-sm font-bold text-white">{progressiveModel.hvacMultiplier.toFixed(2)}×</div>
+                        </div>
+                      )}
+                      {progressiveModel.hasDemandCharge === 'yes' && progressiveModel.demandChargeBand && (
+                        <div>
+                          <div className="text-[9px] text-slate-500 uppercase">Demand Charge</div>
+                          <div className="text-sm font-bold text-amber-400">{progressiveModel.demandChargeBand}</div>
+                        </div>
+                      )}
+                      {progressiveModel.hasBackupGenerator === 'yes' && progressiveModel.generatorCapacityKW && (
+                        <div>
+                          <div className="text-[9px] text-slate-500 uppercase">Generator</div>
+                          <div className={`text-sm font-bold ${
+                            (progressiveModel?.modelConfidenceScore ?? 40) >= 75 
+                              ? 'text-white' 
+                              : 'text-slate-300 border-b border-dotted border-slate-500'
+                          }`}>
+                            {(progressiveModel?.modelConfidenceScore ?? 40) < 75 && '≈ '}
+                            {progressiveModel.generatorCapacityKW} kW
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
                   <div className="text-[10px] text-amber-200 font-semibold mb-2">💡 TIP</div>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    The more details you provide, the more accurate your quote will be. 
-                    Don't worry if you don't know exact numbers — estimates work great!
+                    {(progressiveModel?.modelConfidenceScore ?? 40) >= 75
+                      ? "Great progress! Your model is highly accurate now."
+                      : "Answer more questions to tighten the estimate ranges."}
                   </p>
                 </div>
                 {peakLoadKW && peakLoadKW > 0 && (
                   <div className="rounded-lg bg-slate-800/50 p-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-slate-400">Estimated Peak Load</span>
-                      <span className="text-sm font-bold text-white">{Math.round(peakLoadKW)} kW</span>
+                      <span className={`text-sm font-bold ${
+                        (progressiveModel?.modelConfidenceScore ?? 40) >= 75 
+                          ? 'text-white' 
+                          : 'text-slate-300'
+                      }`}>
+                        {(progressiveModel?.modelConfidenceScore ?? 40) < 75 && '≈ '}
+                        {Math.round(peakLoadKW)} kW
+                        {(progressiveModel?.modelConfidenceScore ?? 40) < 75 && <span className="text-[9px] text-slate-500 ml-1">est.</span>}
+                      </span>
                     </div>
                   </div>
                 )}

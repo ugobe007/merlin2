@@ -74,7 +74,7 @@ export function ServiceSizePrompt({
       className={`rounded-xl border border-violet-500/20 bg-slate-800/50 ${compact ? "p-3" : "p-4"}`}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2">
         <Zap className="w-4 h-4 text-violet-400" />
         <span className={`font-semibold text-white ${compact ? "text-xs" : "text-sm"}`}>
           What is your main electrical service size?
@@ -88,6 +88,10 @@ export function ServiceSizePrompt({
             </div>
           </div>
         </div>
+      </div>
+      {/* Rationale: Why this matters */}
+      <div className="text-[11px] text-slate-400 mb-3 leading-relaxed">
+        This determines how much power your grid can deliver — critical for BESS sizing.
       </div>
 
       {/* Options */}

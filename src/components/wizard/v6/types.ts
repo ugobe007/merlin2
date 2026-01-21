@@ -6,10 +6,154 @@
  * Created: December 28, 2025
  * Updated: January 2026 - Added IndustryInputs type support
  * Updated: January 21, 2026 - Added Progressive Model fields for TrueQuote™ accuracy
+ * Updated: January 21, 2026 - Phase 4: Added ModelConfidence for transparency layer
  */
 
 import type { TrueQuoteAuthenticatedResult } from "@/services/merlin";
 import type { IndustryInputs } from "@/types/industryInputTypes";
+
+// ============================================================================
+// MODEL CONFIDENCE (Phase 4: Jan 21, 2026)
+// ============================================================================
+// Turns TrueQuote from "a smart estimator" into "a transparent financial engine"
+// Max confidence = 90% (never 100% - keeps us financially defensible)
+
+/**
+ * Model Confidence - Tracks how accurate our sizing model is
+ * 
+ * Base: 40% (location + industry priors only)
+ * Max: 90% (with all micro-prompts answered)
+ */
+export interface ModelConfidence {
+  /** Overall confidence score (0-90) */
+  score: number;
+  
+  /** Component breakdown */
+  components: {
+    /** Base from location data: 25% */
+    location: number;
+    /** Base from industry priors: 15% */
+    industryProfile: number;
+    /** Service size micro-prompt: +20% */
+    serviceSize: number;
+    /** Demand charge micro-prompt: +20% */
+    demandCharge: number;
+    /** HVAC type micro-prompt: +10% */
+    hvacType: number;
+    /** Generator micro-prompt: +10% (industry-contextual) */
+    generator: number;
+  };
+  
+  /** Percentage towards max confidence (0-100) */
+  completeness: number;
+  
+  /** Last learning message to display */
+  lastLearningMessage?: string;
+  
+  /** Timestamp of last update */
+  lastUpdated: string;
+}
+
+/** Confidence deltas per micro-prompt (LOCKED - do not change lightly) */
+export const CONFIDENCE_DELTAS = {
+  serviceSize: 20,
+  demandCharge: 20,
+  hvacType: 10,
+  generator: 10,
+} as const;
+
+/** Maximum achievable confidence (never 100%) */
+export const MAX_CONFIDENCE = 90;
+
+/** Base confidence from location + industry */
+export const BASE_CONFIDENCE = {
+  location: 25,
+  industryProfile: 15,
+};
+
+/**
+ * Calculate model confidence from wizard state
+ * Used by ProgressiveModelPanel and AdvisorRail
+ */
+export function calculateModelConfidence(
+  serviceSize?: ServiceSizeOption,
+  hasDemandCharge?: 'yes' | 'no' | 'not-sure',
+  demandChargeBand?: DemandChargeBand,
+  hvacType?: HVACTypeOption,
+  hasBackupGenerator?: 'yes' | 'no' | 'planned',
+  generatorCapacityBand?: GeneratorCapacityBand,
+  showGenerator = true
+): ModelConfidence {
+  const components = {
+    location: BASE_CONFIDENCE.location,
+    industryProfile: BASE_CONFIDENCE.industryProfile,
+    serviceSize: 0,
+    demandCharge: 0,
+    hvacType: 0,
+    generator: 0,
+  };
+  
+  let lastLearningMessage: string | undefined;
+  
+  // Service size: +20%
+  if (serviceSize && serviceSize !== 'unsure') {
+    components.serviceSize = CONFIDENCE_DELTAS.serviceSize;
+    const cap = SERVICE_SIZE_TO_CAPACITY[serviceSize];
+    lastLearningMessage = `Merlin inferred grid capacity ≈ ${cap.gridCapacityKW} kW.`;
+  }
+  
+  // Demand charge: +20%
+  if (hasDemandCharge === 'yes' && demandChargeBand && demandChargeBand !== 'not-sure') {
+    components.demandCharge = CONFIDENCE_DELTAS.demandCharge;
+    lastLearningMessage = 'Peak shaving ROI unlocked (demand charges detected).';
+  } else if (hasDemandCharge === 'no') {
+    components.demandCharge = CONFIDENCE_DELTAS.demandCharge;
+    lastLearningMessage = 'No demand charges — focusing on energy arbitrage savings.';
+  }
+  
+  // HVAC type: +10%
+  if (hvacType && hvacType !== 'not-sure') {
+    components.hvacType = CONFIDENCE_DELTAS.hvacType;
+    const mult = HVAC_TYPE_MULTIPLIERS[hvacType];
+    if (mult > 1) {
+      lastLearningMessage = `Load profile adjusted +${((mult - 1) * 100).toFixed(0)}% for ${hvacType === 'chiller' ? 'chiller' : 'HVAC'} system.`;
+    } else if (mult < 1) {
+      lastLearningMessage = `Load profile adjusted ${((mult - 1) * 100).toFixed(0)}% for efficient heat pump.`;
+    }
+  }
+  
+  // Generator: +10% (only if relevant)
+  if (hasBackupGenerator === 'yes' || hasBackupGenerator === 'planned') {
+    if (generatorCapacityBand && generatorCapacityBand !== 'not-sure') {
+      components.generator = CONFIDENCE_DELTAS.generator;
+      const gen = GENERATOR_BAND_TO_KW[generatorCapacityBand];
+      lastLearningMessage = `Backup resilience extended with ${gen.midpoint} kW generator capacity.`;
+    } else {
+      components.generator = CONFIDENCE_DELTAS.generator / 2; // Partial credit
+      lastLearningMessage = 'Backup capability noted — resilience modeling enabled.';
+    }
+  } else if (hasBackupGenerator === 'no') {
+    components.generator = CONFIDENCE_DELTAS.generator;
+    lastLearningMessage = 'No existing backup — BESS can provide resilience.';
+  }
+  
+  // Calculate total score (capped at MAX_CONFIDENCE)
+  const rawScore = Object.values(components).reduce((a, b) => a + b, 0);
+  const score = Math.min(rawScore, MAX_CONFIDENCE);
+  
+  // Calculate completeness (percentage towards max)
+  // Max possible = 40 (base) + 20 + 20 + 10 + 10 = 100, but we cap at 90
+  const maxPossible = showGenerator ? MAX_CONFIDENCE : MAX_CONFIDENCE - CONFIDENCE_DELTAS.generator;
+  const completeness = Math.round((score / maxPossible) * 100);
+  
+  return {
+    score,
+    components,
+    completeness,
+    lastLearningMessage,
+    lastUpdated: new Date().toISOString(),
+  };
+}
 
 // ============================================================================
 // PROGRESSIVE MODEL TYPES (Jan 21, 2026)
@@ -303,8 +447,9 @@ export interface WizardState {
   // Inferred Values (computed from above, read-only display)
   progressiveModel?: ProgressiveModelInference;
 
-  // Model Confidence Tracking
-  modelConfidence?: "low" | "medium" | "high";
+  // Model Confidence Tracking (Phase 4: Jan 21, 2026)
+  modelConfidence?: ModelConfidence;
+  lastLearningMessage?: string; // Most recent "Merlin learned X" message
   progressiveFieldsAnswered?: string[]; // Track which micro-prompts completed
 }
 
