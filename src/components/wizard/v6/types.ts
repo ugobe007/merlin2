@@ -5,10 +5,174 @@
  *
  * Created: December 28, 2025
  * Updated: January 2026 - Added IndustryInputs type support
+ * Updated: January 21, 2026 - Added Progressive Model fields for TrueQuote™ accuracy
  */
 
 import type { TrueQuoteAuthenticatedResult } from "@/services/merlin";
 import type { IndustryInputs } from "@/types/industryInputTypes";
+
+// ============================================================================
+// PROGRESSIVE MODEL TYPES (Jan 21, 2026)
+// ============================================================================
+// These fields enable accurate financial modeling WITHOUT raw form dumps.
+// Collected through micro-prompts with inference, not audit questionnaires.
+
+/**
+ * Electrical Service Size - Used to infer grid capacity & peak demand band
+ * UX: "What is your main electrical service size?"
+ */
+export type ServiceSizeOption =
+  | "200A-single" // ~48 kW (small retail, small office)
+  | "400A-three" // ~275 kW (medium commercial)
+  | "800A-three" // ~550 kW (large commercial)
+  | "1000A-plus" // 750+ kW (industrial, data center)
+  | "unsure"; // Use industry heuristics
+
+/**
+ * Demand Charge Band - Approximation for ROI modeling
+ * UX: "Approximate demand charge per kW?"
+ */
+export type DemandChargeBand =
+  | "under-10" // Low impact (<$10/kW)
+  | "10-20" // Medium impact ($10-20/kW)
+  | "20-plus" // High impact ($20+/kW)
+  | "not-sure"; // Use regional average
+
+/**
+ * HVAC Type - Affects load shape and peak demand
+ * UX: "Primary HVAC type?"
+ */
+export type HVACTypeOption =
+  | "rtu" // Packaged rooftop unit (baseline)
+  | "chiller" // Central chiller system (+15% load)
+  | "heat-pump" // VRF/Mini-split (-10% load)
+  | "not-sure"; // Default to baseline
+
+/**
+ * Generator Capacity Band - For resilience modeling
+ * UX: "Approximate generator capacity?"
+ */
+export type GeneratorCapacityBand =
+  | "under-100" // <100 kW
+  | "100-500" // 100-500 kW
+  | "500-plus" // 500+ kW
+  | "not-sure"; // Use industry default
+
+/**
+ * Progressive Model Inference Results
+ * Derived from micro-prompt answers, not raw user input
+ */
+export interface ProgressiveModelInference {
+  // Inferred from serviceSize
+  gridCapacityKW?: number;
+  peakDemandRange?: [number, number]; // [low, high]
+
+  // Inferred from demandChargeBand
+  demandChargeRate?: number; // $/kW
+  monthlyDemandCharges?: number; // $/month estimate
+  demandChargeImpact?: "low" | "medium" | "high";
+
+  // Load multipliers
+  hvacMultiplier?: number; // 0.9-1.15x
+
+  // Resilience modeling
+  generatorCapacityKW?: number;
+  hasBackupCapability?: boolean;
+
+  // Confidence tracking
+  confidence: "low" | "medium" | "high";
+  fieldsCollected: string[]; // Which questions were answered
+  lastUpdated: string; // ISO timestamp
+}
+
+/**
+ * Service Size to Grid Capacity Mapping (SSOT)
+ */
+export const SERVICE_SIZE_TO_CAPACITY: Record<
+  Exclude<ServiceSizeOption, "unsure">,
+  {
+    gridCapacityKW: number;
+    peakDemandBand: [number, number];
+    typicalUse: string;
+  }
+> = {
+  "200A-single": {
+    gridCapacityKW: 48,
+    peakDemandBand: [30, 45],
+    typicalUse: "Small retail, small office",
+  },
+  "400A-three": {
+    gridCapacityKW: 275,
+    peakDemandBand: [150, 250],
+    typicalUse: "Medium commercial, restaurants",
+  },
+  "800A-three": {
+    gridCapacityKW: 550,
+    peakDemandBand: [300, 500],
+    typicalUse: "Large commercial, hotels",
+  },
+  "1000A-plus": {
+    gridCapacityKW: 750,
+    peakDemandBand: [500, 1500],
+    typicalUse: "Industrial, data centers, hospitals",
+  },
+};
+
+/**
+ * Demand Charge Band to Rate Mapping (SSOT)
+ */
+export const DEMAND_CHARGE_BAND_TO_RATE: Record<
+  Exclude<DemandChargeBand, "not-sure">,
+  {
+    rate: number;
+    impact: "low" | "medium" | "high";
+    description: string;
+  }
+> = {
+  "under-10": { rate: 8, impact: "low", description: "Low demand charges" },
+  "10-20": { rate: 15, impact: "medium", description: "Moderate demand charges" },
+  "20-plus": { rate: 25, impact: "high", description: "High demand charges - strong BESS ROI" },
+};
+
+/**
+ * HVAC Type to Load Multiplier (SSOT)
+ */
+export const HVAC_TYPE_MULTIPLIERS: Record<HVACTypeOption, number> = {
+  rtu: 1.0, // Baseline
+  chiller: 1.15, // Higher electrical load
+  "heat-pump": 0.9, // More efficient
+  "not-sure": 1.0, // Default
+};
+
+/**
+ * Generator Capacity Band to kW (SSOT)
+ */
+export const GENERATOR_BAND_TO_KW: Record<
+  Exclude<GeneratorCapacityBand, "not-sure">,
+  {
+    midpoint: number;
+    range: [number, number];
+  }
+> = {
+  "under-100": { midpoint: 50, range: [25, 100] },
+  "100-500": { midpoint: 250, range: [100, 500] },
+  "500-plus": { midpoint: 750, range: [500, 2000] },
+};
+
+/**
+ * Industries where generator question is highly relevant (SSOT)
+ */
+export const GENERATOR_RELEVANT_INDUSTRIES = [
+  "hospital",
+  "data_center",
+  "data-center",
+  "casino",
+  "airport",
+  "cold_storage",
+  "cold-storage",
+  "manufacturing",
+  "microgrid",
+] as const;
 
 // ============================================================================
 // WIZARD STATE - Single source of truth
@@ -43,7 +207,7 @@ export interface WizardState {
     avgLowF?: number;
     heatingDegreeDays?: number;
     coolingDegreeDays?: number;
-    source: 'visual-crossing' | 'nws' | 'cache';
+    source: "visual-crossing" | "nws" | "cache";
   };
 
   // Step 1: Savings Preview (ESTIMATES ONLY - not SSOT)
@@ -53,9 +217,9 @@ export interface WizardState {
   // Separate namespace from calculations (SSOT)
   // Shows "Sneak Peek" estimates before facility details collected
   teaserPreview?: TeaserPreview | null;
-  teaserPreviewVersion?: string;       // "teaser-v1"
-  teaserLastUpdatedAt?: string;        // ISO timestamp
-  teaserIsEstimateOnly?: boolean;      // Always true (reminder flag)
+  teaserPreviewVersion?: string; // "teaser-v1"
+  teaserLastUpdatedAt?: string; // ISO timestamp
+  teaserIsEstimateOnly?: boolean; // Always true (reminder flag)
 
   // Step 2: Industry
   industry: string;
@@ -117,6 +281,31 @@ export interface WizardState {
   // Once TrueQuote authenticates, MagicFit display should be frozen or hidden.
   // Type shape is intentionally different from SystemCalculations to prevent accidental assignment.
   magicFit?: MagicFitEstimateState;
+
+  // ============================================================================
+  // PROGRESSIVE MODEL FIELDS (Jan 21, 2026)
+  // ============================================================================
+  // Collected through micro-prompts, NOT raw form fields.
+  // These enable TrueQuote to become a real financial model.
+
+  // Peak & Grid Envelope (collected in Step 2.5)
+  serviceSize?: ServiceSizeOption; // "What is your main electrical service?"
+  hasDemandCharge?: "yes" | "no" | "not-sure"; // "Do you pay demand charges?"
+  demandChargeBand?: DemandChargeBand; // "Approximate demand charge per kW?"
+
+  // HVAC & Load Shape
+  hvacType?: HVACTypeOption; // "Primary HVAC type?"
+
+  // Resilience Layer (industry-contextual)
+  hasBackupGenerator?: "yes" | "no" | "planned"; // "Do you have backup generators?"
+  generatorCapacityBand?: GeneratorCapacityBand; // "Approximate generator capacity?"
+
+  // Inferred Values (computed from above, read-only display)
+  progressiveModel?: ProgressiveModelInference;
+
+  // Model Confidence Tracking
+  modelConfidence?: "low" | "medium" | "high";
+  progressiveFieldsAnswered?: string[]; // Track which micro-prompts completed
 }
 
 // ============================================================================
@@ -137,7 +326,7 @@ export type EnergyGoal =
 
 /**
  * Savings Preview Estimate
- * 
+ *
  * ⚠️ IMPORTANT: This is NOT TrueQuote™ verified data!
  * - Based on industry averages and heuristics
  * - Used ONLY to show a "sneak peek" in Step 1
@@ -157,7 +346,7 @@ export interface SavingsPreviewEstimate {
 
 /**
  * Teaser Preview (Jan 16, 2026)
- * 
+ *
  * ⚠️ IMPORTANT: This is NOT TrueQuote™ verified data!
  * - Based on industry averages and rough heuristics
  * - Used ONLY to show "Sneak Peek" in Step 1 after address lookup
@@ -167,42 +356,42 @@ export interface SavingsPreviewEstimate {
 export interface TeaserPreview {
   // Scenario 1: BESS + Solar (save money)
   solarBess: {
-    annualSavings: number;        // $/year
-    roiYears: number;             // payback years
-    monthlyPayment: number;       // if financed
-    systemSize: string;           // "500 kW battery + 250 kW solar"
-    roiCapped: boolean;           // ⚠️ true if ROI hit safety cap (show qualitative instead)
-    savingsCapped: boolean;       // ⚠️ true if savings below threshold (unreliable)
+    annualSavings: number; // $/year
+    roiYears: number; // payback years
+    monthlyPayment: number; // if financed
+    systemSize: string; // "500 kW battery + 250 kW solar"
+    roiCapped: boolean; // ⚠️ true if ROI hit safety cap (show qualitative instead)
+    savingsCapped: boolean; // ⚠️ true if savings below threshold (unreliable)
   };
-  
+
   // Scenario 2: BESS + Generator (resilience)
   generatorBess: {
-    annualSavings: number;        // $/year (from peak shaving)
-    roiYears: number;             // payback years
-    monthlyPayment: number;       // if financed
-    systemSize: string;           // "500 kW battery + 300 kW generator"
-    resilienceHours: number;      // hours of backup power
-    roiCapped: boolean;           // ⚠️ true if ROI hit safety cap (show qualitative instead)
-    savingsCapped: boolean;       // ⚠️ true if savings below threshold (unreliable)
+    annualSavings: number; // $/year (from peak shaving)
+    roiYears: number; // payback years
+    monthlyPayment: number; // if financed
+    systemSize: string; // "500 kW battery + 300 kW generator"
+    resilienceHours: number; // hours of backup power
+    roiCapped: boolean; // ⚠️ true if ROI hit safety cap (show qualitative instead)
+    savingsCapped: boolean; // ⚠️ true if savings below threshold (unreliable)
   };
-  
+
   // Transparency
-  assumptions: string[];          // ["Based on 1.8M kWh/year", "State avg rate: $0.12/kWh"]
-  disclaimer: string;             // Standard disclaimer text
-  confidence: 'low' | 'medium' | 'high'; // Based on available data
-  
+  assumptions: string[]; // ["Based on 1.8M kWh/year", "State avg rate: $0.12/kWh"]
+  disclaimer: string; // Standard disclaimer text
+  confidence: "low" | "medium" | "high"; // Based on available data
+
   // Metadata
-  createdAt: string;              // ISO timestamp
-  version: string;                // "teaser-v1"
-  teaserHash: string;             // Hash of inputs (prevents recompute churn)
+  createdAt: string; // ISO timestamp
+  version: string; // "teaser-v1"
+  teaserHash: string; // Hash of inputs (prevents recompute churn)
 }
 
 // ============================================================================
 // STEP 2: Business Size Tier
 // ============================================================================
 
-export type BusinessSizeTier = 'small' | 'medium' | 'large' | 'enterprise';
-export type QuestionnaireDepth = 'minimal' | 'standard' | 'detailed';
+export type BusinessSizeTier = "small" | "medium" | "large" | "enterprise";
+export type QuestionnaireDepth = "minimal" | "standard" | "detailed";
 
 /**
  * Business Size Options per Industry
@@ -494,6 +683,20 @@ export const INITIAL_WIZARD_STATE: WizardState = {
   calculations: null,
   quoteCache: undefined,
   magicFit: undefined, // MagicFit proposals are optional (temporary, non-SSOT)
+
+  // ============================================================================
+  // PROGRESSIVE MODEL DEFAULTS (Jan 21, 2026)
+  // ============================================================================
+  // All optional - will be collected through micro-prompts in Step 2.5/3
+  serviceSize: undefined,
+  hasDemandCharge: undefined,
+  demandChargeBand: undefined,
+  hvacType: undefined,
+  hasBackupGenerator: undefined,
+  generatorCapacityBand: undefined,
+  progressiveModel: undefined,
+  modelConfidence: undefined,
+  progressiveFieldsAnswered: [],
 };
 // STEP DEFINITIONS
 // ============================================================================

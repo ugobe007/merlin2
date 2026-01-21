@@ -263,6 +263,10 @@ export default function WizardV6() {
   // Calculates estimated peak demand from Step 3 inputs for PowerGaugeWidget
   // Uses ALL DB custom_questions fields - audit: scripts/audit-questionnaire-data-flow.mjs
   // ============================================================================
+
+  // Extract inputs hash for dependency tracking (avoids complex expression in deps)
+  const inputsHash = JSON.stringify(state.useCaseData?.inputs);
+
   const estimatedPowerMetrics = useMemo(() => {
     const inputs = (state.useCaseData?.inputs || {}) as Record<string, unknown>;
     const industry = state.industry || state.detectedIndustry || "";
@@ -294,7 +298,36 @@ export default function WizardV6() {
     // TRUEQUOTE™ PRIORITY 2: Grid capacity ceiling
     // User can't draw more than their grid connection allows
     // ========================================================================
-    const gridCapacityCeiling = Number(inputs.gridCapacity || inputs.gridCapacityKW || 0);
+    let gridCapacityCeiling = Number(inputs.gridCapacity || inputs.gridCapacityKW || 0);
+
+    // ========================================================================
+    // PROGRESSIVE MODEL ENHANCEMENT (Jan 21, 2026)
+    // Use micro-prompt answers to refine grid capacity if not directly provided
+    // This enables TrueQuote™ to become a real financial model
+    // ========================================================================
+    const SERVICE_SIZE_CAPACITY: Record<string, number> = {
+      "200A-single": 48, // 48 kW (200A × 240V single-phase)
+      "400A-three": 277, // 277 kW (400A × 400V three-phase)
+      "800A-three": 553, // 553 kW (800A × 400V three-phase)
+      "1000A-plus": 1000, // 1000+ kW (industrial service)
+    };
+
+    // If serviceSize from progressive model, use it to infer grid capacity
+    if (!gridCapacityCeiling && state.serviceSize && state.serviceSize !== "unsure") {
+      gridCapacityCeiling = SERVICE_SIZE_CAPACITY[state.serviceSize] || 0;
+      if (import.meta.env.DEV && gridCapacityCeiling > 0) {
+        console.log(
+          `[ProgressiveModel] Grid capacity inferred from serviceSize: ${state.serviceSize} → ${gridCapacityCeiling} kW`
+        );
+      }
+    }
+
+    // HVAC type from progressive model (if not in Step 3 inputs)
+    const progressiveHvacType = state.hvacType;
+
+    // Demand charge tracking from progressive model (used for future ROI calculations)
+    const _hasDemandCharge = state.hasDemandCharge;
+    const _demandChargeBand = state.demandChargeBand;
 
     // ========================================================================
     // TRUEQUOTE™ HELPER: Estimate peak from monthly bill (fallback reference)
@@ -306,7 +339,19 @@ export default function WizardV6() {
     const billEstimatedPeakKW = monthlyBill > 0 ? Math.round(monthlyBill / 0.12 / 730 / 0.4) : 0;
 
     // ==== HELPER: HVAC multiplier based on type ====
+    // Checks both Step 3 questionnaire input AND progressive model micro-prompt
     const getHvacMultiplier = (hvacType: unknown): number => {
+      // First check progressive model (higher confidence from micro-prompt)
+      if (progressiveHvacType && progressiveHvacType !== "not-sure") {
+        const progressiveMultipliers: Record<string, number> = {
+          rtu: 1.0, // Rooftop units (baseline)
+          chiller: 1.15, // Central chiller (higher load)
+          "heat-pump": 0.9, // Heat pumps (more efficient)
+        };
+        return progressiveMultipliers[progressiveHvacType] || 1.0;
+      }
+
+      // Fall back to Step 3 questionnaire input
       if (!hvacType) return 1.0;
       const type = String(hvacType).toLowerCase();
       if (type.includes("central") || type.includes("chiller")) return 1.3;
@@ -1795,10 +1840,15 @@ export default function WizardV6() {
     state.industry,
     state.detectedIndustry,
     state.businessSizeTier,
-    // Stringify inputs to detect deep changes (object reference doesn't trigger re-render)
-    JSON.stringify(state.useCaseData?.inputs),
+    // Use pre-computed hash to detect deep changes
+    inputsHash,
     state.calculations?.base?.peakDemandKW,
     state.calculations?.selected?.bessKW,
+    // Progressive Model fields (Jan 21, 2026) - enable micro-prompt refinements
+    state.serviceSize,
+    state.hvacType,
+    state.hasDemandCharge,
+    state.demandChargeBand,
   ]);
 
   // Auto-save state to bufferService whenever it changes (debounced)
