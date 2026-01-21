@@ -389,116 +389,235 @@ export function AdvisorRail({
         </div>
       </div>
 
-      {/* LOCATION ANALYSIS CARD - Core Intelligence (Jan 20, 2026) */}
+      {/* STEP-AWARE CONTENT PANEL - Different content per step */}
       <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
-        <div className="rounded-xl border border-violet-500/35 bg-gradient-to-br from-slate-800/70 via-slate-900/80 to-violet-950/60 p-4 shadow-[inset_0_1px_0_rgba(167,139,250,0.2),0_0_24px_rgba(99,102,241,0.15),0_0_48px_rgba(139,92,246,0.08)]">{/*Card Header */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Compass className="w-4 h-4 text-violet-400" />
-              <h3 className="text-sm font-bold text-white">Location Analysis</h3>
-            </div>
-            {/* LIVE badge - only show when ZIP validated */}
-            {zip && (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-bold">LIVE</span>
-              </div>
-            )}
-          </div>
-
-          {/* Card Body - Two States */}
-          {!zip ? (
-            /* BEFORE ZIP: Placeholder */
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Compass className="w-12 h-12 text-violet-400/40 mb-3" />
-              <div className="text-xs text-slate-400 mb-1">Enter your ZIP to load</div>
-              <div className="text-sm text-slate-300">utility rates, solar yield, and climate risk.</div>
-            </div>
-          ) : (
-            /* AFTER ZIP: Intelligence Grid */
+        <div className="rounded-xl border border-violet-500/35 bg-gradient-to-br from-slate-800/70 via-slate-900/80 to-violet-950/60 p-4 shadow-[inset_0_1px_0_rgba(167,139,250,0.2),0_0_24px_rgba(99,102,241,0.15),0_0_48px_rgba(139,92,246,0.08)]">
+          
+          {/* STEP 1: Location Analysis */}
+          {currentStep === 1 && (
             <>
-              {/* 2x2 Metrics Grid */}
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                {/* Peak Sun */}
-                <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
-                  <Sun className="absolute top-2 right-2 w-3 h-3 text-slate-400 hover:text-white cursor-help" />
-                  <div className="text-[10px] text-violet-300/70 font-semibold mb-1">PEAK SUN</div>
-                  <div className="text-2xl font-black text-white tabular-nums drop-shadow-sm">
-                    {context?.solar?.sunHours?.toFixed(1) || '—'}
-                  </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">hrs/day</div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-violet-400" />
+                  <h3 className="text-sm font-bold text-white">Location Analysis</h3>
                 </div>
-
-                {/* Electricity Rate */}
-                <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
-                  <Zap className="absolute top-2 right-2 w-3 h-3 text-slate-400 hover:text-white cursor-help" />
-                  <div className="text-[10px] text-violet-300/70 font-semibold mb-1">ELECTRICITY</div>
-                  <div className="text-2xl font-black text-white tabular-nums drop-shadow-sm">
-                    ${(rate || 0).toFixed(2)}
+                {zip && (
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] font-bold">LIVE</span>
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">$/kWh</div>
+                )}
+              </div>
+              {!zip ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Compass className="w-12 h-12 text-violet-400/40 mb-3" />
+                  <div className="text-xs text-slate-400 mb-1">Enter your ZIP to load</div>
+                  <div className="text-sm text-slate-300">utility rates, solar yield, and climate risk.</div>
                 </div>
-
-                {/* Weather Risk */}
-                <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
-                  <button 
-                    onClick={() => setShowWeatherRiskModal(true)}
-                    className="absolute top-2 right-2 transition-colors"
-                  >
-                    <Cloud className="w-3 h-3 text-slate-400 hover:text-white cursor-pointer" />
-                  </button>
-                  <div className="text-[10px] text-violet-300/70 font-semibold mb-1">WEATHER RISK</div>
-                  <div className="text-2xl font-black text-white drop-shadow-sm">Low</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">grid + climate</div>
-                </div>
-
-                {/* Solar Rating */}
-                <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
-                  <Sun className="absolute top-2 right-2 w-3 h-3 text-slate-400 hover:text-white cursor-help" />
-                  <div className="text-[10px] text-violet-300/70 font-semibold mb-1">SOLAR RATING</div>
-                  <div className="text-2xl font-black text-white drop-shadow-sm">
-                    {context?.solar?.rating || 'A+'}
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
+                      <Sun className="absolute top-2 right-2 w-3 h-3 text-slate-400" />
+                      <div className="text-[10px] text-violet-300/70 font-semibold mb-1">PEAK SUN</div>
+                      <div className="text-2xl font-black text-white tabular-nums">{context?.solar?.sunHours?.toFixed(1) || '—'}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">hrs/day</div>
+                    </div>
+                    <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
+                      <Zap className="absolute top-2 right-2 w-3 h-3 text-slate-400" />
+                      <div className="text-[10px] text-violet-300/70 font-semibold mb-1">ELECTRICITY</div>
+                      <div className="text-2xl font-black text-white tabular-nums">${(rate || 0).toFixed(2)}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">$/kWh</div>
+                    </div>
+                    <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
+                      <button onClick={() => setShowWeatherRiskModal(true)} className="absolute top-2 right-2">
+                        <Cloud className="w-3 h-3 text-slate-400 hover:text-white cursor-pointer" />
+                      </button>
+                      <div className="text-[10px] text-violet-300/70 font-semibold mb-1">WEATHER RISK</div>
+                      <div className="text-2xl font-black text-white">Low</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">grid + climate</div>
+                    </div>
+                    <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
+                      <Sun className="absolute top-2 right-2 w-3 h-3 text-slate-400" />
+                      <div className="text-[10px] text-violet-300/70 font-semibold mb-1">SOLAR RATING</div>
+                      <div className="text-2xl font-black text-white">{context?.solar?.rating || 'A+'}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">yield score</div>
+                    </div>
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">yield score</div>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/30 mb-3">
+                    <Zap className="w-4 h-4 text-violet-400" />
+                    <div className="flex-1">
+                      <div className="text-[9px] text-slate-400 uppercase tracking-wide">Utility Territory</div>
+                      <div className="text-xs text-white font-semibold">{context?.location?.utilityName || `${st} Energy`} (avg commercial)</div>
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-violet-400/20 bg-violet-500/8 p-3">
+                    <p className="text-xs text-violet-100 leading-relaxed">
+                      <strong>{context?.location?.city || zip}, {st}</strong> shows strong solar yield and reliable grid conditions. 
+                      BESS + peak shaving tends to perform well at this rate band.
+                    </p>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {/* STEP 2: Industry Context */}
+          {currentStep === 2 && (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-violet-400" />
+                  <h3 className="text-sm font-bold text-white">Industry Selection</h3>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                  <span className="text-[10px] font-bold">STEP 2</span>
                 </div>
               </div>
-
-              {/* Utility Identified Row */}
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/30 mb-3">
-                <Zap className="w-4 h-4 text-violet-400" />
-                <div className="flex-1">
-                  <div className="text-[9px] text-slate-400 uppercase tracking-wide">Utility Territory</div>
-                  <div className="text-xs text-white font-semibold">
-                    {context?.location?.utilityName || `${st} Energy`} (avg commercial)
+              <div className="space-y-3">
+                <div className="rounded-lg border border-indigo-500/30 bg-slate-800/50 p-3">
+                  <div className="text-[10px] text-violet-300/70 font-semibold mb-2">WHY THIS MATTERS</div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Different industries have unique power profiles, peak demand patterns, and energy saving opportunities. 
+                    Selecting your industry helps us tailor the quote to your specific needs.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="rounded-lg bg-slate-800/30 p-2">
+                    <div className="text-lg font-bold text-white">30+</div>
+                    <div className="text-[10px] text-slate-400">Industries</div>
+                  </div>
+                  <div className="rounded-lg bg-slate-800/30 p-2">
+                    <div className="text-lg font-bold text-emerald-400">${(rate || 0.10).toFixed(2)}</div>
+                    <div className="text-[10px] text-slate-400">Your Rate</div>
                   </div>
                 </div>
               </div>
+            </>
+          )}
 
-              {/* Insight Box */}
-              <div className="rounded-lg border border-violet-400/20 bg-violet-500/8 p-3">
-                <p className="text-xs text-violet-100 leading-relaxed">
-                  <strong>{context?.location?.city || zip}, {st}</strong> shows strong solar yield and reliable grid conditions. 
-                  BESS + peak shaving tends to perform well at this rate band.
-                </p>
+          {/* STEP 3: Facility Details - Show progress */}
+          {currentStep === 3 && (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-sm font-bold text-white">Your Facility</h3>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  <span className="text-[10px] font-bold">COLLECTING</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                  <div className="text-[10px] text-amber-200 font-semibold mb-2">💡 TIP</div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    The more details you provide, the more accurate your quote will be. 
+                    Don't worry if you don't know exact numbers — estimates work great!
+                  </p>
+                </div>
+                {peakLoadKW && peakLoadKW > 0 && (
+                  <div className="rounded-lg bg-slate-800/50 p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Estimated Peak Load</span>
+                      <span className="text-sm font-bold text-white">{Math.round(peakLoadKW)} kW</span>
+                    </div>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="rounded-lg bg-slate-800/30 p-2">
+                    <div className="text-lg font-bold text-white">{context?.solar?.sunHours?.toFixed(1) || '5.0'}</div>
+                    <div className="text-[10px] text-slate-400">Sun hrs/day</div>
+                  </div>
+                  <div className="rounded-lg bg-slate-800/30 p-2">
+                    <div className="text-lg font-bold text-emerald-400">${(rate || 0.10).toFixed(2)}</div>
+                    <div className="text-[10px] text-slate-400">Your Rate</div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* STEP 4: Options Selection */}
+          {currentStep === 4 && (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Sun className="w-4 h-4 text-emerald-400" />
+                  <h3 className="text-sm font-bold text-white">Add-On Options</h3>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  <span className="text-[10px] font-bold">OPTIONAL</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Enhance your BESS with solar, EV charging, or backup generators. 
+                    Each option is optional — skip if not needed.
+                  </p>
+                </div>
+                {solarKW && solarKW > 0 && (
+                  <div className="rounded-lg bg-slate-800/50 p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Solar Selected</span>
+                      <span className="text-sm font-bold text-amber-400">{Math.round(solarKW)} kW</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* STEP 5-6: Quote Generation */}
+          {currentStep >= 5 && (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-cyan-400" />
+                  <h3 className="text-sm font-bold text-white">TrueQuote™ Engine</h3>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  <span className="text-[10px] font-bold">COMPUTING</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Our TrueQuote™ engine is calculating your personalized quote using real-time market data, 
+                    utility rates, and industry benchmarks.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="rounded-lg bg-slate-800/30 p-2">
+                    <div className="text-lg font-bold text-white">{zip}</div>
+                    <div className="text-[10px] text-slate-400">Location</div>
+                  </div>
+                  <div className="rounded-lg bg-slate-800/30 p-2">
+                    <div className="text-lg font-bold text-emerald-400">${(rate || 0.10).toFixed(2)}</div>
+                    <div className="text-[10px] text-slate-400">Rate</div>
+                  </div>
+                </div>
               </div>
             </>
           )}
         </div>
       </div>
 
-      {/* SOLAR OPPORTUNITY WIDGET - Only show when ZIP entered (Step 1+) */}
-      {zip && context?.solar?.sunHours && (
+      {/* SOLAR OPPORTUNITY WIDGET - Only show on Step 1 when ZIP entered */}
+      {currentStep === 1 && zip && context?.solar?.sunHours && (
         <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
           <SolarOpportunityWidget state={st} sunHours={context.solar.sunHours} />
         </div>
       )}
 
-      {/* BATTERY PROGRESS REMOVED - Now floating in top right */}
+      {/* BATTERY PROGRESS REMOVED - Now floating in center right */}
 
       {/* POWER GAUGE MOVED - Now in expandable intelligence header panel */}
 
-      {/* ACCURACY / TERRITORY CHIP - Bottom section */}
-      {zip && context?.siteScore && (
+      {/* ACCURACY / TERRITORY CHIP - Only show on Step 1 */}
+      {currentStep === 1 && zip && context?.siteScore && (
         <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
