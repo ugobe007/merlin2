@@ -259,9 +259,136 @@ export default function WizardV6() {
   }, [currentStep]);
 
   // ============================================================================
-  // POWER METRICS REMOVED (Jan 20, 2026)
-  // Calculations moved to AdvisorRail and PowerGaugeWidget
+  // REAL-TIME POWER ESTIMATES (Jan 20, 2026)
+  // Calculates estimated peak demand from Step 3 inputs for PowerGaugeWidget
+  // Uses industry-specific heuristics - NOT SSOT (TrueQuote is SSOT in Step 5)
   // ============================================================================
+  const estimatedPowerMetrics = useMemo(() => {
+    const inputs = (state.useCaseData?.inputs || {}) as Record<string, unknown>;
+    const industry = state.industry || state.detectedIndustry || '';
+    
+    // Default: Use TrueQuote values if available (post-Step 5)
+    if (state.calculations?.base?.peakDemandKW && state.calculations.base.peakDemandKW > 0) {
+      return {
+        peakDemandKW: state.calculations.base.peakDemandKW,
+        bessKW: state.calculations.selected?.bessKW || state.calculations.base.peakDemandKW * 0.4,
+        source: 'truequote' as const,
+      };
+    }
+    
+    // Industry-specific quick estimates from Step 3 inputs
+    let estimatedPeakKW = 0;
+    
+    // Hotels: rooms × 2-4 kW/room
+    if (industry.includes('hotel')) {
+      const rooms = Number(inputs.roomCount || inputs.numberOfRooms || inputs.facilitySize || 150);
+      const hotelClass = String(inputs.hotelClass || inputs.facilityType || 'midscale');
+      const kWPerRoom = hotelClass.includes('luxury') ? 4 : hotelClass.includes('upscale') ? 3 : 2;
+      estimatedPeakKW = rooms * kWPerRoom * 0.75; // 75% diversity factor
+    }
+    // Hospitals: beds × 5-10 kW/bed
+    else if (industry.includes('hospital')) {
+      const beds = Number(inputs.bedCount || inputs.numberOfBeds || inputs.facilitySize || 200);
+      estimatedPeakKW = beds * 7.5 * 0.85; // 85% diversity factor
+    }
+    // Data Centers: IT load × PUE
+    else if (industry.includes('data') && industry.includes('center')) {
+      const itLoadKW = Number(inputs.totalITLoad || inputs.powerCapacity || 5000);
+      const pue = Number(inputs.pue || 1.5);
+      estimatedPeakKW = itLoadKW * pue;
+    }
+    // Car Wash: bays × 30-80 kW/bay
+    else if (industry.includes('car') && industry.includes('wash')) {
+      const bays = Number(inputs.bayCount || inputs.numberOfBays || 4);
+      const washType = String(inputs.washType || inputs.facilityType || 'automatic');
+      const kWPerBay = washType.includes('tunnel') ? 80 : washType.includes('automatic') ? 50 : 30;
+      estimatedPeakKW = bays * kWPerBay;
+    }
+    // EV Charging: chargers × power rating
+    else if (industry.includes('ev') || industry.includes('charging')) {
+      const l2 = Number(inputs.level2Chargers || inputs.l2Count || 12);
+      const dcfc = Number(inputs.dcfcChargers || inputs.dcfcCount || 8);
+      const hpc = Number(inputs.hpcChargers || inputs.hpcCount || 0);
+      estimatedPeakKW = (l2 * 7.2 + dcfc * 150 + hpc * 350) * 0.6; // 60% concurrency
+    }
+    // Manufacturing: sqft × 15-40 W/sqft
+    else if (industry.includes('manufacturing') || industry.includes('industrial')) {
+      const sqft = Number(inputs.squareFootage || inputs.facilitySqFt || 100000);
+      estimatedPeakKW = sqft * 0.025; // 25 W/sqft average
+    }
+    // Warehouse: sqft × 5-15 W/sqft
+    else if (industry.includes('warehouse') || industry.includes('logistics')) {
+      const sqft = Number(inputs.warehouseSqFt || inputs.squareFootage || 200000);
+      const coldStorage = inputs.hasColdStorage || inputs.refrigeratedArea;
+      estimatedPeakKW = sqft * (coldStorage ? 0.02 : 0.008); // 8-20 W/sqft
+    }
+    // Office: sqft × 8-15 W/sqft
+    else if (industry.includes('office')) {
+      const sqft = Number(inputs.squareFootage || inputs.facilitySqFt || 50000);
+      estimatedPeakKW = sqft * 0.012; // 12 W/sqft average
+    }
+    // Retail/Shopping: sqft × 20-40 W/sqft
+    else if (industry.includes('retail') || industry.includes('shopping')) {
+      const sqft = Number(inputs.squareFootage || inputs.retailSqFt || 100000);
+      estimatedPeakKW = sqft * 0.025; // 25 W/sqft
+    }
+    // College/University: students × 1-2 kW/student
+    else if (industry.includes('college') || industry.includes('university')) {
+      const students = Number(inputs.studentPopulation || inputs.enrollment || 10000);
+      estimatedPeakKW = students * 1.5;
+    }
+    // Airport: passengers/year ÷ 1000
+    else if (industry.includes('airport')) {
+      const passengers = Number(inputs.annualPassengers || 5000000);
+      estimatedPeakKW = passengers / 500; // ~2 W per annual passenger
+    }
+    // Casino: gaming sqft × 40-60 W/sqft
+    else if (industry.includes('casino')) {
+      const sqft = Number(inputs.gamingFloorSqft || inputs.squareFootage || 100000);
+      estimatedPeakKW = sqft * 0.05; // 50 W/sqft
+    }
+    // Restaurant: sqft × 50-100 W/sqft
+    else if (industry.includes('restaurant')) {
+      const sqft = Number(inputs.squareFootage || inputs.diningAreaSqft || 5000);
+      estimatedPeakKW = sqft * 0.075; // 75 W/sqft
+    }
+    // Apartment: units × 3-5 kW/unit
+    else if (industry.includes('apartment') || industry.includes('residential')) {
+      const units = Number(inputs.unitCount || inputs.numberOfUnits || 100);
+      estimatedPeakKW = units * 4 * 0.6; // 60% diversity
+    }
+    // Default fallback: businessSizeTier-based estimate
+    else {
+      const tierDefaults: Record<string, number> = {
+        small: 100,
+        medium: 500,
+        large: 2000,
+        enterprise: 10000,
+      };
+      estimatedPeakKW = tierDefaults[state.businessSizeTier || 'medium'] || 500;
+    }
+    
+    // Ensure minimum reasonable value
+    estimatedPeakKW = Math.max(50, estimatedPeakKW);
+    
+    // BESS sizing: typically 30-50% of peak demand for peak shaving
+    const bessKW = estimatedPeakKW * 0.4;
+    
+    return {
+      peakDemandKW: Math.round(estimatedPeakKW),
+      bessKW: Math.round(bessKW),
+      source: 'estimate' as const,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    state.industry,
+    state.detectedIndustry,
+    state.businessSizeTier,
+    // Stringify inputs to detect deep changes (object reference doesn't trigger re-render)
+    JSON.stringify(state.useCaseData?.inputs),
+    state.calculations?.base?.peakDemandKW,
+    state.calculations?.selected?.bessKW,
+  ]);
 
   // Auto-save state to bufferService whenever it changes (debounced)
   useEffect(() => {
@@ -737,8 +864,8 @@ export default function WizardV6() {
                     {/* CLUSTER 3: POWER GAUGE - Inline mini speedometer */}
                     <div className="flex items-center">
                       <PowerGaugeWidget
-                        batteryKW={state.calculations?.selected?.bessKW ?? 0}
-                        peakLoadKW={state.calculations?.base?.peakDemandKW ?? 100}
+                        batteryKW={estimatedPowerMetrics.bessKW}
+                        peakLoadKW={estimatedPowerMetrics.peakDemandKW}
                         compact={true}
                       />
                     </div>
@@ -826,7 +953,8 @@ export default function WizardV6() {
                               state.calculations.selected.bessKW
                             : 0,
                         inverterKW: state.calculations?.selected?.bessKW ?? 0,
-                        peakLoadKW: state.calculations?.base?.peakDemandKW ?? 0,
+                        // Use estimatedPowerMetrics for real-time updates during Step 3
+                        peakLoadKW: estimatedPowerMetrics.peakDemandKW,
                         backupRequired: state.goals?.includes("backup_power") ?? false,
                       },
                       // Phase 1: Intelligence Layer (Jan 18, 2026)
