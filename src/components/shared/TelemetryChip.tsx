@@ -105,8 +105,11 @@ export const TelemetryChip: React.FC<TelemetryChipProps> = ({
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
     >
-      {/* Icon - standardized 16px */}
-      <Icon className={`w-4 h-4 flex-shrink-0 ${iconColorClasses[iconColor]}`} />
+      {/* Icon - standardized 16px with cyan glow */}
+      <Icon 
+        className={`w-4 h-4 flex-shrink-0 ${iconColorClasses[iconColor]}`}
+        style={iconColor === 'cyan' ? { filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.8))' } : undefined}
+      />
 
       {/* Label (optional) */}
       {label && (
