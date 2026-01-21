@@ -15,6 +15,28 @@
  */
 
 // ============================================
+// SIZING OVERRIDES (TrueQuote™ Manual Adjustments)
+// ============================================
+/**
+ * User overrides for Merlin's recommended sizing.
+ * When set, these take precedence over calculated values.
+ * Only batteryKW and backupHours are directly editable;
+ * batteryKWh is derived as batteryKW * backupHours.
+ */
+export interface SizingOverrides {
+  /** Battery power capacity in kW (user-editable) */
+  batteryKW?: number;
+  /** Backup duration in hours (user-editable) */
+  backupHours?: number;
+  /** Battery energy capacity in kWh (derived: batteryKW * backupHours) */
+  batteryKWh?: number;
+  /** Override peak demand if user knows their actual peak */
+  peakDemandKW?: number;
+  /** Timestamp of last override */
+  lastModified?: string;
+}
+
+// ============================================
 // EV CHARGER CONFIGURATION
 // ============================================
 export interface EVChargerConfig {
@@ -81,6 +103,7 @@ export interface WizardState {
 
   // Custom question data from templates (industry-specific fields)
   // Contains fields like annualPassengers (airport), gamingSpaceSqFt (casino), etc.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   useCaseData: Record<string, any>;
 
   // Section 3: Existing Infrastructure
@@ -134,6 +157,10 @@ export interface WizardState {
     estimatedPaybackYears: number;
     estimatedCost: number;
   };
+
+  // TrueQuote™ Sizing Overrides (Jan 21, 2026)
+  // User adjustments to Merlin's recommended system sizing
+  sizingOverrides?: SizingOverrides;
 }
 
 // ============================================
