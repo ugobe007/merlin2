@@ -798,7 +798,7 @@ export default function WizardV6() {
                               ? { text: "est.", variant: "estimate" }
                               : state.calculations?.selected?.bessKW
                                 ? undefined
-                                : { text: "calc.", variant: "verified" }
+                                : { text: "calc.", variant: "live" }
                           }
                           iconColor="indigo"
                           hierarchy="primary"
@@ -846,7 +846,7 @@ export default function WizardV6() {
                               ? { text: "est.", variant: "estimate" }
                               : state.calculations?.selected?.bessKWh
                                 ? undefined
-                                : { text: "calc.", variant: "verified" }
+                                : { text: "calc.", variant: "live" }
                           }
                           iconColor="violet"
                           hierarchy="primary"
