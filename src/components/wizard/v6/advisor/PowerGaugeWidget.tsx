@@ -18,11 +18,21 @@ interface PowerGaugeWidgetProps {
  * Shows how well BESS sizing meets facility power needs
  */
 export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = false }: PowerGaugeWidgetProps) {
+  // Placeholder mode: Show "Analyzing..." when no real data (Step 1-2)
+  const isPlaceholder = batteryKW === 0 && peakLoadKW > 0;
+  
   // Calculate coverage percentage (0-100)
   const coveragePercent = peakLoadKW > 0 ? Math.min((batteryKW / peakLoadKW) * 100, 100) : 0;
   
   // Determine status and color
   const getStatusConfig = (percent: number) => {
+    if (isPlaceholder) return {
+      status: 'Analyzing',
+      color: '#6366f1',
+      icon: Zap,
+      textColor: 'text-indigo-400',
+      message: 'Complete facility details to see coverage'
+    };
     if (percent >= 90) return { 
       status: 'Optimal', 
       color: '#10b981', 
@@ -145,7 +155,7 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
               fontWeight="bold"
               className="font-mono"
             >
-              {Math.round(fillPercent)}%
+              {isPlaceholder ? '—' : `${Math.round(fillPercent)}%`}
             </text>
             
             {/* Status label */}
