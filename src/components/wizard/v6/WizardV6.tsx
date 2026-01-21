@@ -277,77 +277,110 @@ export default function WizardV6() {
     }
     
     // Industry-specific quick estimates from Step 3 inputs
+    // NOTE: Field names mapped to ACTUAL database custom_questions.field_name values
+    // Audit: scripts/audit-questionnaire-data-flow.mjs
     let estimatedPeakKW = 0;
     
     // Hotels: rooms × 2-4 kW/room
+    // DB fields: roomCount, hotelCategory
     if (industry.includes('hotel')) {
       const rooms = Number(inputs.roomCount || inputs.numberOfRooms || inputs.facilitySize || 150);
-      const hotelClass = String(inputs.hotelClass || inputs.facilityType || 'midscale');
+      const hotelClass = String(inputs.hotelCategory || inputs.hotelClass || inputs.facilityType || 'midscale');
       const kWPerRoom = hotelClass.includes('luxury') ? 4 : hotelClass.includes('upscale') ? 3 : 2;
       estimatedPeakKW = rooms * kWPerRoom * 0.75; // 75% diversity factor
     }
     // Hospitals: beds × 5-10 kW/bed
+    // DB fields: bedCount, hospitalType, totalSqFt, operatingRooms, icuBeds
     else if (industry.includes('hospital')) {
       const beds = Number(inputs.bedCount || inputs.numberOfBeds || inputs.facilitySize || 200);
-      estimatedPeakKW = beds * 7.5 * 0.85; // 85% diversity factor
+      const icuBeds = Number(inputs.icuBeds || 0);
+      const operatingRooms = Number(inputs.operatingRooms || 0);
+      // ICU beds use more power, OR adds ~50 kW each
+      estimatedPeakKW = (beds * 7.5 + icuBeds * 3 + operatingRooms * 50) * 0.85;
     }
     // Data Centers: IT load × PUE
+    // DB fields: itLoadKW, currentPUE, rackCount, tierLevel
     else if (industry.includes('data') && industry.includes('center')) {
-      const itLoadKW = Number(inputs.totalITLoad || inputs.powerCapacity || 5000);
-      const pue = Number(inputs.pue || 1.5);
-      estimatedPeakKW = itLoadKW * pue;
+      const itLoadKW = Number(inputs.itLoadKW || inputs.totalITLoad || inputs.powerCapacity || 5000);
+      const pue = Number(inputs.currentPUE || inputs.pue || 1.5);
+      const rackCount = Number(inputs.rackCount || 0);
+      // If rackCount provided but not IT load, estimate ~5kW/rack
+      const calculatedItLoad = itLoadKW > 0 ? itLoadKW : (rackCount * 5);
+      estimatedPeakKW = calculatedItLoad * pue;
     }
     // Car Wash: bays × 30-80 kW/bay
+    // DB fields: bayCount, facilityType (not washType), operatingModel
     else if (industry.includes('car') && industry.includes('wash')) {
       const bays = Number(inputs.bayCount || inputs.numberOfBays || 4);
-      const washType = String(inputs.washType || inputs.facilityType || 'automatic');
+      const washType = String(inputs.facilityType || inputs.washType || inputs.operatingModel || 'automatic');
       const kWPerBay = washType.includes('tunnel') ? 80 : washType.includes('automatic') ? 50 : 30;
       estimatedPeakKW = bays * kWPerBay;
     }
     // EV Charging: chargers × power rating
+    // DB fields: level2Count, dcfc50Count, dcfcHighCount, ultraFastCount, megawattCount
     else if (industry.includes('ev') || industry.includes('charging')) {
-      const l2 = Number(inputs.level2Chargers || inputs.l2Count || 12);
-      const dcfc = Number(inputs.dcfcChargers || inputs.dcfcCount || 8);
-      const hpc = Number(inputs.hpcChargers || inputs.hpcCount || 0);
-      estimatedPeakKW = (l2 * 7.2 + dcfc * 150 + hpc * 350) * 0.6; // 60% concurrency
+      const l2 = Number(inputs.level2Count || inputs.level2Chargers || inputs.l2Count || 12);
+      const dcfc50 = Number(inputs.dcfc50Count || 0);
+      const dcfcHigh = Number(inputs.dcfcHighCount || inputs.dcFastCount || 0);
+      const dcfc = Number(inputs.dcfcChargers || inputs.dcfcCount || dcfc50 + dcfcHigh || 8);
+      const ultraFast = Number(inputs.ultraFastCount || 0);
+      const megawatt = Number(inputs.megawattCount || 0);
+      const hpc = Number(inputs.hpcChargers || inputs.hpcCount || ultraFast || 0);
+      estimatedPeakKW = (l2 * 7.2 + dcfc * 150 + hpc * 350 + megawatt * 1000) * 0.6; // 60% concurrency
     }
     // Manufacturing: sqft × 15-40 W/sqft
+    // DB fields: facilitySqFt, manufacturingSqFt, manufacturingType
     else if (industry.includes('manufacturing') || industry.includes('industrial')) {
-      const sqft = Number(inputs.squareFootage || inputs.facilitySqFt || 100000);
+      const sqft = Number(inputs.manufacturingSqFt || inputs.facilitySqFt || inputs.squareFootage || 100000);
       estimatedPeakKW = sqft * 0.025; // 25 W/sqft average
     }
     // Warehouse: sqft × 5-15 W/sqft
+    // DB fields: warehouseSqFt, facilitySqFt, warehouseType
     else if (industry.includes('warehouse') || industry.includes('logistics')) {
-      const sqft = Number(inputs.warehouseSqFt || inputs.squareFootage || 200000);
-      const coldStorage = inputs.hasColdStorage || inputs.refrigeratedArea;
+      const sqft = Number(inputs.warehouseSqFt || inputs.facilitySqFt || inputs.squareFootage || 200000);
+      const coldStorage = inputs.hasColdStorage || inputs.refrigeratedArea || 
+                          (inputs.warehouseType && String(inputs.warehouseType).includes('cold'));
       estimatedPeakKW = sqft * (coldStorage ? 0.02 : 0.008); // 8-20 W/sqft
     }
     // Office: sqft × 8-15 W/sqft
+    // DB fields: officeSqFt, totalSqFt, buildingSqFt, buildingClass
     else if (industry.includes('office')) {
-      const sqft = Number(inputs.squareFootage || inputs.facilitySqFt || 50000);
+      const sqft = Number(inputs.officeSqFt || inputs.totalSqFt || inputs.buildingSqFt || inputs.squareFootage || inputs.facilitySqFt || 50000);
       estimatedPeakKW = sqft * 0.012; // 12 W/sqft average
     }
     // Retail/Shopping: sqft × 20-40 W/sqft
+    // DB fields: retailSqFt, storeSqFt, mallSqFt, glaSqFt, totalSqFt
     else if (industry.includes('retail') || industry.includes('shopping')) {
-      const sqft = Number(inputs.squareFootage || inputs.retailSqFt || 100000);
+      const sqft = Number(inputs.retailSqFt || inputs.storeSqFt || inputs.mallSqFt || inputs.glaSqFt || inputs.totalSqFt || inputs.squareFootage || 100000);
       estimatedPeakKW = sqft * 0.025; // 25 W/sqft
     }
     // College/University: students × 1-2 kW/student
+    // DB fields: studentPopulation, studentEnrollment, studentCount, totalSqFt
     else if (industry.includes('college') || industry.includes('university')) {
-      const students = Number(inputs.studentPopulation || inputs.enrollment || 10000);
+      const students = Number(inputs.studentPopulation || inputs.studentEnrollment || inputs.studentCount || inputs.enrollment || 10000);
       estimatedPeakKW = students * 1.5;
     }
     // Airport: passengers/year ÷ 1000
+    // DB fields: annualPassengers, terminalSqFt, gateCount
     else if (industry.includes('airport')) {
       const passengers = Number(inputs.annualPassengers || 5000000);
-      estimatedPeakKW = passengers / 500; // ~2 W per annual passenger
+      const terminalSqFt = Number(inputs.terminalSqFt || 0);
+      // If terminal sqft provided, use that as well
+      const basePower = passengers / 500; // ~2 W per annual passenger
+      const terminalPower = terminalSqFt > 0 ? terminalSqFt * 0.03 : 0;
+      estimatedPeakKW = Math.max(basePower, terminalPower);
     }
     // Casino: gaming sqft × 40-60 W/sqft
+    // DB fields: gamingFloorSqft, gamingFloorSize, totalSqFt, hotelRooms, slotMachines
     else if (industry.includes('casino')) {
-      const sqft = Number(inputs.gamingFloorSqft || inputs.squareFootage || 100000);
-      estimatedPeakKW = sqft * 0.05; // 50 W/sqft
+      const sqft = Number(inputs.gamingFloorSqft || inputs.gamingFloorSize || inputs.totalSqFt || inputs.squareFootage || 100000);
+      const hotelRooms = Number(inputs.hotelRooms || 0);
+      const slotMachines = Number(inputs.slotMachines || 0);
+      // Slot machines: ~0.5 kW each
+      estimatedPeakKW = sqft * 0.05 + hotelRooms * 2 + slotMachines * 0.5;
     }
     // Restaurant: base sqft + kitchen equipment loads
+    // DB fields: squareFootage, seatCount, kitchenEquipment, hasKitchenHood, hasWalkInFreezer, restaurantType
     else if (industry.includes('restaurant')) {
       const sqft = Number(inputs.squareFootage || inputs.diningAreaSqft || 3000);
       const seats = Number(inputs.seatCount || 80);
@@ -355,8 +388,8 @@ export default function WizardV6() {
       // Base load: 50 W/sqft for HVAC + lighting
       let basePeakKW = sqft * 0.05;
       
-      // Kitchen equipment loads (from primaryCookingEquipment multi-select)
-      const cookingEquipment = inputs.primaryCookingEquipment as string[] | string | undefined;
+      // Kitchen equipment loads (DB uses 'kitchenEquipment', code also checks 'primaryCookingEquipment')
+      const cookingEquipment = (inputs.kitchenEquipment || inputs.primaryCookingEquipment) as string[] | string | undefined;
       const equipmentArray = Array.isArray(cookingEquipment) 
         ? cookingEquipment 
         : typeof cookingEquipment === 'string' 
@@ -371,6 +404,9 @@ export default function WizardV6() {
         'flat_griddle': 15,     // Flat top griddle
         'pizza_oven': 30,       // Pizza oven
         'convection_oven': 12,  // Convection oven
+        'commercial_oven': 20,  // Generic commercial oven
+        'grill': 15,            // Grill
+        'steamer': 10,          // Commercial steamer
       };
       
       equipmentArray.forEach(eq => {
@@ -391,15 +427,83 @@ export default function WizardV6() {
         basePeakKW += 4;
       }
       
+      // Refrigeration count (DB field)
+      const refrigCount = Number(inputs.refrigerationCount || 0);
+      if (refrigCount > 0) {
+        basePeakKW += refrigCount * 3;
+      }
+      
       // Scale by seat count (more seats = more equipment)
       const seatMultiplier = seats > 150 ? 1.3 : seats > 75 ? 1.1 : 1.0;
       
       estimatedPeakKW = basePeakKW * seatMultiplier * 0.8; // 80% diversity
     }
-    // Apartment: units × 3-5 kW/unit
+    // Apartment/Residential: units × 3-5 kW/unit
+    // DB fields: totalUnits, homeSqFt, avgUnitSize, buildingCount
     else if (industry.includes('apartment') || industry.includes('residential')) {
-      const units = Number(inputs.unitCount || inputs.numberOfUnits || 100);
-      estimatedPeakKW = units * 4 * 0.6; // 60% diversity
+      const units = Number(inputs.totalUnits || inputs.unitCount || inputs.numberOfUnits || 100);
+      const homeSqFt = Number(inputs.homeSqFt || inputs.avgUnitSize || 0);
+      // If homeSqFt provided (single family), use sqft-based calc
+      if (homeSqFt > 0 && units <= 1) {
+        estimatedPeakKW = homeSqFt * 0.01 * 0.6; // 10 W/sqft × 60% diversity for single home
+      } else {
+        estimatedPeakKW = units * 4 * 0.6; // 60% diversity for multi-unit
+      }
+    }
+    // Cold Storage: sqft × 30-50 W/sqft (high refrigeration load)
+    // DB fields: totalSqFt, refrigeratedSqFt, storageCapacity, palletCapacity
+    else if (industry.includes('cold') && industry.includes('storage')) {
+      const sqft = Number(inputs.refrigeratedSqFt || inputs.totalSqFt || inputs.squareFootage || 50000);
+      estimatedPeakKW = sqft * 0.04; // 40 W/sqft for refrigeration
+    }
+    // Gas Station: dispensers + convenience store
+    // DB fields: dispenserCount, storeSqFt, stationType
+    else if (industry.includes('gas') && industry.includes('station')) {
+      const dispensers = Number(inputs.dispenserCount || 8);
+      const storeSqFt = Number(inputs.storeSqFt || 2000);
+      estimatedPeakKW = dispensers * 2 + storeSqFt * 0.02; // 2 kW/dispenser + 20 W/sqft store
+    }
+    // Government: sqft-based calculation
+    // DB fields: totalSqFt, governmentSqFt, facilitySqFt, buildingCount
+    else if (industry.includes('government')) {
+      const sqft = Number(inputs.totalSqFt || inputs.governmentSqFt || inputs.facilitySqFt || 100000);
+      estimatedPeakKW = sqft * 0.015; // 15 W/sqft
+    }
+    // Indoor Farm: sqft × 50-80 W/sqft (high lighting load)
+    // DB fields: growingAreaSqFt, growingLevels, lightingLoadPercent
+    else if (industry.includes('indoor') && industry.includes('farm')) {
+      const sqft = Number(inputs.growingAreaSqFt || 20000);
+      const levels = Number(inputs.growingLevels || 1);
+      const lightingPct = Number(inputs.lightingLoadPercent || 70) / 100;
+      estimatedPeakKW = sqft * levels * 0.06 * (1 + lightingPct); // 60 W/sqft base × lighting factor
+    }
+    // Agricultural: acres-based calculation
+    // DB fields: totalAcres, irrigationType, majorEquipment
+    else if (industry.includes('agricult')) {
+      const acres = Number(inputs.totalAcres || 100);
+      const hasIrrigation = inputs.irrigationType && inputs.irrigationType !== 'none';
+      estimatedPeakKW = acres * (hasIrrigation ? 0.5 : 0.2); // 0.2-0.5 kW/acre
+    }
+    // Truck Stop: chargers + facilities
+    // DB fields: mcsChargers, level2, truckWashBays, serviceBays, peakDemandKW
+    else if (industry.includes('truck') && industry.includes('stop')) {
+      // If peakDemandKW directly provided, use it
+      if (inputs.peakDemandKW) {
+        estimatedPeakKW = Number(inputs.peakDemandKW);
+      } else {
+        const mcsChargers = Number(inputs.mcsChargers || 0); // Megawatt charging
+        const l2Chargers = Number(inputs.level2 || 0);
+        const truckWash = Number(inputs.truckWashBays || 0);
+        const serviceBays = Number(inputs.serviceBays || 0);
+        estimatedPeakKW = mcsChargers * 1000 + l2Chargers * 7.2 + truckWash * 100 + serviceBays * 20;
+      }
+    }
+    // Microgrid: use sitePeakLoad directly if provided
+    // DB fields: sitePeakLoad, criticalLoadPercent, existingCapacity
+    else if (industry.includes('microgrid')) {
+      const sitePeakLoad = Number(inputs.sitePeakLoad || 0);
+      const existingCapacity = Number(inputs.existingCapacity || 0);
+      estimatedPeakKW = sitePeakLoad > 0 ? sitePeakLoad : existingCapacity > 0 ? existingCapacity : 500;
     }
     // Default fallback: businessSizeTier-based estimate
     else {
