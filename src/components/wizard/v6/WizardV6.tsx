@@ -807,6 +807,15 @@ export default function WizardV6() {
                       />
                     </div>
 
+                    {/* CLUSTER 3: POWER GAUGE - Inline mini speedometer */}
+                    <div className="flex items-center">
+                      <PowerGaugeWidget 
+                        batteryKW={state.calculations?.selected?.bessKW ?? 0} 
+                        peakLoadKW={state.calculations?.base?.peakDemandKW ?? 100}
+                        compact={true}
+                      />
+                    </div>
+
                     {/* Expandable Details Tab - Shows when Step 3+ has data */}
                     {currentStep >= 3 && estimatedMetrics && (
                       <button

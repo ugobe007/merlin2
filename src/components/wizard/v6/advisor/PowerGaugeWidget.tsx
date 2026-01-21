@@ -81,6 +81,62 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
 
   const gaugeColor = getGaugeColor(fillPercent);
 
+  // COMPACT MODE: Inline mini gauge for header
+  if (compact) {
+    return (
+      <div className="group relative flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-500/30 bg-slate-800/50 hover:border-indigo-400/50 transition-all cursor-help">
+        {/* Mini semicircle gauge */}
+        <div className="relative" style={{ width: 48, height: 28 }}>
+          <svg width={48} height={28} viewBox="0 0 48 28">
+            {/* Background track */}
+            <path
+              d="M 4,24 A 20,20 0 0,1 44,24"
+              fill="none"
+              stroke="rgba(100, 116, 139, 0.3)"
+              strokeWidth={6}
+              strokeLinecap="round"
+            />
+            {/* Filled progress */}
+            <path
+              d="M 4,24 A 20,20 0 0,1 44,24"
+              fill="none"
+              stroke={gaugeColor}
+              strokeWidth={6}
+              strokeLinecap="round"
+              strokeDasharray={`${Math.PI * 20} ${Math.PI * 20}`}
+              strokeDashoffset={Math.PI * 20 - (fillPercent / 100) * Math.PI * 20}
+              className="transition-all duration-700 ease-out"
+              style={{ filter: `drop-shadow(0 0 4px ${gaugeColor})` }}
+            />
+          </svg>
+        </div>
+
+        {/* Percentage + Status */}
+        <div className="flex flex-col">
+          <span className="text-sm font-bold text-white leading-none">
+            {isPlaceholder ? '—' : `${Math.round(fillPercent)}%`}
+          </span>
+          <span className={`text-[9px] font-semibold uppercase ${config.textColor} leading-tight`}>
+            {config.status}
+          </span>
+        </div>
+
+        {/* Tooltip on hover */}
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-56 p-2.5 rounded-lg bg-slate-900 border border-indigo-500/30 shadow-xl z-50">
+          <div className="text-[10px] font-bold text-white mb-1">Power Coverage</div>
+          <div className="text-[10px] text-slate-300">
+            {isPlaceholder ? (
+              <>Complete facility details to see power coverage.</>
+            ) : (
+              <>BESS: {Math.round(batteryKW)} kW / Peak: {Math.round(peakLoadKW)} kW</>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // FULL MODE: Large gauge for panels
   return (
     <div className="group relative rounded-xl border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-indigo-950/50 p-4 hover:border-indigo-400/50 transition-all cursor-help">
       {/* Header */}
