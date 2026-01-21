@@ -9,6 +9,7 @@ import { buildStep3Snapshot } from "./step3/buildStep3Snapshot";
 // MerlinAdvisor Rail System (Phase 1 - Jan 16, 2026)
 import { AdvisorPublisher } from "./advisor/AdvisorPublisher";
 import { AdvisorRail } from "./advisor/AdvisorRail";
+import { FloatingBatteryProgress } from "./advisor/FloatingBatteryProgress";
 
 // TrueQuote™ Brand Assets (Jan 20, 2026)
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
@@ -732,8 +733,8 @@ export default function WizardV6() {
       options={{ clearOnStepChange: true, enableWarnings: true }}
     >
       <div className="fixed inset-0 bg-gradient-to-br from-[#050B16] via-[#071226] to-[#050B16]">
-        {/* INTEGRATED GLASS SHELL: AdvisorRail + Step content */}
-        <div className={`max-w-7xl mx-auto px-4 ${currentStep === 1 ? "py-3" : "py-6"}`}>
+        {/* INTEGRATED GLASS SHELL: AdvisorRail + Step content - FULL WIDTH */}
+        <div className={`w-full px-6 ${currentStep === 1 ? "py-3" : "py-6"}`}>
           <div className="relative rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-2xl overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
             {/* Glow blobs */}
             <div className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl" />
@@ -769,9 +770,9 @@ export default function WizardV6() {
                     </div>
                   </div>
 
-                  {/* CENTER: Clustered Telemetry Chips - 3 Logical Groups */}
-                  <div className="flex-1 flex items-center gap-7 justify-start">
-                    {/* CLUSTER 1: ECONOMICS (Rate + Peak) */}
+                  {/* CENTER: Simplified Telemetry - Only essential metrics visible */}
+                  <div className="flex-1 flex items-center gap-5 justify-start">
+                    {/* CLUSTER 1: ECONOMICS (Rate only) */}
                     <div className="flex items-center gap-2">
                       <TelemetryChip
                         icon={Zap}
@@ -780,30 +781,6 @@ export default function WizardV6() {
                         iconColor="cyan"
                         hierarchy="primary"
                       />
-                      {state.zipCode && state.solarData?.sunHours && (
-                        <TelemetryChip
-                          icon={Zap}
-                          label="Peak:"
-                          value={
-                            // Priority: 1) Step 5 calculations, 2) Step 3 estimated metrics, 3) Fallback
-                            state.calculations?.selected?.bessKW
-                              ? `${Math.round(state.calculations.selected.bessKW)}`
-                              : estimatedMetrics?.peakDemandKW
-                                ? `${estimatedMetrics.peakDemandKW}`
-                                : "80–120"
-                          }
-                          unit="kW"
-                          badge={
-                            !state.calculations?.selected?.bessKW && !estimatedMetrics?.peakDemandKW
-                              ? { text: "est.", variant: "estimate" }
-                              : state.calculations?.selected?.bessKW
-                                ? undefined
-                                : { text: "calc.", variant: "live" }
-                          }
-                          iconColor="indigo"
-                          hierarchy="primary"
-                        />
-                      )}
                     </div>
 
                     {/* CLUSTER 2: ENVIRONMENT/YIELD (Sun + Grid) */}
@@ -826,32 +803,16 @@ export default function WizardV6() {
                       />
                     </div>
 
-                    {/* CLUSTER 3: SYSTEM PREVIEW (Storage) */}
-                    {state.zipCode && state.solarData?.sunHours && (
-                      <div className="flex items-center">
-                        <TelemetryChip
-                          icon={Battery}
-                          label="Storage:"
-                          value={
-                            // Priority: 1) Step 5 calculations, 2) Step 3 estimated metrics, 3) Fallback
-                            state.calculations?.selected?.bessKWh
-                              ? `${Math.round(state.calculations.selected.bessKWh)}`
-                              : estimatedMetrics?.bessKWh
-                                ? `${estimatedMetrics.bessKWh}`
-                                : "200–400"
-                          }
-                          unit="kWh"
-                          badge={
-                            !state.calculations?.selected?.bessKWh && !estimatedMetrics?.bessKWh
-                              ? { text: "est.", variant: "estimate" }
-                              : state.calculations?.selected?.bessKWh
-                                ? undefined
-                                : { text: "calc.", variant: "live" }
-                          }
-                          iconColor="violet"
-                          hierarchy="primary"
-                        />
-                      </div>
+                    {/* Expandable Details Indicator - Shows when Step 3+ has data */}
+                    {currentStep >= 3 && estimatedMetrics && (
+                      <button
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-400/40 text-violet-200 hover:bg-violet-500/30 transition-all group"
+                        title="Click to see detailed power metrics"
+                      >
+                        <Battery className="w-4 h-4 animate-pulse" />
+                        <span className="text-xs font-semibold">View Details</span>
+                        <div className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_12px_rgba(167,139,250,0.9)] animate-pulse" />
+                      </button>
                     )}
                   </div>
 
@@ -882,8 +843,16 @@ export default function WizardV6() {
               </div>
             )}
 
-            {/* ✅ PHASE 2B: Full-height shell with separate scroll regions */}
+            {/* ======================================================================
+                2-COLUMN LAYOUT: AdvisorRail (LEFT) + Wizard Content (RIGHT)
+                ====================================================================== */}
             <div className="relative flex h-[calc(100vh-108px)] flex-col lg:flex-row">
+              {/* FLOATING BATTERY PROGRESS - Top right, always visible */}
+              <FloatingBatteryProgress 
+                currentStep={currentStep} 
+                onNavigate={(step) => setCurrentStep(step)} 
+              />
+
               {/* LEFT: Cockpit - Wider and more integrated */}
               <div className="lg:w-[450px] lg:flex-shrink-0 border-white/10 lg:border-r">
                 <div className="h-full p-6 overflow-y-auto">
@@ -949,7 +918,7 @@ export default function WizardV6() {
 
         {/* FLOATING NAVIGATION BAR - Always visible (Jan 18, 2026) */}
         <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-          <div className="max-w-7xl mx-auto px-4 pb-4">
+          <div className="w-full px-6 pb-4">
             {/* Blocked feedback message (Jan 19, 2026) */}
             {showBlockedFeedback && currentStep === 3 && (
               <div className="mb-3 flex justify-center pointer-events-auto">

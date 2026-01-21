@@ -3,6 +3,8 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
+import { SolarOpportunityWidget } from "./SolarOpportunityWidget";
+import { PowerCoverageWidget } from "./PowerCoverageWidget";
 import { X, MapPin, Compass, Zap, Sun, Cloud, Lightbulb, AlertTriangle } from "lucide-react";
 import avatarImg from "@/assets/images/new_small_profile_.png";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
@@ -239,6 +241,13 @@ export function AdvisorRail({
         return "TOU pricing creates strong arbitrage potential — focus on 4-6 hour battery systems.";
       }
     }
+
+    // NEW: Power warning system (Step 2-3) - Warn users early if facility is large
+    if (currentStep >= 2 && currentStep <= 3 && peakLoadKW != null && peakLoadKW > 500) {
+      const recommendedBESSKW = Math.ceil(peakLoadKW * 0.7);
+      return `Your facility's peak load (${Math.round(peakLoadKW)} kW) suggests significant power needs. Plan for at least ${recommendedBESSKW} kW of BESS capacity in Step 4 options.`;
+    }
+
     return null;
   };
 
@@ -477,58 +486,21 @@ export function AdvisorRail({
         </div>
       </div>
 
-      {/* PROGRESS - Visually reduced dominance */}
-      <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-sm font-bold text-violet-300/90">PROGRESS</div>
-          <div className="text-sm text-indigo-200/70">
-            Step {currentStep} of {totalSteps}
-          </div>
+      {/* SOLAR OPPORTUNITY WIDGET - Only show when ZIP entered (Step 1+) */}
+      {zip && context?.solar?.sunHours && (
+        <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
+          <SolarOpportunityWidget state={st} sunHours={context.solar.sunHours} />
         </div>
+      )}
 
-        <div className="space-y-2.5">
-          {STEP_LABELS.slice(0, totalSteps).map((label, idx) => {
-            const stepNum = idx + 1;
-            const isActive = stepNum === currentStep;
-            const isDone = stepNum < currentStep;
-            const clickable = !!onNavigate && canClick(stepNum);
+      {/* BATTERY PROGRESS REMOVED - Now floating in top right */}
 
-            return (
-              <button
-                key={stepNum}
-                type="button"
-                onClick={() => (clickable ? onNavigate?.(stepNum) : undefined)}
-                disabled={!clickable}
-                className={`w-full flex items-center gap-3 text-sm transition-all text-left ${
-                  isActive ? "text-amber-300" : isDone ? "text-emerald-300" : "text-slate-400/40"
-                } ${clickable ? "cursor-pointer hover:opacity-95" : "opacity-60 cursor-not-allowed"}`}
-              >
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                    isActive
-                      ? "bg-amber-400/15 border-2 border-amber-400/80"
-                      : isDone
-                        ? "bg-emerald-400/10 border border-emerald-400/70"
-                        : "bg-white/[0.04] border border-white/10"
-                  }`}
-                >
-                  {isDone ? "✓" : stepNum}
-                </div>
-
-                <div className="flex-1">
-                  <div className="font-semibold">{label}</div>
-                </div>
-
-                {isActive && (
-                  <div className="text-[10px] px-2 py-0.5 rounded bg-amber-400/15 text-amber-200 border border-amber-400/20">
-                    Current
-                  </div>
-                )}
-              </button>
-            );
-          })}
+      {/* POWER COVERAGE WIDGET - Only show when we have config data (Step 3+) */}
+      {currentStep >= 3 && inverterKW != null && peakLoadKW != null && (
+        <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
+          <PowerCoverageWidget batteryKW={inverterKW} peakLoadKW={peakLoadKW} />
         </div>
-      </div>
+      )}
 
       {/* ACCURACY / TERRITORY CHIP - Bottom section */}
       {zip && context?.siteScore && (
