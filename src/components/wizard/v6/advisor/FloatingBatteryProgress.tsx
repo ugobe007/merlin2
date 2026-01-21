@@ -39,7 +39,7 @@ export function FloatingBatteryProgress({ currentStep, onNavigate }: FloatingBat
   const clickable = (stepNum: number) => stepNum <= currentStep;
 
   return (
-    <div className="group fixed top-24 right-4 z-40 flex items-center gap-3 animate-fade-in">
+    <div className="group fixed top-24 right-8 z-40 flex items-center gap-3 animate-fade-in">
       {/* Battery Container */}
       <div className="relative w-10 h-32 bg-slate-900/90 border-2 border-cyan-400/70 rounded-lg shadow-[0_0_24px_rgba(6,182,212,0.4)] backdrop-blur-sm">
         {/* Battery Terminal */}
@@ -87,13 +87,11 @@ export function FloatingBatteryProgress({ currentStep, onNavigate }: FloatingBat
         </div>
       </div>
 
-      {/* Info Panel - Appears on hover */}
-      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-slate-900/95 border border-cyan-400/50 rounded-lg px-3 py-2 shadow-xl backdrop-blur-sm min-w-[120px]">
-        <div className="text-[10px] text-cyan-300 font-semibold mb-0.5">PROGRESS</div>
-        <div className="text-sm text-white font-bold">Step {currentStep}/6</div>
-        <div className="text-xs text-slate-400 mt-0.5">{steps[currentStep - 1].label}</div>
+      {/* Info Panel - Appears on hover - MINIMAL */}
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-slate-900/95 border border-cyan-400/50 rounded-lg px-3 py-2 shadow-xl backdrop-blur-sm min-w-[100px]">
+        <div className="text-[10px] text-cyan-300 font-semibold mb-1">MERLIN</div>
         {onNavigate && (
-          <div className="text-[9px] text-slate-500 mt-1">Click letters to navigate</div>
+          <div className="text-[9px] text-slate-400">Click letters to navigate</div>
         )}
       </div>
     </div>
