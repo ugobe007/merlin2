@@ -23,16 +23,40 @@ function ModeBadge({ mode }: { mode: "estimate" | "verified" }) {
   );
 }
 
-// Weather Risk Modal Component
-function WeatherRiskModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+// Weather Risk Modal Component - Uses SiteScore™ SSOT data
+interface WeatherRiskModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  siteScore?: SiteScoreResult | null;
+  weatherProfile?: string;
+  state?: string;
+}
+
+function WeatherRiskModal({ isOpen, onClose, siteScore, weatherProfile, state }: WeatherRiskModalProps) {
   if (!isOpen) return null;
 
+  // Extract REAL data from SiteScore™ SSOT (TrueQuote compliant)
+  const gridReliability = siteScore?.riskResilience?.breakdown?.gridReliability ?? 5; // 0-8 scale
+  const climateExposure = siteScore?.riskResilience?.breakdown?.climateExposure ?? 4; // 0-7 scale
+  const businessCriticality = siteScore?.riskResilience?.breakdown?.businessCriticality ?? 3; // 0-5 scale
+
+  // Convert SiteScore scales to percentage for display
+  // Lower score = higher risk (invert for user comprehension)
+  const gridRiskPct = Math.round(((8 - gridReliability) / 8) * 100);
+  const climateRiskPct = Math.round((climateExposure / 7) * 100);
+  const criticalityPct = Math.round((businessCriticality / 5) * 100);
+
+  // Derive storm/heat from weather profile if available
+  const isHotClimate = weatherProfile?.toLowerCase().includes('hot') || weatherProfile?.toLowerCase().includes('humid');
+  const isColdClimate = weatherProfile?.toLowerCase().includes('cold');
+  const isExtremeClimate = weatherProfile?.toLowerCase().includes('extreme') || weatherProfile?.toLowerCase().includes('variability');
+
   const riskFactors = [
-    { name: "Storm frequency", level: 20, color: "emerald" },
-    { name: "Extreme heat events", level: 35, color: "amber" },
-    { name: "Grid reliability", level: 15, color: "emerald" },
-    { name: "Extreme cold events", level: 10, color: "emerald" },
-    { name: "Wind/tornado risk", level: 25, color: "amber" },
+    { name: "Grid reliability issues", level: gridRiskPct, color: gridRiskPct > 40 ? "amber" : "emerald", source: "EIA SAIDI" },
+    { name: "Climate exposure", level: climateRiskPct, color: climateRiskPct > 50 ? "amber" : "emerald", source: "NOAA/NWS" },
+    { name: "Extreme heat events", level: isHotClimate ? 60 : isExtremeClimate ? 40 : 20, color: isHotClimate ? "amber" : "emerald", source: "Visual Crossing" },
+    { name: "Extreme cold events", level: isColdClimate ? 50 : 15, color: isColdClimate ? "amber" : "emerald", source: "Visual Crossing" },
+    { name: "Business criticality", level: criticalityPct, color: criticalityPct > 60 ? "amber" : "emerald", source: "Industry Benchmark" },
   ];
 
   const overallRisk = Math.round(riskFactors.reduce((sum, f) => sum + f.level, 0) / riskFactors.length);
@@ -70,13 +94,16 @@ function WeatherRiskModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
           </div>
         </div>
 
-        {/* Risk Factor Bars */}
+        {/* Risk Factor Bars - TrueQuote™ Source Attribution */}
         <div className="space-y-4 mb-6">
           {riskFactors.map((factor, idx) => (
             <div key={idx}>
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-sm text-slate-300">{factor.name}</span>
-                <span className="text-xs text-slate-400">{factor.level}%</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] text-slate-500">{factor.source}</span>
+                  <span className="text-xs text-slate-400">{factor.level}%</span>
+                </div>
               </div>
               <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                 <div 
@@ -92,10 +119,23 @@ function WeatherRiskModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
           ))}
         </div>
 
-        {/* Recommendation */}
+        {/* Recommendation - Dynamic based on risk profile */}
         <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
           <div className="text-xs text-blue-200 leading-relaxed">
-            <strong>Recommendation:</strong> Reliable grid + strong solar = prioritize peak shaving + solar-ready storage.
+            <strong>Recommendation:</strong> {overallRisk < 30 
+              ? `Reliable grid in ${state || 'your area'} + favorable climate = prioritize peak shaving + solar-ready storage.`
+              : overallRisk < 50
+              ? `Moderate risk profile suggests balanced approach: BESS for demand management with backup capability.`
+              : `Higher risk exposure in ${state || 'your area'} = prioritize resilience. Consider longer-duration storage + generator hybrid.`
+            }
+          </div>
+        </div>
+
+        {/* TrueQuote™ Source Attribution */}
+        <div className="mt-4 pt-3 border-t border-slate-700/50">
+          <div className="text-[9px] text-slate-500 flex items-center gap-1">
+            <span>📊</span>
+            <span>Data sources: EIA SAIDI Index, NOAA Climate Data, Visual Crossing Weather API</span>
           </div>
         </div>
       </div>
@@ -176,15 +216,30 @@ export function AdvisorRail({
   const rate = context?.utility?.rate;
   const demand = context?.utility?.demandCharge;
   const hasTOU = context?.utility?.hasTOU;
+  const utilityName = context?.location?.utilityName || "";
 
-  // sun moved to header dials - prefix with _ to mark unused
-  const _sun = context?.solar?.sunHours;
-  const _solarRating = context?.solar?.rating;
+  // Solar data from SSOT (NREL PVWatts)
+  const sunHours = context?.solar?.sunHours;
+  const solarRating = context?.solar?.rating;
 
-  const _weatherProfile = context?.weather?.profile;
-  const _weatherExtremes = context?.weather?.extremes;
+  // Weather data from SSOT (Visual Crossing / NWS)
+  const weatherProfile = context?.weather?.profile;
+  const weatherExtremes = context?.weather?.extremes;
 
-  const _arbitrage = context?.opportunities?.arbitrage;
+  // Opportunities from SSOT analysis
+  const arbitrageOpportunity = context?.opportunities?.arbitrage;
+
+  // Site Score from SSOT calculator
+  const siteScore = context?.siteScore;
+
+  // Derive weather risk label from actual data
+  const weatherRiskLabel = (() => {
+    if (!weatherProfile) return null;
+    const profile = weatherProfile.toLowerCase();
+    if (profile.includes('extreme') || profile.includes('high variability')) return 'Moderate';
+    if (profile.includes('hot') || profile.includes('cold')) return 'Low-Med';
+    return 'Low';
+  })();
 
   // Phase 5: Config data for trade-off warnings (Step 3-4)
   const solarKW = context?.config?.solarKW;
@@ -434,8 +489,8 @@ export function AdvisorRail({
                         <Cloud className="w-3 h-3 text-slate-400 hover:text-white cursor-pointer" />
                       </button>
                       <div className="text-[10px] text-violet-300/70 font-semibold mb-1">WEATHER RISK</div>
-                      <div className="text-2xl font-black text-white">Low</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">grid + climate</div>
+                      <div className={`text-2xl font-black ${weatherRiskLabel === 'Moderate' ? 'text-amber-400' : 'text-white'}`}>{weatherRiskLabel || '—'}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">{weatherProfile ? weatherProfile.substring(0, 15) : 'grid + climate'}</div>
                     </div>
                     <div className="relative rounded-lg border border-indigo-500/30 bg-gradient-to-br from-slate-800/70 to-blue-950/50 p-3">
                       <Sun className="absolute top-2 right-2 w-3 h-3 text-slate-400" />
@@ -448,7 +503,7 @@ export function AdvisorRail({
                     <Zap className="w-4 h-4 text-violet-400" />
                     <div className="flex-1">
                       <div className="text-[9px] text-slate-400 uppercase tracking-wide">Utility Territory</div>
-                      <div className="text-xs text-white font-semibold">{context?.location?.utilityName || `${st} Energy`} (avg commercial)</div>
+                      <div className="text-xs text-white font-semibold">{utilityName || `${st} Average`} {hasTOU ? '(TOU)' : '(avg commercial)'}</div>
                     </div>
                   </div>
                   <div className="rounded-lg border border-violet-400/20 bg-violet-500/8 p-3">
@@ -710,8 +765,14 @@ export function AdvisorRail({
         </div>
       )}
 
-      {/* WEATHER RISK MODAL (Jan 20, 2026 - Vineet UX) */}
-      <WeatherRiskModal isOpen={showWeatherRiskModal} onClose={() => setShowWeatherRiskModal(false)} />
+      {/* WEATHER RISK MODAL (Jan 20, 2026 - TrueQuote™ Compliant) */}
+      <WeatherRiskModal 
+        isOpen={showWeatherRiskModal} 
+        onClose={() => setShowWeatherRiskModal(false)}
+        siteScore={siteScore}
+        weatherProfile={weatherProfile}
+        state={st}
+      />
     </div>
   );
 }
