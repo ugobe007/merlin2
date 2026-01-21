@@ -17,7 +17,7 @@
  */
 
 import React from "react";
-import { Battery, Zap, Clock, Info, Sparkles, AlertTriangle, Settings2 } from "lucide-react";
+import { Battery, Zap, Clock, Info, Sparkles, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TrueQuoteSizing } from "@/services/truequote";
 import { getSizingBandDescription, shouldShowEstimate } from "@/services/truequote";
@@ -118,16 +118,12 @@ export function LiveSystemPreview({
   const effectiveHours = overrides?.backupHours ?? recommended.durationHours.best;
   const effectiveEnergyKWh = overrides?.batteryKWh ?? recommended.energyKWh.best;
 
-  // Determine confidence color
+  // Determine confidence color - subtle, not alarming
   const confidenceColor =
-    confidence >= 75 ? "text-green-600" : confidence >= 60 ? "text-amber-600" : "text-orange-500";
+    confidence >= 75 ? "text-emerald-600" : confidence >= 60 ? "text-blue-600" : "text-muted-foreground";
 
-  const confidenceBg =
-    confidence >= 75
-      ? "bg-green-50 border-green-200"
-      : confidence >= 60
-        ? "bg-amber-50 border-amber-200"
-        : "bg-orange-50 border-orange-200";
+  // All backgrounds are subtle - no warning colors
+  const confidenceBg = "bg-muted/30 border-border";
 
   if (compact) {
     // Compact version for sidebar
@@ -181,8 +177,8 @@ export function LiveSystemPreview({
           )}
         </div>
         <div className="flex items-center gap-3">
-          <div className={cn("text-sm font-medium", confidenceColor)}>
-            {confidence}% confident • {bandDescription}
+          <div className={cn("text-sm", confidenceColor)}>
+            {confidence >= 75 ? `${confidence}% confident` : `Building estimate...`}
           </div>
           {onCustomize && (
             <button
@@ -293,14 +289,13 @@ export function LiveSystemPreview({
         </div>
       )}
 
-      {/* Low confidence warning */}
+      {/* Low confidence tip - subtle guidance, not a warning */}
       {confidence < 60 && (
         <div className="px-4 pb-3">
-          <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-md p-2">
-            <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+          <div className="flex items-start gap-2 text-xs text-muted-foreground">
+            <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
             <span>
-              Answer more questions above to narrow these estimates. Current range is ±
-              {confidence < 45 ? "25" : "15"}% due to limited data.
+              <span className="font-medium text-foreground/80">Tip:</span> Answer more questions to narrow these estimates.
             </span>
           </div>
         </div>
