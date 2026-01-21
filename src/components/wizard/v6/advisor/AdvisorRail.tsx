@@ -4,7 +4,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
 import { SolarOpportunityWidget } from "./SolarOpportunityWidget";
-import { PowerCoverageWidget } from "./PowerCoverageWidget";
+import { PowerGaugeWidget } from "./PowerGaugeWidget";
 import { X, MapPin, Compass, Zap, Sun, Cloud, Lightbulb, AlertTriangle } from "lucide-react";
 import avatarImg from "@/assets/images/new_small_profile_.png";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
@@ -495,10 +495,10 @@ export function AdvisorRail({
 
       {/* BATTERY PROGRESS REMOVED - Now floating in top right */}
 
-      {/* POWER COVERAGE WIDGET - Only show when we have config data (Step 3+) */}
+      {/* POWER GAUGE WIDGET - Speedometer style (Step 3+) */}
       {currentStep >= 3 && inverterKW != null && peakLoadKW != null && (
         <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
-          <PowerCoverageWidget batteryKW={inverterKW} peakLoadKW={peakLoadKW} />
+          <PowerGaugeWidget batteryKW={inverterKW} peakLoadKW={peakLoadKW} />
         </div>
       )}
 
