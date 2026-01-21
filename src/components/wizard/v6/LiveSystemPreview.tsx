@@ -29,6 +29,8 @@ interface LiveSystemPreviewProps {
   overrides?: SizingOverrides;
   /** Callback when user wants to customize sizing */
   onCustomize?: () => void;
+  /** Model confidence from TrueQuote (single source of truth) */
+  modelConfidence?: number;
   className?: string;
   compact?: boolean;
 }
@@ -88,6 +90,7 @@ export function LiveSystemPreview({
   sizing,
   overrides,
   onCustomize,
+  modelConfidence,
   className,
   compact = false,
 }: LiveSystemPreviewProps) {
@@ -106,9 +109,12 @@ export function LiveSystemPreview({
     );
   }
 
-  const { recommended, goalsBreakdown, constraints: _constraints, confidence, notes } = sizing;
+  const { recommended, goalsBreakdown, constraints: _constraints, confidence: sizingConfidence, notes } = sizing;
+  
+  // Use modelConfidence (from TrueQuote SSOT) if provided, otherwise fallback to sizing confidence
+  const confidence = modelConfidence ?? sizingConfidence;
   const showEstimate = shouldShowEstimate(confidence);
-  const bandDescription = getSizingBandDescription(confidence);
+  const _bandDescription = getSizingBandDescription(confidence);
 
   // Check if user has overridden the Merlin recommendation
   const hasOverride = overrides && (overrides.batteryKW || overrides.backupHours);
@@ -163,33 +169,28 @@ export function LiveSystemPreview({
   // Full version
   return (
     <div className={cn("rounded-lg border bg-card", className)}>
-      {/* Header */}
+      {/* Header - clean, no duplicate confidence (shown in Merlin panel) */}
       <div className={cn("px-4 py-3 border-b flex items-center justify-between", confidenceBg)}>
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
           <span className="font-medium">
-            {hasOverride ? "Customized System" : "Recommended System"}
+            {hasOverride ? "Your System" : "Recommended System"}
           </span>
           {hasOverride && (
             <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
-              Modified
+              Customized
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          <div className={cn("text-sm", confidenceColor)}>
-            {confidence >= 75 ? `${confidence}% confident` : `Building estimate...`}
-          </div>
-          {onCustomize && (
-            <button
-              onClick={onCustomize}
-              className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-            >
-              <Settings2 className="h-3.5 w-3.5" />
-              Customize
-            </button>
-          )}
-        </div>
+        {onCustomize && (
+          <button
+            onClick={onCustomize}
+            className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+            Customize
+          </button>
+        )}
       </div>
 
       {/* Main metrics */}
