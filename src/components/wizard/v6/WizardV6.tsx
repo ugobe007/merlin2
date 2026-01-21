@@ -2529,12 +2529,6 @@ export default function WizardV6() {
                 2-COLUMN LAYOUT: AdvisorRail (LEFT) + Wizard Content (RIGHT)
                 ====================================================================== */}
             <div className="relative flex h-[calc(100vh-108px)] flex-col lg:flex-row">
-              {/* FLOATING BATTERY PROGRESS - Top right, always visible */}
-              <FloatingBatteryProgress
-                currentStep={currentStep}
-                onNavigate={(step) => setCurrentStep(step)}
-              />
-
               {/* LEFT: Cockpit - Wider and more integrated */}
               <div className="lg:w-[450px] lg:flex-shrink-0 border-white/10 lg:border-r">
                 <div className="h-full p-6 overflow-y-auto">
