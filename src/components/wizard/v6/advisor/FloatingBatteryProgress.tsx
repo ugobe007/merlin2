@@ -39,11 +39,11 @@ export function FloatingBatteryProgress({ currentStep, onNavigate }: FloatingBat
   const clickable = (stepNum: number) => stepNum <= currentStep;
 
   return (
-    <div className="group fixed top-28 right-8 z-40 flex items-center gap-3 animate-fade-in">
-      {/* Battery Container */}
-      <div className="relative w-10 h-32 bg-slate-900/90 border-2 border-cyan-400/70 rounded-lg shadow-[0_0_24px_rgba(6,182,212,0.4)] backdrop-blur-sm">
+    <div className="group fixed top-1/2 -translate-y-1/2 right-2 z-40 flex items-center gap-2 animate-fade-in">
+      {/* Battery Container - Slimmer for edge placement */}
+      <div className="relative w-8 h-28 bg-slate-900/90 border border-cyan-400/50 rounded-lg shadow-[0_0_16px_rgba(6,182,212,0.3)] backdrop-blur-sm">
         {/* Battery Terminal */}
-        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-cyan-400/70 rounded-t-sm" />
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-1 bg-cyan-400/60 rounded-t-sm" />
         
         {/* Fill - Animated gradient from bottom to top */}
         <div 
