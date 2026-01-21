@@ -363,14 +363,14 @@ export function AdvisorRail({
             <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border-2 border-slate-900 shadow-[0_0_16px_rgba(16,185,129,0.9)] animate-pulse" />
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 font-bold text-xl tracking-tight">
               Merlin
             </div>
             <div className="text-slate-300/80 text-sm font-medium">AI Energy Advisor</div>
             {context?.location?.businessName && (
-              <div className="flex items-center gap-1.5 mt-1.5 text-white text-sm font-bold">
-                <span className="text-violet-400 text-xs">🏢</span>
+              <div className="flex items-center gap-1.5 mt-1.5 text-white text-sm font-bold max-w-full">
+                <span className="text-violet-400 text-xs flex-shrink-0">🏢</span>
                 <span className="truncate" title={context.location.businessName}>{context.location.businessName}</span>
               </div>
             )}
