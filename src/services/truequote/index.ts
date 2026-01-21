@@ -2,7 +2,7 @@
  * TrueQuote™ Service Index
  * =========================
  * Central export point for all TrueQuote services.
- * 
+ *
  * Created: January 21, 2026
  * Phase 5: Live Battery Sizing + Power Profile Preview
  */
@@ -12,10 +12,11 @@ export {
   computeTrueQuoteSizing,
   getSizingBandDescription,
   shouldShowEstimate,
+  getEffectiveSizing,
   type TrueQuoteSizing,
   type SizingOverrides,
   type SizingInputs,
-} from './sizingEngine';
+} from "./sizingEngine";
 
 // Load Curve Generator
 export {
@@ -26,4 +27,4 @@ export {
   type LoadCurve,
   type LoadCurvePoint,
   type LoadCurveInputs,
-} from './loadCurve';
+} from "./loadCurve";
