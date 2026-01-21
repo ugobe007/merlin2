@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { RotateCcw, X, ChevronLeft, ChevronRight, Zap, Sun, Battery, Shield } from "lucide-react";
+import { RotateCcw, X, ChevronLeft, ChevronRight, Zap, Sun, Battery, Shield, Activity } from "lucide-react";
 
 import type { WizardState } from "./types";
 import { INITIAL_WIZARD_STATE, POWER_LEVELS } from "./types";
@@ -10,6 +10,7 @@ import { buildStep3Snapshot } from "./step3/buildStep3Snapshot";
 import { AdvisorPublisher } from "./advisor/AdvisorPublisher";
 import { AdvisorRail } from "./advisor/AdvisorRail";
 import { FloatingBatteryProgress } from "./advisor/FloatingBatteryProgress";
+import { PowerGaugeWidget } from "./advisor/PowerGaugeWidget";
 
 // TrueQuote™ Brand Assets (Jan 20, 2026)
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
@@ -230,6 +231,9 @@ export default function WizardV6() {
 
   // Blocked feedback state (Jan 19, 2026 - Shows message when Next is blocked)
   const [showBlockedFeedback, setShowBlockedFeedback] = useState(false);
+
+  // Expandable intelligence panel state (Jan 20, 2026 - Power details panel)
+  const [showDetailsPanel, setShowDetailsPanel] = useState(false);
 
   // ✅ FIX: Real-time metrics from Step 3 inputs (Jan 20, 2026)
   // Calculate power metrics immediately when user answers questions
@@ -803,14 +807,15 @@ export default function WizardV6() {
                       />
                     </div>
 
-                    {/* Expandable Details Indicator - Shows when Step 3+ has data */}
+                    {/* Expandable Details Tab - Shows when Step 3+ has data */}
                     {currentStep >= 3 && estimatedMetrics && (
                       <button
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-400/40 text-violet-200 hover:bg-violet-500/30 transition-all group"
-                        title="Click to see detailed power metrics"
+                        onClick={() => setShowDetailsPanel(!showDetailsPanel)}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-400/40 text-violet-200 hover:bg-violet-500/30 transition-all group shadow-[0_0_16px_rgba(167,139,250,0.4)]"
+                        title="Click to expand power details panel"
                       >
                         <Battery className="w-4 h-4 animate-pulse" />
-                        <span className="text-xs font-semibold">View Details</span>
+                        <span className="text-xs font-semibold">{showDetailsPanel ? 'Hide' : 'Power'} Details</span>
                         <div className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_12px_rgba(167,139,250,0.9)] animate-pulse" />
                       </button>
                     )}
@@ -840,6 +845,55 @@ export default function WizardV6() {
                     )}
                   </div>
                 </div>
+
+                {/* EXPANDABLE POWER DETAILS PANEL - Slides down below intelligence header */}
+                {showDetailsPanel && currentStep >= 3 && (
+                  <div className="border-t border-white/10 bg-gradient-to-br from-slate-800/70 via-slate-900/80 to-violet-950/60 p-6 shadow-[inset_0_1px_0_rgba(167,139,250,0.2),0_0_24px_rgba(99,102,241,0.15)] animate-slide-down">
+                    <div className="grid grid-cols-2 gap-6">
+                      {/* LEFT: Power Gauge Odometer */}
+                      <div>
+                        <h3 className="text-sm font-bold text-violet-300 mb-3 flex items-center gap-2">
+                          <Zap className="w-4 h-4" />
+                          Power Coverage
+                        </h3>
+                        <PowerGaugeWidget 
+                          batteryKW={state.calculations?.selected?.bessKW ?? 0} 
+                          peakLoadKW={state.calculations?.base?.peakDemandKW ?? 100} 
+                        />
+                      </div>
+
+                      {/* RIGHT: Key Metrics */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-bold text-violet-300 mb-3 flex items-center gap-2">
+                          <Activity className="w-4 h-4" />
+                          System Metrics
+                        </h3>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">Peak Demand</span>
+                            <span className="text-sm font-bold text-white">{Math.round(state.calculations?.base?.peakDemandKW ?? 0)} kW</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">BESS Power</span>
+                            <span className="text-sm font-bold text-white">{Math.round(state.calculations?.selected?.bessKW ?? 0)} kW</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">Storage Capacity</span>
+                            <span className="text-sm font-bold text-white">{Math.round(state.calculations?.selected?.bessKWh ?? 0)} kWh</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">Duration</span>
+                            <span className="text-sm font-bold text-white">
+                              {state.calculations?.selected?.bessKWh && state.calculations?.selected?.bessKW
+                                ? (state.calculations.selected.bessKWh / state.calculations.selected.bessKW).toFixed(1)
+                                : '0'} hours
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
