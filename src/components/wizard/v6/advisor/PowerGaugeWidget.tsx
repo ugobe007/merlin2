@@ -72,6 +72,7 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
 
   // Color gradient based on percentage
   const getGaugeColor = (percent: number) => {
+    if (isPlaceholder) return '#6366f1'; // Indigo for "Analyzing..."
     if (percent >= 90) return '#10b981'; // Green
     if (percent >= 70) return '#f59e0b'; // Amber
     if (percent >= 40) return '#fb923c'; // Orange
@@ -195,13 +196,16 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-72 p-3 rounded-lg bg-slate-900 border border-indigo-500/30 shadow-xl z-50">
         <div className="text-xs font-bold text-white mb-1">Power Adequacy Gauge</div>
         <div className="text-xs text-slate-300 leading-relaxed">
-          {coveragePercent >= 90 && (
+          {isPlaceholder && (
+            <>This gauge will show how well your BESS covers facility peak demand. Complete Step 3 (Facility Details) to see your power coverage analysis.</>
+          )}
+          {!isPlaceholder && coveragePercent >= 90 && (
             <>Your BESS ({Math.round(batteryKW)} kW) fully meets peak demand ({Math.round(peakLoadKW)} kW). System can handle peak loads during outages.</>
           )}
-          {coveragePercent >= 70 && coveragePercent < 90 && (
+          {!isPlaceholder && coveragePercent >= 70 && coveragePercent < 90 && (
             <>Your BESS covers {Math.round(coveragePercent)}% of peak demand. Consider adding {Math.round(peakLoadKW - batteryKW)} kW for full coverage.</>
           )}
-          {coveragePercent < 70 && (
+          {!isPlaceholder && coveragePercent < 70 && (
             <>Your BESS is undersized for peak demand. Add {Math.round(peakLoadKW - batteryKW)} kW to support critical loads during grid outages.</>
           )}
         </div>
