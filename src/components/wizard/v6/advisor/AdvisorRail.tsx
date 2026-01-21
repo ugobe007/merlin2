@@ -495,10 +495,16 @@ export function AdvisorRail({
 
       {/* BATTERY PROGRESS REMOVED - Now floating in top right */}
 
-      {/* POWER GAUGE WIDGET - Speedometer style (Step 3+) */}
-      {currentStep >= 3 && inverterKW != null && peakLoadKW != null && (
+      {/* POWER GAUGE WIDGET - Speedometer style */}
+      {/* Step 1-2: Show placeholder to create curiosity */}
+      {/* Step 3+: Show real data when available */}
+      {zip && (
         <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
-          <PowerGaugeWidget batteryKW={inverterKW} peakLoadKW={peakLoadKW} />
+          {currentStep >= 3 && inverterKW != null && peakLoadKW != null ? (
+            <PowerGaugeWidget batteryKW={inverterKW} peakLoadKW={peakLoadKW} />
+          ) : (
+            <PowerGaugeWidget batteryKW={0} peakLoadKW={100} />
+          )}
         </div>
       )}
 
