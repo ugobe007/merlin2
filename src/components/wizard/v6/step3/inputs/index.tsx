@@ -184,9 +184,9 @@ const getIcon = (
 
   // Try as Lucide icon
   if (iconName) {
-    const Icon = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[
-      iconName
-    ];
+    const Icon = (
+      LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>
+    )[iconName];
     if (Icon) {
       return <Icon className={className || "w-5 h-5"} />;
     }
@@ -282,10 +282,12 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
 
             {/* Description - only on hover or select, ultra-compact */}
             {option.description && (
-              <span className={cn(
-                "text-[10px] text-slate-500 text-center mt-0.5 line-clamp-1 transition-opacity",
-                isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-              )}>
+              <span
+                className={cn(
+                  "text-[10px] text-slate-500 text-center mt-0.5 line-clamp-1 transition-opacity",
+                  isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                )}
+              >
                 {option.description}
               </span>
             )}
@@ -338,24 +340,24 @@ export const ToggleButtons: React.FC<ToggleButtonsProps> = ({
                 : `border-white/10 bg-white/5/40 hover:bg-white/5 hover:border-white/10`
             )}
           >
-            <div className={cn(
-              "w-5 h-5 rounded-full flex items-center justify-center transition-all",
-              isSelected && val && `bg-gradient-to-br ${scheme.primaryGradient}`,
-              isSelected && !val && "bg-slate-600",
-              !isSelected && "bg-white/5"
-            )}>
-              {getIcon(
-                icon,
-                cn(
-                  "w-3 h-3",
-                  isSelected ? "text-white" : "text-slate-500"
-                )
+            <div
+              className={cn(
+                "w-5 h-5 rounded-full flex items-center justify-center transition-all",
+                isSelected && val && `bg-gradient-to-br ${scheme.primaryGradient}`,
+                isSelected && !val && "bg-slate-600",
+                !isSelected && "bg-white/5"
               )}
+            >
+              {getIcon(icon, cn("w-3 h-3", isSelected ? "text-white" : "text-slate-500"))}
             </div>
-            <span className={cn(
-              "font-medium text-sm",
-              isSelected ? (val ? "text-white" : "text-slate-300") : "text-slate-400"
-            )}>{label}</span>
+            <span
+              className={cn(
+                "font-medium text-sm",
+                isSelected ? (val ? "text-white" : "text-slate-300") : "text-slate-400"
+              )}
+            >
+              {label}
+            </span>
           </button>
         );
       })}
@@ -391,7 +393,9 @@ export const SliderWithButtons: React.FC<SliderWithButtonsProps> = ({
   const scheme = colorScheme || getColorScheme(0);
   // Ensure value is never null - default to min if null/undefined
   const safeValue = value ?? min ?? 0;
-  const displayValue = formatValue ? formatValue(safeValue) : `${safeValue.toLocaleString()}${suffix}`;
+  const displayValue = formatValue
+    ? formatValue(safeValue)
+    : `${safeValue.toLocaleString()}${suffix}`;
   const percentage = ((safeValue - min) / (max - min)) * 100;
 
   const increment = () => onChange(Math.min(max, safeValue + step));
@@ -456,7 +460,7 @@ export const SliderWithButtons: React.FC<SliderWithButtonsProps> = ({
             className={cn(
               "absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg transition-all duration-150 pointer-events-none",
               `ring-2 ring-offset-1 ring-offset-slate-900`,
-              scheme.borderSelected.replace('border-', 'ring-')
+              scheme.borderSelected.replace("border-", "ring-")
             )}
             style={{ left: `calc(${percentage}% - 8px)` }}
           />
@@ -559,7 +563,9 @@ export const CheckboxGrid: React.FC<CheckboxGridProps> = ({
         <div
           className={cn(
             "w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all",
-            isSelected ? `bg-gradient-to-br ${scheme.primaryGradient}` : "border border-white/10 bg-white/5"
+            isSelected
+              ? `bg-gradient-to-br ${scheme.primaryGradient}`
+              : "border border-white/10 bg-white/5"
           )}
         >
           {isSelected && <LucideIcons.Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
@@ -578,9 +584,7 @@ export const CheckboxGrid: React.FC<CheckboxGridProps> = ({
         )}
 
         {/* Label */}
-        <span
-          className={cn("text-xs font-medium", isSelected ? "text-white" : "text-slate-300")}
-        >
+        <span className={cn("text-xs font-medium", isSelected ? "text-white" : "text-slate-300")}>
           {option.label}
         </span>
       </button>
@@ -672,13 +676,17 @@ export const NumberInput: React.FC<NumberInputProps> = ({
 
       {allowEstimate && onEstimateToggle && (
         <label className="flex items-center gap-1.5 cursor-pointer group">
-          <div className={cn(
-            "w-4 h-4 rounded flex items-center justify-center transition-all",
-            useEstimate 
-              ? `bg-gradient-to-br ${scheme.primaryGradient}` 
-              : "border border-white/10 bg-white/5 group-hover:border-slate-500"
-          )}>
-            {useEstimate && <LucideIcons.Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+          <div
+            className={cn(
+              "w-4 h-4 rounded flex items-center justify-center transition-all",
+              useEstimate
+                ? `bg-gradient-to-br ${scheme.primaryGradient}`
+                : "border border-white/10 bg-white/5 group-hover:border-slate-500"
+            )}
+          >
+            {useEstimate && (
+              <LucideIcons.Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+            )}
           </div>
           <span className="text-xs text-slate-400 group-hover:text-slate-300">Estimate for me</span>
         </label>
@@ -730,9 +738,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
         <div
           className={cn(
             "flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full",
-            isComplete 
-              ? "bg-emerald-500/20 text-emerald-400" 
-              : "bg-white/5 text-slate-400"
+            isComplete ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-slate-400"
           )}
         >
           {isComplete && <LucideIcons.CheckCircle2 className="w-3 h-3" />}
@@ -748,10 +754,12 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
 // ============================================
 // RANGE BUTTON GROUP (For discrete count ranges)
 // Like: 1-5, 6-10, 11-20, 21-50, 50+
+// Also supports percentage ranges like: Low (0-40%), Medium (40-60%)
 // ============================================
 
 interface RangeOption {
   label: string;
+  sublabel?: string; // e.g., "0-40%" shown below the label
   min: number;
   max: number | null;
 }
@@ -772,14 +780,15 @@ export const RangeButtonGroup: React.FC<RangeButtonGroupProps> = ({
   colorScheme,
 }) => {
   const scheme = colorScheme || getColorScheme(0);
-  
+
   // Find which range the current value falls into
-  const selectedRangeIndex = value !== null 
-    ? ranges.findIndex(r => value >= r.min && (r.max === null || value <= r.max))
-    : -1;
+  const selectedRangeIndex =
+    value !== null
+      ? ranges.findIndex((r) => value >= r.min && (r.max === null || value <= r.max))
+      : -1;
 
   // When user clicks a range, set value to the midpoint (or min for open-ended)
-  const handleRangeClick = (range: RangeOption, index: number) => {
+  const handleRangeClick = (range: RangeOption) => {
     if (range.max === null) {
       // Open-ended range like "50+" - use min value
       onChange(range.min);
@@ -800,7 +809,7 @@ export const RangeButtonGroup: React.FC<RangeButtonGroupProps> = ({
             <button
               key={range.label}
               type="button"
-              onClick={() => handleRangeClick(range, index)}
+              onClick={() => handleRangeClick(range)}
               className={cn(
                 "group relative flex flex-col items-center justify-center py-3 px-2 rounded-xl transition-all duration-200",
                 "hover:scale-[1.02] active:scale-[0.98]",
@@ -830,6 +839,18 @@ export const RangeButtonGroup: React.FC<RangeButtonGroupProps> = ({
               >
                 {range.label}
               </span>
+
+              {/* Sublabel (e.g., "0-40%") */}
+              {range.sublabel && (
+                <span
+                  className={cn(
+                    "text-xs mt-0.5",
+                    isSelected ? "text-violet-300" : "text-slate-500 group-hover:text-slate-400"
+                  )}
+                >
+                  {range.sublabel}
+                </span>
+              )}
             </button>
           );
         })}
@@ -869,7 +890,15 @@ interface SmartQuestionProps {
   question: {
     id: string;
     question_text: string;
-    question_type: "select" | "multiselect" | "number" | "boolean" | "text" | "range_buttons" | "slider" | "toggle";
+    question_type:
+      | "select"
+      | "multiselect"
+      | "number"
+      | "boolean"
+      | "text"
+      | "range_buttons"
+      | "slider"
+      | "toggle";
     field_name: string;
     options?: Option[] | QuestionConfig | RangeConfig | SliderConfig;
     help_text?: string;
@@ -941,9 +970,16 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
               "border-white/10 focus:outline-none focus:ring-2 focus:ring-amber-400/15 focus:border-violet-500",
               "cursor-pointer appearance-none"
             )}
-            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1.25rem' }}
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right 0.75rem center",
+              backgroundSize: "1.25rem",
+            }}
           >
-            <option value="" className="bg-white/5">Select an option...</option>
+            <option value="" className="bg-white/5">
+              Select an option...
+            </option>
             {parsedOptions.map((opt) => (
               <option key={opt.value} value={opt.value} className="bg-white/5">
                 {opt.label}
@@ -963,7 +999,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
         if (range > 20) {
           return (
             <SliderWithButtons
-              value={((value as number | null) ?? numConfig.default ?? numConfig.min ?? 0)}
+              value={(value as number | null) ?? numConfig.default ?? numConfig.min ?? 0}
               onChange={(v) => onChange(field_name, v)}
               min={numConfig.min ?? 0}
               max={numConfig.max ?? 1000}
@@ -991,11 +1027,11 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
       case "range_buttons": {
         const rangeConfig = config as RangeConfig | null;
         const ranges = rangeConfig?.ranges || [
-          { label: '1-10', min: 1, max: 10 },
-          { label: '11-25', min: 11, max: 25 },
-          { label: '26-50', min: 26, max: 50 },
-          { label: '51-100', min: 51, max: 100 },
-          { label: '100+', min: 101, max: null },
+          { label: "1-10", min: 1, max: 10 },
+          { label: "11-25", min: 11, max: 25 },
+          { label: "26-50", min: 26, max: 50 },
+          { label: "51-100", min: 51, max: 100 },
+          { label: "100+", min: 101, max: null },
         ];
         return (
           <RangeButtonGroup
@@ -1013,7 +1049,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
         const sliderConfig = config as SliderConfig | null;
         return (
           <SliderWithButtons
-            value={((value as number | null) ?? sliderConfig?.min ?? 0)}
+            value={(value as number | null) ?? sliderConfig?.min ?? 0}
             onChange={(v) => onChange(field_name, v)}
             min={sliderConfig?.min ?? 0}
             max={sliderConfig?.max ?? 1000}
