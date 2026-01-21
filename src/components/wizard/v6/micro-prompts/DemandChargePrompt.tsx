@@ -68,7 +68,7 @@ export function DemandChargePrompt({
       className={`rounded-xl border border-violet-500/20 bg-slate-800/50 ${compact ? "p-3" : "p-4"}`}
     >
       {/* Question 1: Do you pay demand charges? */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2">
         <DollarSign className="w-4 h-4 text-amber-400" />
         <span className={`font-semibold text-white ${compact ? "text-xs" : "text-sm"}`}>
           Do you pay a demand charge on your utility bill?
@@ -82,6 +82,10 @@ export function DemandChargePrompt({
             </div>
           </div>
         </div>
+      </div>
+      {/* Rationale: Why this matters */}
+      <div className="text-[11px] text-slate-400 mb-3 leading-relaxed">
+        This unlocks accurate peak shaving savings — often the #1 ROI driver for BESS.
       </div>
 
       {/* Yes/No/Not Sure Options */}
