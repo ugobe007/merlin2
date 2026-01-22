@@ -3,10 +3,14 @@
  *
  * Connects the new Complete Step 3 with existing Step3Details
  * Provides smooth migration path and backward compatibility
+ * 
+ * ✅ NEW: Car Wash 16Q Integration (Jan 2026)
+ * Detects car-wash industry and calculates power metrics in real-time
  */
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { CompleteStep3Component } from "./CompleteStep3Component";
 import { assertNoDerivedFieldsInStep3 } from "./v6/utils/wizardStateValidator";
+import { calculateCarWashMetrics } from "./carWashIntegration";
 // ✅ REMOVED: calculateCompleteQuote import
 // Step 3 no longer computes derived values - TrueQuote is SSOT (Option A - Recommended)
 // import { calculateCompleteQuote } from '@/services/CompleteTrueQuoteEngine';
@@ -60,16 +64,35 @@ export function Step3Integration({
 
     if (answersChanged && updateState) {
       prevAnswersRef.current = answers;
+      
+      // ✅ NEW: Car Wash 16Q Calculator Integration (Jan 2026)
+      // Calculate power metrics in real-time for car-wash industry
+      let carWashMetrics = null;
+      const industry = state.industry?.toLowerCase().replace(/_/g, '-');
+      if (industry === 'car-wash' && Object.keys(answers).length > 0) {
+        carWashMetrics = calculateCarWashMetrics(answers);
+        if (carWashMetrics) {
+          console.log('🚗 Car Wash Power Metrics Updated:', {
+            peakKW: carWashMetrics.peakDemandKW,
+            bessKW: carWashMetrics.bessRecommendedKW,
+            bessKWh: carWashMetrics.bessRecommendedKWh,
+            confidence: carWashMetrics.confidence,
+          });
+        }
+      }
+      
       // Force power metrics recalculation by updating useCaseData
       // This triggers WizardV6's estimatedPowerMetrics useMemo via inputsHash dependency
       updateState({
         useCaseData: {
           ...state.useCaseData,
           inputs: { ...answers }, // Shallow copy to ensure new reference
+          // ✅ Store car wash metrics for access in other wizard steps
+          carWashMetrics: carWashMetrics || undefined,
         },
       });
     }
-  }, [answers, updateState, state.useCaseData]);
+  }, [answers, updateState, state.useCaseData, state.industry]);
 
   // Handle completion
   const handleComplete = () => {
