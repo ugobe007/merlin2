@@ -1,7 +1,7 @@
 // src/components/wizard/v6/advisor/PowerGaugeWidget.tsx
 
-import React from 'react';
-import { Zap, AlertTriangle, CheckCircle } from 'lucide-react';
+import React from "react";
+import { Zap } from "lucide-react";
 
 interface PowerGaugeWidgetProps {
   /** Battery power rating (kW) */
@@ -13,50 +13,68 @@ interface PowerGaugeWidgetProps {
 }
 
 /**
- * Power Gauge Widget - Speedometer/Odometer Style
- * Visual gauge that fills from red (0%) → yellow (50%) → green (100%)
- * Shows how well BESS sizing meets facility power needs
+ * Power Gauge Widget - Shows Total Facility Energy Needs
+ * Displays peak demand (kW) as the primary metric
+ * Visual gauge fills as model confidence improves
  */
-export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = false }: PowerGaugeWidgetProps) {
+export function PowerGaugeWidget({
+  batteryKW = 0,
+  peakLoadKW = 0,
+  compact = false,
+}: PowerGaugeWidgetProps) {
   // Placeholder mode: Show "Analyzing..." when no real data (Step 1-2)
-  const isPlaceholder = batteryKW === 0 && peakLoadKW > 0;
-  
-  // Calculate coverage percentage (0-100)
-  const coveragePercent = peakLoadKW > 0 ? Math.min((batteryKW / peakLoadKW) * 100, 100) : 0;
-  
-  // Determine status and color
-  const getStatusConfig = (percent: number) => {
-    if (isPlaceholder) return {
-      status: 'Analyzing',
-      color: '#6366f1',
+  const isPlaceholder = peakLoadKW === 0 || peakLoadKW < 10;
+
+  // Use peak load as the primary value to display
+  const displayValue = peakLoadKW;
+
+  // Gauge fill based on peak load magnitude (visual feedback)
+  // Small facilities: 0-100 kW, Medium: 100-500 kW, Large: 500+ kW
+  const getFillPercent = (peakKW: number) => {
+    if (peakKW === 0) return 0;
+    if (peakKW < 100) return 30 + (peakKW / 100) * 30; // 30-60%
+    if (peakKW < 500) return 60 + ((peakKW - 100) / 400) * 30; // 60-90%
+    return 90 + Math.min(((peakKW - 500) / 500) * 10, 10); // 90-100%
+  };
+
+  const fillPercent = getFillPercent(displayValue);
+
+  // Determine status and color based on facility size
+  const getStatusConfig = (peakKW: number) => {
+    if (isPlaceholder)
+      return {
+        status: "Analyzing",
+        color: "#6366f1",
+        icon: Zap,
+        textColor: "text-indigo-400",
+        message: "Complete facility details",
+      };
+    if (peakKW >= 500)
+      return {
+        status: "Large",
+        color: "#ef4444",
+        icon: Zap,
+        textColor: "text-red-400",
+        message: "Industrial scale",
+      };
+    if (peakKW >= 100)
+      return {
+        status: "Medium",
+        color: "#f59e0b",
+        icon: Zap,
+        textColor: "text-amber-400",
+        message: "Commercial scale",
+      };
+    return {
+      status: "Small",
+      color: "#10b981",
       icon: Zap,
-      textColor: 'text-indigo-400',
-      message: 'Complete facility details to see coverage'
-    };
-    if (percent >= 90) return { 
-      status: 'Optimal', 
-      color: '#10b981', 
-      icon: CheckCircle,
-      textColor: 'text-emerald-400',
-      message: 'Full coverage'
-    };
-    if (percent >= 70) return { 
-      status: 'Adequate', 
-      color: '#f59e0b', 
-      icon: Zap,
-      textColor: 'text-amber-400',
-      message: 'Partial coverage'
-    };
-    return { 
-      status: 'Undersized', 
-      color: '#ef4444', 
-      icon: AlertTriangle,
-      textColor: 'text-red-400',
-      message: 'Needs more power'
+      textColor: "text-emerald-400",
+      message: "Small commercial",
     };
   };
 
-  const config = getStatusConfig(coveragePercent);
+  const config = getStatusConfig(displayValue);
   const Icon = config.icon;
 
   // Gauge SVG parameters
@@ -65,21 +83,19 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
   const radius = (size - strokeWidth) / 2;
   const circumference = Math.PI * radius; // Half circle
   const dashArray = `${circumference} ${circumference}`;
-  
-  // Calculate fill offset (0% = all red, 100% = all green)
-  const fillPercent = Math.max(0, Math.min(100, coveragePercent));
+
+  // Calculate fill offset using fillPercent from earlier
   const dashOffset = circumference - (fillPercent / 100) * circumference;
 
-  // Color gradient based on percentage
-  const getGaugeColor = (percent: number) => {
-    if (isPlaceholder) return '#6366f1'; // Indigo for "Analyzing..."
-    if (percent >= 90) return '#10b981'; // Green
-    if (percent >= 70) return '#f59e0b'; // Amber
-    if (percent >= 40) return '#fb923c'; // Orange
-    return '#ef4444'; // Red
+  // Color gradient based on facility size
+  const getGaugeColor = (peakKW: number) => {
+    if (isPlaceholder) return "#6366f1"; // Indigo for "Analyzing..."
+    if (peakKW >= 500) return "#ef4444"; // Red - Large
+    if (peakKW >= 100) return "#f59e0b"; // Amber - Medium
+    return "#10b981"; // Green - Small
   };
 
-  const gaugeColor = getGaugeColor(fillPercent);
+  const gaugeColor = getGaugeColor(displayValue);
 
   // COMPACT MODE: Inline mini gauge for header
   if (compact) {
@@ -111,24 +127,27 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
           </svg>
         </div>
 
-        {/* Percentage + Status */}
+        {/* Peak Load Value + Status */}
         <div className="flex flex-col">
           <span className="text-sm font-bold text-white leading-none">
-            {isPlaceholder ? '—' : `${Math.round(fillPercent)}%`}
+            {isPlaceholder ? "—" : `${Math.round(displayValue)}`}
           </span>
           <span className={`text-[9px] font-semibold uppercase ${config.textColor} leading-tight`}>
-            {config.status}
+            {isPlaceholder ? "kW" : config.status}
           </span>
         </div>
 
         {/* Tooltip on hover */}
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-56 p-2.5 rounded-lg bg-slate-900 border border-indigo-500/30 shadow-xl z-50">
-          <div className="text-[10px] font-bold text-white mb-1">Power Coverage</div>
+          <div className="text-[10px] font-bold text-white mb-1">Peak Demand</div>
           <div className="text-[10px] text-slate-300">
             {isPlaceholder ? (
-              <>Complete facility details to see power coverage.</>
+              <>Complete facility details to calculate peak demand.</>
             ) : (
-              <>BESS: {Math.round(batteryKW)} kW / Peak: {Math.round(peakLoadKW)} kW</>
+              <>
+                Your facility's peak demand: {Math.round(peakLoadKW)} kW. BESS recommended:{" "}
+                {Math.round(batteryKW)} kW.
+              </>
             )}
           </div>
         </div>
@@ -143,16 +162,16 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Icon className={`w-4 h-4 ${config.textColor}`} />
-          <span className="text-xs font-bold text-white uppercase tracking-wide">Power Gauge</span>
+          <span className="text-xs font-bold text-white uppercase tracking-wide">Peak Demand</span>
         </div>
       </div>
 
       {/* Speedometer Gauge */}
       <div className="flex flex-col items-center">
         <div className="relative" style={{ width: size, height: size / 2 + 20 }}>
-          <svg 
-            width={size} 
-            height={size / 2 + 20} 
+          <svg
+            width={size}
+            height={size / 2 + 20}
             viewBox={`0 0 ${size} ${size / 2 + 20}`}
             className="transform"
           >
@@ -164,7 +183,7 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
               strokeWidth={strokeWidth}
               strokeLinecap="round"
             />
-            
+
             {/* Filled progress (red → yellow → green) */}
             <path
               d={`M ${strokeWidth / 2},${size / 2} A ${radius},${radius} 0 0,1 ${size - strokeWidth / 2},${size / 2}`}
@@ -187,7 +206,7 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
               const y1 = size / 2 - Math.sin(angle) * (radius - strokeWidth / 2 - 5);
               const x2 = size / 2 - Math.cos(angle) * (radius - strokeWidth / 2 - 12);
               const y2 = size / 2 - Math.sin(angle) * (radius - strokeWidth / 2 - 12);
-              
+
               return (
                 <line
                   key={tick}
@@ -202,7 +221,7 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
               );
             })}
 
-            {/* Center percentage text */}
+            {/* Center value - Peak Load in kW */}
             <text
               x={size / 2}
               y={size / 2 - 10}
@@ -212,10 +231,10 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
               fontWeight="bold"
               className="font-mono"
             >
-              {isPlaceholder ? '—' : `${Math.round(fillPercent)}%`}
+              {isPlaceholder ? "—" : `${Math.round(displayValue)}`}
             </text>
-            
-            {/* Status label */}
+
+            {/* Units label */}
             <text
               x={size / 2}
               y={size / 2 + 15}
@@ -225,7 +244,7 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
               fontWeight="600"
               className="uppercase tracking-wider"
             >
-              {config.status}
+              {isPlaceholder ? "kW" : "kW Peak"}
             </text>
           </svg>
         </div>
@@ -233,40 +252,42 @@ export function PowerGaugeWidget({ batteryKW = 0, peakLoadKW = 0, compact = fals
         {/* Stats row */}
         <div className="flex items-center justify-between w-full mt-3 text-xs">
           <div className="text-slate-400">
-            <div className="text-[10px] text-slate-500 uppercase">BESS</div>
-            <div className="font-semibold">{batteryKW > 0 ? `${Math.round(batteryKW)} kW` : '—'}</div>
+            <div className="text-[10px] text-slate-500 uppercase">Facility Size</div>
+            <div className="font-semibold">{config.status}</div>
           </div>
           <div className="text-slate-400 text-right">
-            <div className="text-[10px] text-slate-500 uppercase">Peak Load</div>
-            <div className="font-semibold">{peakLoadKW > 0 ? `${Math.round(peakLoadKW)} kW` : '—'}</div>
+            <div className="text-[10px] text-slate-500 uppercase">BESS Rec.</div>
+            <div className="font-semibold">
+              {batteryKW > 0 ? `${Math.round(batteryKW)} kW` : "—"}
+            </div>
           </div>
         </div>
 
         {/* Message */}
         <div className={`mt-2 text-xs ${config.textColor} font-medium text-center`}>
-          {config.message}
+          {isPlaceholder ? "Complete Step 3" : `${config.message} facility`}
         </div>
       </div>
 
       {/* Hover Tooltip */}
       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-72 p-3 rounded-lg bg-slate-900 border border-indigo-500/30 shadow-xl z-50">
-        <div className="text-xs font-bold text-white mb-1">Power Adequacy Gauge</div>
+        <div className="text-xs font-bold text-white mb-1">Peak Demand Meter</div>
         <div className="text-xs text-slate-300 leading-relaxed">
           {isPlaceholder && (
-            <>This gauge will show how well your BESS covers facility peak demand. Complete Step 3 (Facility Details) to see your power coverage analysis.</>
+            <>
+              This shows your facility's total energy needs. Complete Step 3 (Facility Details) to
+              calculate peak demand.
+            </>
           )}
-          {!isPlaceholder && coveragePercent >= 90 && (
-            <>Your BESS ({Math.round(batteryKW)} kW) fully meets peak demand ({Math.round(peakLoadKW)} kW). System can handle peak loads during outages.</>
-          )}
-          {!isPlaceholder && coveragePercent >= 70 && coveragePercent < 90 && (
-            <>Your BESS covers {Math.round(coveragePercent)}% of peak demand. Consider adding {Math.round(peakLoadKW - batteryKW)} kW for full coverage.</>
-          )}
-          {!isPlaceholder && coveragePercent < 70 && (
-            <>Your BESS is undersized for peak demand. Add {Math.round(peakLoadKW - batteryKW)} kW to support critical loads during grid outages.</>
+          {!isPlaceholder && (
+            <>
+              Your facility's peak demand is {Math.round(peakLoadKW)} kW. We recommend{" "}
+              {Math.round(batteryKW)} kW BESS capacity (40% of peak for optimal peak shaving).
+            </>
           )}
         </div>
         <div className="mt-2 text-[10px] text-indigo-400">
-          ℹ️ Gauge shows BESS inverter power vs facility peak demand
+          ℹ️ Gauge shows total facility power needs, not just battery size
         </div>
       </div>
     </div>
