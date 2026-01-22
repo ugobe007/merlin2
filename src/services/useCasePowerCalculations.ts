@@ -6945,3 +6945,12 @@ export function calculateCarportSolarCapacity(
     ...(includeEVChargers && { evChargerSpaces, evChargerCost }),
   };
 }
+
+// =============================================================================
+// CAR WASH 16-QUESTION CALCULATOR - Re-export from dedicated module
+// =============================================================================
+export { 
+  calculateCarWash16Q,
+  type CarWash16QInput,
+  type CarWash16QResult
+} from './carWash16QCalculator';
