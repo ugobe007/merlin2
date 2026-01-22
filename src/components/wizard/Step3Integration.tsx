@@ -13,8 +13,8 @@ import { assertNoDerivedFieldsInStep3 } from "./v6/utils/wizardStateValidator";
 
 type WizardStep3State = {
   industry?: string;
-  businessSizeTier?: 'small' | 'medium' | 'large' | 'enterprise';
-  questionnaireDepth?: 'minimal' | 'standard' | 'detailed';
+  businessSizeTier?: "small" | "medium" | "large" | "enterprise";
+  questionnaireDepth?: "minimal" | "standard" | "detailed";
   useCaseData?: Record<string, unknown> & {
     inputs?: Record<string, unknown>;
   };
@@ -60,10 +60,12 @@ export function Step3Integration({
 
     if (answersChanged && updateState) {
       prevAnswersRef.current = answers;
+      // Force power metrics recalculation by updating useCaseData
+      // This triggers WizardV6's estimatedPowerMetrics useMemo via inputsHash dependency
       updateState({
         useCaseData: {
           ...state.useCaseData,
-          inputs: answers,
+          inputs: { ...answers }, // Shallow copy to ensure new reference
         },
       });
     }
