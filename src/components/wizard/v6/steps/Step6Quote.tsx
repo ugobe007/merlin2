@@ -28,6 +28,7 @@ import { POWER_LEVELS } from "../types";
 import { useSSOTValidation } from "@/utils/ssotValidation";
 import type { TrueQuoteSizing } from "@/services/truequote";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
+import { AUTHORITATIVE_SOURCES } from "@/services/benchmarkSources";
 
 import RequestQuoteModal from "@/components/modals/RequestQuoteModal";
 import { exportQuoteAsPDF } from "@/utils/quoteExportUtils";
@@ -794,6 +795,124 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
             <CheckCircle className="w-4 h-4" />
             <span>92%+ probability of positive NPV</span>
           </div>
+        </div>
+
+        {/* Benchmark Sources Section */}
+        <div className="mt-6 p-5 rounded-xl bg-slate-800/50 border border-slate-700/50">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+              <Shield className="w-4 h-4 text-purple-400" />
+              Benchmark Sources
+            </h4>
+            <button
+              onClick={() => setShowPricingSources((s) => !s)}
+              className="text-xs text-purple-300 hover:text-purple-200 flex items-center gap-1"
+            >
+              {showPricingSources ? "Hide" : "Show"} all sources
+              <Info className="w-3 h-3" />
+            </button>
+          </div>
+          
+          {showPricingSources && (
+            <div className="space-y-3">
+              {/* BESS Pricing */}
+              <div className="p-3 rounded-lg bg-white/5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-white mb-1">Battery Energy Storage</div>
+                    <div className="text-xs text-slate-400">
+                      ${((selected.totalInvestment || 0) / (selected.bessKWh || 1)).toFixed(0)}/kWh installed cost
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-medium text-purple-300">NREL ATB 2024</div>
+                    <div className="text-xs text-slate-400">Q1 2024</div>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-slate-500">
+                  Source: {AUTHORITATIVE_SOURCES["nrel-atb-2024"].name}
+                </div>
+              </div>
+
+              {/* Solar Pricing */}
+              {(selected.solarKW || 0) > 0 && (
+                <div className="p-3 rounded-lg bg-white/5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-white mb-1">Solar PV System</div>
+                      <div className="text-xs text-slate-400">
+                        {Math.round(selected.solarKW || 0)} kW commercial system
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs font-medium text-amber-300">NREL Cost Benchmark</div>
+                      <div className="text-xs text-slate-400">2024</div>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-slate-500">
+                    Source: {AUTHORITATIVE_SOURCES["nrel-cost-benchmark-2024"].name}
+                  </div>
+                </div>
+              )}
+
+              {/* ITC */}
+              <div className="p-3 rounded-lg bg-white/5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-white mb-1">Federal Tax Credit ({itcPercentage}%)</div>
+                    <div className="text-xs text-slate-400">
+                      IRA 2022 (IRC Section 48)
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-medium text-emerald-300">IRS Guidance</div>
+                    <div className="text-xs text-slate-400">2024</div>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-slate-500">
+                  Base 6% + Prevailing Wage Bonus 24%
+                </div>
+              </div>
+
+              {/* Utility Rates */}
+              <div className="p-3 rounded-lg bg-white/5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-white mb-1">Utility Rates</div>
+                    <div className="text-xs text-slate-400">
+                      ${(base.utilityRate ?? state.electricityRate ?? 0.12).toFixed(3)}/kWh
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-medium text-cyan-300">EIA Data</div>
+                    <div className="text-xs text-slate-400">2024</div>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-slate-500">
+                  Source: {AUTHORITATIVE_SOURCES["eia-electricity"].name}
+                </div>
+              </div>
+
+              {/* Financial Assumptions */}
+              <div className="p-3 rounded-lg bg-white/5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-white mb-1">Financial Modeling</div>
+                    <div className="text-xs text-slate-400">
+                      NPV, IRR, payback calculations
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-medium text-blue-300">NREL SAM</div>
+                    <div className="text-xs text-slate-400">2024</div>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-slate-500">
+                  Methodology: {AUTHORITATIVE_SOURCES["nrel-sam-2024"].name}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
