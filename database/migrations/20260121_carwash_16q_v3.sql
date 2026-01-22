@@ -125,10 +125,10 @@ SELECT
   'electricalServiceSize',
   'select',
   '[
-    {"value": "200", "label": "200A", "icon": "⚡", "kW": 48},
-    {"value": "400", "label": "400A", "icon": "⚡⚡", "kW": 96},
-    {"value": "600", "label": "600A", "icon": "⚡⚡⚡", "kW": 144},
-    {"value": "800+", "label": "800A+", "icon": "⚡⚡⚡⚡", "kW": 192},
+    {"value": "200", "label": "200A", "icon": "🔌", "kW": 48},
+    {"value": "400", "label": "400A", "icon": "⚡", "kW": 96},
+    {"value": "600", "label": "600A", "icon": "🔋", "kW": 144},
+    {"value": "800+", "label": "800A+", "icon": "⚙️", "kW": 192},
     {"value": "not_sure", "label": "Not sure", "icon": "❓"}
   ]'::jsonb,
   '400',
@@ -160,9 +160,9 @@ SELECT
   'select',
   '[
     {"value": "208", "label": "208V", "icon": "🔌"},
-    {"value": "240", "label": "240V", "icon": "🔌"},
-    {"value": "277_480", "label": "277/480V", "icon": "🔌🔌"},
-    {"value": "mixed", "label": "Mixed", "icon": "🔌🔌🔌"},
+    {"value": "240", "label": "240V", "icon": "⚡"},
+    {"value": "277_480", "label": "277/480V", "icon": "🔋"},
+    {"value": "mixed", "label": "Mixed", "icon": "⚙️"},
     {"value": "not_sure", "label": "Not sure", "icon": "❓"}
   ]'::jsonb,
   '277_480',
@@ -231,11 +231,11 @@ SELECT
   'largestMotorSize',
   'select',
   '[
-    {"value": "<10", "label": "<10 HP", "icon": "⚡", "kW": 7},
-    {"value": "10-25", "label": "10–25 HP", "icon": "⚡⚡", "kW": 18},
-    {"value": "25-50", "label": "25–50 HP", "icon": "⚡⚡⚡", "kW": 37},
-    {"value": "50-100", "label": "50–100 HP", "icon": "⚡⚡⚡⚡", "kW": 75},
-    {"value": "100+", "label": "100+ HP", "icon": "⚡⚡⚡⚡⚡", "kW": 100},
+    {"value": "<10", "label": "<10 HP", "icon": "🔌", "kW": 7},
+    {"value": "10-25", "label": "10–25 HP", "icon": "⚡", "kW": 18},
+    {"value": "25-50", "label": "25–50 HP", "icon": "🔋", "kW": 37},
+    {"value": "50-100", "label": "50–100 HP", "icon": "⚙️", "kW": 75},
+    {"value": "100+", "label": "100+ HP", "icon": "🏭", "kW": 100},
     {"value": "not_sure", "label": "Not sure", "icon": "❓", "kW": 25}
   ]'::jsonb,
   '10-25',
@@ -300,10 +300,10 @@ SELECT
   'select',
   '[
     {"value": "<30", "label": "<30", "icon": "🚗"},
-    {"value": "30-75", "label": "30–75", "icon": "🚗🚗"},
-    {"value": "75-150", "label": "75–150", "icon": "🚗🚗🚗"},
-    {"value": "150-300", "label": "150–300", "icon": "🚗🚗🚗🚗"},
-    {"value": "300+", "label": "300+", "icon": "🚗🚗🚗🚗🚗"}
+    {"value": "30-75", "label": "30–75", "icon": "🚕"},
+    {"value": "75-150", "label": "75–150", "icon": "🚙"},
+    {"value": "150-300", "label": "150–300", "icon": "🚐"},
+    {"value": "300+", "label": "300+", "icon": "🚛"}
   ]'::jsonb,
   '75-150',
   true,
@@ -334,9 +334,9 @@ SELECT
   'select',
   '[
     {"value": "<10", "label": "<10", "icon": "🚗"},
-    {"value": "10-25", "label": "10–25", "icon": "🚗🚗"},
-    {"value": "25-50", "label": "25–50", "icon": "🚗🚗🚗"},
-    {"value": "50+", "label": "50+", "icon": "🚗🚗🚗🚗"}
+    {"value": "10-25", "label": "10–25", "icon": "🚕"},
+    {"value": "25-50", "label": "25–50", "icon": "🚙"},
+    {"value": "50+", "label": "50+", "icon": "🚐"}
   ]'::jsonb,
   '10-25',
   true,
@@ -366,11 +366,11 @@ SELECT
   'washCycleDuration',
   'select',
   '[
-    {"value": "<3", "label": "<3 minutes", "icon": "⚡", "minutes": 2},
-    {"value": "3-5", "label": "3–5 minutes", "icon": "⚡⚡", "minutes": 4},
-    {"value": "5-8", "label": "5–8 minutes", "icon": "⚡⚡⚡", "minutes": 6},
-    {"value": "8-12", "label": "8–12 minutes", "icon": "⚡⚡⚡⚡", "minutes": 10},
-    {"value": "12+", "label": "12+ minutes", "icon": "⚡⚡⚡⚡⚡", "minutes": 15}
+    {"value": "<3", "label": "<3 minutes", "icon": "⏱️", "minutes": 2},
+    {"value": "3-5", "label": "3–5 minutes", "icon": "⏰", "minutes": 4},
+    {"value": "5-8", "label": "5–8 minutes", "icon": "⏲️", "minutes": 6},
+    {"value": "8-12", "label": "8–12 minutes", "icon": "🕐", "minutes": 10},
+    {"value": "12+", "label": "12+ minutes", "icon": "🕰️", "minutes": 15}
   ]'::jsonb,
   '3-5',
   true,
@@ -401,9 +401,9 @@ SELECT
   'select',
   '[
     {"value": "<8", "label": "<8 hrs/day", "icon": "🕐", "hours": 6},
-    {"value": "8-12", "label": "8–12 hrs/day", "icon": "🕐🕐", "hours": 10},
-    {"value": "12-18", "label": "12–18 hrs/day", "icon": "🕐🕐🕐", "hours": 15},
-    {"value": "18-24", "label": "18–24 hrs/day", "icon": "🕐🕐🕐🕐", "hours": 21}
+    {"value": "8-12", "label": "8–12 hrs/day", "icon": "🕔", "hours": 10},
+    {"value": "12-18", "label": "12–18 hrs/day", "icon": "🕘", "hours": 15},
+    {"value": "18-24", "label": "18–24 hrs/day", "icon": "🕛", "hours": 21}
   ]'::jsonb,
   '8-12',
   true,
@@ -434,10 +434,10 @@ SELECT
   'select',
   '[
     {"value": "<1000", "label": "<$1,000", "icon": "💵"},
-    {"value": "1000-3000", "label": "$1,000–$3,000", "icon": "💵💵"},
-    {"value": "3000-7500", "label": "$3,000–$7,500", "icon": "💵💵💵"},
-    {"value": "7500-15000", "label": "$7,500–$15,000", "icon": "💵💵💵💵"},
-    {"value": "15000+", "label": "$15,000+", "icon": "💵💵💵💵💵"},
+    {"value": "1000-3000", "label": "$1,000–$3,000", "icon": "💰"},
+    {"value": "3000-7500", "label": "$3,000–$7,500", "icon": "💳"},
+    {"value": "7500-15000", "label": "$7,500–$15,000", "icon": "💸"},
+    {"value": "15000+", "label": "$15,000+", "icon": "🏦"},
     {"value": "not_sure", "label": "Not sure", "icon": "❓"}
   ]'::jsonb,
   '3000-7500',
@@ -502,7 +502,7 @@ SELECT
   'powerQualityIssues',
   'multi-select',
   '[
-    {"value": "breaker_trips", "label": "Breaker trips", "icon": "⚡❌"},
+    {"value": "breaker_trips", "label": "Breaker trips", "icon": "⚠️"},
     {"value": "voltage_sag", "label": "Voltage sag during peak use", "icon": "📉"},
     {"value": "utility_penalties", "label": "Utility penalties", "icon": "💰"},
     {"value": "equipment_brownouts", "label": "Equipment brownouts", "icon": "💡"},
@@ -569,8 +569,8 @@ SELECT
   'expansionPlans',
   'multi-select',
   '[
-    {"value": "add_bay_tunnel", "label": "Adding another bay/tunnel", "icon": "➕🚗", "kWIncrease": 50},
-    {"value": "larger_equipment", "label": "Larger blowers or pumps", "icon": "⬆️💨", "kWIncrease": 30},
+    {"value": "add_bay_tunnel", "label": "Adding another bay/tunnel", "icon": "➕", "kWIncrease": 50},
+    {"value": "larger_equipment", "label": "Larger blowers or pumps", "icon": "⬆️", "kWIncrease": 30},
     {"value": "ev_chargers", "label": "EV chargers", "icon": "🔌", "kWIncrease": 50},
     {"value": "more_vacuums", "label": "More vacuums", "icon": "🌀", "kWIncrease": 10},
     {"value": "solar", "label": "Solar", "icon": "☀️", "kWIncrease": 0},
