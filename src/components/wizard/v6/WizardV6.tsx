@@ -32,12 +32,7 @@ import {
 } from "@/services/calculators/siteScoreCalculator";
 
 // TrueQuote™ Sizing Engine (Jan 21, 2026 - Phase 5)
-import {
-  computeTrueQuoteSizing,
-  buildLoadCurve,
-  type TrueQuoteSizing,
-  type LoadCurve,
-} from "@/services/truequote";
+import { computeTrueQuoteSizing, type TrueQuoteSizing } from "@/services/truequote";
 import { calculateModelConfidence } from "./types";
 
 // ============================================================================
@@ -1863,16 +1858,17 @@ export default function WizardV6() {
   // TRUEQUOTE™ LIVE SIZING ENGINE (Jan 21, 2026 - Phase 5)
   // Computes recommended BESS sizing with confidence-aware bands
   // Updates in real-time as user answers micro-prompts
+  // NOTE: Currently unused after Step 3 cleanup, but kept for potential future use
   // ============================================================================
 
-  const trueQuoteSizing = useMemo<TrueQuoteSizing | null>(() => {
+  const _trueQuoteSizing = useMemo<TrueQuoteSizing | null>(() => {
     const industry = state.industry || state.detectedIndustry;
-    
+
     // Need at least peak demand to compute sizing
     if (!estimatedPowerMetrics.peakDemandKW || estimatedPowerMetrics.peakDemandKW < 10) {
       return null;
     }
-    
+
     // Calculate model confidence from progressive model state
     const modelConfidence = calculateModelConfidence(
       state.serviceSize,
@@ -1881,9 +1877,9 @@ export default function WizardV6() {
       state.hvacType,
       state.hasBackupGenerator,
       state.generatorCapacityBand,
-      industry?.includes('hospital') || industry?.includes('data') // Show generator for critical industries
+      industry?.includes("hospital") || industry?.includes("data") // Show generator for critical industries
     );
-    
+
     // Infer grid capacity from service size (if not directly provided)
     const SERVICE_SIZE_CAPACITY: Record<string, number> = {
       "200A-single": 48,
@@ -1891,10 +1887,11 @@ export default function WizardV6() {
       "800A-three": 553,
       "1000A-plus": 1000,
     };
-    const inferredGridCapacity = state.serviceSize && state.serviceSize !== 'unsure'
-      ? SERVICE_SIZE_CAPACITY[state.serviceSize] || 0
-      : 0;
-    
+    const inferredGridCapacity =
+      state.serviceSize && state.serviceSize !== "unsure"
+        ? SERVICE_SIZE_CAPACITY[state.serviceSize] || 0
+        : 0;
+
     // Infer generator capacity from band
     const GENERATOR_BAND_KW: Record<string, number> = {
       "under-50": 35,
@@ -1902,20 +1899,22 @@ export default function WizardV6() {
       "150-500": 300,
       "500-plus": 750,
     };
-    const inferredGeneratorKW = state.generatorCapacityBand && state.generatorCapacityBand !== 'not-sure'
-      ? GENERATOR_BAND_KW[state.generatorCapacityBand] || 0
-      : 0;
-    
+    const inferredGeneratorKW =
+      state.generatorCapacityBand && state.generatorCapacityBand !== "not-sure"
+        ? GENERATOR_BAND_KW[state.generatorCapacityBand] || 0
+        : 0;
+
     // HVAC multiplier from type
     const HVAC_MULTIPLIERS: Record<string, number> = {
       rtu: 1.0,
       chiller: 1.15,
-      'heat-pump': 0.9,
+      "heat-pump": 0.9,
     };
-    const hvacMultiplier = state.hvacType && state.hvacType !== 'not-sure'
-      ? HVAC_MULTIPLIERS[state.hvacType] || 1.0
-      : 1.0;
-    
+    const hvacMultiplier =
+      state.hvacType && state.hvacType !== "not-sure"
+        ? HVAC_MULTIPLIERS[state.hvacType] || 1.0
+        : 1.0;
+
     return computeTrueQuoteSizing({
       gridCapacityKW: inferredGridCapacity || undefined,
       peakDemandKW: estimatedPowerMetrics.peakDemandKW,
@@ -1938,77 +1937,6 @@ export default function WizardV6() {
     state.generatorCapacityBand,
     state.goals,
     estimatedPowerMetrics.peakDemandKW,
-  ]);
-
-  // ============================================================================
-  // TRUEQUOTE™ MODEL CONFIDENCE (Jan 21, 2026 - Phase 5)
-  // Single source of truth for confidence score across all UI components
-  // ============================================================================
-
-  const modelConfidenceScore = useMemo<number>(() => {
-    const industry = state.industry || state.detectedIndustry;
-    const showGenerator = industry?.includes('hospital') || industry?.includes('data') || industry?.includes('critical');
-    
-    const mc = calculateModelConfidence(
-      state.serviceSize,
-      state.hasDemandCharge,
-      state.demandChargeBand,
-      state.hvacType,
-      state.hasBackupGenerator,
-      state.generatorCapacityBand,
-      showGenerator
-    );
-    
-    return mc.score;
-  }, [
-    state.industry,
-    state.detectedIndustry,
-    state.serviceSize,
-    state.hasDemandCharge,
-    state.demandChargeBand,
-    state.hvacType,
-    state.hasBackupGenerator,
-    state.generatorCapacityBand,
-  ]);
-
-  // ============================================================================
-  // TRUEQUOTE™ LOAD CURVE VISUALIZATION (Jan 21, 2026 - Phase 5)
-  // Generates 24-hour load curve for power profile chart
-  // ============================================================================
-
-  const loadCurve = useMemo<LoadCurve | null>(() => {
-    const industry = state.industry || state.detectedIndustry;
-    
-    if (!estimatedPowerMetrics.peakDemandKW || estimatedPowerMetrics.peakDemandKW < 10) {
-      return null;
-    }
-    
-    // HVAC multiplier
-    const HVAC_MULTIPLIERS: Record<string, number> = {
-      rtu: 1.0,
-      chiller: 1.15,
-      'heat-pump': 0.9,
-    };
-    const hvacMultiplier = state.hvacType && state.hvacType !== 'not-sure'
-      ? HVAC_MULTIPLIERS[state.hvacType] || 1.0
-      : 1.0;
-    
-    return buildLoadCurve({
-      industry,
-      peakDemandKW: estimatedPowerMetrics.peakDemandKW,
-      bessCapacityKWh: trueQuoteSizing?.recommended.energyKWh.best,
-      bessDischargeKW: trueQuoteSizing?.recommended.powerKW.best,
-      targetCapKW: trueQuoteSizing?.constraints.targetCapKW,
-      hvacMultiplier,
-    });
-  }, [
-    state.industry,
-    state.detectedIndustry,
-    state.hvacType,
-    estimatedPowerMetrics.peakDemandKW,
-    trueQuoteSizing?.recommended.energyKWh.best,
-    trueQuoteSizing?.recommended.powerKW.best,
-    trueQuoteSizing?.constraints.targetCapKW,
   ]);
 
   // Auto-save state to bufferService whenever it changes (debounced)
@@ -2384,9 +2312,6 @@ export default function WizardV6() {
               goToStep(4);
             }}
             onValidityChange={setStep3Valid}
-            trueQuoteSizing={trueQuoteSizing}
-            loadCurve={loadCurve}
-            modelConfidenceScore={modelConfidenceScore}
           />
         );
       case 4:
@@ -2583,7 +2508,10 @@ export default function WizardV6() {
                       progressiveModel: (() => {
                         // Calculate model confidence using the SSOT function
                         const industry = state.industry || state.detectedIndustry;
-                        const showGenerator = industry?.includes('hospital') || industry?.includes('data') || industry?.includes('critical');
+                        const showGenerator =
+                          industry?.includes("hospital") ||
+                          industry?.includes("data") ||
+                          industry?.includes("critical");
                         const modelConf = calculateModelConfidence(
                           state.serviceSize,
                           state.hasDemandCharge,
@@ -2593,28 +2521,54 @@ export default function WizardV6() {
                           state.generatorCapacityBand,
                           showGenerator
                         );
-                        
+
                         return {
                           serviceSize: state.serviceSize,
-                          gridCapacityKW: state.serviceSize && state.serviceSize !== 'unsure' 
-                            ? ({ '200A-single': 48, '400A-three': 277, '800A-three': 553, '1000A-plus': 1000 } as Record<string, number>)[state.serviceSize]
-                            : undefined,
+                          gridCapacityKW:
+                            state.serviceSize && state.serviceSize !== "unsure"
+                              ? (
+                                  {
+                                    "200A-single": 48,
+                                    "400A-three": 277,
+                                    "800A-three": 553,
+                                    "1000A-plus": 1000,
+                                  } as Record<string, number>
+                                )[state.serviceSize]
+                              : undefined,
                           hasDemandCharge: state.hasDemandCharge,
                           demandChargeBand: state.demandChargeBand,
                           hvacType: state.hvacType,
-                          hvacMultiplier: state.hvacType && state.hvacType !== 'not-sure'
-                            ? ({ 'rtu': 1.0, 'chiller': 1.15, 'heat-pump': 0.90 } as Record<string, number>)[state.hvacType]
-                            : undefined,
+                          hvacMultiplier:
+                            state.hvacType && state.hvacType !== "not-sure"
+                              ? (
+                                  { rtu: 1.0, chiller: 1.15, "heat-pump": 0.9 } as Record<
+                                    string,
+                                    number
+                                  >
+                                )[state.hvacType]
+                              : undefined,
                           hasBackupGenerator: state.hasBackupGenerator,
-                          generatorCapacityKW: state.generatorCapacityBand && state.generatorCapacityBand !== 'not-sure'
-                            ? ({ 'under-100': 50, '100-500': 250, '500-plus': 750 } as Record<string, number>)[state.generatorCapacityBand]
-                            : undefined,
+                          generatorCapacityKW:
+                            state.generatorCapacityBand &&
+                            state.generatorCapacityBand !== "not-sure"
+                              ? (
+                                  { "under-100": 50, "100-500": 250, "500-plus": 750 } as Record<
+                                    string,
+                                    number
+                                  >
+                                )[state.generatorCapacityBand]
+                              : undefined,
                           // Phase 4: Numeric confidence from TrueQuote™ SSOT
                           modelConfidenceScore: modelConf.score,
                           modelCompleteness: modelConf.completeness,
                           lastLearningMessage: modelConf.lastLearningMessage,
                           // Legacy (deprecated)
-                          confidence: modelConf.score >= 75 ? 'high' as const : modelConf.score >= 55 ? 'medium' as const : 'low' as const,
+                          confidence:
+                            modelConf.score >= 75
+                              ? ("high" as const)
+                              : modelConf.score >= 55
+                                ? ("medium" as const)
+                                : ("low" as const),
                           fieldsAnswered: (state.progressiveFieldsAnswered || []).length,
                         };
                       })(),
