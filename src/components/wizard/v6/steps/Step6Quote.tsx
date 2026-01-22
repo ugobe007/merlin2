@@ -26,6 +26,8 @@ import {
 import type { WizardState } from "../types";
 import { POWER_LEVELS } from "../types";
 import { useSSOTValidation } from "@/utils/ssotValidation";
+import type { TrueQuoteSizing } from "@/services/truequote";
+import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 
 import RequestQuoteModal from "@/components/modals/RequestQuoteModal";
 import { exportQuoteAsPDF } from "@/utils/quoteExportUtils";
@@ -33,9 +35,10 @@ import type { QuoteExportData } from "@/utils/quoteExportUtils";
 
 interface Props {
   state: WizardState;
+  trueQuoteSizing?: TrueQuoteSizing | null;
 }
 
-export function Step6Quote({ state }: Props) {
+export function Step6Quote({ state, trueQuoteSizing }: Props) {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showPricingSources, setShowPricingSources] = useState(false);
 
@@ -411,10 +414,13 @@ export function Step6Quote({ state }: Props) {
 
       {/* System Summary */}
       <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
-        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-green-400" />
-          Recommended System ({powerLevel.name})
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-400" />
+            Recommended System ({powerLevel.name})
+          </h2>
+          <TrueQuoteBadgeCanonical showTooltip={true} />
+        </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-3">
@@ -422,6 +428,11 @@ export function Step6Quote({ state }: Props) {
               <span className="flex items-center gap-2">
                 <Battery className="w-4 h-4 text-purple-300" />
                 BESS Size
+                {trueQuoteSizing && (
+                  <span className="text-xs text-slate-400" title="TrueQuote™ Confidence-Aware Sizing">
+                    (±{Math.round(((trueQuoteSizing.recommended.powerKW.max - trueQuoteSizing.recommended.powerKW.min) / trueQuoteSizing.recommended.powerKW.best) * 100)}%)
+                  </span>
+                )}
               </span>
               <span className="font-semibold">
                 {Math.round(selected.bessKW || 0).toLocaleString()} kW /{" "}
@@ -527,6 +538,131 @@ export function Step6Quote({ state }: Props) {
           </div>
         ) : null}
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TRUEQUOTE™ SIZING METHODOLOGY (Jan 21, 2026) */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {trueQuoteSizing && (
+        <div className="rounded-2xl bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/30 p-6 mt-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Shield className="w-5 h-5 text-purple-400" />
+              TrueQuote™ Sizing Methodology
+            </h3>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 text-xs font-medium text-purple-300 bg-purple-500/20 rounded-full">
+                Confidence: {Math.round(trueQuoteSizing.confidence)}%
+              </span>
+              <TrueQuoteBadgeCanonical showTooltip={false} />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Power (kW) Sizing */}
+            <div className="p-5 rounded-xl bg-white/5 border border-white/10">
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="w-5 h-5 text-cyan-400" />
+                <h4 className="font-bold text-white">Power Sizing (kW)</h4>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 text-sm">Conservative</span>
+                  <span className="text-slate-300 font-medium">
+                    {Math.round(trueQuoteSizing.recommended.powerKW.min).toLocaleString()} kW
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-purple-500/20 border border-purple-500/30">
+                  <span className="text-purple-300 font-semibold text-sm">Recommended</span>
+                  <span className="text-white font-bold text-lg">
+                    {Math.round(trueQuoteSizing.recommended.powerKW.best).toLocaleString()} kW
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 text-sm">Aggressive</span>
+                  <span className="text-slate-300 font-medium">
+                    {Math.round(trueQuoteSizing.recommended.powerKW.max).toLocaleString()} kW
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <p className="text-xs text-slate-400">
+                  <strong className="text-purple-300">Source:</strong> Based on {Math.round(trueQuoteSizing.constraints.peakDemandKW || 0)} kW peak demand
+                  {trueQuoteSizing.constraints.gridCapacityKW && ` (grid capacity: ${Math.round(trueQuoteSizing.constraints.gridCapacityKW)} kW)`}
+                </p>
+              </div>
+            </div>
+
+            {/* Energy (kWh) Sizing */}
+            <div className="p-5 rounded-xl bg-white/5 border border-white/10">
+              <div className="flex items-center gap-2 mb-4">
+                <Battery className="w-5 h-5 text-purple-400" />
+                <h4 className="font-bold text-white">Energy Sizing (kWh)</h4>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 text-sm">Conservative</span>
+                  <span className="text-slate-300 font-medium">
+                    {Math.round(trueQuoteSizing.recommended.energyKWh.min).toLocaleString()} kWh
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-purple-500/20 border border-purple-500/30">
+                  <span className="text-purple-300 font-semibold text-sm">Recommended</span>
+                  <span className="text-white font-bold text-lg">
+                    {Math.round(trueQuoteSizing.recommended.energyKWh.best).toLocaleString()} kWh
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 text-sm">Aggressive</span>
+                  <span className="text-slate-300 font-medium">
+                    {Math.round(trueQuoteSizing.recommended.energyKWh.max).toLocaleString()} kWh
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <p className="text-xs text-slate-400">
+                  <strong className="text-purple-300">Duration:</strong> {trueQuoteSizing.recommended.durationHours.best.toFixed(1)} hours
+                  {trueQuoteSizing.constraints.demandChargeBand && (
+                    <span className="block mt-1">
+                      <strong className="text-purple-300">Demand Band:</strong> {trueQuoteSizing.constraints.demandChargeBand}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Sizing Rationale */}
+          <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h5 className="text-sm font-semibold text-blue-300 mb-2">Why This Size?</h5>
+                <div className="space-y-2 text-xs text-slate-300">
+                  {trueQuoteSizing.notes?.length > 0 ? (
+                    trueQuoteSizing.notes.map((note: string, i: number) => (
+                      <p key={i}>• {note}</p>
+                    ))
+                  ) : (
+                    <>
+                      <p>• Sized to shave {Math.round((trueQuoteSizing.recommended.powerKW.best / (trueQuoteSizing.constraints.peakDemandKW || 100)) * 100)}% of peak demand</p>
+                      <p>• Duration optimized for {trueQuoteSizing.constraints.demandChargeBand || 'typical'} demand charge structure</p>
+                      <p>• Model confidence: {Math.round(trueQuoteSizing.confidence)}%</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* TRUEQUOTE™ INSIGHTS SECTION - Advanced Analysis (Jan 2026) */}
