@@ -178,7 +178,12 @@ const getIcon = (
   }
 
   // Try as emoji first (higher priority than Lucide)
-  if (iconName && /[\u{1F300}-\u{1F9FF}]/u.test(iconName)) {
+  // Expanded regex to catch ALL emoji ranges including:
+  // - Basic emoji (🧽 🚗 ⚡ etc)
+  // - Numbers/symbols (1️⃣ 2️⃣ ❓ ✅ ⚠️ 🛑 etc)
+  // - Arrows (➕ ⬆️)
+  // - Keycap numbers with variation selector
+  if (iconName && /[\u{1F000}-\u{1F9FF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{1F300}-\u{1F9FF}\u{2700}-\u{27BF}\u{FE0F}\u{20E3}\u{231A}\u{231B}\u{2328}\u{23CF}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{24C2}\u{25AA}-\u{25FE}\u{2600}-\u{27BF}\u{2934}\u{2935}\u{2B05}-\u{2B07}\u{2B1B}\u{2B1C}\u{2B50}\u{2B55}\u{3030}\u{303D}\u{3297}\u{3299}]/u.test(iconName)) {
     return <span className={className || "text-2xl"}>{iconName}</span>;
   }
 
