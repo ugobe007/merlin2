@@ -1858,10 +1858,10 @@ export default function WizardV6() {
   // TRUEQUOTE™ LIVE SIZING ENGINE (Jan 21, 2026 - Phase 5)
   // Computes recommended BESS sizing with confidence-aware bands
   // Updates in real-time as user answers micro-prompts
-  // NOTE: Currently unused after Step 3 cleanup, but kept for potential future use
+  // Now displayed in Step 6 (Results) - Jan 21, 2026
   // ============================================================================
 
-  const _trueQuoteSizing = useMemo<TrueQuoteSizing | null>(() => {
+  const trueQuoteSizing = useMemo<TrueQuoteSizing | null>(() => {
     const industry = state.industry || state.detectedIndustry;
 
     // Need at least peak demand to compute sizing
@@ -2328,7 +2328,7 @@ export default function WizardV6() {
           />
         );
       case 6:
-        return <Step6Quote state={state} />;
+        return <Step6Quote state={state} trueQuoteSizing={trueQuoteSizing} />;
       default:
         return null;
     }
