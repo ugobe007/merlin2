@@ -76,7 +76,13 @@
     "prepare": "husky",
     "test:perf:unit": "vitest run tests/perf --reporter=verbose",
     "test:perf:e2e": "playwright test tests/e2e/wizardv6.perf.spec.ts",
-    "perf": "npm run test:perf:unit && npm run test:perf:e2e"
+    "perf": "npm run test:perf:unit && npm run test:perf:e2e",
+    "lint:ship": "eslint \"src/components/wizard/v6/step3/**/*.{ts,tsx}\" --max-warnings=0",
+    "ship:gate": "npm run typecheck && npm run test && npm run build && npm run lint:ship",
+    "typecheck:step3": "tsc -p tsconfig.json --noEmit",
+    "lint:step3": "eslint \"src/components/wizard/v6/step3/**/*.{ts,tsx}\" --max-warnings=0",
+    "test:step3": "vitest run \"src/components/wizard/v6/step3/**/*.test.{ts,tsx}\"",
+    "ship:step3": "npm run typecheck:step3 && npm run lint:step3"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.79.0",
