@@ -131,6 +131,8 @@ export default [
   {
     files: [
       'src/services/**/*.{ts,tsx}',
+      "src/components/wizard/_archive-jan-2026/**",
+"src/components/wizard/**/_archive-*/**",
       'src/components/admin/**/*.{ts,tsx}',
       'src/components/examples/**/*.{ts,tsx}',
       'src/infrastructure/**/*.{ts,tsx}',
