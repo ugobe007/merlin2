@@ -1,0 +1,8 @@
+
+# Wizard archives should not be lint-gated
+src/components/wizard/_archive-jan-2026/**
+src/components/wizard/**/_archive-*/**
+
+# Wizard archives should not be lint-gated
+src/components/wizard/_archive-jan-2026/**
+src/components/wizard/**/_archive-*/**

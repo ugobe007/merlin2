@@ -56,12 +56,37 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
-  // ✅ Tests: allow dev patterns
+  // Apply base configs first (so we can override them)
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  
+  // ✅ GLOBAL OVERRIDES: Apply downgrades to ALL TS/TSX files
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      // A3: Disable @typescript-eslint/no-unused-vars (unused-imports handles it)
+      '@typescript-eslint/no-unused-vars': 'off',
+      // Legacy integration seams: warn, don't block
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/ban-ts-comment': 'warn',
+      '@typescript-eslint/no-require-imports': 'warn',
+      // Style preferences: warn, don't block
+      'no-case-declarations': 'warn',
+      'no-empty': 'warn',
+      'no-useless-escape': 'warn',
+      'prefer-const': 'warn',
+    },
+  },
+  
+  // ✅ Tests: allow dev patterns (more permissive than global)
   {
     files: [
       '**/*.{test,spec}.{ts,tsx,js,jsx}',
+      '**/__tests__/**/*.{ts,tsx}',
       'tests/**/*',
       'test-helpers.ts',
+      '**/*-test.{ts,tsx}',
+      '**/*-tests.{ts,tsx}',
     ],
     languageOptions: {
       globals: {
@@ -70,33 +95,52 @@ export default [
       },
     },
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off', // keep tests moving
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'unused-imports/no-unused-vars': 'off',
+      'unused-imports/no-unused-imports': 'off',
       'no-console': 'off',
       'no-undef': 'off',
+      'react-hooks/exhaustive-deps': 'off',
+      'no-useless-escape': 'off',
     },
   },
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
+  
+  // 🎯 WIZARD: Strict zone - Step 3 and core wizard (keep quality high)
   {
-    // Override TypeScript ESLint rules after recommended configs
-    files: ['**/*.{ts,tsx}'],
+    files: ['src/components/wizard/**/*.{ts,tsx}'],
     rules: {
-      '@typescript-eslint/no-unused-vars': [
-        'warn',  // Downgraded from 'error' - unused vars are warnings, not blockers
-        { 
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          destructuredArrayIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_'
-        }
-      ],
-      '@typescript-eslint/no-explicit-any': 'warn',  // Downgraded - any usage is a warning, not a blocker
-      '@typescript-eslint/ban-ts-comment': 'warn',  // Allow @ts-nocheck with warning
-      '@typescript-eslint/no-require-imports': 'warn',  // Allow require() with warning
-      'no-case-declarations': 'warn',  // Allow lexical declarations in case blocks (common pattern)
-      'no-empty': 'warn',  // Empty blocks are warnings (often intentional catch blocks)
-      'no-useless-escape': 'warn',  // Unnecessary escapes are warnings
-      'prefer-const': 'warn',  // Prefer const is a style preference, not a blocker
+      '@typescript-eslint/no-explicit-any': 'error',
+      'unused-imports/no-unused-vars': 'error',
+      'no-useless-escape': 'error',
+    },
+  },
+  
+  // 🎯 STEP 3 SSOT: Belt + suspenders (maximum strictness)
+  {
+    files: ['src/components/wizard/v6/step3/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+      'unused-imports/no-unused-vars': 'error',
+      'no-useless-escape': 'error',
+      'no-case-declarations': 'error',
+    },
+  },
+  
+  // 🧯 LEGACY ZONES: Relax rules (tech debt acknowledged)
+  {
+    files: [
+      'src/services/**/*.{ts,tsx}',
+      'src/components/admin/**/*.{ts,tsx}',
+      'src/components/examples/**/*.{ts,tsx}',
+      'src/infrastructure/**/*.{ts,tsx}',
+      'src/components/modals/**/*.{ts,tsx}',
+      'src/components/VendorPortal.tsx',
+      'src/components/ProjectInfoForm.tsx',
+    ],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      'no-useless-escape': 'off',
     },
   },
 ]
