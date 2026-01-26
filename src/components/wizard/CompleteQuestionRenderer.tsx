@@ -90,9 +90,17 @@ export function CompleteQuestionRenderer({
         </div>
 
         {/* Title - More compact */}
-        <h2 className="text-xl font-bold text-white leading-tight">
-          {question.title}
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold text-white leading-tight">
+            {question.title}
+          </h2>
+          {/* REQUIRED badge - Make it OBVIOUS */}
+          {(question as any).isRequired !== false && (question as any).tier !== 'detailed' && (
+            <span className="px-2 py-0.5 bg-red-500/20 text-red-300 text-[10px] font-bold uppercase rounded border border-red-500/40">
+              Required
+            </span>
+          )}
+        </div>
 
         {/* Subtitle */}
         {question.subtitle && (
@@ -157,7 +165,19 @@ function renderInputComponent(
         <PanelButtonGroup
           options={options || question.options || []}
           value={value || question.smartDefault}
-          onChange={onChange}
+          onChange={(newValue) => {
+            if (import.meta.env.DEV) {
+              console.log(`📝 [QuestionRenderer] onChange called:`, {
+                questionId: question.id,
+                questionType: question.type,
+                questionField: questionFieldName,
+                oldValue: value,
+                newValue,
+                willCallParentOnChange: typeof onChange === 'function'
+              });
+            }
+            onChange(newValue);
+          }}
           questionField={questionFieldName}
         />
       );

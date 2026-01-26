@@ -1,0 +1,207 @@
+{
+  "timestamp": "2026-01-26T18:11:21.586Z",
+  "summary": {
+    "total": 23,
+    "ok": 0,
+    "withIssues": 0,
+    "notFound": 23
+  },
+  "results": [
+    {
+      "slug": "agricultural",
+      "name": "Agricultural",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "airport",
+      "name": "Airport",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "apartment",
+      "name": "Apartment Complex",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "car-wash",
+      "name": "Car Wash",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "casino",
+      "name": "Casino & Gaming",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "cold-storage",
+      "name": "Cold Storage",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "college",
+      "name": "College & University",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "data-center",
+      "name": "Data Center",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "ev-charging",
+      "name": "EV Charging Station",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "gas-station",
+      "name": "Gas Station",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "government",
+      "name": "Government & Public Building",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "heavy_duty_truck_stop",
+      "name": "Heavy Duty Truck Stop / Travel Center",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "hospital",
+      "name": "Hospital",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "hotel",
+      "name": "Hotel",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "indoor-farm",
+      "name": "Indoor Farm",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "manufacturing",
+      "name": "Manufacturing Facility",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "microgrid",
+      "name": "Microgrid & Renewable Integration",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "office",
+      "name": "Office Building",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "residential",
+      "name": "Residential",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "restaurant",
+      "name": "Restaurant",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "retail",
+      "name": "Retail & Commercial",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "shopping-center",
+      "name": "Shopping Center/Mall",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    },
+    {
+      "slug": "warehouse",
+      "name": "Warehouse & Logistics",
+      "status": "NO_QUESTIONS",
+      "issues": []
+    }
+  ],
+  "codeFieldNames": [
+    "acres",
+    "annualPassengers",
+    "bayCount",
+    "bayTunnelCount",
+    "bays",
+    "bedCount",
+    "casinoFloorSqFt",
+    "coldStorageSqFt",
+    "dcfc50Count",
+    "dcfcHighCount",
+    "enrollment",
+    "facilitySqFt",
+    "farmAcres",
+    "farmSquareFeet",
+    "fuelPositions",
+    "fuelPumpCount",
+    "gamingFloorSqFt",
+    "gamingSquareFeet",
+    "glaSqFt",
+    "hotelRooms",
+    "hoursOfOperation",
+    "level2Count",
+    "mallSqFt",
+    "manufacturingSqFt",
+    "manufacturingSquareFeet",
+    "numberOfBeds",
+    "numberOfFuelPositions",
+    "numberOfPumps",
+    "numberOfRacks",
+    "numberOfRooms",
+    "numberOfUnits",
+    "officeSqFt",
+    "officeSquareFeet",
+    "operatingHours",
+    "operatingSchedule",
+    "passengerCount",
+    "passengers",
+    "pumpPositions",
+    "rackCount",
+    "refrigeratedSqFt",
+    "refrigeratedSquareFeet",
+    "retailSqFt",
+    "retailSquareFeet",
+    "roomCount",
+    "shoppingCenterSqFt",
+    "squareFeet",
+    "squareFootage",
+    "storeSqFt",
+    "studentPopulation",
+    "students",
+    "totalAcres",
+    "totalSqFt",
+    "totalUnits",
+    "unitCount",
+    "warehouseSqFt",
+    "warehouseSquareFeet"
+  ]
+}

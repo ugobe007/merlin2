@@ -338,6 +338,18 @@ export interface WizardState {
   electricityRate?: number;
   currency?: string;
 
+  // ✅ NEW: Energy Metrics (Jan 25, 2026) - Persistent location intelligence
+  // Populated in Step 1 after ZIP enrichment, displayed in header throughout wizard
+  energyMetrics?: {
+    utilityRate: number;        // $/kWh
+    demandCharge: number;        // $/kW
+    solarRating: string;         // 'A', 'B', 'C', 'D', 'F'
+    solarHours: number;          // hrs/day
+    hasTOU: boolean;             // Time-of-use rates available
+    utilityName?: string;        // Utility company name
+    location: string;            // "San Francisco, CA"
+  };
+
   // Business lookup (from Google Places API)
   businessName?: string;
   businessAddress?: string;

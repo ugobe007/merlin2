@@ -114,15 +114,15 @@ const STEP_MESSAGES: Record<number, (props: MerlinBarProps) => { main: string; t
       return { main: "🏢 What type of facility do you have? I'll tailor your system." };
     }
     return { 
-      main: `Perfect! I know ${p.industryName || p.industry} energy patterns well.`,
+      main: `Perfect! I know ${_p.industryName || _p.industry} energy patterns well.`,
       tip: "Next: Tell me about your facility size and usage."
     };
   },
-  3: (p) => ({
+  3: (_p) => ({
     main: "📊 Great info! I'm calculating your baseline load...",
     tip: "Accurate details = more precise savings estimate."
   }),
-  4: (p) => {
+  4: (_p) => {
     const parts: string[] = [];
     if (p.hasSolar) parts.push('solar');
     if (p.hasGenerator) parts.push('backup power');
@@ -181,7 +181,7 @@ function calculateProgressiveEstimate(props: MerlinBarProps): {
   confidence: number; // 1-5 stars
   source: string;
 } {
-  const { currentStep, industry, sunHours, electricityRate, annualSavings, goals } = props;
+  const { currentStep, industry, sunHours: _sunHours, electricityRate: _electricityRate, annualSavings, goals: _goals } = props;
   
   // If we have actual calculations, use them
   if (annualSavings && annualSavings > 0) {
@@ -247,7 +247,7 @@ function getEnergyOpportunities(props: MerlinBarProps): Array<{
     color: string;
   }> = [];
   
-  const { sunHours, electricityRate, goals, hasSolar, hasGenerator, hasEv } = props;
+  const { sunHours, electricityRate: _electricityRate, goals: _goals, hasSolar: _hasSolar, hasGenerator: _hasGenerator, hasEv: _hasEv } = props;
   
   // Peak shaving is always available with BESS
   opportunities.push({
@@ -316,9 +316,9 @@ interface DiscoveryClue {
 function getDiscoveryClues(props: MerlinBarProps): DiscoveryClue[] {
   const clues: DiscoveryClue[] = [];
   const { 
-    state, sunHours, electricityRate, goals, industry, industryName,
-    hasSolar, hasGenerator, hasEv, solarKw, generatorKw, bessKwh,
-    evL2Count, evDcfcCount, currentStep, selectedTier, annualSavings
+    state, sunHours, electricityRate, goals, industry, industryName: _industryName,
+    hasSolar, hasGenerator, hasEv, solarKw: _solarKw, generatorKw: _generatorKw, bessKwh,
+    evL2Count: _evL2Count, evDcfcCount: _evDcfcCount, currentStep, selectedTier, annualSavings: _annualSavings
   } = props;
   
   // ═══════════════════════════════════════════════════════════════════════════
@@ -564,7 +564,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
   const [activeTab, setActiveTab] = useState<'discoveries' | 'tips'>('tips');
   const [hasPendingSuggestion, setHasPendingSuggestion] = useState(false);
   const [lastStep, setLastStep] = useState(props.currentStep);
-  const [userDismissedThisStep, setUserDismissedThisStep] = useState(false);
+  const [_userDismissedThisStep, setUserDismissedThisStep] = useState(false);
   const { currentStep } = props;
   
   // AUTO-OPEN only when [A] step changes AND [B] there are suggestions

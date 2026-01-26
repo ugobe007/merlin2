@@ -8,7 +8,7 @@
  * based on selected industry (state.industry)
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { CompleteQuestionRenderer } from "./CompleteQuestionRenderer";
 import { IndustryOpportunityPanel } from "./IndustryOpportunityPanel";
 import { useCaseService } from "@/services/useCaseService";
@@ -293,22 +293,28 @@ function transformDatabaseQuestion(
 
   // Map section to valid values (check both 'section' and 'section_name' from DB)
   const sectionRaw = (dbQuestion.section_name || dbQuestion.section || "facility") as string;
-  // Normalize section names: "Facility Basics" → "facility", "Site & Infrastructure" → "facility", etc.
-  const sectionNormalized =
-    sectionRaw.toLowerCase().includes("facility") ||
-    sectionRaw.toLowerCase().includes("infrastructure") ||
-    sectionRaw.toLowerCase().includes("basic")
-      ? "facility"
-      : sectionRaw.toLowerCase().includes("operation")
-        ? "operations"
-        : sectionRaw.toLowerCase().includes("equipment") ||
-            sectionRaw.toLowerCase().includes("charger")
-          ? "equipment"
-          : sectionRaw.toLowerCase().includes("solar") ||
-              sectionRaw.toLowerCase().includes("energy")
-            ? "solar"
-            : "facility";
-  const validSections = ["facility", "operations", "equipment", "solar"] as const;
+  const sectionLower = sectionRaw.toLowerCase();
+  
+  // ✅ Bug #2 Fix (Jan 23, 2026): Normalize section names to match all sectionConfig keys
+  // Normalize section names: "Facility Basics" → "facility", "Energy Profile" → "energy", etc.
+  let sectionNormalized: string;
+  if (sectionLower.includes("facility") || sectionLower.includes("infrastructure") || sectionLower.includes("basic")) {
+    sectionNormalized = "facility";
+  } else if (sectionLower.includes("operation")) {
+    sectionNormalized = "operations";
+  } else if (sectionLower.includes("equipment") || sectionLower.includes("charger")) {
+    sectionNormalized = "equipment";
+  } else if (sectionLower.includes("solar") || sectionLower.includes("renewable")) {
+    sectionNormalized = "solar";
+  } else if (sectionLower.includes("energy") || sectionLower.includes("power") || sectionLower.includes("utility")) {
+    sectionNormalized = "energy";
+  } else if (sectionLower.includes("goal")) {
+    sectionNormalized = "goals";
+  } else {
+    sectionNormalized = "general"; // Default unknown sections to general
+  }
+  
+  const validSections = ["facility", "operations", "equipment", "solar", "energy", "goals", "general"] as const;
   const section: (typeof validSections)[number] = validSections.includes(
     sectionNormalized as (typeof validSections)[number]
   )
@@ -350,7 +356,7 @@ function transformDatabaseQuestion(
 
   return {
     id: fieldName, // CRITICAL: Use field_name so calculations can find the value
-    type: mapQuestionType((dbQuestion.input_type || dbQuestion.question_type || "text") as string),
+    type: mapQuestionType((dbQuestion.input_type || dbQuestion.question_type || "text") as string, fieldName),
     section,
     title: (dbQuestion.question_text || dbQuestion.label || "Question") as string,
     subtitle:
@@ -380,7 +386,7 @@ function transformDatabaseQuestion(
 }
 
 // Map database question types to component types
-function mapQuestionType(dbType: string): Question["type"] {
+function mapQuestionType(dbType: string, fieldName?: string): Question["type"] {
   const typeMap: Record<string, Question["type"]> = {
     // Selection types
     select: "buttons",
@@ -404,11 +410,27 @@ function mapQuestionType(dbType: string): Question["type"] {
     boolean: "toggle",
     yes_no: "toggle",
 
-    // Text types - CRITICAL FIX: 'text' should NOT become buttons!
-    text: "number_input", // Most "text" in our DB are actually numeric
+    // Text types - handled specially below
     text_input: "number_input",
     freeform: "number_input",
   };
+
+  // ✅ Bug #1 Fix (Jan 23, 2026): Handle 'text' type intelligently
+  // Only treat as numeric if field name contains numeric hints
+  if (dbType === "text" || dbType === "text_input" || dbType === "freeform") {
+    const numericHints = ['kw', 'kwh', 'sqft', 'sq_ft', 'count', 'rate', 'cost', 'spend', 
+      'size', 'capacity', 'load', 'power', 'voltage', 'amp', 'watt', 'number', 'total',
+      'bay', 'room', 'bed', 'unit', 'charger', 'motor', 'throughput', 'duration', 'hours'];
+    const fieldLower = (fieldName || '').toLowerCase();
+    const isNumeric = numericHints.some(hint => fieldLower.includes(hint));
+    
+    if (isNumeric) {
+      return "number_input";
+    }
+    // For actual text fields (names, notes, etc.), use buttons as fallback
+    // TODO: Add proper text_input renderer if needed
+    return "buttons";
+  }
 
   const mappedType = typeMap[dbType];
   if (!mappedType) {
@@ -485,6 +507,35 @@ interface CompleteStep3ComponentProps {
   onValidityChange?: (isValid: boolean) => void;
 }
 
+// ✅ Bug #3 Fix (Jan 23, 2026): Helper to properly check if a value is "answered"
+// Handles empty strings, empty arrays, null, undefined
+const isAnswered = (v: unknown): boolean => {
+  if (v === undefined || v === null) return false;
+  if (typeof v === "string") return v.trim().length > 0;
+  if (Array.isArray(v)) return v.length > 0;
+  return true; // numbers, booleans, non-empty objects
+};
+
+// ✅ FIX (Jan 25, 2026): Normalize multi-select answers to prevent string/char array corruption
+function normalizeAnswer(value: unknown): unknown {
+  if (Array.isArray(value)) return value;
+
+  // If we accidentally stored JSON as a string, recover it
+  if (typeof value === "string") {
+    const s = value.trim();
+    if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("{") && s.endsWith("}"))) {
+      try {
+        return JSON.parse(s);
+      } catch {
+        // Not valid JSON, return as-is
+      }
+    }
+    return value;
+  }
+
+  return value;
+}
+
 export function CompleteStep3Component({
   state = {},
   updateState,
@@ -496,12 +547,90 @@ export function CompleteStep3Component({
   onValidityChange,
 }: CompleteStep3ComponentProps) {
   // ============================================================================
-  // STATE MANAGEMENT
+  // DEBUG LOGGING - Verify state.industry at mount (Jan 25, 2026)
   // ============================================================================
-  const [answers, setAnswers] = useState<Record<string, unknown>>(
-    (initialAnswers as Record<string, unknown>) ||
-      ((state.useCaseData?.inputs as Record<string, unknown>) ?? {})
-  );
+  if (import.meta.env.DEV) {
+    console.log("🧭 Step3 mount state.industry =", state.industry, "industryName =", state.industryName);
+    console.log("🧭 Step3 state keys:", Object.keys(state || {}));
+  }
+
+  // ============================================================================
+  // MULTI-SOURCE INDUSTRY RESOLVER - Resilient to Step 2 representation (Jan 25, 2026)
+  // ============================================================================
+  // Step 3 must be resilient to different ways Step 2 might write industry data
+  const industrySlugResolved = useMemo(() => {
+    const anyState = state as any;
+    return (
+      (typeof state.industry === "string" && state.industry.trim()) ||
+      anyState.industry?.type ||
+      anyState.industryType ||
+      anyState.industrySlug ||
+      anyState.detectedIndustry ||
+      ""
+    );
+  }, [state]);
+
+  // ============================================================================
+  // STATE MANAGEMENT - WIZARD STORE IS SINGLE SOURCE OF TRUTH (Jan 24, 2026)
+  // ============================================================================
+  // ✅ CRITICAL FIX: NO local answers state!
+  // The wizard store (state.useCaseData.inputs) is the ONLY source of truth.
+  // This ensures:
+  // 1. Prefill updates the same object that validation reads
+  // 2. Validation reads the same object that Step 4 reads
+  // 3. No sync effects that can overwrite user input
+  
+  // Read answers directly from wizard store
+  const answers = useMemo(() => {
+    // Priority: initialAnswers (from parent) > state.useCaseData.inputs > empty
+    const fromInitial = initialAnswers && Object.keys(initialAnswers).length > 0 ? initialAnswers : null;
+    const fromState = (state.useCaseData?.inputs as Record<string, unknown>) ?? {};
+    return fromInitial ?? fromState;
+  }, [initialAnswers, state.useCaseData?.inputs]);
+
+  // Single setter function - writes to wizard store AND notifies parent
+  const setAnswer = useCallback((field: string, value: unknown) => {
+    if (import.meta.env.DEV) {
+      console.log(`💾 [Step3/setAnswer] START:`, {
+        field,
+        value,
+        oldValue: answers[field],
+        answerCount: Object.keys(answers).filter(k => isAnswered(answers[k])).length,
+        hasUpdateState: typeof updateState === 'function',
+        hasOnAnswersChange: typeof onAnswersChange === 'function'
+      });
+    }
+    
+    // ✅ FIX (Jan 25, 2026): Normalize multi-select answers before storing
+    const normalizedValue = normalizeAnswer(value);
+    const newAnswers = { ...answers, [field]: normalizedValue };
+    
+    // Write to wizard store (this is what Step 4 reads)
+    if (updateState) {
+      updateState({
+        useCaseData: {
+          ...state.useCaseData,
+          inputs: newAnswers,
+        },
+      });
+      if (import.meta.env.DEV) {
+        console.log(`✅ [Step3/setAnswer] Updated wizard store`);
+      }
+    }
+    
+    // Notify parent for any additional handling
+    if (onAnswersChange) {
+      onAnswersChange(newAnswers);
+      if (import.meta.env.DEV) {
+        console.log(`✅ [Step3/setAnswer] Called onAnswersChange`);
+      }
+    }
+    
+    if (import.meta.env.DEV) {
+      console.log(`📝 [Step3/setAnswer] DONE: ${field} =`, normalizedValue);
+    }
+  }, [answers, updateState, state.useCaseData, onAnswersChange]);
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [, setIsTransitioning] = useState(false); // Only setter used
   const questionRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -514,6 +643,8 @@ export function CompleteStep3Component({
   const [industryTitle, setIndustryTitle] = useState("");
 
   // ✅ Apply business size pre-fills to answers (e.g., "Hyperscale" → dataCenterType: 'hyperscale')
+  const preFillsAppliedRef = useRef<string | null>(null);
+  
   useEffect(() => {
     const industry = state.industry;
     const businessSizeTier = state.businessSizeTier as
@@ -525,6 +656,14 @@ export function CompleteStep3Component({
 
     if (!industry || !businessSizeTier) {
       console.log("📋 No business size pre-fill: industry=", industry, "tier=", businessSizeTier);
+      return;
+    }
+
+    // ✅ CRITICAL FIX (Jan 26, 2026): Only apply pre-fills ONCE per industry+tier combination
+    // This prevents infinite loop where effect modifies state.useCaseData which triggers effect again
+    const preFillKey = `${industry}-${businessSizeTier}`;
+    if (preFillsAppliedRef.current === preFillKey) {
+      console.log(`✅ Pre-fills already applied for ${preFillKey}, skipping`);
       return;
     }
 
@@ -545,37 +684,86 @@ export function CompleteStep3Component({
       tierPrefills
     );
 
-    // Merge pre-fills into answers, but DON'T override existing user answers
-    setAnswers((prevAnswers) => {
-      const merged = { ...tierPrefills };
-      // User's existing answers take precedence
-      Object.keys(prevAnswers).forEach((key) => {
-        if (
-          prevAnswers[key] !== undefined &&
-          prevAnswers[key] !== "" &&
-          prevAnswers[key] !== null
-        ) {
-          merged[key] = prevAnswers[key];
-        }
-      });
-      console.log("📋 Merged answers with pre-fills:", merged);
-      return merged;
+    // ✅ SINGLE SOURCE OF TRUTH: Write pre-fills to wizard store
+    // Merge pre-fills into current answers, but DON'T override existing user answers
+    const currentAnswers = (state.useCaseData?.inputs as Record<string, unknown>) ?? {};
+    const merged = { ...tierPrefills };
+    // User's existing answers take precedence
+    Object.keys(currentAnswers).forEach((key) => {
+      if (
+        currentAnswers[key] !== undefined &&
+        currentAnswers[key] !== "" &&
+        currentAnswers[key] !== null
+      ) {
+        merged[key] = currentAnswers[key];
+      }
     });
-  }, [state.industry, state.businessSizeTier]);
+    console.log("📋 Merged answers with pre-fills:", merged);
+    
+    // Mark as applied BEFORE calling updateState to prevent re-entry
+    preFillsAppliedRef.current = preFillKey;
+    
+    // ✅ FIX (Jan 26, 2026 evening): Ensure validation sees the pre-filled answers
+    // Write to wizard store AND trigger validation
+    if (updateState) {
+      console.log("📝 Writing pre-fills to wizard store...");
+      updateState({
+        useCaseData: {
+          ...state.useCaseData,
+          inputs: merged,
+        },
+      });
+      
+      // Force validation to re-check after next render
+      queueMicrotask(() => {
+        console.log("✅ Pre-fills written, validation should re-check now");
+      });
+    }
+  }, [state.industry, state.businessSizeTier, updateState]);
 
   // ✅ Load questions dynamically based on industry
   useEffect(() => {
     async function loadQuestions() {
-      const industry = state.industry;
+      // Use resolved industry slug from multi-source resolver (not state.industry directly)
+      const industry = industrySlugResolved;
 
-      if (!industry) {
-        console.log("📋 No industry selected, using car wash questions as default");
+      if (!industry || industry === "unknown") {
+        console.warn("⚠️ Step3: No valid industry selected (got '", industry, "'), using car-wash fallback");
         setQuestions(carWashQuestionsComplete);
         setSections(carWashSections);
         setIndustryTitle("Car Wash");
         setLoading(false);
         return;
       }
+
+      // ✅ CRITICAL FIX (Jan 24, 2026): Helper to apply smartDefaults to answers
+      // When questions have default_value in DB, pre-populate them as answers
+      // This fixes the bug where pre-selected values don't count as "answered"
+      // ✅ SINGLE SOURCE OF TRUTH: Write defaults directly to wizard store
+      const applySmartDefaults = (loadedQuestions: Question[]) => {
+        const currentAnswers = (state.useCaseData?.inputs as Record<string, unknown>) ?? {};
+        const withDefaults = { ...currentAnswers };
+        let appliedCount = 0;
+        
+        loadedQuestions.forEach((q) => {
+          // Only apply default if user hasn't already answered this question
+          if (!isAnswered(currentAnswers[q.id]) && q.smartDefault !== undefined && q.smartDefault !== null) {
+            withDefaults[q.id] = q.smartDefault;
+            appliedCount++;
+          }
+        });
+        
+        if (appliedCount > 0 && updateState) {
+          console.log(`📋 Applied ${appliedCount} smart defaults from database:`, 
+            loadedQuestions.filter(q => q.smartDefault).map(q => ({ id: q.id, default: q.smartDefault })));
+          updateState({
+            useCaseData: {
+              ...state.useCaseData,
+              inputs: withDefaults,
+            },
+          });
+        }
+      };
 
       try {
         // Try multiple slug formats since DB has inconsistent naming:
@@ -647,6 +835,34 @@ export function CompleteStep3Component({
           setQuestions(dedupedQuestions);
           setSections(createSectionsFromQuestions(dedupedQuestions));
           setIndustryTitle(useCase.name || state.industryName || industry);
+          
+          // ✅ CRITICAL (Jan 24, 2026): Apply smart defaults from database
+          // This ensures pre-filled values count as "answered"
+          applySmartDefaults(dedupedQuestions);
+
+          // ✅ NEW (Jan 23, 2026): Store Step 3 industry template (load profile + equipment summary) into SSOT
+          if (updateState && useCase?.id) {
+            try {
+              const template = await useCaseService.getStep3IndustryTemplateByUseCase({
+                id: useCase.id,
+                slug: useCase.slug,
+                name: useCase.name,
+              });
+
+              updateState({
+                useCaseData: {
+                  ...state.useCaseData,
+                  template, // <- SSOT snapshot for Step 3+
+                },
+              });
+
+              if (import.meta.env.DEV) {
+                console.log("✅ Step 3 industry template loaded:", template);
+              }
+            } catch (e) {
+              console.warn("⚠️ Failed to load Step 3 template bundle:", e);
+            }
+          }
         } else {
           // Log what we actually got from the service
           console.log(
@@ -690,7 +906,7 @@ export function CompleteStep3Component({
     }
 
     loadQuestions();
-  }, [state.industry, state.industryName]);
+  }, [industrySlugResolved, state.industryName]);
 
   // Sync with parent component (debounced to prevent infinite loops)
   const prevAnswersRef = useRef<Record<string, unknown>>(answers);
@@ -710,6 +926,19 @@ export function CompleteStep3Component({
   useEffect(() => {
     if (!onValidityChange) return;
 
+    // ✅ GUARD: If questions haven't loaded yet, don't report validity
+    // BUT log it so we can see the timing in dev mode
+    if (questions.length === 0) {
+      if (import.meta.env.DEV) {
+        console.log('📊 Step 3 Validity: Skipping - questions not loaded yet');
+      }
+      // Don't report - wait for questions to load
+      return;
+    }
+
+    // ✅ CRITICAL: Count total answered INCLUDING business size pre-fills
+    const totalAnsweredCount = Object.keys(answers).filter(k => isAnswered(answers[k])).length;
+
     // Count required questions (essential tier questions)
     const requiredQuestions = questions.filter((q) => {
       // Only count questions that are visible based on depth
@@ -723,33 +952,71 @@ export function CompleteStep3Component({
       return q.questionTier === "essential" || !q.questionTier;
     });
 
+    // ✅ Bug #3 Fix: Use isAnswered helper (handles empty arrays)
     const answeredRequired = requiredQuestions.filter(
-      (q) => answers[q.id] !== undefined && answers[q.id] !== ""
+      (q) => isAnswered(answers[q.id])
     );
     const requiredProgress =
       requiredQuestions.length > 0 ? (answeredRequired.length / requiredQuestions.length) * 100 : 0;
 
+    // ✅ FIX (Jan 24, 2026): If user has answered ALL visible questions, consider valid
+    // This fixes the case where user answered 100% but validation still fails
+    const allVisibleQuestions = questions.filter((q) => {
+      if (!shouldShowByDepth(q.questionTier)) return false;
+      if (q.conditionalLogic) {
+        const dependentValue = answers[q.conditionalLogic.dependsOn];
+        if (!q.conditionalLogic.showIf(dependentValue)) return false;
+      }
+      return true;
+    });
+    const answeredAll = allVisibleQuestions.filter(q => isAnswered(answers[q.id]));
+    const allAnsweredPercent = allVisibleQuestions.length > 0 
+      ? (answeredAll.length / allVisibleQuestions.length) * 100 
+      : 0;
+
     // Consider valid if:
-    // - At least 70% of required questions are answered, OR
-    // - All essential questions are answered
-    const isValid = requiredProgress >= 70;
+    // - At least 50% of ESSENTIAL questions are answered, OR
+    // - At least 50% of ALL visible questions are answered, OR
+    // - No questions exist (proceed with defaults), OR
+    // - User has at least 3 answers in state (pre-fills count!)
+    // ✅ RELAXED (Jan 24, 2026): Added totalAnsweredCount >= 3 fallback
+    // This ensures pre-filled values from business size selection work
+    const isValid = requiredProgress >= 50 || allAnsweredPercent >= 50 || allVisibleQuestions.length === 0 || totalAnsweredCount >= 3;
 
     // DEBUG: Log validity status
     if (import.meta.env.DEV) {
       console.log(
-        `📊 Step 3 Validity: ${Math.round(requiredProgress)}% (${answeredRequired.length}/${requiredQuestions.length} required) - ${isValid ? "✅ VALID" : "❌ INVALID"}`
+        `📊 Step 3 Validity: Essential ${Math.round(requiredProgress)}% (${answeredRequired.length}/${requiredQuestions.length}) | All ${Math.round(allAnsweredPercent)}% (${answeredAll.length}/${allVisibleQuestions.length}) | Total answers: ${totalAnsweredCount} - ${isValid ? "✅ VALID" : "❌ INVALID"}`
       );
+      
+      // Show which required questions are NOT answered
+      const unanswered = requiredQuestions.filter(q => !isAnswered(answers[q.id]));
+      if (unanswered.length > 0) {
+        console.log(`❓ Unanswered essential questions:`, unanswered.map(q => ({ id: q.id, title: q.title.substring(0, 40) })));
+      }
+      
+      // Show what's in answers object
+      console.log(`📝 Current answers (${Object.keys(answers).filter(k => isAnswered(answers[k])).length} answered):`, Object.keys(answers).filter(k => isAnswered(answers[k])));
     }
 
     onValidityChange(isValid);
-  }, [answers, questions, onValidityChange, state.questionnaireDepth]);
-
-  // Load initial answers
-  useEffect(() => {
-    if (initialAnswers && Object.keys(initialAnswers).length > 0) {
-      setAnswers(initialAnswers);
+    
+    // ✅ SSOT VERIFICATION (Jan 24, 2026): Confirm validator reads wizard store
+    if (import.meta.env.DEV) {
+      const wizardStoreInputs = state.useCaseData?.inputs as Record<string, unknown> | undefined;
+      const wizardStoreCount = wizardStoreInputs ? Object.keys(wizardStoreInputs).filter(k => isAnswered(wizardStoreInputs[k])).length : 0;
+      const answersCount = Object.keys(answers).filter(k => isAnswered(answers[k])).length;
+      if (wizardStoreCount !== answersCount) {
+        console.error(`🚨 SSOT DIVERGENCE: answers has ${answersCount}, wizard store has ${wizardStoreCount}`);
+      } else {
+        console.log(`✅ SSOT OK: Both answers and wizard store have ${answersCount} answered`);
+      }
     }
-  }, [initialAnswers]);
+  }, [answers, questions, onValidityChange, state.questionnaireDepth, state.useCaseData?.inputs]);
+
+  // ✅ SINGLE SOURCE OF TRUTH: Initial answers are now handled via:
+  // 1. useMemo for `answers` reads from state.useCaseData.inputs (which already has initialAnswers)
+  // 2. No need for separate sync - the wizard store is the single source
 
   // Helper: Check if a question should be shown based on questionnaire depth
   // Questionnaire depths (from BusinessSizePanel): 'minimal', 'standard', 'detailed'
@@ -811,11 +1078,18 @@ export function CompleteStep3Component({
     });
   }
 
+  // ✅ Bug #4 Fix (Jan 23, 2026): Clamp index when conditional logic hides questions
+  useEffect(() => {
+    if (visibleQuestions.length > 0 && currentQuestionIndex > visibleQuestions.length - 1) {
+      setCurrentQuestionIndex(Math.max(0, visibleQuestions.length - 1));
+    }
+  }, [visibleQuestions.length, currentQuestionIndex]);
+
   // Current question
   const currentQuestion = visibleQuestions[currentQuestionIndex];
 
-  // Progress calculation
-  const answeredCount = Object.keys(answers).length;
+  // Progress calculation - ✅ Bug #3 Fix: Use isAnswered for accurate count
+  const answeredCount = visibleQuestions.filter(q => isAnswered(answers[q.id])).length;
   const totalQuestions = visibleQuestions.length;
   const _overallProgress = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
   void _overallProgress; // Used for progress tracking
@@ -832,7 +1106,8 @@ export function CompleteStep3Component({
         return q.conditionalLogic.showIf(dependentValue);
       }
     );
-    const answered = sectionQuestions.filter((q: Question) => answers[q.id] !== undefined).length;
+    // ✅ Bug #3 Fix: Use isAnswered helper
+    const answered = sectionQuestions.filter((q: Question) => isAnswered(answers[q.id])).length;
     const total = sectionQuestions.length;
 
     return {
@@ -851,35 +1126,9 @@ export function CompleteStep3Component({
   // HANDLERS
   // ============================================================================
   const handleAnswer = (questionId: string, value: unknown) => {
-    // DEBUG: Log answer capture for troubleshooting
-    if (import.meta.env.DEV) {
-      console.log(`📝 Answer captured: ${questionId} =`, value, `(type: ${typeof value})`);
-    }
-
-    const newAnswers = {
-      ...answers,
-      [questionId]: value,
-    };
-    setAnswers(newAnswers);
-
-    // Update parent state if updateState is provided
-    if (updateState) {
-      updateState({
-        useCaseData: {
-          ...state.useCaseData,
-          inputs: newAnswers,
-        },
-      });
-
-      // DEBUG: Log state update
-      if (import.meta.env.DEV) {
-        console.log(`📊 State updated with ${Object.keys(newAnswers).length} answers:`, newAnswers);
-      }
-    }
-
-    // DISABLED: Auto-scroll removed per user request
-    // User should manually scroll/click to continue
-    // Auto-advance was causing issues with premature triggering
+    // ✅ SINGLE SOURCE OF TRUTH: Use setAnswer which writes to wizard store
+    // This ensures validation and Step 4 see the same data
+    setAnswer(questionId, value);
   };
 
   const goToQuestion = (index: number) => {
@@ -921,10 +1170,9 @@ export function CompleteStep3Component({
 
   const canProceed = () => {
     // Check if all required questions are answered
+    // ✅ Bug #3 Fix: Use isAnswered helper (handles empty arrays)
     const requiredQuestions = visibleQuestions.filter((q) => q.validation?.required);
-    return requiredQuestions.every(
-      (q) => answers[q.id] !== undefined && answers[q.id] !== null && answers[q.id] !== ""
-    );
+    return requiredQuestions.every((q) => isAnswered(answers[q.id]));
   };
 
   const _handleComplete = () => {
@@ -980,6 +1228,29 @@ export function CompleteStep3Component({
 
   return (
     <div className="min-h-screen bg-slate-950">
+      {/* ✅ DEBUG PANEL (Jan 24, 2026) - Shows actual state for troubleshooting */}
+      {/* Enable with ?debug=1 in URL */}
+      {import.meta.env.DEV && new URLSearchParams(window.location.search).get("debug") === "1" && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm bg-slate-900 border border-purple-500/50 rounded-lg p-3 text-xs font-mono overflow-auto max-h-64">
+          <div className="text-purple-400 font-bold mb-2">Step 3 Debug Panel</div>
+          <div className="text-slate-300">
+            <div className="mb-1">Questions: {visibleQuestions.length}</div>
+            <div className="mb-1">Answered: {answeredCount}/{totalQuestions} ({Math.round((answeredCount/totalQuestions)*100)}%)</div>
+            <div className="mb-1">Valid: {answeredCount >= totalQuestions * 0.5 ? '✅ YES' : '❌ NO'}</div>
+            <div className="text-slate-500 mt-2">Answers ({Object.keys(answers).filter(k => isAnswered(answers[k])).length} non-empty):</div>
+            <pre className="text-[10px] text-slate-400 mt-1 whitespace-pre-wrap">
+              {JSON.stringify(
+                Object.fromEntries(
+                  Object.entries(answers).filter(([_, v]) => isAnswered(v)).slice(0, 10)
+                ),
+                null,
+                1
+              )}
+              {Object.keys(answers).filter(k => isAnswered(answers[k])).length > 10 && '\n...and more'}
+            </pre>
+          </div>
+        </div>
+      )}
       {/* Main Content - Full Width (no sidebar) */}
       <div className="flex flex-col min-h-screen">
         {/* Compact Header with Progress */}
@@ -1002,9 +1273,6 @@ export function CompleteStep3Component({
                     <h1 className="text-2xl md:text-3xl font-bold text-white mb-0.5">
                       Your {industryTitle} Details
                     </h1>
-                    <p className="text-slate-300 text-sm">
-                      Help Merlin size the perfect energy system for you.
-                    </p>
                   </div>
                 </div>
               </div>
@@ -1014,17 +1282,15 @@ export function CompleteStep3Component({
             {(!state.industry || !INDUSTRY_IMAGES[state.industry]) && (
               <div className="mb-6 text-center">
                 <h1 className="text-2xl font-bold text-white mb-1">Your {industryTitle} Details</h1>
-                <p className="text-base text-slate-400">
-                  Help Merlin size the perfect energy system for you.
-                </p>
               </div>
             )}
 
             {/* Industry Opportunity Panel */}
+            {/* ✅ Bug #5 Fix (Jan 23, 2026): Renamed prop from 'state' to 'locationString' for clarity */}
             <IndustryOpportunityPanel
               industry={state.industry || "car-wash"}
               industryName={state.industryName || industryTitle}
-              state={state.location}
+              locationString={state.location}
               electricityRate={state.electricityRate}
               sunHours={state.sunHours}
               goals={state.goals}

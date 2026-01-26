@@ -263,18 +263,43 @@ const DEFAULT_PRICING_CONFIG: PricingConfiguration = {
 };
 
 class PricingConfigService {
-  private config: PricingConfiguration;
+  private config: PricingConfiguration = DEFAULT_PRICING_CONFIG;
   private useDatabase: boolean = true; // Flag to enable/disable database usage
   private configCache: PricingConfiguration | null = null;
   private cacheExpiry: number = 0;
   private readonly CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
-  constructor() {
-    // Initialize with defaults (will be overridden by loadFromDatabase)
-    this.config = DEFAULT_PRICING_CONFIG;
+  // ✅ NEW: Single-flight initialization control
+  private _readyPromise: Promise<PricingConfiguration> | null = null;
+  private _readyResolved: boolean = false;
 
-    // Try to load from database first, fallback to localStorage, then defaults
-    this.loadConfiguration();
+  constructor() {
+    // ✅ DO NOT call async work here - prevents race conditions
+    this.config = DEFAULT_PRICING_CONFIG;
+  }
+
+  /**
+   * ✅ Call this before using pricing - ensures config is loaded
+   * Returns frozen configuration for wizard session
+   */
+  async ready(): Promise<PricingConfiguration> {
+    if (this._readyResolved) return this.getConfiguration();
+
+    if (!this._readyPromise) {
+      this._readyPromise = (async () => {
+        await this.loadConfiguration();
+        this._readyResolved = true;
+        return this.getConfiguration();
+      })();
+    }
+    return this._readyPromise;
+  }
+
+  /**
+   * ✅ Guard for SSR safety - only access localStorage in browser
+   */
+  private isBrowser(): boolean {
+    return typeof window !== "undefined" && typeof localStorage !== "undefined";
   }
 
   /**
@@ -289,26 +314,28 @@ class PricingConfigService {
         if (dbConfig) {
           this.config = dbConfig;
           // Migrate localStorage to database if it exists and is newer
-          await this.migrateLocalStorageToDatabase();
+          await this.migrateLocalStorageToDatabaseSafe();
           return;
         }
       }
 
-      // Fallback to localStorage
-      const savedConfig = localStorage.getItem("pricingConfiguration");
-      if (savedConfig) {
-        try {
-          const parsed = JSON.parse(savedConfig);
-          if (this.validateConfig(parsed)) {
-            this.config = parsed;
-            // Try to save to database for future use
-            if (this.useDatabase) {
-              await this.saveToDatabase(this.config, "Migrated from localStorage");
+      // ✅ Fallback to localStorage ONLY in browser
+      if (this.isBrowser()) {
+        const savedConfig = localStorage.getItem("pricingConfiguration");
+        if (savedConfig) {
+          try {
+            const parsed = JSON.parse(savedConfig);
+            if (this.validateConfig(parsed)) {
+              this.config = parsed;
+              // Try to save to database for future use
+              if (this.useDatabase) {
+                await this.saveToDatabase(this.config, "Migrated from localStorage");
+              }
+              return;
             }
-            return;
+          } catch (e) {
+            console.warn("Failed to parse localStorage pricing config:", e);
           }
-        } catch (e) {
-          console.warn("Failed to parse localStorage pricing config:", e);
         }
       }
 
@@ -316,16 +343,28 @@ class PricingConfigService {
       this.config = DEFAULT_PRICING_CONFIG;
     } catch (error) {
       console.error("Error loading pricing configuration:", error);
-      // Fallback to localStorage or defaults
-      const savedConfig = localStorage.getItem("pricingConfiguration");
-      if (savedConfig) {
-        try {
-          this.config = JSON.parse(savedConfig);
-        } catch {
-          this.config = DEFAULT_PRICING_CONFIG;
+
+      // ✅ Safe fallback with browser guard
+      if (this.isBrowser()) {
+        const savedConfig = localStorage.getItem("pricingConfiguration");
+        if (savedConfig) {
+          try {
+            const parsed = JSON.parse(savedConfig);
+            this.config = this.validateConfig(parsed) ? parsed : DEFAULT_PRICING_CONFIG;
+            return;
+          } catch {}
         }
       }
+      this.config = DEFAULT_PRICING_CONFIG;
     }
+  }
+
+  /**
+   * ✅ Browser-safe wrapper for localStorage migration
+   */
+  private async migrateLocalStorageToDatabaseSafe(): Promise<void> {
+    if (!this.isBrowser()) return;
+    return this.migrateLocalStorageToDatabase();
   }
 
   /**
@@ -396,7 +435,18 @@ class PricingConfigService {
 
       // Validate the config
       if (!this.validateConfig(config)) {
-        console.warn("Invalid config from database, using defaults");
+        if (import.meta.env.DEV) {
+          console.warn("[pricingConfigService] Invalid config from DB:", {
+            id: data?.id,
+            hasConfig: !!data?.config_data,
+            sections: Object.keys(data?.config_data || {}),
+            bessCheck: typeof (data?.config_data as any)?.bess?.smallSystemPerKWh,
+            solarCheck: typeof (data?.config_data as any)?.solar?.commercialPerWatt,
+            generatorCheck: typeof (data?.config_data as any)?.generators?.naturalGasPerKW,
+          });
+        } else {
+          console.warn("Invalid config from database, using defaults");
+        }
         return null;
       }
 
@@ -615,7 +665,7 @@ class PricingConfigService {
   }
 
   private validateConfig(config: any): boolean {
-    // Basic validation to ensure required sections exist
+    // ✅ Tightened validation: check sections exist AND have valid numeric values
     const requiredSections = [
       "bess",
       "solar",
@@ -626,7 +676,32 @@ class PricingConfigService {
       "balanceOfPlant",
       "systemControls",
     ];
-    return requiredSections.every((section) => section in config);
+    
+    // Check sections exist
+    if (!requiredSections.every((section) => section in config)) {
+      return false;
+    }
+
+    // ✅ Validate sentinel values to catch partial/corrupt DB rows
+    try {
+      if (typeof config.bess?.smallSystemPerKWh !== "number" || config.bess.smallSystemPerKWh <= 0) {
+        console.warn("Invalid BESS pricing in config");
+        return false;
+      }
+      if (typeof config.solar?.commercialPerWatt !== "number" || config.solar.commercialPerWatt <= 0) {
+        console.warn("Invalid solar pricing in config");
+        return false;
+      }
+      if (typeof config.generators?.naturalGasPerKW !== "number" || config.generators.naturalGasPerKW <= 0) {
+        console.warn("Invalid generator pricing in config");
+        return false;
+      }
+    } catch (e) {
+      console.warn("Pricing config validation error:", e);
+      return false;
+    }
+
+    return true;
   }
 
   private incrementVersion(version: string): string {
@@ -685,6 +760,14 @@ class PricingConfigService {
 }
 
 export const pricingConfigService = new PricingConfigService();
+
+/**
+ * ✅ Convenient helper for wizard/components - ensures pricing is loaded
+ * Use this in Step 3 to get frozen pricing for session
+ */
+export async function getPricingConfiguration(): Promise<PricingConfiguration> {
+  return pricingConfigService.ready();
+}
 
 // Main exports
 export { PricingConfigService, DEFAULT_PRICING_CONFIG, defaultBESSPricing };

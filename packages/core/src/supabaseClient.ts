@@ -1,24 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
+// ============================================================================
+// SUPABASE CLIENT - RE-EXPORT FROM MAIN APP
+// ============================================================================
+// This prevents "Multiple GoTrueClient instances" warning by ensuring
+// packages/core uses the SAME Supabase instance as the main app.
+//
+// Import chain:
+//   packages/core/src/* → packages/core/src/supabaseClient.ts (this file)
+//   → src/services/supabaseClient.ts (main app's singleton)
+//
+// This guarantees a single GoTrueClient instance across the entire app.
+// ============================================================================
 
-// Supabase configuration
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️ Supabase credentials not found. Please add them to your .env file.');
-}
-
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  }
-});
+// Re-export the singleton instance from main app
+export { supabase } from '../../../src/services/supabaseClient';
+export type { Database } from '../../../src/types/database.types';
 
 // ====================================================================
-// PRICING DATABASE TYPES
+// PRICING DATABASE TYPES (keep these here for backward compatibility)
+// ====================================================================
 // ====================================================================
 
 export interface PricingConfiguration {

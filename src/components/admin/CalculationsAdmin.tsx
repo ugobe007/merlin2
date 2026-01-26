@@ -403,8 +403,8 @@ const CalculationsAdmin: React.FC = () => {
             >
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h4 className="text-lg font-bold text-white">{eq.name}</h4>
-                  <p className="text-gray-400 text-sm">{eq.category}</p>
+                  <h4 className="text-lg font-bold text-white">{eq.equipment_name}</h4>
+                  <p className="text-gray-400 text-sm">{eq.equipment_category}</p>
                 </div>
                 <button className="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-3 py-1 rounded text-xs font-semibold transition-all">
                   ✏️ Edit
@@ -418,7 +418,7 @@ const CalculationsAdmin: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-gray-400">Duty Cycle:</span>
-                  <p className="text-white font-semibold">{(eq.typical_duty_cycle * 100).toFixed(0)}%</p>
+                  <p className="text-white font-semibold">{((eq.duty_cycle_percent || 0) / 100).toFixed(0)}%</p>
                 </div>
                 <div>
                   <span className="text-gray-400">Efficiency:</span>
@@ -426,7 +426,7 @@ const CalculationsAdmin: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-gray-400">Lifetime:</span>
-                  <p className="text-white font-semibold">{eq.expected_lifetime_years} years</p>
+                  <p className="text-white font-semibold">{eq.equipment_lifetime_years || 'N/A'} years</p>
                 </div>
               </div>
             </div>

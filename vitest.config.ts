@@ -12,7 +12,7 @@ export default defineConfig({
     globals: true,
     
     // Setup files
-    setupFiles: ['./test-setup.ts'],
+    setupFiles: ['./test-setup.vitest.ts'],
     
     // Coverage configuration
     coverage: {

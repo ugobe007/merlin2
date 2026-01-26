@@ -1,39 +1,27 @@
 /**
- * Step3Details - COMPLETE REPLACEMENT
+ * Step3Details - V6 Questionnaire Step
  *
- * Drop-in replacement for existing Step3Details.tsx
- * Uses new CompleteStep3 with full backward compatibility
- *
- * This replaces the old questionnaire engine with the new
- * CompleteStep3 system that includes:
+ * Uses CompleteStep3 via Step3Integration for:
  * - 27 comprehensive questions
  * - 12 question types
  * - Conditional logic
  * - Live calculations
  * - Quote generation
  *
- * ✅ NEW (Jan 21, 2026): Includes ProgressiveModelPanel for TrueQuote™ accuracy
- * - Collects service size, demand charge, HVAC type via micro-prompts
- * - Improves peakDemand and gridCapacity inference without form bloat
+ * Updated Jan 24, 2026: Removed ProgressiveModelPanel (battery sizing micro-prompts)
+ * per user feedback - users want full questionnaire without extra panels.
  */
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Step3Integration } from "../../Step3Integration";
-import { ProgressiveModelPanel } from "../micro-prompts";
-import type {
-  WizardState,
-  ServiceSizeOption,
-  DemandChargeBand,
-  HVACTypeOption,
-  GeneratorCapacityBand,
-} from "../types";
+import type { WizardState } from "../types";
 
 interface Step3DetailsProps {
-  state: unknown;
+  state: WizardState; // ✅ FIX: no more unknown
   updateState: (updates: Partial<WizardState>) => void;
   onNext: () => void;
   onBack?: () => void;
-  onValidityChange?: (isValid: boolean) => void;
+  onValidityChange?: (isValid: boolean) => void; // UI hint only (SSOT gating lives in WizardV6 snapshot)
 }
 
 export function Step3Details({
@@ -43,92 +31,23 @@ export function Step3Details({
   onBack,
   onValidityChange,
 }: Step3DetailsProps) {
-  // Cast state to proper type
-  const wizardState = state as WizardState;
-
-  // Extract current answers from state
-  const initialData = (wizardState.useCaseData?.inputs as Record<string, unknown>) || {};
-
-  // Get industry for context-aware prompts
-  const industry = wizardState.industry || wizardState.detectedIndustry || "";
+  // Extract current answers from state (stable memo)
+  const initialData = useMemo(
+    () => ((state.useCaseData?.inputs as Record<string, unknown>) || {}),
+    [state.useCaseData?.inputs]
+  );
 
   return (
     <div className="space-y-6">
-      {/* ========================================================================
-          PROGRESSIVE MODEL PANEL - Micro-prompts for TrueQuote™ accuracy
-          ======================================================================== */}
-      <ProgressiveModelPanel
-        industry={industry}
-        serviceSize={wizardState.serviceSize}
-        hasDemandCharge={wizardState.hasDemandCharge}
-        demandChargeBand={wizardState.demandChargeBand}
-        hvacType={wizardState.hvacType}
-        hasBackupGenerator={wizardState.hasBackupGenerator}
-        generatorCapacityBand={wizardState.generatorCapacityBand}
-        onServiceSizeChange={(value: ServiceSizeOption) => {
-          updateState({
-            serviceSize: value,
-            progressiveFieldsAnswered: [
-              ...(wizardState.progressiveFieldsAnswered || []),
-              "serviceSize",
-            ].filter((v, i, a) => a.indexOf(v) === i),
-          });
-        }}
-        onHasDemandChargeChange={(value: "yes" | "no" | "not-sure") => {
-          updateState({
-            hasDemandCharge: value,
-            progressiveFieldsAnswered: [
-              ...(wizardState.progressiveFieldsAnswered || []),
-              "hasDemandCharge",
-            ].filter((v, i, a) => a.indexOf(v) === i),
-          });
-        }}
-        onDemandChargeBandChange={(value: DemandChargeBand) => {
-          updateState({
-            demandChargeBand: value,
-            progressiveFieldsAnswered: [
-              ...(wizardState.progressiveFieldsAnswered || []),
-              "demandChargeBand",
-            ].filter((v, i, a) => a.indexOf(v) === i),
-          });
-        }}
-        onHVACTypeChange={(value: HVACTypeOption) => {
-          updateState({
-            hvacType: value,
-            progressiveFieldsAnswered: [
-              ...(wizardState.progressiveFieldsAnswered || []),
-              "hvacType",
-            ].filter((v, i, a) => a.indexOf(v) === i),
-          });
-        }}
-        onHasBackupGeneratorChange={(value: "yes" | "no" | "planned") => {
-          updateState({
-            hasBackupGenerator: value,
-            progressiveFieldsAnswered: [
-              ...(wizardState.progressiveFieldsAnswered || []),
-              "hasBackupGenerator",
-            ].filter((v, i, a) => a.indexOf(v) === i),
-          });
-        }}
-        onGeneratorCapacityBandChange={(value: GeneratorCapacityBand) => {
-          updateState({
-            generatorCapacityBand: value,
-            progressiveFieldsAnswered: [
-              ...(wizardState.progressiveFieldsAnswered || []),
-              "generatorCapacityBand",
-            ].filter((v, i, a) => a.indexOf(v) === i),
-          });
-        }}
-      />
-
       {/* ========================================================================
           STEP 3 QUESTIONNAIRE - Industry-specific questions
           Note: Step3Integration has slightly different types due to legacy API
           eslint-disable @typescript-eslint/no-explicit-any - Type coercion needed
           ======================================================================== */}
       <Step3Integration
+        // Legacy API mismatch: keep coercion local
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        state={wizardState as any}
+        state={state as any}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         updateState={updateState as any}
         initialData={initialData}
@@ -136,18 +55,16 @@ export function Step3Details({
           // Sync answers back to state as user types
           updateState({
             useCaseData: {
-              ...wizardState.useCaseData,
+              ...state.useCaseData,
               inputs: data as Record<string, unknown>,
             },
           });
         }}
         onNext={(quoteData) => {
           // Save complete data and proceed to Step 4
-          // Note: 'calculated' and 'timestamp' are not part of useCaseData type
-          // TrueQuote is SSOT for calculations (Step 5)
           updateState({
             useCaseData: {
-              ...wizardState.useCaseData,
+              ...state.useCaseData,
               inputs: quoteData.answers,
             },
           });

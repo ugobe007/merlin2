@@ -7,7 +7,6 @@ import merlinImage from "../../assets/images/new_profile_merlin.png";
 import { MethodologyStatement } from "../shared/IndustryComplianceBadges";
 import { TrueQuoteModal } from "../shared/TrueQuoteModal";
 import { TrueQuoteBadgeCanonical } from "../shared/TrueQuoteBadgeCanonical";
-import badgeGoldIcon from "../../assets/images/badge_gold_icon.jpg";
 import badgeIcon from "../../assets/images/badge_icon.jpg";
 
 // Marketing constants for display-only calculations (hero stats, not quotes)

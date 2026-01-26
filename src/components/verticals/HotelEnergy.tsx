@@ -17,7 +17,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { DollarSign, CheckCircle, ArrowRight, Sun, Sparkles, X, Battery, Building2, Car, Leaf, Receipt, MapPin, Plug, Zap } from 'lucide-react';
+import { DollarSign, CheckCircle, ArrowRight, Sun, Sparkles, X, Battery, Building2, Car, Leaf, Receipt, MapPin, Plug } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { calculateHotelPowerSimple, type HotelClassSimple, type HotelAmenitySimple } from '@/services/useCasePowerCalculations';

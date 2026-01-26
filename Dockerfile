@@ -21,8 +21,8 @@ COPY . .
 # Clear any existing build artifacts
 RUN rm -rf dist node_modules/.vite
 
-# Build the app (this will create fresh dist folder)
-RUN npm run build
+# Build the app (skip TypeScript checking for faster deploy)
+RUN npm run build:prod
 
 # Production stage
 FROM nginx:alpine

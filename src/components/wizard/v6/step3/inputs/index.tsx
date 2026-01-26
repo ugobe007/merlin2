@@ -124,7 +124,18 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
           <button
             key={option.value}
             type="button"
-            onClick={() => onChange(option.value)}
+            onClick={() => {
+              if (import.meta.env.DEV) {
+                console.log(`🔘 [PanelButtonGroup] Button clicked:`, {
+                  questionField,
+                  optionValue: option.value,
+                  optionLabel: option.label,
+                  currentValue: value,
+                  willCallOnChange: typeof onChange === 'function'
+                });
+              }
+              onChange(option.value);
+            }}
             className={cn(
               "group relative flex flex-col items-center p-3 rounded-xl transition-all duration-200",
               "hover:scale-[1.02] active:scale-[0.98]",

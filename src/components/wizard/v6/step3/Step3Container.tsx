@@ -7,7 +7,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/services/supabaseClient';
 import { SectionHeader, SmartQuestion, getColorScheme } from './inputs';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 // ============================================
 // TYPES
@@ -18,7 +18,7 @@ interface Question {
   question_text: string;
   question_type: 'select' | 'multiselect' | 'number' | 'boolean' | 'text' | 'range_buttons' | 'slider' | 'toggle';
   field_name: string;
-  options: any;
+  options: unknown;
   is_required: boolean;
   display_order: number;
   help_text: string;
@@ -26,18 +26,12 @@ interface Question {
   icon_name: string;
 }
 
-interface Section {
-  name: string;
-  icon: string;
-  questions: Question[];
-}
-
 interface Step3ContainerProps {
   industry: string;
   useCaseId: string;
-  values: Record<string, any>;
-  onChange: (fieldName: string, value: any) => void;
-  onBack: () => void;
+  values: Record<string, unknown>;
+  onChange: (fieldName: string, value: unknown) => void;
+  _onBack: () => void;
   onNext: () => void;
 }
 
@@ -74,7 +68,7 @@ export const Step3Container: React.FC<Step3ContainerProps> = ({
   useCaseId,
   values,
   onChange,
-  onBack,
+  _onBack,
   onNext,
 }) => {
   const [questions, setQuestions] = useState<Question[]>([]);

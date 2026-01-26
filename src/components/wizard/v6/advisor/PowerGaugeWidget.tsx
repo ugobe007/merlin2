@@ -25,19 +25,19 @@ export function PowerGaugeWidget({
   // Placeholder mode: Show "Analyzing..." when no real data (Step 1-2)
   const isPlaceholder = peakLoadKW === 0 || peakLoadKW < 10;
 
-  // Use peak load as the primary value to display
-  const displayValue = peakLoadKW;
+  // Use peak load as the primary value to display (guard against NaN/undefined)
+  const displayValue = Number.isFinite(peakLoadKW) ? peakLoadKW : 0;
 
   // Gauge fill based on peak load magnitude (visual feedback)
   // Small facilities: 0-100 kW, Medium: 100-500 kW, Large: 500+ kW
   const getFillPercent = (peakKW: number) => {
-    if (peakKW === 0) return 0;
+    if (!Number.isFinite(peakKW) || peakKW === 0) return 0;
     if (peakKW < 100) return 30 + (peakKW / 100) * 30; // 30-60%
     if (peakKW < 500) return 60 + ((peakKW - 100) / 400) * 30; // 60-90%
     return 90 + Math.min(((peakKW - 500) / 500) * 10, 10); // 90-100%
   };
 
-  const fillPercent = getFillPercent(displayValue);
+  const fillPercent = getFillPercent(displayValue) || 0; // Ensure never NaN
 
   // Determine status and color based on facility size
   const getStatusConfig = (peakKW: number) => {

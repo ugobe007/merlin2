@@ -79,9 +79,9 @@ const TIER_CONFIG = {
 // CUSTOM STYLES - PART 2 ENHANCED DESIGN
 // ============================================================================
 const customStyles = `
-  /* Card hover transitions */
+  /* Card hover transitions + CLICK FEEDBACK */
   .card-starter, .card-perfect, .card-beast {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .card-starter:hover {
@@ -89,14 +89,61 @@ const customStyles = `
     box-shadow: 0 40px 80px -20px rgba(16, 185, 129, 0.3);
   }
   
+  .card-starter:active {
+    transform: translateY(-2px) scale(0.98);
+    box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.4);
+  }
+  
   .card-perfect:hover {
     transform: translateY(-6px);
     box-shadow: 0 40px 80px -20px rgba(168, 85, 247, 0.4);
   }
   
+  .card-perfect:active {
+    transform: translateY(-2px) scale(0.98);
+    box-shadow: 0 20px 40px -15px rgba(168, 85, 247, 0.5);
+  }
+  
   .card-beast:hover {
     transform: translateY(-6px);
     box-shadow: 0 40px 80px -20px rgba(249, 115, 22, 0.35);
+  }
+  
+  .card-beast:active {
+    transform: translateY(-2px) scale(0.98);
+    box-shadow: 0 20px 40px -15px rgba(249, 115, 22, 0.45);
+  }
+  
+  /* SELECTED STATE GLOW */
+  .card-selected {
+    animation: selectedPulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes selectedPulse {
+    0%, 100% { box-shadow: 0 0 40px 0px rgba(168, 85, 247, 0.5); }
+    50% { box-shadow: 0 0 60px 5px rgba(168, 85, 247, 0.7); }
+  }
+  
+  /* CHECKMARK ANIMATION */
+  .checkmark-appear {
+    animation: checkmarkBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  @keyframes checkmarkBounce {
+    0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(0deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  
+  /* SAVINGS NUMBER POP */
+  @keyframes savingsPop {
+    0% { transform: scale(0.9); opacity: 0; }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  .savings-number {
+    animation: savingsPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
   
   /* STARTER - Fresh green gradient text */
@@ -562,11 +609,28 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
               onClick={() => selectPowerLevel(tier)}
               className={`
                 relative rounded-2xl overflow-hidden cursor-pointer card ${config.cardHover}
-                ${config.cardBg} border ${config.cardBorder}
+                ${config.cardBg} border-2
+                ${isSelected 
+                  ? "border-purple-500 card-selected" 
+                  : config.cardBorder
+                }
                 ${isPerfectFit ? "shadow-[0_0_60px_-15px_rgba(168,85,247,0.4)]" : ""}
-                ${isSelected ? "ring-2 ring-purple-500" : ""}
+                transition-all duration-300
               `}
             >
+              {/* SELECTED CHECKMARK BADGE */}
+              {isSelected && (
+                <div className="absolute top-4 right-4 z-20 checkmark-appear">
+                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-2 shadow-lg shadow-purple-500/50">
+                    <Check className="w-6 h-6 text-white" strokeWidth={3} />
+                  </div>
+                </div>
+              )}
+              
+              {/* SELECTION GLOW OVERLAY */}
+              {isSelected && (
+                <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 via-transparent to-transparent pointer-events-none" />
+              )}
               {/* Recommended Banner (Perfect Fit only) */}
               {isPerfectFit && (
                 <>
@@ -829,6 +893,31 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
           variant="compact"
         />
       </div>
+      
+      {/* CONTINUE BUTTON - Appears when selection made */}
+      {selectedTier && (
+        <div className="mt-8 flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <button
+            onClick={() => goToStep(6)}
+            className="
+              group relative px-12 py-4 rounded-xl
+              bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600
+              hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500
+              text-white font-bold text-lg
+              shadow-2xl shadow-purple-500/50
+              transform hover:scale-105 active:scale-95
+              transition-all duration-300
+              flex items-center gap-3
+            "
+          >
+            <span>Continue with {TIER_CONFIG[selectedTier].name}</span>
+            <Check className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            
+            {/* Pulsing glow effect */}
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 opacity-0 group-hover:opacity-20 blur-xl transition-opacity" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,22 @@
 /**
  * =============================================================================
- * CAR WASH 16Q INTEGRATION LAYER
+ * @deprecated LEGACY FILE - DO NOT USE
+ * =============================================================================
+ * 
+ * This file is DEPRECATED as of Jan 23, 2026.
+ * 
+ * USE INSTEAD: @/services/calculators/carWashIntegration.ts
+ * 
+ * Step3Integration.tsx imports from the canonical location:
+ *   import { calculateCarWashFromAnswers } from "@/services/calculators/carWashIntegration";
+ * 
+ * This file remains for backward compatibility but will be removed.
+ * =============================================================================
+ */
+
+/**
+ * =============================================================================
+ * CAR WASH 16Q INTEGRATION LAYER (LEGACY)
  * =============================================================================
  * 
  * Connects CompleteStep3Component answers to calculateCarWash16Q()

@@ -289,6 +289,12 @@ export function EnhancedStep2Industry({ state, updateState, onNext }: Props) {
   const hasPresetSize = state.businessName && state.businessSizeTier;
 
   const selectIndustry = (slug: string, name: string) => {
+    // ✅ FIX (Jan 25, 2026): Validate industry before allowing navigation
+    if (!slug || !name) {
+      console.error("Step2: Cannot select industry without slug and name");
+      return;
+    }
+
     updateState({ industry: slug, industryName: name });
 
     if (hasPresetSize) {
@@ -301,10 +307,38 @@ export function EnhancedStep2Industry({ state, updateState, onNext }: Props) {
   };
 
   const handleSizeSelect = (size: BusinessSizeTier, depth: QuestionnaireDepth) => {
+    // ✅ CRITICAL FIX (Jan 25, 2026): Normalize and validate industry slug before committing
+    const normalizeIndustry = (raw: string): string => {
+      return raw.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+    };
+
+    const slug = normalizeIndustry(
+      (typeof state.industry === "string" && state.industry) ||
+      (state as any).industrySlug ||
+      (state as any).detectedIndustry ||
+      ""
+    );
+
+    const name = state.industryName || slug;
+
+    if (!slug || slug === "unknown") {
+      console.error("❌ Step2: Cannot advance - industry slug is missing or invalid:", slug);
+      setShowSizePanel(false);
+      return;
+    }
+
+    // Atomic SSOT update: commit ALL Step 2 fields before advancing
     updateState({
+      industry: slug,
+      industryName: name,
       businessSizeTier: size,
       questionnaireDepth: depth,
     });
+
+    if (import.meta.env.DEV) {
+      console.log("✅ Step2: Committing to state:", { industry: slug, industryName: name, businessSizeTier: size, questionnaireDepth: depth });
+    }
+
     setShowSizePanel(false);
     if (onNext) setTimeout(onNext, 300);
   };
