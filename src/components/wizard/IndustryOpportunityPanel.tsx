@@ -43,7 +43,10 @@ interface OpportunityCard {
 interface IndustryOpportunityPanelProps {
   industry: string;
   industryName?: string;
+  /** @deprecated Use locationString instead */
   state?: string;
+  /** ✅ Bug #5 Fix (Jan 23, 2026): Renamed from 'state' to avoid confusion with US state */
+  locationString?: string;
   electricityRate?: number;
   sunHours?: number;
   goals?: string[];
@@ -324,15 +327,19 @@ export function IndustryOpportunityPanel({
   industry,
   industryName,
   state,
+  locationString,
   electricityRate,
   sunHours,
   goals,
 }: IndustryOpportunityPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
+  // ✅ Bug #5 Fix: Accept both state (deprecated) and locationString
+  const location = locationString || state;
+  
   const opportunities = getIndustryOpportunities(
     industry,
-    state,
+    location,
     electricityRate,
     sunHours,
     goals

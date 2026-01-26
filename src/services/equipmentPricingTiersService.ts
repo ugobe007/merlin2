@@ -115,11 +115,13 @@ export interface EquipmentPrice {
 interface MarkupConfig {
   data: Map<string, number>;
   expiry: number;
+  tableUnavailable?: boolean; // ✅ Flag to stop repeated 404 attempts
 }
 
 const markupCache: MarkupConfig = {
   data: new Map(),
-  expiry: 0
+  expiry: 0,
+  tableUnavailable: false
 };
 
 /**
@@ -140,14 +142,35 @@ export async function getMarkupPercentage(
     return markupCache.data.get(equipmentType)!;
   }
   
+  // ✅ If table was previously unavailable, skip DB attempts and use default
+  if (markupCache.tableUnavailable) {
+    const defaultMarkup = 15;
+    markupCache.data.set(equipmentType, defaultMarkup);
+    markupCache.expiry = Date.now() + CACHE_DURATION_MS;
+    return defaultMarkup;
+  }
+  
   try {
-    // Try equipment-specific markup first
+    // Try equipment-specific markup first (optional table - may not exist in all environments)
     const { data: typeMarkup, error: typeError } = await supabase
       .from('pricing_markup_config')
       .select('markup_percentage')
       .eq('config_key', equipmentType)
       .eq('is_active', true)
       .single();
+    
+    // Silently handle missing table (404) or bad requests (400) - these are non-critical
+    if (typeError && (typeError.code === 'PGRST116' || typeError.message?.includes('404') || typeError.message?.includes('400'))) {
+      if (import.meta.env.DEV) {
+        console.debug('[MarkupService] pricing_markup_config table not available, using defaults');
+      }
+      // ✅ Mark table as unavailable to prevent future 404 spam
+      markupCache.tableUnavailable = true;
+      const defaultMarkup = 15;
+      markupCache.data.set(equipmentType, defaultMarkup);
+      markupCache.expiry = Date.now() + CACHE_DURATION_MS;
+      return defaultMarkup;
+    }
     
     if (!typeError && typeMarkup) {
       markupCache.data.set(equipmentType, typeMarkup.markup_percentage);
@@ -169,7 +192,10 @@ export async function getMarkupPercentage(
     return markup;
     
   } catch (error) {
-    console.warn(`[MarkupService] Error getting markup for ${equipmentType}, using 15%:`, error);
+    // Silently fail - these are optional features
+    if (import.meta.env.DEV) {
+      console.debug(`[MarkupService] Optional pricing table unavailable, using 15% default`);
+    }
     return 15; // Safe default
   }
 }
@@ -652,7 +678,7 @@ export async function getMarketAdjustedPrice(
   const tier = options?.tier || 'standard';
   const maxAgeDays = options?.maxAgedays || 30;
   
-  // Step 1: Try live market data first
+  // Step 1: Try live market data first (optional table)
   try {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - maxAgeDays);
@@ -662,13 +688,20 @@ export async function getMarketAdjustedPrice(
       .select('*')
       .eq('equipment_type', equipmentType)
       .eq('is_verified', true)
-      .gte('collected_at', cutoffDate.toISOString())
-      .order('collected_at', { ascending: false })
+      .gte('price_date', cutoffDate.toISOString())
+      .order('price_date', { ascending: false })
       .limit(5);
     
-    if (!marketError && marketPrices && marketPrices.length > 0) {
+    // Silently handle missing table - this is an optional market intelligence feature
+    if (marketError && (marketError.code === 'PGRST116' || marketError.message?.includes('404') || marketError.message?.includes('400'))) {
+      // Table doesn't exist or bad request - skip to fallback pricing
+      if (import.meta.env.DEV) {
+        console.debug('[PricingService] Market pricing table not available, using fallback');
+      }
+      // Fall through to Step 2 (database pricing tables)
+    } else if (!marketError && marketPrices && marketPrices.length > 0) {
       // Calculate weighted average from market data
-      interface MarketPrice { price: number; confidence?: number; collected_at: string; source_name?: string; }
+      interface MarketPrice { price: number; confidence?: number; price_date: string; source_name?: string; }
       const prices = marketPrices as MarketPrice[];
       
       // Weight by recency (newer = higher weight)
@@ -697,7 +730,7 @@ export async function getMarketAdjustedPrice(
         sourceType: 'market_data',
         trueQuote: {
           source: `Market data (${prices.length} sources)`,
-          sourceDate: latestSource.collected_at?.split('T')[0],
+          sourceDate: latestSource.price_date?.split('T')[0],
           confidence: prices.length >= 3 ? 'high' : 'medium',
           methodology: `Weighted average from ${prices.length} verified market sources, most recent: ${latestSource.source_name || 'Unknown'}`
         }
@@ -769,7 +802,7 @@ export async function syncPricingFromMarketData(
       .select('*')
       .eq('equipment_type', equipmentType)
       .eq('is_verified', true)
-      .order('collected_at', { ascending: false })
+      .order('price_date', { ascending: false })
       .limit(10);
     
     if (marketError) {

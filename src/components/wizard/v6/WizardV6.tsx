@@ -1,19 +1,22 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { RotateCcw, X, ChevronLeft, ChevronRight, Zap, Sun, Shield } from "lucide-react";
+import { RotateCcw, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { WizardState } from "./types";
 import { INITIAL_WIZARD_STATE, POWER_LEVELS } from "./types";
 import { bufferService } from "@/services/bufferService";
 import { buildStep3Snapshot } from "./step3/buildStep3Snapshot";
+import { validateStep3Contract } from "./step3/validateStep3Contract";
+import { validateStep3Dynamic, validateStep3Sync } from "./step3/validateStep3Dynamic"; // V7 architecture
+
+// Feature flag for database-driven validation (Jan 26, 2026)
+const USE_DATABASE_VALIDATOR = import.meta.env.VITE_USE_DATABASE_VALIDATOR === 'true' || false;
 
 // MerlinAdvisor Rail System (Phase 1 - Jan 16, 2026)
 import { AdvisorPublisher } from "./advisor/AdvisorPublisher";
 import { AdvisorRail } from "./advisor/AdvisorRail";
-import { PowerGaugeWidget } from "./advisor/PowerGaugeWidget";
 
-// TrueQuote™ Brand Assets (Jan 20, 2026)
-import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
-import { TelemetryChip } from "@/components/shared/TelemetryChip";
+// Energy Metrics Header (Jan 25, 2026) - Persistent location intelligence
+import { EnergyMetricsHeader } from "./EnergyMetricsHeader";
 
 // Intelligence Layer (Phase 1: Adaptive UX - Jan 18, 2026)
 import {
@@ -122,7 +125,7 @@ function StartOverModal({ isOpen, onClose, onConfirm }: StartOverModalProps) {
         {/* Content */}
         <h2 className="text-xl font-bold text-white text-center mb-2">Start Over?</h2>
         <p className="text-slate-400 text-center mb-6">
-          Your progress will be reset and you'll return to Industry Selection.
+          Your progress will be reset and you'll return to Step 1 (Location).
         </p>
 
         {/* Buttons */}
@@ -160,7 +163,7 @@ export default function WizardV6() {
 
   // ✅ FIXED: Clear persisted state on mount if this is a fresh start
   // This ensures "Get my free quote" always starts at Step 1
-  React.useEffect(() => {
+  useEffect(() => {
     if (shouldStartFresh && typeof window !== "undefined") {
       bufferService.clear();
       console.log("✅ Cleared persisted wizard state for fresh start");
@@ -229,8 +232,9 @@ export default function WizardV6() {
   const [siteScore, setSiteScore] = useState<SiteScoreResult | null>(null);
 
   // Step validity tracking (Jan 16, 2026 - Step 3→4→5 fix)
-  const [step3Valid, setStep3Valid] = useState(false);
-  const [step4Valid, setStep4Valid] = useState(false);
+  const [_step3Valid, setStep3Valid] = useState(false);
+  // ✅ FIX (Jan 25, 2026): Only setter used, validation via step3Contract
+  // ✅ REMOVED (Jan 24, 2026): step4Valid state - Step 4 is ALWAYS valid (opt-in add-ons)
 
   // Blocked feedback state (Jan 19, 2026 - Shows message when Next is blocked)
   const [showBlockedFeedback, setShowBlockedFeedback] = useState(false);
@@ -250,16 +254,9 @@ export default function WizardV6() {
     }
   }, [currentStep, state]); // ✅ FIXED: Re-run on step change
 
-  // ✅ FIX #2: Auto-validate Step 4 once loaded (Jan 16, 2026)
-  // IMPORTANT: Step 4 is OPT-IN for add-ons (solar/EV/generator).
-  // It's always considered valid because no selections are required.
-  // User selections flow to Step 5 via safeState and are included in quotes.
-  // DO NOT add validation here unless product requirements change.
-  useEffect(() => {
-    if (currentStep === 4) {
-      setStep4Valid(true); // Step 4 is always valid once loaded
-    }
-  }, [currentStep]);
+  // ✅ REMOVED (Jan 24, 2026): Step 4 auto-validate useEffect
+  // Step 4 is ALWAYS valid - it's opt-in for add-ons (solar/EV/generator).
+  // No selections are required. User selections flow to Step 5 via safeState.
 
   // ============================================================================
   // REAL-TIME POWER ESTIMATES (Jan 20, 2026) - COMPREHENSIVE VERSION
@@ -2149,21 +2146,31 @@ export default function WizardV6() {
 
   const goNext = () =>
     setCurrentStep((prev) => {
-      // Step 3 validation gate - don't advance if not valid
-      if (prev === 3 && !step3Valid) {
-        console.log("⚠️ Step 3 not valid yet - cannot advance");
-        // Show feedback to user
+      // ✅ GATING FIX (Jan 24, 2026): Block advancing if current step isn't complete
+      // This prevents users from blasting through incomplete steps
+      if (!_canProceed()) {
+        console.log(`⚠️ Step ${prev} blocked - requirements not met`);
         setShowBlockedFeedback(true);
         setTimeout(() => setShowBlockedFeedback(false), 3000);
-        return prev; // Stay on Step 3
+        return prev;
       }
-      const next = prev + 1;
+
+      // ✅ CONTRACT (Jan 24, 2026): Step 3 validation uses contract validator
+      if (prev === 3 && !step3Contract.ok) {
+        console.log("⚠️ Step 3 not valid - cannot advance. Missing:", step3Contract.missing);
+        setShowBlockedFeedback(true);
+        setTimeout(() => setShowBlockedFeedback(false), 3000);
+        return prev;
+      }
+
       // Skip Step 2 (Industry Selection) if industry was auto-detected from business lookup
-      if (prev === 1 && state.detectedIndustry && state.industry) {
-        console.log("🧙 Skipping Step 2 - Industry auto-detected:", state.industry);
+      // ✅ FIX 3 (Jan 24, 2026): Use hasIndustry for deterministic skip
+      if (prev === 1 && hasIndustry) {
+        console.log("🧙 Skipping Step 2 - Industry detected:", state.industry || state.detectedIndustry);
         return 3; // Go directly to Step 3 (Details)
       }
-      return Math.min(next, 6);
+
+      return Math.min(prev + 1, 6);
     });
 
   const goBack = () =>
@@ -2252,6 +2259,83 @@ export default function WizardV6() {
     setShowStartOverModal(false);
   };
 
+  // ✅ FIX 1 (Jan 24, 2026): Step 5/6 "calcs ready" watchdog
+  // Prevents "quote page but empty numbers" - the most common wizard failure
+  const hasValidCalcs = useMemo(() => {
+    const c = state.calculations?.selected;
+    const b = state.calculations?.base;
+    if (!c || !b) return false;
+
+    // These fields MUST exist for Step 6 to render meaningfully
+    const ok =
+      (b.peakDemandKW ?? 0) > 0 &&
+      (c.bessKW ?? 0) > 0 &&
+      (c.bessKWh ?? 0) > 0 &&
+      (c.totalInvestment ?? 0) > 0;
+
+    return ok;
+  }, [state.calculations]);
+
+  // ✅ FIX 3 (Jan 24, 2026): Deterministic industry detection
+  // Prevents timing-dependent skip behavior
+  const hasIndustry = !!(state.industry || state.detectedIndustry);
+
+  // ✅ FIX 5 (Jan 24, 2026): Step-specific blocked feedback messages
+  const blockedMessage = useMemo(() => {
+    switch (currentStep) {
+      case 1: return "Add your ZIP + state and choose at least 2 goals.";
+      case 2: return "Select your industry and business size.";
+      case 3: return "Complete the required questions to continue.";
+      case 5: return "Pick a power level to generate your quote.";
+      default: return "Please complete the required fields before continuing.";
+    }
+  }, [currentStep]);
+
+  // ✅ CONTRACT VALIDATOR (Jan 24, 2026 → Jan 26, 2026): The ONLY authority for Step 3 validity
+  // V6: Hardcoded validator (validateStep3Contract)
+  // V7: Database-driven validator (validateStep3Dynamic)
+  // Toggle via VITE_USE_DATABASE_VALIDATOR=true
+  const [step3Contract, setStep3Contract] = useState(() => validateStep3Sync(state));
+  
+  useEffect(() => {
+    if (USE_DATABASE_VALIDATOR) {
+      // Async database-driven validation
+      validateStep3Dynamic(state).then(result => {
+        setStep3Contract(result);
+        
+        if (import.meta.env.DEV) {
+          console.log('📋 Step 3 Contract (V7 Database):', {
+            ok: result.ok,
+            completeness: result.completenessPct + '%',
+            confidence: result.confidencePct + '%',
+            hasLoadAnchor: result.hasLoadAnchor,
+            missingRequired: result.missingRequired,
+            industry: result.industry,
+          });
+        }
+      });
+    } else {
+      // Synchronous hardcoded validation (V6)
+      const result = validateStep3Contract(state);
+      setStep3Contract(result);
+      
+      if (import.meta.env.DEV) {
+        // ✅ ENHANCED DEBUG (Jan 26, 2026 evening): Show WHY validation fails
+        const inputsCount = Object.keys(state.useCaseData?.inputs || {}).length;
+        console.group('📋 Step 3 Contract (V6 Hardcoded)');
+        console.log('OK:', result.ok);
+        console.log('Completeness:', result.completenessPct + '%');
+        console.log('Confidence:', result.confidencePct + '%');
+        console.log('Has Load Anchor:', result.hasLoadAnchor);
+        console.log('Missing Required:', result.missingRequired);
+        console.log('Industry:', state.industry || state.detectedIndustry);
+        console.log('Inputs Count:', inputsCount);
+        console.log('Inputs:', state.useCaseData?.inputs);
+        console.groupEnd();
+      }
+    }
+  }, [state, USE_DATABASE_VALIDATOR]);
+
   const _canProceed = (): boolean => {
     switch (currentStep) {
       case 1:
@@ -2260,19 +2344,43 @@ export default function WizardV6() {
         // Industry must be selected AND business size tier must be set
         return state.industry !== "" && state.businessSizeTier !== undefined;
       case 3:
-        // ✅ FIXED: Real Step 3 gating (Jan 16, 2026)
-        return step3Valid;
+        // ✅ CONTRACT (Jan 24, 2026): Use contract validator, not UI-reported step3Valid
+        // This ensures Step 3 can't lie about validity
+        const can = step3Contract.ok;
+        // ✅ DEBUG (Jan 25, 2026): Log when Continue is blocked
+        if (!can && import.meta.env.DEV) {
+          console.warn('⛔ Continue BLOCKED at Step 3:', {
+            contractOk: step3Contract.ok,
+            missingRequired: step3Contract.missingRequired,
+            completeness: step3Contract.completenessPct + '%',
+            inputsInState: Object.keys(state.useCaseData?.inputs || {}).length,
+          });
+        } else if (can && import.meta.env.DEV) {
+          console.log('✅ Continue ENABLED at Step 3:', {
+            contractOk: step3Contract.ok,
+            completeness: step3Contract.completenessPct + '%',
+          });
+        }
+        return can;
       case 4:
-        // ✅ FIXED: Real Step 4 gating (Jan 16, 2026)
-        return step4Valid;
+        // ✅ FIX 2 (Jan 24, 2026): Step 4 is ALWAYS valid (opt-in add-ons)
+        return true;
       case 5:
-        return state.selectedPowerLevel !== null && state.calculations !== null;
+        // ✅ FIX 1 (Jan 24, 2026): Use hasValidCalcs to prevent empty quote pages
+        return state.selectedPowerLevel !== null && hasValidCalcs;
       case 6:
-        return state.calculations !== null && state.selectedPowerLevel !== null;
+        return state.selectedPowerLevel !== null && hasValidCalcs;
       default:
         return false;
     }
   };
+
+  // ✅ GATING FIX (Jan 24, 2026): Wire _canProceed to actual navigation
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const canProceed = useMemo(() => _canProceed(), [currentStep, step3Contract.ok, state, hasValidCalcs]);
+
+  // ✅ FIX (Jan 25, 2026): flashBlocked removed - feedback now shown via canProceed check
+  // setShowBlockedFeedback controlled directly in goNext()
 
   const renderStep = () => {
     switch (currentStep) {
@@ -2283,8 +2391,8 @@ export default function WizardV6() {
             updateState={updateState}
             onGoToStep2={() => goToStep(2)}
             onNext={() => {
-              // Auto-skip to Step 3 if business detected
-              if (state.detectedIndustry) {
+              // ✅ FIX 3 (Jan 24, 2026): Use hasIndustry for deterministic skip
+              if (hasIndustry) {
                 goToStep(3);
               } else {
                 goNext();
@@ -2307,8 +2415,11 @@ export default function WizardV6() {
             updateState={updateState}
             onBack={goBack}
             onNext={() => {
-              // Hard gate here too (belt + suspenders)
-              if (!step3Valid) return;
+              // ✅ CONTRACT (Jan 24, 2026): Use contract validator for hard gating
+              if (!step3Contract.ok) {
+                console.log("⚠️ Step 3 onNext blocked - missing:", step3Contract.missing);
+                return;
+              }
               goToStep(4);
             }}
             onValidityChange={setStep3Valid}
@@ -2353,101 +2464,10 @@ export default function WizardV6() {
             {/* Inner glass lip */}
             <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(0,0,0,0.35)]" />
 
-            {/* TOP: Intelligence Header - Capital-Grade Instrument Panel (Jan 20, 2026) */}
-            {state.zipCode && state.electricityRate && (
-              <div className="relative border-b border-white/10 bg-gradient-to-r from-slate-800/40 via-slate-900/50 to-slate-800/40 backdrop-blur-sm">
-                <div className="h-[100px] px-6 flex items-center gap-5">
-                  {/* LEFT: Merlin Identity + TrueQuote Anchor + Model Active */}
-                  <div className="flex items-center gap-3 min-w-[280px]">
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                      <span className="text-lg">🧙</span>
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <div className="text-white font-semibold text-sm leading-none">
-                        Merlin Intelligence
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <TrueQuoteBadgeCanonical showTooltip={false} />
-                        {/* Model Active Indicator - Green glow = system is ON */}
-                        <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-md bg-transparent text-emerald-300 border-2 border-emerald-400/70 shadow-[0_0_20px_rgba(16,185,129,0.6),0_0_40px_rgba(16,185,129,0.3)] animate-pulse">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,1)] animate-pulse" />
-                          <span className="font-bold tracking-wide">Model Active</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            {/* OLD Intelligence Header REMOVED - Replaced by EnergyMetricsHeader (Jan 25, 2026) */}
 
-                  {/* CENTER: Simplified Telemetry - Only essential metrics visible */}
-                  <div className="flex-1 flex items-center gap-5 justify-start">
-                    {/* CLUSTER 1: ECONOMICS (Rate only) */}
-                    <div className="flex items-center gap-2">
-                      <TelemetryChip
-                        icon={Zap}
-                        value={`$${state.electricityRate?.toFixed(3) || "0.000"}`}
-                        unit="/kWh"
-                        iconColor="cyan"
-                        hierarchy="primary"
-                      />
-                    </div>
-
-                    {/* CLUSTER 2: ENVIRONMENT/YIELD (Sun + Grid) */}
-                    <div className="flex items-center gap-2">
-                      {state.solarData?.sunHours && (
-                        <TelemetryChip
-                          icon={Sun}
-                          value={state.solarData.sunHours.toFixed(1)}
-                          unit="hrs/day"
-                          iconColor="amber"
-                          hierarchy="secondary"
-                        />
-                      )}
-                      <TelemetryChip
-                        icon={Shield}
-                        label="Grid:"
-                        value={state.weatherData?.extremes ? "Moderate" : "Reliable"}
-                        iconColor="emerald"
-                        hierarchy="secondary"
-                      />
-                    </div>
-
-                    {/* CLUSTER 3: POWER GAUGE - Inline mini speedometer */}
-                    <div className="flex items-center">
-                      <PowerGaugeWidget
-                        batteryKW={estimatedPowerMetrics.bessKW}
-                        peakLoadKW={estimatedPowerMetrics.peakDemandKW}
-                        compact={true}
-                      />
-                    </div>
-                  </div>
-
-                  {/* RIGHT: Location + Site Score */}
-                  <div className="text-right min-w-[120px] max-w-[180px] flex-shrink-0">
-                    <div className="text-white text-sm font-medium leading-tight truncate">
-                      {state.zipCode} • {state.state}
-                    </div>
-                    {siteScore && (
-                      <div className="text-xs mt-0.5">
-                        <span className="text-slate-400">Score: </span>
-                        <span
-                          className={`font-bold ${
-                            siteScore.scoreLabel === "exceptional" ||
-                            siteScore.scoreLabel === "strong"
-                              ? "text-emerald-400"
-                              : siteScore.scoreLabel === "good"
-                                ? "text-amber-400"
-                                : "text-orange-400"
-                          }`}
-                        >
-                          {siteScore.totalScore}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* POWER DETAILS PANEL REMOVED - User requested removal (Jan 20, 2026) */}
-              </div>
-            )}
+            {/* ✅ ENERGY METRICS - Persistent location intelligence (Jan 25, 2026) */}
+            <EnergyMetricsHeader metrics={state.energyMetrics || null} />
 
             {/* ======================================================================
                 2-COLUMN LAYOUT: AdvisorRail (LEFT) + Wizard Content (RIGHT)
@@ -2588,11 +2608,11 @@ export default function WizardV6() {
         {/* FLOATING NAVIGATION BAR - Always visible (Jan 18, 2026) */}
         <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
           <div className="w-full px-6 pb-4">
-            {/* Blocked feedback message (Jan 19, 2026) */}
-            {showBlockedFeedback && currentStep === 3 && (
+            {/* Blocked feedback message - shows for ALL steps (Jan 24, 2026) */}
+            {showBlockedFeedback && (
               <div className="mb-3 flex justify-center pointer-events-auto">
                 <div className="bg-amber-500/20 border border-amber-500/50 text-amber-200 px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm animate-pulse">
-                  ⚠️ Please complete required questions before continuing
+                  ⚠️ {blockedMessage}
                 </div>
               </div>
             )}
@@ -2621,14 +2641,14 @@ export default function WizardV6() {
                 )}
               </div>
 
-              {/* Next button */}
+              {/* Next button - disabled when step requirements not met (Jan 24, 2026) */}
               <button
                 onClick={goNext}
-                disabled={currentStep === 6}
+                disabled={currentStep === 6 || !canProceed}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg ${
-                  currentStep === 6
+                  currentStep === 6 || !canProceed
                     ? "bg-slate-800/80 text-slate-500 cursor-not-allowed"
-                    : showBlockedFeedback && currentStep === 3
+                    : showBlockedFeedback
                       ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white animate-pulse"
                       : "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-400 hover:to-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
                 }`}

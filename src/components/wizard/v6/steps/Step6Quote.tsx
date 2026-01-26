@@ -29,6 +29,7 @@ import { useSSOTValidation } from "@/utils/ssotValidation";
 import type { TrueQuoteSizing } from "@/services/truequote";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import { AUTHORITATIVE_SOURCES } from "@/services/benchmarkSources";
+import { SAVINGS_BREAKDOWN_DEFAULTS, PROJECTION_YEARS } from "@/services/calculationConstants";
 
 import RequestQuoteModal from "@/components/modals/RequestQuoteModal";
 import { exportQuoteAsPDF } from "@/utils/quoteExportUtils";
@@ -72,7 +73,8 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
   // ✅ FIXED: Read quoteId from base (SSOT) not selected
   const quoteId = base.quoteId || `MQ-${Date.now().toString(36).toUpperCase()}`;
 
-  const tenYearSavings = (selected.annualSavings || 0) * 10;
+  // TODO: SSOT-001 - These should come from QuoteEngine.generateQuote() result
+  const tenYearSavings = (selected.annualSavings || 0) * PROJECTION_YEARS.SHORT_TERM;
   const netTenYearValue = tenYearSavings - (selected.netInvestment || 0);
 
   const handleRequestQuote = () => setShowRequestModal(true);
@@ -226,7 +228,7 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
                 <div className="text-cyan-400 font-semibold">Peak Shaving</div>
               </div>
               <div className="text-2xl font-bold text-white mb-1">
-                ${Math.round((selected.annualSavings || 0) * 0.45).toLocaleString()}
+                ${Math.round((selected.annualSavings || 0) * SAVINGS_BREAKDOWN_DEFAULTS.PEAK_SHAVING).toLocaleString()}
               </div>
               <p className="text-sm text-slate-400">
                 Battery discharges during peak hours to reduce your demand charges by up to 30%
@@ -242,7 +244,7 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
                 <div className="text-purple-400 font-semibold">Energy Arbitrage</div>
               </div>
               <div className="text-2xl font-bold text-white mb-1">
-                ${Math.round((selected.annualSavings || 0) * 0.25).toLocaleString()}
+                ${Math.round((selected.annualSavings || 0) * SAVINGS_BREAKDOWN_DEFAULTS.ARBITRAGE).toLocaleString()}
               </div>
               <p className="text-sm text-slate-400">
                 Charge battery when rates are low, use power when rates are high (TOU optimization)
@@ -260,7 +262,7 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
                 </div>
               </div>
               <div className="text-2xl font-bold text-white mb-1">
-                ${Math.round((selected.annualSavings || 0) * 0.30).toLocaleString()}
+                ${Math.round((selected.annualSavings || 0) * SAVINGS_BREAKDOWN_DEFAULTS.SOLAR_INTEGRATION).toLocaleString()}
               </div>
               <p className="text-sm text-slate-400">
                 {(selected.solarKW || 0) > 0 

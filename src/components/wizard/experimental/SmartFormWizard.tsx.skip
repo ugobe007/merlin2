@@ -1,0 +1,191 @@
+/**
+ * EXPERIMENTAL: Smart Form Wizard (Option 2)
+ * 
+ * Single-page form with all 16 questions visible at once.
+ * Pre-populated with smart defaults from database.
+ * No wizard steps - just scroll, answer, generate quote.
+ * 
+ * Proof-of-concept to demonstrate UI layer is swappable
+ * while using same calculator services as WizardV6.
+ */
+
+import React, { useState, useEffect } from 'react';
+import { useCaseService } from '@/services/useCaseService';
+import { CompleteQuestionRenderer } from '@/components/wizard/CompleteQuestionRenderer';
+import type { CustomQuestion } from '@/types/useCase.types';
+
+interface SmartFormWizardProps {
+  industrySlug: string;  // 'hotel', 'car-wash', etc.
+}
+
+export function SmartFormWizard({ industrySlug }: SmartFormWizardProps) {
+  const [questions, setQuestions] = useState<CustomQuestion[]>([]);
+  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<any>(null);
+
+  // Load questions from database
+  useEffect(() => {
+    async function loadQuestions() {
+      try {
+        const qs = await useCaseService.getQuestionsByIndustry(industrySlug);
+        setQuestions(qs);
+        
+        // Pre-populate with defaults
+        const defaultAnswers: Record<string, any> = {};
+        qs.forEach(q => {
+          if (q.default_value) {
+            defaultAnswers[q.field_name] = q.default_value;
+          }
+        });
+        setAnswers(defaultAnswers);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Failed to load questions:', error);
+        setLoading(false);
+      }
+    }
+    
+    loadQuestions();
+  }, [industrySlug]);
+
+  // Handle answer change
+  const handleAnswerChange = (fieldName: string, value: any) => {
+    setAnswers(prev => ({ ...prev, [fieldName]: value }));
+  };
+
+  // Generate quote
+  const handleGenerateQuote = async () => {
+    // TODO: Call calculator service when built
+    // For now, just show answers
+    console.log('Answers collected:', answers);
+    
+    // Future: const result = await calculate{Industry}16Q(answers);
+    setResult({
+      message: `Quote generated for ${industrySlug} with ${Object.keys(answers).length} answers`,
+      answers,
+      peakKW: 500,  // Placeholder
+      bessKWh: 2000, // Placeholder
+      confidence: 0.85, // Placeholder
+    });
+  };
+
+  // Group questions by section
+  const questionsBySection = questions.reduce((acc, q) => {
+    const section = q.section_name || 'General';
+    if (!acc[section]) acc[section] = [];
+    acc[section].push(q);
+    return acc;
+  }, {} as Record<string, CustomQuestion[]>);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading questions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (result) {
+    return (
+      <div className="max-w-4xl mx-auto p-8">
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <h2 className="text-3xl font-bold mb-4 text-green-600">✓ Quote Generated</h2>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded">
+              <p className="font-semibold">Peak Demand: {result.peakKW} kW</p>
+              <p className="font-semibold">BESS Recommended: {result.bessKWh} kWh</p>
+              <p className="text-sm text-gray-600">Confidence: {(result.confidence * 100).toFixed(0)}%</p>
+            </div>
+            <button 
+              onClick={() => setResult(null)}
+              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Back to Form
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-2">
+          {industrySlug.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} Energy Assessment
+        </h1>
+        <p className="text-gray-600">
+          Answer all questions below to generate your BESS sizing recommendation.
+          Pre-populated with smart defaults - just review and adjust.
+        </p>
+        <div className="mt-4 flex items-center gap-4">
+          <span className="text-sm text-gray-500">
+            {Object.keys(answers).length} / {questions.length} questions answered
+          </span>
+          <div className="flex-1 bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all"
+              style={{ width: `${(Object.keys(answers).length / questions.length) * 100}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Questions by Section */}
+      <div className="space-y-8">
+        {Object.entries(questionsBySection).map(([section, sectionQuestions]) => (
+          <div key={section} className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-semibold mb-4 border-b pb-2">
+              {section}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {sectionQuestions.map(question => (
+                <div key={question.id} className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {question.question_text}
+                    {question.is_required && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  {question.help_text && (
+                    <p className="text-xs text-gray-500">{question.help_text}</p>
+                  )}
+                  <CompleteQuestionRenderer
+                    question={question}
+                    value={answers[question.field_name]}
+                    onChange={(value) => handleAnswerChange(question.field_name, value)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Generate Quote Button */}
+      <div className="mt-8 flex justify-center">
+        <button
+          onClick={handleGenerateQuote}
+          disabled={Object.keys(answers).length < questions.filter(q => q.is_required).length}
+          className="px-12 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xl font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          Generate Quote
+        </button>
+      </div>
+
+      {/* Debug Info (remove in production) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-8 p-4 bg-gray-100 rounded text-xs">
+          <details>
+            <summary className="cursor-pointer font-semibold">Debug Info</summary>
+            <pre className="mt-2 overflow-auto">{JSON.stringify({ questions: questions.length, answers }, null, 2)}</pre>
+          </details>
+        </div>
+      )}
+    </div>
+  );
+}

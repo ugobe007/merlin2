@@ -65,7 +65,7 @@ export const CalculationAuditDashboard: React.FC = () => {
         .limit(14); // Last 2 weeks
       
       if (summaryError) throw summaryError;
-      setSummary(summaryData || []);
+      setSummary((summaryData || []) as DailySummary[]);
 
       // Fetch anomalies
       const { data: anomalyData, error: anomalyError } = await supabase
@@ -74,7 +74,7 @@ export const CalculationAuditDashboard: React.FC = () => {
         .limit(20);
       
       if (anomalyError) throw anomalyError;
-      setAnomalies(anomalyData || []);
+      setAnomalies((anomalyData || []) as AuditLogEntry[]);
       
     } catch (err: any) {
       console.error('Failed to fetch audit data:', err);

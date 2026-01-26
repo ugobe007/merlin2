@@ -7,6 +7,7 @@ import EVChargingEnergy from './components/verticals/EVChargingEnergy';
 import HotelEnergy from './components/verticals/HotelEnergy';
 // DEPRECATED: import { WizardV5 } from './components/wizard/_deprecated/v5';
 import WizardV6 from "./components/wizard/v6/WizardV6";
+import WizardV7 from "./components/wizard/v7/WizardV7";
 import MetaCalculationsPage from "./pages/MetaCalculationsPage";
 // import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder'; // Unused
 import { QuoteProvider } from './contexts/QuoteContext';
@@ -124,6 +125,12 @@ function App() {
   if (pathname === "/wizard" || pathname === "/wizard-v6") {
     return <WizardV6 />;
   }
+
+  // Access via /wizard-v7 - V7 Wizard (Vineet's Vision - Jan 22, 2026)
+  if (pathname === "/wizard-v7") {
+    return <WizardV7 />;
+  }
+
   // Access via /quote-builder or advanced=true - Show Advanced Quote Builder
   // The BessQuoteBuilder component handles this via the advanced param
 

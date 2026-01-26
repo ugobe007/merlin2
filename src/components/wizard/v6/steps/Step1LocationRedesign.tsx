@@ -37,7 +37,6 @@ import {
   ChevronDown,
   ArrowRight,
   Thermometer,
-  AlertTriangle,
   Shield,
   Leaf,
   DollarSign,
@@ -62,10 +61,8 @@ import {
 } from "@/services/googlePlacesService";
 
 // ✅ SSOT: Database-backed industry power profiles
-import {
-  getIndustryProfile,
-  type IndustryPowerProfile,
-} from "@/services/industryPowerProfilesService";
+
+
 
 import type { IntelligenceContext } from "@/types/intelligence.types";
 

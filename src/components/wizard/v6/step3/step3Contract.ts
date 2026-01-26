@@ -1,11 +1,16 @@
 /**
  * STEP 3 CONTRACT - The handoff object between Steps 3→4→5
  * Created: Jan 16, 2026
+ * Updated: Jan 24, 2026 - Contract-based validator integration
  *
  * This is the SINGLE SOURCE OF TRUTH for what Step 3 produces
  * and what Steps 4 & 5 consume.
  */
 
+/**
+ * Contract keys for missing field validation.
+ * These map directly to Step3Snapshot paths.
+ */
 export type Step3MissingKey =
   | "location.zipCode"
   | "location.state"
@@ -16,7 +21,10 @@ export type Step3MissingKey =
   | "facility.bayCount"
   | "facility.rackCount"
   | "facility.bedCount"
-  | "goals.primaryGoal";
+  | "facility.fuelPumpCount"
+  | "facility.dcfcChargerCount"
+  | "goals.primaryGoal"
+  | "calculated.loadAnchor";
 
 export interface LoadProfile {
   baseBuildingLoadKW: number;
@@ -73,6 +81,7 @@ export interface Step3Snapshot {
   missing: Step3MissingKey[];
   completenessPct: number;
   confidencePct: number;
+  warnings?: string[]; // Non-blocking issues (e.g., "peak_fallback_applied")
 
   // Derived load profile (minimum needed for Step 4 & Step 5)
   loadProfile: LoadProfile;

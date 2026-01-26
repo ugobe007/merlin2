@@ -19,7 +19,6 @@ import {
   Check,
   Sparkles,
   ChevronDown,
-  ArrowRight,
   Activity,
   Info,
   AlertCircle,
@@ -33,6 +32,11 @@ import {
   enrichLocationData,
   type EnrichedLocationData,
 } from "@/services/locationEnrichmentService";
+import {
+  lookupZipCode,
+  getQuickStateFromZip,
+  type ZipCodeResult,
+} from "@/services/zipCodeLookupService";
 import {
   INTERNATIONAL_DATA,
   getCountryData,
@@ -48,7 +52,7 @@ import {
 // GOALS CONFIGURATION
 // ============================================================================
 
-const DEFAULT_GOALS: EnergyGoal[] = ["reduce_costs"];
+const DEFAULT_GOALS: EnergyGoal[] = ["reduce_costs", "peak_shaving"];
 
 // ============================================================================
 // CLIMATE RISK MAPPING
@@ -75,12 +79,21 @@ interface Props {
   onGoToStep2?: () => void;
 }
 
-export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Props) {
+export function Step1AdvisorLed({ state, updateState, onNext: _onNext, onGoToStep2: _onGoToStep2 }: Props) {
+  // ✅ FIX (Jan 25, 2026): Prefix unused callbacks with _ (parent WizardV6 handles navigation)
+  // These props exist for API consistency but aren't used in this step
+  
+  // 🔎 DEV MARKER: Prove this component is actually running (Jan 25, 2026)
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.log("✅ RUNNING Step1AdvisorLed.tsx (DEV MARKER) —", new Date().toISOString());
+  }
+  
   // TrueQuote modal state
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
 
-  // Facility refine toggle state
-  const [showFacilityRefine, setShowFacilityRefine] = useState(false);
+  // Facility refine toggle state (unused after Jan 20 refactor, kept for future use)
+  const [_showFacilityRefine, _setShowFacilityRefine] = useState(false);
 
   // Region state
   const [region, setRegion] = useState<"us" | "international">("us");
@@ -106,9 +119,35 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
       updateState({ businessName: businessNameInput.trim() });
     }
   }, [businessNameInput]); // eslint-disable-line
+
   const [streetAddress, setStreetAddress] = useState("");
   const [isLookingUp, setIsLookingUp] = useState(false);
+  const [zipLookupResult, setZipLookupResult] = useState<ZipCodeResult | null>(null);
   const [businessLookup, setBusinessLookup] = useState<PlaceLookupResult | null>(null);
+
+  // 🔎 DEBUG: Track business state changes (Jan 25, 2026)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("🔎 Step1 business state:", {
+        businessName: state.businessName,
+        businessAddress: state.businessAddress,
+        businessLookup,
+        businessNameInput,
+      });
+    }
+  }, [state.businessName, state.businessAddress, businessLookup, businessNameInput]);
+
+  // 🔎 WATCHER: Detect if wizard state gets overwritten (Jan 25, 2026)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("🧠 wizard business fields changed:", {
+        businessName: state.businessName,
+        businessAddress: state.businessAddress,
+        detectedIndustry: (state as any).detectedIndustry,
+        industry: state.industry,
+      });
+    }
+  }, [state.businessName, state.businessAddress, (state as any).detectedIndustry, state.industry]);
 
   // Derived location data
   const locationData = useMemo(() => {
@@ -147,39 +186,80 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
     return null;
   }, [enrichedData, region, selectedCountry, selectedCity]);
 
-  // Handle ZIP code validation and enrichment
+  // Handle ZIP c5, 2026): 3-Tier lookup: Database → Google Maps → Hardcoded
   useEffect(() => {
     if (region === "us" && zipInput.length === 5) {
       setIsEnriching(true);
       setZipError(null);
 
-      enrichLocationData(zipInput)
-        .then((data) => {
-          if (data) {
-            setEnrichedData(data);
+      // ✅ OPTIMISTIC UPDATE: Set quick state from hardcoded ranges
+      const quickState = getQuickStateFromZip(zipInput);
+      updateState({
+        zipCode: zipInput,
+        state: quickState || "",
+        country: "US",
+        currency: "USD",
+      });
+
+      // ✅ TIER 1-3: Database → Google Maps → Hardcoded (parallel with enrichment)
+      Promise.all([
+        lookupZipCode(zipInput),
+        enrichLocationData(zipInput)
+      ])
+        .then(([zipResult, enriched]) => {
+          // Save ZIP lookup result
+          if (zipResult) {
+            setZipLookupResult(zipResult);
+          }
+
+          // Save enrichment data
+          if (enriched) {
+            setEnrichedData(enriched);
             setZipError(null);
+            
+            // Update with full enriched data + energy metrics
             updateState({
               zipCode: zipInput,
-              state: data.stateCode,
-              city: data.city,
+              state: enriched.stateCode,
+              city: enriched.city,
               country: "US",
-              electricityRate: data.utility.rate,
-              solarData: { sunHours: data.solar.sunHours, rating: data.solar.label },
+              electricityRate: enriched.utility.rate,
+              solarData: { sunHours: enriched.solar.sunHours, rating: enriched.solar.label },
               currency: "USD",
               weatherData: {
-                profile: data.weather.profile,
-                extremes: data.weather.extremes,
+                profile: enriched.weather.profile,
+                extremes: enriched.weather.extremes,
                 source: "visual-crossing" as const,
               },
+              // ✅ NEW: Populate energy metrics for persistent header display
+              energyMetrics: {
+                utilityRate: enriched.utility.rate,
+                demandCharge: enriched.utility.demandCharge,
+                solarRating: enriched.solar.label,
+                solarHours: enriched.solar.sunHours,
+                hasTOU: enriched.utility.hasTOU,
+                utilityName: enriched.utility.name,
+                location: `${enriched.city}, ${enriched.stateCode}`,
+              },
             });
+          } else if (zipResult) {
+            // ZIP lookup succeeded but enrichment failed - use ZIP data
+            updateState({
+              zipCode: zipInput,
+              state: zipResult.state,
+              city: zipResult.city,
+              country: "US",
+              currency: "USD",
+            });
+            setZipError(null);
           } else {
-            setZipError("Please enter a valid US ZIP code");
-            setEnrichedData(null);
+            // Both failed
+            setZipError("Unable to find location data for this ZIP code");
           }
         })
-        .catch(() => {
-          setZipError("Unable to validate ZIP code");
-          setEnrichedData(null);
+        .catch((err) => {
+          console.error("ZIP lookup/enrichment error:", err);
+          setZipError("Error looking up ZIP code");
         })
         .finally(() => setIsEnriching(false));
     } else if (region === "us" && zipInput.length > 0 && zipInput.length < 5) {
@@ -252,24 +332,60 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
       const result = await lookupBusinessByAddress(searchQuery.trim());
       setBusinessLookup(result);
 
-      if (result.found && result.businessName) {
-        updateState({
-          businessName: result.businessName,
-          businessAddress: result.formattedAddress,
+      // ✅ VINEET FIX (Jan 25, 2026): Loosen gate - persist even if businessName missing
+      // Use input as fallback to ensure we don't lose data
+      if (result.found) {
+        const patch: Partial<typeof state> = {
+          businessName: result.businessName || businessNameInput.trim() || "",
+          businessAddress: result.formattedAddress || "",
           businessPhotoUrl: result.photoUrl,
           businessPlaceId: result.placeId,
           detectedIndustry: result.industrySlug,
           businessLat: result.lat,
           businessLng: result.lng,
-          industry: result.industrySlug || "",
-          industryName: result.industrySlug
-            ? INDUSTRY_NAMES[result.industrySlug] || result.businessType || ""
-            : "",
-        });
+        };
+
+        // Only set industry fields if we have a valid slug (prevents "" writes)
+        if (result.industrySlug) {
+          patch.industry = result.industrySlug;
+          patch.industryName = INDUSTRY_NAMES[result.industrySlug] || result.businessType || "";
+        }
+
+        updateState(patch);
+        
+        // 🔎 DEBUG: Verify SSOT persistence happened (Jan 25, 2026)
+        if (import.meta.env.DEV) {
+          console.log("✅ persisted business to wizard state", {
+            name: patch.businessName,
+            addr: patch.businessAddress,
+            industry: result?.industrySlug || "(not detected)",
+            patchKeys: Object.keys(patch),
+          });
+        }
       }
     } catch (error) {
-      console.error("Address lookup failed:", error);
+      console.error("❌ Address lookup failed:", error);
       setBusinessLookup({ found: false });
+      
+      // ✅ FALLBACK MODE (Jan 25, 2026): Save business name even if API fails
+      // This allows manual entry when Google Places API key is missing
+      if (import.meta.env.DEV) {
+        console.warn("⚠️  Google Places API unavailable - using fallback mode");
+        console.log("💡 Add VITE_GOOGLE_PLACES_API_KEY to .env for full business lookup");
+      }
+      
+      // Save what we have from user input
+      updateState({
+        businessName: businessNameInput.trim(),
+        businessAddress: searchQuery.trim(),
+      });
+      
+      if (import.meta.env.DEV) {
+        console.log("✅ saved business name (fallback mode):", {
+          name: businessNameInput.trim(),
+          addr: searchQuery.trim(),
+        });
+      }
     } finally {
       setIsLookingUp(false);
     }
@@ -284,7 +400,9 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
     }
   }, [zipInput, selectedCity]); // eslint-disable-line
 
-  const canProceed = locationData !== null && !zipError;
+  // ✅ Navigation handled by parent WizardV6 via _canProceed() function (line 2305)
+  // WizardV6 checks: state.zipCode.length === 5 && state.state !== "" && state.goals.length >= 2
+  
   const selectedCountryData = selectedCountry ? getCountryData(selectedCountry) : null;
 
   // ============================================================================
@@ -561,6 +679,142 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
                 </div>
               )}
 
+              {/* ✅ BUSINESS IDENTITY CARD (Jan 25, 2026) - Promoted to top */}
+              {(state.businessName || state.businessAddress) && (
+                <div className="mt-4 rounded-xl border border-emerald-500/40 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="text-xs text-emerald-400 font-semibold mb-1">
+                        ✓ Recognized Business
+                      </div>
+                      <div className="text-lg font-bold text-white">{state.businessName}</div>
+                      {state.businessAddress && (
+                        <div className="text-sm text-slate-300 mt-1">{state.businessAddress}</div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => {
+                        // ✅ Clear both SSOT state and local lookup (Jan 25, 2026)
+                        updateState({
+                          businessName: "",
+                          businessAddress: "",
+                          detectedIndustry: "",
+                          // Don't clear industry/industryName if user manually selected later
+                        });
+                        setBusinessNameInput("");
+                        setBusinessLookup(null);
+                      }}
+                      className="text-xs text-slate-400 hover:text-white transition-colors px-2 py-1 rounded border border-slate-600 hover:border-slate-400"
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ✨ ENERGY OPPORTUNITY PANEL (Jan 25, 2026) */}
+              {enrichedData && (
+                <div className="mt-6 bg-gradient-to-br from-violet-500/10 to-indigo-500/10 border border-violet-400/30 rounded-xl p-5 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20 flex items-center justify-center border border-violet-400/30">
+                      <Activity className="w-5 h-5 text-violet-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white flex items-center gap-2">
+                        Energy Opportunities
+                        <span className="text-xs font-normal text-violet-300">
+                          {enrichedData.city}, {enrichedData.stateCode}
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-400">Location-specific savings analysis</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Utility Rate */}
+                    <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-600/30">
+                      <div className="text-xs text-slate-400 mb-1">Utility Rate</div>
+                      <div className="text-lg font-bold text-white">
+                        ${enrichedData.utility.rate.toFixed(2)}/kWh
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        {enrichedData.utility.rate > 0.18 ? '⚡ High - Great for BESS' : 
+                         enrichedData.utility.rate > 0.12 ? '✓ Good for savings' : 
+                         '○ Moderate rates'}
+                      </div>
+                    </div>
+
+                    {/* Demand Charge */}
+                    <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-600/30">
+                      <div className="text-xs text-slate-400 mb-1">Demand Charge</div>
+                      <div className="text-lg font-bold text-white">
+                        ${enrichedData.utility.demandCharge}/kW
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        {enrichedData.utility.demandCharge > 20 ? '⚡ High - Peak shaving ROI' : 
+                         enrichedData.utility.demandCharge > 12 ? '✓ Good opportunity' : 
+                         '○ Standard'}
+                      </div>
+                    </div>
+
+                    {/* Solar Potential */}
+                    <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-600/30">
+                      <div className="text-xs text-slate-400 mb-1">Solar Potential</div>
+                      <div className="text-lg font-bold text-white flex items-center gap-1.5">
+                        ☀️ {enrichedData.solar.label}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        {enrichedData.solar.sunHours.toFixed(1)} hrs/day peak sun
+                      </div>
+                    </div>
+
+                    {/* TOU Arbitrage */}
+                    <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-600/30">
+                      <div className="text-xs text-slate-400 mb-1">Energy Arbitrage</div>
+                      <div className="text-lg font-bold text-white">
+                        {enrichedData.utility.hasTOU ? '✓ Available' : '○ Limited'}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        {enrichedData.utility.hasTOU 
+                          ? `${enrichedData.utility.name}`
+                          : 'No TOU rates'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Overall Opportunity Score */}
+                  {(() => {
+                    const score = 
+                      (enrichedData.utility.rate > 0.18 ? 3 : enrichedData.utility.rate > 0.12 ? 2 : 1) +
+                      (enrichedData.utility.demandCharge > 20 ? 3 : enrichedData.utility.demandCharge > 12 ? 2 : 1) +
+                      (enrichedData.solar.sunHours > 5.0 ? 3 : enrichedData.solar.sunHours > 4.0 ? 2 : 1) +
+                      (enrichedData.utility.hasTOU ? 2 : 0);
+                    
+                    const rating = score >= 9 ? 'Excellent' : score >= 6 ? 'Good' : 'Fair';
+                    const color = score >= 9 ? 'emerald' : score >= 6 ? 'blue' : 'slate';
+                    
+                    return (
+                      <div className={`bg-${color}-500/10 border border-${color}-400/30 rounded-lg p-3`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm font-bold text-white">
+                              💡 {rating} Location for Energy Storage
+                            </div>
+                            <div className="text-xs text-slate-400 mt-0.5">
+                              {score >= 9 
+                                ? 'High utility costs + TOU rates + strong solar = compelling economics'
+                                : score >= 6 
+                                ? 'Good fundamentals for BESS + solar hybrid systems'
+                                : 'Moderate opportunity - focus on peak shaving and backup power'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
               {/* Address + Business Name - Always Visible After ZIP */}
               {enrichedData && !businessLookup?.found && (
                 <div className="mt-6 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-600/30 rounded-xl p-6 space-y-4">
@@ -676,26 +930,8 @@ export function Step1AdvisorLed({ state, updateState, onNext, onGoToStep2 }: Pro
 
         {/* Refine with Your Facility section removed - Jan 20, 2026 */}
 
-        {/* Continue Button - HIDDEN: Use bottom nav instead to avoid duplicate CTAs */}
-        {false && canProceed && (
-          <div className="flex items-center justify-end">
-            <button
-              onClick={() => {
-                if (state.detectedIndustry && onNext) {
-                  onNext();
-                } else if (onGoToStep2) {
-                  onGoToStep2();
-                } else if (onNext) {
-                  onNext();
-                }
-              }}
-              className="px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-lg font-black shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all flex items-center gap-2"
-            >
-              Continue to Industry
-              <ArrowRight className="w-5 h-5" />
-            </button>
-          </div>
-        )}
+        {/* Continue Button - REMOVED: Use bottom nav instead to avoid duplicate CTAs
+        {/* Continue Button - REMOVED: Use bottom nav instead to avoid duplicate CTAs */}
       </div>
 
       {/* TrueQuote Modal */}

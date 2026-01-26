@@ -14,7 +14,7 @@ import type { WizardState } from "../types";
 function _calculateEVChargerLoad(evChargers: unknown): number {
   if (!evChargers) return 0;
 
-  const chargers = evChargers as Record<string, any>;
+  const chargers = evChargers as Record<string, unknown>;
   let totalKW = 0;
 
   // Level 2 chargers (7.2 kW each)
@@ -34,7 +34,7 @@ function _calculateEVChargerLoad(evChargers: unknown): number {
  */
 function estimateBaseBuildingLoad(state: WizardState): number {
   const industry = (state.industry || "").toLowerCase();
-  const inputs = (state.useCaseData?.inputs || {}) as Record<string, any>;
+  const inputs = (state.useCaseData?.inputs || {}) as Record<string, unknown>;
 
   // Hotel
   if (industry.includes("hotel")) {
@@ -93,7 +93,7 @@ export function recalcWizardCalculated(state: WizardState): WizardState["calcula
   );
 
   // Annual consumption estimate
-  const inputs = (state.useCaseData?.inputs || {}) as Record<string, any>;
+  const inputs = (state.useCaseData?.inputs || {}) as Record<string, unknown>;
   const operatingHours = inputs.operatingHours || 8760; // Default to full year
   const annualConsumptionKWh = Math.round(baseBuildingLoadKW * operatingHours * 0.7); // 70% capacity factor
 

@@ -667,12 +667,13 @@ function OptionCard({
               onToggle();
             }}
             className={`
-              px-5 py-2.5 rounded-xl font-semibold text-sm transition-all
+              px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200
               ${
                 isSelected
-                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25"
-                  : "bg-white/5 text-slate-300 hover:bg-slate-600"
+                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-emerald-700"
+                  : "bg-white/5 text-slate-300 hover:bg-white/10"
               }
+              active:scale-95 active:shadow-inner
             `}
           >
             {isSelected ? (
@@ -733,12 +734,13 @@ function TierCard({ tier, isSelected, onClick, accentColor, sizeLabel, metrics }
     <div
       onClick={onClick}
       className={`
-        relative p-4 rounded-xl cursor-pointer transition-all
+        relative p-4 rounded-xl cursor-pointer transition-all duration-200
         ${
           isSelected
             ? `bg-white/5/80 border-2 ${accent.border} shadow-lg`
             : "bg-white/5 border border-white/10 hover:bg-white/5"
         }
+        active:scale-[0.97] active:shadow-inner
       `}
     >
       {/* Tag */}

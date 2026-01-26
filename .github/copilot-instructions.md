@@ -1136,6 +1136,140 @@ import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
 
 ---
 
+## 🧙‍♂️ WIZARDV6 ARCHITECTURE (Jan 2026)
+
+**WizardV6 is the CURRENT PRODUCTION WIZARD** (as of Dec 28, 2025).
+
+**Routes:** `/wizard` and `/wizard-v6`  
+**Main File:** `src/components/wizard/v6/WizardV6.tsx` (2,674 lines)  
+**Architecture:** Comprehensive 6-step wizard with advisor-led UX
+
+### WizardV6 Architecture
+
+```
+wizard/
+├── v6/                           ✅ ACTIVE - Production wizard
+│   ├── WizardV6.tsx             Main orchestrator (2,674 lines)
+│   ├── types.ts                 State types, constants, confidence model
+│   ├── constants.ts             Wizard configuration
+│   │
+│   ├── steps/                   ✅ Step components (6 steps)
+│   │   ├── Step1AdvisorLed.tsx      ✅ Advisor-led location/industry (Jan 19)
+│   │   ├── EnhancedStep2Industry.tsx
+│   │   ├── Step3Details.tsx         ✅ Database-driven questionnaire
+│   │   ├── Step4Options.tsx     
+│   │   ├── Step5MagicFit.tsx    
+│   │   └── Step6Quote.tsx       
+│   │
+│   ├── advisor/                 MerlinAdvisor rail system (Jan 16)
+│   │   ├── AdvisorRail.tsx      
+│   │   ├── AdvisorPublisher.tsx 
+│   │   └── PowerGaugeWidget.tsx 
+│   │
+│   ├── micro-prompts/           Micro-interaction components
+│   ├── inputs/                  Form input components
+│   ├── layout/                  Layout components
+│   ├── shared/                  Shared v6 components
+│   ├── step3/                   Step 3 utilities
+│   └── utils/                   Utility functions
+│
+├── shared/                       ✅ Shared across wizard versions
+│   └── WizardBottomAdvisor.tsx  Bottom advisor component
+│
+├── _archive-jan-2026/            ❌ DEPRECATED - Reference only
+│   ├── README.md                Explains deprecation reasons
+│   ├── Step3HotelEnergy.tsx     Old industry-specific component
+│   └── EnhancedLocationStep.v2.tsx  Old location step (Jan 21)
+│
+└── [Root TSX files]              ⚠️ Integration/support components
+    ├── CompleteStep3Component.tsx      Database-driven Step 3
+    ├── CompleteQuestionRenderer.tsx    Question rendering logic
+    ├── Step3Integration.tsx            Step 3 SSOT enforcement
+    ├── IndustryOpportunityPanel.tsx    Industry insights
+    ├── CompleteSolarPreviewCard.tsx    Solar configuration
+    ├── CarWash16QVisuals.tsx          Car wash visuals
+    ├── QuestionIconMap.tsx            Question icon mapping
+    ├── ProgressSidebar.tsx            (Orphaned - candidate for removal)
+    └── carWashIntegration.ts          Car wash data mapping
+```
+
+### Key Integration Flow (Step 3 Questionnaire)
+
+```
+WizardV6.tsx
+    ↓ (renders)
+v6/steps/Step3Details.tsx (thin wrapper)
+    ↓ (delegates to)
+Step3Integration.tsx (SSOT enforcement - no derived fields)
+    ↓ (renders)
+CompleteStep3Component.tsx (DB-driven questionnaire for ALL industries)
+    ├── CompleteQuestionRenderer.tsx (polymorphic question types)
+    └── IndustryOpportunityPanel.tsx (industry insights)
+    ↓ (loads questions from)
+Database: custom_questions table (21 active use cases)
+```
+
+### Recent WizardV6 Updates (Jan 2026)
+
+**Jan 21, 2026: TrueQuote™ Phase 5**
+- Integrated `computeTrueQuoteSizing()` from `truequote.ts`
+- Added confidence modeling via `calculateModelConfidence()`
+
+**Jan 19, 2026: Advisor-Led Step 1**
+- Replaced old location step with `Step1AdvisorLed.tsx`
+- 2-panel design: Conversational advisor + clean form panel
+- Progressive complexity disclosure
+
+**Jan 18, 2026: Intelligence Layer**
+- Added adaptive UX via `intelligence.ts` service
+- Integrated Site Score™ calculator
+- Context-aware goal suggestions
+
+**Jan 16, 2026: MerlinAdvisor Rail**
+- Added `AdvisorRail.tsx` and `AdvisorPublisher.tsx`
+- Real-time advisor updates based on user inputs
+
+### WizardV6 is Used By:
+
+1. **Main App Router** (`/App.tsx`) - Routes `/wizard` and `/wizard-v6`
+2. **Vertical Landing Pages:**
+   - `CarWashEnergy.tsx` - Can launch WizardV6
+   - `EVChargingEnergy.tsx` - Can launch WizardV6
+   - `HotelEnergy.tsx` - Can launch WizardV6
+3. **Modal System** (`ModalManager.tsx`) - Opens wizard in modal
+
+### WizardV6 vs StreamlinedWizard
+
+| Feature | WizardV6 | StreamlinedWizard |
+|---------|----------|-------------------|
+| **Status** | ✅ Production (Jan 2026) | ⚠️ Legacy/Alternative |
+| **Lines** | 2,674 (monolithic) | 280 (modular) |
+| **Architecture** | Single-file orchestrator | Hook-based modular |
+| **Advisor UX** | ✅ Advisor rail + micro-prompts | Basic |
+| **Intelligence** | ✅ Intelligence layer | No |
+| **Site Score™** | ✅ Yes | No |
+| **TrueQuote™** | ✅ Phase 5 integration | Basic |
+| **Step 3** | DB-driven (21 industries) | DB-driven (21 industries) |
+| **Routes** | `/wizard`, `/wizard-v6` | N/A (not routed) |
+
+**⚠️ NOTE:** StreamlinedWizard was documented in Dec 2025 as refactored from 4,677→280 lines, but WizardV6 is the actual production wizard in Jan 2026. StreamlinedWizard may be an experimental branch or alternative implementation.
+
+### DO NOT MODIFY WITHOUT REVIEW:
+
+**Critical WizardV6 Files:**
+- `v6/WizardV6.tsx` - Main orchestrator
+- `v6/types.ts` - State management contract
+- `v6/steps/Step3Details.tsx` - Questionnaire integration
+- `Step3Integration.tsx` - SSOT enforcement
+- `CompleteStep3Component.tsx` - Database-driven questions
+
+**See Also:**
+- `/src/components/wizard/WIZARD_ARCHITECTURE.md` - Full architecture doc
+- `/src/components/wizard/ROOT_COMPONENTS_README.md` - Root component guide
+- `/src/components/wizard/_archive-jan-2026/README.md` - Deprecated components
+
+---
+
 ## 🏢 VERTICAL WIZARD STANDARDS (Dec 2025)
 
 **All vertical wizards MUST follow these standards for SSOT compliance:**

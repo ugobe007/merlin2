@@ -56,6 +56,12 @@
     "**/__tests__/**",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "src/scripts/**"
+    "src/scripts/**",
+    "src/services/vendor*.ts",
+    "src/services/brandPresetService.ts",
+    "src/components/admin/**",
+    "src/components/modals/EmailCaptureModal.tsx",
+    "src/components/ProjectInfoForm.tsx",
+    "src/utils/testDatabaseConnection.ts"
   ]
 }

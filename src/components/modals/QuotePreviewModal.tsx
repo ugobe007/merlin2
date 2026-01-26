@@ -98,7 +98,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
        
       windMW,
       generatorMW,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       application,
       location,
       tariffRegion,

@@ -5,6 +5,10 @@ import { defineConfig, devices } from '@playwright/test';
  * See https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
+  // Explicitly tell vitest NOT to run
+  globalSetup: undefined,
+  globalTeardown: undefined,
+  
   // Test directory
   testDir: './tests/e2e',
   
@@ -84,12 +88,17 @@ export default defineConfig({
 
   // Run dev server automatically before tests (but reuse if already running)
   webServer: {
-    command: 'npm run dev',
+    command: 'npm run dev -- --port 5184 --strictPort',
     url: process.env.TEST_URL || process.env.BASE_URL || 'http://localhost:5184',
     reuseExistingServer: !process.env.CI, // Reuse if server is already running
     timeout: 120 * 1000,
     stdout: 'ignore',
     stderr: 'pipe',
+    env: {
+      // Explicitly disable Vitest
+      VITEST: 'false',
+      NODE_ENV: 'test',
+    },
   },
 
   // Folder for test artifacts such as screenshots, videos, traces, etc.

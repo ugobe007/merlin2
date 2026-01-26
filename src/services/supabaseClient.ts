@@ -1,4 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database.types";
 
 // Supabase configuration
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
@@ -8,14 +9,23 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn("⚠️ Supabase credentials not found. Please add them to your .env file.");
 }
 
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-  },
-});
+// SINGLETON PATTERN: Only create client once per browser context
+// This prevents "Multiple GoTrueClient instances" warning
+let _supabaseInstance: SupabaseClient<Database> | null = null;
+
+export const supabase = (() => {
+  if (!_supabaseInstance) {
+    _supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        storageKey: 'merlin-auth', // Unique key to avoid conflicts
+      },
+    });
+  }
+  return _supabaseInstance;
+})();
 
 // ====================================================================
 // PRICING DATABASE TYPES

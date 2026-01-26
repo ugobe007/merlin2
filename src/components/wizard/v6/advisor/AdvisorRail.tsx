@@ -4,8 +4,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { useAdvisorPublisher } from "./AdvisorPublisher";
 import { AdvisorCard } from "./AdvisorCard";
 import { SolarOpportunityWidget } from "./SolarOpportunityWidget";
-import { PowerGaugeWidget } from "./PowerGaugeWidget";
-import { X, MapPin, Compass, Zap, Sun, Cloud, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
+import { X, MapPin, Zap, Sun, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
 import avatarImg from "@/assets/images/new_small_profile_.png";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import type { IntelligenceContext } from "@/types/intelligence.types";
@@ -235,7 +234,6 @@ export function AdvisorRail({
   const rate = context?.utility?.rate;
   const demand = context?.utility?.demandCharge;
   const hasTOU = context?.utility?.hasTOU;
-  const utilityName = context?.location?.utilityName || "";
 
   // Solar data from SSOT (NREL PVWatts) - used via context?.solar in JSX
   const _sunHours = context?.solar?.sunHours;
@@ -254,8 +252,8 @@ export function AdvisorRail({
   // Progressive Model from micro-prompts (Jan 21, 2026)
   const progressiveModel = context?.progressiveModel;
 
-  // Derive weather risk label from actual data
-  const weatherRiskLabel = (() => {
+  // Derive weather risk label from actual data (unused after Step 1 removal - kept for future use)
+  const _weatherRiskLabel = (() => {
     if (!weatherProfile) return null;
     const profile = weatherProfile.toLowerCase();
     if (profile.includes('extreme') || profile.includes('high variability')) return 'Moderate';
@@ -470,7 +468,36 @@ export function AdvisorRail({
       <div className="px-6 py-4 border-b border-violet-500/20 flex-shrink-0">
         <div className="rounded-xl border border-violet-500/35 bg-gradient-to-br from-slate-800/70 via-slate-900/80 to-violet-950/60 p-4 shadow-[inset_0_1px_0_rgba(167,139,250,0.2),0_0_24px_rgba(99,102,241,0.15),0_0_48px_rgba(139,92,246,0.08)]">
           
-          {/* STEP 1: Location Analysis */}
+          {/* STEP 1: Welcome Greeting */}
+          {currentStep === 1 && (
+            <>
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-4 h-4 text-violet-400" />
+                <h3 className="text-sm font-bold text-white">Welcome to Merlin</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-lg border border-violet-400/20 bg-violet-500/8 p-3">
+                  <p className="text-xs text-violet-100 leading-relaxed">
+                    <strong>Hi! I'm Merlin, your AI Energy Advisor.</strong> I'll help you discover how much you can save with battery storage and solar. Let's start by finding your location to see local energy rates and solar potential.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                  <div className="text-[10px] text-amber-200 font-semibold mb-2">💡 WHAT I'LL DO</div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    I'll analyze your facility's energy profile, calculate savings with TrueQuote™ precision, and recommend the right system size for your business.
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ============================================================================
+              STEP 1: Location Analysis - DISABLED (Jan 25, 2026)
+              
+              Redundant with EnergyMetricsHeader (persistent header at top of wizard)
+              Keeping code commented for reference but not rendering to avoid duplication
+              ============================================================================
+          
           {currentStep === 1 && (
             <>
               <div className="flex items-center justify-between mb-3">
@@ -538,6 +565,7 @@ export function AdvisorRail({
               )}
             </>
           )}
+          ============================================================================ */}
 
           {/* STEP 2: Industry Context */}
           {currentStep === 2 && (

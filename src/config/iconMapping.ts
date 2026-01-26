@@ -56,7 +56,6 @@ import {
   TrendingUp,
   TrendingDown,
   BarChart3,
-  PieChart,
   Activity,
   
   // Status & Feedback
@@ -66,9 +65,6 @@ import {
   HelpCircle,
   Loader2,
   Sparkles,
-  
-  // Data & Analysis
-  FileText,
   Download,
   Upload,
   Search,
@@ -79,9 +75,6 @@ import {
   User,
   Users,
   Shield,
-  Lock,
-  Eye,
-  EyeOff,
   
   // Weather & Climate
   Cloud,
@@ -89,10 +82,6 @@ import {
   CloudSnow,
   CloudLightning,
   Thermometer,
-  
-  // Tools & Equipment
-  Wrench,
-  Hammer,
   
   type LucideIcon,
 } from "lucide-react";

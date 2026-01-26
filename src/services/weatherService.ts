@@ -5,10 +5,11 @@
  * to provide climate context for energy system sizing.
  * 
  * Created: Jan 17, 2026
- * Updated: Jan 17, 2026 - Added Google Geocoding for precise coordinates
+ * Updated: Jan 25, 2026 - Added safe fetch to handle 429 rate limiting
  */
 
 import { getCoordinatesFromZip } from './geocodingService';
+import { fetchOptionalJSON } from '@/utils/safeFetch';
 
 const VISUAL_CROSSING_API_KEY = 'HQLBWQ3D3YLYKF2NLJL68EW4C';
 
@@ -94,19 +95,16 @@ function calculateDegreeDays(avgTemp: number): { heating: number; cooling: numbe
 
 /**
  * Fetch weather data from Visual Crossing API
+ * Uses safe fetch wrapper to handle 429 (rate limiting) gracefully with 10-minute cache
  */
 async function fetchVisualCrossing(zipCode: string): Promise<WeatherData | null> {
   try {
     const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${zipCode}/last30days?unitGroup=us&key=${VISUAL_CROSSING_API_KEY}&include=days`;
     
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.warn('Visual Crossing API error:', response.status);
-      return null;
-    }
-
-    const data: VisualCrossingResponse = await response.json();
-    if (!data.days || data.days.length === 0) {
+    // Use safe fetch with 10-minute cache (weather doesn't change that often)
+    const data = await fetchOptionalJSON<VisualCrossingResponse>(url, { ttlMs: 10 * 60_000 });
+    
+    if (!data || !data.days || data.days.length === 0) {
       return null;
     }
 

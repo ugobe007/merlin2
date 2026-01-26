@@ -213,7 +213,7 @@ export const calculateEnergySavings = (
 
   // Calculate peak shaving savings
   const peakShavingKWh = annualEnergyKWh * peakShavingPercent;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const offPeakKWh = annualEnergyKWh * (1 - peakShavingPercent);
 
   const peakSavings = peakShavingKWh * (rates.peakRateKWh - rates.offPeakRateKWh);
