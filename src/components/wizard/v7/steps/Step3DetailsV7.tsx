@@ -58,31 +58,25 @@ interface Step3DetailsV7Props {
 
 // Industry-specific icons
 const INDUSTRY_ICONS: Record<string, string> = {
-  'car-wash': '🚗',
-  'hotel': '🏨',
-  'office': '🏢',
-  'hospital': '🏥',
-  'data-center': '💾',
-  'manufacturing': '🏭',
-  'ev-charging': '⚡',
-  'retail': '🛒',
-  'restaurant': '🍽️',
-  'warehouse': '📦',
-  'apartment': '🏘️',
-  'college': '🎓',
-  'airport': '✈️',
-  'gas-station': '⛽',
-  'casino': '🎰',
-  'cold-storage': '❄️',
+  "car-wash": "🚗",
+  hotel: "🏨",
+  office: "🏢",
+  hospital: "🏥",
+  "data-center": "💾",
+  manufacturing: "🏭",
+  "ev-charging": "⚡",
+  retail: "🛒",
+  restaurant: "🍽️",
+  warehouse: "📦",
+  apartment: "🏘️",
+  college: "🎓",
+  airport: "✈️",
+  "gas-station": "⛽",
+  casino: "🎰",
+  "cold-storage": "❄️",
 };
 
-function StepLoadingCard({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle?: string;
-}) {
+function StepLoadingCard({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="h-full min-h-0 flex flex-col">
       {/* Compact top bar skeleton */}
@@ -102,9 +96,7 @@ function StepLoadingCard({
         <div className="max-w-3xl mx-auto px-6 py-8">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <div className="text-xl font-semibold text-white">{title}</div>
-            {subtitle && (
-              <div className="text-sm text-slate-300 mt-2">{subtitle}</div>
-            )}
+            {subtitle && <div className="text-sm text-slate-300 mt-2">{subtitle}</div>}
             <div className="mt-6 space-y-4">
               <div className="h-16 rounded-xl bg-white/5 animate-pulse" />
               <div className="h-16 rounded-xl bg-white/5 animate-pulse" />
@@ -140,7 +132,7 @@ export default function Step3DetailsV7({
 
   // ✅ Template state: V7 must persist template that CompleteStep3Component loads from DB
   // Without this, template is "loaded" but dropped on the floor by updateState handler
-  const [step3Template, setStep3Template] = useState<any>(null);
+  const [step3Template, setStep3Template] = useState<unknown>(null);
 
   const [questionCount, setQuestionCount] = useState({ answered: 0, total: 0 });
   const [dbError, setDbError] = useState<string | null>(null);
@@ -152,14 +144,14 @@ export default function Step3DetailsV7({
 
   // Calculate progress (moved above early return to avoid conditional hook call)
   useEffect(() => {
-    const answered = Object.keys(answers).filter(k => answers[k] !== undefined && answers[k] !== '').length;
-    setQuestionCount(prev => ({ answered, total: prev.total || 16 }));
+    const answered = Object.keys(answers).filter(
+      (k) => answers[k] !== undefined && answers[k] !== ""
+    ).length;
+    setQuestionCount((prev) => ({ answered, total: prev.total || 16 }));
   }, [answers]);
 
   // ✅ Pricing snapshot: freeze identity at first ready/fallback
-  const [pricingSnapshot, setPricingSnapshot] = useState<PricingConfig | null>(
-    null
-  );
+  const [pricingSnapshot, setPricingSnapshot] = useState<PricingConfig | null>(null);
 
   useEffect(() => {
     const ok = pricingStatus === "ready" || pricingStatus === "fallback";
@@ -169,13 +161,16 @@ export default function Step3DetailsV7({
   }, [pricingSnapshot, pricingStatus, pricingConfig]);
 
   const pricing = pricingSnapshot ?? pricingConfig;
-  const isPricingLoading =
-    pricingStatus === "idle" || pricingStatus === "loading";
+  const isPricingLoading = pricingStatus === "idle" || pricingStatus === "loading";
 
   // ✅ DEBUG: Log pricing status transitions to diagnose stuck loading
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.log("[Step3] pricing:", { pricingStatus, hasConfig: !!pricingConfig, hasSnapshot: !!pricingSnapshot });
+      console.log("[Step3] pricing:", {
+        pricingStatus,
+        hasConfig: !!pricingConfig,
+        hasSnapshot: !!pricingSnapshot,
+      });
     }
   }, [pricingStatus, pricingConfig, pricingSnapshot]);
 
@@ -197,25 +192,25 @@ export default function Step3DetailsV7({
   // ============================================================================
 
   // Base completeness score (0-100)
-  const completeness = questionCount.total > 0 
-    ? Math.round((questionCount.answered / questionCount.total) * 100)
-    : 0;
+  const completeness =
+    questionCount.total > 0 ? Math.round((questionCount.answered / questionCount.total) * 100) : 0;
 
   // Calculator confidence (0-1 scale, converted to 0-100)
-  const calcConfidence = liveMetrics?.confidence != null 
-    ? Math.round(liveMetrics.confidence * 100) 
-    : null;
+  const calcConfidence =
+    liveMetrics?.confidence != null ? Math.round(liveMetrics.confidence * 100) : null;
 
   // Template boost: small bounded bonus if template is present
   const templateBoost = step3Template ? 10 : 0;
 
   // Merged confidence formula (no useMemo needed - cheap computation)
-  const confidenceScore = calcConfidence != null
-    ? Math.min(100, Math.round((0.6 * completeness) + (0.4 * calcConfidence) + templateBoost))
-    : Math.min(100, completeness + templateBoost);
+  const confidenceScore =
+    calcConfidence != null
+      ? Math.min(100, Math.round(0.6 * completeness + 0.4 * calcConfidence + templateBoost))
+      : Math.min(100, completeness + templateBoost);
 
-  const confidenceLabel = confidenceScore >= 80 ? 'High' : confidenceScore >= 50 ? 'Medium' : 'Low';
-  const confidenceColor = confidenceScore >= 80 ? '#22c55e' : confidenceScore >= 50 ? '#f59e0b' : '#ef4444';
+  const confidenceLabel = confidenceScore >= 80 ? "High" : confidenceScore >= 50 ? "Medium" : "Low";
+  const _confidenceColor =
+    confidenceScore >= 80 ? "#22c55e" : confidenceScore >= 50 ? "#f59e0b" : "#ef4444";
 
   // ============================================================================
   // DEVIATION FLAGS (non-blocking warnings)
@@ -237,28 +232,28 @@ export default function Step3DetailsV7({
   }
 
   // Get industry icon (slug already computed above)
-  const industryIcon = INDUSTRY_ICONS[industrySlug] || '🏢';
-  
+  const industryIcon = INDUSTRY_ICONS[industrySlug] || "🏢";
+
   // Industry display names
   const industryNames: Record<string, string> = {
-    'car-wash': 'Car Wash',
-    'hotel': 'Hotel',
-    'office': 'Office Building',
-    'hospital': 'Hospital',
-    'data-center': 'Data Center',
-    'manufacturing': 'Manufacturing Facility',
-    'ev-charging': 'EV Charging Station',
-    'retail': 'Retail Store',
-    'restaurant': 'Restaurant',
-    'warehouse': 'Warehouse',
-    'apartment': 'Apartment Complex',
-    'college': 'College/University',
-    'airport': 'Airport',
-    'gas-station': 'Gas Station',
-    'casino': 'Casino',
-    'cold-storage': 'Cold Storage',
+    "car-wash": "Car Wash",
+    hotel: "Hotel",
+    office: "Office Building",
+    hospital: "Hospital",
+    "data-center": "Data Center",
+    manufacturing: "Manufacturing Facility",
+    "ev-charging": "EV Charging Station",
+    retail: "Retail Store",
+    restaurant: "Restaurant",
+    warehouse: "Warehouse",
+    apartment: "Apartment Complex",
+    college: "College/University",
+    airport: "Airport",
+    "gas-station": "Gas Station",
+    casino: "Casino",
+    "cold-storage": "Cold Storage",
   };
-  const industryName = industryNames[industrySlug] || 'Commercial Facility';
+  const industryName = industryNames[industrySlug] || "Commercial Facility";
 
   const pricingBadge =
     pricingStatus === "ready" ? (
@@ -272,32 +267,33 @@ export default function Step3DetailsV7({
     );
 
   // Handle updates from Step3Integration (live calculations)
-  const handleAnswersUpdate = (newAnswers: Record<string, unknown>, metrics?: any) => {
+  const handleAnswersUpdate = (newAnswers: Record<string, unknown>, metrics?: unknown) => {
     try {
       setAnswers(newAnswers);
-      
+
       // Update live metrics if provided
-      if (metrics) {
+      if (metrics && typeof metrics === "object") {
+        const m = metrics as Record<string, unknown>;
         setLiveMetrics({
-          peakDemandKW: metrics.peakKW || metrics.peakDemandKW,
-          dailyKWh: metrics.dailyKWh,
-          recommendedBESSKW: metrics.bessKW || metrics.recommendedBESSKW,
-          recommendedBESSKWh: metrics.bessKWh || metrics.recommendedBESSKWh,
-          estimatedSavings: metrics.annualSavings || metrics.estimatedSavings,
-          confidence: metrics.confidence,
+          peakDemandKW: (m.peakKW as number) || (m.peakDemandKW as number),
+          dailyKWh: m.dailyKWh as number,
+          recommendedBESSKW: (m.bessKW as number) || (m.recommendedBESSKW as number),
+          recommendedBESSKWh: (m.bessKWh as number) || (m.recommendedBESSKWh as number),
+          estimatedSavings: (m.annualSavings as number) || (m.estimatedSavings as number),
+          confidence: m.confidence as number,
         });
       }
-      
+
       // Clear error if successful
       if (dbError) setDbError(null);
     } catch (error) {
-      console.error('Error updating answers:', error);
-      setDbError(error instanceof Error ? error.message : 'Failed to update questionnaire');
+      console.error("Error updating answers:", error);
+      setDbError(error instanceof Error ? error.message : "Failed to update questionnaire");
     }
   };
 
   // ---- TrueQuote Proof CTA (fires window event - no prop threading) ----
-  const openTrueQuoteProof = () => {
+  const _openTrueQuoteProof = () => {
     const payload: Partial<import("@/components/shared/TrueQuoteModal").TrueQuoteProofPayload> = {
       industry: industrySlug,
 
@@ -338,12 +334,25 @@ export default function Step3DetailsV7({
       },
 
       assumptions: [
-        { label: "Pricing mode", value: pricingStatus === "ready" ? "Locked" : "Default (Estimate)" },
+        {
+          label: "Pricing mode",
+          value: pricingStatus === "ready" ? "Locked" : "Default (Estimate)",
+        },
         ...(locationIntel?.utilityRate != null
-          ? [{ label: "Utility rate", value: `$${Number(locationIntel.utilityRate).toFixed(2)}/kWh` }]
+          ? [
+              {
+                label: "Utility rate",
+                value: `$${Number(locationIntel.utilityRate).toFixed(2)}/kWh`,
+              },
+            ]
           : []),
         ...(locationIntel?.peakSunHours != null
-          ? [{ label: "Peak sun hours", value: `${Number(locationIntel.peakSunHours).toFixed(1)} hrs/day` }]
+          ? [
+              {
+                label: "Peak sun hours",
+                value: `${Number(locationIntel.peakSunHours).toFixed(1)} hrs/day`,
+              },
+            ]
           : []),
       ],
     };
@@ -367,7 +376,10 @@ export default function Step3DetailsV7({
               <div>
                 <div className="text-lg font-semibold text-white">{industryName}</div>
                 <div className="text-sm text-slate-400">
-                  {location?.business?.name || location?.businessName || location?.city || 'Your facility'}
+                  {location?.business?.name ||
+                    location?.businessName ||
+                    location?.city ||
+                    "Your facility"}
                 </div>
               </div>
             </div>
@@ -377,7 +389,7 @@ export default function Step3DetailsV7({
               <div className="flex items-center gap-3">
                 <div className="flex-1">
                   <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-gradient-to-r from-purple-600 to-purple-400 transition-all duration-500"
                       style={{ width: `${confidenceScore}%` }}
                     />
@@ -396,9 +408,9 @@ export default function Step3DetailsV7({
                 onClick={() => setShowMetrics(!showMetrics)}
                 className={[
                   "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-                  showMetrics 
-                    ? "bg-purple-600 text-white" 
-                    : "bg-white/5 text-slate-300 hover:bg-white/10"
+                  showMetrics
+                    ? "bg-purple-600 text-white"
+                    : "bg-white/5 text-slate-300 hover:bg-white/10",
                 ].join(" ")}
               >
                 {showMetrics ? "Hide Metrics" : "Show Metrics"}
@@ -466,10 +478,12 @@ export default function Step3DetailsV7({
                 >
                   <span className="text-lg">⚠️</span>
                   <div>
-                    <div className={[
-                      "text-sm font-semibold",
-                      flag.severity === "warning" ? "text-amber-300" : "text-blue-300",
-                    ].join(" ")}>
+                    <div
+                      className={[
+                        "text-sm font-semibold",
+                        flag.severity === "warning" ? "text-amber-300" : "text-blue-300",
+                      ].join(" ")}
+                    >
                       {flag.label}
                     </div>
                     <div className="text-xs text-slate-300">{flag.detail}</div>
@@ -483,7 +497,9 @@ export default function Step3DetailsV7({
           {dbError ? (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
               <div className="text-4xl mb-3">⚠️</div>
-              <div className="text-lg font-semibold text-red-300 mb-2">Database Connection Issue</div>
+              <div className="text-lg font-semibold text-red-300 mb-2">
+                Database Connection Issue
+              </div>
               <div className="text-sm text-slate-300">{dbError}</div>
               <button
                 onClick={() => window.location.reload()}
@@ -499,26 +515,29 @@ export default function Step3DetailsV7({
                 industry: industrySlug,
                 useCaseData: {
                   inputs: answers,
-                  template: step3Template,  // ✅ Pass persisted template back in
+                  template: step3Template, // ✅ Pass persisted template back in
                 },
 
                 // ✅ Pricing freeze passed into SSOT state (no DB reads inside Step 3+)
                 pricingConfig: pricing,
                 pricingStatus,
               }}
-              updateState={(updates: any) => {
+              updateState={(updates: unknown) => {
                 // ✅ WIRING DOCTRINE: Invariant guard - make bad update shapes loud, not silent
-                const inputs = updates?.useCaseData?.inputs;
-                const metrics = updates?.useCaseData?.industryMetrics;
-                const template = updates?.useCaseData?.template;
+                const u = updates as {
+                  useCaseData?: { inputs?: unknown; industryMetrics?: unknown; template?: unknown };
+                };
+                const inputs = u?.useCaseData?.inputs;
+                const metrics = u?.useCaseData?.industryMetrics;
+                const template = u?.useCaseData?.template;
 
                 // ✅ CRITICAL: Persist template in V7 layer so it survives re-renders
                 // Without this, template loaded by CompleteStep3Component is dropped
                 // ✅ HARDENED: Use fingerprint to detect both identity churn AND stale template swaps
                 if (template) {
-                  setStep3Template((prev: any) => {
+                  setStep3Template((prev: unknown) => {
                     // Build fingerprints for comparison
-                    const getFingerprint = (t: any) => {
+                    const getFingerprint = (t: unknown) => {
                       if (!t) return null;
                       // ✅ Full loadProfile hash (catches any profile field change)
                       const loadProfileHash = t.loadProfile
@@ -560,7 +579,10 @@ export default function Step3DetailsV7({
 
                 if (!inputs || typeof inputs !== "object") {
                   if (import.meta.env.DEV) {
-                    console.error("[Step3] BAD UPDATE SHAPE - expected useCaseData.inputs", updates);
+                    console.error(
+                      "[Step3] BAD UPDATE SHAPE - expected useCaseData.inputs",
+                      updates
+                    );
                   }
                   setDbError("Step 3 wiring error: missing useCaseData.inputs");
                   return;
@@ -570,7 +592,7 @@ export default function Step3DetailsV7({
                 if (import.meta.env.DEV && Object.keys(answers).length > 0) {
                   const prevKeys = Object.keys(answers);
                   const nextKeys = Object.keys(inputs);
-                  const added = nextKeys.filter(k => !prevKeys.includes(k));
+                  const added = nextKeys.filter((k) => !prevKeys.includes(k));
                   if (added.length > 0) {
                     console.log("[Step3] INPUT KEYS added:", added.slice(0, 10));
                   }
@@ -585,7 +607,8 @@ export default function Step3DetailsV7({
               }}
               onNext={(quoteData) => {
                 setIsLoading(false);
-                handleAnswersUpdate(quoteData.answers, quoteData.metrics);
+                const metrics = "metrics" in quoteData ? quoteData.metrics : undefined;
+                handleAnswersUpdate(quoteData.answers, metrics);
                 onComplete();
               }}
               onBack={onBack}
