@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import placesRouter from './routes/places.js';
+import locationRouter from './routes/location.js';
 
 // Load environment variables from server/.env
 const __filename = fileURLToPath(import.meta.url);
@@ -30,14 +31,16 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/places', placesRouter);
+app.use('/api/location', locationRouter);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'merlin-places-api' });
+  res.json({ status: 'ok', service: 'merlin-api', endpoints: ['/api/places', '/api/location'] });
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Merlin Places API running on port ${PORT}`);
-  console.log(`📍 Places endpoints available at http://localhost:${PORT}/api/places`);
+  console.log(`🚀 Merlin API running on port ${PORT}`);
+  console.log(`📍 Places endpoints: http://localhost:${PORT}/api/places`);
+  console.log(`🌎 Location endpoints: http://localhost:${PORT}/api/location`);
 });
