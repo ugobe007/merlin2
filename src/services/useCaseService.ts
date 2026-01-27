@@ -233,7 +233,7 @@ export class UseCaseService {
       // Handle schema mismatch: TypeScript types say 'question_key' and 'select_options'
       // but migrations use 'field_name' and 'options'. Database likely has both.
       const rawQuestions = questionsResult.status === "fulfilled" ? questionsResult.value : [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const transformedQuestions = rawQuestions.map((q: any) => {
         // Get field name - database may have both question_key (schema) and field_name (migrations)
         const fieldName = q.field_name || q.question_key || q.id;

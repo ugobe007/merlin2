@@ -10,7 +10,7 @@ import { calculateTruckStopLoad } from "../industries/truckStopIndustry";
 
 export interface LoadCalculationInput {
   industry: Industry;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   useCaseData: Record<string, any>;
 }
 
@@ -213,7 +213,7 @@ const INDUSTRY_LOAD_FACTORS: Record<
  * Based on actual equipment power ratings, not generic per-sqft
  */
 function calculateCarWashLoad(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   useCaseData: Record<string, any>,
   breakdown: LoadCalculationResult["breakdown"]
 ): number {
@@ -508,7 +508,7 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
  * Extract unit count based on industry
  * Handles ALL field name variations from 23 industries
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function extractUnitCount(industry: Industry, data: Record<string, any>): number {
   switch (industry) {
     case "hotel":
@@ -540,7 +540,7 @@ function extractUnitCount(industry: Industry, data: Record<string, any>): number
 function applyModifiers(
   baseKW: number,
   industry: Industry,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   data: Record<string, any>,
   breakdown: LoadCalculationResult["breakdown"]
 ): number {

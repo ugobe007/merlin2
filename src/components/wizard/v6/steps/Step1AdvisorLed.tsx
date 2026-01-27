@@ -85,7 +85,7 @@ export function Step1AdvisorLed({ state, updateState, onNext: _onNext, onGoToSte
   
   // 🔎 DEV MARKER: Prove this component is actually running (Jan 25, 2026)
   if (import.meta.env.DEV) {
-    // eslint-disable-next-line no-console
+     
     console.log("✅ RUNNING Step1AdvisorLed.tsx (DEV MARKER) —", new Date().toISOString());
   }
   
