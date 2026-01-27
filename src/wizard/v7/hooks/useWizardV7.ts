@@ -1,5 +1,10 @@
 // src/wizard/v7/hooks/useWizardV7.ts
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import { getTemplate } from "@/wizard/v7/templates/templateIndex";
+import { CALCULATORS_BY_ID } from "@/wizard/v7/calculators/registry";
+import { validateTemplateAgainstCalculator } from "@/wizard/v7/templates/validator";
+import { applyTemplateMapping } from "@/wizard/v7/templates/applyMapping";
+import type { CalcInputs } from "@/wizard/v7/calculators/contract";
 
 /**
  * ============================================================
@@ -207,6 +212,67 @@ function createSessionId(): string {
 
 function nowISO(): string {
   return new Date().toISOString();
+}
+
+/* ============================================================
+   Contract Quote Runner (V7 SSOT Integration)
+============================================================ */
+
+/**
+ * Run contract-based quote generation
+ * - Load template for industry
+ * - Validate template vs calculator contract
+ * - Apply mapping transforms
+ * - Compute quote via calculator
+ * - Return freeze + outputs
+ */
+function runContractQuote(params: { industry: string; answers: Record<string, unknown> }): {
+  freeze: PricingFreeze;
+  quote: QuoteOutput;
+} {
+  // 1. Load template
+  const tpl = getTemplate(params.industry);
+  if (!tpl) {
+    throw { code: "STATE", message: `No template found for industry "${params.industry}"` };
+  }
+
+  // 2. Get calculator contract
+  const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+  if (!calc) {
+    throw { code: "STATE", message: `No calculator registered for id "${tpl.calculator.id}"` };
+  }
+
+  // 3. Validate template vs calculator (hard fail on mismatch)
+  const validation = validateTemplateAgainstCalculator(tpl, calc, {
+    minQuestions: 16,
+    maxQuestions: 18,
+  });
+  if (!validation.ok) {
+    const errorMsg = validation.issues.map((i) => `${i.level}:${i.code}:${i.message}`).join(" | ");
+    throw { code: "VALIDATION", message: `Template validation failed: ${errorMsg}` };
+  }
+
+  // 4. Apply mapping (answers → canonical calculator inputs)
+  const inputs = applyTemplateMapping(tpl, params.answers);
+
+  // 5. Run calculator
+  const computed = calc.compute(inputs as CalcInputs);
+
+  // 6. Build pricing freeze (SSOT snapshot)
+  const freeze: PricingFreeze = {
+    powerMW: computed.peakLoadKW ? computed.peakLoadKW / 1000 : undefined,
+    hours: undefined, // TODO: extract from answers if needed
+    mwh: computed.energyKWhPerDay ? computed.energyKWhPerDay / 1000 : undefined,
+    useCase: tpl.industry,
+    createdAtISO: nowISO(),
+  };
+
+  // 7. Build quote output
+  const quote: QuoteOutput = {
+    notes: [...(computed.assumptions ?? []), ...(computed.warnings ?? []).map((w) => `⚠️ ${w}`)],
+  };
+
+  return { freeze, quote };
 }
 
 /* ============================================================
@@ -852,26 +918,25 @@ export function useWizardV7() {
         return;
       }
 
-      const controller = new AbortController();
-      abortRef.current = controller;
-
       try {
-        setBusy(true, "Running QuoteEngine...");
-        dispatch({ type: "DEBUG_TAG", lastApi: "runQuoteEngine" });
+        setBusy(true, "Running TrueQuote™ Calculator...");
+        dispatch({ type: "DEBUG_TAG", lastApi: "runContractQuote" });
 
-        const { freeze, quote } = await api.runQuoteEngine(
-          {
-            location,
-            locationIntel: state.locationIntel,
-            industry: state.industry,
-            answers,
-          },
-          controller.signal
-        );
+        // Use V7 contract layer for quote generation
+        const { freeze, quote } = runContractQuote({
+          industry: state.industry,
+          answers,
+        });
 
         dispatch({ type: "SET_STEP3_COMPLETE", complete: true });
         dispatch({ type: "SET_PRICING_FREEZE", freeze });
         dispatch({ type: "SET_QUOTE", quote });
+
+        // Add debug note about contract usage
+        dispatch({
+          type: "DEBUG_NOTE",
+          note: `Contract quote: industry=${state.industry}, template validated, calculator executed`,
+        });
 
         setStep("results", "quote_ready");
       } catch (err: unknown) {
@@ -879,7 +944,6 @@ export function useWizardV7() {
         else setError(err);
       } finally {
         setBusy(false);
-        abortRef.current = null;
       }
     },
     [
@@ -892,7 +956,6 @@ export function useWizardV7() {
       state.industry,
       state.step3Template,
       state.step3Answers,
-      state.locationIntel,
     ]
   );
 
