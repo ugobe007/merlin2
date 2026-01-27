@@ -1,0 +1,266 @@
+/**
+ * TEMPLATE DRIFT DETECTION TESTS
+ * ===============================
+ *
+ * Created: January 26, 2026
+ * Purpose: Prevent template/calculator drift with hard failures
+ *
+ * ENFORCES:
+ * - Data center template NEVER ships with 6 questions again
+ * - Template calculator.id matches registered contract
+ * - All calculator requiredInputs are mapped
+ * - All mapping.from references exist in questions
+ * - Question count stays within 16-18 range
+ *
+ * FAILURE MODE:
+ * - Test fails LOUDLY at build time
+ * - CI/CD blocks deployment if drift detected
+ * - Detailed error messages show exactly what broke
+ *
+ * EXTENSION:
+ * - Add one test per industry template
+ * - Copy/paste data_center test and adjust for hotel, car_wash, etc.
+ */
+
+import { describe, it, expect } from "vitest";
+import type { IndustryTemplateV1 } from "../types";
+import { validateTemplateAgainstCalculator } from "../validator";
+import { CALCULATORS_BY_ID, DC_LOAD_V1_16Q } from "../../calculators/registry";
+import { applyTemplateMapping } from "../applyMapping";
+
+// Import JSON templates (Vite supports JSON import)
+import dcTemplate from "../data_center.v1.json";
+import hotelTemplate from "../hotel.v1.json";
+import carWashTemplate from "../car_wash.v1.json";
+
+/**
+ * Type-safe JSON import helper
+ */
+function asTemplate(x: unknown): IndustryTemplateV1 {
+  return x as IndustryTemplateV1;
+}
+
+describe("Industry templates drift detection", () => {
+  /**
+   * DATA CENTER TEMPLATE CONTRACT TEST
+   *
+   * CRITICAL: This test prevents the "6 questions for data centers" regression
+   *
+   * ENFORCES:
+   * - Exactly 18 questions (16-18 range allowed, but DC needs 18)
+   * - Calculator ID: dc_load_v1
+   * - All 16 required inputs mapped
+   * - All mapping refs exist
+   * - No duplicate question IDs
+   */
+  it("data_center template validates against dc_load_v1 contract", () => {
+    const tpl = asTemplate(dcTemplate);
+
+    // 1) Calculator must exist in registry
+    const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+    expect(calc).toBeTruthy();
+    expect(calc?.id).toBe(DC_LOAD_V1_16Q.id);
+
+    // 2) Template must validate against contract
+    const res = validateTemplateAgainstCalculator(tpl, calc!, {
+      minQuestions: 16,
+      maxQuestions: 18,
+    });
+
+    // If validation fails, print all issues for debugging
+    if (!res.ok) {
+      const errorMsg = res.issues
+        .filter((i) => i.level === "error")
+        .map((i) => `${i.code}: ${i.message}`)
+        .join("\n");
+      throw new Error(`Template validation failed:\n${errorMsg}`);
+    }
+
+    // Log warnings (non-blocking but good to see)
+    const warnings = res.issues.filter((i) => i.level === "warn");
+    if (warnings.length > 0) {
+      console.warn("[drift test] Warnings:", warnings.map((w) => w.message).join(", "));
+    }
+
+    // 3) Hard assertion: Data center MUST have exactly 18 questions
+    expect(tpl.questions.length).toBe(18);
+  });
+
+  /**
+   * DATA CENTER TEMPLATE MAPPING TEST
+   *
+   * ENFORCES:
+   * - Sample answers produce non-null outputs
+   * - Transforms work correctly (ifDemandChargeElseZero)
+   * - Calculator compute() doesn't throw
+   */
+  it("data_center template mapping produces valid calculator inputs", () => {
+    const tpl = asTemplate(dcTemplate);
+    const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+    expect(calc).toBeTruthy();
+
+    // Sample answers (minimal valid input)
+    const answers: Record<string, unknown> = {
+      it_load_kw: 500,
+      peak_it_load_kw: 650,
+      avg_utilization_pct: 75,
+      growth_pct_24mo: 15,
+      power_capacity_kw: 1000,
+      tier: "Tier III",
+      redundancy: "N+1",
+      required_runtime_min: 30,
+      generator_present: true,
+      generator_kw: 750,
+      ups_present: true,
+      ups_runtime_min: 15,
+      cooling_type: "CRAH/CRAC",
+      pue: 1.5,
+      cooling_peak_kw: 200,
+      monthly_kwh: 360000,
+      demand_charge: false, // Transform test: should force demand_charge_rate → 0
+      demand_charge_rate: 25, // Should be ignored because demand_charge = false
+    };
+
+    // Apply mapping
+    const inputs = applyTemplateMapping(tpl, answers);
+
+    // Verify transform worked
+    expect(inputs.demand_charge_rate).toBe(0); // ifDemandChargeElseZero applied
+
+    // Run calculator
+    const result = calc!.compute(inputs);
+
+    // Verify outputs exist
+    expect(result.baseLoadKW).toBeGreaterThan(0);
+    expect(result.peakLoadKW).toBeGreaterThan(0);
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(result.baseLoadKW!);
+
+    // Log result for debugging
+    console.log("[drift test] DC calc result:", {
+      baseLoadKW: result.baseLoadKW,
+      peakLoadKW: result.peakLoadKW,
+      energyKWhPerDay: result.energyKWhPerDay,
+      warnings: result.warnings,
+    });
+  });
+
+  /**
+   * HOTEL TEMPLATE CONTRACT TEST
+   *
+   * ENFORCES:
+   * - 18 questions for hotel (room-based + amenities)
+   * - Calculator ID: hotel_load_v1
+   * - All required inputs mapped
+   * - ifDemandChargeElseZero transform applied
+   */
+  it("hotel template validates against hotel_load_v1 contract", () => {
+    const tpl = asTemplate(hotelTemplate);
+    const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+    expect(calc).toBeTruthy();
+
+    const res = validateTemplateAgainstCalculator(tpl, calc!, {
+      minQuestions: 16,
+      maxQuestions: 18,
+    });
+
+    if (!res.ok) {
+      const errorMsg = res.issues
+        .filter((i) => i.level === "error")
+        .map((i) => `${i.code}: ${i.message}`)
+        .join("\n");
+      throw new Error(`Hotel template validation failed:\n${errorMsg}`);
+    }
+
+    // Log warnings
+    const warnings = res.issues.filter((i) => i.level === "warn");
+    if (warnings.length > 0) {
+      console.warn("[drift test] Hotel warnings:", warnings.map((w) => w.message).join(", "));
+    }
+
+    // Hotel should have 18 questions
+    expect(tpl.questions.length).toBe(18);
+  });
+
+  /**
+   * CAR WASH TEMPLATE CONTRACT TEST
+   *
+   * ENFORCES:
+   * - 18 questions for car wash (equipment-based)
+   * - Calculator ID: car_wash_load_v1
+   * - All required inputs mapped
+   * - ifDemandChargeElseZero transform applied
+   */
+  it("car_wash template validates against car_wash_load_v1 contract", () => {
+    const tpl = asTemplate(carWashTemplate);
+    const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+    expect(calc).toBeTruthy();
+
+    const res = validateTemplateAgainstCalculator(tpl, calc!, {
+      minQuestions: 16,
+      maxQuestions: 18,
+    });
+
+    if (!res.ok) {
+      const errorMsg = res.issues
+        .filter((i) => i.level === "error")
+        .map((i) => `${i.code}: ${i.message}`)
+        .join("\n");
+      throw new Error(`Car wash template validation failed:\n${errorMsg}`);
+    }
+
+    // Log warnings
+    const warnings = res.issues.filter((i) => i.level === "warn");
+    if (warnings.length > 0) {
+      console.warn("[drift test] Car wash warnings:", warnings.map((w) => w.message).join(", "));
+    }
+
+    // Car wash should have 18 questions
+    expect(tpl.questions.length).toBe(18);
+  });
+
+  /**
+   * REGISTRY COMPLETENESS TEST
+   *
+   * ENFORCES:
+   * - All templates reference calculators that exist in registry
+   * - No orphaned templates
+   */
+  it("all templates reference registered calculators", () => {
+    const templates = [dcTemplate, hotelTemplate, carWashTemplate];
+
+    for (const tpl of templates) {
+      const template = asTemplate(tpl);
+      const calc = CALCULATORS_BY_ID[template.calculator.id];
+      expect(calc).toBeTruthy();
+      expect(calc?.id).toBe(template.calculator.id);
+    }
+  });
+});
+
+/**
+ * EXTENSION TEMPLATE (copy/paste for new industries)
+ *
+ * import hotelTemplate from "../hotel.v1.json";
+ *
+ * it("hotel template validates against hotel_load_v1 contract", () => {
+ *   const tpl = asTemplate(hotelTemplate);
+ *   const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+ *   expect(calc).toBeTruthy();
+ *
+ *   const res = validateTemplateAgainstCalculator(tpl, calc!, {
+ *     minQuestions: 16,
+ *     maxQuestions: 18,
+ *   });
+ *
+ *   if (!res.ok) {
+ *     const errorMsg = res.issues
+ *       .filter((i) => i.level === "error")
+ *       .map((i) => `${i.code}: ${i.message}`)
+ *       .join("\n");
+ *     throw new Error(`Template validation failed:\n${errorMsg}`);
+ *   }
+ *
+ *   expect(tpl.questions.length).toBeGreaterThanOrEqual(16);
+ *   expect(tpl.questions.length).toBeLessThanOrEqual(18);
+ * });
+ */

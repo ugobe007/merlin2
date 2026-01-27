@@ -1,0 +1,196 @@
+{
+  "schema": "industry-template-v1",
+  "industry": "hotel",
+  "version": "hotel.v1.0.0",
+  "calculator": {
+    "id": "hotel_load_v1",
+    "requiredInputs": [
+      "room_count",
+      "occupancy_avg_pct",
+      "occupancy_peak_pct",
+      "laundry_on_site",
+      "kitchen_type",
+      "restaurant_on_site",
+      "bar_on_site",
+      "pool_on_site",
+      "spa_on_site",
+      "conference_sqft",
+      "hvac_type",
+      "has_electric_hot_water",
+      "monthly_kwh",
+      "peak_demand_kw",
+      "demand_charge",
+      "demand_charge_rate"
+    ]
+  },
+  "questions": [
+    {
+      "id": "room_count",
+      "label": "Number of rooms",
+      "type": "number",
+      "required": true,
+      "unit": "rooms",
+      "min": 1,
+      "hint": "Total guest rooms in the hotel"
+    },
+    {
+      "id": "occupancy_avg_pct",
+      "label": "Average occupancy",
+      "type": "number",
+      "required": true,
+      "unit": "%",
+      "min": 0,
+      "max": 100,
+      "hint": "Typical year-round occupancy rate"
+    },
+    {
+      "id": "occupancy_peak_pct",
+      "label": "Peak occupancy (busy weeks)",
+      "type": "number",
+      "required": true,
+      "unit": "%",
+      "min": 0,
+      "max": 100,
+      "hint": "Occupancy during high season or events"
+    },
+    {
+      "id": "laundry_on_site",
+      "label": "On-site laundry?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Do you have commercial laundry equipment on-site?"
+    },
+    {
+      "id": "kitchen_type",
+      "label": "Kitchen type",
+      "type": "select",
+      "required": true,
+      "options": ["None", "Light prep", "Full commercial"],
+      "hint": "Type of kitchen facilities (None = continental breakfast only)"
+    },
+    {
+      "id": "restaurant_on_site",
+      "label": "Restaurant on-site?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Full-service restaurant serving guests and/or public"
+    },
+    {
+      "id": "bar_on_site",
+      "label": "Bar on-site?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Bar or lounge serving alcoholic beverages"
+    },
+    {
+      "id": "pool_on_site",
+      "label": "Pool on-site?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Swimming pool (indoor or outdoor)"
+    },
+    {
+      "id": "spa_on_site",
+      "label": "Spa / wellness facilities?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Spa, fitness center, or wellness facilities"
+    },
+    {
+      "id": "conference_sqft",
+      "label": "Conference / event space",
+      "type": "number",
+      "required": true,
+      "unit": "sq ft",
+      "min": 0,
+      "hint": "Total meeting room and event space square footage"
+    },
+    {
+      "id": "hvac_type",
+      "label": "HVAC type",
+      "type": "select",
+      "required": true,
+      "options": ["Packaged RTU", "Chiller plant", "VRF/Heat pump", "Other"],
+      "hint": "Primary HVAC system type (RTU = rooftop unit)"
+    },
+    {
+      "id": "has_electric_hot_water",
+      "label": "Electric domestic hot water?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Is domestic hot water heated electrically (vs gas)?"
+    },
+    {
+      "id": "ev_chargers_count",
+      "label": "EV chargers on-site (count)",
+      "type": "number",
+      "required": false,
+      "unit": "chargers",
+      "min": 0,
+      "hint": "Number of electric vehicle charging stations (leave blank if none)"
+    },
+    {
+      "id": "ev_charger_power_kw",
+      "label": "Typical charger power",
+      "type": "number",
+      "required": false,
+      "unit": "kW",
+      "min": 0,
+      "hint": "Power rating per charger (typical: 7 kW Level 2, 50+ kW DCFC)"
+    },
+    {
+      "id": "monthly_kwh",
+      "label": "Monthly energy use",
+      "type": "number",
+      "required": true,
+      "unit": "kWh",
+      "min": 1,
+      "hint": "Total monthly electricity consumption from utility bill"
+    },
+    {
+      "id": "peak_demand_kw",
+      "label": "Peak demand",
+      "type": "number",
+      "required": true,
+      "unit": "kW",
+      "min": 0,
+      "hint": "Peak electrical demand from utility bill (billing demand)"
+    },
+    {
+      "id": "demand_charge",
+      "label": "Demand charges apply?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Does your utility bill include demand charges ($/kW-month)?"
+    },
+    {
+      "id": "demand_charge_rate",
+      "label": "Demand charge rate (if applicable)",
+      "type": "number",
+      "required": false,
+      "unit": "$/kW-month",
+      "min": 0,
+      "hint": "Demand charge rate from utility bill (leave blank if no demand charges)"
+    }
+  ],
+  "mapping": {
+    "room_count": { "from": "room_count" },
+    "occupancy_avg_pct": { "from": "occupancy_avg_pct" },
+    "occupancy_peak_pct": { "from": "occupancy_peak_pct" },
+    "laundry_on_site": { "from": "laundry_on_site" },
+    "kitchen_type": { "from": "kitchen_type" },
+    "restaurant_on_site": { "from": "restaurant_on_site" },
+    "bar_on_site": { "from": "bar_on_site" },
+    "pool_on_site": { "from": "pool_on_site" },
+    "spa_on_site": { "from": "spa_on_site" },
+    "conference_sqft": { "from": "conference_sqft" },
+    "hvac_type": { "from": "hvac_type" },
+    "has_electric_hot_water": { "from": "has_electric_hot_water" },
+    "ev_chargers_count": { "from": "ev_chargers_count" },
+    "ev_charger_power_kw": { "from": "ev_charger_power_kw" },
+    "monthly_kwh": { "from": "monthly_kwh" },
+    "peak_demand_kw": { "from": "peak_demand_kw" },
+    "demand_charge": { "from": "demand_charge" },
+    "demand_charge_rate": { "from": "demand_charge_rate", "transform": "ifDemandChargeElseZero" }
+  }
+}
