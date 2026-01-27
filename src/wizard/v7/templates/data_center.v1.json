@@ -1,0 +1,201 @@
+{
+  "schema": "industry-template-v1",
+  "industry": "data_center",
+  "version": "dc.v1.0.0",
+  "calculator": {
+    "id": "dc_load_v1",
+    "requiredInputs": [
+      "it_load_kw",
+      "peak_it_load_kw",
+      "avg_utilization_pct",
+      "growth_pct_24mo",
+      "power_capacity_kw",
+      "tier",
+      "redundancy",
+      "required_runtime_min",
+      "generator_present",
+      "ups_present",
+      "cooling_type",
+      "pue",
+      "cooling_peak_kw",
+      "monthly_kwh",
+      "demand_charge",
+      "demand_charge_rate"
+    ]
+  },
+  "questions": [
+    {
+      "id": "it_load_kw",
+      "label": "Current IT critical load",
+      "type": "number",
+      "required": true,
+      "unit": "kW",
+      "min": 1,
+      "hint": "Average power draw from servers, storage, and networking equipment"
+    },
+    {
+      "id": "peak_it_load_kw",
+      "label": "Peak IT load (last 30 days)",
+      "type": "number",
+      "required": true,
+      "unit": "kW",
+      "min": 1,
+      "hint": "Maximum observed power draw during peak operations"
+    },
+    {
+      "id": "avg_utilization_pct",
+      "label": "Average utilization",
+      "type": "number",
+      "required": true,
+      "unit": "%",
+      "min": 1,
+      "max": 100,
+      "hint": "Typical percentage of IT capacity in use"
+    },
+    {
+      "id": "growth_pct_24mo",
+      "label": "Projected growth (next 24 months)",
+      "type": "number",
+      "required": true,
+      "unit": "%",
+      "min": 0,
+      "hint": "Expected increase in IT load over next 2 years"
+    },
+    {
+      "id": "power_capacity_kw",
+      "label": "Available utility/service capacity",
+      "type": "number",
+      "required": true,
+      "unit": "kW",
+      "min": 1,
+      "hint": "Total electrical service capacity from utility (panel/transformer rating)"
+    },
+    {
+      "id": "tier",
+      "label": "Facility tier",
+      "type": "select",
+      "required": true,
+      "options": ["Tier I", "Tier II", "Tier III", "Tier IV"],
+      "hint": "Uptime Institute tier classification (affects redundancy requirements)"
+    },
+    {
+      "id": "redundancy",
+      "label": "Redundancy configuration",
+      "type": "select",
+      "required": true,
+      "options": ["N", "N+1", "2N"],
+      "hint": "Power distribution redundancy (N = no redundancy, N+1 = one backup, 2N = fully redundant)"
+    },
+    {
+      "id": "required_runtime_min",
+      "label": "Required ride-through runtime",
+      "type": "number",
+      "required": true,
+      "unit": "minutes",
+      "min": 1,
+      "hint": "How long must facility run on backup power during outage"
+    },
+    {
+      "id": "generator_present",
+      "label": "Generator on-site?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Do you have backup generators installed?"
+    },
+    {
+      "id": "generator_kw",
+      "label": "Generator capacity (if present)",
+      "type": "number",
+      "required": false,
+      "unit": "kW",
+      "min": 0,
+      "hint": "Total generator capacity (leave blank if no generator)"
+    },
+    {
+      "id": "ups_present",
+      "label": "UPS on-site?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Do you have uninterruptible power supply (UPS) systems?"
+    },
+    {
+      "id": "ups_runtime_min",
+      "label": "UPS runtime (if present)",
+      "type": "number",
+      "required": false,
+      "unit": "minutes",
+      "min": 0,
+      "hint": "UPS battery runtime at full load (leave blank if no UPS)"
+    },
+    {
+      "id": "cooling_type",
+      "label": "Cooling type",
+      "type": "select",
+      "required": true,
+      "options": ["CRAH/CRAC", "Chilled water", "DX", "Other"],
+      "hint": "Primary cooling system type"
+    },
+    {
+      "id": "pue",
+      "label": "Current PUE",
+      "type": "number",
+      "required": true,
+      "min": 1.0,
+      "hint": "Power Usage Effectiveness (total facility power / IT equipment power). Typical: 1.5-2.0"
+    },
+    {
+      "id": "cooling_peak_kw",
+      "label": "Cooling load at peak",
+      "type": "number",
+      "required": true,
+      "unit": "kW",
+      "min": 0,
+      "hint": "Power draw of cooling systems during peak operations"
+    },
+    {
+      "id": "monthly_kwh",
+      "label": "Monthly energy use",
+      "type": "number",
+      "required": true,
+      "unit": "kWh",
+      "min": 1,
+      "hint": "Total energy consumption per month (from utility bill)"
+    },
+    {
+      "id": "demand_charge",
+      "label": "Demand charges apply?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Does your utility bill include demand charges ($/kW-month)?"
+    },
+    {
+      "id": "demand_charge_rate",
+      "label": "Demand charge rate (if applicable)",
+      "type": "number",
+      "required": false,
+      "unit": "$/kW-month",
+      "min": 0,
+      "hint": "Demand charge rate from utility bill (leave blank if no demand charges)"
+    }
+  ],
+  "mapping": {
+    "it_load_kw": { "from": "it_load_kw" },
+    "peak_it_load_kw": { "from": "peak_it_load_kw" },
+    "avg_utilization_pct": { "from": "avg_utilization_pct" },
+    "growth_pct_24mo": { "from": "growth_pct_24mo" },
+    "power_capacity_kw": { "from": "power_capacity_kw" },
+    "tier": { "from": "tier" },
+    "redundancy": { "from": "redundancy" },
+    "required_runtime_min": { "from": "required_runtime_min" },
+    "generator_present": { "from": "generator_present" },
+    "generator_kw": { "from": "generator_kw" },
+    "ups_present": { "from": "ups_present" },
+    "ups_runtime_min": { "from": "ups_runtime_min" },
+    "cooling_type": { "from": "cooling_type" },
+    "pue": { "from": "pue" },
+    "cooling_peak_kw": { "from": "cooling_peak_kw" },
+    "monthly_kwh": { "from": "monthly_kwh" },
+    "demand_charge": { "from": "demand_charge" },
+    "demand_charge_rate": { "from": "demand_charge_rate", "transform": "ifDemandChargeElseZero" }
+  }
+}

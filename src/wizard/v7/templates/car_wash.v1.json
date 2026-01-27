@@ -1,0 +1,204 @@
+{
+  "schema": "industry-template-v1",
+  "industry": "car_wash",
+  "version": "car_wash.v1.0.0",
+  "calculator": {
+    "id": "car_wash_load_v1",
+    "requiredInputs": [
+      "wash_type",
+      "bay_count",
+      "tunnel_length_ft",
+      "cars_per_day_avg",
+      "cars_per_hour_peak",
+      "operating_hours_per_day",
+      "days_per_week",
+      "dryer_present",
+      "dryer_kw",
+      "water_heating_type",
+      "uses_hot_water",
+      "reclaim_system",
+      "vacuum_count",
+      "vacuum_kw_each",
+      "monthly_kwh",
+      "peak_demand_kw",
+      "demand_charge",
+      "demand_charge_rate"
+    ]
+  },
+  "questions": [
+    {
+      "id": "wash_type",
+      "label": "Car wash type",
+      "type": "select",
+      "required": true,
+      "options": ["In-bay automatic", "Tunnel (single)", "Self-serve bays", "Detail shop", "Other"],
+      "hint": "Primary wash configuration"
+    },
+    {
+      "id": "bay_count",
+      "label": "Number of bays (or lanes)",
+      "type": "number",
+      "required": true,
+      "unit": "count",
+      "min": 1,
+      "hint": "Total wash bays or tunnel lanes"
+    },
+    {
+      "id": "tunnel_length_ft",
+      "label": "Tunnel length (if tunnel)",
+      "type": "number",
+      "required": false,
+      "unit": "ft",
+      "min": 0,
+      "hint": "Length of conveyor tunnel (leave blank if not tunnel wash)"
+    },
+    {
+      "id": "cars_per_day_avg",
+      "label": "Average cars per day",
+      "type": "number",
+      "required": true,
+      "unit": "cars/day",
+      "min": 0,
+      "hint": "Typical daily throughput"
+    },
+    {
+      "id": "cars_per_hour_peak",
+      "label": "Peak cars per hour",
+      "type": "number",
+      "required": true,
+      "unit": "cars/hour",
+      "min": 0,
+      "hint": "Maximum throughput during busy periods"
+    },
+    {
+      "id": "operating_hours_per_day",
+      "label": "Operating hours per day",
+      "type": "number",
+      "required": true,
+      "unit": "hours",
+      "min": 1,
+      "max": 24,
+      "hint": "Hours open per day (e.g., 12 for 7am-7pm)"
+    },
+    {
+      "id": "days_per_week",
+      "label": "Days open per week",
+      "type": "number",
+      "required": true,
+      "unit": "days",
+      "min": 1,
+      "max": 7,
+      "hint": "Days per week in operation"
+    },
+    {
+      "id": "dryer_present",
+      "label": "Dryers installed?",
+      "type": "boolean",
+      "required": true,
+      "hint": "High-powered blower dryers at end of wash"
+    },
+    {
+      "id": "dryer_kw",
+      "label": "Dryer motor + heat load (if applicable)",
+      "type": "number",
+      "required": false,
+      "unit": "kW",
+      "min": 0,
+      "hint": "Total dryer system power (motors + heat, leave blank if no dryers)"
+    },
+    {
+      "id": "water_heating_type",
+      "label": "Water heating type",
+      "type": "select",
+      "required": true,
+      "options": ["None", "Electric", "Gas", "Heat pump"],
+      "hint": "How is wash water heated (if at all)?"
+    },
+    {
+      "id": "uses_hot_water",
+      "label": "Uses hot water?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Whether the car wash uses heated water"
+    },
+    {
+      "id": "reclaim_system",
+      "label": "Water reclaim system?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Reclaim/recycling system for wash water"
+    },
+    {
+      "id": "vacuum_count",
+      "label": "Vacuum stalls (count)",
+      "type": "number",
+      "required": true,
+      "unit": "count",
+      "min": 0,
+      "hint": "Number of self-service vacuum stations"
+    },
+    {
+      "id": "vacuum_kw_each",
+      "label": "Vacuum power per stall",
+      "type": "number",
+      "required": true,
+      "unit": "kW",
+      "min": 0,
+      "hint": "Typical vacuum motor power (usually 5-15 kW per unit)"
+    },
+    {
+      "id": "monthly_kwh",
+      "label": "Monthly energy use",
+      "type": "number",
+      "required": true,
+      "unit": "kWh",
+      "min": 1,
+      "hint": "Total monthly electricity consumption from utility bill"
+    },
+    {
+      "id": "peak_demand_kw",
+      "label": "Peak demand",
+      "type": "number",
+      "required": true,
+      "unit": "kW",
+      "min": 0,
+      "hint": "Peak electrical demand from utility bill"
+    },
+    {
+      "id": "demand_charge",
+      "label": "Demand charges apply?",
+      "type": "boolean",
+      "required": true,
+      "hint": "Does your utility bill include demand charges ($/kW-month)?"
+    },
+    {
+      "id": "demand_charge_rate",
+      "label": "Demand charge rate (if applicable)",
+      "type": "number",
+      "required": false,
+      "unit": "$/kW-month",
+      "min": 0,
+      "hint": "Demand charge rate from utility bill (leave blank if no demand charges)"
+    }
+  ],
+  "mapping": {
+    "wash_type": { "from": "wash_type" },
+    "bay_count": { "from": "bay_count" },
+    "tunnel_length_ft": { "from": "tunnel_length_ft" },
+    "cars_per_day_avg": { "from": "cars_per_day_avg" },
+    "cars_per_hour_peak": { "from": "cars_per_hour_peak" },
+    "operating_hours_per_day": { "from": "operating_hours_per_day" },
+    "days_per_week": { "from": "days_per_week" },
+    "dryer_present": { "from": "dryer_present" },
+    "dryer_kw": { "from": "dryer_kw" },
+    "water_heating_type": { "from": "water_heating_type" },
+    "uses_hot_water": { "from": "uses_hot_water" },
+    "reclaim_system": { "from": "reclaim_system" },
+    "vacuum_count": { "from": "vacuum_count" },
+    "vacuum_kw_each": { "from": "vacuum_kw_each" },
+    "monthly_kwh": { "from": "monthly_kwh" },
+    "peak_demand_kw": { "from": "peak_demand_kw" },
+    "demand_charge": { "from": "demand_charge" },
+    "demand_charge_rate": { "from": "demand_charge_rate", "transform": "ifDemandChargeElseZero" }
+  }
+}
