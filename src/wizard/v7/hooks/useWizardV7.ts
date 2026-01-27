@@ -5,6 +5,7 @@ import { CALCULATORS_BY_ID } from "@/wizard/v7/calculators/registry";
 import { validateTemplateAgainstCalculator } from "@/wizard/v7/templates/validator";
 import { applyTemplateMapping } from "@/wizard/v7/templates/applyMapping";
 import type { CalcInputs } from "@/wizard/v7/calculators/contract";
+import { ContractRunLogger } from "@/wizard/v7/telemetry/contractTelemetry";
 
 /**
  * ============================================================
@@ -225,54 +226,106 @@ function nowISO(): string {
  * - Apply mapping transforms
  * - Compute quote via calculator
  * - Return freeze + outputs
+ * - Log telemetry for production monitoring
  */
 function runContractQuote(params: { industry: string; answers: Record<string, unknown> }): {
   freeze: PricingFreeze;
   quote: QuoteOutput;
+  sessionId: string;
 } {
-  // 1. Load template
-  const tpl = getTemplate(params.industry);
-  if (!tpl) {
-    throw { code: "STATE", message: `No template found for industry "${params.industry}"` };
+  // Initialize telemetry logger
+  let logger: ContractRunLogger | undefined;
+  
+  try {
+    // 1. Load template
+    const tpl = getTemplate(params.industry);
+    if (!tpl) {
+      throw { code: "STATE", message: `No template found for industry "${params.industry}"` };
+    }
+
+    // 2. Get calculator contract
+    const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+    if (!calc) {
+      throw { code: "STATE", message: `No calculator registered for id "${tpl.calculator.id}"` };
+    }
+
+    // Initialize logger with context
+    logger = new ContractRunLogger(
+      tpl.industry,
+      tpl.version,
+      tpl.calculator.id,
+    );
+    
+    // Log start event
+    logger.logStart(tpl.questions.length);
+
+    // 3. Validate template vs calculator (hard fail on mismatch)
+    const validation = validateTemplateAgainstCalculator(tpl, calc, {
+      minQuestions: 16,
+      maxQuestions: 18,
+    });
+    
+    if (!validation.ok) {
+      const issues = validation.issues.map((i) => `${i.level}:${i.code}:${i.message}`);
+      
+      // Log validation failure
+      logger.logValidationFailed(issues);
+      
+      const errorMsg = issues.join(" | ");
+      throw { code: "VALIDATION", message: `Template validation failed: ${errorMsg}` };
+    }
+
+    // 4. Apply mapping (answers → canonical calculator inputs)
+    const inputs = applyTemplateMapping(tpl, params.answers);
+
+    // 5. Run calculator
+    const computed = calc.compute(inputs as CalcInputs);
+
+    // 6. Build pricing freeze (SSOT snapshot)
+    const freeze: PricingFreeze = {
+      powerMW: computed.peakLoadKW ? computed.peakLoadKW / 1000 : undefined,
+      hours: undefined, // TODO: extract from answers if needed
+      mwh: computed.energyKWhPerDay ? computed.energyKWhPerDay / 1000 : undefined,
+      useCase: tpl.industry,
+      createdAtISO: nowISO(),
+    };
+
+    // 7. Build quote output
+    const quote: QuoteOutput = {
+      notes: [...(computed.assumptions ?? []), ...(computed.warnings ?? []).map((w) => `⚠️ ${w}`)],
+    };
+
+    // 8. Log success telemetry
+    logger.logSuccess({
+      baseLoadKW: computed.baseLoadKW,
+      peakLoadKW: computed.peakLoadKW,
+      energyKWhPerDay: computed.energyKWhPerDay,
+      warningsCount: computed.warnings?.length ?? 0,
+      assumptionsCount: computed.assumptions?.length ?? 0,
+      missingInputs: computed.warnings
+        ?.filter(w => w.toLowerCase().includes('missing'))
+        .map(w => w.split(':')[0].trim()),
+    });
+    
+    // Log warnings separately if present
+    if (computed.warnings && computed.warnings.length > 0) {
+      logger.logWarnings(computed.warnings);
+    }
+
+    return { freeze, quote, sessionId: logger.getSessionId() };
+    
+  } catch (err) {
+    // Log failure telemetry
+    if (logger) {
+      logger.logFailure({
+        code: (err as { code?: string }).code || 'UNKNOWN',
+        message: (err as { message?: string }).message || 'Contract execution failed',
+      });
+    }
+    
+    // Re-throw for caller
+    throw err;
   }
-
-  // 2. Get calculator contract
-  const calc = CALCULATORS_BY_ID[tpl.calculator.id];
-  if (!calc) {
-    throw { code: "STATE", message: `No calculator registered for id "${tpl.calculator.id}"` };
-  }
-
-  // 3. Validate template vs calculator (hard fail on mismatch)
-  const validation = validateTemplateAgainstCalculator(tpl, calc, {
-    minQuestions: 16,
-    maxQuestions: 18,
-  });
-  if (!validation.ok) {
-    const errorMsg = validation.issues.map((i) => `${i.level}:${i.code}:${i.message}`).join(" | ");
-    throw { code: "VALIDATION", message: `Template validation failed: ${errorMsg}` };
-  }
-
-  // 4. Apply mapping (answers → canonical calculator inputs)
-  const inputs = applyTemplateMapping(tpl, params.answers);
-
-  // 5. Run calculator
-  const computed = calc.compute(inputs as CalcInputs);
-
-  // 6. Build pricing freeze (SSOT snapshot)
-  const freeze: PricingFreeze = {
-    powerMW: computed.peakLoadKW ? computed.peakLoadKW / 1000 : undefined,
-    hours: undefined, // TODO: extract from answers if needed
-    mwh: computed.energyKWhPerDay ? computed.energyKWhPerDay / 1000 : undefined,
-    useCase: tpl.industry,
-    createdAtISO: nowISO(),
-  };
-
-  // 7. Build quote output
-  const quote: QuoteOutput = {
-    notes: [...(computed.assumptions ?? []), ...(computed.warnings ?? []).map((w) => `⚠️ ${w}`)],
-  };
-
-  return { freeze, quote };
 }
 
 /* ============================================================
@@ -923,7 +976,7 @@ export function useWizardV7() {
         dispatch({ type: "DEBUG_TAG", lastApi: "runContractQuote" });
 
         // Use V7 contract layer for quote generation
-        const { freeze, quote } = runContractQuote({
+        const { freeze, quote, sessionId } = runContractQuote({
           industry: state.industry,
           answers,
         });
@@ -932,10 +985,10 @@ export function useWizardV7() {
         dispatch({ type: "SET_PRICING_FREEZE", freeze });
         dispatch({ type: "SET_QUOTE", quote });
 
-        // Add debug note about contract usage
+        // Add debug note about contract usage + telemetry session
         dispatch({
           type: "DEBUG_NOTE",
-          note: `Contract quote: industry=${state.industry}, template validated, calculator executed`,
+          note: `Contract quote: industry=${state.industry}, template validated, calculator executed, sessionId=${sessionId}`,
         });
 
         setStep("results", "quote_ready");
