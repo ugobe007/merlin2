@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
-import BessQuoteBuilder from './components/BessQuoteBuilder';
-import AdminDashboard from './components/AdminDashboard';
-import VendorPortal from './components/VendorPortal';
-import CarWashEnergy from './components/verticals/CarWashEnergy';
-import EVChargingEnergy from './components/verticals/EVChargingEnergy';
-import HotelEnergy from './components/verticals/HotelEnergy';
+import { useState, useEffect } from "react";
+import BessQuoteBuilder from "./components/BessQuoteBuilder";
+import AdminDashboard from "./components/AdminDashboard";
+import VendorPortal from "./components/VendorPortal";
+import CarWashEnergy from "./components/verticals/CarWashEnergy";
+import EVChargingEnergy from "./components/verticals/EVChargingEnergy";
+import HotelEnergy from "./components/verticals/HotelEnergy";
 // DEPRECATED: import { WizardV5 } from './components/wizard/_deprecated/v5';
 import WizardV6 from "./components/wizard/v6/WizardV6";
-import WizardV7 from "./components/wizard/v7/WizardV7";
+// DEPRECATED: Old WizardV7 moved to _deprecated/ (Jan 26, 2026)
+import WizardV7Page from "./pages/WizardV7Page"; // V7: Clean SSOT page
 import MetaCalculationsPage from "./pages/MetaCalculationsPage";
 // import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder'; // Unused
-import { QuoteProvider } from './contexts/QuoteContext';
+import { QuoteProvider } from "./contexts/QuoteContext";
 
 // Test calculations temporarily disabled for production build
 // import { testCalculations } from './utils/testCalculations';
@@ -21,68 +22,72 @@ import { QuoteProvider } from './contexts/QuoteContext';
 function App() {
   // Check for admin access via URL parameter
   const urlParams = new URLSearchParams(window.location.search);
-  const adminParam = urlParams.get('admin');
-  const verticalParam = urlParams.get('vertical');
-  const advancedParam = urlParams.get('advanced');
-  
+  const adminParam = urlParams.get("admin");
+  const verticalParam = urlParams.get("vertical");
+  const advancedParam = urlParams.get("advanced");
+
   // Check for path-based routing (e.g., /carwashenergy)
   const pathname = window.location.pathname;
-  
+
   // Route detection for admin and vendor portal
-  const isAdminRoute = pathname === '/admin' || adminParam === 'true';
-  const isVendorPortalRoute = pathname === '/vendor-portal' || pathname === '/vendor';
-  
+  const isAdminRoute = pathname === "/admin" || adminParam === "true";
+  const isVendorPortalRoute = pathname === "/vendor-portal" || pathname === "/vendor";
+
   const [showAdmin, setShowAdmin] = useState(isAdminRoute);
   const [showVendorPortal] = useState(isVendorPortalRoute);
   // const [showWizard, setShowWizard] = useState(pathname === '/wizard'); // Unused
-  
+
   // NEW: Direct /quote-builder route support
   // This enables verticals to redirect to Advanced Quote Builder directly
   // const [showAdvancedQuoteBuilder, setShowAdvancedQuoteBuilder] = useState( // Unused
   //   pathname === '/quote-builder' || advancedParam === 'true'
   // );
-  
+
   // If advanced=true is set, don't activate vertical (let BessQuoteBuilder handle it)
   const [activeVertical] = useState<string | null>(
-    advancedParam === 'true' ? null : (
-      verticalParam || 
-      (pathname === '/carwashenergy' || pathname === '/car-wash' ? 'carwash' : 
-       pathname === '/evchargingenergy' || pathname === '/ev-charging' ? 'evcharging' :
-       pathname === '/hotelenergy' || pathname === '/hotel' ? 'hotel' : null)
-    )
+    advancedParam === "true"
+      ? null
+      : verticalParam ||
+          (pathname === "/carwashenergy" || pathname === "/car-wash"
+            ? "carwash"
+            : pathname === "/evchargingenergy" || pathname === "/ev-charging"
+              ? "evcharging"
+              : pathname === "/hotelenergy" || pathname === "/hotel"
+                ? "hotel"
+                : null)
   );
 
   // Keyboard shortcut: Ctrl+Shift+A for admin access
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.shiftKey && event.key === 'A') {
+      if (event.ctrlKey && event.shiftKey && event.key === "A") {
         event.preventDefault();
         handleAdminAccess();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Admin authentication with email and password
   const handleAdminAccess = async () => {
-    const email = prompt('Enter admin email:');
+    const email = prompt("Enter admin email:");
     if (!email) return;
-    
-    const password = prompt('Enter admin password:');
+
+    const password = prompt("Enter admin password:");
     if (!password) return;
-    
+
     // Check admin credentials using AdminAuthService (supports multiple admin accounts)
     // Current accounts:
     // - admin@merlinenergy.net / merlin2025 (super admin - full access)
     // - viewer@merlinenergy.net / viewer2025 (limited admin - view only, no edits)
-    const { adminAuthService } = await import('./services/adminAuthService');
+    const { adminAuthService } = await import("./services/adminAuthService");
     const authenticated = adminAuthService.authenticate(email, password);
     if (authenticated) {
       setShowAdmin(true);
     } else {
-      alert('Incorrect email or password');
+      alert("Incorrect email or password");
     }
   };
 
@@ -101,20 +106,19 @@ function App() {
 
   // White-label verticals
   // Access via ?vertical=carwash or eventually carwashenergy.com
-  if (activeVertical === 'carwash') {
+  if (activeVertical === "carwash") {
     return <CarWashEnergy />;
   }
-  
+
   // Access via ?vertical=evcharging or /evchargingenergy
-  if (activeVertical === 'evcharging') {
+  if (activeVertical === "evcharging") {
     return <EVChargingEnergy />;
   }
-  
+
   // Access via ?vertical=hotel or /hotelenergy
-  if (activeVertical === 'hotel') {
+  if (activeVertical === "hotel") {
     return <HotelEnergy />;
   }
-  
 
   // Access via /meta or /meta-calculations - TrueQuote Meta Calculations Dashboard
   if (pathname === "/meta" || pathname === "/meta-calculations" || pathname === "/ssot") {
@@ -126,9 +130,9 @@ function App() {
     return <WizardV6 />;
   }
 
-  // Access via /wizard-v7 - V7 Wizard (Vineet's Vision - Jan 22, 2026)
-  if (pathname === "/wizard-v7") {
-    return <WizardV7 />;
+  // Access via /v7 or /wizard/v7 - V7 SSOT Wizard (Jan 26, 2026)
+  if (pathname === "/v7" || pathname === "/wizard/v7" || pathname === "/wizard-v7") {
+    return <WizardV7Page />;
   }
 
   // Access via /quote-builder or advanced=true - Show Advanced Quote Builder
@@ -138,7 +142,7 @@ function App() {
     <QuoteProvider>
       <div>
         <BessQuoteBuilder />
-        
+
         {/* Floating Admin Access Button - Bottom Right */}
         <button
           onClick={handleAdminAccess}
@@ -153,4 +157,3 @@ function App() {
 }
 
 export default App;
-
