@@ -15,7 +15,7 @@
 
 import type { WizardState } from "../types";
 import type { Step3MissingKey } from "./step3Contract";
-import { getIndustryValidationSchema, validateAnswers } from "@/services/validationSchemaService";
+import { getIndustryValidationSchema } from "@/services/validationSchemaService";
 
 type Inputs = Record<string, unknown>;
 

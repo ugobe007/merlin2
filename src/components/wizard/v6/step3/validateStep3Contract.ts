@@ -110,6 +110,8 @@ export function validateStep3Contract(state: WizardState): Step3ContractValidati
   );
   
   const squareFeet = num(inputs.squareFeet || inputs.squareFootage || inputs.totalSqFt || inputs.facilitySqFt);
+  
+  // ✅ FIX (Jan 26, 2026): Hotel 16Q uses 'roomCount' (correct field name)
   const roomCount = num(inputs.roomCount || inputs.numberOfRooms);
   
   // --- BAY COUNT (accept legacy + current) ---
@@ -121,10 +123,54 @@ export function validateStep3Contract(state: WizardState): Step3ContractValidati
     inputs.bays;
   const bayCount = Number.isFinite(Number(bayCountRaw)) ? Number(bayCountRaw) : 0;
   
-  const rackCount = num(inputs.rackCount || inputs.numberOfRacks);
+  // --- RACK COUNT (accept multiple field names) ---
+  // Data center 16Q uses 'itLoadCapacity' and 'rackPowerDensity' instead of direct rack count
+  // Derive rack count from itLoadCapacity when direct count not available
+  const rackCountRaw =
+    inputs.rackCount ??
+    inputs.numberOfRacks ??
+    inputs.racks;
+  
+  let rackCount = Number.isFinite(Number(rackCountRaw)) ? Number(rackCountRaw) : 0;
+  
+  // ✅ FIX (Jan 26, 2026): Data center 16Q doesn't have rackCount field
+  // Derive from itLoadCapacity (e.g., "500-1000" kW IT load)
+  if (rackCount === 0 && inputs.itLoadCapacity) {
+    const itLoadStr = String(inputs.itLoadCapacity);
+    // Extract upper bound from ranges like "500-1000" or "<100"
+    const match = itLoadStr.match(/(\d+)$/);
+    if (match) {
+      const itLoadKW = parseInt(match[1]);
+      // Assume average rack is 8-10 kW (mid-range density)
+      rackCount = Math.ceil(itLoadKW / 9);
+    }
+  }
+  
+  // ✅ FIX (Jan 26, 2026): Hospital 16Q uses 'bedCount' (correct field name)
   const bedCount = num(inputs.bedCount || inputs.numberOfBeds);
-  const fuelPumpCount = num(inputs.fuelPumpCount);
-  const dcfcChargerCount = num(inputs.dcfcChargerCount || inputs.dcfcChargers);
+  
+  // ✅ FIX (Jan 26, 2026): Truck Stop 16Q uses 'fuelingPositions' instead of fuelPumpCount
+  const fuelPumpCount = num(inputs.fuelPumpCount || inputs.fuelPumps || inputs.fuelingPositions);
+  
+  // ✅ FIX (Jan 26, 2026): EV Charging 16Q uses 'chargerCounts' (JSON object) instead of dcfcChargerCount
+  // chargerCounts format: { "level2": 10, "dcfc": 5, "hpc": 2 }
+  let dcfcChargerCount = num(inputs.dcfcChargerCount || inputs.dcfcChargers);
+  
+  if (dcfcChargerCount === 0 && inputs.chargerCounts) {
+    try {
+      const counts = typeof inputs.chargerCounts === 'string' 
+        ? JSON.parse(inputs.chargerCounts) 
+        : inputs.chargerCounts;
+      dcfcChargerCount = (counts.dcfc || 0) + (counts.hpc || 0);
+    } catch {
+      // If JSON parse fails, try to extract from string
+      const countsStr = String(inputs.chargerCounts);
+      const dcfcMatch = countsStr.match(/dcfc["\s:]+(\d+)/i);
+      const hpcMatch = countsStr.match(/hpc["\s:]+(\d+)/i);
+      dcfcChargerCount = (dcfcMatch ? parseInt(dcfcMatch[1]) : 0) + (hpcMatch ? parseInt(hpcMatch[1]) : 0);
+    }
+  }
+  
   const primaryGoal = derivePrimaryGoal(state);
 
   const missingRequired: Step3MissingKey[] = [];
