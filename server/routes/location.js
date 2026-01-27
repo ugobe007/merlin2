@@ -136,19 +136,44 @@ router.post("/resolve", async (req, res) => {
 
     // Determine confidence (0-1 scale)
     let confidence = 0.7; // Base confidence
-    if (result.geometry.location_type === "ROOFTOP") confidence = 1.0;
-    else if (result.geometry.location_type === "RANGE_INTERPOLATED") confidence = 0.9;
-    else if (result.geometry.location_type === "GEOMETRIC_CENTER") confidence = 0.8;
-    else if (result.geometry.location_type === "APPROXIMATE") confidence = 0.6;
+    const evidenceComponents = [];
+    
+    if (result.geometry.location_type === "ROOFTOP") {
+      confidence = 1.0;
+      evidenceComponents.push("exact_address");
+    } else if (result.geometry.location_type === "RANGE_INTERPOLATED") {
+      confidence = 0.9;
+      evidenceComponents.push("street_interpolated");
+    } else if (result.geometry.location_type === "GEOMETRIC_CENTER") {
+      confidence = 0.8;
+      evidenceComponents.push("geometric_center");
+    } else if (result.geometry.location_type === "APPROXIMATE") {
+      confidence = 0.6;
+      evidenceComponents.push("approximate");
+    }
 
     // Boost confidence if postal code present
-    if (postal) confidence = Math.min(confidence + 0.1, 1.0);
+    if (postal) {
+      confidence = Math.min(confidence + 0.1, 1.0);
+      evidenceComponents.push("has_postal_code");
+    }
+    
+    // Track component quality
+    if (city) evidenceComponents.push("has_city");
+    if (state) evidenceComponents.push("has_state");
+    if (countryCode) evidenceComponents.push("has_country");
 
     // Reject low confidence
     if (confidence < 0.5) {
       return res.json({
         ok: false,
         reason: "low_confidence",
+        confidence,
+        evidence: {
+          source: "google_geocoding",
+          locationType: result.geometry.location_type,
+          components: evidenceComponents,
+        },
         notes: [
           "Location too ambiguous. Please be more specific:",
           "• Include city name",
@@ -178,6 +203,13 @@ router.post("/resolve", async (req, res) => {
       ok: true,
       location,
       source: "google_geocoding",
+      confidence,
+      evidence: {
+        source: "google_geocoding",
+        placeId: result.place_id,
+        locationType: result.geometry.location_type,
+        components: evidenceComponents,
+      },
       confidence,
     });
   } catch (error) {

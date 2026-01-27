@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import placesRouter from './routes/places.js';
 import locationRouter from './routes/location.js';
+import templatesRouter from './routes/templates.js';
 
 // Load environment variables from server/.env
 const __filename = fileURLToPath(import.meta.url);
@@ -32,10 +33,15 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/places', placesRouter);
 app.use('/api/location', locationRouter);
+app.use('/api/templates', templatesRouter);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'merlin-api', endpoints: ['/api/places', '/api/location'] });
+  res.json({ 
+    status: 'ok', 
+    service: 'merlin-api', 
+    endpoints: ['/api/places', '/api/location', '/api/templates'] 
+  });
 });
 
 // Start server
@@ -43,4 +49,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Merlin API running on port ${PORT}`);
   console.log(`📍 Places endpoints: http://localhost:${PORT}/api/places`);
   console.log(`🌎 Location endpoints: http://localhost:${PORT}/api/location`);
+  console.log(`📋 Template endpoints: http://localhost:${PORT}/api/templates`);
 });

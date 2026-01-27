@@ -230,6 +230,12 @@ const api = {
       location?: LocationCard;
       source?: string;
       confidence?: number;
+      evidence?: {
+        source: string;
+        placeId?: string;
+        locationType?: string;
+        components?: string[];
+      };
       reason?: string;
       notes?: string[];
     }>(API_ENDPOINTS.LOCATION_RESOLVE, {
@@ -241,7 +247,32 @@ const api = {
     // Handle rejection from backend
     if (!response.ok) {
       const errorMsg = response.notes?.join(" ") || response.reason || "Location not found";
+
+      // Log evidence for debugging if present
+      if (response.evidence && import.meta.env.DEV) {
+        console.log("[V7 SSOT] Location rejection evidence:", response.evidence);
+      }
+
       throw { code: "VALIDATION", message: errorMsg };
+    }
+
+    // Log confidence + evidence for audit trail
+    const confidence = response.confidence ?? 0.7;
+    const evidence = response.evidence;
+
+    if (import.meta.env.DEV) {
+      console.log(`[V7 SSOT] Location resolved with confidence: ${confidence}`, {
+        source: evidence?.source,
+        placeId: evidence?.placeId,
+        components: evidence?.components,
+      });
+    }
+
+    // Soft-gate: Warn about low confidence but allow through
+    if (confidence < 0.7) {
+      console.warn(
+        `[V7 SSOT] Low confidence location (${confidence}): ${response.location?.formattedAddress}`
+      );
     }
 
     // Validate state field for US locations (SSOT requirement)
@@ -278,61 +309,32 @@ const api = {
   },
 
   // Load Step 3 template by industry
-  async loadStep3Template(industry: IndustrySlug, _signal?: AbortSignal): Promise<Step3Template> {
-    // TEMP: seed questions so UI + flow can be tested end-to-end
-    if (industry === "car_wash") {
-      return {
-        industry,
-        version: "v7.0-seed",
-        questions: [
-          {
-            id: "monthly_kwh",
-            label: "Monthly energy usage",
-            type: "number",
-            required: true,
-            unit: "kWh",
-          },
-          { id: "peak_kw", label: "Peak demand", type: "number", required: true, unit: "kW" },
-          { id: "has_demand_charges", label: "Demand charges?", type: "boolean", required: true },
-          {
-            id: "site_type",
-            label: "Site type",
-            type: "select",
-            required: true,
-            options: [
-              "In-bay automatic",
-              "Tunnel (single)",
-              "Self-serve bays",
-              "Detail shop",
-              "Other",
-            ],
-          },
-          {
-            id: "operating_hours",
-            label: "Operating hours per day",
-            type: "number",
-            required: true,
-            unit: "hours",
-          },
-        ],
+  async loadStep3Template(industry: IndustrySlug, signal?: AbortSignal): Promise<Step3Template> {
+    // Import API helper
+    const { apiCall, API_ENDPOINTS } = await import("@/config/api");
+
+    // Call backend template loader
+    const response = await apiCall<{
+      ok: boolean;
+      template?: Step3Template;
+      reason?: string;
+      notes?: string[];
+    }>(API_ENDPOINTS.TEMPLATE_LOAD, {
+      method: "POST",
+      body: JSON.stringify({ industry }),
+      signal,
+    });
+
+    // Handle rejection
+    if (!response.ok || !response.template) {
+      throw {
+        code: "API",
+        message: response.notes?.join(" ") || `Template not found for ${industry}`,
       };
     }
 
-    return {
-      industry,
-      version: "v7.0-seed",
-      questions: [
-        {
-          id: "monthly_kwh",
-          label: "Monthly energy usage",
-          type: "number",
-          required: true,
-          unit: "kWh",
-        },
-        { id: "peak_kw", label: "Peak demand", type: "number", required: true, unit: "kW" },
-        { id: "has_demand_charges", label: "Demand charges?", type: "boolean", required: true },
-      ],
-    };
+    console.log(`[V7 SSOT] Loaded template: ${industry} ${response.template.version}`);
+    return response.template;
   },
 
   // Compute pricing freeze + quote (QuoteEngine)
