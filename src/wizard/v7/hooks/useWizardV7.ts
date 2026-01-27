@@ -57,6 +57,7 @@ export type LocationCard = {
   state?: string; // IMPORTANT: you flagged missing STATE; SSOT requires it.
   postalCode?: string;
   country?: string;
+  countryCode?: string; // ISO country code (e.g., "US")
   lat?: number;
   lng?: number;
   placeId?: string;
@@ -336,7 +337,7 @@ const api = {
 
   // Compute pricing freeze + quote (QuoteEngine)
   async runQuoteEngine(
-    args: {
+    _args: {
       location: LocationCard;
       locationIntel: LocationIntel | null;
       industry: IndustrySlug;
@@ -1015,17 +1016,17 @@ export function useWizardV7() {
 function normalizeError(err: unknown): WizardError {
   if (!err) return { code: "UNKNOWN", message: "Unknown error." };
 
-  // If we threw our own shape
-  if (typeof err === "object" && err.code && err.message) {
+  // Type guard for object with properties
+  if (typeof err === "object" && "code" in err && "message" in err && err.code && err.message) {
     return {
       code: err.code as WizardError["code"],
       message: String(err.message),
-      detail: err.detail ?? err,
+      detail: "detail" in err ? err.detail : err,
     };
   }
 
   // Common fetch error shape
-  if (typeof err === "object" && err.name === "AbortError") {
+  if (typeof err === "object" && "name" in err && err.name === "AbortError") {
     return { code: "ABORTED", message: "Request aborted." };
   }
 
@@ -1037,7 +1038,8 @@ function normalizeError(err: unknown): WizardError {
 }
 
 function isAbort(err: unknown): boolean {
-  return !!err && (err.name === "AbortError" || err.code === "ABORTED");
+  if (!err || typeof err !== "object") return false;
+  return ("name" in err && err.name === "AbortError") || ("code" in err && err.code === "ABORTED");
 }
 
 function validateStep3(
