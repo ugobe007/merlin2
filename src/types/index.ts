@@ -242,6 +242,9 @@ export interface SystemConfig {
 
 /**
  * Wizard State Types (for quoteAdapter)
+ * 
+ * NOTE: This is the LEGACY quoteAdapter state, NOT the V7 wizard state.
+ * V7 wizard state is in @/wizard/v7/hooks/useWizardV7
  */
 
 export interface UseCaseData {
@@ -257,7 +260,7 @@ export interface UseCaseData {
   peakConcurrency?: number;
 }
 
-export interface WizardState {
+export interface QuoteWizardState {
   selectedTemplate?: string;
   selectedIndustry?: string;
   useCaseData: UseCaseData;
@@ -272,6 +275,10 @@ export interface WizardState {
   selectedUtility: string;
   [key: string]: any; // Allow additional properties
 }
+
+// NOTE: WizardState is intentionally NOT exported from this barrel.
+// - V7 wizard uses WizardState from @/wizard/v7/hooks/useWizardV7
+// - Legacy quoteAdapter code should use QuoteWizardState directly
 
 /**
  * Cache Types
