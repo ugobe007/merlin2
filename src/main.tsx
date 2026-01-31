@@ -1,6 +1,7 @@
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import "./styles/merlin-design-system.css";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App.tsx";
 // Test calculations temporarily disabled for production build
 // import './utils/testCalculations'
 
@@ -13,15 +14,15 @@ import App from './App.tsx'
 // initializeAIDataCollection();
 
 try {
-  const rootElement = document.getElementById('root');
+  const rootElement = document.getElementById("root");
   if (!rootElement) {
-    throw new Error('Root element not found!');
+    throw new Error("Root element not found!");
   }
-  
+
   const root = createRoot(rootElement);
   root.render(<App />);
 } catch (error) {
-  console.error('❌ FATAL ERROR during initialization:', error);
+  console.error("❌ FATAL ERROR during initialization:", error);
   document.body.innerHTML = `
     <div style="padding: 20px; font-family: monospace;">
       <h1 style="color: red;">❌ Application Failed to Load</h1>

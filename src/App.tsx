@@ -9,6 +9,7 @@ import HotelEnergy from "./components/verticals/HotelEnergy";
 import WizardV6 from "./components/wizard/v6/WizardV6";
 // DEPRECATED: Old WizardV7 moved to _deprecated/ (Jan 26, 2026)
 import WizardV7Page from "./pages/WizardV7Page"; // V7: Clean SSOT page
+import WizardVNextPage from "./pages/WizardVNextPage"; // vNext: luminous HUD scaffold
 import MetaCalculationsPage from "./pages/MetaCalculationsPage";
 // import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder'; // Unused
 import { QuoteProvider } from "./contexts/QuoteContext";
@@ -133,6 +134,11 @@ function App() {
   // Access via /v7 or /wizard/v7 - V7 SSOT Wizard (Jan 26, 2026)
   if (pathname === "/v7" || pathname === "/wizard/v7" || pathname === "/wizard-v7") {
     return <WizardV7Page />;
+  }
+
+  // Access via /wizard-vnext or /vnext - vNext luminous HUD scaffold (Jan 30, 2026)
+  if (pathname === "/wizard-vnext" || pathname === "/vnext") {
+    return <WizardVNextPage />;
   }
 
   // Access via /quote-builder or advanced=true - Show Advanced Quote Builder
