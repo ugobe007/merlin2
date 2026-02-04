@@ -28,6 +28,8 @@
  * SSOT Version: 1.0
  */
 
+import type { MarginRenderEnvelope } from "@/types/marginRenderEnvelope";
+
 // ============================================================================
 // ENUMS & CONSTANTS
 // ============================================================================
@@ -342,6 +344,8 @@ export interface AuthenticatedSystemOption extends SystemOption {
     financialsValid: boolean;
     roiAccurate: boolean;
   };
+  // Margin policy envelope (added Feb 2026)
+  marginRender?: MarginRenderEnvelope;
 }
 
 /**

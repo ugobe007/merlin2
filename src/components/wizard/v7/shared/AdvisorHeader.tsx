@@ -14,11 +14,11 @@ interface AdvisorHeaderProps {
 
 export default function AdvisorHeader({ size = 'large', subtitle }: AdvisorHeaderProps) {
   return (
-    <div className={`flex items-center ${size === 'large' ? 'gap-4 mb-6' : 'gap-3 mb-4'} shrink-0`}>
+    <div className={`flex items-center ${size === 'large' ? 'gap-5 mb-6' : 'gap-3 mb-4'} shrink-0`}>
       <div className="relative">
         <div 
           className={`
-            ${size === 'large' ? 'w-14 h-14' : 'w-12 h-12'} 
+            ${size === 'large' ? 'w-20 h-20' : 'w-12 h-12'} 
             rounded-full overflow-hidden border-2 border-purple-500/30 shadow-lg
           `}
         >
@@ -26,7 +26,7 @@ export default function AdvisorHeader({ size = 'large', subtitle }: AdvisorHeade
         </div>
         <div 
           className={`
-            absolute ${size === 'large' ? '-bottom-0.5 -right-0.5 w-4 h-4' : '-bottom-0.5 -right-0.5 w-3 h-3'} 
+            absolute ${size === 'large' ? 'bottom-0 right-0 w-5 h-5' : '-bottom-0.5 -right-0.5 w-3 h-3'} 
             bg-green-400 rounded-full border-2 border-[#070a11] shadow-sm
           `} 
         />

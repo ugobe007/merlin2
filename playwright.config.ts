@@ -4,6 +4,9 @@ import { defineConfig, devices } from '@playwright/test';
  * Playwright Configuration for BESS Quote Builder E2E Tests
  * See https://playwright.dev/docs/test-configuration
  */
+const PORT = process.env.E2E_PORT || '5177';
+const BASE_URL = process.env.E2E_BASE_URL || `http://localhost:${PORT}`;
+
 export default defineConfig({
   // Explicitly tell vitest NOT to run
   globalSetup: undefined,
@@ -37,10 +40,10 @@ export default defineConfig({
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: process.env.TEST_URL || process.env.BASE_URL || 'http://localhost:5184',
+    baseURL: BASE_URL,
     
     // Collect trace when retrying the failed test
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     
     // Screenshot on failure
     screenshot: 'only-on-failure',
@@ -86,20 +89,31 @@ export default defineConfig({
     },
   ],
 
-  // Run dev server automatically before tests (but reuse if already running)
-  webServer: {
-    command: 'npm run dev -- --port 5184 --strictPort',
-    url: process.env.TEST_URL || process.env.BASE_URL || 'http://localhost:5184',
-    reuseExistingServer: !process.env.CI, // Reuse if server is already running
-    timeout: 120 * 1000,
-    stdout: 'ignore',
-    stderr: 'pipe',
-    env: {
-      // Explicitly disable Vitest
-      VITEST: 'false',
-      NODE_ENV: 'test',
-    },
-  },
+  // ============================================================================
+  // WEBSERVER DISABLED (Feb 1, 2026)
+  // ============================================================================
+  // RATIONALE: Auto-starting dev server during debugging causes 80% of hangs.
+  // 
+  // When debugging:
+  //   1. Start dev server manually: npm run dev
+  //   2. Run specific test: npx playwright test path/to/test.ts
+  //
+  // For CI, re-enable by uncommenting below.
+  // ============================================================================
+  
+  // webServer: {
+  //   command: `npm run dev -- --host 127.0.0.1 --port ${PORT}`,
+  //   url: BASE_URL,
+  //   reuseExistingServer: !process.env.CI, // Reuse if server is already running
+  //   timeout: 120 * 1000,
+  //   stdout: 'ignore',
+  //   stderr: 'pipe',
+  //   env: {
+  //     // Explicitly disable Vitest
+  //     VITEST: 'false',
+  //     NODE_ENV: 'test',
+  //   },
+  // },
 
   // Folder for test artifacts such as screenshots, videos, traces, etc.
   outputDir: 'test-results/',

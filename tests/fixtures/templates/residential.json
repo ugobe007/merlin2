@@ -1,0 +1,741 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:35.853Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "24ebfd00-562d-47e8-803b-278281f2e807",
+  "templateVersion": "2025-11-24T02:56:44.525966+00:00",
+  "industry": "residential",
+  "useCase": "residential",
+  "name": "Residential",
+  "slug": "residential",
+  "description": "Single-family homes and residential complexes",
+  "category": "residential",
+  "questions": [
+    {
+      "id": "1a34ca84-d690-4682-a30e-1f893cb6d160",
+      "type": "text",
+      "required": false,
+      "defaultValue": "2500",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "b0dc0543-e5cb-4cca-90a3-7c1807d83258",
+      "type": "text",
+      "required": false,
+      "defaultValue": "2500",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "3bcf7172-0acd-4abe-bc39-5c1945c5de2a",
+      "type": "text",
+      "required": false,
+      "defaultValue": "central_ac",
+      "options": [
+        {
+          "label": "Central AC/Heating",
+          "value": "central_ac"
+        },
+        {
+          "label": "Rooftop Units (RTUs)",
+          "value": "rooftop"
+        },
+        {
+          "label": "Chiller System",
+          "value": "chiller"
+        },
+        {
+          "label": "Split Systems",
+          "value": "split"
+        },
+        {
+          "label": "VRF/Mini-Splits",
+          "value": "vrf"
+        }
+      ]
+    },
+    {
+      "id": "af5182c9-3e9b-403f-8401-e5398095e34e",
+      "type": "text",
+      "required": false,
+      "defaultValue": "extended",
+      "options": {
+        "max": 24,
+        "min": 6,
+        "step": 1,
+        "suffix": " hrs/day"
+      }
+    },
+    {
+      "id": "1f68e4ee-7648-4215-b08c-1c35466efb74",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "label": "Legacy (15+ years old)",
+          "value": "legacy",
+          "description": "Older, less efficient equipment"
+        },
+        {
+          "label": "Standard (5-15 years)",
+          "value": "standard",
+          "description": "Average efficiency"
+        },
+        {
+          "label": "Modern (under 5 years)",
+          "value": "modern",
+          "description": "High-efficiency equipment"
+        },
+        {
+          "label": "Premium/LEED",
+          "value": "premium",
+          "description": "Best-in-class efficiency"
+        }
+      ]
+    },
+    {
+      "id": "1f8f9ade-bfbb-4cc7-9ea3-0ca59c09dc75",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000",
+      "options": [
+        {
+          "icon": "HelpCircle",
+          "label": "$1,000 - $5,000/month",
+          "value": "3000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$5,000 - $10,000/month",
+          "value": "7500"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$10,000 - $25,000/month",
+          "value": "17500"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$25,000 - $50,000/month",
+          "value": "37500"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$50,000 - $100,000/month",
+          "value": "75000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$100,000 - $250,000/month",
+          "value": "175000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$250,000 - $500,000/month",
+          "value": "375000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Over $500,000/month",
+          "value": "500000"
+        }
+      ]
+    },
+    {
+      "id": "0daae1b1-afbb-4b20-90c7-9deab66ecbeb",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "label": "Low (under 100 kW)",
+          "value": "low",
+          "description": "Minimal equipment load"
+        },
+        {
+          "label": "Medium (100-500 kW)",
+          "value": "medium",
+          "description": "Standard commercial operations"
+        },
+        {
+          "label": "High (500 kW - 2 MW)",
+          "value": "high",
+          "description": "Heavy equipment or HVAC load"
+        },
+        {
+          "label": "Very High (over 2 MW)",
+          "value": "very_high",
+          "description": "Industrial or data center level"
+        }
+      ]
+    },
+    {
+      "id": "4cc5c359-1df4-4570-baa2-996b3c6839ca",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "label": "Under 200 kW",
+          "value": "small",
+          "description": "Small commercial service"
+        },
+        {
+          "label": "200-500 kW",
+          "value": "medium",
+          "description": "Medium commercial service"
+        },
+        {
+          "label": "500 kW - 2 MW",
+          "value": "large",
+          "description": "Large commercial service"
+        },
+        {
+          "label": "Over 2 MW",
+          "value": "utility",
+          "description": "Utility-scale connection"
+        }
+      ]
+    },
+    {
+      "id": "04fee8e1-0272-4f2b-910f-f3a9054750e8",
+      "type": "text",
+      "required": false,
+      "defaultValue": "500",
+      "options": [
+        {
+          "icon": "HelpCircle",
+          "label": "100 - 500 kW",
+          "value": "250"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "500 - 1,000 kW",
+          "value": "750"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "1 - 2 MW",
+          "value": "1500"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "2 - 4 MW",
+          "value": "3000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "4 - 8 MW",
+          "value": "6000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "8 - 16 MW",
+          "value": "12000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "16 - 32 MW",
+          "value": "25000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "32 - 64 MW",
+          "value": "50000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "64+ MW",
+          "value": "100000"
+        }
+      ]
+    },
+    {
+      "id": "f2a81d13-4e6d-48a5-ad75-16d9ec5b9a41",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "3c738bc8-17ce-4296-9b01-8ae9fe07522f",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "1c7b2bc5-bce1-4d2d-af2f-f6cd9b17ab73",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "max": 500,
+        "min": 0,
+        "step": 10,
+        "suffix": " kW"
+      }
+    },
+    {
+      "id": "558ed7e5-edda-40d5-8fd5-1be33ba5d715",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "ffd2561e-7cd4-4bbe-a391-0844e874cf22",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "ranges": [
+          {
+            "max": 0,
+            "min": 0,
+            "label": "0"
+          },
+          {
+            "max": 5,
+            "min": 1,
+            "label": "1-5"
+          },
+          {
+            "max": 15,
+            "min": 6,
+            "label": "6-15"
+          },
+          {
+            "max": 30,
+            "min": 16,
+            "label": "16-30"
+          },
+          {
+            "max": null,
+            "min": 31,
+            "label": "30+"
+          }
+        ],
+        "suffix": "chargers"
+      }
+    },
+    {
+      "id": "89ec6c53-753a-4502-9e8c-f3b7bd0e6109",
+      "type": "text",
+      "required": false,
+      "defaultValue": "cost_reduction",
+      "options": [
+        {
+          "icon": "DollarSign",
+          "label": "Cost Reduction - Lower electricity bills",
+          "value": "cost_reduction"
+        },
+        {
+          "icon": "Zap",
+          "label": "Avoid Grid Fees - Reduce connection charges",
+          "value": "avoid_grid_fees"
+        },
+        {
+          "icon": "Zap",
+          "label": "Energy Independence - Self-sufficiency",
+          "value": "energy_independence"
+        },
+        {
+          "icon": "Target",
+          "label": "Resilience - Backup power priority",
+          "value": "resilience"
+        },
+        {
+          "icon": "Target",
+          "label": "Carbon Reduction - Environmental goals",
+          "value": "carbon_reduction"
+        },
+        {
+          "icon": "Zap",
+          "label": "Grid Export Revenue - Sell power back",
+          "value": "grid_export"
+        }
+      ]
+    },
+    {
+      "id": "9db585bf-05d1-40ee-9fe2-6466790538dc",
+      "type": "text",
+      "required": false,
+      "defaultValue": "peak_shaving",
+      "options": [
+        {
+          "icon": "TrendingDown",
+          "label": "Peak Shaving - Reduce demand charges during peak periods",
+          "value": "peak_shaving"
+        },
+        {
+          "icon": "Clock",
+          "label": "Energy Arbitrage - Buy low, sell/use high",
+          "value": "energy_arbitrage"
+        },
+        {
+          "icon": "Battery",
+          "label": "Backup Power - Critical load protection",
+          "value": "backup_power"
+        },
+        {
+          "icon": "Zap",
+          "label": "Demand Response - Utility DR programs",
+          "value": "demand_response"
+        },
+        {
+          "icon": "Zap",
+          "label": "Renewable Integration - Maximize solar/wind",
+          "value": "renewable_integration"
+        },
+        {
+          "icon": "Zap",
+          "label": "Load Shifting - Off-peak consumption",
+          "value": "load_shifting"
+        },
+        {
+          "icon": "Zap",
+          "label": "Frequency Regulation - Grid services",
+          "value": "frequency_regulation"
+        },
+        {
+          "icon": "Zap",
+          "label": "Multiple Applications - Stacked benefits",
+          "value": "stacked"
+        }
+      ]
+    },
+    {
+      "id": "d0696edd-8b30-4801-9255-4867e0ed1259",
+      "type": "text",
+      "required": false,
+      "defaultValue": "single_family",
+      "options": [
+        {
+          "icon": "Home",
+          "label": "Large Home (3,000+ sq ft)",
+          "value": "large"
+        },
+        {
+          "icon": "Home",
+          "label": "Single Family (1,500-3,000 sq ft)",
+          "value": "single_family"
+        },
+        {
+          "icon": "Home",
+          "label": "Small Home/Condo (<1,500 sq ft)",
+          "value": "small"
+        }
+      ]
+    },
+    {
+      "id": "716bbc98-3846-4088-9654-c8038d0b3862",
+      "type": "text",
+      "required": false,
+      "defaultValue": "3000",
+      "options": [
+        {
+          "icon": "HelpCircle",
+          "label": "None / Not sure",
+          "value": "0"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$100 - $500/month",
+          "value": "300"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$500 - $1,500/month",
+          "value": "1000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$1,500 - $3,000/month",
+          "value": "2250"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$3,000 - $7,500/month",
+          "value": "5250"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$7,500 - $15,000/month",
+          "value": "11250"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$15,000 - $30,000/month",
+          "value": "22500"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$30,000 - $75,000/month",
+          "value": "52500"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Over $75,000/month",
+          "value": "100000"
+        }
+      ]
+    },
+    {
+      "id": "1117014b-37a0-4b9f-bf03-bb3b0dd598a4",
+      "type": "text",
+      "required": false,
+      "defaultValue": "none",
+      "options": [
+        {
+          "icon": "AlertCircle",
+          "label": "None - Reliable grid",
+          "value": "none"
+        },
+        {
+          "icon": "AlertCircle",
+          "label": "Occasional outages (1-2/year)",
+          "value": "occasional"
+        },
+        {
+          "icon": "AlertCircle",
+          "label": "Frequent outages (monthly)",
+          "value": "frequent"
+        },
+        {
+          "icon": "AlertCircle",
+          "label": "Voltage issues",
+          "value": "voltage"
+        },
+        {
+          "icon": "AlertCircle",
+          "label": "Both outages and voltage",
+          "value": "both"
+        }
+      ]
+    },
+    {
+      "id": "bb185203-3347-475a-aca6-24156a0c4128",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": [
+        {
+          "icon": "HelpCircle",
+          "label": "No outages (0 hours)",
+          "value": "0"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Minimal (1-4 hours)",
+          "value": "2"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Occasional (4-12 hours)",
+          "value": "8"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Moderate (12-48 hours)",
+          "value": "24"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Significant (48-100 hours)",
+          "value": "72"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Frequent (100+ hours)",
+          "value": "150"
+        }
+      ]
+    },
+    {
+      "id": "7b4298c3-94c8-4890-ac74-03e942e5ec51",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": [
+        {
+          "icon": "HelpCircle",
+          "label": "50 - 150 kW",
+          "value": "100"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "150 - 500 kW",
+          "value": "300"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "500 - 1,000 kW",
+          "value": "750"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "1 - 2 MW",
+          "value": "1500"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "2 - 5 MW",
+          "value": "3500"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "5 - 10 MW",
+          "value": "7500"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "10 - 20 MW",
+          "value": "15000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "20+ MW",
+          "value": "30000"
+        }
+      ]
+    },
+    {
+      "id": "aea8028b-1673-4bf9-b7f8-dc62eec17162",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": [
+        {
+          "icon": "HelpCircle",
+          "label": "$0 - $1K/year",
+          "value": "500"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$1K - $5K/year",
+          "value": "2500"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$5K - $15K/year",
+          "value": "10000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$15K - $35K/year",
+          "value": "25000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$35K - $75K/year",
+          "value": "50000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$75K - $150K/year",
+          "value": "100000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "$150K+/year",
+          "value": "250000"
+        }
+      ]
+    },
+    {
+      "id": "e5e75b9c-59ff-42df-8c56-126e708c3f77",
+      "type": "text",
+      "required": false,
+      "defaultValue": "not_considering",
+      "options": [
+        {
+          "icon": "Zap",
+          "label": "Not considering",
+          "value": "not_considering"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "Cost savings",
+          "value": "cost"
+        },
+        {
+          "icon": "Shield",
+          "label": "Reliability concerns",
+          "value": "reliability"
+        },
+        {
+          "icon": "Zap",
+          "label": "Remote location",
+          "value": "remote"
+        },
+        {
+          "icon": "Zap",
+          "label": "Sustainability goals",
+          "value": "sustainability"
+        },
+        {
+          "icon": "Zap",
+          "label": "Energy independence",
+          "value": "independence"
+        }
+      ]
+    },
+    {
+      "id": "fbe0e7a0-c034-44ce-a98b-6698ed52f7b6",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    }
+  ],
+  "defaults": {
+    "undefined": "false"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "residential_load_v1",
+  "calculatorVersion": "1.0.0"
+}

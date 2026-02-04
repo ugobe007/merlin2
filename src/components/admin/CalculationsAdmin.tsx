@@ -426,7 +426,7 @@ const CalculationsAdmin: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-gray-400">Lifetime:</span>
-                  <p className="text-white font-semibold">{eq.equipment_lifetime_years || 'N/A'} years</p>
+                  <p className="text-white font-semibold">{((eq as any).equipment_lifetime_years ?? (eq as any).lifetime_years ?? 'N/A')} years</p>
                 </div>
               </div>
             </div>

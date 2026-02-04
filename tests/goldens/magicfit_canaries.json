@@ -1,0 +1,230 @@
+{
+  "_meta": {
+    "description": "Canary goldens for MagicFit trust verification",
+    "created": "2026-02-01",
+    "version": "1.0.0",
+    "toleranceRules": {
+      "kWh": { "type": "percent", "value": 0.05 },
+      "kW": { "type": "percent", "value": 0.05 },
+      "cost": { "type": "absolute", "value": 1000 },
+      "savings": { "type": "percent", "value": 0.10 }
+    }
+  },
+  "canaries": [
+    {
+      "id": "hotel-standard",
+      "description": "150-room midscale hotel, peak shaving focus",
+      "fixtureSlug": "hotel",
+      "baseCalcOverrides": {
+        "load": {
+          "peakDemandKW": 450,
+          "annualConsumptionKWh": 1500000,
+          "averageDailyKWh": 4109,
+          "loadProfile": "peaky"
+        },
+        "bess": {
+          "powerKW": 225,
+          "energyKWh": 900,
+          "durationHours": 4
+        },
+        "utility": {
+          "rate": 0.14,
+          "demandCharge": 18
+        }
+      },
+      "goals": ["reduce_costs"],
+      "userPrefs": {
+        "solar": { "interested": true },
+        "generator": { "interested": false },
+        "ev": { "interested": false }
+      },
+      "expected": {
+        "scenario": "solarOnly",
+        "starter": {
+          "bess": { "energyKWh": 1035, "powerKW": 259 },
+          "pricing": { "netCost": 450000 }
+        },
+        "perfectFit": {
+          "bess": { "energyKWh": 1575, "powerKW": 281 },
+          "pricing": { "netCost": 660000 }
+        },
+        "beastMode": {
+          "bess": { "energyKWh": 2100, "powerKW": 304 },
+          "pricing": { "netCost": 875000 }
+        }
+      }
+    },
+    {
+      "id": "car-wash-standard",
+      "description": "4-bay automatic car wash, cost reduction",
+      "fixtureSlug": "car-wash",
+      "baseCalcOverrides": {
+        "load": {
+          "peakDemandKW": 200,
+          "annualConsumptionKWh": 350000,
+          "averageDailyKWh": 959,
+          "loadProfile": "flat"
+        },
+        "bess": {
+          "powerKW": 100,
+          "energyKWh": 400,
+          "durationHours": 4
+        },
+        "utility": {
+          "rate": 0.16,
+          "demandCharge": 22
+        }
+      },
+      "goals": ["reduce_costs"],
+      "userPrefs": {
+        "solar": { "interested": true },
+        "generator": { "interested": false },
+        "ev": { "interested": false }
+      },
+      "expected": {
+        "scenario": "solarOnly",
+        "starter": {
+          "bess": { "energyKWh": 460, "powerKW": 115 },
+          "pricing": { "netCost": 200000 }
+        },
+        "perfectFit": {
+          "bess": { "energyKWh": 700, "powerKW": 125 },
+          "pricing": { "netCost": 295000 }
+        },
+        "beastMode": {
+          "bess": { "energyKWh": 935, "powerKW": 135 },
+          "pricing": { "netCost": 390000 }
+        }
+      }
+    },
+    {
+      "id": "ev-charging-standard",
+      "description": "EV charging station with 8 DCFC + 12 L2",
+      "fixtureSlug": "ev-charging",
+      "baseCalcOverrides": {
+        "load": {
+          "peakDemandKW": 1200,
+          "annualConsumptionKWh": 2000000,
+          "averageDailyKWh": 5479,
+          "loadProfile": "peaky"
+        },
+        "bess": {
+          "powerKW": 600,
+          "energyKWh": 2400,
+          "durationHours": 4
+        },
+        "utility": {
+          "rate": 0.12,
+          "demandCharge": 25
+        }
+      },
+      "goals": ["reduce_costs", "backup_power"],
+      "userPrefs": {
+        "solar": { "interested": true },
+        "generator": { "interested": true },
+        "ev": { "interested": true }
+      },
+      "expected": {
+        "scenario": "fullGeneration",
+        "starter": {
+          "bess": { "energyKWh": 1680, "powerKW": 420 },
+          "pricing": { "netCost": 1150000 }
+        },
+        "perfectFit": {
+          "bess": { "energyKWh": 2400, "powerKW": 600 },
+          "pricing": { "netCost": 1650000 }
+        },
+        "beastMode": {
+          "bess": { "energyKWh": 3120, "powerKW": 780 },
+          "pricing": { "netCost": 2150000 }
+        }
+      }
+    },
+    {
+      "id": "data-center-critical",
+      "description": "Tier III data center, backup power critical",
+      "fixtureSlug": "data-center",
+      "baseCalcOverrides": {
+        "load": {
+          "peakDemandKW": 2000,
+          "annualConsumptionKWh": 15000000,
+          "averageDailyKWh": 41096,
+          "loadProfile": "flat"
+        },
+        "bess": {
+          "powerKW": 1000,
+          "energyKWh": 4000,
+          "durationHours": 4
+        },
+        "utility": {
+          "rate": 0.10,
+          "demandCharge": 15
+        }
+      },
+      "goals": ["backup_power"],
+      "userPrefs": {
+        "solar": { "interested": false },
+        "generator": { "interested": false },
+        "ev": { "interested": false }
+      },
+      "expected": {
+        "scenario": "upsMode",
+        "starter": {
+          "bess": { "energyKWh": 9600, "powerKW": 1500 },
+          "pricing": { "netCost": 2040000 }
+        },
+        "perfectFit": {
+          "bess": { "energyKWh": 10000, "powerKW": 1750 },
+          "pricing": { "netCost": 2125000 }
+        },
+        "beastMode": {
+          "bess": { "energyKWh": 10000, "powerKW": 2000 },
+          "pricing": { "netCost": 2125000 }
+        }
+      }
+    },
+    {
+      "id": "hospital-resilience",
+      "description": "200-bed hospital, resilience focus",
+      "fixtureSlug": "hospital",
+      "baseCalcOverrides": {
+        "load": {
+          "peakDemandKW": 1500,
+          "annualConsumptionKWh": 8000000,
+          "averageDailyKWh": 21918,
+          "loadProfile": "flat"
+        },
+        "bess": {
+          "powerKW": 750,
+          "energyKWh": 3000,
+          "durationHours": 4
+        },
+        "utility": {
+          "rate": 0.11,
+          "demandCharge": 18
+        }
+      },
+      "goals": ["backup_power", "reduce_costs"],
+      "userPrefs": {
+        "solar": { "interested": true },
+        "generator": { "interested": true },
+        "ev": { "interested": false }
+      },
+      "expected": {
+        "scenario": "fullGeneration",
+        "starter": {
+          "bess": { "energyKWh": 2100, "powerKW": 525 },
+          "pricing": { "netCost": 1400000 }
+        },
+        "perfectFit": {
+          "bess": { "energyKWh": 3000, "powerKW": 750 },
+          "pricing": { "netCost": 2000000 }
+        },
+        "beastMode": {
+          "bess": { "energyKWh": 3900, "powerKW": 975 },
+          "pricing": { "netCost": 2600000 }
+        }
+      }
+    }
+  ]
+}

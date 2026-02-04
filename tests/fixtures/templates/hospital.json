@@ -1,0 +1,688 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:34.433Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "0e2c2c6c-0939-41f9-b1ba-bf7d1d34eaf9",
+  "templateVersion": "2025-11-28T04:59:13.77318+00:00",
+  "industry": "hospital",
+  "useCase": "hospital",
+  "name": "Hospital",
+  "slug": "hospital",
+  "description": "Healthcare facility with medical equipment, HVAC, emergency systems, and 24/7 operation",
+  "category": "institutional",
+  "questions": [
+    {
+      "id": "8d4ede43-edf9-4a6a-89da-742af1f1cd0b",
+      "type": "text",
+      "required": false,
+      "defaultValue": "general_hospital",
+      "options": [
+        {
+          "icon": "🏥",
+          "label": "General hospital",
+          "value": "general_hospital",
+          "kWPerBed": 8,
+          "description": "Full-service acute care"
+        },
+        {
+          "icon": "🏨",
+          "label": "Critical access hospital",
+          "value": "critical_access",
+          "kWPerBed": 6,
+          "description": "Rural, limited services"
+        },
+        {
+          "icon": "🔬",
+          "label": "Specialty hospital",
+          "value": "specialty",
+          "kWPerBed": 10,
+          "description": "Cardiac, orthopedic, etc."
+        },
+        {
+          "icon": "🎓",
+          "label": "Teaching/research hospital",
+          "value": "teaching",
+          "kWPerBed": 12,
+          "description": "Academic medical center"
+        },
+        {
+          "icon": "🏢",
+          "label": "Outpatient center",
+          "value": "outpatient",
+          "kWPerBed": 5,
+          "description": "Surgical center, imaging"
+        }
+      ]
+    },
+    {
+      "id": "973d184d-c5fb-478f-a3a0-6904db3724fd",
+      "type": "text",
+      "required": false,
+      "defaultValue": "100-250",
+      "options": [
+        {
+          "beds": 40,
+          "icon": "🏨",
+          "label": "<50 beds",
+          "value": "<50"
+        },
+        {
+          "beds": 75,
+          "icon": "🏥",
+          "label": "50–100 beds",
+          "value": "50-100"
+        },
+        {
+          "beds": 175,
+          "icon": "🏪",
+          "label": "100–250 beds",
+          "value": "100-250"
+        },
+        {
+          "beds": 375,
+          "icon": "🏢",
+          "label": "250–500 beds",
+          "value": "250-500"
+        },
+        {
+          "beds": 650,
+          "icon": "🏰",
+          "label": "500+ beds",
+          "value": "500+"
+        }
+      ]
+    },
+    {
+      "id": "5a9d8290-6cde-43b8-a4eb-0357e785e560",
+      "type": "text",
+      "required": false,
+      "defaultValue": "2000",
+      "options": [
+        {
+          "kW": 288,
+          "icon": "🔌",
+          "label": "1200A",
+          "value": "1200"
+        },
+        {
+          "kW": 480,
+          "icon": "⚡",
+          "label": "2000A",
+          "value": "2000"
+        },
+        {
+          "kW": 720,
+          "icon": "🔋",
+          "label": "3000A",
+          "value": "3000"
+        },
+        {
+          "kW": 960,
+          "icon": "⚙️",
+          "label": "4000A+",
+          "value": "4000+"
+        },
+        {
+          "kW": 2000,
+          "icon": "🏭",
+          "label": "Medium voltage",
+          "value": "medium_voltage"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "d89851db-ff2c-4386-805b-68569747d255",
+      "type": "text",
+      "required": false,
+      "defaultValue": "1000-2000",
+      "options": [
+        {
+          "kW": 0,
+          "icon": "❌",
+          "label": "No generator",
+          "value": "none"
+        },
+        {
+          "kW": 350,
+          "icon": "🔌",
+          "label": "<500 kW",
+          "value": "<500"
+        },
+        {
+          "kW": 750,
+          "icon": "⚡",
+          "label": "500–1,000 kW",
+          "value": "500-1000"
+        },
+        {
+          "kW": 1500,
+          "icon": "🔋",
+          "label": "1–2 MW",
+          "value": "1000-2000"
+        },
+        {
+          "kW": 3000,
+          "icon": "🏭",
+          "label": "2+ MW",
+          "value": "2000+"
+        },
+        {
+          "kW": 750,
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "aee135e3-794b-496c-bfa0-788c879053de",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"or_suites\", \"icu\", \"emergency_dept\", \"imaging\"]",
+      "options": [
+        {
+          "kW": 100,
+          "icon": "🏥",
+          "label": "Operating rooms",
+          "value": "or_suites"
+        },
+        {
+          "kW": 80,
+          "icon": "💉",
+          "label": "ICU/CCU",
+          "value": "icu"
+        },
+        {
+          "kW": 75,
+          "icon": "🚑",
+          "label": "Emergency department",
+          "value": "emergency_dept"
+        },
+        {
+          "kW": 150,
+          "icon": "🔬",
+          "label": "Imaging (MRI, CT, X-ray)",
+          "value": "imaging"
+        },
+        {
+          "kW": 50,
+          "icon": "🧪",
+          "label": "Laboratory",
+          "value": "lab"
+        },
+        {
+          "kW": 30,
+          "icon": "💊",
+          "label": "Pharmacy (refrigeration)",
+          "value": "pharmacy"
+        },
+        {
+          "kW": 100,
+          "icon": "🍽️",
+          "label": "Kitchen/food service",
+          "value": "kitchen"
+        },
+        {
+          "kW": 120,
+          "icon": "🧺",
+          "label": "On-site laundry",
+          "value": "laundry"
+        },
+        {
+          "kW": 80,
+          "icon": "💻",
+          "label": "Data center/IT",
+          "value": "data_center"
+        }
+      ]
+    },
+    {
+      "id": "45c4b11a-12be-4f24-be06-86ce21aac5ea",
+      "type": "text",
+      "required": false,
+      "defaultValue": "central_chiller",
+      "options": [
+        {
+          "icon": "🏭",
+          "label": "Central chiller plant",
+          "value": "central_chiller",
+          "multiplier": 1.2
+        },
+        {
+          "icon": "🏢",
+          "label": "Rooftop units (RTUs)",
+          "value": "rooftop_units",
+          "multiplier": 1
+        },
+        {
+          "icon": "⚙️",
+          "label": "VRF/VRV system",
+          "value": "vrf",
+          "multiplier": 0.9
+        },
+        {
+          "icon": "🔄",
+          "label": "Hybrid system",
+          "value": "hybrid",
+          "multiplier": 1.1
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "multiplier": 1
+        }
+      ]
+    },
+    {
+      "id": "40ca9dd1-7e44-4d65-9974-11e2bf6ce239",
+      "type": "text",
+      "required": false,
+      "defaultValue": "60-80",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "<40%",
+          "value": "<40",
+          "concurrency": 0.6
+        },
+        {
+          "icon": "📊",
+          "label": "40–60%",
+          "value": "40-60",
+          "concurrency": 0.7
+        },
+        {
+          "icon": "📈",
+          "label": "60–80%",
+          "value": "60-80",
+          "concurrency": 0.8
+        },
+        {
+          "icon": "🔥",
+          "label": "80%+",
+          "value": "80+",
+          "concurrency": 0.9
+        }
+      ]
+    },
+    {
+      "id": "537787eb-23f3-4b29-8e2b-901f8ae4fb4b",
+      "type": "text",
+      "required": false,
+      "defaultValue": "10-25",
+      "options": [
+        {
+          "icon": "🏢",
+          "label": "None (outpatient only)",
+          "value": "none",
+          "procedures": 0
+        },
+        {
+          "icon": "🏥",
+          "label": "<10 procedures",
+          "value": "<10",
+          "procedures": 7
+        },
+        {
+          "icon": "🔬",
+          "label": "10–25 procedures",
+          "value": "10-25",
+          "procedures": 17
+        },
+        {
+          "icon": "⚕️",
+          "label": "25–50 procedures",
+          "value": "25-50",
+          "procedures": 37
+        },
+        {
+          "icon": "🏭",
+          "label": "50+ procedures",
+          "value": "50+",
+          "procedures": 65
+        }
+      ]
+    },
+    {
+      "id": "df13963e-edc4-4ba1-a0a0-e737d22e0029",
+      "type": "text",
+      "required": false,
+      "defaultValue": "25-75",
+      "options": [
+        {
+          "icon": "❌",
+          "label": "None (no imaging)",
+          "value": "none",
+          "studies": 0
+        },
+        {
+          "icon": "📸",
+          "label": "<25 studies",
+          "value": "<25",
+          "studies": 15
+        },
+        {
+          "icon": "🔬",
+          "label": "25–75 studies",
+          "value": "25-75",
+          "studies": 50
+        },
+        {
+          "icon": "🏥",
+          "label": "75–150 studies",
+          "value": "75-150",
+          "studies": 110
+        },
+        {
+          "icon": "🏭",
+          "label": "150+ studies",
+          "value": "150+",
+          "studies": 200
+        }
+      ]
+    },
+    {
+      "id": "7dc17de7-8f6c-4ad3-90a3-96dd31b1103b",
+      "type": "text",
+      "required": false,
+      "defaultValue": "24_7_ed_only",
+      "options": [
+        {
+          "icon": "🕛",
+          "label": "24/7 full services",
+          "value": "24_7_full",
+          "concurrency": 0.9
+        },
+        {
+          "icon": "🚑",
+          "label": "24/7 ED, limited nights",
+          "value": "24_7_ed_only",
+          "concurrency": 0.7
+        },
+        {
+          "icon": "🕔",
+          "label": "Business hours only",
+          "value": "business_hours",
+          "concurrency": 0.5
+        },
+        {
+          "icon": "🔬",
+          "label": "Surgical center (daytime)",
+          "value": "surgical_only",
+          "concurrency": 0.4
+        }
+      ]
+    },
+    {
+      "id": "ec2bbf02-357e-40bb-acd6-98deb9384e46",
+      "type": "text",
+      "required": false,
+      "defaultValue": "midday",
+      "options": [
+        {
+          "icon": "🌅",
+          "label": "Morning (6–10 AM)",
+          "value": "morning",
+          "peakHour": 8
+        },
+        {
+          "icon": "☀️",
+          "label": "Midday (10 AM–4 PM)",
+          "value": "midday",
+          "peakHour": 13
+        },
+        {
+          "icon": "🌇",
+          "label": "Afternoon (2–6 PM)",
+          "value": "afternoon",
+          "peakHour": 16
+        },
+        {
+          "icon": "🌃",
+          "label": "Evening surge (6–10 PM)",
+          "value": "evening",
+          "peakHour": 19
+        },
+        {
+          "icon": "📊",
+          "label": "Relatively flat 24/7",
+          "value": "relatively_flat",
+          "peakHour": 14
+        }
+      ]
+    },
+    {
+      "id": "72f8e94c-ae76-44ed-851a-c7dffc66e2f7",
+      "type": "text",
+      "required": false,
+      "defaultValue": "75000-150000",
+      "options": [
+        {
+          "icon": "💵",
+          "label": "<$25,000",
+          "value": "<25000"
+        },
+        {
+          "icon": "💰",
+          "label": "$25,000–$75,000",
+          "value": "25000-75000"
+        },
+        {
+          "icon": "💳",
+          "label": "$75,000–$150,000",
+          "value": "75000-150000"
+        },
+        {
+          "icon": "💸",
+          "label": "$150,000–$300,000",
+          "value": "150000-300000"
+        },
+        {
+          "icon": "🏦",
+          "label": "$300,000+",
+          "value": "300000+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "5f2f8192-e9f4-458a-b563-fa39cd27e2ba",
+      "type": "text",
+      "required": false,
+      "defaultValue": "demand",
+      "options": [
+        {
+          "icon": "📊",
+          "label": "Flat rate only",
+          "value": "flat",
+          "savingsMultiplier": 0.5
+        },
+        {
+          "icon": "🕐",
+          "label": "Time-of-use (TOU)",
+          "value": "tou",
+          "savingsMultiplier": 0.8
+        },
+        {
+          "icon": "⚡",
+          "label": "Demand charges",
+          "value": "demand",
+          "savingsMultiplier": 1
+        },
+        {
+          "icon": "🎯",
+          "label": "TOU + demand charges",
+          "value": "tou_demand",
+          "savingsMultiplier": 1.2
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "savingsMultiplier": 0.8
+        }
+      ]
+    },
+    {
+      "id": "0fcfb032-83be-41c0-a866-00046a8911f8",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "Voltage sag/flicker",
+          "value": "voltage_sag"
+        },
+        {
+          "icon": "🌊",
+          "label": "Harmonic distortion",
+          "value": "harmonics"
+        },
+        {
+          "icon": "⚠️",
+          "label": "Bumps during generator tests",
+          "value": "generator_switchover"
+        },
+        {
+          "icon": "🛑",
+          "label": "Equipment trips/shutdowns",
+          "value": "equipment_trips"
+        },
+        {
+          "icon": "🔬",
+          "label": "Imaging equipment interference",
+          "value": "imaging_interference"
+        },
+        {
+          "icon": "✅",
+          "label": "None",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "acab83b3-a787-4555-aee1-23cd72ed16d4",
+      "type": "text",
+      "required": false,
+      "defaultValue": "life_safety",
+      "options": [
+        {
+          "icon": "🚨",
+          "label": "Life safety systems (NEC 517)",
+          "value": "life_safety",
+          "backupHours": 24
+        },
+        {
+          "icon": "🏥",
+          "label": "Full operations continuity",
+          "value": "full_operations",
+          "backupHours": 12
+        },
+        {
+          "icon": "⚠️",
+          "label": "Critical systems only",
+          "value": "critical_only",
+          "backupHours": 6
+        },
+        {
+          "icon": "🏢",
+          "label": "Minimal (outpatient)",
+          "value": "minimal",
+          "backupHours": 2
+        }
+      ]
+    },
+    {
+      "id": "4eb6ece9-6073-4082-9fa5-6f9bf2b9c768",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "➕",
+          "label": "Adding beds/wing",
+          "value": "add_beds",
+          "kWIncrease": 200
+        },
+        {
+          "icon": "🏥",
+          "label": "New OR suite",
+          "value": "new_or_suite",
+          "kWIncrease": 100
+        },
+        {
+          "icon": "🔬",
+          "label": "Imaging equipment (MRI/CT)",
+          "value": "imaging_equipment",
+          "kWIncrease": 150
+        },
+        {
+          "icon": "❄️",
+          "label": "Chiller/HVAC upgrade",
+          "value": "chiller_upgrade",
+          "kWIncrease": 100
+        },
+        {
+          "icon": "🚑",
+          "label": "EV ambulance charging",
+          "value": "ev_ambulance",
+          "kWIncrease": 50
+        },
+        {
+          "icon": "☀️",
+          "label": "Solar + storage",
+          "value": "solar",
+          "kWIncrease": 0
+        },
+        {
+          "icon": "✅",
+          "label": "No expansion planned",
+          "value": "none",
+          "kWIncrease": 0
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "[\"none\"]"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "hospital_load_v1",
+  "calculatorVersion": "1.0.0"
+}

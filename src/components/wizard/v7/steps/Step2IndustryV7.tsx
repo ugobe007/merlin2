@@ -1,8 +1,27 @@
 import React, { useMemo } from "react";
-import type { IndustrySlug, WizardState } from "@/wizard/v7/hooks/useWizardV7";
+import type { IndustrySlug, WizardState as WizardV7State } from "@/wizard/v7/hooks/useWizardV7";
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Merlin Dark Theme Tokens (matching Step 1)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const DARK = {
+  bgGradient: "linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%)",
+  cardBg: "rgba(255,255,255,0.04)",
+  cardBorder: "rgba(255,255,255,0.08)",
+  cardHoverBg: "rgba(255,255,255,0.08)",
+  textPrimary: "#ffffff",
+  textSecondary: "rgba(255,255,255,0.7)",
+  textMuted: "rgba(255,255,255,0.5)",
+  accent: "#a855f7",
+  accentGlow: "rgba(168,85,247,0.4)",
+  buttonBg: "rgba(168,85,247,0.2)",
+  buttonBorder: "rgba(168,85,247,0.3)",
+  buttonHoverBg: "rgba(168,85,247,0.3)",
+  successGreen: "#22c55e",
+};
 
 type Props = {
-  state: WizardState;
+  state: WizardV7State;
   actions: {
     goBack: () => void;
     selectIndustry: (industry: IndustrySlug) => Promise<void>;
@@ -14,10 +33,10 @@ function Card({ children }: { children: React.ReactNode }) {
     <div
       style={{
         borderRadius: 16,
-        border: "1px solid rgba(0,0,0,0.10)",
-        background: "white",
-        padding: 16,
-        boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
+        border: `1px solid ${DARK.cardBorder}`,
+        background: DARK.cardBg,
+        padding: 20,
+        backdropFilter: "blur(12px)",
       }}
     >
       {children}
@@ -43,13 +62,15 @@ function Button({
       style={{
         width: "100%",
         textAlign: "left",
-        padding: "12px 12px",
+        padding: "12px 16px",
         borderRadius: 14,
-        border: "1px solid rgba(0,0,0,0.12)",
-        background: subtle ? "rgba(0,0,0,0.03)" : "rgba(0,0,0,0.06)",
+        border: subtle ? `1px solid ${DARK.cardBorder}` : `1px solid ${DARK.buttonBorder}`,
+        background: subtle ? DARK.cardBg : DARK.buttonBg,
+        color: DARK.textPrimary,
         cursor: disabled ? "not-allowed" : "pointer",
-        fontWeight: 800,
-        opacity: disabled ? 0.6 : 1,
+        fontWeight: 600,
+        opacity: disabled ? 0.5 : 1,
+        transition: "all 0.2s ease",
       }}
     >
       {children}
@@ -64,12 +85,13 @@ function Pill({ children }: { children: React.ReactNode }) {
         display: "inline-flex",
         alignItems: "center",
         gap: 6,
-        padding: "6px 10px",
+        padding: "6px 12px",
         borderRadius: 999,
-        background: "rgba(0,0,0,0.05)",
-        border: "1px solid rgba(0,0,0,0.08)",
+        background: "rgba(34,197,94,0.15)",
+        border: "1px solid rgba(34,197,94,0.3)",
         fontSize: 12,
-        opacity: 0.9,
+        color: DARK.successGreen,
+        fontWeight: 500,
       }}
     >
       {children}
@@ -82,38 +104,43 @@ const INDUSTRIES: Array<{
   label: string;
   desc: string;
   emoji: string;
+  image: string;
 }> = [
   {
     slug: "car_wash",
     label: "Car Wash",
     desc: "Tunnel / in-bay / single-site operators",
     emoji: "🚿",
+    image: "/src/assets/images/car_wash_1.jpg",
   },
   {
     slug: "ev_charging",
     label: "EV Charging Hub",
     desc: "Depot / public charging sites",
     emoji: "⚡",
+    image: "/src/assets/images/ev_charging_station.jpg",
   },
-  { slug: "hotel", label: "Hotel / Hospitality", desc: "Hotels, resorts, properties", emoji: "🏨" },
-  { slug: "restaurant", label: "Restaurant", desc: "Quick service, full service", emoji: "🍽️" },
-  { slug: "retail", label: "Retail", desc: "Stores, malls, chain locations", emoji: "🛍️" },
+  { slug: "hotel", label: "Hotel / Hospitality", desc: "Hotels, resorts, properties", emoji: "🏨", image: "/src/assets/images/hotel_motel_holidayinn_1.jpg" },
+  { slug: "restaurant", label: "Restaurant", desc: "Quick service, full service", emoji: "🍽️", image: "/src/assets/images/restaurant_1.jpg" },
+  { slug: "retail", label: "Retail", desc: "Stores, malls, chain locations", emoji: "🛍️", image: "/src/assets/images/retail_1.jpg" },
   {
     slug: "warehouse",
     label: "Warehouse / Logistics",
     desc: "Distribution, light industrial",
     emoji: "📦",
+    image: "/src/assets/images/logistics_1.jpg",
   },
   {
     slug: "manufacturing",
     label: "Manufacturing",
     desc: "Industrial loads, production lines",
     emoji: "🏭",
+    image: "/src/assets/images/manufacturing_1.jpg",
   },
-  { slug: "office", label: "Office", desc: "Commercial office buildings", emoji: "🏢" },
-  { slug: "healthcare", label: "Healthcare", desc: "Clinics, hospitals, labs", emoji: "🏥" },
-  { slug: "data_center", label: "Data Center", desc: "Critical loads + redundancy", emoji: "🖥️" },
-  { slug: "other", label: "Other", desc: "If none fit, pick this", emoji: "✨" },
+  { slug: "office", label: "Office", desc: "Commercial office buildings", emoji: "🏢", image: "/src/assets/images/office_building1.jpg" },
+  { slug: "healthcare", label: "Healthcare", desc: "Clinics, hospitals, labs", emoji: "🏥", image: "/src/assets/images/hospital_1.jpg" },
+  { slug: "data_center", label: "Data Center", desc: "Critical loads + redundancy", emoji: "🖥️", image: "/src/assets/images/data-center-1.jpg" },
+  { slug: "other", label: "Other", desc: "If none fit, pick this", emoji: "✨", image: "" },
 ];
 
 export default function Step2IndustryV7({ state, actions }: Props) {
@@ -126,78 +153,129 @@ export default function Step2IndustryV7({ state, actions }: Props) {
   }, [state.location]);
 
   const disabled = !state.location || state.isBusy;
+  
+  // Debug logging
+  console.log("[Step2] state.location:", state.location);
+  console.log("[Step2] state.isBusy:", state.isBusy);
+  console.log("[Step2] disabled:", disabled);
 
   return (
-    <div style={{ display: "grid", gap: 14 }}>
-      <Card>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.2px" }}>
-              Step 2 — Choose your industry
-            </div>
-            <div style={{ marginTop: 6, fontSize: 13, opacity: 0.75 }}>
-              SSOT couldn't infer your industry with high confidence, so choose it here.
-            </div>
-          </div>
-          <Pill>📍 {locationLine}</Pill>
-        </div>
-
-        <div style={{ marginTop: 12 }}>
-          <Button onClick={actions.goBack} subtle>
-            ← Back to location
-          </Button>
-        </div>
-      </Card>
-
-      <Card>
-        <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 10 }}>Industries</div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 10,
-          }}
-        >
-          {INDUSTRIES.map((it) => (
-            <div
-              key={it.slug}
-              style={{
-                borderRadius: 16,
-                border: "1px solid rgba(0,0,0,0.10)",
-                padding: 12,
-                background: "rgba(0,0,0,0.02)",
-              }}
-            >
-              <div style={{ fontSize: 13, opacity: 0.75 }}>{it.emoji}</div>
-              <div style={{ marginTop: 6, fontSize: 15, fontWeight: 900 }}>{it.label}</div>
-              <div style={{ marginTop: 4, fontSize: 13, opacity: 0.72 }}>{it.desc}</div>
-
-              <div style={{ marginTop: 10 }}>
-                <button
-                  disabled={disabled}
-                  onClick={() => actions.selectIndustry(it.slug)}
-                  style={{
-                    width: "100%",
-                    height: 42,
-                    borderRadius: 12,
-                    border: "1px solid rgba(0,0,0,0.12)",
-                    background: disabled ? "rgba(0,0,0,0.04)" : "rgba(0,0,0,0.06)",
-                    cursor: disabled ? "not-allowed" : "pointer",
-                    fontWeight: 900,
-                  }}
-                >
-                  Choose {it.label}
-                </button>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: DARK.bgGradient,
+        padding: "40px 24px",
+        color: DARK.textPrimary,
+      }}
+    >
+      <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 20 }}>
+        {/* Header Card */}
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-0.5px", color: DARK.textPrimary }}>
+                Choose Your Industry
+              </div>
+              <div style={{ marginTop: 8, fontSize: 16, color: DARK.textSecondary }}>
+                Select the industry that best describes your facility so we can customize your energy recommendations.
               </div>
             </div>
-          ))}
-        </div>
+            <Pill>📍 {locationLine}</Pill>
+          </div>
 
-        <div style={{ marginTop: 12, fontSize: 12, opacity: 0.6 }}>
-          Note: Industry inference lives in SSOT (useWizardV7). This page is intentionally dumb.
-        </div>
-      </Card>
+          <div style={{ marginTop: 16 }}>
+            <Button onClick={actions.goBack} subtle>
+              ← Back to location
+            </Button>
+          </div>
+        </Card>
+
+        {/* Industries Grid */}
+        <Card>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, color: DARK.textSecondary, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            Select Industry
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 16,
+            }}
+          >
+            {INDUSTRIES.map((it) => (
+              <button
+                key={it.slug}
+                data-testid={`industry-card-${it.slug.replace(/_/g, "-")}`}
+                disabled={disabled}
+                onClick={() => {
+                  console.log("[Step2] Clicked industry:", it.slug, "disabled:", disabled);
+                  if (!disabled) {
+                    actions.selectIndustry(it.slug);
+                  }
+                }}
+                style={{
+                  borderRadius: 16,
+                  border: `1px solid ${DARK.cardBorder}`,
+                  padding: 0,
+                  background: DARK.cardBg,
+                  cursor: disabled ? "not-allowed" : "pointer",
+                  opacity: disabled ? 0.5 : 1,
+                  textAlign: "left",
+                  transition: "all 0.2s ease",
+                  overflow: "hidden",
+                }}
+                onMouseEnter={(e) => {
+                  if (!disabled) {
+                    e.currentTarget.style.background = DARK.cardHoverBg;
+                    e.currentTarget.style.borderColor = DARK.accent;
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                    e.currentTarget.style.boxShadow = `0 8px 30px ${DARK.accentGlow}`;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = DARK.cardBg;
+                  e.currentTarget.style.borderColor = DARK.cardBorder;
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                {/* Image Section */}
+                {it.image ? (
+                  <div
+                    style={{
+                      height: 120,
+                      background: `url(${it.image}) center/cover no-repeat`,
+                      borderBottom: `1px solid ${DARK.cardBorder}`,
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      height: 120,
+                      background: `linear-gradient(135deg, ${DARK.accent}33 0%, ${DARK.cardBg} 100%)`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 48,
+                      borderBottom: `1px solid ${DARK.cardBorder}`,
+                    }}
+                  >
+                    {it.emoji}
+                  </div>
+                )}
+                {/* Text Section */}
+                <div style={{ padding: 16 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: DARK.textPrimary, display: "flex", alignItems: "center", gap: 8 }}>
+                    <span>{it.emoji}</span> {it.label}
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 13, color: DARK.textMuted }}>{it.desc}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

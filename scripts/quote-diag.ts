@@ -175,24 +175,17 @@ type Variant = {
 // ========== CAR WASH ==========
 function baseCarWashAnswers(): Record<string, unknown> {
   return {
-    wash_type: "Tunnel (single)",
-    bay_count: 1,
-    tunnel_length_ft: 120,
-    cars_per_day_avg: 250,
-    cars_per_hour_peak: 30,
-    operating_hours_per_day: 12,
-    days_per_week: 7,
-    dryer_present: true,
-    dryer_kw: 40,
-    water_heating_type: "gas",
-    uses_hot_water: true,
-    reclaim_system: true,
-    vacuum_count: 8,
-    vacuum_kw_each: 2.5,
-    monthly_kwh: 15000,
-    peak_demand_kw: 100,
-    demand_charge: true,
-    demand_charge_rate: 20,
+    // Database format (camelCase, combined fields, arrays) - Feb 4, 2026
+    carWashType: "tunnel",
+    bayTunnelCount: "2 tunnels",
+    averageWashesPerDay: 250,
+    peakHourThroughput: 30,
+    operatingHours: 12,
+    primaryEquipment: ["conveyor", "dryers", "vacuums"],
+    electricalServiceSize: "400-600kVA",
+    washCycleDuration: "3-5",
+    waterHeating: "gas",
+    monthlyElectricitySpend: "$3000-5000",
   };
 }
 
@@ -210,31 +203,31 @@ function makeCarWashVariants(): Variant[] {
       id: "cw_more_hours",
       label: "Car Wash longer hours",
       calculatorId: "car_wash_load_v1",
-      answers: { ...base, operating_hours_per_day: 18 },
+      answers: { ...base, operatingHours: 18 },
     },
     {
       id: "cw_more_vehicles",
       label: "Car Wash higher throughput",
       calculatorId: "car_wash_load_v1",
-      answers: { ...base, cars_per_day_avg: 450, cars_per_hour_peak: 50 },
+      answers: { ...base, averageWashesPerDay: 450, peakHourThroughput: 50 },
     },
     {
       id: "cw_big_dryers",
-      label: "Car Wash more dryers",
+      label: "Car Wash larger dryer system",
       calculatorId: "car_wash_load_v1",
-      answers: { ...base, dryer_kw: 80 },
+      answers: { ...base, primaryEquipment: ["conveyor", "dryers_high_power", "vacuums"] },
     },
     {
       id: "cw_more_vacuums",
-      label: "Car Wash more vacuums",
+      label: "Car Wash double vacuums",
       calculatorId: "car_wash_load_v1",
-      answers: { ...base, vacuum_count: 16 },
+      answers: { ...base, primaryEquipment: ["conveyor", "dryers", "vacuums", "vacuums_extra"] },
     },
     {
       id: "cw_low_traffic",
       label: "Car Wash low traffic",
       calculatorId: "car_wash_load_v1",
-      answers: { ...base, cars_per_day_avg: 120, cars_per_hour_peak: 15, operating_hours_per_day: 10 },
+      answers: { ...base, averageWashesPerDay: 120, peakHourThroughput: 15, operatingHours: 10 },
     },
   ];
 }

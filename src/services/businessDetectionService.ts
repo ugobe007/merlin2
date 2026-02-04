@@ -215,6 +215,18 @@ const detectOperatingHours = (
 // ============================================
 // PREFILLED ANSWERS GENERATOR
 // ============================================
+// 
+// ⚠️  SSOT DOCTRINE (Jan 31, 2026):
+// This function generates prefills from DETECTED business data (amenities, operating hours).
+// This is GROUND TRUTH derived from Places API / business detection - similar to locationIntel.
+// 
+// Priority order for Step 3 defaults:
+// 1. template.defaults (contract defaults)
+// 2. question.defaultValue (legacy fallback)
+// 3. locationIntel + businessDetection (ground truth - highest accuracy)
+// 
+// This function provides #3 - detected facts about the business, NOT arbitrary industry guesses.
+// ============================================
 
 const generatePrefilledAnswers = (
   industrySlug: string,
@@ -223,19 +235,20 @@ const generatePrefilledAnswers = (
 ): Record<string, unknown> => {
   const answers: Record<string, unknown> = {};
 
-  // Operating hours
+  // Operating hours - from detected business data
   if (operatingHours?.alwaysOpen) {
     answers.operatingHours = 24;
     answers.daysPerWeek = 7;
   }
 
-  // Industry-specific pre-fills
+  // Industry-specific pre-fills based on DETECTED amenities (ground truth)
   switch (industrySlug) {
     case "hotel":
       if (operatingHours?.alwaysOpen) {
         answers.operatingHours = 24;
         answers.daysPerWeek = 7;
       }
+      // These come from Places API amenity detection - ground truth
       if (amenities.hasPool !== undefined) {
         answers.hasPool = amenities.hasPool;
       }
@@ -249,6 +262,7 @@ const generatePrefilledAnswers = (
 
     case "car-wash":
       // Car washes typically 8-10 hours/day, 6-7 days/week
+      // TODO: Move these to template.defaults instead of hardcoding here
       if (!answers.operatingHours) {
         answers.operatingHours = 10;
         answers.daysPerWeek = 6;
@@ -256,13 +270,13 @@ const generatePrefilledAnswers = (
       break;
 
     case "hospital":
-      // Hospitals always 24/7
+      // Hospitals always 24/7 - industry standard (ground truth)
       answers.operatingHours = 24;
       answers.daysPerWeek = 7;
       break;
 
     case "data-center":
-      // Data centers always 24/7
+      // Data centers always 24/7 - industry standard (ground truth)
       answers.operatingHours = 24;
       answers.daysPerWeek = 7;
       break;
@@ -279,34 +293,67 @@ export const detectBusinessFromAddress = async (
   query: string
 ): Promise<BusinessDetectionResult | null> => {
   try {
-    // TODO: Implement Google Places Autocomplete API call
-    // For now, return mock data for development
     console.log("[BusinessDetection] Query:", query);
 
-    // This would be replaced with actual Google Places API call:
-    // const response = await fetch(
-    //   `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=${GOOGLE_API_KEY}`
-    // );
+    // Use canonical backend API for business lookup
+    const { lookupBusiness, getPlaceDetails } = await import("@/config/api");
 
-    // Mock response for development
-    const mockResult: GooglePlacesResult = {
-      place_id: "ChIJN1t_tDeuEmsRUsoyG83frY4",
-      name: query,
-      formatted_address: "50 3rd St, San Francisco, CA 94103",
-      geometry: {
-        location: {
-          lat: 37.7858,
-          lng: -122.4064,
-        },
-      },
-      types: ["lodging", "hotel", "point_of_interest"],
-      opening_hours: {
-        open_now: true,
-        periods: [{ open: { day: 0, time: "0000" } }], // 24/7
-      },
-    };
+    // Lookup business using backend (proxies to Google Places)
+    const lookupResult = await lookupBusiness(query);
 
-    return await processPlaceDetails(mockResult);
+    if (!lookupResult.results || lookupResult.results.length === 0) {
+      console.log("[BusinessDetection] No results found for query:", query);
+      return null;
+    }
+
+    // Use the first (best) result
+    const candidate = lookupResult.results[0];
+    console.log("[BusinessDetection] Best candidate:", candidate.name, candidate.formattedAddress);
+
+    // Get full place details for more information
+    let placeDetails: GooglePlacesResult;
+    
+    try {
+      const detailsResponse = await getPlaceDetails(candidate.placeId);
+      if (detailsResponse.ok && detailsResponse.place) {
+        placeDetails = {
+          place_id: detailsResponse.place.placeId,
+          name: detailsResponse.place.name,
+          formatted_address: detailsResponse.place.formattedAddress,
+          geometry: {
+            location: {
+              lat: detailsResponse.place.lat,
+              lng: detailsResponse.place.lng,
+            },
+          },
+          types: detailsResponse.place.types || candidate.types || [],
+          opening_hours: detailsResponse.place.openingHours ? {
+            open_now: true,
+            weekday_text: detailsResponse.place.openingHours,
+          } : undefined,
+        };
+      } else {
+        // Fallback to candidate data
+        placeDetails = {
+          place_id: candidate.placeId,
+          name: candidate.name,
+          formatted_address: candidate.formattedAddress,
+          geometry: { location: { lat: 0, lng: 0 } },
+          types: candidate.types || [],
+        };
+      }
+    } catch (detailsError) {
+      console.warn("[BusinessDetection] Could not fetch place details, using candidate:", detailsError);
+      placeDetails = {
+        place_id: candidate.placeId,
+        name: candidate.name,
+        formatted_address: candidate.formattedAddress,
+        geometry: { location: { lat: 0, lng: 0 } },
+        types: candidate.types || [],
+      };
+    }
+
+    return await processPlaceDetails(placeDetails);
   } catch (error) {
     console.error("[BusinessDetection] Error:", error);
     return null;

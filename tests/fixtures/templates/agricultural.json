@@ -1,0 +1,900 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:31.621Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "3a697fd6-ed56-4ad3-b4d5-1d6f5fa0692a",
+  "templateVersion": "2025-11-28T04:59:13.77318+00:00",
+  "industry": "agricultural",
+  "useCase": "agricultural",
+  "name": "Agricultural",
+  "slug": "agricultural",
+  "description": "Farm with irrigation pumps, processing equipment, and storage facilities",
+  "category": "agricultural",
+  "questions": [
+    {
+      "id": "cc565ee0-c542-4f86-a2d0-48381b75c31d",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Wheat",
+          "label": "Row Crops",
+          "value": "row-crops",
+          "description": "Corn, soybeans, wheat, etc."
+        },
+        {
+          "icon": "Milk",
+          "label": "Dairy Farm",
+          "value": "dairy",
+          "description": "Milk production"
+        },
+        {
+          "icon": "Bird",
+          "label": "Livestock/Poultry",
+          "value": "livestock",
+          "description": "Cattle, hogs, chickens"
+        },
+        {
+          "icon": "Apple",
+          "label": "Orchard/Vineyard",
+          "value": "orchard",
+          "description": "Fruit, nuts, grapes"
+        },
+        {
+          "icon": "Carrot",
+          "label": "Vegetable Farm",
+          "value": "vegetable",
+          "description": "Fresh produce"
+        },
+        {
+          "icon": "Tractor",
+          "label": "Mixed Operation",
+          "value": "mixed",
+          "description": "Multiple farm types"
+        }
+      ]
+    },
+    {
+      "id": "f70bb48f-4179-4566-af0e-a86dfdf03645",
+      "type": "text",
+      "required": false,
+      "defaultValue": "500",
+      "options": {
+        "max": 1000,
+        "min": 0,
+        "step": 10
+      }
+    },
+    {
+      "id": "44e3f195-054b-4c70-93ad-2b159f97e554",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "max": 1000,
+        "min": 0,
+        "step": 10
+      }
+    },
+    {
+      "id": "3b7a496b-8002-4fc1-a7b2-0619c7a8e118",
+      "type": "text",
+      "required": false,
+      "defaultValue": "50000",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "ab3f10ca-cee7-4ad9-b738-496b1313d807",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "max": 1000,
+        "min": 0,
+        "step": 10
+      }
+    },
+    {
+      "id": "befa3d37-1a2a-4c39-82a4-ef765c3277af",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Warehouse",
+          "label": "Barn/Equipment Storage",
+          "value": "barn"
+        },
+        {
+          "icon": "Cylinder",
+          "label": "Grain Bins/Silos",
+          "value": "grain-bins"
+        },
+        {
+          "icon": "Wrench",
+          "label": "Shop/Maintenance",
+          "value": "shop"
+        },
+        {
+          "icon": "Building",
+          "label": "Farm Office",
+          "value": "office"
+        },
+        {
+          "icon": "Home",
+          "label": "Farm Residence",
+          "value": "residence"
+        },
+        {
+          "icon": "Warehouse",
+          "label": "Livestock Housing",
+          "value": "livestock-barn"
+        },
+        {
+          "icon": "Milk",
+          "label": "Milking Parlor",
+          "value": "milking-parlor"
+        },
+        {
+          "icon": "Factory",
+          "label": "Processing Facility",
+          "value": "processing"
+        }
+      ]
+    },
+    {
+      "id": "5d16e385-d252-4c39-a97d-f745369af0dc",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Gauge",
+          "label": "Irrigation Pumps",
+          "value": "irrigation-pumps"
+        },
+        {
+          "icon": "Flame",
+          "label": "Grain Dryers",
+          "value": "grain-dryers"
+        },
+        {
+          "icon": "Cog",
+          "label": "Feed Mills/Grinders",
+          "value": "feed-mills"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Cold Storage/Refrigeration",
+          "value": "refrigeration"
+        },
+        {
+          "icon": "Wind",
+          "label": "Barn Ventilation",
+          "value": "ventilation"
+        },
+        {
+          "icon": "Milk",
+          "label": "Milking Equipment",
+          "value": "milking"
+        },
+        {
+          "icon": "Factory",
+          "label": "Processing Equipment",
+          "value": "processing"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "EV/Equipment Chargers",
+          "value": "ev-chargers"
+        }
+      ]
+    },
+    {
+      "id": "db4dffed-1597-42ec-9881-0f78dcb7d894",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No Irrigation (Dryland)",
+          "value": "none"
+        },
+        {
+          "icon": "RotateCw",
+          "label": "Center Pivot",
+          "value": "center-pivot"
+        },
+        {
+          "icon": "Droplets",
+          "label": "Drip/Micro Irrigation",
+          "value": "drip"
+        },
+        {
+          "icon": "Waves",
+          "label": "Flood/Furrow",
+          "value": "flood"
+        },
+        {
+          "icon": "Cloud",
+          "label": "Sprinkler System",
+          "value": "sprinkler"
+        },
+        {
+          "icon": "Settings",
+          "label": "Multiple Systems",
+          "value": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "8f406f8e-75e2-45ff-be15-57a7dd81353b",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "RotateCw",
+          "label": "Year-Round Operation",
+          "value": "year-round"
+        },
+        {
+          "icon": "Sun",
+          "label": "Summer Peak (Irrigation)",
+          "value": "summer-peak"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Fall Peak (Harvest/Drying)",
+          "value": "fall-peak"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Winter Peak (Livestock)",
+          "value": "winter-peak"
+        },
+        {
+          "icon": "TrendingUp",
+          "label": "Highly Variable",
+          "value": "variable"
+        }
+      ]
+    },
+    {
+      "id": "c6b3dcb1-2c7a-4646-b40c-4f523b9aebd6",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Droplets",
+          "label": "Well/Groundwater",
+          "value": "well"
+        },
+        {
+          "icon": "Waves",
+          "label": "Surface Water/Canal",
+          "value": "surface"
+        },
+        {
+          "icon": "Building",
+          "label": "Municipal Supply",
+          "value": "municipal"
+        },
+        {
+          "icon": "CloudRain",
+          "label": "Rainwater/Pond",
+          "value": "rainwater"
+        },
+        {
+          "icon": "Droplets",
+          "label": "Multiple Sources",
+          "value": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "a9bc2d50-1d48-4fdd-be8a-30d2d60b51c5",
+      "type": "text",
+      "required": false,
+      "defaultValue": "12",
+      "options": {
+        "max": 24,
+        "min": 6,
+        "step": 1,
+        "suffix": " hrs/day"
+      }
+    },
+    {
+      "id": "59dded82-3e71-49de-8f07-be0b616548e3",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "label": "Legacy (15+ years old)",
+          "value": "legacy",
+          "description": "Older, less efficient equipment"
+        },
+        {
+          "label": "Standard (5-15 years)",
+          "value": "standard",
+          "description": "Average efficiency"
+        },
+        {
+          "label": "Modern (under 5 years)",
+          "value": "modern",
+          "description": "High-efficiency equipment"
+        },
+        {
+          "label": "Premium/LEED",
+          "value": "premium",
+          "description": "Best-in-class efficiency"
+        }
+      ]
+    },
+    {
+      "id": "4575b867-a2b2-4632-9869-e0667c395106",
+      "type": "text",
+      "required": false,
+      "defaultValue": "central_ac",
+      "options": [
+        {
+          "label": "Central AC/Heating",
+          "value": "central_ac"
+        },
+        {
+          "label": "Rooftop Units (RTUs)",
+          "value": "rooftop"
+        },
+        {
+          "label": "Chiller System",
+          "value": "chiller"
+        },
+        {
+          "label": "Split Systems",
+          "value": "split"
+        },
+        {
+          "label": "VRF/Mini-Splits",
+          "value": "vrf"
+        }
+      ]
+    },
+    {
+      "id": "789a2f06-f2dd-4bc9-ba49-ee5073f40be7",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Minus",
+          "label": "Flat Rate",
+          "value": "flat"
+        },
+        {
+          "icon": "Clock",
+          "label": "Time-of-Use",
+          "value": "tou"
+        },
+        {
+          "icon": "Gauge",
+          "label": "Demand Charges",
+          "value": "demand"
+        },
+        {
+          "icon": "Tractor",
+          "label": "Agricultural Rate",
+          "value": "ag-rate"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Unknown",
+          "value": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "5fc52567-fdfb-4865-adbf-86ac53348e11",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000",
+      "options": [
+        {
+          "label": "$1,000 - $5,000/mo",
+          "value": "3000"
+        },
+        {
+          "label": "$5,000 - $15,000/mo",
+          "value": "10000"
+        },
+        {
+          "label": "$15,000 - $35,000/mo",
+          "value": "25000"
+        },
+        {
+          "label": "$35,000 - $75,000/mo",
+          "value": "50000"
+        },
+        {
+          "label": "$75,000 - $150,000/mo",
+          "value": "100000"
+        },
+        {
+          "label": "Over $150,000/mo",
+          "value": "200000"
+        }
+      ]
+    },
+    {
+      "id": "e2c92fc7-5946-4d74-9ddc-c1fdadf07039",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "DollarSign",
+          "label": "Under $1,000",
+          "value": "under-1k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$1,000 - $3,000",
+          "value": "1-3k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$3,000 - $10,000",
+          "value": "3-10k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$10,000 - $25,000",
+          "value": "10-25k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "Over $25,000",
+          "value": "over-25k"
+        }
+      ]
+    },
+    {
+      "id": "c7a385c9-cacb-4591-8eda-a35f88c18357",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Zap",
+          "label": "Under 50 kW",
+          "value": "under-50"
+        },
+        {
+          "icon": "Zap",
+          "label": "50-150 kW",
+          "value": "50-150"
+        },
+        {
+          "icon": "Zap",
+          "label": "150-500 kW",
+          "value": "150-500"
+        },
+        {
+          "icon": "Zap",
+          "label": "500 kW - 1 MW",
+          "value": "500-1000"
+        },
+        {
+          "icon": "Zap",
+          "label": "Over 1 MW",
+          "value": "over-1000"
+        }
+      ]
+    },
+    {
+      "id": "3f292525-c164-4e59-85c4-a21a942a2cd7",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "label": "Under 200 kW",
+          "value": "small",
+          "description": "Small commercial service"
+        },
+        {
+          "label": "200-500 kW",
+          "value": "medium",
+          "description": "Medium commercial service"
+        },
+        {
+          "label": "500 kW - 2 MW",
+          "value": "large",
+          "description": "Large commercial service"
+        },
+        {
+          "label": "Over 2 MW",
+          "value": "utility",
+          "description": "Utility-scale connection"
+        }
+      ]
+    },
+    {
+      "id": "ae5b8909-508c-431e-9549-e772f7b60b7d",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Shield",
+          "label": "Very Reliable",
+          "value": "reliable"
+        },
+        {
+          "icon": "AlertCircle",
+          "label": "Occasional Outages",
+          "value": "occasional"
+        },
+        {
+          "icon": "AlertTriangle",
+          "label": "Frequent Outages",
+          "value": "frequent"
+        },
+        {
+          "icon": "Unplug",
+          "label": "PSPS/Shutoff Risk",
+          "value": "psps"
+        }
+      ]
+    },
+    {
+      "id": "d9dc532d-e9c3-4731-8539-7c9910cb461b",
+      "type": "text",
+      "required": false,
+      "defaultValue": "true",
+      "options": null
+    },
+    {
+      "id": "182bbacf-01ef-4d3e-857a-304ab90ce9a1",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No Backup",
+          "value": "none"
+        },
+        {
+          "icon": "Battery",
+          "label": "Partial (Critical Only)",
+          "value": "partial"
+        },
+        {
+          "icon": "Fuel",
+          "label": "Full Generator Backup",
+          "value": "full-gen"
+        },
+        {
+          "icon": "Battery",
+          "label": "Battery Backup",
+          "value": "full-battery"
+        }
+      ]
+    },
+    {
+      "id": "c5dfbcdc-7bca-45ec-8e23-4b43a6047131",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "dbd5546d-961f-4d14-b83d-4fcfffbefbbf",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "max": 500,
+        "min": 0,
+        "step": 10,
+        "suffix": " kW"
+      }
+    },
+    {
+      "id": "7aa17db6-ff94-4516-91a4-26efe9fb7a62",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "2dcfa3b7-82b9-4479-9ad6-f8c2bfc1a5fc",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "ranges": [
+          {
+            "max": 0,
+            "min": 0,
+            "label": "0"
+          },
+          {
+            "max": 5,
+            "min": 1,
+            "label": "1-5"
+          },
+          {
+            "max": 15,
+            "min": 6,
+            "label": "6-15"
+          },
+          {
+            "max": 30,
+            "min": 16,
+            "label": "16-30"
+          },
+          {
+            "max": null,
+            "min": 31,
+            "label": "30+"
+          }
+        ],
+        "suffix": "chargers"
+      }
+    },
+    {
+      "id": "69694b1b-2f90-4f3e-ab7a-282ffc500580",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Sun",
+          "label": "Solar PV",
+          "value": "solar"
+        },
+        {
+          "icon": "Wind",
+          "label": "Wind Turbine",
+          "value": "wind"
+        },
+        {
+          "icon": "Fuel",
+          "label": "Backup Generator",
+          "value": "generator"
+        },
+        {
+          "icon": "Battery",
+          "label": "Battery Storage",
+          "value": "battery"
+        },
+        {
+          "icon": "Flame",
+          "label": "Biogas/Digester",
+          "value": "biogas"
+        }
+      ]
+    },
+    {
+      "id": "3d6d664a-4bf9-47dd-94ec-5ba2675ca34d",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Interested",
+          "value": "not_interested"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Considering",
+          "value": "considering"
+        },
+        {
+          "icon": "Sun",
+          "label": "Very Interested",
+          "value": "very_interested"
+        },
+        {
+          "icon": "FileText",
+          "label": "Interested in Land Lease",
+          "value": "lease-land"
+        }
+      ]
+    },
+    {
+      "id": "99cb4ff2-536b-40dc-8716-a7dbcd0f2439",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Home",
+          "label": "Barn/Building Rooftops",
+          "value": "rooftop-barn"
+        },
+        {
+          "icon": "Mountain",
+          "label": "Unused Land",
+          "value": "ground-unused"
+        },
+        {
+          "icon": "Wheat",
+          "label": "Crop/Pasture Land (Agrivoltaics)",
+          "value": "agrivoltaics"
+        },
+        {
+          "icon": "Circle",
+          "label": "Pivot Corners",
+          "value": "pivot-corners"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "Limited Space",
+          "value": "limited"
+        }
+      ]
+    },
+    {
+      "id": "927ebd42-535c-4837-857a-626cb11b0ac8",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Sun",
+          "label": "Renewable Energy Goal",
+          "value": "renewable-goal"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Carbon Reduction",
+          "value": "carbon-reduction"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Organic Certification",
+          "value": "organic"
+        },
+        {
+          "icon": "Recycle",
+          "label": "Regenerative Practices",
+          "value": "regenerative"
+        },
+        {
+          "icon": "Droplets",
+          "label": "Water Efficiency",
+          "value": "water-efficiency"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "No Formal Goals",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "e995b19d-3346-405a-8e32-729af7280f29",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Interested",
+          "value": "not_interested"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Curious to Learn More",
+          "value": "curious"
+        },
+        {
+          "icon": "Sun",
+          "label": "Interested",
+          "value": "interested"
+        },
+        {
+          "icon": "Sun",
+          "label": "Very Interested",
+          "value": "very_interested"
+        }
+      ]
+    },
+    {
+      "id": "2242368d-14b4-4150-a3a5-268cf30590f1",
+      "type": "text",
+      "required": false,
+      "defaultValue": "peak_shaving",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "Peak Shaving",
+          "value": "peak_shaving",
+          "description": "Reduce demand charges during peak hours"
+        },
+        {
+          "icon": "💰",
+          "label": "Energy Arbitrage",
+          "value": "arbitrage",
+          "description": "Buy low, use high - time-of-use optimization"
+        },
+        {
+          "icon": "🔋",
+          "label": "Backup/Resilience",
+          "value": "resilience",
+          "description": "Keep critical loads running during outages"
+        },
+        {
+          "icon": "☀️",
+          "label": "Renewable Integration",
+          "value": "renewable",
+          "description": "Maximize solar self-consumption"
+        },
+        {
+          "icon": "📊",
+          "label": "Demand Response",
+          "value": "demand_response",
+          "description": "Participate in utility programs for revenue"
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "peak_shaving"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "agricultural_load_v1",
+  "calculatorVersion": "1.0.0"
+}

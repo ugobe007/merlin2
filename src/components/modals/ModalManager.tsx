@@ -10,7 +10,8 @@ import WelcomeModal from "./WelcomeModal";
 import AccountSetup from "./AccountSetup";
 import EnhancedProfile from "../EnhancedProfile";
 import JoinMerlinModal from "./JoinMerlinModal";
-import WizardV6 from "../wizard/v6/WizardV6";
+// V7 Wizard (Feb 2026 - V7 is now default, V6 retired from modal layer)
+import WizardV7Page from "../../pages/WizardV7Page";
 import CalculationModal from "./CalculationModal";
 import SaveProjectModal from "./SaveProjectModal";
 import LoadProjectModal from "./LoadProjectModal";
@@ -420,10 +421,21 @@ export default function ModalManager(props: ModalManagerProps) {
         }}
       />
 
-      {/* V5 Wizard */}
+      {/* V7 Wizard (Feb 2026 - V7 is now default) */}
       {showSmartWizard && (
-        <div className="fixed inset-0 z-50">
-          <WizardV6 />
+        <div className="fixed inset-0 z-[9999]">
+          {/* Backdrop - click to close */}
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setShowSmartWizard(false)}
+          />
+          {/* Modal frame - doesn't steal events */}
+          <div className="absolute inset-0 pointer-events-none flex">
+            {/* Wizard container - takes events + scroll */}
+            <div className="pointer-events-auto w-full h-full overflow-y-auto">
+              <WizardV7Page />
+            </div>
+          </div>
         </div>
       )}
 

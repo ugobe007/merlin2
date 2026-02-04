@@ -1,0 +1,875 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:36.723Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "50a119a7-99b5-4403-b6a7-18ce5816ab53",
+  "templateVersion": "2025-11-28T04:59:13.77318+00:00",
+  "industry": "warehouse",
+  "useCase": "warehouse",
+  "name": "Warehouse & Logistics",
+  "slug": "warehouse",
+  "description": "Distribution center with loading docks, conveyors, and climate control",
+  "category": "industrial",
+  "questions": [
+    {
+      "id": "9199bd15-7cc4-468d-b42c-921a56f77b8e",
+      "type": "text",
+      "required": false,
+      "defaultValue": "200000",
+      "options": null
+    },
+    {
+      "id": "9f633b16-0ccf-4e67-bab0-5eb7d48baae4",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Truck",
+          "label": "Distribution Center",
+          "value": "distribution",
+          "description": "High-volume throughput"
+        },
+        {
+          "icon": "Package",
+          "label": "E-Commerce Fulfillment",
+          "value": "fulfillment",
+          "description": "Direct-to-consumer shipping"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Cold Storage/Refrigerated",
+          "value": "cold-storage",
+          "description": "Temperature controlled"
+        },
+        {
+          "icon": "Warehouse",
+          "label": "General Warehousing",
+          "value": "general",
+          "description": "Storage and inventory"
+        },
+        {
+          "icon": "Factory",
+          "label": "Manufacturing Support",
+          "value": "manufacturing",
+          "description": "Raw materials/finished goods"
+        },
+        {
+          "icon": "ArrowLeftRight",
+          "label": "Cross-Dock Facility",
+          "value": "cross-dock",
+          "description": "Minimal storage, rapid transfer"
+        }
+      ]
+    },
+    {
+      "id": "1c4e6139-6c97-4d13-b538-c853f9d20390",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "2f594570-94fb-49e7-946f-652e57e7a0f0",
+      "type": "text",
+      "required": false,
+      "defaultValue": "250000",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "1fc0548a-2267-4467-a65a-50d7f8c9628f",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Ruler",
+          "label": "Under 24 ft",
+          "value": "under-24"
+        },
+        {
+          "icon": "Ruler",
+          "label": "24-32 ft",
+          "value": "24-32"
+        },
+        {
+          "icon": "Ruler",
+          "label": "32-40 ft",
+          "value": "32-40"
+        },
+        {
+          "icon": "Ruler",
+          "label": "Over 40 ft",
+          "value": "over-40"
+        }
+      ]
+    },
+    {
+      "id": "bb9e3995-86d8-44ea-9efa-5fdc0df7e4d8",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "ranges": [
+          {
+            "max": 5,
+            "min": 1,
+            "label": "1-5"
+          },
+          {
+            "max": 15,
+            "min": 6,
+            "label": "6-15"
+          },
+          {
+            "max": 30,
+            "min": 16,
+            "label": "16-30"
+          },
+          {
+            "max": 60,
+            "min": 31,
+            "label": "31-60"
+          },
+          {
+            "max": null,
+            "min": 61,
+            "label": "60+"
+          }
+        ],
+        "suffix": "docks"
+      }
+    },
+    {
+      "id": "d0f910ef-a0a5-4e27-ae21-5af3c0d2ce06",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "max": 7,
+        "min": 1,
+        "step": 1,
+        "suffix": " days/week"
+      }
+    },
+    {
+      "id": "b3160286-b71a-4d4b-838b-d327c7397f52",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Clock",
+          "label": "1 Shift (8 hrs)",
+          "value": "1"
+        },
+        {
+          "icon": "Clock",
+          "label": "2 Shifts (16 hrs)",
+          "value": "2"
+        },
+        {
+          "icon": "Clock",
+          "label": "3 Shifts (24 hrs)",
+          "value": "3"
+        },
+        {
+          "icon": "RotateCw",
+          "label": "Continuous 24/7",
+          "value": "continuous"
+        }
+      ]
+    },
+    {
+      "id": "cd831773-ea9d-4827-a3d9-ec3de989ea4b",
+      "type": "text",
+      "required": false,
+      "defaultValue": "12",
+      "options": {
+        "max": 24,
+        "min": 6,
+        "step": 1,
+        "suffix": " hrs/day"
+      }
+    },
+    {
+      "id": "6fb9dad1-f819-443c-9ff6-e07729f5ba7e",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Thermometer",
+          "label": "Ambient Only",
+          "value": "ambient"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Cooler (35-45°F)",
+          "value": "cooler"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Freezer (0°F or below)",
+          "value": "freezer"
+        },
+        {
+          "icon": "Thermometer",
+          "label": "Climate Controlled (55-75°F)",
+          "value": "climate"
+        }
+      ]
+    },
+    {
+      "id": "8bee780f-235b-43b4-b91b-5377cd15bda9",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "User",
+          "label": "Manual/Traditional",
+          "value": "manual",
+          "description": "Primarily human labor"
+        },
+        {
+          "icon": "Cog",
+          "label": "Semi-Automated",
+          "value": "semi-auto",
+          "description": "Conveyors, pick-to-light"
+        },
+        {
+          "icon": "Bot",
+          "label": "Highly Automated",
+          "value": "automated",
+          "description": "AS/RS, robotics"
+        },
+        {
+          "icon": "Bot",
+          "label": "Lights-Out Capable",
+          "value": "lights-out",
+          "description": "Fully autonomous"
+        }
+      ]
+    },
+    {
+      "id": "8656cb2b-766d-4473-8a4b-850e67b49fb9",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Truck",
+          "label": "Propane Forklifts",
+          "value": "forklifts-propane"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "Electric Forklifts",
+          "value": "forklifts-electric"
+        },
+        {
+          "icon": "Truck",
+          "label": "Reach Trucks",
+          "value": "reach-trucks"
+        },
+        {
+          "icon": "Package",
+          "label": "Order Pickers",
+          "value": "order-pickers"
+        },
+        {
+          "icon": "ArrowUpDown",
+          "label": "Electric Pallet Jacks",
+          "value": "pallet-jacks"
+        },
+        {
+          "icon": "ArrowRight",
+          "label": "Conveyor Systems",
+          "value": "conveyors"
+        },
+        {
+          "icon": "Bot",
+          "label": "AGVs/AMRs",
+          "value": "agvs"
+        }
+      ]
+    },
+    {
+      "id": "e2844893-a517-4149-a8ce-1c643e3cf5e9",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No On-Site Fleet",
+          "value": "none"
+        },
+        {
+          "icon": "Truck",
+          "label": "Small (1-10 vehicles)",
+          "value": "small"
+        },
+        {
+          "icon": "Truck",
+          "label": "Medium (11-50 vehicles)",
+          "value": "medium"
+        },
+        {
+          "icon": "Truck",
+          "label": "Large (51-200 vehicles)",
+          "value": "large"
+        },
+        {
+          "icon": "Truck",
+          "label": "Very Large (200+)",
+          "value": "xlarge"
+        }
+      ]
+    },
+    {
+      "id": "db3fec55-24d2-48f6-a13c-7be4b5c51705",
+      "type": "text",
+      "required": false,
+      "defaultValue": "central_ac",
+      "options": [
+        {
+          "label": "Central AC/Heating",
+          "value": "central_ac"
+        },
+        {
+          "label": "Rooftop Units (RTUs)",
+          "value": "rooftop"
+        },
+        {
+          "label": "Chiller System",
+          "value": "chiller"
+        },
+        {
+          "label": "Split Systems",
+          "value": "split"
+        },
+        {
+          "label": "VRF/Mini-Splits",
+          "value": "vrf"
+        }
+      ]
+    },
+    {
+      "id": "9d00b60d-ac35-457c-ac6a-922656cc9c06",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "label": "Legacy (15+ years old)",
+          "value": "legacy",
+          "description": "Older, less efficient equipment"
+        },
+        {
+          "label": "Standard (5-15 years)",
+          "value": "standard",
+          "description": "Average efficiency"
+        },
+        {
+          "label": "Modern (under 5 years)",
+          "value": "modern",
+          "description": "High-efficiency equipment"
+        },
+        {
+          "label": "Premium/LEED",
+          "value": "premium",
+          "description": "Best-in-class efficiency"
+        }
+      ]
+    },
+    {
+      "id": "a170d931-4cdb-4a18-926f-484fd68fb59c",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No EVs Planned",
+          "value": "none"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Planning/Evaluating",
+          "value": "planning"
+        },
+        {
+          "icon": "Zap",
+          "label": "Pilot Program",
+          "value": "pilot"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "Partial Fleet EV",
+          "value": "partial"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Full EV Commitment",
+          "value": "committed"
+        }
+      ]
+    },
+    {
+      "id": "a68f95a6-b720-4155-95fc-dc76a0501dbe",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Lightbulb",
+          "label": "HID/Metal Halide",
+          "value": "hid"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "Fluorescent",
+          "value": "fluorescent"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "LED (Partial)",
+          "value": "led-partial"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "LED (Full Facility)",
+          "value": "led-full"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "LED with Smart Controls",
+          "value": "led-smart"
+        }
+      ]
+    },
+    {
+      "id": "161ec97d-1387-40c1-9694-b77da66f3672",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000",
+      "options": [
+        {
+          "label": "$1,000 - $5,000/mo",
+          "value": "3000"
+        },
+        {
+          "label": "$5,000 - $15,000/mo",
+          "value": "10000"
+        },
+        {
+          "label": "$15,000 - $35,000/mo",
+          "value": "25000"
+        },
+        {
+          "label": "$35,000 - $75,000/mo",
+          "value": "50000"
+        },
+        {
+          "label": "$75,000 - $150,000/mo",
+          "value": "100000"
+        },
+        {
+          "label": "Over $150,000/mo",
+          "value": "200000"
+        }
+      ]
+    },
+    {
+      "id": "1df50516-9eb4-4dd7-ab02-3a7ecb419ffc",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "DollarSign",
+          "label": "Under $10,000",
+          "value": "under-10k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$10,000 - $25,000",
+          "value": "10-25k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$25,000 - $50,000",
+          "value": "25-50k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$50,000 - $100,000",
+          "value": "50-100k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "Over $100,000",
+          "value": "over-100k"
+        }
+      ]
+    },
+    {
+      "id": "7d8e87fc-9b6a-437b-a9c3-d105cd96bf84",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Zap",
+          "label": "Under 500 kW",
+          "value": "under-500"
+        },
+        {
+          "icon": "Zap",
+          "label": "500 kW - 1 MW",
+          "value": "500-1000"
+        },
+        {
+          "icon": "Zap",
+          "label": "1-2 MW",
+          "value": "1-2mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "2-5 MW",
+          "value": "2-5mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "Over 5 MW",
+          "value": "over-5mw"
+        }
+      ]
+    },
+    {
+      "id": "63dba7ef-7ee8-4373-876c-b3729057d94a",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "label": "Under 200 kW",
+          "value": "small",
+          "description": "Small commercial service"
+        },
+        {
+          "label": "200-500 kW",
+          "value": "medium",
+          "description": "Medium commercial service"
+        },
+        {
+          "label": "500 kW - 2 MW",
+          "value": "large",
+          "description": "Large commercial service"
+        },
+        {
+          "label": "Over 2 MW",
+          "value": "utility",
+          "description": "Utility-scale connection"
+        }
+      ]
+    },
+    {
+      "id": "6453367a-a976-4ed5-b56e-fdccb238d467",
+      "type": "text",
+      "required": false,
+      "defaultValue": "true",
+      "options": null
+    },
+    {
+      "id": "670f2cd8-097e-44c7-b31a-10a01d294321",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "13fc1183-2d8d-448e-8f30-91b69afd7d78",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "max": 500,
+        "min": 0,
+        "step": 10,
+        "suffix": " kW"
+      }
+    },
+    {
+      "id": "71a297b4-53ee-4874-b5af-1e32ec2ae8e1",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "dd8fb8d0-2470-4edb-9d13-ed7390d25814",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "ranges": [
+          {
+            "max": 0,
+            "min": 0,
+            "label": "0"
+          },
+          {
+            "max": 5,
+            "min": 1,
+            "label": "1-5"
+          },
+          {
+            "max": 15,
+            "min": 6,
+            "label": "6-15"
+          },
+          {
+            "max": 30,
+            "min": 16,
+            "label": "16-30"
+          },
+          {
+            "max": null,
+            "min": 31,
+            "label": "30+"
+          }
+        ],
+        "suffix": "chargers"
+      }
+    },
+    {
+      "id": "27a2c1af-bf13-4a3e-b6ff-db7f31aaff6c",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Sun",
+          "label": "Solar PV",
+          "value": "solar"
+        },
+        {
+          "icon": "Fuel",
+          "label": "Backup Generators",
+          "value": "generator"
+        },
+        {
+          "icon": "Battery",
+          "label": "Battery Storage",
+          "value": "battery"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "EV Chargers",
+          "value": "ev-chargers"
+        },
+        {
+          "icon": "Battery",
+          "label": "Forklift Charging",
+          "value": "forklift-charging"
+        }
+      ]
+    },
+    {
+      "id": "1beb17c8-0a0f-41ee-bea7-7966b0687cdc",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Interested",
+          "value": "not_interested"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Considering",
+          "value": "considering"
+        },
+        {
+          "icon": "Sun",
+          "label": "Very Interested",
+          "value": "very_interested"
+        },
+        {
+          "icon": "FileText",
+          "label": "PPA/No Capital Preferred",
+          "value": "ppa-preferred"
+        }
+      ]
+    },
+    {
+      "id": "e276f281-c816-4f0f-9b8d-9913f710b68d",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Home",
+          "label": "Warehouse Rooftop",
+          "value": "rooftop"
+        },
+        {
+          "icon": "Car",
+          "label": "Parking/Trailer Lot",
+          "value": "parking"
+        },
+        {
+          "icon": "Mountain",
+          "label": "Adjacent Land",
+          "value": "ground"
+        },
+        {
+          "icon": "Car",
+          "label": "Employee Parking Carports",
+          "value": "carport"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "Limited Space",
+          "value": "limited"
+        }
+      ]
+    },
+    {
+      "id": "875b5202-2636-4ede-a98f-30d9657deb53",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Leaf",
+          "label": "Carbon Neutrality Target",
+          "value": "carbon-neutral"
+        },
+        {
+          "icon": "Sun",
+          "label": "Renewable Energy Goal",
+          "value": "renewable-goal"
+        },
+        {
+          "icon": "Award",
+          "label": "LEED Certified",
+          "value": "leed"
+        },
+        {
+          "icon": "Users",
+          "label": "Customer Requirements",
+          "value": "customer-req"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "Fleet Electrification",
+          "value": "fleet-ev"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "No Formal Goals",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "f730c80a-01ac-4bbd-869a-a48ab1fc9d41",
+      "type": "text",
+      "required": false,
+      "defaultValue": "peak_shaving",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "Peak Shaving",
+          "value": "peak_shaving",
+          "description": "Reduce demand charges during peak hours"
+        },
+        {
+          "icon": "💰",
+          "label": "Energy Arbitrage",
+          "value": "arbitrage",
+          "description": "Buy low, use high - time-of-use optimization"
+        },
+        {
+          "icon": "🔋",
+          "label": "Backup/Resilience",
+          "value": "resilience",
+          "description": "Keep critical loads running during outages"
+        },
+        {
+          "icon": "☀️",
+          "label": "Renewable Integration",
+          "value": "renewable",
+          "description": "Maximize solar self-consumption"
+        },
+        {
+          "icon": "📊",
+          "label": "Demand Response",
+          "value": "demand_response",
+          "description": "Participate in utility programs for revenue"
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "peak_shaving"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "warehouse_load_v1",
+  "calculatorVersion": "1.0.0"
+}

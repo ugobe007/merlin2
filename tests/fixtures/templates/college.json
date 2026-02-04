@@ -1,0 +1,955 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:33.131Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "dd7fb36d-342e-4198-8267-c292d1155022",
+  "templateVersion": "2025-11-28T04:59:13.77318+00:00",
+  "industry": "college",
+  "useCase": "college",
+  "name": "College & University",
+  "slug": "college",
+  "description": "Higher education campus with classrooms, dorms, dining, labs, and recreational facilities",
+  "category": "institutional",
+  "questions": [
+    {
+      "id": "eb45f4b9-867b-4853-a84e-616cf1faa509",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "GraduationCap",
+          "label": "Community College",
+          "value": "community",
+          "description": "2-year programs"
+        },
+        {
+          "icon": "Book",
+          "label": "Liberal Arts College",
+          "value": "liberal-arts",
+          "description": "Small, undergraduate focus"
+        },
+        {
+          "icon": "Building2",
+          "label": "State University",
+          "value": "state-university",
+          "description": "Public, large enrollment"
+        },
+        {
+          "icon": "Castle",
+          "label": "Private University",
+          "value": "private-university",
+          "description": "Private, research or teaching"
+        },
+        {
+          "icon": "FlaskConical",
+          "label": "Research University (R1/R2)",
+          "value": "research",
+          "description": "Major research institution"
+        },
+        {
+          "icon": "Wrench",
+          "label": "Technical/Trade School",
+          "value": "technical",
+          "description": "Vocational programs"
+        }
+      ]
+    },
+    {
+      "id": "3d5d2243-6b7f-4b8c-abb7-641f32e2dde0",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Users",
+          "label": "Under 2,500",
+          "value": "under-2500"
+        },
+        {
+          "icon": "Users",
+          "label": "2,500 - 5,000",
+          "value": "2500-5000"
+        },
+        {
+          "icon": "Users",
+          "label": "5,000 - 15,000",
+          "value": "5000-15000"
+        },
+        {
+          "icon": "Users",
+          "label": "15,000 - 30,000",
+          "value": "15000-30000"
+        },
+        {
+          "icon": "Users",
+          "label": "30,000 - 50,000",
+          "value": "30000-50000"
+        },
+        {
+          "icon": "Users",
+          "label": "Over 50,000",
+          "value": "over-50000"
+        }
+      ]
+    },
+    {
+      "id": "9b2d1cb5-d5cb-44d6-9a5d-2331a9a3037d",
+      "type": "text",
+      "required": false,
+      "defaultValue": "50000",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "29debfad-0dc6-4fac-aa39-a3b7eb98a41f",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "max": 1000,
+        "min": 0,
+        "step": 10
+      }
+    },
+    {
+      "id": "c4e9eba7-21cd-45e5-a1d7-66264a32958e",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "ranges": [
+          {
+            "max": 10,
+            "min": 1,
+            "label": "1-10"
+          },
+          {
+            "max": 25,
+            "min": 11,
+            "label": "11-25"
+          },
+          {
+            "max": 50,
+            "min": 26,
+            "label": "26-50"
+          },
+          {
+            "max": 100,
+            "min": 51,
+            "label": "51-100"
+          },
+          {
+            "max": null,
+            "min": 101,
+            "label": "100+"
+          }
+        ]
+      }
+    },
+    {
+      "id": "8022bf9d-11a4-495d-a65e-015a05320fdd",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Leaf",
+          "label": "Under 5 years",
+          "value": "under-5"
+        },
+        {
+          "icon": "Clock",
+          "label": "5-15 years",
+          "value": "5-15"
+        },
+        {
+          "icon": "Clock",
+          "label": "15-25 years",
+          "value": "15-25"
+        },
+        {
+          "icon": "AlertTriangle",
+          "label": "Over 25 years",
+          "value": "over-25"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Mixed/Varies",
+          "value": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "4512ed94-8c3a-480f-ab7c-804cdf52a5c8",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No Central Plant",
+          "value": "none",
+          "description": "Building-level systems"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Chilled Water Only",
+          "value": "chilled-water"
+        },
+        {
+          "icon": "Flame",
+          "label": "Steam/Hot Water Only",
+          "value": "steam"
+        },
+        {
+          "icon": "Building",
+          "label": "Full District Energy",
+          "value": "both",
+          "description": "Both heating and cooling"
+        },
+        {
+          "icon": "Zap",
+          "label": "CHP/Cogeneration",
+          "value": "chp"
+        }
+      ]
+    },
+    {
+      "id": "75b8df15-c91b-4cd0-8377-66cf00cadcb7",
+      "type": "text",
+      "required": false,
+      "defaultValue": "central_ac",
+      "options": [
+        {
+          "label": "Central AC/Heating",
+          "value": "central_ac"
+        },
+        {
+          "label": "Rooftop Units (RTUs)",
+          "value": "rooftop"
+        },
+        {
+          "label": "Chiller System",
+          "value": "chiller"
+        },
+        {
+          "label": "Split Systems",
+          "value": "split"
+        },
+        {
+          "label": "VRF/Mini-Splits",
+          "value": "vrf"
+        }
+      ]
+    },
+    {
+      "id": "e9c8963e-0ced-42e7-ae2a-e70e10372a67",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "label": "Legacy (15+ years old)",
+          "value": "legacy",
+          "description": "Older, less efficient equipment"
+        },
+        {
+          "label": "Standard (5-15 years)",
+          "value": "standard",
+          "description": "Average efficiency"
+        },
+        {
+          "label": "Modern (under 5 years)",
+          "value": "modern",
+          "description": "High-efficiency equipment"
+        },
+        {
+          "label": "Premium/LEED",
+          "value": "premium",
+          "description": "Best-in-class efficiency"
+        }
+      ]
+    },
+    {
+      "id": "763522aa-e6eb-4d24-8740-5cdff4a11371",
+      "type": "text",
+      "required": false,
+      "defaultValue": "12",
+      "options": {
+        "max": 24,
+        "min": 6,
+        "step": 1,
+        "suffix": " hrs/day"
+      }
+    },
+    {
+      "id": "9fe3c101-fd80-4674-9602-28f3f0fba273",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "TrendingDown",
+          "label": "Minimal (<10% of bill)",
+          "value": "minimal"
+        },
+        {
+          "icon": "Gauge",
+          "label": "Moderate (10-25%)",
+          "value": "moderate"
+        },
+        {
+          "icon": "TrendingUp",
+          "label": "Significant (25-40%)",
+          "value": "significant"
+        },
+        {
+          "icon": "AlertTriangle",
+          "label": "Major (>40%)",
+          "value": "major"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Unknown",
+          "value": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "ae827b64-583a-4ff0-867e-6dbf9e8606fc",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000",
+      "options": [
+        {
+          "label": "$1,000 - $5,000/mo",
+          "value": "3000"
+        },
+        {
+          "label": "$5,000 - $15,000/mo",
+          "value": "10000"
+        },
+        {
+          "label": "$15,000 - $35,000/mo",
+          "value": "25000"
+        },
+        {
+          "label": "$35,000 - $75,000/mo",
+          "value": "50000"
+        },
+        {
+          "label": "$75,000 - $150,000/mo",
+          "value": "100000"
+        },
+        {
+          "label": "Over $150,000/mo",
+          "value": "200000"
+        }
+      ]
+    },
+    {
+      "id": "658bc316-7835-4b4a-b307-bd8987f22186",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "DollarSign",
+          "label": "Under $50,000",
+          "value": "under-50k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$50,000 - $200,000",
+          "value": "50-200k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$200,000 - $500,000",
+          "value": "200-500k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$500,000 - $1M",
+          "value": "500k-1m"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "Over $1M",
+          "value": "over-1m"
+        }
+      ]
+    },
+    {
+      "id": "06d160a2-8cb4-4a40-a065-ba07cec195f1",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Zap",
+          "label": "Under 1 MW",
+          "value": "under-1mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "1-5 MW",
+          "value": "1-5mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "5-15 MW",
+          "value": "5-15mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "15-30 MW",
+          "value": "15-30mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "Over 30 MW",
+          "value": "over-30mw"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Unknown",
+          "value": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "867ed7e3-5cbe-4aa1-a0a4-4d9565315e78",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "label": "Under 200 kW",
+          "value": "small",
+          "description": "Small commercial service"
+        },
+        {
+          "label": "200-500 kW",
+          "value": "medium",
+          "description": "Medium commercial service"
+        },
+        {
+          "label": "500 kW - 2 MW",
+          "value": "large",
+          "description": "Large commercial service"
+        },
+        {
+          "label": "Over 2 MW",
+          "value": "utility",
+          "description": "Utility-scale connection"
+        }
+      ]
+    },
+    {
+      "id": "a6884b3e-0ebb-41ce-be62-3915bd6adb89",
+      "type": "text",
+      "required": false,
+      "defaultValue": "true",
+      "options": null
+    },
+    {
+      "id": "5283c839-5754-4bfe-b6ec-4924485a93d2",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "332c444e-88b2-4e11-a94f-b6d08638c5db",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "max": 500,
+        "min": 0,
+        "step": 10,
+        "suffix": " kW"
+      }
+    },
+    {
+      "id": "1e9dcdcf-1108-492f-a1b3-17f2ff1ab240",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "1e85cd3a-9c71-45ef-aa35-c8cc05bb6176",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "ranges": [
+          {
+            "max": 0,
+            "min": 0,
+            "label": "0"
+          },
+          {
+            "max": 5,
+            "min": 1,
+            "label": "1-5"
+          },
+          {
+            "max": 15,
+            "min": 6,
+            "label": "6-15"
+          },
+          {
+            "max": 30,
+            "min": 16,
+            "label": "16-30"
+          },
+          {
+            "max": null,
+            "min": 31,
+            "label": "30+"
+          }
+        ],
+        "suffix": "chargers"
+      }
+    },
+    {
+      "id": "9dd4592a-6328-494d-b46b-e995646ce82a",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Sun",
+          "label": "Rooftop Solar",
+          "value": "solar-rooftop"
+        },
+        {
+          "icon": "Sun",
+          "label": "Ground-Mount Solar",
+          "value": "solar-ground"
+        },
+        {
+          "icon": "Car",
+          "label": "Solar Carports",
+          "value": "solar-carport"
+        },
+        {
+          "icon": "Wind",
+          "label": "Wind Turbines",
+          "value": "wind"
+        },
+        {
+          "icon": "Battery",
+          "label": "Battery Storage",
+          "value": "battery"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "EV Charging Stations",
+          "value": "ev-chargers"
+        },
+        {
+          "icon": "Thermometer",
+          "label": "Geothermal",
+          "value": "geothermal"
+        }
+      ]
+    },
+    {
+      "id": "767d9975-5b0f-4c2b-a600-a427f4a0f029",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Interested",
+          "value": "not_interested"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Considering",
+          "value": "considering"
+        },
+        {
+          "icon": "Sun",
+          "label": "Very Interested",
+          "value": "very_interested"
+        },
+        {
+          "icon": "FileText",
+          "label": "PPA/No Capital Preferred",
+          "value": "ppa-preferred"
+        }
+      ]
+    },
+    {
+      "id": "74fe9fb7-cd25-45bf-8690-d8392a7a4b3a",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Home",
+          "label": "Building Rooftops",
+          "value": "rooftop"
+        },
+        {
+          "icon": "Car",
+          "label": "Parking Lots/Structures",
+          "value": "parking"
+        },
+        {
+          "icon": "Mountain",
+          "label": "Open Land",
+          "value": "ground"
+        },
+        {
+          "icon": "Dumbbell",
+          "label": "Athletic Facilities",
+          "value": "athletic"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "Limited Space Available",
+          "value": "limited"
+        }
+      ]
+    },
+    {
+      "id": "a3802a88-b61a-4ab0-9264-0b99a28fb035",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Leaf",
+          "label": "Carbon Neutrality Target",
+          "value": "carbon-neutral"
+        },
+        {
+          "icon": "FileCheck",
+          "label": "ACUPCC Signatory",
+          "value": "acupcc"
+        },
+        {
+          "icon": "Sun",
+          "label": "Renewable Energy Goal",
+          "value": "renewable-goal"
+        },
+        {
+          "icon": "Star",
+          "label": "STARS Certification",
+          "value": "stars"
+        },
+        {
+          "icon": "Award",
+          "label": "LEED Buildings",
+          "value": "leed"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "No Formal Commitments",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "e45f16b0-46bf-462d-9dad-7447d0909a0c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "peak_shaving",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "Peak Shaving",
+          "value": "peak_shaving",
+          "description": "Reduce demand charges during peak hours"
+        },
+        {
+          "icon": "💰",
+          "label": "Energy Arbitrage",
+          "value": "arbitrage",
+          "description": "Buy low, use high - time-of-use optimization"
+        },
+        {
+          "icon": "🔋",
+          "label": "Backup/Resilience",
+          "value": "resilience",
+          "description": "Keep critical loads running during outages"
+        },
+        {
+          "icon": "☀️",
+          "label": "Renewable Integration",
+          "value": "renewable",
+          "description": "Maximize solar self-consumption"
+        },
+        {
+          "icon": "📊",
+          "label": "Demand Response",
+          "value": "demand_response",
+          "description": "Participate in utility programs for revenue"
+        }
+      ]
+    },
+    {
+      "id": "d79665d3-13ba-4a37-8466-b393cd441268",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "options": [
+          {
+            "icon": "School",
+            "label": "Academic Buildings",
+            "value": "classrooms"
+          },
+          {
+            "icon": "FlaskConical",
+            "label": "Research Labs",
+            "value": "labs"
+          },
+          {
+            "icon": "Home",
+            "label": "Dormitories/Housing",
+            "value": "dorms"
+          },
+          {
+            "icon": "UtensilsCrossed",
+            "label": "Dining Halls",
+            "value": "dining"
+          },
+          {
+            "icon": "Dumbbell",
+            "label": "Athletic Facilities",
+            "value": "athletic"
+          },
+          {
+            "icon": "Library",
+            "label": "Library",
+            "value": "library"
+          },
+          {
+            "icon": "Briefcase",
+            "label": "Administrative",
+            "value": "admin"
+          },
+          {
+            "icon": "Heart",
+            "label": "Health Center/Hospital",
+            "value": "medical"
+          },
+          {
+            "icon": "Theater",
+            "label": "Performing Arts Center",
+            "value": "performing"
+          },
+          {
+            "icon": "Server",
+            "label": "Data Center",
+            "value": "datacenter"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e7804714-1923-4569-97c8-b48a38b94935",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No EV Chargers",
+          "value": "none"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "1-10 Chargers",
+          "value": "minimal"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "11-50 Chargers",
+          "value": "moderate"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "50+ Chargers",
+          "value": "extensive"
+        },
+        {
+          "icon": "Truck",
+          "label": "EV Fleet Vehicles",
+          "value": "fleet"
+        }
+      ]
+    },
+    {
+      "id": "e50b18ee-bb5e-4a8f-920d-214b49666b77",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Server",
+          "label": "Data Center/IT",
+          "value": "datacenter"
+        },
+        {
+          "icon": "FlaskConical",
+          "label": "Research Labs",
+          "value": "research"
+        },
+        {
+          "icon": "Heart",
+          "label": "Health Center/Hospital",
+          "value": "medical"
+        },
+        {
+          "icon": "Home",
+          "label": "Student Housing",
+          "value": "housing"
+        },
+        {
+          "icon": "UtensilsCrossed",
+          "label": "Dining Services",
+          "value": "food"
+        },
+        {
+          "icon": "Shield",
+          "label": "Security/Emergency Ops",
+          "value": "security"
+        }
+      ]
+    },
+    {
+      "id": "d4731635-4bd0-4ef9-a15a-22365fca0417",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "None/Minimal",
+          "value": "none"
+        },
+        {
+          "icon": "Shield",
+          "label": "Critical Buildings Only",
+          "value": "critical-only"
+        },
+        {
+          "icon": "Battery",
+          "label": "Partial Campus Coverage",
+          "value": "partial"
+        },
+        {
+          "icon": "BatteryFull",
+          "label": "Full Campus Coverage",
+          "value": "full"
+        }
+      ]
+    },
+    {
+      "id": "5048ac7b-faa6-4264-9419-740f442cf652",
+      "type": "text",
+      "required": false,
+      "defaultValue": "10000",
+      "options": {
+        "max": 1000,
+        "min": 0,
+        "step": 10
+      }
+    },
+    {
+      "id": "ac960c4a-a6af-4eb2-be12-76723d25decc",
+      "type": "text",
+      "required": false,
+      "defaultValue": "10000",
+      "options": {
+        "ranges": [
+          {
+            "max": 10,
+            "min": 1,
+            "label": "1-10"
+          },
+          {
+            "max": 25,
+            "min": 11,
+            "label": "11-25"
+          },
+          {
+            "max": 50,
+            "min": 26,
+            "label": "26-50"
+          },
+          {
+            "max": 100,
+            "min": 51,
+            "label": "51-100"
+          },
+          {
+            "max": null,
+            "min": 101,
+            "label": "100+"
+          }
+        ]
+      }
+    }
+  ],
+  "defaults": {
+    "undefined": "10000"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "college_load_v1",
+  "calculatorVersion": "1.0.0"
+}

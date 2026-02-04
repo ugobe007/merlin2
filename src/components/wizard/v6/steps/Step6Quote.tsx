@@ -34,6 +34,7 @@ import { SAVINGS_BREAKDOWN_DEFAULTS, PROJECTION_YEARS } from "@/services/calcula
 import RequestQuoteModal from "@/components/modals/RequestQuoteModal";
 import { exportQuoteAsPDF } from "@/utils/quoteExportUtils";
 import type { QuoteExportData } from "@/utils/quoteExportUtils";
+import { DevQADebugPanel, RuntimeAssertBanner } from "../shared/DevQADebugPanel";
 
 interface Props {
   state: WizardState;
@@ -62,16 +63,37 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
   const base = calculations.base;
   const selected = calculations.selected;
 
+  // ✅ FEB 2026: Use marginRender.sellPriceTotal as SSOT (fallback to totalInvestment)
+  const sell = selected.marginRender?.sellPriceTotal ?? selected.totalInvestment ?? 0;
+
   // ITC percentage dynamically (fallback to 30% if not provided)
   const itcPercentage =
     typeof selected.federalITCRate === "number"
       ? Math.round(selected.federalITCRate * 100)
-      : selected.federalITC > 0 && selected.totalInvestment > 0
-        ? Math.round((selected.federalITC / selected.totalInvestment) * 100)
+      : selected.federalITC > 0 && sell > 0
+        ? Math.round((selected.federalITC / sell) * 100)
         : 30;
 
   // ✅ FIXED: Read quoteId from base (SSOT) not selected
   const quoteId = base.quoteId || `MQ-${Date.now().toString(36).toUpperCase()}`;
+
+  // ============================================================================
+  // RUNTIME ASSERTS (DEV only) - Catches invariant violations immediately
+  // ============================================================================
+  const runtimeAssertions = [
+    {
+      condition: Number.isFinite(sell) && sell > 0,
+      message: `sell must be > 0 and finite, got: ${sell}`
+    },
+    {
+      condition: (selected.netInvestment ?? 0) <= sell,
+      message: `netInvestment (${selected.netInvestment}) must be ≤ sell (${sell})`
+    },
+    {
+      condition: (selected.federalITC ?? 0) <= sell,
+      message: `federalITC (${selected.federalITC}) must be ≤ sell (${sell})`
+    }
+  ];
 
   // TODO: SSOT-001 - These should come from QuoteEngine.generateQuote() result
   const tenYearSavings = (selected.annualSavings || 0) * PROJECTION_YEARS.SHORT_TERM;
@@ -127,7 +149,7 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
         solarPanelType: "Monocrystalline",
         solarPanelEfficiency: 21,
 
-        systemCost: selected.totalInvestment || 0,
+        systemCost: sell,
         showAiNote: false,
       };
 
@@ -140,6 +162,24 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
+      {/* ================================================================== */}
+      {/* DEV QA INFRASTRUCTURE - Runtime Asserts + Debug Panel */}
+      {/* ================================================================== */}
+      <RuntimeAssertBanner assertions={runtimeAssertions} />
+      
+      <DevQADebugPanel
+        step="Step6"
+        tierName={powerLevel.name}
+        invariants={{
+          sellPriceTotal: selected.marginRender?.sellPriceTotal,
+          totalInvestment: selected.totalInvestment,
+          federalITC: selected.federalITC,
+          stateIncentive: 0, // TODO: Get from state incentives service
+          netInvestment: selected.netInvestment,
+          marginRender: selected.marginRender,
+        }}
+      />
+
       {/* Header */}
       <div className="flex items-start justify-between gap-6 mb-8">
         <div>
@@ -197,7 +237,10 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
             </div>
             
             <div className="relative">
-              <div className="text-7xl md:text-8xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent leading-none">
+              <div 
+                data-testid="pricing-savings-annual"
+                className="text-7xl md:text-8xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent leading-none"
+              >
                 ${Math.round(selected.annualSavings || 0).toLocaleString()}
               </div>
               <div className="text-2xl text-slate-400 mt-2">per year</div>
@@ -321,13 +364,28 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-emerald-400" />
             Your Investment
+            {selected.marginRender?.confidenceBadge?.badge && (
+              <span className="text-xs bg-white/10 text-slate-200 px-2 py-0.5 rounded-full ml-auto">
+                {selected.marginRender.confidenceBadge.badge}
+              </span>
+            )}
           </h3>
+
+          {/* Review banner if pricing needs human review */}
+          {selected.marginRender?.needsHumanReview && (
+            <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm text-amber-300">
+              ⚠️ Pricing needs human review (market below threshold)
+            </div>
+          )}
           
           <div className="space-y-3">
             <div className="flex justify-between items-center pb-3 border-b border-white/10">
               <span className="text-slate-300">Total System Cost</span>
-              <span className="text-white font-semibold">
-                ${Math.round(selected.totalInvestment || 0).toLocaleString()}
+              <span 
+                data-testid="pricing-capex-total"
+                className="text-white font-semibold"
+              >
+                ${Math.round(sell).toLocaleString()}
               </span>
             </div>
             
@@ -343,7 +401,10 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
             
             <div className="flex justify-between items-center pt-3 border-t border-white/10">
               <span className="text-white font-bold text-lg">Net Investment</span>
-              <span className="text-emerald-400 font-bold text-xl">
+              <span 
+                data-testid="pricing-total"
+                className="text-emerald-400 font-bold text-xl"
+              >
                 ${Math.round(selected.netInvestment || 0).toLocaleString()}
               </span>
             </div>
@@ -823,7 +884,7 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
                   <div>
                     <div className="text-sm font-medium text-white mb-1">Battery Energy Storage</div>
                     <div className="text-xs text-slate-400">
-                      ${((selected.totalInvestment || 0) / (selected.bessKWh || 1)).toFixed(0)}/kWh installed cost
+                      ${(sell / (selected.bessKWh || 1)).toFixed(0)}/kWh installed cost
                     </div>
                   </div>
                   <div className="text-right">

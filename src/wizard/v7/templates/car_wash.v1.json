@@ -25,6 +25,52 @@
       "demand_charge_rate"
     ]
   },
+  "parts": [
+    {
+      "id": "operations",
+      "label": "Wash Operations",
+      "description": "Type and throughput",
+      "questionIds": ["wash_type", "bay_count", "tunnel_length_ft", "cars_per_day_avg", "cars_per_hour_peak"]
+    },
+    {
+      "id": "schedule",
+      "label": "Operating Schedule",
+      "description": "Hours and days of operation",
+      "questionIds": ["operating_hours_per_day", "days_per_week"]
+    },
+    {
+      "id": "equipment",
+      "label": "Equipment & Systems",
+      "description": "Dryers, water heating, vacuums",
+      "questionIds": ["dryer_present", "dryer_kw", "water_heating_type", "uses_hot_water", "reclaim_system", "vacuum_count", "vacuum_kw_each"]
+    },
+    {
+      "id": "billing",
+      "label": "Energy & Billing",
+      "description": "Current energy usage and costs",
+      "questionIds": ["monthly_kwh", "peak_demand_kw", "demand_charge", "demand_charge_rate"]
+    }
+  ],
+  "defaults": {
+    "wash_type": "Tunnel (single)",
+    "bay_count": 6,
+    "tunnel_length_ft": 150,
+    "cars_per_day_avg": 200,
+    "cars_per_hour_peak": 40,
+    "operating_hours_per_day": 12,
+    "days_per_week": 7,
+    "dryer_present": true,
+    "dryer_kw": 100,
+    "water_heating_type": "Electric",
+    "uses_hot_water": true,
+    "reclaim_system": true,
+    "vacuum_count": 8,
+    "vacuum_kw_each": 3,
+    "monthly_kwh": 45000,
+    "peak_demand_kw": 150,
+    "demand_charge": true,
+    "demand_charge_rate": 12
+  },
   "questions": [
     {
       "id": "wash_type",

@@ -23,6 +23,52 @@
       "demand_charge_rate"
     ]
   },
+  "parts": [
+    {
+      "id": "facility",
+      "label": "Facility Size",
+      "description": "Basic property information",
+      "questionIds": ["room_count", "occupancy_avg_pct", "occupancy_peak_pct", "conference_sqft"]
+    },
+    {
+      "id": "amenities",
+      "label": "Amenities & Services",
+      "description": "What services does your hotel offer?",
+      "questionIds": ["laundry_on_site", "kitchen_type", "restaurant_on_site", "bar_on_site", "pool_on_site", "spa_on_site"]
+    },
+    {
+      "id": "systems",
+      "label": "Building Systems",
+      "description": "HVAC and utilities",
+      "questionIds": ["hvac_type", "has_electric_hot_water", "ev_chargers_count", "ev_charger_power_kw"]
+    },
+    {
+      "id": "billing",
+      "label": "Energy & Billing",
+      "description": "Current energy usage and costs",
+      "questionIds": ["monthly_kwh", "peak_demand_kw", "demand_charge", "demand_charge_rate"]
+    }
+  ],
+  "defaults": {
+    "room_count": 150,
+    "occupancy_avg_pct": 65,
+    "occupancy_peak_pct": 90,
+    "conference_sqft": 5000,
+    "laundry_on_site": true,
+    "kitchen_type": "Full commercial",
+    "restaurant_on_site": true,
+    "bar_on_site": true,
+    "pool_on_site": true,
+    "spa_on_site": false,
+    "hvac_type": "Packaged RTU",
+    "has_electric_hot_water": true,
+    "ev_chargers_count": 4,
+    "ev_charger_power_kw": 7,
+    "monthly_kwh": 150000,
+    "peak_demand_kw": 400,
+    "demand_charge": true,
+    "demand_charge_rate": 15
+  },
   "questions": [
     {
       "id": "room_count",
