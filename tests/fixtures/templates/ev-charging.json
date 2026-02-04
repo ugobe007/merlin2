@@ -1,0 +1,658 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:33.572Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "19d0266d-feb9-4c6e-8f70-905b06f16e71",
+  "templateVersion": "2025-11-24T02:56:44.525966+00:00",
+  "industry": "ev-charging",
+  "useCase": "ev-charging",
+  "name": "EV Charging Station",
+  "slug": "ev-charging",
+  "description": "Electric vehicle charging infrastructure",
+  "category": "commercial",
+  "questions": [
+    {
+      "id": "e367bce4-0926-4acf-8bc0-f7ef84a2eb85",
+      "type": "text",
+      "required": false,
+      "defaultValue": "retail",
+      "options": [
+        {
+          "icon": "🏢",
+          "label": "Workplace charging",
+          "value": "workplace",
+          "dwellHours": 8,
+          "description": "Employee parking, long dwell time"
+        },
+        {
+          "icon": "🏪",
+          "label": "Retail/commercial",
+          "value": "retail",
+          "dwellHours": 2,
+          "description": "Shopping centers, 1-3 hour stays"
+        },
+        {
+          "icon": "⚡",
+          "label": "Public fast charging hub",
+          "value": "public_fast",
+          "dwellHours": 0.5,
+          "description": "Highway corridor, quick turnaround"
+        },
+        {
+          "icon": "🚚",
+          "label": "Fleet depot",
+          "value": "fleet_depot",
+          "dwellHours": 12,
+          "description": "Captive fleet, managed charging"
+        },
+        {
+          "icon": "🏘️",
+          "label": "Multi-family residential",
+          "value": "multi_family",
+          "dwellHours": 10,
+          "description": "Apartment/condo parking, overnight"
+        }
+      ]
+    },
+    {
+      "id": "629cdf81-04dd-482b-b682-284362c3f392",
+      "type": "text",
+      "required": false,
+      "defaultValue": "{\"level2_7kw\": 8, \"dcfc_50kw\": 2, \"dcfc_150kw\": 2}",
+      "options": {
+        "dcfc_50kw": {
+          "label": "DCFC (50 kW)",
+          "default": 2
+        },
+        "hpc_250kw": {
+          "label": "HPC (250 kW)",
+          "default": 0
+        },
+        "hpc_350kw": {
+          "label": "HPC (350 kW)",
+          "default": 0
+        },
+        "dcfc_150kw": {
+          "label": "DCFC (150 kW)",
+          "default": 2
+        },
+        "level2_7kw": {
+          "label": "Level 2 (7 kW)",
+          "default": 8
+        },
+        "level2_11kw": {
+          "label": "Level 2 (11 kW)",
+          "default": 0
+        },
+        "level2_19kw": {
+          "label": "Level 2 (19 kW)",
+          "default": 0
+        }
+      }
+    },
+    {
+      "id": "8dc759ed-5041-4950-9aef-7443a010e9eb",
+      "type": "text",
+      "required": false,
+      "defaultValue": "800",
+      "options": [
+        {
+          "kW": 96,
+          "icon": "🔌",
+          "label": "400A (small L2 hub)",
+          "value": "400"
+        },
+        {
+          "kW": 192,
+          "icon": "⚡",
+          "label": "800A (mixed L2/DCFC)",
+          "value": "800"
+        },
+        {
+          "kW": 288,
+          "icon": "🔋",
+          "label": "1200A",
+          "value": "1200"
+        },
+        {
+          "kW": 384,
+          "icon": "⚙️",
+          "label": "1600A",
+          "value": "1600"
+        },
+        {
+          "kW": 480,
+          "icon": "🏭",
+          "label": "2000A+ (HPC hub)",
+          "value": "2000+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure / need guidance",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "be84175b-c954-41ec-bc64-926dbf0656b3",
+      "type": "text",
+      "required": false,
+      "defaultValue": "277_480",
+      "options": [
+        {
+          "icon": "🔌",
+          "label": "208V (L2 only)",
+          "value": "208"
+        },
+        {
+          "icon": "⚡",
+          "label": "240V (L2 only)",
+          "value": "240"
+        },
+        {
+          "icon": "🔋",
+          "label": "277/480V (L2 + DCFC)",
+          "value": "277_480"
+        },
+        {
+          "icon": "⚙️",
+          "label": "Medium voltage (HPC)",
+          "value": "medium_voltage"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "3db1cbcd-b666-43ca-aa41-cfd8ecd69c34",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"canopy_lighting\", \"security_cameras\"]",
+      "options": [
+        {
+          "kW": 50,
+          "icon": "🏪",
+          "label": "Retail store",
+          "value": "retail_store"
+        },
+        {
+          "kW": 100,
+          "icon": "🍔",
+          "label": "Restaurant",
+          "value": "restaurant"
+        },
+        {
+          "kW": 75,
+          "icon": "🏢",
+          "label": "Office space",
+          "value": "office"
+        },
+        {
+          "kW": 20,
+          "icon": "💡",
+          "label": "Canopy lighting",
+          "value": "canopy_lighting"
+        },
+        {
+          "kW": 30,
+          "icon": "🔦",
+          "label": "Parking lot lighting",
+          "value": "parking_lighting"
+        },
+        {
+          "kW": 5,
+          "icon": "📹",
+          "label": "Security/cameras",
+          "value": "security_cameras"
+        },
+        {
+          "kW": 0,
+          "icon": "⚡",
+          "label": "Chargers only",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "3a058cdb-9307-43dd-9548-7caac6c83504",
+      "type": "text",
+      "required": false,
+      "defaultValue": "basic",
+      "options": [
+        {
+          "icon": "❌",
+          "label": "No load management",
+          "value": "none",
+          "concurrency": 1
+        },
+        {
+          "icon": "🔄",
+          "label": "Basic power sharing",
+          "value": "basic",
+          "concurrency": 0.8
+        },
+        {
+          "icon": "🧠",
+          "label": "Advanced load management",
+          "value": "advanced",
+          "concurrency": 0.7
+        },
+        {
+          "icon": "🤖",
+          "label": "AI-optimized + BESS integration",
+          "value": "ai_optimized",
+          "concurrency": 0.6
+        }
+      ]
+    },
+    {
+      "id": "9ba2af85-3fc9-4346-87e3-40aa2491ac06",
+      "type": "text",
+      "required": false,
+      "defaultValue": "50-75",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "<25%",
+          "value": "<25",
+          "concurrency": 0.2
+        },
+        {
+          "icon": "📊",
+          "label": "25–50%",
+          "value": "25-50",
+          "concurrency": 0.4
+        },
+        {
+          "icon": "📈",
+          "label": "50–75%",
+          "value": "50-75",
+          "concurrency": 0.65
+        },
+        {
+          "icon": "🔥",
+          "label": "75%+",
+          "value": "75+",
+          "concurrency": 0.85
+        }
+      ]
+    },
+    {
+      "id": "b3ee9044-c493-4782-b593-723e234a2360",
+      "type": "text",
+      "required": false,
+      "defaultValue": "75-150",
+      "options": [
+        {
+          "icon": "🚗",
+          "label": "<25 sessions",
+          "value": "<25"
+        },
+        {
+          "icon": "🚕",
+          "label": "25–75 sessions",
+          "value": "25-75"
+        },
+        {
+          "icon": "🚙",
+          "label": "75–150 sessions",
+          "value": "75-150"
+        },
+        {
+          "icon": "🚐",
+          "label": "150–300 sessions",
+          "value": "150-300"
+        },
+        {
+          "icon": "🚛",
+          "label": "300+ sessions",
+          "value": "300+"
+        }
+      ]
+    },
+    {
+      "id": "a624e28a-ec12-456f-aac2-55e28899d8ad",
+      "type": "text",
+      "required": false,
+      "defaultValue": "afternoon",
+      "options": [
+        {
+          "icon": "🌅",
+          "label": "Morning (7–10 AM)",
+          "value": "morning",
+          "peakHour": 8
+        },
+        {
+          "icon": "☀️",
+          "label": "Midday (11 AM–2 PM)",
+          "value": "midday",
+          "peakHour": 12
+        },
+        {
+          "icon": "🌇",
+          "label": "Afternoon (3–6 PM)",
+          "value": "afternoon",
+          "peakHour": 16
+        },
+        {
+          "icon": "🌃",
+          "label": "Evening (6–10 PM)",
+          "value": "evening",
+          "peakHour": 19
+        },
+        {
+          "icon": "🌙",
+          "label": "Overnight (fleet/residential)",
+          "value": "overnight",
+          "peakHour": 2
+        },
+        {
+          "icon": "🕛",
+          "label": "Steady throughout day",
+          "value": "all_day",
+          "peakHour": 14
+        }
+      ]
+    },
+    {
+      "id": "b8604f8d-1b13-4226-b429-0066c614a58c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "1-3",
+      "options": [
+        {
+          "icon": "⚡",
+          "hours": 0.4,
+          "label": "<30 minutes (HPC)",
+          "value": "<30"
+        },
+        {
+          "icon": "⏱️",
+          "hours": 0.75,
+          "label": "30–60 minutes (DCFC)",
+          "value": "30-60"
+        },
+        {
+          "icon": "⏰",
+          "hours": 2,
+          "label": "1–3 hours (L2 retail)",
+          "value": "1-3"
+        },
+        {
+          "icon": "⏲️",
+          "hours": 5,
+          "label": "3–8 hours (L2 workplace)",
+          "value": "3-8"
+        },
+        {
+          "icon": "🌙",
+          "hours": 10,
+          "label": "8+ hours (overnight)",
+          "value": "8+"
+        }
+      ]
+    },
+    {
+      "id": "434bffd7-d14b-4489-9811-33eb817dc72a",
+      "type": "text",
+      "required": false,
+      "defaultValue": "business_extended",
+      "options": [
+        {
+          "icon": "🕛",
+          "hours": 24,
+          "label": "24/7 public access",
+          "value": "24_7"
+        },
+        {
+          "icon": "🕐",
+          "hours": 18,
+          "label": "Extended (6 AM–midnight)",
+          "value": "business_extended"
+        },
+        {
+          "icon": "🕔",
+          "hours": 10,
+          "label": "Business hours (8 AM–6 PM)",
+          "value": "business_standard"
+        },
+        {
+          "icon": "🕘",
+          "hours": 8,
+          "label": "Limited hours",
+          "value": "limited"
+        }
+      ]
+    },
+    {
+      "id": "d2aa1c96-4d6b-4f1a-a4aa-eddf4f82c20b",
+      "type": "text",
+      "required": false,
+      "defaultValue": "5000-15000",
+      "options": [
+        {
+          "icon": "💵",
+          "label": "<$2,000",
+          "value": "<2000"
+        },
+        {
+          "icon": "💰",
+          "label": "$2,000–$5,000",
+          "value": "2000-5000"
+        },
+        {
+          "icon": "💳",
+          "label": "$5,000–$15,000",
+          "value": "5000-15000"
+        },
+        {
+          "icon": "💸",
+          "label": "$15,000–$30,000",
+          "value": "15000-30000"
+        },
+        {
+          "icon": "🏦",
+          "label": "$30,000+",
+          "value": "30000+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure / new site",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "e52ecf64-c296-4803-9eee-9df2996aa8ec",
+      "type": "text",
+      "required": false,
+      "defaultValue": "demand",
+      "options": [
+        {
+          "icon": "📊",
+          "label": "Flat rate (rare for commercial)",
+          "value": "flat",
+          "savingsMultiplier": 0.5
+        },
+        {
+          "icon": "🕐",
+          "label": "Time-of-use (TOU)",
+          "value": "tou",
+          "savingsMultiplier": 0.8
+        },
+        {
+          "icon": "⚡",
+          "label": "Demand charges",
+          "value": "demand",
+          "savingsMultiplier": 1
+        },
+        {
+          "icon": "🎯",
+          "label": "TOU + demand charges",
+          "value": "tou_demand",
+          "savingsMultiplier": 1.2
+        },
+        {
+          "icon": "🔌",
+          "label": "EV-specific rate",
+          "value": "ev_specific",
+          "savingsMultiplier": 0.9
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "savingsMultiplier": 0.8
+        }
+      ]
+    },
+    {
+      "id": "b82349e1-b14e-446e-b7ff-7bac27d5df1d",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"adequate\"]",
+      "options": [
+        {
+          "icon": "⚠️",
+          "label": "Insufficient service size",
+          "value": "insufficient_service"
+        },
+        {
+          "icon": "⚙️",
+          "label": "Need transformer upgrade",
+          "value": "transformer_upgrade"
+        },
+        {
+          "icon": "🚧",
+          "label": "Trenching/conduit required",
+          "value": "trenching_required"
+        },
+        {
+          "icon": "💰",
+          "label": "High utility make-ready fees",
+          "value": "utility_fees"
+        },
+        {
+          "icon": "⏰",
+          "label": "Long utility lead times",
+          "value": "long_lead_time"
+        },
+        {
+          "icon": "✅",
+          "label": "Adequate capacity",
+          "value": "adequate"
+        }
+      ]
+    },
+    {
+      "id": "8661aea0-7ba3-4ed4-9ba9-31829768a46c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "important",
+      "options": [
+        {
+          "icon": "🛑",
+          "label": "Critical (fleet operations)",
+          "value": "critical",
+          "backupHours": 4
+        },
+        {
+          "icon": "⚠️",
+          "label": "Important (revenue loss)",
+          "value": "important",
+          "backupHours": 2
+        },
+        {
+          "icon": "📉",
+          "label": "Moderate (customer inconvenience)",
+          "value": "moderate",
+          "backupHours": 1
+        },
+        {
+          "icon": "✅",
+          "label": "Low priority",
+          "value": "low",
+          "backupHours": 0
+        }
+      ]
+    },
+    {
+      "id": "e8a39450-07fd-45f3-b1aa-6ffc88b7ad99",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "➕",
+          "label": "Additional chargers",
+          "value": "add_chargers",
+          "kWIncrease": 100
+        },
+        {
+          "icon": "⚡",
+          "label": "Upgrade to DCFC/HPC",
+          "value": "upgrade_dcfc",
+          "kWIncrease": 200
+        },
+        {
+          "icon": "☀️",
+          "label": "Solar canopy",
+          "value": "solar_canopy",
+          "kWIncrease": 0
+        },
+        {
+          "icon": "🔄",
+          "label": "Vehicle-to-grid (V2G)",
+          "value": "v2g",
+          "kWIncrease": 0
+        },
+        {
+          "icon": "🗺️",
+          "label": "Additional sites",
+          "value": "additional_sites",
+          "kWIncrease": 0
+        },
+        {
+          "icon": "✅",
+          "label": "No expansion planned",
+          "value": "none",
+          "kWIncrease": 0
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "[\"none\"]"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "ev-charging_load_v1",
+  "calculatorVersion": "1.0.0"
+}

@@ -1,0 +1,879 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:32.916Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "757f3665-dade-42a3-848b-21392b4343b5",
+  "templateVersion": "2025-11-28T04:59:13.77318+00:00",
+  "industry": "cold-storage",
+  "useCase": "cold-storage",
+  "name": "Cold Storage",
+  "slug": "cold-storage",
+  "description": "Refrigerated warehouse with compressors, fans, and temperature control",
+  "category": "industrial",
+  "questions": [
+    {
+      "id": "0a04476f-b664-481d-92cc-dcc6ef322da7",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Warehouse",
+          "label": "Public Refrigerated Warehouse",
+          "value": "public-warehouse",
+          "description": "Third-party storage"
+        },
+        {
+          "icon": "Building",
+          "label": "Private/Dedicated",
+          "value": "private",
+          "description": "Single company use"
+        },
+        {
+          "icon": "Truck",
+          "label": "Cold Storage Distribution",
+          "value": "distribution",
+          "description": "High throughput"
+        },
+        {
+          "icon": "Factory",
+          "label": "Food Processing + Storage",
+          "value": "food-processing",
+          "description": "Manufacturing with cold storage"
+        },
+        {
+          "icon": "Pill",
+          "label": "Pharmaceutical/Life Sciences",
+          "value": "pharma",
+          "description": "Strict temp control"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Blast Freezing Facility",
+          "value": "blast-freezer",
+          "description": "Rapid freezing operations"
+        }
+      ]
+    },
+    {
+      "id": "fe4b299f-b4ca-4dec-bd3e-afd19f6d9123",
+      "type": "text",
+      "required": false,
+      "defaultValue": "100000",
+      "options": {
+        "max": 1000,
+        "min": 0,
+        "step": 10
+      }
+    },
+    {
+      "id": "5cb4a48e-55e7-488c-91a7-adef8d58a829",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "e5f54e79-7172-4646-846f-3172f48ddb1a",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Package",
+          "label": "Under 5,000",
+          "value": "under-5000"
+        },
+        {
+          "icon": "Package",
+          "label": "5,000 - 15,000",
+          "value": "5000-15000"
+        },
+        {
+          "icon": "Package",
+          "label": "15,000 - 40,000",
+          "value": "15000-40000"
+        },
+        {
+          "icon": "Package",
+          "label": "40,000 - 100,000",
+          "value": "40000-100000"
+        },
+        {
+          "icon": "Package",
+          "label": "Over 100,000",
+          "value": "over-100000"
+        }
+      ]
+    },
+    {
+      "id": "98d9171d-997d-4863-84be-d3aa5d644a26",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Snowflake",
+          "label": "Deep Freeze (-20°F and below)",
+          "value": "deep-freeze"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Frozen (0°F to -20°F)",
+          "value": "frozen"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Freezer (0°F to 32°F)",
+          "value": "freezer"
+        },
+        {
+          "icon": "Thermometer",
+          "label": "Cooler (33°F to 45°F)",
+          "value": "cooler"
+        },
+        {
+          "icon": "Thermometer",
+          "label": "Controlled Room (46°F to 60°F)",
+          "value": "controlled"
+        },
+        {
+          "icon": "Home",
+          "label": "Ambient/Dry Storage",
+          "value": "ambient"
+        }
+      ]
+    },
+    {
+      "id": "c4e9a2a7-0b8b-4a41-87cd-cb18a2700cda",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No Blast Freezing",
+          "value": "none"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Small Capacity",
+          "value": "small"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Medium Capacity",
+          "value": "medium"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Large/Commercial Scale",
+          "value": "large"
+        }
+      ]
+    },
+    {
+      "id": "9db9a214-4ec1-46f9-9bc3-640ca54d55a8",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "DoorOpen",
+          "label": "Standard Docks",
+          "value": "standard"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Refrigerated Docks",
+          "value": "refrigerated"
+        },
+        {
+          "icon": "Shield",
+          "label": "Sealed/Climate-Controlled",
+          "value": "sealed"
+        },
+        {
+          "icon": "Settings",
+          "label": "Mixed Configuration",
+          "value": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "f4744a66-9837-4a43-ac70-c7af9ff53a3e",
+      "type": "text",
+      "required": false,
+      "defaultValue": "12",
+      "options": {
+        "max": 24,
+        "min": 6,
+        "step": 1,
+        "suffix": " hrs/day"
+      }
+    },
+    {
+      "id": "f4e4cd75-34e7-4c14-91af-46100db77b63",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Gauge",
+          "label": "Low (under 25% of bill)",
+          "value": "low"
+        },
+        {
+          "icon": "Gauge",
+          "label": "Moderate (25-40%)",
+          "value": "moderate"
+        },
+        {
+          "icon": "Gauge",
+          "label": "High (40-60%)",
+          "value": "high"
+        },
+        {
+          "icon": "Gauge",
+          "label": "Very High (over 60%)",
+          "value": "very-high"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Unknown",
+          "value": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "2dc69972-65dc-4561-878e-6cd2778df51c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000",
+      "options": [
+        {
+          "label": "$1,000 - $5,000/mo",
+          "value": "3000"
+        },
+        {
+          "label": "$5,000 - $15,000/mo",
+          "value": "10000"
+        },
+        {
+          "label": "$15,000 - $35,000/mo",
+          "value": "25000"
+        },
+        {
+          "label": "$35,000 - $75,000/mo",
+          "value": "50000"
+        },
+        {
+          "label": "$75,000 - $150,000/mo",
+          "value": "100000"
+        },
+        {
+          "label": "Over $150,000/mo",
+          "value": "200000"
+        }
+      ]
+    },
+    {
+      "id": "475c0bb8-ee37-4c8f-b76f-e06ed0eb06ae",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "DollarSign",
+          "label": "Under $25,000",
+          "value": "under-25k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$25,000 - $75,000",
+          "value": "25-75k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$75,000 - $150,000",
+          "value": "75-150k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$150,000 - $300,000",
+          "value": "150-300k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "Over $300,000",
+          "value": "over-300k"
+        }
+      ]
+    },
+    {
+      "id": "afaac8ff-aeba-4553-8406-9c28138178a8",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Zap",
+          "label": "Under 500 kW",
+          "value": "under-500"
+        },
+        {
+          "icon": "Zap",
+          "label": "500 kW - 1.5 MW",
+          "value": "500-1500"
+        },
+        {
+          "icon": "Zap",
+          "label": "1.5-3 MW",
+          "value": "1500-3000"
+        },
+        {
+          "icon": "Zap",
+          "label": "3-6 MW",
+          "value": "3000-6000"
+        },
+        {
+          "icon": "Zap",
+          "label": "Over 6 MW",
+          "value": "over-6000"
+        }
+      ]
+    },
+    {
+      "id": "3d195b9b-9ba6-49a6-b2a4-9b39b0fc4133",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "label": "Under 200 kW",
+          "value": "small",
+          "description": "Small commercial service"
+        },
+        {
+          "label": "200-500 kW",
+          "value": "medium",
+          "description": "Medium commercial service"
+        },
+        {
+          "label": "500 kW - 2 MW",
+          "value": "large",
+          "description": "Large commercial service"
+        },
+        {
+          "label": "Over 2 MW",
+          "value": "utility",
+          "description": "Utility-scale connection"
+        }
+      ]
+    },
+    {
+      "id": "8777d3db-48d5-4adc-9a5f-3806071a123a",
+      "type": "text",
+      "required": false,
+      "defaultValue": "true",
+      "options": null
+    },
+    {
+      "id": "38b7ae04-07dc-4371-a5e6-b1298fb265d1",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "1e6cb3ac-8c77-4b7e-8de2-26a068b562f0",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "max": 500,
+        "min": 0,
+        "step": 10,
+        "suffix": " kW"
+      }
+    },
+    {
+      "id": "06b9008f-6616-4f91-9c78-85f813afa72b",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "4f2c473c-8461-4cf9-9b77-91afc43cbd81",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "ranges": [
+          {
+            "max": 0,
+            "min": 0,
+            "label": "0"
+          },
+          {
+            "max": 5,
+            "min": 1,
+            "label": "1-5"
+          },
+          {
+            "max": 15,
+            "min": 6,
+            "label": "6-15"
+          },
+          {
+            "max": 30,
+            "min": 16,
+            "label": "16-30"
+          },
+          {
+            "max": null,
+            "min": 31,
+            "label": "30+"
+          }
+        ],
+        "suffix": "chargers"
+      }
+    },
+    {
+      "id": "22a436f3-1860-420a-97e0-b74843c5e415",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Sun",
+          "label": "Solar PV",
+          "value": "solar"
+        },
+        {
+          "icon": "Fuel",
+          "label": "Backup Generators",
+          "value": "generator"
+        },
+        {
+          "icon": "Battery",
+          "label": "Battery Storage",
+          "value": "battery"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Thermal Energy Storage",
+          "value": "thermal-storage"
+        },
+        {
+          "icon": "Flame",
+          "label": "CHP/Cogeneration",
+          "value": "chp"
+        }
+      ]
+    },
+    {
+      "id": "4039eb3f-8958-4d7e-a5e2-2833b830daf8",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Interested",
+          "value": "not_interested"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Considering",
+          "value": "considering"
+        },
+        {
+          "icon": "Sun",
+          "label": "Very Interested",
+          "value": "very_interested"
+        },
+        {
+          "icon": "FileText",
+          "label": "PPA/No Capital Preferred",
+          "value": "ppa-preferred"
+        }
+      ]
+    },
+    {
+      "id": "50e7593d-1dea-4a5e-8482-351cfed0a329",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Home",
+          "label": "Warehouse Rooftop",
+          "value": "rooftop"
+        },
+        {
+          "icon": "Car",
+          "label": "Parking/Staging Area",
+          "value": "parking"
+        },
+        {
+          "icon": "Mountain",
+          "label": "Adjacent Land",
+          "value": "ground"
+        },
+        {
+          "icon": "Truck",
+          "label": "Truck Parking Carports",
+          "value": "carports"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "Limited Space",
+          "value": "limited"
+        }
+      ]
+    },
+    {
+      "id": "9020a7c9-1dbc-40d7-a1bb-3eacbe6e7ee4",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Leaf",
+          "label": "Carbon Neutrality Goal",
+          "value": "carbon-neutral"
+        },
+        {
+          "icon": "Sun",
+          "label": "Renewable Energy Target",
+          "value": "renewable-target"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Low-GWP Refrigerant Transition",
+          "value": "refrigerant-transition"
+        },
+        {
+          "icon": "Users",
+          "label": "Customer Sustainability Requirement",
+          "value": "customer-requirement"
+        },
+        {
+          "icon": "TrendingDown",
+          "label": "Energy Efficiency Program",
+          "value": "energy-efficiency"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "No Formal Goals",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "5f977b68-20ef-41eb-a27f-b9fbff06afbe",
+      "type": "text",
+      "required": false,
+      "defaultValue": "peak_shaving",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "Peak Shaving",
+          "value": "peak_shaving",
+          "description": "Reduce demand charges during peak hours"
+        },
+        {
+          "icon": "💰",
+          "label": "Energy Arbitrage",
+          "value": "arbitrage",
+          "description": "Buy low, use high - time-of-use optimization"
+        },
+        {
+          "icon": "🔋",
+          "label": "Backup/Resilience",
+          "value": "resilience",
+          "description": "Keep critical loads running during outages"
+        },
+        {
+          "icon": "☀️",
+          "label": "Renewable Integration",
+          "value": "renewable",
+          "description": "Maximize solar self-consumption"
+        },
+        {
+          "icon": "📊",
+          "label": "Demand Response",
+          "value": "demand_response",
+          "description": "Participate in utility programs for revenue"
+        }
+      ]
+    },
+    {
+      "id": "12f771ef-ae5d-4ca3-ab52-9f377592b49f",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Snowflake",
+          "label": "Frozen Foods",
+          "value": "frozen-foods"
+        },
+        {
+          "icon": "Milk",
+          "label": "Dairy Products",
+          "value": "dairy"
+        },
+        {
+          "icon": "Beef",
+          "label": "Meat/Poultry",
+          "value": "meat-poultry"
+        },
+        {
+          "icon": "Fish",
+          "label": "Seafood",
+          "value": "seafood"
+        },
+        {
+          "icon": "Apple",
+          "label": "Fresh Produce",
+          "value": "produce"
+        },
+        {
+          "icon": "Wine",
+          "label": "Beverages",
+          "value": "beverages"
+        },
+        {
+          "icon": "Pill",
+          "label": "Pharmaceuticals",
+          "value": "pharma"
+        },
+        {
+          "icon": "IceCream",
+          "label": "Ice Cream/Frozen Desserts",
+          "value": "ice-cream"
+        }
+      ]
+    },
+    {
+      "id": "2e56b923-d9d4-46f3-b521-d1927af922c1",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Sparkles",
+          "label": "New (under 5 years)",
+          "value": "new"
+        },
+        {
+          "icon": "Settings",
+          "label": "Modern (5-10 years)",
+          "value": "modern"
+        },
+        {
+          "icon": "Settings",
+          "label": "Mature (10-20 years)",
+          "value": "mature"
+        },
+        {
+          "icon": "AlertCircle",
+          "label": "Aging (20+ years)",
+          "value": "aging"
+        },
+        {
+          "icon": "Layers",
+          "label": "Mixed Ages",
+          "value": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "fd99f765-8253-4972-ba4e-24073dbb039a",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Factory",
+          "label": "Central Ammonia (NH3)",
+          "value": "ammonia-central",
+          "description": "Industrial ammonia system"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Freon/HFC Systems",
+          "value": "freon"
+        },
+        {
+          "icon": "Leaf",
+          "label": "CO2 (Transcritical)",
+          "value": "co2"
+        },
+        {
+          "icon": "Layers",
+          "label": "Cascade System",
+          "value": "cascade"
+        },
+        {
+          "icon": "Settings",
+          "label": "Mixed Refrigerants",
+          "value": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "0aef7514-57cb-4ce9-b290-1be6fa182b99",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Cog",
+          "label": "Single-Stage",
+          "value": "single-stage"
+        },
+        {
+          "icon": "Cog",
+          "label": "Two-Stage",
+          "value": "two-stage"
+        },
+        {
+          "icon": "Cog",
+          "label": "Screw Compressors",
+          "value": "screw"
+        },
+        {
+          "icon": "Gauge",
+          "label": "VFD-Equipped",
+          "value": "vfd"
+        },
+        {
+          "icon": "Settings",
+          "label": "Mixed Configuration",
+          "value": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "2c670930-a10c-44ff-bde8-776f88717937",
+      "type": "text",
+      "required": false,
+      "defaultValue": "central_ac",
+      "options": [
+        {
+          "label": "Central AC/Heating",
+          "value": "central_ac"
+        },
+        {
+          "label": "Rooftop Units (RTUs)",
+          "value": "rooftop"
+        },
+        {
+          "label": "Chiller System",
+          "value": "chiller"
+        },
+        {
+          "label": "Split Systems",
+          "value": "split"
+        },
+        {
+          "label": "VRF/Mini-Splits",
+          "value": "vrf"
+        }
+      ]
+    },
+    {
+      "id": "d6b8b648-18a7-4fdf-bedb-3337bd75d3a3",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "label": "Legacy (15+ years old)",
+          "value": "legacy",
+          "description": "Older, less efficient equipment"
+        },
+        {
+          "label": "Standard (5-15 years)",
+          "value": "standard",
+          "description": "Average efficiency"
+        },
+        {
+          "label": "Modern (under 5 years)",
+          "value": "modern",
+          "description": "High-efficiency equipment"
+        },
+        {
+          "label": "Premium/LEED",
+          "value": "premium",
+          "description": "Best-in-class efficiency"
+        }
+      ]
+    },
+    {
+      "id": "8976c48e-009f-414a-b733-233a237d88a2",
+      "type": "text",
+      "required": false,
+      "defaultValue": "1000000",
+      "options": {
+        "max": 1000,
+        "min": 0,
+        "step": 10
+      }
+    }
+  ],
+  "defaults": {
+    "undefined": "1000000"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "cold-storage_load_v1",
+  "calculatorVersion": "1.0.0"
+}

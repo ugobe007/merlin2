@@ -1,0 +1,636 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:32.472Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "4c736f5e-3d8e-44e0-8472-68a903d406d2",
+  "templateVersion": "2025-11-28T04:59:13.77318+00:00",
+  "industry": "car-wash",
+  "useCase": "car-wash",
+  "name": "Car Wash",
+  "slug": "car-wash",
+  "description": "Automated car wash facility with pumps, vacuums, dryers, and lighting",
+  "category": "commercial",
+  "questions": [
+    {
+      "id": "e32ce3f5-507f-47b9-9c2f-c3911b9cde82",
+      "type": "text",
+      "required": false,
+      "defaultValue": "automatic_inbay",
+      "options": [
+        {
+          "icon": "🧽",
+          "label": "Self-serve (coin-op bays)",
+          "value": "self_serve",
+          "description": "Customer wand wash with high-pressure equipment"
+        },
+        {
+          "icon": "🚗",
+          "label": "Automatic in-bay",
+          "value": "automatic_inbay",
+          "description": "Vehicle stationary, machine moves over it"
+        },
+        {
+          "icon": "🏎️",
+          "label": "Conveyor tunnel (single tunnel)",
+          "value": "conveyor_tunnel",
+          "description": "Single tunnel with conveyor system"
+        },
+        {
+          "icon": "🎯",
+          "label": "Combination (self-serve + in-bay)",
+          "value": "combination",
+          "description": "Multiple wash types on one site"
+        },
+        {
+          "icon": "🔧",
+          "label": "Other",
+          "value": "other",
+          "description": "Custom or specialized configuration"
+        }
+      ]
+    },
+    {
+      "id": "6e5f7633-014b-4efe-b37e-17474e0efedf",
+      "type": "text",
+      "required": false,
+      "defaultValue": "1",
+      "options": [
+        {
+          "icon": "1️⃣",
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "icon": "2️⃣",
+          "label": "2–3",
+          "value": "2-3"
+        },
+        {
+          "icon": "4️⃣",
+          "label": "4–6",
+          "value": "4-6"
+        },
+        {
+          "icon": "7️⃣",
+          "label": "7+",
+          "value": "7+"
+        }
+      ]
+    },
+    {
+      "id": "0ee0109e-1adb-4e1b-a85d-352cbd66b645",
+      "type": "text",
+      "required": false,
+      "defaultValue": "400",
+      "options": [
+        {
+          "kW": 48,
+          "icon": "🔌",
+          "label": "200A",
+          "value": "200"
+        },
+        {
+          "kW": 96,
+          "icon": "⚡",
+          "label": "400A",
+          "value": "400"
+        },
+        {
+          "kW": 144,
+          "icon": "🔋",
+          "label": "600A",
+          "value": "600"
+        },
+        {
+          "kW": 192,
+          "icon": "⚙️",
+          "label": "800A+",
+          "value": "800+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "ab0634e7-c75f-4a59-9460-f8fcff1bc6d1",
+      "type": "text",
+      "required": false,
+      "defaultValue": "277_480",
+      "options": [
+        {
+          "icon": "🔌",
+          "label": "208V",
+          "value": "208"
+        },
+        {
+          "icon": "⚡",
+          "label": "240V",
+          "value": "240"
+        },
+        {
+          "icon": "🔋",
+          "label": "277/480V",
+          "value": "277_480"
+        },
+        {
+          "icon": "⚙️",
+          "label": "Mixed",
+          "value": "mixed"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "66d65c71-cfa8-4fb8-9558-81c0238e544d",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"high_pressure_pumps\", \"blowers_dryers\", \"lighting\", \"pos_controls\"]",
+      "options": [
+        {
+          "kW": 20,
+          "icon": "💦",
+          "label": "High-pressure pumps",
+          "value": "high_pressure_pumps"
+        },
+        {
+          "kW": 15,
+          "icon": "🔄",
+          "label": "Conveyor motor",
+          "value": "conveyor_motor"
+        },
+        {
+          "kW": 40,
+          "icon": "💨",
+          "label": "Blowers / dryers",
+          "value": "blowers_dryers"
+        },
+        {
+          "kW": 10,
+          "icon": "💧",
+          "label": "RO system",
+          "value": "ro_system"
+        },
+        {
+          "kW": 50,
+          "icon": "🔥",
+          "label": "Water heaters (electric)",
+          "value": "water_heaters_electric"
+        },
+        {
+          "kW": 5,
+          "icon": "💡",
+          "label": "Lighting",
+          "value": "lighting"
+        },
+        {
+          "kW": 15,
+          "icon": "🌀",
+          "label": "Vacuum stations",
+          "value": "vacuum_stations"
+        },
+        {
+          "kW": 2,
+          "icon": "💻",
+          "label": "POS / controls",
+          "value": "pos_controls"
+        },
+        {
+          "kW": 10,
+          "icon": "⚙️",
+          "label": "Air compressors",
+          "value": "air_compressors"
+        }
+      ]
+    },
+    {
+      "id": "92319513-8491-48d2-9866-adaf6caa2882",
+      "type": "text",
+      "required": false,
+      "defaultValue": "10-25",
+      "options": [
+        {
+          "kW": 7,
+          "icon": "🔌",
+          "label": "<10 HP",
+          "value": "<10"
+        },
+        {
+          "kW": 18,
+          "icon": "⚡",
+          "label": "10–25 HP",
+          "value": "10-25"
+        },
+        {
+          "kW": 37,
+          "icon": "🔋",
+          "label": "25–50 HP",
+          "value": "25-50"
+        },
+        {
+          "kW": 75,
+          "icon": "⚙️",
+          "label": "50–100 HP",
+          "value": "50-100"
+        },
+        {
+          "kW": 100,
+          "icon": "🏭",
+          "label": "100+ HP",
+          "value": "100+"
+        },
+        {
+          "kW": 25,
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "e2e57c55-7122-4f9a-b143-4bcb0dea6613",
+      "type": "text",
+      "required": false,
+      "defaultValue": "3-4",
+      "options": [
+        {
+          "icon": "1️⃣",
+          "label": "1–2",
+          "value": "1-2",
+          "concurrency": 0.5
+        },
+        {
+          "icon": "3️⃣",
+          "label": "3–4",
+          "value": "3-4",
+          "concurrency": 0.75
+        },
+        {
+          "icon": "5️⃣",
+          "label": "5–7",
+          "value": "5-7",
+          "concurrency": 0.9
+        },
+        {
+          "icon": "8️⃣",
+          "label": "8+",
+          "value": "8+",
+          "concurrency": 1
+        }
+      ]
+    },
+    {
+      "id": "36f855e7-ab98-4ece-860c-835c086f6b77",
+      "type": "text",
+      "required": false,
+      "defaultValue": "75-150",
+      "options": [
+        {
+          "icon": "🚗",
+          "label": "<30",
+          "value": "<30"
+        },
+        {
+          "icon": "🚕",
+          "label": "30–75",
+          "value": "30-75"
+        },
+        {
+          "icon": "🚙",
+          "label": "75–150",
+          "value": "75-150"
+        },
+        {
+          "icon": "🚐",
+          "label": "150–300",
+          "value": "150-300"
+        },
+        {
+          "icon": "🚛",
+          "label": "300+",
+          "value": "300+"
+        }
+      ]
+    },
+    {
+      "id": "845e2991-d40e-47d6-9eb1-a5a8864b3b4c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "10-25",
+      "options": [
+        {
+          "icon": "🚗",
+          "label": "<10",
+          "value": "<10"
+        },
+        {
+          "icon": "🚕",
+          "label": "10–25",
+          "value": "10-25"
+        },
+        {
+          "icon": "🚙",
+          "label": "25–50",
+          "value": "25-50"
+        },
+        {
+          "icon": "🚐",
+          "label": "50+",
+          "value": "50+"
+        }
+      ]
+    },
+    {
+      "id": "dd4a6588-b84d-45c5-86eb-65d7b3dba8fd",
+      "type": "text",
+      "required": false,
+      "defaultValue": "3-5",
+      "options": [
+        {
+          "icon": "⏱️",
+          "label": "<3 minutes",
+          "value": "<3",
+          "minutes": 2
+        },
+        {
+          "icon": "⏰",
+          "label": "3–5 minutes",
+          "value": "3-5",
+          "minutes": 4
+        },
+        {
+          "icon": "⏲️",
+          "label": "5–8 minutes",
+          "value": "5-8",
+          "minutes": 6
+        },
+        {
+          "icon": "🕐",
+          "label": "8–12 minutes",
+          "value": "8-12",
+          "minutes": 10
+        },
+        {
+          "icon": "🕰️",
+          "label": "12+ minutes",
+          "value": "12+",
+          "minutes": 15
+        }
+      ]
+    },
+    {
+      "id": "8247c3b8-1a3b-4719-b0f3-aae045d98ad7",
+      "type": "text",
+      "required": false,
+      "defaultValue": "8-12",
+      "options": [
+        {
+          "icon": "🕐",
+          "hours": 6,
+          "label": "<8 hrs/day",
+          "value": "<8"
+        },
+        {
+          "icon": "🕔",
+          "hours": 10,
+          "label": "8–12 hrs/day",
+          "value": "8-12"
+        },
+        {
+          "icon": "🕘",
+          "hours": 15,
+          "label": "12–18 hrs/day",
+          "value": "12-18"
+        },
+        {
+          "icon": "🕛",
+          "hours": 21,
+          "label": "18–24 hrs/day",
+          "value": "18-24"
+        }
+      ]
+    },
+    {
+      "id": "63e57755-ccd1-43c5-a803-4be50a9ccd70",
+      "type": "text",
+      "required": false,
+      "defaultValue": "3000-7500",
+      "options": [
+        {
+          "icon": "💵",
+          "label": "<$1,000",
+          "value": "<1000"
+        },
+        {
+          "icon": "💰",
+          "label": "$1,000–$3,000",
+          "value": "1000-3000"
+        },
+        {
+          "icon": "💳",
+          "label": "$3,000–$7,500",
+          "value": "3000-7500"
+        },
+        {
+          "icon": "💸",
+          "label": "$7,500–$15,000",
+          "value": "7500-15000"
+        },
+        {
+          "icon": "🏦",
+          "label": "$15,000+",
+          "value": "15000+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "09f2c1db-8a82-4816-9e17-4fb3af1ab7b4",
+      "type": "text",
+      "required": false,
+      "defaultValue": "demand",
+      "options": [
+        {
+          "icon": "📊",
+          "label": "Flat rate only",
+          "value": "flat",
+          "savingsMultiplier": 0.5
+        },
+        {
+          "icon": "🕐",
+          "label": "Time-of-use (TOU)",
+          "value": "tou",
+          "savingsMultiplier": 0.8
+        },
+        {
+          "icon": "⚡",
+          "label": "Demand charges",
+          "value": "demand",
+          "savingsMultiplier": 1
+        },
+        {
+          "icon": "🎯",
+          "label": "TOU + demand charges",
+          "value": "tou_demand",
+          "savingsMultiplier": 1.2
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "savingsMultiplier": 0.8
+        }
+      ]
+    },
+    {
+      "id": "dea4bf96-6dee-4e08-b159-91dfc9a97fff",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "⚠️",
+          "label": "Breaker trips",
+          "value": "breaker_trips"
+        },
+        {
+          "icon": "📉",
+          "label": "Voltage sag during peak use",
+          "value": "voltage_sag"
+        },
+        {
+          "icon": "💰",
+          "label": "Utility penalties",
+          "value": "utility_penalties"
+        },
+        {
+          "icon": "💡",
+          "label": "Equipment brownouts",
+          "value": "equipment_brownouts"
+        },
+        {
+          "icon": "✅",
+          "label": "None",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "18e90b64-0315-4808-a486-3a21f1d0f9cf",
+      "type": "text",
+      "required": false,
+      "defaultValue": "operations_stop",
+      "options": [
+        {
+          "icon": "🛑",
+          "label": "Operations stop entirely",
+          "value": "operations_stop",
+          "backupHours": 4
+        },
+        {
+          "icon": "⚠️",
+          "label": "Partial operations only",
+          "value": "partial_operations",
+          "backupHours": 2
+        },
+        {
+          "icon": "📉",
+          "label": "Minor disruption",
+          "value": "minor_disruption",
+          "backupHours": 1
+        },
+        {
+          "icon": "✅",
+          "label": "No impact",
+          "value": "no_impact",
+          "backupHours": 0
+        }
+      ]
+    },
+    {
+      "id": "44d4b416-33f6-447a-a11c-b8494a024954",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "➕",
+          "label": "Adding another bay/tunnel",
+          "value": "add_bay_tunnel",
+          "kWIncrease": 50
+        },
+        {
+          "icon": "⬆️",
+          "label": "Larger blowers or pumps",
+          "value": "larger_equipment",
+          "kWIncrease": 30
+        },
+        {
+          "icon": "🔌",
+          "label": "EV chargers",
+          "value": "ev_chargers",
+          "kWIncrease": 50
+        },
+        {
+          "icon": "🌀",
+          "label": "More vacuums",
+          "value": "more_vacuums",
+          "kWIncrease": 10
+        },
+        {
+          "icon": "☀️",
+          "label": "Solar",
+          "value": "solar",
+          "kWIncrease": 0
+        },
+        {
+          "icon": "✅",
+          "label": "No expansion planned",
+          "value": "none",
+          "kWIncrease": 0
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "[\"none\"]"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "car-wash_load_v1",
+  "calculatorVersion": "1.0.0"
+}

@@ -1,0 +1,912 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:34.874Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "91a73821-e782-4380-935b-56f4472c566f",
+  "templateVersion": "2025-11-28T04:59:13.77318+00:00",
+  "industry": "indoor-farm",
+  "useCase": "indoor-farm",
+  "name": "Indoor Farm",
+  "slug": "indoor-farm",
+  "description": "Vertical farming with LED grow lights, climate control, and hydroponic systems",
+  "category": "agricultural",
+  "questions": [
+    {
+      "id": "c94491b9-a2df-4e76-9244-c3c96ab9b1d2",
+      "type": "text",
+      "required": false,
+      "defaultValue": "50000",
+      "options": null
+    },
+    {
+      "id": "a28b0967-81f2-4a9f-ad1b-2dfc9933df7e",
+      "type": "text",
+      "required": false,
+      "defaultValue": "10000",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "dd51c8ce-b1e9-4104-99a4-58ee118a415b",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Layers",
+          "label": "Vertical Farm",
+          "value": "vertical-farm",
+          "description": "Stacked growing systems"
+        },
+        {
+          "icon": "Home",
+          "label": "Greenhouse/Glasshouse",
+          "value": "greenhouse",
+          "description": "Natural + supplemental light"
+        },
+        {
+          "icon": "Container",
+          "label": "Container Farm",
+          "value": "container",
+          "description": "Modular shipping containers"
+        },
+        {
+          "icon": "Warehouse",
+          "label": "Warehouse Conversion",
+          "value": "warehouse",
+          "description": "Converted industrial space"
+        },
+        {
+          "icon": "Sun",
+          "label": "Hybrid Indoor/Outdoor",
+          "value": "hybrid",
+          "description": "Combined approach"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Cannabis Cultivation",
+          "value": "cannabis",
+          "description": "Licensed cannabis grow"
+        }
+      ]
+    },
+    {
+      "id": "d1fc0ac0-4075-45a9-83e1-80fbdd746a45",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "ranges": [
+          {
+            "max": 3,
+            "min": 1,
+            "label": "1-3"
+          },
+          {
+            "max": 10,
+            "min": 4,
+            "label": "4-10"
+          },
+          {
+            "max": 25,
+            "min": 11,
+            "label": "11-25"
+          },
+          {
+            "max": 50,
+            "min": 26,
+            "label": "26-50"
+          },
+          {
+            "max": null,
+            "min": 51,
+            "label": "50+"
+          }
+        ],
+        "suffix": "floors"
+      }
+    },
+    {
+      "id": "f7471291-2b49-4cdf-8b55-819c26deaf92",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Leaf",
+          "label": "Leafy Greens",
+          "value": "leafy-greens"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Herbs",
+          "value": "herbs"
+        },
+        {
+          "icon": "Sprout",
+          "label": "Microgreens",
+          "value": "microgreens"
+        },
+        {
+          "icon": "Apple",
+          "label": "Tomatoes/Peppers",
+          "value": "tomatoes"
+        },
+        {
+          "icon": "Cherry",
+          "label": "Strawberries",
+          "value": "strawberries"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Cannabis",
+          "value": "cannabis"
+        },
+        {
+          "icon": "Flower",
+          "label": "Cut Flowers",
+          "value": "flowers"
+        },
+        {
+          "icon": "Sprout",
+          "label": "Seedlings/Transplants",
+          "value": "seedlings"
+        }
+      ]
+    },
+    {
+      "id": "2001b6ee-8859-4479-92da-ef1308172a44",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Droplets",
+          "label": "Hydroponics",
+          "value": "hydroponics",
+          "description": "Water-based, no soil"
+        },
+        {
+          "icon": "Wind",
+          "label": "Aeroponics",
+          "value": "aeroponics",
+          "description": "Mist-based roots"
+        },
+        {
+          "icon": "Fish",
+          "label": "Aquaponics",
+          "value": "aquaponics",
+          "description": "Fish + plant integration"
+        },
+        {
+          "icon": "Mountain",
+          "label": "Soil/Container",
+          "value": "soil",
+          "description": "Traditional growing media"
+        },
+        {
+          "icon": "Layers",
+          "label": "Mixed Methods",
+          "value": "mixed",
+          "description": "Multiple systems"
+        }
+      ]
+    },
+    {
+      "id": "dc4f8b7a-5712-48a9-80c3-d5f5dc50329c",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Droplets",
+          "label": "Municipal Water",
+          "value": "municipal"
+        },
+        {
+          "icon": "Droplets",
+          "label": "Well Water",
+          "value": "well"
+        },
+        {
+          "icon": "Recycle",
+          "label": "Recirculating System",
+          "value": "recirculating"
+        },
+        {
+          "icon": "CloudRain",
+          "label": "Rainwater Collection",
+          "value": "rainwater"
+        },
+        {
+          "icon": "Droplets",
+          "label": "Mixed Sources",
+          "value": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "82ddaa21-ccb5-49d9-8e2b-67114144c898",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Clock",
+          "label": "12-14 hours",
+          "value": "12-14"
+        },
+        {
+          "icon": "Clock",
+          "label": "14-16 hours",
+          "value": "14-16"
+        },
+        {
+          "icon": "Clock",
+          "label": "16-18 hours",
+          "value": "16-18"
+        },
+        {
+          "icon": "Clock",
+          "label": "18-20 hours",
+          "value": "18-20"
+        },
+        {
+          "icon": "Settings",
+          "label": "Variable by Crop",
+          "value": "variable"
+        }
+      ]
+    },
+    {
+      "id": "8f0058fe-3207-497d-b2a4-0832f43271c1",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Wind",
+          "label": "HVAC/Air Conditioning",
+          "value": "hvac"
+        },
+        {
+          "icon": "Droplets",
+          "label": "Dehumidification",
+          "value": "dehumidification"
+        },
+        {
+          "icon": "Cloud",
+          "label": "CO2 Enrichment",
+          "value": "co2-enrichment"
+        },
+        {
+          "icon": "Flame",
+          "label": "Supplemental Heating",
+          "value": "heating"
+        },
+        {
+          "icon": "Droplets",
+          "label": "Evaporative Cooling",
+          "value": "evap-cooling"
+        },
+        {
+          "icon": "Fan",
+          "label": "Air Circulation Fans",
+          "value": "air-circulation"
+        }
+      ]
+    },
+    {
+      "id": "7d67582a-0e19-4cf1-b222-f5e051eac7a3",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "RotateCw",
+          "label": "24/7 Operation",
+          "value": "24-7"
+        },
+        {
+          "icon": "Sun",
+          "label": "Daytime Only (Staff)",
+          "value": "daytime"
+        },
+        {
+          "icon": "Clock",
+          "label": "Split Shifts",
+          "value": "split"
+        },
+        {
+          "icon": "Bot",
+          "label": "Highly Automated",
+          "value": "automated"
+        }
+      ]
+    },
+    {
+      "id": "cbc79722-b8ed-44d3-aca7-3f7c0cbf7810",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "User",
+          "label": "Manual/Low Automation",
+          "value": "manual"
+        },
+        {
+          "icon": "Settings",
+          "label": "Partial Automation",
+          "value": "partial",
+          "description": "Automated irrigation/climate"
+        },
+        {
+          "icon": "Bot",
+          "label": "High Automation",
+          "value": "high",
+          "description": "Automated seeding, harvesting"
+        },
+        {
+          "icon": "Bot",
+          "label": "Fully Automated",
+          "value": "full",
+          "description": "Minimal human intervention"
+        }
+      ]
+    },
+    {
+      "id": "6deaf010-63b2-40d8-a5d4-dd5296a9914d",
+      "type": "text",
+      "required": false,
+      "defaultValue": "12",
+      "options": {
+        "max": 24,
+        "min": 6,
+        "step": 1,
+        "suffix": " hrs/day"
+      }
+    },
+    {
+      "id": "ec6e6ab8-1626-4d30-a5bb-ec51ff680fcd",
+      "type": "text",
+      "required": false,
+      "defaultValue": "central_ac",
+      "options": [
+        {
+          "label": "Central AC/Heating",
+          "value": "central_ac"
+        },
+        {
+          "label": "Rooftop Units (RTUs)",
+          "value": "rooftop"
+        },
+        {
+          "label": "Chiller System",
+          "value": "chiller"
+        },
+        {
+          "label": "Split Systems",
+          "value": "split"
+        },
+        {
+          "label": "VRF/Mini-Splits",
+          "value": "vrf"
+        }
+      ]
+    },
+    {
+      "id": "a8af0dea-9373-463b-861a-ca88b2800367",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "label": "Legacy (15+ years old)",
+          "value": "legacy",
+          "description": "Older, less efficient equipment"
+        },
+        {
+          "label": "Standard (5-15 years)",
+          "value": "standard",
+          "description": "Average efficiency"
+        },
+        {
+          "label": "Modern (under 5 years)",
+          "value": "modern",
+          "description": "High-efficiency equipment"
+        },
+        {
+          "label": "Premium/LEED",
+          "value": "premium",
+          "description": "Best-in-class efficiency"
+        }
+      ]
+    },
+    {
+      "id": "acc5fa42-5f21-4132-b99e-784861d43844",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Lightbulb",
+          "label": "Under 30%",
+          "value": "under-30"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "30-50%",
+          "value": "30-50"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "50-70%",
+          "value": "50-70"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "Over 70%",
+          "value": "over-70"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Unknown",
+          "value": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "d7150f27-3b75-42e5-bec0-19dbfa61d300",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000",
+      "options": [
+        {
+          "label": "$1,000 - $5,000/mo",
+          "value": "3000"
+        },
+        {
+          "label": "$5,000 - $15,000/mo",
+          "value": "10000"
+        },
+        {
+          "label": "$15,000 - $35,000/mo",
+          "value": "25000"
+        },
+        {
+          "label": "$35,000 - $75,000/mo",
+          "value": "50000"
+        },
+        {
+          "label": "$75,000 - $150,000/mo",
+          "value": "100000"
+        },
+        {
+          "label": "Over $150,000/mo",
+          "value": "200000"
+        }
+      ]
+    },
+    {
+      "id": "b92d7116-f3ff-4f57-a3f3-5ef29eec8f1e",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "DollarSign",
+          "label": "Under $5,000",
+          "value": "under-5k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$5,000 - $15,000",
+          "value": "5-15k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$15,000 - $50,000",
+          "value": "15-50k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$50,000 - $150,000",
+          "value": "50-150k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "Over $150,000",
+          "value": "over-150k"
+        }
+      ]
+    },
+    {
+      "id": "f537fa40-9920-4733-83b5-7207f04127fe",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Zap",
+          "label": "Under 100 kW",
+          "value": "under-100"
+        },
+        {
+          "icon": "Zap",
+          "label": "100-500 kW",
+          "value": "100-500"
+        },
+        {
+          "icon": "Zap",
+          "label": "500 kW - 1 MW",
+          "value": "500-1000"
+        },
+        {
+          "icon": "Zap",
+          "label": "1-3 MW",
+          "value": "1-3mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "3-10 MW",
+          "value": "3-10mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "Over 10 MW",
+          "value": "over-10mw"
+        }
+      ]
+    },
+    {
+      "id": "66fa8a20-cd22-45eb-9de2-5ad188eeab9f",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "label": "Under 200 kW",
+          "value": "small",
+          "description": "Small commercial service"
+        },
+        {
+          "label": "200-500 kW",
+          "value": "medium",
+          "description": "Medium commercial service"
+        },
+        {
+          "label": "500 kW - 2 MW",
+          "value": "large",
+          "description": "Large commercial service"
+        },
+        {
+          "label": "Over 2 MW",
+          "value": "utility",
+          "description": "Utility-scale connection"
+        }
+      ]
+    },
+    {
+      "id": "ad73ee87-d455-4534-ace3-771c31417d33",
+      "type": "text",
+      "required": false,
+      "defaultValue": "true",
+      "options": null
+    },
+    {
+      "id": "bd1248f3-70dd-4b26-96c4-be7f8526960a",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "c4d8b0bd-ee0d-48c3-8d9f-30a0891a18c0",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "max": 500,
+        "min": 0,
+        "step": 10,
+        "suffix": " kW"
+      }
+    },
+    {
+      "id": "df46cc1f-bacb-4a43-8d3b-68533637e554",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "9b8a7d69-2e24-4898-945a-eb2e3b91a68c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "ranges": [
+          {
+            "max": 0,
+            "min": 0,
+            "label": "0"
+          },
+          {
+            "max": 5,
+            "min": 1,
+            "label": "1-5"
+          },
+          {
+            "max": 15,
+            "min": 6,
+            "label": "6-15"
+          },
+          {
+            "max": 30,
+            "min": 16,
+            "label": "16-30"
+          },
+          {
+            "max": null,
+            "min": 31,
+            "label": "30+"
+          }
+        ],
+        "suffix": "chargers"
+      }
+    },
+    {
+      "id": "50c5e8bd-064f-4b00-8322-2c49bf2a3992",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Sun",
+          "label": "Solar PV",
+          "value": "solar"
+        },
+        {
+          "icon": "Fuel",
+          "label": "Backup Generator",
+          "value": "generator"
+        },
+        {
+          "icon": "Battery",
+          "label": "Battery Storage",
+          "value": "battery"
+        },
+        {
+          "icon": "Flame",
+          "label": "CHP/Cogeneration",
+          "value": "chp"
+        }
+      ]
+    },
+    {
+      "id": "414fe1ff-180e-4d7d-a85a-d6a4403c0bba",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Interested",
+          "value": "not_interested"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Considering",
+          "value": "considering"
+        },
+        {
+          "icon": "Sun",
+          "label": "Very Interested",
+          "value": "very_interested"
+        },
+        {
+          "icon": "FileText",
+          "label": "PPA/No Capital Preferred",
+          "value": "ppa-preferred"
+        }
+      ]
+    },
+    {
+      "id": "174f4d99-c389-40e5-a5c5-f6eefd21dded",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Home",
+          "label": "Building Rooftop",
+          "value": "rooftop"
+        },
+        {
+          "icon": "Home",
+          "label": "Greenhouse Roof",
+          "value": "greenhouse-roof"
+        },
+        {
+          "icon": "Car",
+          "label": "Parking Area",
+          "value": "parking"
+        },
+        {
+          "icon": "Mountain",
+          "label": "Adjacent Land",
+          "value": "ground"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "Limited Space",
+          "value": "limited"
+        }
+      ]
+    },
+    {
+      "id": "9642a240-284b-40a2-a3cc-557d78d806bd",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Leaf",
+          "label": "Carbon Neutrality Goal",
+          "value": "carbon-neutral"
+        },
+        {
+          "icon": "Sun",
+          "label": "100% Renewable Target",
+          "value": "renewable-100"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Organic Certification",
+          "value": "organic"
+        },
+        {
+          "icon": "Droplets",
+          "label": "Water Reduction Goals",
+          "value": "water-reduction"
+        },
+        {
+          "icon": "Recycle",
+          "label": "Zero Waste",
+          "value": "zero-waste"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "No Formal Goals",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "afbe40bf-fcb5-40a1-893e-6013697808fd",
+      "type": "text",
+      "required": false,
+      "defaultValue": "peak_shaving",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "Peak Shaving",
+          "value": "peak_shaving",
+          "description": "Reduce demand charges during peak hours"
+        },
+        {
+          "icon": "💰",
+          "label": "Energy Arbitrage",
+          "value": "arbitrage",
+          "description": "Buy low, use high - time-of-use optimization"
+        },
+        {
+          "icon": "🔋",
+          "label": "Backup/Resilience",
+          "value": "resilience",
+          "description": "Keep critical loads running during outages"
+        },
+        {
+          "icon": "☀️",
+          "label": "Renewable Integration",
+          "value": "renewable",
+          "description": "Maximize solar self-consumption"
+        },
+        {
+          "icon": "📊",
+          "label": "Demand Response",
+          "value": "demand_response",
+          "description": "Participate in utility programs for revenue"
+        }
+      ]
+    },
+    {
+      "id": "1593f76c-6352-4065-a7b6-efb27ca7097c",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Lightbulb",
+          "label": "LED Only",
+          "value": "led",
+          "description": "Full LED lighting"
+        },
+        {
+          "icon": "Sun",
+          "label": "HPS/HID",
+          "value": "hps",
+          "description": "High-pressure sodium"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "LED + HPS Hybrid",
+          "value": "hybrid",
+          "description": "Mixed lighting"
+        },
+        {
+          "icon": "Sun",
+          "label": "Natural + Supplemental",
+          "value": "natural-supplemental",
+          "description": "Greenhouse with lights"
+        },
+        {
+          "icon": "Sun",
+          "label": "Natural Light Only",
+          "value": "natural-only",
+          "description": "Greenhouse, no supplemental"
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "peak_shaving"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "indoor-farm_load_v1",
+  "calculatorVersion": "1.0.0"
+}

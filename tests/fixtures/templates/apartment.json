@@ -1,0 +1,914 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:32.087Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "908acfe0-7ef8-4fb7-85c2-56700dc815b9",
+  "templateVersion": "2025-11-28T04:59:13.77318+00:00",
+  "industry": "apartment",
+  "useCase": "apartment",
+  "name": "Apartment Complex",
+  "slug": "apartment",
+  "description": "Multi-unit residential building with common areas, elevators, and amenities",
+  "category": "residential",
+  "questions": [
+    {
+      "id": "e2be17c3-bbc1-4da3-b539-b9cc15de6f87",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "TreePine",
+          "label": "Garden Style",
+          "value": "garden-style",
+          "description": "Low-rise, spread out"
+        },
+        {
+          "icon": "Building",
+          "label": "Mid-Rise",
+          "value": "mid-rise",
+          "description": "4-8 stories"
+        },
+        {
+          "icon": "Building2",
+          "label": "High-Rise",
+          "value": "high-rise",
+          "description": "9+ stories"
+        },
+        {
+          "icon": "Store",
+          "label": "Mixed-Use",
+          "value": "mixed-use",
+          "description": "Retail/commercial below"
+        },
+        {
+          "icon": "Home",
+          "label": "Townhome/Attached",
+          "value": "townhome",
+          "description": "Multi-story units"
+        },
+        {
+          "icon": "Heart",
+          "label": "Senior Living",
+          "value": "senior",
+          "description": "55+ community"
+        }
+      ]
+    },
+    {
+      "id": "5e4d5b4d-9fa0-430a-8d0b-c58448f343d2",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "ranges": [
+          {
+            "max": 20,
+            "min": 1,
+            "label": "1-20"
+          },
+          {
+            "max": 50,
+            "min": 21,
+            "label": "21-50"
+          },
+          {
+            "max": 100,
+            "min": 51,
+            "label": "51-100"
+          },
+          {
+            "max": 250,
+            "min": 101,
+            "label": "101-250"
+          },
+          {
+            "max": null,
+            "min": 251,
+            "label": "250+"
+          }
+        ],
+        "suffix": "units"
+      }
+    },
+    {
+      "id": "13890451-b4a4-4d6c-8b8b-b7ba0de0f5d9",
+      "type": "text",
+      "required": false,
+      "defaultValue": "50000",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "72c6362e-2b7e-420a-ac40-19fa33282caa",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "ranges": [
+          {
+            "max": 10,
+            "min": 1,
+            "label": "1-10"
+          },
+          {
+            "max": 25,
+            "min": 11,
+            "label": "11-25"
+          },
+          {
+            "max": 50,
+            "min": 26,
+            "label": "26-50"
+          },
+          {
+            "max": 100,
+            "min": 51,
+            "label": "51-100"
+          },
+          {
+            "max": null,
+            "min": 101,
+            "label": "100+"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e6b56d29-babc-4de0-88d9-48ba7f005ba5",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "ranges": [
+          {
+            "max": 20,
+            "min": 1,
+            "label": "1-20"
+          },
+          {
+            "max": 50,
+            "min": 21,
+            "label": "21-50"
+          },
+          {
+            "max": 100,
+            "min": 51,
+            "label": "51-100"
+          },
+          {
+            "max": 250,
+            "min": 101,
+            "label": "101-250"
+          },
+          {
+            "max": null,
+            "min": 251,
+            "label": "250+"
+          }
+        ],
+        "suffix": "units"
+      }
+    },
+    {
+      "id": "24ccca34-14be-413f-88ca-6fdd451147ed",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Flame",
+          "label": "Individual Gas",
+          "value": "individual-gas"
+        },
+        {
+          "icon": "Zap",
+          "label": "Individual Electric",
+          "value": "individual-electric"
+        },
+        {
+          "icon": "Flame",
+          "label": "Central Gas Boiler",
+          "value": "central-gas"
+        },
+        {
+          "icon": "Zap",
+          "label": "Central Electric",
+          "value": "central-electric"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Heat Pump Water Heaters",
+          "value": "heat-pump"
+        }
+      ]
+    },
+    {
+      "id": "51c4b043-38b1-46a8-8a9a-c1c9b2d9591b",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Lightbulb",
+          "label": "Incandescent/CFL",
+          "value": "incandescent"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "Fluorescent",
+          "value": "fluorescent"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "LED (Partial)",
+          "value": "led-partial"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "LED (Full)",
+          "value": "led-full"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "LED with Sensors",
+          "value": "led-smart"
+        }
+      ]
+    },
+    {
+      "id": "59d10133-fe0a-46c2-8767-b693e432fd39",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Wind",
+          "label": "Individual Unit HVAC",
+          "value": "individual",
+          "description": "Each unit has own system"
+        },
+        {
+          "icon": "Flame",
+          "label": "Central Heat / Individual AC",
+          "value": "central-heat",
+          "description": "Boiler + window/PTAC"
+        },
+        {
+          "icon": "Building",
+          "label": "Central Heat & Cooling",
+          "value": "central-both",
+          "description": "Building-wide system"
+        },
+        {
+          "icon": "Wind",
+          "label": "PTAC Units",
+          "value": "ptac",
+          "description": "Through-wall units"
+        },
+        {
+          "icon": "Thermometer",
+          "label": "VRF System",
+          "value": "vrf",
+          "description": "Variable refrigerant flow"
+        }
+      ]
+    },
+    {
+      "id": "381efc23-a861-42be-9ec8-ef015580d2b9",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "ranges": [
+          {
+            "max": 2,
+            "min": 0,
+            "label": "0-2"
+          },
+          {
+            "max": 6,
+            "min": 3,
+            "label": "3-6"
+          },
+          {
+            "max": 12,
+            "min": 7,
+            "label": "7-12"
+          },
+          {
+            "max": 20,
+            "min": 13,
+            "label": "13-20"
+          },
+          {
+            "max": null,
+            "min": 21,
+            "label": "20+"
+          }
+        ],
+        "suffix": "elevators"
+      }
+    },
+    {
+      "id": "4c042a8e-066f-4f46-a57d-f41fed464e6c",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No In-Unit",
+          "value": "none",
+          "description": "Common laundry only"
+        },
+        {
+          "icon": "Plug",
+          "label": "Hookups Only",
+          "value": "hookups"
+        },
+        {
+          "icon": "Shirt",
+          "label": "Some Units",
+          "value": "partial"
+        },
+        {
+          "icon": "Shirt",
+          "label": "All Units",
+          "value": "all"
+        }
+      ]
+    },
+    {
+      "id": "cc45cff7-fc16-40d9-b4b3-03ffa9638fd6",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Building",
+          "label": "Master Metered",
+          "value": "master-meter",
+          "description": "Owner pays all electric"
+        },
+        {
+          "icon": "Gauge",
+          "label": "Sub-Metered",
+          "value": "sub-meter",
+          "description": "Owner bills residents"
+        },
+        {
+          "icon": "Home",
+          "label": "Individual Meters",
+          "value": "individual",
+          "description": "Residents pay utility directly"
+        },
+        {
+          "icon": "Settings",
+          "label": "Mixed",
+          "value": "mixed",
+          "description": "Varies by building/use"
+        }
+      ]
+    },
+    {
+      "id": "d9652c7e-ce04-4f14-92c2-4b82ac9b267a",
+      "type": "text",
+      "required": false,
+      "defaultValue": "12",
+      "options": {
+        "max": 24,
+        "min": 6,
+        "step": 1,
+        "suffix": " hrs/day"
+      }
+    },
+    {
+      "id": "ccbd4e5e-b7bc-46c3-97d8-b1c871628423",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Car",
+          "label": "Surface Lots",
+          "value": "surface"
+        },
+        {
+          "icon": "Warehouse",
+          "label": "Covered/Carport",
+          "value": "covered"
+        },
+        {
+          "icon": "Building",
+          "label": "Parking Garage",
+          "value": "garage"
+        },
+        {
+          "icon": "Building",
+          "label": "Underground",
+          "value": "underground"
+        },
+        {
+          "icon": "Car",
+          "label": "Street Parking Only",
+          "value": "street"
+        }
+      ]
+    },
+    {
+      "id": "3b8ee563-8fd1-4f82-99f8-d9db01c856a4",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Waves",
+          "label": "Swimming Pool",
+          "value": "pool"
+        },
+        {
+          "icon": "Dumbbell",
+          "label": "Fitness Center",
+          "value": "fitness"
+        },
+        {
+          "icon": "Users",
+          "label": "Clubhouse/Lounge",
+          "value": "clubhouse"
+        },
+        {
+          "icon": "Monitor",
+          "label": "Business Center",
+          "value": "business"
+        },
+        {
+          "icon": "Shirt",
+          "label": "Common Laundry",
+          "value": "laundry"
+        },
+        {
+          "icon": "Package",
+          "label": "Package Lockers",
+          "value": "package"
+        },
+        {
+          "icon": "Dog",
+          "label": "Dog Park",
+          "value": "dog-park"
+        },
+        {
+          "icon": "Baby",
+          "label": "Playground",
+          "value": "playground"
+        }
+      ]
+    },
+    {
+      "id": "358d0249-09b2-4980-b1eb-1ef73ac0077d",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "DollarSign",
+          "label": "Under $2,000",
+          "value": "under-2k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$2,000 - $5,000",
+          "value": "2-5k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$5,000 - $15,000",
+          "value": "5-15k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$15,000 - $30,000",
+          "value": "15-30k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "Over $30,000",
+          "value": "over-30k"
+        },
+        {
+          "icon": "Building",
+          "label": "Master Metered (All-in)",
+          "value": "master-included"
+        }
+      ]
+    },
+    {
+      "id": "d0473d9b-411e-40b2-b77e-e3f722fc87cd",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Interested",
+          "value": "not_interested"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Considering",
+          "value": "considering"
+        },
+        {
+          "icon": "FileText",
+          "label": "Required by Code/Mandate",
+          "value": "required"
+        },
+        {
+          "icon": "Users",
+          "label": "Resident Demand",
+          "value": "resident-demand"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "Already Installed",
+          "value": "already-have"
+        }
+      ]
+    },
+    {
+      "id": "1382ff98-95ef-43d6-b18e-09c8dd7a907c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "label": "Legacy (15+ years old)",
+          "value": "legacy",
+          "description": "Older, less efficient equipment"
+        },
+        {
+          "label": "Standard (5-15 years)",
+          "value": "standard",
+          "description": "Average efficiency"
+        },
+        {
+          "label": "Modern (under 5 years)",
+          "value": "modern",
+          "description": "High-efficiency equipment"
+        },
+        {
+          "label": "Premium/LEED",
+          "value": "premium",
+          "description": "Best-in-class efficiency"
+        }
+      ]
+    },
+    {
+      "id": "c9e780ad-b672-4d93-99f9-be0ee30482a0",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000",
+      "options": [
+        {
+          "label": "$1,000 - $5,000/mo",
+          "value": "3000"
+        },
+        {
+          "label": "$5,000 - $15,000/mo",
+          "value": "10000"
+        },
+        {
+          "label": "$15,000 - $35,000/mo",
+          "value": "25000"
+        },
+        {
+          "label": "$35,000 - $75,000/mo",
+          "value": "50000"
+        },
+        {
+          "label": "$75,000 - $150,000/mo",
+          "value": "100000"
+        },
+        {
+          "label": "Over $150,000/mo",
+          "value": "200000"
+        }
+      ]
+    },
+    {
+      "id": "989565b4-76b5-4829-be80-84d4d7053fc1",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Zap",
+          "label": "Under 100 kW",
+          "value": "under-100"
+        },
+        {
+          "icon": "Zap",
+          "label": "100-250 kW",
+          "value": "100-250"
+        },
+        {
+          "icon": "Zap",
+          "label": "250-500 kW",
+          "value": "250-500"
+        },
+        {
+          "icon": "Zap",
+          "label": "500 kW - 1 MW",
+          "value": "500-1000"
+        },
+        {
+          "icon": "Zap",
+          "label": "Over 1 MW",
+          "value": "over-1000"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Unknown/Individual Meters",
+          "value": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "b3ff2efd-5b88-4a62-a4da-3708fb140407",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "label": "Under 200 kW",
+          "value": "small",
+          "description": "Small commercial service"
+        },
+        {
+          "label": "200-500 kW",
+          "value": "medium",
+          "description": "Medium commercial service"
+        },
+        {
+          "label": "500 kW - 2 MW",
+          "value": "large",
+          "description": "Large commercial service"
+        },
+        {
+          "label": "Over 2 MW",
+          "value": "utility",
+          "description": "Utility-scale connection"
+        }
+      ]
+    },
+    {
+      "id": "d5ac9f5f-acbc-49fc-841e-a8e46269fed5",
+      "type": "text",
+      "required": false,
+      "defaultValue": "true",
+      "options": null
+    },
+    {
+      "id": "4de5372e-b368-4e3d-bee9-f8763ec8081d",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "a8bdde6d-c58e-42ff-80f9-cfc250e99bdf",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "max": 500,
+        "min": 0,
+        "step": 10,
+        "suffix": " kW"
+      }
+    },
+    {
+      "id": "956a528e-0738-4530-a024-65b8291b3d4c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "cb3397bd-89ec-48d3-8fac-06c1a907f865",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "ranges": [
+          {
+            "max": 0,
+            "min": 0,
+            "label": "0"
+          },
+          {
+            "max": 5,
+            "min": 1,
+            "label": "1-5"
+          },
+          {
+            "max": 15,
+            "min": 6,
+            "label": "6-15"
+          },
+          {
+            "max": 30,
+            "min": 16,
+            "label": "16-30"
+          },
+          {
+            "max": null,
+            "min": 31,
+            "label": "30+"
+          }
+        ],
+        "suffix": "chargers"
+      }
+    },
+    {
+      "id": "07ed9d83-23f3-4a1f-9e3e-3903938daa86",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Sun",
+          "label": "Solar PV",
+          "value": "solar"
+        },
+        {
+          "icon": "Fuel",
+          "label": "Backup Generator",
+          "value": "generator"
+        },
+        {
+          "icon": "Battery",
+          "label": "Battery Storage",
+          "value": "battery"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "EV Chargers",
+          "value": "ev-chargers"
+        }
+      ]
+    },
+    {
+      "id": "948d27e5-ceb5-45a7-a24f-9070817e531b",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Interested",
+          "value": "not_interested"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Considering",
+          "value": "considering"
+        },
+        {
+          "icon": "Sun",
+          "label": "Very Interested",
+          "value": "very_interested"
+        },
+        {
+          "icon": "Users",
+          "label": "Community Solar Interest",
+          "value": "community-solar"
+        },
+        {
+          "icon": "FileText",
+          "label": "PPA/No Capital Preferred",
+          "value": "ppa-preferred"
+        }
+      ]
+    },
+    {
+      "id": "dba499cf-52e4-4440-b161-6b04063cad4e",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Home",
+          "label": "Building Rooftops",
+          "value": "rooftop"
+        },
+        {
+          "icon": "Car",
+          "label": "Parking Carports",
+          "value": "carports"
+        },
+        {
+          "icon": "Mountain",
+          "label": "Open Land",
+          "value": "ground"
+        },
+        {
+          "icon": "Building",
+          "label": "Parking Garage Top",
+          "value": "garage-top"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "Limited Space",
+          "value": "limited"
+        }
+      ]
+    },
+    {
+      "id": "7e36789e-3de9-4f13-8594-2fcec584423c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "peak_shaving",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "Peak Shaving",
+          "value": "peak_shaving",
+          "description": "Reduce demand charges during peak hours"
+        },
+        {
+          "icon": "💰",
+          "label": "Energy Arbitrage",
+          "value": "arbitrage",
+          "description": "Buy low, use high - time-of-use optimization"
+        },
+        {
+          "icon": "🔋",
+          "label": "Backup/Resilience",
+          "value": "resilience",
+          "description": "Keep critical loads running during outages"
+        },
+        {
+          "icon": "☀️",
+          "label": "Renewable Integration",
+          "value": "renewable",
+          "description": "Maximize solar self-consumption"
+        },
+        {
+          "icon": "📊",
+          "label": "Demand Response",
+          "value": "demand_response",
+          "description": "Participate in utility programs for revenue"
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "peak_shaving"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "apartment_load_v1",
+  "calculatorVersion": "1.0.0"
+}

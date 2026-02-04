@@ -1,0 +1,713 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:33.343Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "79884210-7439-45fd-8853-b1c3978b75e7",
+  "templateVersion": "2025-11-24T02:56:44.525966+00:00",
+  "industry": "data-center",
+  "useCase": "data-center",
+  "name": "Data Center",
+  "slug": "data-center",
+  "description": "High-reliability power for mission-critical data center operations",
+  "category": "commercial",
+  "questions": [
+    {
+      "id": "c7f873fa-e422-4755-acca-4a7b668863c1",
+      "type": "text",
+      "required": false,
+      "defaultValue": "tier3",
+      "options": [
+        {
+          "pue": 1.6,
+          "icon": "🏢",
+          "label": "Colocation space",
+          "value": "colocation",
+          "description": "Shared facility, rack/cage space"
+        },
+        {
+          "pue": 2,
+          "icon": "🖥️",
+          "label": "Tier I (Basic)",
+          "value": "tier1",
+          "description": "Single path, no redundancy"
+        },
+        {
+          "pue": 1.8,
+          "icon": "💻",
+          "label": "Tier II (Component redundant)",
+          "value": "tier2",
+          "description": "N+1 components, single path"
+        },
+        {
+          "pue": 1.7,
+          "icon": "🏭",
+          "label": "Tier III (Concurrently maintainable)",
+          "value": "tier3",
+          "description": "N+1, dual path, 72hr outage resilience"
+        },
+        {
+          "pue": 1.6,
+          "icon": "🏰",
+          "label": "Tier IV (Fault tolerant)",
+          "value": "tier4",
+          "description": "2N, fault tolerant, 96hr resilience"
+        },
+        {
+          "pue": 1.9,
+          "icon": "📡",
+          "label": "Edge/micro data center",
+          "value": "edge",
+          "description": "< 100 kW IT load"
+        }
+      ]
+    },
+    {
+      "id": "9e74b5c7-798e-484f-a501-1fdcc942610a",
+      "type": "text",
+      "required": false,
+      "defaultValue": "500-1000",
+      "options": [
+        {
+          "kW": 75,
+          "icon": "📡",
+          "label": "<100 kW (edge)",
+          "value": "<100"
+        },
+        {
+          "kW": 300,
+          "icon": "🖥️",
+          "label": "100–500 kW",
+          "value": "100-500"
+        },
+        {
+          "kW": 750,
+          "icon": "💻",
+          "label": "500 kW–1 MW",
+          "value": "500-1000"
+        },
+        {
+          "kW": 3000,
+          "icon": "🏭",
+          "label": "1–5 MW",
+          "value": "1-5"
+        },
+        {
+          "kW": 12000,
+          "icon": "🏰",
+          "label": "5–20 MW",
+          "value": "5-20"
+        },
+        {
+          "kW": 30000,
+          "icon": "🌐",
+          "label": "20+ MW (hyperscale)",
+          "value": "20+"
+        }
+      ]
+    },
+    {
+      "id": "d1b7d51b-5ce0-4793-b107-37436a8d1814",
+      "type": "text",
+      "required": false,
+      "defaultValue": "2000",
+      "options": [
+        {
+          "kW": 288,
+          "icon": "🔌",
+          "label": "1200A (480V)",
+          "value": "1200"
+        },
+        {
+          "kW": 480,
+          "icon": "⚡",
+          "label": "2000A (480V)",
+          "value": "2000"
+        },
+        {
+          "kW": 720,
+          "icon": "🔋",
+          "label": "3000A (480V)",
+          "value": "3000"
+        },
+        {
+          "kW": 2000,
+          "icon": "⚙️",
+          "label": "Medium voltage (4160V)",
+          "value": "medium_voltage"
+        },
+        {
+          "kW": 10000,
+          "icon": "🏭",
+          "label": "Dedicated utility substation",
+          "value": "utility_substation"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "440fa59b-bb7e-422f-bf7d-49407eabce9f",
+      "type": "text",
+      "required": false,
+      "defaultValue": "n_plus_1",
+      "options": [
+        {
+          "icon": "❌",
+          "label": "No UPS",
+          "value": "none",
+          "minutes": 0
+        },
+        {
+          "icon": "🔋",
+          "label": "Single UPS (<10 min)",
+          "value": "single",
+          "minutes": 5
+        },
+        {
+          "icon": "🔋🔋",
+          "label": "N+1 UPS (10-15 min)",
+          "value": "n_plus_1",
+          "minutes": 12
+        },
+        {
+          "icon": "🔋🔋🔋",
+          "label": "2N UPS (15-20 min)",
+          "value": "2n",
+          "minutes": 18
+        },
+        {
+          "icon": "🔋🔋🔋🔋",
+          "label": "Distributed redundant UPS",
+          "value": "distributed",
+          "minutes": 20
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "minutes": 10
+        }
+      ]
+    },
+    {
+      "id": "b4dc28f1-aff8-43d8-a6e8-3536d0dc6fcf",
+      "type": "text",
+      "required": false,
+      "defaultValue": "chilled_water",
+      "options": [
+        {
+          "pue": 1.8,
+          "icon": "❄️",
+          "label": "CRAC/CRAH units",
+          "value": "crac_crah"
+        },
+        {
+          "pue": 1.7,
+          "icon": "💧",
+          "label": "Chilled water plant",
+          "value": "chilled_water"
+        },
+        {
+          "pue": 1.4,
+          "icon": "🌊",
+          "label": "Direct evaporative cooling",
+          "value": "direct_evap"
+        },
+        {
+          "pue": 1.3,
+          "icon": "🍃",
+          "label": "Free cooling (economizer)",
+          "value": "free_cooling"
+        },
+        {
+          "pue": 1.2,
+          "icon": "🧊",
+          "label": "Liquid/immersion cooling",
+          "value": "liquid_cooling"
+        },
+        {
+          "pue": 1.7,
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "ec71324d-9822-498a-b39c-e984829cbf48",
+      "type": "text",
+      "required": false,
+      "defaultValue": "10-15",
+      "options": [
+        {
+          "kW": 4,
+          "icon": "🖥️",
+          "label": "<5 kW/rack (legacy)",
+          "value": "<5"
+        },
+        {
+          "kW": 7.5,
+          "icon": "💻",
+          "label": "5–10 kW/rack",
+          "value": "5-10"
+        },
+        {
+          "kW": 12.5,
+          "icon": "⚡",
+          "label": "10–15 kW/rack (modern)",
+          "value": "10-15"
+        },
+        {
+          "kW": 22,
+          "icon": "🔥",
+          "label": "15–30 kW/rack (high-density)",
+          "value": "15-30"
+        },
+        {
+          "kW": 40,
+          "icon": "🚀",
+          "label": "30+ kW/rack (GPU/AI)",
+          "value": "30+"
+        }
+      ]
+    },
+    {
+      "id": "c7d420b4-f1dd-452d-9e79-640b718c5154",
+      "type": "text",
+      "required": false,
+      "defaultValue": "50-75",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "<25% (new/growing)",
+          "value": "<25",
+          "utilization": 0.2
+        },
+        {
+          "icon": "📊",
+          "label": "25–50%",
+          "value": "25-50",
+          "utilization": 0.4
+        },
+        {
+          "icon": "📈",
+          "label": "50–75%",
+          "value": "50-75",
+          "utilization": 0.65
+        },
+        {
+          "icon": "🎯",
+          "label": "75–90% (mature)",
+          "value": "75-90",
+          "utilization": 0.85
+        },
+        {
+          "icon": "🔥",
+          "label": "90%+ (at capacity)",
+          "value": "90+",
+          "utilization": 0.95
+        }
+      ]
+    },
+    {
+      "id": "49387f55-0087-41b7-9563-f7f2a905d90d",
+      "type": "text",
+      "required": false,
+      "defaultValue": "always_on",
+      "options": [
+        {
+          "icon": "🟢",
+          "label": "Always-on services (flat 24/7)",
+          "value": "always_on",
+          "variance": 0.05
+        },
+        {
+          "icon": "🕐",
+          "label": "Business hours peak",
+          "value": "business_hours",
+          "variance": 0.3
+        },
+        {
+          "icon": "🌙",
+          "label": "Batch processing (night peaks)",
+          "value": "batch_processing",
+          "variance": 0.4
+        },
+        {
+          "icon": "🤖",
+          "label": "AI training (sporadic spikes)",
+          "value": "ai_training",
+          "variance": 0.5
+        },
+        {
+          "icon": "🔄",
+          "label": "Mixed workloads",
+          "value": "mixed",
+          "variance": 0.25
+        }
+      ]
+    },
+    {
+      "id": "d2e58c30-5a7e-42b0-9fcf-45c4e6bcd868",
+      "type": "text",
+      "required": false,
+      "defaultValue": "moderate",
+      "options": [
+        {
+          "icon": "📊",
+          "label": "Stable (0-5%)",
+          "value": "stable",
+          "growth": 0.03
+        },
+        {
+          "icon": "📈",
+          "label": "Moderate (5-15%)",
+          "value": "moderate",
+          "growth": 0.1
+        },
+        {
+          "icon": "🚀",
+          "label": "High (15-30%)",
+          "value": "high",
+          "growth": 0.22
+        },
+        {
+          "icon": "🔥",
+          "label": "Rapid (30%+)",
+          "value": "rapid",
+          "growth": 0.4
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "growth": 0.1
+        }
+      ]
+    },
+    {
+      "id": "8189a1b4-c891-496d-95ec-2cfdf84eb093",
+      "type": "text",
+      "required": false,
+      "defaultValue": "1.5-1.8",
+      "options": [
+        {
+          "pue": 1.25,
+          "icon": "🏆",
+          "label": "<1.3 (world-class)",
+          "value": "<1.3"
+        },
+        {
+          "pue": 1.4,
+          "icon": "✅",
+          "label": "1.3–1.5 (good)",
+          "value": "1.3-1.5"
+        },
+        {
+          "pue": 1.65,
+          "icon": "📊",
+          "label": "1.5–1.8 (average)",
+          "value": "1.5-1.8"
+        },
+        {
+          "pue": 1.9,
+          "icon": "📉",
+          "label": "1.8–2.0 (needs improvement)",
+          "value": "1.8-2.0"
+        },
+        {
+          "pue": 2.2,
+          "icon": "⚠️",
+          "label": "2.0+ (inefficient)",
+          "value": "2.0+"
+        },
+        {
+          "pue": 1.7,
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "b6b616c0-acb1-44e5-b4f2-0c043e1b736c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "tier3",
+      "options": [
+        {
+          "icon": "🖥️",
+          "label": "99.671% (Tier I)",
+          "value": "tier1",
+          "downtimeHours": 28.8
+        },
+        {
+          "icon": "💻",
+          "label": "99.741% (Tier II)",
+          "value": "tier2",
+          "downtimeHours": 22
+        },
+        {
+          "icon": "🏭",
+          "label": "99.982% (Tier III)",
+          "value": "tier3",
+          "downtimeHours": 1.6
+        },
+        {
+          "icon": "🏰",
+          "label": "99.995% (Tier IV)",
+          "value": "tier4",
+          "downtimeHours": 0.4
+        },
+        {
+          "icon": "🏆",
+          "label": "99.999% (five nines)",
+          "value": "five_nines",
+          "downtimeHours": 0.09
+        }
+      ]
+    },
+    {
+      "id": "f4ae4f1c-8d79-4a8b-8aa5-67e891092d3e",
+      "type": "text",
+      "required": false,
+      "defaultValue": "75000-150000",
+      "options": [
+        {
+          "icon": "💵",
+          "label": "<$25,000",
+          "value": "<25000"
+        },
+        {
+          "icon": "💰",
+          "label": "$25,000–$75,000",
+          "value": "25000-75000"
+        },
+        {
+          "icon": "💳",
+          "label": "$75,000–$150,000",
+          "value": "75000-150000"
+        },
+        {
+          "icon": "💸",
+          "label": "$150,000–$500,000",
+          "value": "150000-500000"
+        },
+        {
+          "icon": "🏦",
+          "label": "$500,000+",
+          "value": "500000+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "436a1658-9453-45e0-a260-351cec426e04",
+      "type": "text",
+      "required": false,
+      "defaultValue": "demand",
+      "options": [
+        {
+          "icon": "📊",
+          "label": "Flat rate only",
+          "value": "flat",
+          "savingsMultiplier": 0.5
+        },
+        {
+          "icon": "🕐",
+          "label": "Time-of-use (TOU)",
+          "value": "tou",
+          "savingsMultiplier": 0.8
+        },
+        {
+          "icon": "⚡",
+          "label": "Demand charges",
+          "value": "demand",
+          "savingsMultiplier": 1
+        },
+        {
+          "icon": "🎯",
+          "label": "TOU + demand charges",
+          "value": "tou_demand",
+          "savingsMultiplier": 1.2
+        },
+        {
+          "icon": "🏭",
+          "label": "Wholesale/direct access",
+          "value": "wholesale",
+          "savingsMultiplier": 0.6
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "savingsMultiplier": 0.8
+        }
+      ]
+    },
+    {
+      "id": "493d83fa-3b6a-44f6-b6b6-00e6600a4ff9",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "Voltage sag/dips",
+          "value": "voltage_sag"
+        },
+        {
+          "icon": "🌊",
+          "label": "Harmonic distortion",
+          "value": "harmonics"
+        },
+        {
+          "icon": "📊",
+          "label": "Frequency variation",
+          "value": "frequency_variation"
+        },
+        {
+          "icon": "⚡",
+          "label": "Transients/surges",
+          "value": "transients"
+        },
+        {
+          "icon": "⚠️",
+          "label": "UPS bypass events",
+          "value": "ups_bypass"
+        },
+        {
+          "icon": "✅",
+          "label": "None",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "24d0a627-7d61-49d7-946e-7c1c860bb28f",
+      "type": "text",
+      "required": false,
+      "defaultValue": "250k-1m",
+      "options": [
+        {
+          "icon": "💵",
+          "label": "<$50k",
+          "value": "<50k",
+          "backupHours": 2
+        },
+        {
+          "icon": "💰",
+          "label": "$50k–$250k",
+          "value": "50-250k",
+          "backupHours": 4
+        },
+        {
+          "icon": "💳",
+          "label": "$250k–$1M",
+          "value": "250k-1m",
+          "backupHours": 8
+        },
+        {
+          "icon": "💸",
+          "label": "$1M–$5M",
+          "value": "1-5m",
+          "backupHours": 12
+        },
+        {
+          "icon": "🏦",
+          "label": "$5M+",
+          "value": "5m+",
+          "backupHours": 24
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "backupHours": 6
+        }
+      ]
+    },
+    {
+      "id": "a9019787-07e0-4cf7-85cd-3db3163b9c7f",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "➕",
+          "label": "Additional racks/servers",
+          "value": "add_racks",
+          "kWIncrease": 100
+        },
+        {
+          "icon": "🤖",
+          "label": "GPU/AI compute expansion",
+          "value": "gpu_ai",
+          "kWIncrease": 500
+        },
+        {
+          "icon": "❄️",
+          "label": "Cooling system upgrade",
+          "value": "cooling_upgrade",
+          "kWIncrease": 200
+        },
+        {
+          "icon": "⚡",
+          "label": "Generator/UPS upgrade",
+          "value": "generator_upgrade",
+          "kWIncrease": 0
+        },
+        {
+          "icon": "☀️",
+          "label": "Solar + storage",
+          "value": "solar",
+          "kWIncrease": 0
+        },
+        {
+          "icon": "✅",
+          "label": "No expansion planned",
+          "value": "none",
+          "kWIncrease": 0
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "[\"none\"]"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "data-center_load_v1",
+  "calculatorVersion": "1.0.0"
+}

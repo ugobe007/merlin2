@@ -6,6 +6,15 @@
  *
  * ✅ FIXED Jan 2025: Now loads questions dynamically from database
  * based on selected industry (state.industry)
+ * 
+ * ⚠️  SSOT DOCTRINE (Jan 31, 2026):
+ * BUSINESS_SIZE_PREFILLS is a LEGACY divergent source and is now GATED.
+ * Canonical defaults come ONLY from:
+ * 1. template.defaults (contract)
+ * 2. question.defaultValue (legacy fallback)
+ * 3. locationIntel (ground truth)
+ * 
+ * Set ENABLE_LEGACY_PREFILLS = true only for backward compat debugging.
  */
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -18,6 +27,11 @@ import {
   type Question,
 } from "@/data/carwash-questions-complete.config";
 import { Loader2 } from "lucide-react";
+
+// ============================================================================
+// FEATURE FLAG: Legacy prefills (DEPRECATED - use template.defaults instead)
+// ============================================================================
+const ENABLE_LEGACY_PREFILLS = false; // Set to true only for debugging
 
 // Industry header images
 import hotelImg from "@/assets/images/hotel_motel_holidayinn_1.jpg";
@@ -76,7 +90,8 @@ const INDUSTRY_IMAGES: Record<string, string> = {
 };
 
 // ============================================================================
-// BUSINESS SIZE → PRE-FILL MAPPING
+// BUSINESS SIZE → PRE-FILL MAPPING (LEGACY - GATED BY FEATURE FLAG)
+// ⚠️  DEPRECATED: Use template.defaults from SSOT instead
 // Maps the businessSizeTier from Step 2 to pre-fill values for Step 3 questions
 // This prevents asking redundant questions about facility size
 // ============================================================================
@@ -642,10 +657,17 @@ export function CompleteStep3Component({
   const [loading, setLoading] = useState(true);
   const [industryTitle, setIndustryTitle] = useState("");
 
-  // ✅ Apply business size pre-fills to answers (e.g., "Hyperscale" → dataCenterType: 'hyperscale')
+  // ⚠️  LEGACY: Apply business size pre-fills to answers
+  // GATED by ENABLE_LEGACY_PREFILLS feature flag
+  // Canonical defaults should come from template.defaults via SSOT
   const preFillsAppliedRef = useRef<string | null>(null);
   
   useEffect(() => {
+    // ⚠️  SSOT DOCTRINE: Legacy prefills are DISABLED by default
+    if (!ENABLE_LEGACY_PREFILLS) {
+      return;
+    }
+
     const industry = state.industry;
     const businessSizeTier = state.businessSizeTier as
       | "small"
@@ -655,7 +677,7 @@ export function CompleteStep3Component({
       | undefined;
 
     if (!industry || !businessSizeTier) {
-      console.log("📋 No business size pre-fill: industry=", industry, "tier=", businessSizeTier);
+      console.log("📋 [LEGACY] No business size pre-fill: industry=", industry, "tier=", businessSizeTier);
       return;
     }
 
@@ -663,25 +685,26 @@ export function CompleteStep3Component({
     // This prevents infinite loop where effect modifies state.useCaseData which triggers effect again
     const preFillKey = `${industry}-${businessSizeTier}`;
     if (preFillsAppliedRef.current === preFillKey) {
-      console.log(`✅ Pre-fills already applied for ${preFillKey}, skipping`);
+      console.log(`✅ [LEGACY] Pre-fills already applied for ${preFillKey}, skipping`);
       return;
     }
 
     const industryPrefills = BUSINESS_SIZE_PREFILLS[industry];
     if (!industryPrefills) {
-      console.log(`📋 No pre-fill mapping for industry: ${industry}`);
+      console.log(`📋 [LEGACY] No pre-fill mapping for industry: ${industry}`);
       return;
     }
 
     const tierPrefills = industryPrefills[businessSizeTier];
     if (!tierPrefills) {
-      console.log(`📋 No pre-fill mapping for tier: ${businessSizeTier}`);
+      console.log(`📋 [LEGACY] No pre-fill mapping for tier: ${businessSizeTier}`);
       return;
     }
 
-    console.log(
-      `✅ Applying business size pre-fills for ${industry} (${businessSizeTier}):`,
-      tierPrefills
+    console.warn(
+      `⚠️  [LEGACY PREFILLS] Applying divergent pre-fills for ${industry} (${businessSizeTier}):`,
+      tierPrefills,
+      "\n  ⚠️  These should come from template.defaults instead!"
     );
 
     // ✅ SINGLE SOURCE OF TRUTH: Write pre-fills to wizard store
@@ -698,7 +721,7 @@ export function CompleteStep3Component({
         merged[key] = currentAnswers[key];
       }
     });
-    console.log("📋 Merged answers with pre-fills:", merged);
+    console.log("📋 [LEGACY] Merged answers with pre-fills:", merged);
     
     // Mark as applied BEFORE calling updateState to prevent re-entry
     preFillsAppliedRef.current = preFillKey;

@@ -1,0 +1,670 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:34.657Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "5c60a1ef-acb0-4ddd-83ad-8834c1e81ed9",
+  "templateVersion": "2025-11-12T03:25:05.152409+00:00",
+  "industry": "hotel",
+  "useCase": "hotel",
+  "name": "Hotel",
+  "slug": "hotel",
+  "description": "Hotels, motels, resorts with guest rooms",
+  "category": "commercial",
+  "questions": [
+    {
+      "id": "b6543e5d-22eb-4445-a894-a5956d325e78",
+      "type": "text",
+      "required": false,
+      "defaultValue": "midscale",
+      "options": [
+        {
+          "icon": "🏨",
+          "label": "Economy/Budget",
+          "value": "economy",
+          "kWPerRoom": 5,
+          "description": "Limited amenities, basic HVAC"
+        },
+        {
+          "icon": "🏩",
+          "label": "Midscale",
+          "value": "midscale",
+          "kWPerRoom": 7,
+          "description": "Standard amenities + breakfast area"
+        },
+        {
+          "icon": "🏪",
+          "label": "Upscale/Full-service",
+          "value": "upscale",
+          "kWPerRoom": 10,
+          "description": "Restaurant, fitness, meeting rooms"
+        },
+        {
+          "icon": "🏰",
+          "label": "Luxury/Resort",
+          "value": "luxury",
+          "kWPerRoom": 15,
+          "description": "Spa, pool, full dining, concierge"
+        }
+      ]
+    },
+    {
+      "id": "50bfaf41-5e2b-4112-beb9-d571edb98a88",
+      "type": "text",
+      "required": false,
+      "defaultValue": "100-200",
+      "options": [
+        {
+          "icon": "🏨",
+          "label": "<50 rooms",
+          "rooms": 40,
+          "value": "<50"
+        },
+        {
+          "icon": "🏩",
+          "label": "50–100 rooms",
+          "rooms": 75,
+          "value": "50-100"
+        },
+        {
+          "icon": "🏪",
+          "label": "100–200 rooms",
+          "rooms": 150,
+          "value": "100-200"
+        },
+        {
+          "icon": "🏢",
+          "label": "200–400 rooms",
+          "rooms": 300,
+          "value": "200-400"
+        },
+        {
+          "icon": "🏰",
+          "label": "400+ rooms",
+          "rooms": 500,
+          "value": "400+"
+        }
+      ]
+    },
+    {
+      "id": "3ed68cb0-6346-4abc-8744-0411d321f3fd",
+      "type": "text",
+      "required": false,
+      "defaultValue": "1200",
+      "options": [
+        {
+          "kW": 96,
+          "icon": "🔌",
+          "label": "400A",
+          "value": "400"
+        },
+        {
+          "kW": 192,
+          "icon": "⚡",
+          "label": "800A",
+          "value": "800"
+        },
+        {
+          "kW": 288,
+          "icon": "🔋",
+          "label": "1200A",
+          "value": "1200"
+        },
+        {
+          "kW": 384,
+          "icon": "⚙️",
+          "label": "1600A",
+          "value": "1600"
+        },
+        {
+          "kW": 480,
+          "icon": "🏭",
+          "label": "2000A+",
+          "value": "2000+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "87e02532-f267-4994-b4ef-412b763ae4ba",
+      "type": "text",
+      "required": false,
+      "defaultValue": "277_480",
+      "options": [
+        {
+          "icon": "🔌",
+          "label": "208V",
+          "value": "208"
+        },
+        {
+          "icon": "⚡",
+          "label": "240V",
+          "value": "240"
+        },
+        {
+          "icon": "🔋",
+          "label": "277/480V",
+          "value": "277_480"
+        },
+        {
+          "icon": "⚙️",
+          "label": "Mixed",
+          "value": "mixed"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "909c3a70-470c-44eb-9532-aec87715f2a3",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"breakfast_area\", \"fitness\"]",
+      "options": [
+        {
+          "kW": 100,
+          "icon": "🏊",
+          "label": "Indoor pool (heated)",
+          "value": "pool_indoor"
+        },
+        {
+          "kW": 50,
+          "icon": "🌊",
+          "label": "Outdoor pool",
+          "value": "pool_outdoor"
+        },
+        {
+          "kW": 75,
+          "icon": "🍽️",
+          "label": "Full-service restaurant",
+          "value": "restaurant"
+        },
+        {
+          "kW": 25,
+          "icon": "🥐",
+          "label": "Breakfast area",
+          "value": "breakfast_area"
+        },
+        {
+          "kW": 60,
+          "icon": "♨️",
+          "label": "Spa/hot tub",
+          "value": "spa"
+        },
+        {
+          "kW": 20,
+          "icon": "💪",
+          "label": "Fitness center",
+          "value": "fitness"
+        },
+        {
+          "kW": 80,
+          "icon": "🧺",
+          "label": "On-site laundry",
+          "value": "laundry"
+        },
+        {
+          "kW": 50,
+          "icon": "🔌",
+          "label": "EV charging stations",
+          "value": "ev_charging"
+        },
+        {
+          "kW": 30,
+          "icon": "📊",
+          "label": "Conference/meeting rooms",
+          "value": "conference"
+        }
+      ]
+    },
+    {
+      "id": "7b9cb791-7dae-4862-9f96-3d0a109c6cd6",
+      "type": "text",
+      "required": false,
+      "defaultValue": "ptac",
+      "options": [
+        {
+          "icon": "❄️",
+          "label": "PTAC units (in-room)",
+          "value": "ptac",
+          "kWPerRoom": 3
+        },
+        {
+          "icon": "🌡️",
+          "label": "Split systems",
+          "value": "split",
+          "kWPerRoom": 3.5
+        },
+        {
+          "icon": "🏭",
+          "label": "Central chiller plant",
+          "value": "central_chiller",
+          "kWPerRoom": 4
+        },
+        {
+          "icon": "⚙️",
+          "label": "VRF/VRV system",
+          "value": "vrf",
+          "kWPerRoom": 3.2
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "kWPerRoom": 3
+        }
+      ]
+    },
+    {
+      "id": "5aa1c706-b60a-463f-8e09-3c99d3728914",
+      "type": "text",
+      "required": false,
+      "defaultValue": "electric",
+      "options": [
+        {
+          "icon": "⚡",
+          "label": "Electric water heaters",
+          "value": "electric",
+          "kWPerRoom": 2
+        },
+        {
+          "icon": "🔥",
+          "label": "Natural gas",
+          "value": "gas",
+          "kWPerRoom": 0
+        },
+        {
+          "icon": "♨️",
+          "label": "Heat pump water heaters",
+          "value": "heat_pump",
+          "kWPerRoom": 1
+        },
+        {
+          "icon": "☀️",
+          "label": "Solar thermal",
+          "value": "solar_thermal",
+          "kWPerRoom": 0.5
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "kWPerRoom": 1
+        }
+      ]
+    },
+    {
+      "id": "3e6c0b1a-4ac1-4278-bca4-66b6601cc68e",
+      "type": "text",
+      "required": false,
+      "defaultValue": "60-75",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "<40%",
+          "value": "<40",
+          "concurrency": 0.4
+        },
+        {
+          "icon": "📊",
+          "label": "40–60%",
+          "value": "40-60",
+          "concurrency": 0.6
+        },
+        {
+          "icon": "📈",
+          "label": "60–75%",
+          "value": "60-75",
+          "concurrency": 0.7
+        },
+        {
+          "icon": "🎯",
+          "label": "75–90%",
+          "value": "75-90",
+          "concurrency": 0.85
+        },
+        {
+          "icon": "🔥",
+          "label": "90%+",
+          "value": "90+",
+          "concurrency": 0.95
+        }
+      ]
+    },
+    {
+      "id": "c0799d27-7046-48c4-a2af-0a53e7999747",
+      "type": "text",
+      "required": false,
+      "defaultValue": "afternoon",
+      "options": [
+        {
+          "icon": "🕐",
+          "label": "Afternoon (2–6 PM)",
+          "value": "afternoon",
+          "peakHour": 16
+        },
+        {
+          "icon": "🌆",
+          "label": "Evening (6–10 PM)",
+          "value": "evening",
+          "peakHour": 19
+        },
+        {
+          "icon": "🕛",
+          "label": "Throughout the day",
+          "value": "all_day",
+          "peakHour": 14
+        },
+        {
+          "icon": "📊",
+          "label": "Convention-driven (surges)",
+          "value": "convention",
+          "peakHour": 15
+        }
+      ]
+    },
+    {
+      "id": "8d25f45d-5fe3-4779-bd63-660ed64cbdf2",
+      "type": "text",
+      "required": false,
+      "defaultValue": "2-3",
+      "options": [
+        {
+          "icon": "🌙",
+          "label": "1 night",
+          "value": "1",
+          "nights": 1
+        },
+        {
+          "icon": "🌃",
+          "label": "2–3 nights",
+          "value": "2-3",
+          "nights": 2.5
+        },
+        {
+          "icon": "🏖️",
+          "label": "4–7 nights",
+          "value": "4-7",
+          "nights": 5
+        },
+        {
+          "icon": "🏝️",
+          "label": "7+ nights",
+          "value": "7+",
+          "nights": 10
+        },
+        {
+          "icon": "🏠",
+          "label": "Extended stay (weeks)",
+          "value": "extended",
+          "nights": 21
+        }
+      ]
+    },
+    {
+      "id": "f92da5ed-ed96-4a35-8c82-e22945bbb8e2",
+      "type": "text",
+      "required": false,
+      "defaultValue": "24_7",
+      "options": [
+        {
+          "icon": "🕛",
+          "hours": 24,
+          "label": "24/7 staffed",
+          "value": "24_7"
+        },
+        {
+          "icon": "🕐",
+          "hours": 18,
+          "label": "6 AM – Midnight",
+          "value": "6am_midnight"
+        },
+        {
+          "icon": "🕔",
+          "hours": 16,
+          "label": "7 AM – 11 PM",
+          "value": "7am_11pm"
+        },
+        {
+          "icon": "🕘",
+          "hours": 12,
+          "label": "Limited hours",
+          "value": "limited"
+        }
+      ]
+    },
+    {
+      "id": "f1123266-5233-4052-95f5-943473901bab",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000-30000",
+      "options": [
+        {
+          "icon": "💵",
+          "label": "<$5,000",
+          "value": "<5000"
+        },
+        {
+          "icon": "💰",
+          "label": "$5,000–$15,000",
+          "value": "5000-15000"
+        },
+        {
+          "icon": "💳",
+          "label": "$15,000–$30,000",
+          "value": "15000-30000"
+        },
+        {
+          "icon": "💸",
+          "label": "$30,000–$75,000",
+          "value": "30000-75000"
+        },
+        {
+          "icon": "🏦",
+          "label": "$75,000+",
+          "value": "75000+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "87726278-9010-4776-b2e0-ba8f4528f56e",
+      "type": "text",
+      "required": false,
+      "defaultValue": "demand",
+      "options": [
+        {
+          "icon": "📊",
+          "label": "Flat rate only",
+          "value": "flat",
+          "savingsMultiplier": 0.5
+        },
+        {
+          "icon": "🕐",
+          "label": "Time-of-use (TOU)",
+          "value": "tou",
+          "savingsMultiplier": 0.8
+        },
+        {
+          "icon": "⚡",
+          "label": "Demand charges",
+          "value": "demand",
+          "savingsMultiplier": 1
+        },
+        {
+          "icon": "🎯",
+          "label": "TOU + demand charges",
+          "value": "tou_demand",
+          "savingsMultiplier": 1.2
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "savingsMultiplier": 0.8
+        }
+      ]
+    },
+    {
+      "id": "1452181b-1a0d-4d64-b275-6468559a0f51",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "⚠️",
+          "label": "Breaker trips",
+          "value": "breaker_trips"
+        },
+        {
+          "icon": "❄️",
+          "label": "HVAC failures during peak",
+          "value": "hvac_failures"
+        },
+        {
+          "icon": "📉",
+          "label": "Voltage sag/flicker",
+          "value": "voltage_sag"
+        },
+        {
+          "icon": "💰",
+          "label": "Utility penalties",
+          "value": "utility_penalties"
+        },
+        {
+          "icon": "😤",
+          "label": "Guest complaints (no AC)",
+          "value": "guest_complaints"
+        },
+        {
+          "icon": "✅",
+          "label": "None",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "cacc944a-ece1-4e06-a7f6-43af0cdedc6b",
+      "type": "text",
+      "required": false,
+      "defaultValue": "guest_impact",
+      "options": [
+        {
+          "icon": "🛑",
+          "label": "Critical systems fail (elevators, HVAC)",
+          "value": "critical",
+          "backupHours": 6
+        },
+        {
+          "icon": "⚠️",
+          "label": "Major guest impact",
+          "value": "guest_impact",
+          "backupHours": 4
+        },
+        {
+          "icon": "📉",
+          "label": "Inconvenience only",
+          "value": "inconvenience",
+          "backupHours": 2
+        },
+        {
+          "icon": "✅",
+          "label": "Minor disruption",
+          "value": "minor",
+          "backupHours": 1
+        }
+      ]
+    },
+    {
+      "id": "ea007dd9-b7a1-45d3-84de-412990503b20",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "➕",
+          "label": "Adding rooms/floors",
+          "value": "add_rooms",
+          "kWIncrease": 100
+        },
+        {
+          "icon": "🏊",
+          "label": "Adding pool/spa",
+          "value": "pool",
+          "kWIncrease": 100
+        },
+        {
+          "icon": "🍽️",
+          "label": "Adding restaurant",
+          "value": "restaurant",
+          "kWIncrease": 75
+        },
+        {
+          "icon": "🔌",
+          "label": "EV charging stations",
+          "value": "ev_chargers",
+          "kWIncrease": 50
+        },
+        {
+          "icon": "❄️",
+          "label": "HVAC upgrade",
+          "value": "hvac_upgrade",
+          "kWIncrease": 50
+        },
+        {
+          "icon": "☀️",
+          "label": "Solar panels",
+          "value": "solar",
+          "kWIncrease": 0
+        },
+        {
+          "icon": "✅",
+          "label": "No expansion planned",
+          "value": "none",
+          "kWIncrease": 0
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "[\"none\"]"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "hotel_load_v1",
+  "calculatorVersion": "1.0.0"
+}

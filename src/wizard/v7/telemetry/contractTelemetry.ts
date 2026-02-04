@@ -74,7 +74,8 @@ export async function sendContractTelemetry(event: ContractTelemetryEvent): Prom
     }
 
     // Production: send to backend (fire-and-forget)
-    const endpoint = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+    // Use relative URL (same-origin) - Fly.io routes /api/* to backend
+    const endpoint = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") || '';
     
     fetch(`${endpoint}/api/telemetry`, {
       method: 'POST',

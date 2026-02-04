@@ -126,14 +126,14 @@ function App() {
     return <MetaCalculationsPage />;
   }
 
-  // Access via /wizard or /wizard-v6 - V6 Wizard (Clean Build Dec 28, 2025)
-  if (pathname === "/wizard" || pathname === "/wizard-v6") {
-    return <WizardV6 />;
+  // Access via /wizard or /wizard-v7 - V7 SSOT Wizard (Feb 1, 2026 - NOW THE DEFAULT)
+  if (pathname === "/wizard" || pathname === "/wizard-v7" || pathname === "/v7" || pathname === "/wizard/v7") {
+    return <WizardV7Page />;
   }
 
-  // Access via /v7 or /wizard/v7 - V7 SSOT Wizard (Jan 26, 2026)
-  if (pathname === "/v7" || pathname === "/wizard/v7" || pathname === "/wizard-v7") {
-    return <WizardV7Page />;
+  // Access via /wizard-v6 ONLY - V6 Legacy (kept for testing)
+  if (pathname === "/wizard-v6") {
+    return <WizardV6 />;
   }
 
   // Access via /wizard-vnext or /vnext - vNext luminous HUD scaffold (Jan 30, 2026)

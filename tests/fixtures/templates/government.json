@@ -1,0 +1,880 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:34.004Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "36e2303b-0e7f-4a26-b177-ec3e0bdb8cd3",
+  "templateVersion": "2025-11-28T04:59:13.77318+00:00",
+  "industry": "government",
+  "useCase": "government",
+  "name": "Government & Public Building",
+  "slug": "government",
+  "description": "Municipal building with offices, public services, and security systems",
+  "category": "institutional",
+  "questions": [
+    {
+      "id": "a2457956-e3d4-4d57-a508-5408ed670506",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Landmark",
+          "label": "City Hall/Municipal Building",
+          "value": "city-hall",
+          "description": "Administrative offices"
+        },
+        {
+          "icon": "Scale",
+          "label": "Courthouse",
+          "value": "courthouse",
+          "description": "Judicial facility"
+        },
+        {
+          "icon": "Shield",
+          "label": "Public Safety",
+          "value": "public-safety",
+          "description": "Police, fire station"
+        },
+        {
+          "icon": "Library",
+          "label": "Library",
+          "value": "library",
+          "description": "Public library"
+        },
+        {
+          "icon": "Users",
+          "label": "Community Center",
+          "value": "community-center",
+          "description": "Recreation, events"
+        },
+        {
+          "icon": "Bus",
+          "label": "Transit Facility",
+          "value": "transit",
+          "description": "Bus depot, transit hub"
+        },
+        {
+          "icon": "Droplets",
+          "label": "Water/Wastewater",
+          "value": "water-wastewater",
+          "description": "Treatment, pumping"
+        },
+        {
+          "icon": "Building2",
+          "label": "Multi-Use Campus",
+          "value": "multi-use",
+          "description": "Multiple building types"
+        }
+      ]
+    },
+    {
+      "id": "29b0e6e2-9cf4-4c4b-9b35-7e3b09a1f9cd",
+      "type": "text",
+      "required": false,
+      "defaultValue": "75000",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "c7708fee-aff6-4302-b621-ee84bcebbbdf",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Building",
+          "label": "Municipal/City",
+          "value": "municipal"
+        },
+        {
+          "icon": "MapPin",
+          "label": "County",
+          "value": "county"
+        },
+        {
+          "icon": "Flag",
+          "label": "State",
+          "value": "state"
+        },
+        {
+          "icon": "Landmark",
+          "label": "Federal",
+          "value": "federal"
+        },
+        {
+          "icon": "Feather",
+          "label": "Tribal",
+          "value": "tribal"
+        },
+        {
+          "icon": "Circle",
+          "label": "Special District",
+          "value": "special-district"
+        }
+      ]
+    },
+    {
+      "id": "5a792f3b-1b16-4142-9ed0-a69d4fbeba54",
+      "type": "text",
+      "required": false,
+      "defaultValue": "50000",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "41e33a1d-1491-48e4-aec1-1ae187a932e8",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "ranges": [
+          {
+            "max": 10,
+            "min": 1,
+            "label": "1-10"
+          },
+          {
+            "max": 25,
+            "min": 11,
+            "label": "11-25"
+          },
+          {
+            "max": 50,
+            "min": 26,
+            "label": "26-50"
+          },
+          {
+            "max": 100,
+            "min": 51,
+            "label": "51-100"
+          },
+          {
+            "max": null,
+            "min": 101,
+            "label": "100+"
+          }
+        ]
+      }
+    },
+    {
+      "id": "f3e28529-4f69-46ea-9e64-1d0f94fc7b38",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Phone",
+          "label": "911/Emergency Dispatch",
+          "value": "911-dispatch"
+        },
+        {
+          "icon": "Server",
+          "label": "Data Center/IT",
+          "value": "data-center"
+        },
+        {
+          "icon": "AlertCircle",
+          "label": "Emergency Operations Center",
+          "value": "emergency-ops"
+        },
+        {
+          "icon": "Lock",
+          "label": "Detention/Holding",
+          "value": "detention"
+        },
+        {
+          "icon": "Archive",
+          "label": "Evidence Storage",
+          "value": "evidence"
+        },
+        {
+          "icon": "FileText",
+          "label": "Critical Records",
+          "value": "records"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "No Critical 24/7 Functions",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "b863df84-2ffb-46ce-89ed-6804a761ce85",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No EVs Currently",
+          "value": "none"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Planning/Evaluating",
+          "value": "planning"
+        },
+        {
+          "icon": "Zap",
+          "label": "Pilot Program",
+          "value": "pilot"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "Partial Fleet EV",
+          "value": "partial"
+        },
+        {
+          "icon": "FileText",
+          "label": "Mandated Transition",
+          "value": "mandated"
+        }
+      ]
+    },
+    {
+      "id": "5638ee4e-f514-4444-8fac-075918b9caa0",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No Fleet",
+          "value": "none"
+        },
+        {
+          "icon": "Car",
+          "label": "Small (1-10)",
+          "value": "small"
+        },
+        {
+          "icon": "Car",
+          "label": "Medium (11-50)",
+          "value": "medium"
+        },
+        {
+          "icon": "Truck",
+          "label": "Large (51-200)",
+          "value": "large"
+        },
+        {
+          "icon": "Truck",
+          "label": "Very Large (200+)",
+          "value": "very-large"
+        }
+      ]
+    },
+    {
+      "id": "9e2f949e-f18f-4d15-bc4a-515df994a4e3",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "max": 24,
+        "min": 6,
+        "step": 1,
+        "suffix": " hrs/day"
+      }
+    },
+    {
+      "id": "a2c4e55a-38e2-463e-85af-d98db8bda2d1",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "label": "Legacy (15+ years old)",
+          "value": "legacy",
+          "description": "Older, less efficient equipment"
+        },
+        {
+          "label": "Standard (5-15 years)",
+          "value": "standard",
+          "description": "Average efficiency"
+        },
+        {
+          "label": "Modern (under 5 years)",
+          "value": "modern",
+          "description": "High-efficiency equipment"
+        },
+        {
+          "label": "Premium/LEED",
+          "value": "premium",
+          "description": "Best-in-class efficiency"
+        }
+      ]
+    },
+    {
+      "id": "bc797d6b-cedc-4a89-8cc6-be1cb0f44b51",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No Backup",
+          "value": "none"
+        },
+        {
+          "icon": "Shield",
+          "label": "Critical Systems Only",
+          "value": "critical-only"
+        },
+        {
+          "icon": "Battery",
+          "label": "Partial Building",
+          "value": "partial"
+        },
+        {
+          "icon": "Fuel",
+          "label": "Full Building",
+          "value": "full"
+        },
+        {
+          "icon": "ShieldCheck",
+          "label": "Redundant (N+1)",
+          "value": "redundant"
+        }
+      ]
+    },
+    {
+      "id": "a21654ad-3e29-4451-bb4e-eece0f4871ff",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Building",
+          "label": "Central Plant",
+          "value": "central"
+        },
+        {
+          "icon": "Wind",
+          "label": "Rooftop Units",
+          "value": "rooftop"
+        },
+        {
+          "icon": "Wind",
+          "label": "Split Systems",
+          "value": "split"
+        },
+        {
+          "icon": "Thermometer",
+          "label": "VRF System",
+          "value": "vrf"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Geothermal",
+          "value": "geothermal"
+        },
+        {
+          "icon": "Settings",
+          "label": "Mixed Systems",
+          "value": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "6f364301-2684-4055-b76c-b12396ab9a16",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Lightbulb",
+          "label": "Fluorescent",
+          "value": "fluorescent"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "LED (Partial)",
+          "value": "led-partial"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "LED (Full Building)",
+          "value": "led-full"
+        },
+        {
+          "icon": "Lightbulb",
+          "label": "LED with Smart Controls",
+          "value": "led-smart"
+        }
+      ]
+    },
+    {
+      "id": "7495fbc1-cb68-49c0-9bb8-de42a091d341",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Benchmarking",
+          "value": "none"
+        },
+        {
+          "icon": "Star",
+          "label": "ENERGY STAR Portfolio Manager",
+          "value": "energy-star"
+        },
+        {
+          "icon": "FileText",
+          "label": "Local Benchmarking Mandate",
+          "value": "local-mandate"
+        },
+        {
+          "icon": "BarChart",
+          "label": "Internal Tracking Only",
+          "value": "internal"
+        }
+      ]
+    },
+    {
+      "id": "e375f361-ba57-48d0-af76-5369605a0802",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000",
+      "options": [
+        {
+          "label": "$1,000 - $5,000/mo",
+          "value": "3000"
+        },
+        {
+          "label": "$5,000 - $15,000/mo",
+          "value": "10000"
+        },
+        {
+          "label": "$15,000 - $35,000/mo",
+          "value": "25000"
+        },
+        {
+          "label": "$35,000 - $75,000/mo",
+          "value": "50000"
+        },
+        {
+          "label": "$75,000 - $150,000/mo",
+          "value": "100000"
+        },
+        {
+          "label": "Over $150,000/mo",
+          "value": "200000"
+        }
+      ]
+    },
+    {
+      "id": "4617d335-e8a1-43a5-aac0-208e998f388c",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "DollarSign",
+          "label": "Under $5,000",
+          "value": "under-5k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$5,000 - $15,000",
+          "value": "5-15k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$15,000 - $40,000",
+          "value": "15-40k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$40,000 - $100,000",
+          "value": "40-100k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "Over $100,000",
+          "value": "over-100k"
+        }
+      ]
+    },
+    {
+      "id": "5eb6e212-2123-41d5-85cf-34ee75c153e4",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Zap",
+          "label": "Under 100 kW",
+          "value": "under-100"
+        },
+        {
+          "icon": "Zap",
+          "label": "100-300 kW",
+          "value": "100-300"
+        },
+        {
+          "icon": "Zap",
+          "label": "300-750 kW",
+          "value": "300-750"
+        },
+        {
+          "icon": "Zap",
+          "label": "750 kW - 1.5 MW",
+          "value": "750-1500"
+        },
+        {
+          "icon": "Zap",
+          "label": "Over 1.5 MW",
+          "value": "over-1500"
+        }
+      ]
+    },
+    {
+      "id": "affcc91e-c0eb-4634-944a-0ee0dbb6876d",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "label": "Under 200 kW",
+          "value": "small",
+          "description": "Small commercial service"
+        },
+        {
+          "label": "200-500 kW",
+          "value": "medium",
+          "description": "Medium commercial service"
+        },
+        {
+          "label": "500 kW - 2 MW",
+          "value": "large",
+          "description": "Large commercial service"
+        },
+        {
+          "label": "Over 2 MW",
+          "value": "utility",
+          "description": "Utility-scale connection"
+        }
+      ]
+    },
+    {
+      "id": "b1998864-7a0a-4a89-9a2e-1853dd06235c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "true",
+      "options": null
+    },
+    {
+      "id": "2a6cac9a-ed3b-4bf0-85bb-ec98531176ab",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "92768646-5d08-4d17-b601-4afabfd9afd6",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "max": 500,
+        "min": 0,
+        "step": 10,
+        "suffix": " kW"
+      }
+    },
+    {
+      "id": "d4dd39e6-7572-4b78-89da-99a03047cb9a",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "f8bde0d3-4c50-409a-aee5-c58ef6fea45c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "ranges": [
+          {
+            "max": 0,
+            "min": 0,
+            "label": "0"
+          },
+          {
+            "max": 5,
+            "min": 1,
+            "label": "1-5"
+          },
+          {
+            "max": 15,
+            "min": 6,
+            "label": "6-15"
+          },
+          {
+            "max": 30,
+            "min": 16,
+            "label": "16-30"
+          },
+          {
+            "max": null,
+            "min": 31,
+            "label": "30+"
+          }
+        ],
+        "suffix": "chargers"
+      }
+    },
+    {
+      "id": "ec24bc94-eca5-4a5f-a453-14752e0f18da",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Sun",
+          "label": "Solar PV",
+          "value": "solar"
+        },
+        {
+          "icon": "Fuel",
+          "label": "Backup Generators",
+          "value": "generator"
+        },
+        {
+          "icon": "Battery",
+          "label": "Battery Storage",
+          "value": "battery"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "EV Chargers",
+          "value": "ev-chargers"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Geothermal",
+          "value": "geothermal"
+        },
+        {
+          "icon": "Flame",
+          "label": "CHP/Cogeneration",
+          "value": "chp"
+        }
+      ]
+    },
+    {
+      "id": "dceeff66-fde0-46de-9d4f-2ff422d03be0",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Interested",
+          "value": "not_interested"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Considering",
+          "value": "considering"
+        },
+        {
+          "icon": "Sun",
+          "label": "Very Interested",
+          "value": "very_interested"
+        },
+        {
+          "icon": "FileText",
+          "label": "PPA/No Capital Preferred",
+          "value": "ppa-preferred"
+        },
+        {
+          "icon": "FileText",
+          "label": "Mandated/Required",
+          "value": "mandated"
+        }
+      ]
+    },
+    {
+      "id": "443f8249-b7d0-48b5-941a-d1982cde56bb",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Home",
+          "label": "Building Rooftops",
+          "value": "rooftop"
+        },
+        {
+          "icon": "Car",
+          "label": "Parking Lot Carports",
+          "value": "parking"
+        },
+        {
+          "icon": "Mountain",
+          "label": "Government-Owned Land",
+          "value": "ground"
+        },
+        {
+          "icon": "Recycle",
+          "label": "Brownfield/Landfill",
+          "value": "brownfield"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "Limited Space",
+          "value": "limited"
+        }
+      ]
+    },
+    {
+      "id": "42a2ab53-90d4-47f1-b98f-91974e63d87b",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Leaf",
+          "label": "Carbon Neutrality Goal",
+          "value": "carbon-neutral"
+        },
+        {
+          "icon": "Sun",
+          "label": "Renewable Energy Target",
+          "value": "renewable-target"
+        },
+        {
+          "icon": "FileText",
+          "label": "Executive Order/Directive",
+          "value": "executive-order"
+        },
+        {
+          "icon": "Award",
+          "label": "LEED Requirement",
+          "value": "leed"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "EV-First Fleet Policy",
+          "value": "ev-first"
+        },
+        {
+          "icon": "Flag",
+          "label": "Lead by Example Program",
+          "value": "lead-by-example"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "No Formal Mandates",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "f2b2ceae-078c-4a58-881e-eda5afd3ff2f",
+      "type": "text",
+      "required": false,
+      "defaultValue": "peak_shaving",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "Peak Shaving",
+          "value": "peak_shaving",
+          "description": "Reduce demand charges during peak hours"
+        },
+        {
+          "icon": "💰",
+          "label": "Energy Arbitrage",
+          "value": "arbitrage",
+          "description": "Buy low, use high - time-of-use optimization"
+        },
+        {
+          "icon": "🔋",
+          "label": "Backup/Resilience",
+          "value": "resilience",
+          "description": "Keep critical loads running during outages"
+        },
+        {
+          "icon": "☀️",
+          "label": "Renewable Integration",
+          "value": "renewable",
+          "description": "Maximize solar self-consumption"
+        },
+        {
+          "icon": "📊",
+          "label": "Demand Response",
+          "value": "demand_response",
+          "description": "Participate in utility programs for revenue"
+        }
+      ]
+    },
+    {
+      "id": "30ee3395-12cf-4b6a-b3a1-b3479f60f654",
+      "type": "text",
+      "required": false,
+      "defaultValue": "50000",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    }
+  ],
+  "defaults": {
+    "undefined": "50000"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "government_load_v1",
+  "calculatorVersion": "1.0.0"
+}

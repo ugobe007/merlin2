@@ -153,6 +153,24 @@ function StartOverModal({ isOpen, onClose, onConfirm }: StartOverModalProps) {
 // ============================================================================
 
 export default function WizardV6() {
+  // ⚠️ TRIPWIRE: V6 is RETIRED from modals (Feb 2, 2026)
+  // This should ONLY mount via /wizard-v6 explicit route
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      const isLegacyRoute = window.location.pathname === "/wizard-v6";
+      if (!isLegacyRoute) {
+        console.error(
+          "🚨 [V6 TRIPWIRE] WizardV6 mounted outside /wizard-v6!\n" +
+          "   Current path: " + window.location.pathname + "\n" +
+          "   V6 is RETIRED. All CTAs should open V7.\n" +
+          "   Check ModalManager.tsx or ModalRenderer.tsx for regressions."
+        );
+      } else {
+        console.warn("[V6] WizardV6 mounted via /wizard-v6 (legacy route - OK)");
+      }
+    }
+  }, []);
+
   // ✅ FIXED: Check URL parameter to force fresh start
   // If ?fresh=true or wizard is accessed directly, clear all persisted state
   const shouldStartFresh = (() => {
@@ -2379,6 +2397,76 @@ export default function WizardV6() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const canProceed = useMemo(() => _canProceed(), [currentStep, step3Contract.ok, state, hasValidCalcs]);
 
+  // ✅ DIAGNOSTIC (Feb 1, 2026): Compute WHY Next is disabled - ROOT CAUSE PRECEDENCE
+  // Returns ONLY the first/root blocking condition for clean diagnostics
+  // This makes Playwright tests stable and errors actionable
+  const nextDisabledReason = useMemo((): string | null => {
+    if (currentStep === 6) return 'final-step'; // Not really "disabled", just hidden
+
+    switch (currentStep) {
+      case 1: {
+        // Root-cause precedence: ZIP → state → goals
+        if (state.zipCode.length !== 5) return 'zip-incomplete';
+        if (state.state === '') return 'state-missing';
+        if (state.goals.length < 2) return 'goals-need-2';
+        return null;
+      }
+      case 2: {
+        // Root-cause precedence: industry → size tier
+        if (state.industry === '') return 'industry-missing';
+        if (state.businessSizeTier === undefined) return 'size-tier-missing';
+        return null;
+      }
+      case 3: {
+        if (!step3Contract.ok) {
+          // For Step 3, provide more detail since it's complex
+          if (step3Contract.missingRequired?.length > 0) {
+            return `missing:${step3Contract.missingRequired[0]}`; // First missing field
+          }
+          return 'step3-contract-failed';
+        }
+        return null;
+      }
+      case 4:
+        // Step 4 is always valid (opt-in add-ons)
+        return null;
+      case 5: {
+        // Root-cause precedence: power level → calcs
+        if (state.selectedPowerLevel === null) return 'power-level-not-selected';
+        if (!hasValidCalcs) return 'calcs-invalid';
+        return null;
+      }
+      default:
+        return 'unknown-step';
+    }
+  }, [currentStep, state.zipCode, state.state, state.goals.length, state.industry, 
+      state.businessSizeTier, step3Contract, state.selectedPowerLevel, hasValidCalcs]);
+
+  // ✅ DIAGNOSTIC (Jan 28, 2026): Log when Next stays disabled for > 2s after user activity
+  // Helps debug Playwright tests that timeout waiting for Next to enable
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    if (!nextDisabledReason) return; // Not disabled, nothing to log
+    if (currentStep === 6) return; // Final step, expected
+
+    const timer = setTimeout(() => {
+      console.warn(`⚠️ [DIAGNOSTIC] Next disabled for >2s at Step ${currentStep}:`, {
+        reason: nextDisabledReason,
+        zipCode: state.zipCode,
+        state: state.state,
+        goalsCount: state.goals.length,
+        industry: state.industry,
+        businessSizeTier: state.businessSizeTier,
+        selectedPowerLevel: state.selectedPowerLevel,
+        step3Contract: step3Contract.ok ? 'OK' : step3Contract.missingRequired,
+        hasValidCalcs,
+      });
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [nextDisabledReason, currentStep, state.zipCode, state.state, state.goals.length,
+      state.industry, state.businessSizeTier, state.selectedPowerLevel, step3Contract, hasValidCalcs]);
+
   // ✅ FIX (Jan 25, 2026): flashBlocked removed - feedback now shown via canProceed check
   // setShowBlockedFeedback controlled directly in goNext()
 
@@ -2450,7 +2538,7 @@ export default function WizardV6() {
       currentStep={currentStep}
       options={{ clearOnStepChange: true, enableWarnings: true }}
     >
-      <div className="fixed inset-0 bg-gradient-to-br from-[#050B16] via-[#071226] to-[#050B16]">
+      <div data-wizard-version="v6" className="fixed inset-0 bg-gradient-to-br from-[#050B16] via-[#071226] to-[#050B16]">
         {/* INTEGRATED GLASS SHELL: AdvisorRail + Step content - FULL WIDTH */}
         <div className={`w-full px-6 ${currentStep === 1 ? "py-3" : "py-6"}`}>
           <div className="relative rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-2xl overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
@@ -2642,20 +2730,35 @@ export default function WizardV6() {
               </div>
 
               {/* Next button - disabled when step requirements not met (Jan 24, 2026) */}
-              <button
-                onClick={goNext}
-                disabled={currentStep === 6 || !canProceed}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg ${
-                  currentStep === 6 || !canProceed
-                    ? "bg-slate-800/80 text-slate-500 cursor-not-allowed"
-                    : showBlockedFeedback
-                      ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white animate-pulse"
-                      : "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-400 hover:to-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-                }`}
-              >
-                {currentStep === 5 ? "View Quote" : "Next Step"}
-                <ChevronRight className="w-5 h-5" />
-              </button>
+              {/* ✅ DIAGNOSTIC (Jan 28, 2026): data-disabled-reason for Playwright debugging */}
+              <div className="relative group">
+                <button
+                  onClick={goNext}
+                  disabled={currentStep === 6 || !canProceed}
+                  data-testid="wizard-next-button"
+                  data-disabled-reason={nextDisabledReason || undefined}
+                  data-step={currentStep}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg ${
+                    currentStep === 6 || !canProceed
+                      ? "bg-slate-800/80 text-slate-500 cursor-not-allowed"
+                      : showBlockedFeedback
+                        ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white animate-pulse"
+                        : "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-400 hover:to-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                  }`}
+                >
+                  {currentStep === 5 ? "View Quote" : "Next Step"}
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+                {/* DEV-only: Show why disabled as tooltip */}
+                {import.meta.env.DEV && nextDisabledReason && (
+                  <div className="absolute bottom-full mb-2 right-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <div className="bg-red-900/95 text-red-200 text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap border border-red-700">
+                      <div className="font-bold text-red-300 mb-1">🚫 Next Disabled:</div>
+                      <code className="text-red-100">{nextDisabledReason}</code>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

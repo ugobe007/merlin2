@@ -1,0 +1,630 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:34.215Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "ca157985-1676-4652-bf11-5a12bffe83b8",
+  "templateVersion": "2026-01-07T02:56:11.417661+00:00",
+  "industry": "heavy_duty_truck_stop",
+  "useCase": "heavy_duty_truck_stop",
+  "name": "Heavy Duty Truck Stop / Travel Center",
+  "slug": "heavy_duty_truck_stop",
+  "description": "HIGH-VOLTAGE NODES - Industrial-Utility thinking required. Not gas stations—electrical demand profiles comparable to small manufacturing plants or high-density data centers. Extreme demand from MW-class EV charging (MCS/DCFC), heavy inductive loads (Speedco maintenance), and 24/7 hospitality operations. Love's Travel Stops, Pilot Flying J, TA/Petro, TravelCenters of America.",
+  "category": "commercial",
+  "questions": [
+    {
+      "id": "3d782741-557f-422f-b600-c6358f367f5e",
+      "type": "text",
+      "required": false,
+      "defaultValue": "travel_center",
+      "options": [
+        {
+          "icon": "⛽",
+          "label": "Basic fueling station",
+          "value": "basic_fuel",
+          "baseKW": 100,
+          "description": "Diesel pumps + small store"
+        },
+        {
+          "icon": "🛣️",
+          "label": "Travel center",
+          "value": "travel_center",
+          "baseKW": 250,
+          "description": "Fuel + store + restaurant + showers"
+        },
+        {
+          "icon": "🏪",
+          "label": "Mega travel center",
+          "value": "mega_center",
+          "baseKW": 500,
+          "description": "Full-service with truck services"
+        },
+        {
+          "icon": "🚛",
+          "label": "Private fleet facility",
+          "value": "fleet_facility",
+          "baseKW": 300,
+          "description": "Captive fleet + maintenance"
+        }
+      ]
+    },
+    {
+      "id": "237a78f4-976d-4e3f-a12e-866a4385e712",
+      "type": "text",
+      "required": false,
+      "defaultValue": "6-8",
+      "options": [
+        {
+          "kW": 30,
+          "icon": "⛽",
+          "label": "2–4 positions",
+          "value": "2-4"
+        },
+        {
+          "kW": 50,
+          "icon": "🚚",
+          "label": "6–8 positions",
+          "value": "6-8"
+        },
+        {
+          "kW": 80,
+          "icon": "🚛",
+          "label": "10–16 positions",
+          "value": "10-16"
+        },
+        {
+          "kW": 120,
+          "icon": "🏭",
+          "label": "16+ positions",
+          "value": "16+"
+        }
+      ]
+    },
+    {
+      "id": "0375dafc-bea7-475f-b3c3-91dc6419184a",
+      "type": "text",
+      "required": false,
+      "defaultValue": "800",
+      "options": [
+        {
+          "kW": 96,
+          "icon": "🔌",
+          "label": "400A",
+          "value": "400"
+        },
+        {
+          "kW": 192,
+          "icon": "⚡",
+          "label": "800A",
+          "value": "800"
+        },
+        {
+          "kW": 288,
+          "icon": "🔋",
+          "label": "1200A",
+          "value": "1200"
+        },
+        {
+          "kW": 384,
+          "icon": "⚙️",
+          "label": "1600A",
+          "value": "1600"
+        },
+        {
+          "kW": 480,
+          "icon": "🏭",
+          "label": "2000A+",
+          "value": "2000+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "e7f776c0-8ec1-4a1e-8ad5-cf07ff2aa89c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "277_480",
+      "options": [
+        {
+          "icon": "🔌",
+          "label": "208V",
+          "value": "208"
+        },
+        {
+          "icon": "⚡",
+          "label": "240V",
+          "value": "240"
+        },
+        {
+          "icon": "🔋",
+          "label": "277/480V",
+          "value": "277_480"
+        },
+        {
+          "icon": "⚙️",
+          "label": "Mixed",
+          "value": "mixed"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "27e5e89a-33d9-4b40-a8b2-2389e7856f25",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"convenience_store\", \"parking_lighting\"]",
+      "options": [
+        {
+          "kW": 50,
+          "icon": "🏪",
+          "label": "Convenience store",
+          "value": "convenience_store"
+        },
+        {
+          "kW": 100,
+          "icon": "🍔",
+          "label": "Restaurant/food service",
+          "value": "restaurant"
+        },
+        {
+          "kW": 40,
+          "icon": "🚿",
+          "label": "Shower facilities",
+          "value": "showers"
+        },
+        {
+          "kW": 30,
+          "icon": "🧺",
+          "label": "Laundry facilities",
+          "value": "laundry"
+        },
+        {
+          "kW": 80,
+          "icon": "🚛",
+          "label": "Truck wash",
+          "value": "truck_wash"
+        },
+        {
+          "kW": 60,
+          "icon": "🔧",
+          "label": "Maintenance bays",
+          "value": "maintenance_bay"
+        },
+        {
+          "kW": 10,
+          "icon": "⚖️",
+          "label": "Truck scale",
+          "value": "scale"
+        },
+        {
+          "kW": 40,
+          "icon": "💡",
+          "label": "Parking lot lighting",
+          "value": "parking_lighting"
+        }
+      ]
+    },
+    {
+      "id": "32c766ea-38fd-47ee-97c0-eaf4b1195626",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "kW": 20,
+          "icon": "🧊",
+          "label": "Minimal (few coolers)",
+          "value": "minimal"
+        },
+        {
+          "kW": 40,
+          "icon": "🥤",
+          "label": "Standard convenience store",
+          "value": "standard"
+        },
+        {
+          "kW": 80,
+          "icon": "🏪",
+          "label": "Large (walk-in coolers)",
+          "value": "large"
+        },
+        {
+          "kW": 150,
+          "icon": "🏭",
+          "label": "Industrial (cold storage)",
+          "value": "industrial"
+        }
+      ]
+    },
+    {
+      "id": "50e508b5-d66d-4074-8f4e-9b9babd00c33",
+      "type": "text",
+      "required": false,
+      "defaultValue": "5000-10000",
+      "options": [
+        {
+          "kW": 30,
+          "icon": "🏪",
+          "label": "<5,000 sq ft",
+          "value": "<5000"
+        },
+        {
+          "kW": 60,
+          "icon": "🏬",
+          "label": "5,000–10,000 sq ft",
+          "value": "5000-10000"
+        },
+        {
+          "kW": 100,
+          "icon": "🏢",
+          "label": "10,000–20,000 sq ft",
+          "value": "10000-20000"
+        },
+        {
+          "kW": 150,
+          "icon": "🏭",
+          "label": "20,000+ sq ft",
+          "value": "20000+"
+        }
+      ]
+    },
+    {
+      "id": "bcc55884-b8e2-4feb-b157-800a81f54a6b",
+      "type": "text",
+      "required": false,
+      "defaultValue": "100-250",
+      "options": [
+        {
+          "icon": "🚚",
+          "label": "<100 trucks",
+          "value": "<100"
+        },
+        {
+          "icon": "🚛",
+          "label": "100–250 trucks",
+          "value": "100-250"
+        },
+        {
+          "icon": "🚐",
+          "label": "250–500 trucks",
+          "value": "250-500"
+        },
+        {
+          "icon": "🏭",
+          "label": "500+ trucks",
+          "value": "500+"
+        }
+      ]
+    },
+    {
+      "id": "17a7b412-4011-4e5d-aaaf-533bc3c773b4",
+      "type": "text",
+      "required": false,
+      "defaultValue": "midday",
+      "options": [
+        {
+          "icon": "🌅",
+          "label": "Morning (6–10 AM)",
+          "value": "morning",
+          "peakHour": 8
+        },
+        {
+          "icon": "☀️",
+          "label": "Midday (10 AM–2 PM)",
+          "value": "midday",
+          "peakHour": 12
+        },
+        {
+          "icon": "🌇",
+          "label": "Afternoon (2–6 PM)",
+          "value": "afternoon",
+          "peakHour": 16
+        },
+        {
+          "icon": "🌃",
+          "label": "Evening (6 PM–midnight)",
+          "value": "evening",
+          "peakHour": 20
+        },
+        {
+          "icon": "🕛",
+          "label": "Steady all day",
+          "value": "all_day",
+          "peakHour": 14
+        }
+      ]
+    },
+    {
+      "id": "55d71d80-d12d-4dc2-9f06-71a18fbe8ec8",
+      "type": "text",
+      "required": false,
+      "defaultValue": "10-20",
+      "options": [
+        {
+          "icon": "⚡",
+          "label": "<10 minutes",
+          "value": "<10",
+          "minutes": 8
+        },
+        {
+          "icon": "⏱️",
+          "label": "10–20 minutes",
+          "value": "10-20",
+          "minutes": 15
+        },
+        {
+          "icon": "⏰",
+          "label": "20–30 minutes",
+          "value": "20-30",
+          "minutes": 25
+        },
+        {
+          "icon": "⏲️",
+          "label": "30+ minutes",
+          "value": "30+",
+          "minutes": 40
+        }
+      ]
+    },
+    {
+      "id": "72a3bb54-d366-4529-9f0b-3ba25b81bf75",
+      "type": "text",
+      "required": false,
+      "defaultValue": "24_7",
+      "options": [
+        {
+          "icon": "🕛",
+          "hours": 24,
+          "label": "24/7 operation",
+          "value": "24_7"
+        },
+        {
+          "icon": "🕐",
+          "hours": 18,
+          "label": "18 hours/day (5 AM–11 PM)",
+          "value": "18_hours"
+        },
+        {
+          "icon": "🕔",
+          "hours": 12,
+          "label": "12 hours/day (6 AM–6 PM)",
+          "value": "12_hours"
+        },
+        {
+          "icon": "🕘",
+          "hours": 8,
+          "label": "Limited hours",
+          "value": "limited"
+        }
+      ]
+    },
+    {
+      "id": "ebe4407b-0f26-4b3a-b1fa-8b0f80e83851",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000-30000",
+      "options": [
+        {
+          "icon": "💵",
+          "label": "<$5,000",
+          "value": "<5000"
+        },
+        {
+          "icon": "💰",
+          "label": "$5,000–$15,000",
+          "value": "5000-15000"
+        },
+        {
+          "icon": "💳",
+          "label": "$15,000–$30,000",
+          "value": "15000-30000"
+        },
+        {
+          "icon": "💸",
+          "label": "$30,000–$75,000",
+          "value": "30000-75000"
+        },
+        {
+          "icon": "🏦",
+          "label": "$75,000+",
+          "value": "75000+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "38ac926f-7dac-4e7a-a875-c6c106ccb269",
+      "type": "text",
+      "required": false,
+      "defaultValue": "demand",
+      "options": [
+        {
+          "icon": "📊",
+          "label": "Flat rate only",
+          "value": "flat",
+          "savingsMultiplier": 0.5
+        },
+        {
+          "icon": "🕐",
+          "label": "Time-of-use (TOU)",
+          "value": "tou",
+          "savingsMultiplier": 0.8
+        },
+        {
+          "icon": "⚡",
+          "label": "Demand charges",
+          "value": "demand",
+          "savingsMultiplier": 1
+        },
+        {
+          "icon": "🎯",
+          "label": "TOU + demand charges",
+          "value": "tou_demand",
+          "savingsMultiplier": 1.2
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "savingsMultiplier": 0.8
+        }
+      ]
+    },
+    {
+      "id": "e9e27856-c491-4a48-8e7e-af1adc5275df",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "⚠️",
+          "label": "Breaker trips",
+          "value": "breaker_trips"
+        },
+        {
+          "icon": "⛽",
+          "label": "Fuel pump failures during peak",
+          "value": "pump_failures"
+        },
+        {
+          "icon": "📉",
+          "label": "Voltage sag/flicker",
+          "value": "voltage_sag"
+        },
+        {
+          "icon": "💰",
+          "label": "Utility penalties",
+          "value": "utility_penalties"
+        },
+        {
+          "icon": "🧊",
+          "label": "Refrigeration issues",
+          "value": "refrigeration_issues"
+        },
+        {
+          "icon": "✅",
+          "label": "None",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "d0416384-6289-4002-a9f0-e934276153da",
+      "type": "text",
+      "required": false,
+      "defaultValue": "complete_shutdown",
+      "options": [
+        {
+          "icon": "🛑",
+          "label": "Complete shutdown (fuel pumps down)",
+          "value": "complete_shutdown",
+          "backupHours": 8
+        },
+        {
+          "icon": "⚠️",
+          "label": "Critical systems only (lights, POS)",
+          "value": "critical_only",
+          "backupHours": 4
+        },
+        {
+          "icon": "📉",
+          "label": "Minor impact",
+          "value": "minor_impact",
+          "backupHours": 2
+        },
+        {
+          "icon": "✅",
+          "label": "Minimal disruption",
+          "value": "minimal",
+          "backupHours": 1
+        }
+      ]
+    },
+    {
+      "id": "7c361068-a040-4d0b-8641-8018a11874da",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "⛽",
+          "label": "Additional fuel lanes",
+          "value": "add_fuel_lanes",
+          "kWIncrease": 30
+        },
+        {
+          "icon": "🔌",
+          "label": "EV/truck charging stations",
+          "value": "ev_chargers",
+          "kWIncrease": 150
+        },
+        {
+          "icon": "🍔",
+          "label": "Restaurant/food service",
+          "value": "restaurant",
+          "kWIncrease": 100
+        },
+        {
+          "icon": "🚛",
+          "label": "Truck wash",
+          "value": "truck_wash",
+          "kWIncrease": 80
+        },
+        {
+          "icon": "☀️",
+          "label": "Solar canopy",
+          "value": "solar",
+          "kWIncrease": 0
+        },
+        {
+          "icon": "✅",
+          "label": "No expansion planned",
+          "value": "none",
+          "kWIncrease": 0
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "[\"none\"]"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "heavy_duty_truck_stop_load_v1",
+  "calculatorVersion": "1.0.0"
+}

@@ -23,6 +23,52 @@
       "demand_charge_rate"
     ]
   },
+  "parts": [
+    {
+      "id": "it_load",
+      "label": "IT Load Profile",
+      "description": "Current and projected compute loads",
+      "questionIds": ["it_load_kw", "peak_it_load_kw", "avg_utilization_pct", "growth_pct_24mo"]
+    },
+    {
+      "id": "infrastructure",
+      "label": "Power Infrastructure",
+      "description": "Tier, redundancy, and capacity",
+      "questionIds": ["power_capacity_kw", "tier", "redundancy", "required_runtime_min"]
+    },
+    {
+      "id": "backup",
+      "label": "Backup & Cooling",
+      "description": "Generators, UPS, and cooling systems",
+      "questionIds": ["generator_present", "generator_kw", "ups_present", "ups_runtime_min", "cooling_type", "pue", "cooling_peak_kw"]
+    },
+    {
+      "id": "billing",
+      "label": "Energy & Billing",
+      "description": "Current energy usage and costs",
+      "questionIds": ["monthly_kwh", "demand_charge", "demand_charge_rate"]
+    }
+  ],
+  "defaults": {
+    "it_load_kw": 400,
+    "peak_it_load_kw": 500,
+    "avg_utilization_pct": 65,
+    "growth_pct_24mo": 20,
+    "power_capacity_kw": 1000,
+    "tier": "Tier III",
+    "redundancy": "N+1",
+    "required_runtime_min": 15,
+    "generator_present": true,
+    "generator_kw": 1000,
+    "ups_present": true,
+    "ups_runtime_min": 10,
+    "cooling_type": "Chilled water",
+    "pue": 1.5,
+    "cooling_peak_kw": 200,
+    "monthly_kwh": 500000,
+    "demand_charge": true,
+    "demand_charge_rate": 18
+  },
   "questions": [
     {
       "id": "it_load_kw",

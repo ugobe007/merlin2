@@ -21,10 +21,11 @@ import type { WizardState } from "../types";
 // SSOT IMPORTS
 // ============================================================================
 import { generateQuote, isAuthenticated, isRejected } from "@/services/merlin";
-import type { TrueQuoteAuthenticatedResult } from "@/services/merlin";
+import type { TrueQuoteAuthenticatedResult, AuthenticatedSystemOption } from "@/services/merlin";
 import { TrueQuoteVerifyBadge } from "../components/TrueQuoteVerifyBadge";
 import type { TrueQuoteWorksheetData } from "../components/TrueQuoteVerifyBadge";
 import { calculateIncentives } from "@/services/stateIncentivesService";
+import { DevQADebugPanel } from "../shared/DevQADebugPanel";
 
 // ============================================================================
 // TIER DESIGN CONFIG - PART 2 REFINED STYLING
@@ -399,6 +400,41 @@ function buildWorksheetData(
 }
 
 // ============================================================================
+// MARGIN RENDER HELPERS (Feb 2026)
+// ============================================================================
+
+/**
+ * Get sell price from marginRender envelope (fallback-safe)
+ */
+function sellPriceForTier(option: AuthenticatedSystemOption): number {
+  const v = option.marginRender?.sellPriceTotal;
+  return typeof v === "number" && Number.isFinite(v) ? v : option.financials.totalInvestment;
+}
+
+/**
+ * Net Cost invariant:
+ * Net Cost = sellPriceTotal − federalITC − stateIncentive
+ */
+function netCostForTier(option: AuthenticatedSystemOption, stateIncentive: number): number {
+  const sellPrice = sellPriceForTier(option);
+  return sellPrice - (option.financials.federalITC ?? 0) - (stateIncentive ?? 0);
+}
+
+/**
+ * Check if tier needs pricing review
+ */
+function tierNeedsReview(option: AuthenticatedSystemOption): boolean {
+  return Boolean(option.marginRender?.needsHumanReview);
+}
+
+/**
+ * Get badge label (string) if available
+ */
+function getTierBadgeLabel(option: AuthenticatedSystemOption): string | null {
+  return option.marginRender?.confidenceBadge?.badge ?? null;
+}
+
+// ============================================================================
 // COMPONENT
 // ============================================================================
 
@@ -487,6 +523,11 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
     const base = quoteResult.baseCalculation;
     setSelectedTier(tier);
 
+    // ✅ FEB 2026: Use sellPrice from marginRender envelope (fallback-safe)
+    const sellPrice = sellPriceForTier(option);
+    const stateIncentive = stateIncentives[tier] ?? 0;
+    const netCost = netCostForTier(option, stateIncentive);
+
     // ✅ FIXED: Write nested { base, selected } structure matching SystemCalculations type
     updateState({
       selectedPowerLevel:
@@ -504,20 +545,22 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
           pricingSources: ["NREL ATB 2024", "EIA", "IRS"],
         },
         // Selected tier calculations (changes when user picks a tier)
+        // ✅ FEB 2026: Use sellPrice from marginRender envelope
         selected: {
           bessKW: option.bess.powerKW,
           bessKWh: option.bess.energyKWh,
           solarKW: option.solar.capacityKW,
           evChargers: option.ev.l2Count + option.ev.dcfcCount + option.ev.ultraFastCount,
           generatorKW: option.generator.capacityKW,
-          totalInvestment: option.financials.totalInvestment,
+          totalInvestment: sellPrice,  // ← Use sellPriceTotal from envelope
           annualSavings: option.financials.annualSavings,
           paybackYears: option.financials.paybackYears,
           tenYearROI: option.financials.tenYearROI,
           federalITC: option.financials.federalITC,
           // ✅ FIXED: Get federalITCRate from baseCalculation (not option.financials)
           federalITCRate: base.financials.federalITCRate,
-          netInvestment: option.financials.netCost,
+          netInvestment: netCost,  // ← Net Cost = sellPriceTotal − ITC − state
+          marginRender: option.marginRender,  // ← Pass-through for Step6 badge/banner
         },
       },
     });
@@ -599,8 +642,9 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
           const isSelected = selectedTier === tier;
           const isPerfectFit = tier === "perfectFit";
           const stateIncentive = stateIncentives[tier];
-          const netCost =
-            option.financials.totalInvestment - option.financials.federalITC - stateIncentive;
+          // ✅ FEB 2026: Use marginRender envelope (fallback-safe)
+          const sellPrice = sellPriceForTier(option);
+          const netCost = netCostForTier(option, stateIncentive);
           const twentyFiveYearProfit = option.financials.annualSavings * 25 - netCost;
 
           return (
@@ -755,13 +799,24 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                   className={`text-[10px] uppercase tracking-widest mb-3 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
                 >
                   Financial Summary
+                  {getTierBadgeLabel(option) && (
+                    <span className="text-[10px] bg-white/10 text-slate-200 px-2 py-0.5 rounded-full ml-2">
+                      {getTierBadgeLabel(option)}
+                    </span>
+                  )}
                 </p>
+
+                {tierNeedsReview(option) && (
+                  <div className="mb-3 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-300">
+                    ⚠️ Pricing needs human review (market below threshold)
+                  </div>
+                )}
 
                 <div className="space-y-2 text-sm mb-4">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Total Investment</span>
                     <span className="text-slate-300">
-                      {formatCurrency(option.financials.totalInvestment)}
+                      {formatCurrency(sellPrice)}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -893,6 +948,33 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
           variant="compact"
         />
       </div>
+
+      {/* ================================================================== */}
+      {/* DEV QA DEBUG PANELS - One per tier to catch invariant violations */}
+      {/* ================================================================== */}
+      {import.meta.env.DEV && (
+        <div className="mt-6 space-y-2">
+          {(["starter", "perfectFit", "beastMode"] as const).map((tier) => {
+            const option = quoteResult.options[tier];
+            const stateIncentive = stateIncentives[tier];
+            return (
+              <DevQADebugPanel
+                key={tier}
+                step="Step5"
+                tierName={TIER_CONFIG[tier].name}
+                invariants={{
+                  sellPriceTotal: option.marginRender?.sellPriceTotal,
+                  totalInvestment: option.financials.totalInvestment,
+                  federalITC: option.financials.federalITC,
+                  stateIncentive,
+                  netInvestment: option.financials.netCost,
+                  marginRender: option.marginRender,
+                }}
+              />
+            );
+          })}
+        </div>
+      )}
       
       {/* CONTINUE BUTTON - Appears when selection made */}
       {selectedTier && (

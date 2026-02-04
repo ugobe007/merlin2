@@ -29,8 +29,8 @@ const QuoteTemplates = React.lazy(() => import('../QuoteTemplates'));
 const PricingPresets = React.lazy(() => import('../PricingPresets'));
 const QuoteReviewWorkflow = React.lazy(() => import('../QuoteReviewWorkflow'));
 const UseCaseROI = React.lazy(() => import('../UseCaseROI'));
-// V5 Wizard
-const WizardV6 = React.lazy(() => import('../wizard/v6/WizardV6'));
+// V7 Wizard (Feb 2026 - V7 is now default)
+const WizardV7Page = React.lazy(() => import('../../pages/WizardV7Page'));
 const SaveProjectModal = React.lazy(() => import('./SaveProjectModal'));
 const LoadProjectModal = React.lazy(() => import('./LoadProjectModal'));
 const QuotePreviewModal = React.lazy(() => import('./QuotePreviewModal'));
@@ -253,9 +253,9 @@ const ModalRenderer: React.FC<ModalRendererProps> = ({
         />
       )}
 
-      {/* Smart Wizard - V5 */}
+      {/* Smart Wizard - V7 (Feb 2026 - V7 is now default) */}
       {isModalOpen('showSmartWizard') && (
-        <WizardV6 />
+        <WizardV7Page />
       )}
 
       {/* Project Management Modals */}

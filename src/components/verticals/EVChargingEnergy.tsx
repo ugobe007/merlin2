@@ -25,8 +25,8 @@ import { supabase } from '@/services/supabaseClient';
 import merlinImage from '@/assets/images/new_profile_merlin.png';
 import evChargingImage from '@/assets/images/ev_charging_station.jpg';
 import evChargingHotelImage from '@/assets/images/ev_charging_hotel.jpg';
-// V5 Wizard (Clean Build Dec 21, 2025)
-import WizardV6 from '@/components/wizard/v6/WizardV6';
+// V7 Wizard (Feb 2026 - V7 is now default)
+import WizardV7Page from '@/pages/WizardV7Page';
 import { TrueQuoteBadgeCanonical } from '@/components/shared/TrueQuoteBadgeCanonical';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 
@@ -234,7 +234,7 @@ function calculateEVChargingPower(inputs: EVChargingInputs): { peakKW: number; d
 // ============================================
 
 export default function EVChargingEnergy() {
-  // Redirect to wizard with ev-charging pre-selected
+  // Redirect to wizard with ev-charging pre-selected (V7 is now default)
   useEffect(() => {
     window.location.href = '/wizard?industry=ev-charging';
   }, []);
@@ -1134,11 +1134,11 @@ export default function EVChargingEnergy() {
       )}
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          WIZARD MODAL - Uses WizardV5 with ev-charging pre-selected
+          WIZARD MODAL - Uses WizardV7 (Feb 2026 - V7 is now default)
           ═══════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
         <div className="fixed inset-0 z-50">
-          <WizardV6 />
+          <WizardV7Page />
         </div>
       )}
       

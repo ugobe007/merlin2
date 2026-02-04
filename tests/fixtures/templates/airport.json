@@ -1,0 +1,920 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:31.854Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "eca5965d-ce78-438a-af1b-2b1cb49dd6a8",
+  "templateVersion": "2025-11-28T04:59:13.77318+00:00",
+  "industry": "airport",
+  "useCase": "airport",
+  "name": "Airport",
+  "slug": "airport",
+  "description": "Commercial airport with terminals, baggage handling, retail, and ground support",
+  "category": "institutional",
+  "questions": [
+    {
+      "id": "110c542a-a811-4741-9da3-a7366d52ce6f",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Plane",
+          "label": "Large Hub",
+          "value": "large-hub",
+          "description": "1%+ of US enplanements"
+        },
+        {
+          "icon": "Plane",
+          "label": "Medium Hub",
+          "value": "medium-hub",
+          "description": "0.25-1% of enplanements"
+        },
+        {
+          "icon": "Plane",
+          "label": "Small Hub",
+          "value": "small-hub",
+          "description": "0.05-0.25% of enplanements"
+        },
+        {
+          "icon": "Plane",
+          "label": "Non-Hub Primary",
+          "value": "non-hub",
+          "description": "10,000+ enplanements"
+        },
+        {
+          "icon": "Plane",
+          "label": "Regional/Reliever",
+          "value": "regional",
+          "description": "Reduces congestion at hub"
+        },
+        {
+          "icon": "Plane",
+          "label": "General Aviation",
+          "value": "general-aviation",
+          "description": "Private/corporate aircraft"
+        }
+      ]
+    },
+    {
+      "id": "1a4d9f21-c2ef-46f7-bac7-648414183be9",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Users",
+          "label": "Under 500,000",
+          "value": "under-500k"
+        },
+        {
+          "icon": "Users",
+          "label": "500,000 - 2 Million",
+          "value": "500k-2m"
+        },
+        {
+          "icon": "Users",
+          "label": "2 - 10 Million",
+          "value": "2-10m"
+        },
+        {
+          "icon": "Users",
+          "label": "10 - 30 Million",
+          "value": "10-30m"
+        },
+        {
+          "icon": "Users",
+          "label": "30 - 50 Million",
+          "value": "30-50m"
+        },
+        {
+          "icon": "Users",
+          "label": "Over 50 Million",
+          "value": "over-50m"
+        }
+      ]
+    },
+    {
+      "id": "e36172f1-4c93-47a3-9ec4-e30e852a56b9",
+      "type": "text",
+      "required": false,
+      "defaultValue": "50000",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "5d36c5c9-1c8b-4911-9d48-ce0b0626f466",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "7beca7f3-9540-4eef-8bc2-ad1299b673a7",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "ranges": [
+          {
+            "max": 10,
+            "min": 1,
+            "label": "1-10"
+          },
+          {
+            "max": 25,
+            "min": 11,
+            "label": "11-25"
+          },
+          {
+            "max": 50,
+            "min": 26,
+            "label": "26-50"
+          },
+          {
+            "max": 100,
+            "min": 51,
+            "label": "51-100"
+          },
+          {
+            "max": null,
+            "min": 101,
+            "label": "100+"
+          }
+        ]
+      }
+    },
+    {
+      "id": "d8d92746-41f2-41a3-8bc8-c08d43465a9a",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "ranges": [
+          {
+            "max": 10,
+            "min": 1,
+            "label": "1-10"
+          },
+          {
+            "max": 25,
+            "min": 11,
+            "label": "11-25"
+          },
+          {
+            "max": 50,
+            "min": 26,
+            "label": "26-50"
+          },
+          {
+            "max": 100,
+            "min": 51,
+            "label": "51-100"
+          },
+          {
+            "max": null,
+            "min": 101,
+            "label": "100+"
+          }
+        ]
+      }
+    },
+    {
+      "id": "92ba769f-5890-4502-a4d7-26f1bd495118",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Car",
+          "label": "Under 2,500",
+          "value": "under-2500"
+        },
+        {
+          "icon": "Car",
+          "label": "2,500 - 10,000",
+          "value": "2500-10000"
+        },
+        {
+          "icon": "Car",
+          "label": "10,000 - 25,000",
+          "value": "10000-25000"
+        },
+        {
+          "icon": "Car",
+          "label": "25,000 - 50,000",
+          "value": "25000-50000"
+        },
+        {
+          "icon": "Car",
+          "label": "Over 50,000",
+          "value": "over-50000"
+        }
+      ]
+    },
+    {
+      "id": "90e47284-1f60-4652-be39-5c61afffa1cd",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Package",
+          "label": "Cargo/Air Freight",
+          "value": "cargo"
+        },
+        {
+          "icon": "Wrench",
+          "label": "Aircraft Maintenance",
+          "value": "maintenance"
+        },
+        {
+          "icon": "Fuel",
+          "label": "Fuel Farm",
+          "value": "fuel-farm"
+        },
+        {
+          "icon": "Flame",
+          "label": "Fire/Rescue Station",
+          "value": "fire-station"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Deicing Facility",
+          "value": "deicing"
+        },
+        {
+          "icon": "Truck",
+          "label": "Ground Support Equipment",
+          "value": "ground-support"
+        }
+      ]
+    },
+    {
+      "id": "031f1d8b-e858-4cbc-be44-7ef3075d790a",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Minimal (<10%)",
+          "value": "minimal"
+        },
+        {
+          "icon": "Battery",
+          "label": "Partial (10-30%)",
+          "value": "partial"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "Significant (30-60%)",
+          "value": "significant"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Extensive (60%+)",
+          "value": "extensive"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Mandated/Full eGSE",
+          "value": "mandate"
+        }
+      ]
+    },
+    {
+      "id": "62795f5c-cdd8-4150-b718-4c3a7e394aa4",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "None",
+          "value": "none"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "1-25 ports",
+          "value": "few"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "26-100 ports",
+          "value": "moderate"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "101-500 ports",
+          "value": "extensive"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "500+ ports",
+          "value": "major"
+        }
+      ]
+    },
+    {
+      "id": "bea82d77-93da-4dad-8af9-8fd17756de48",
+      "type": "text",
+      "required": false,
+      "defaultValue": "12",
+      "options": {
+        "max": 24,
+        "min": 6,
+        "step": 1,
+        "suffix": " hrs/day"
+      }
+    },
+    {
+      "id": "4e3116e1-6d82-47c8-9d7e-c2df1299c2cd",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "label": "Legacy (15+ years old)",
+          "value": "legacy",
+          "description": "Older, less efficient equipment"
+        },
+        {
+          "label": "Standard (5-15 years)",
+          "value": "standard",
+          "description": "Average efficiency"
+        },
+        {
+          "label": "Modern (under 5 years)",
+          "value": "modern",
+          "description": "High-efficiency equipment"
+        },
+        {
+          "label": "Premium/LEED",
+          "value": "premium",
+          "description": "Best-in-class efficiency"
+        }
+      ]
+    },
+    {
+      "id": "64f36c50-ed45-454b-88f9-8e45a196aa62",
+      "type": "text",
+      "required": false,
+      "defaultValue": "central_ac",
+      "options": [
+        {
+          "label": "Central AC/Heating",
+          "value": "central_ac"
+        },
+        {
+          "label": "Rooftop Units (RTUs)",
+          "value": "rooftop"
+        },
+        {
+          "label": "Chiller System",
+          "value": "chiller"
+        },
+        {
+          "label": "Split Systems",
+          "value": "split"
+        },
+        {
+          "label": "VRF/Mini-Splits",
+          "value": "vrf"
+        }
+      ]
+    },
+    {
+      "id": "e07e4d39-eff3-4497-b077-39cec8f745f4",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No Central Plant",
+          "value": "none"
+        },
+        {
+          "icon": "Snowflake",
+          "label": "Chilled Water Only",
+          "value": "chilled-water"
+        },
+        {
+          "icon": "Flame",
+          "label": "Steam/Hot Water Only",
+          "value": "steam"
+        },
+        {
+          "icon": "Factory",
+          "label": "Full Central Plant",
+          "value": "both"
+        },
+        {
+          "icon": "Zap",
+          "label": "CHP/Cogeneration",
+          "value": "chp"
+        }
+      ]
+    },
+    {
+      "id": "6ffec2f1-30e4-43e9-8497-5671c649eced",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000",
+      "options": [
+        {
+          "label": "$1,000 - $5,000/mo",
+          "value": "3000"
+        },
+        {
+          "label": "$5,000 - $15,000/mo",
+          "value": "10000"
+        },
+        {
+          "label": "$15,000 - $35,000/mo",
+          "value": "25000"
+        },
+        {
+          "label": "$35,000 - $75,000/mo",
+          "value": "50000"
+        },
+        {
+          "label": "$75,000 - $150,000/mo",
+          "value": "100000"
+        },
+        {
+          "label": "Over $150,000/mo",
+          "value": "200000"
+        }
+      ]
+    },
+    {
+      "id": "2ca448b9-e0b8-4df3-9f9d-66c4bb607aee",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "DollarSign",
+          "label": "Under $100,000",
+          "value": "under-100k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$100,000 - $500,000",
+          "value": "100-500k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$500,000 - $1M",
+          "value": "500k-1m"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$1M - $3M",
+          "value": "1-3m"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "Over $3M",
+          "value": "over-3m"
+        }
+      ]
+    },
+    {
+      "id": "0a828575-12c8-48d0-932f-873f9902d45d",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Zap",
+          "label": "Under 5 MW",
+          "value": "under-5mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "5-15 MW",
+          "value": "5-15mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "15-30 MW",
+          "value": "15-30mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "30-50 MW",
+          "value": "30-50mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "50-100 MW",
+          "value": "50-100mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "Over 100 MW",
+          "value": "over-100mw"
+        }
+      ]
+    },
+    {
+      "id": "87ef50d9-dc3b-43c4-9b45-4d4e4bb18585",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "label": "Under 200 kW",
+          "value": "small",
+          "description": "Small commercial service"
+        },
+        {
+          "label": "200-500 kW",
+          "value": "medium",
+          "description": "Medium commercial service"
+        },
+        {
+          "label": "500 kW - 2 MW",
+          "value": "large",
+          "description": "Large commercial service"
+        },
+        {
+          "label": "Over 2 MW",
+          "value": "utility",
+          "description": "Utility-scale connection"
+        }
+      ]
+    },
+    {
+      "id": "43b653ea-34ff-4244-bb00-7da5a20382dd",
+      "type": "text",
+      "required": false,
+      "defaultValue": "true",
+      "options": null
+    },
+    {
+      "id": "6a5136a5-a100-4bf2-a25c-0f7a74c6d266",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "1c2653cb-ed5f-42a7-a20d-8a842ff69f40",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "max": 500,
+        "min": 0,
+        "step": 10,
+        "suffix": " kW"
+      }
+    },
+    {
+      "id": "ce4ef9ba-d443-4ab0-ab96-60bb107b1ad8",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "f5ce314e-4d6b-43f8-b9f8-846e4568d29a",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "ranges": [
+          {
+            "max": 0,
+            "min": 0,
+            "label": "0"
+          },
+          {
+            "max": 5,
+            "min": 1,
+            "label": "1-5"
+          },
+          {
+            "max": 15,
+            "min": 6,
+            "label": "6-15"
+          },
+          {
+            "max": 30,
+            "min": 16,
+            "label": "16-30"
+          },
+          {
+            "max": null,
+            "min": 31,
+            "label": "30+"
+          }
+        ],
+        "suffix": "chargers"
+      }
+    },
+    {
+      "id": "50f99ef9-a9c6-4ab2-b398-7ccd0cdd617b",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Sun",
+          "label": "Rooftop Solar",
+          "value": "solar-rooftop"
+        },
+        {
+          "icon": "Sun",
+          "label": "Ground-Mount Solar",
+          "value": "solar-ground"
+        },
+        {
+          "icon": "Car",
+          "label": "Solar Carports",
+          "value": "solar-carport"
+        },
+        {
+          "icon": "Battery",
+          "label": "Battery Storage",
+          "value": "battery"
+        },
+        {
+          "icon": "Flame",
+          "label": "CHP/Cogeneration",
+          "value": "chp"
+        },
+        {
+          "icon": "Grid3x3",
+          "label": "Microgrids",
+          "value": "microgrids"
+        }
+      ]
+    },
+    {
+      "id": "7c4a1df5-d2ff-469e-bcb7-73d31f3e30b7",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Interested",
+          "value": "not_interested"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Considering",
+          "value": "considering"
+        },
+        {
+          "icon": "Sun",
+          "label": "Very Interested",
+          "value": "very_interested"
+        },
+        {
+          "icon": "FileText",
+          "label": "PPA/No Capital Preferred",
+          "value": "ppa-preferred"
+        }
+      ]
+    },
+    {
+      "id": "86465838-dc7a-439c-b432-fdc8497cb5be",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Home",
+          "label": "Terminal Rooftops",
+          "value": "terminal-roof"
+        },
+        {
+          "icon": "Building",
+          "label": "Parking Garage Tops",
+          "value": "parking-garage"
+        },
+        {
+          "icon": "Car",
+          "label": "Parking Lot Carports",
+          "value": "carports"
+        },
+        {
+          "icon": "Warehouse",
+          "label": "Cargo/Hangar Roofs",
+          "value": "cargo-roof"
+        },
+        {
+          "icon": "Mountain",
+          "label": "Airfield Adjacent Land",
+          "value": "ground"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "Limited Space",
+          "value": "limited"
+        }
+      ]
+    },
+    {
+      "id": "4aa794b9-8774-4b07-a63a-5c33127138a7",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Leaf",
+          "label": "Net Zero Carbon Target",
+          "value": "net-zero"
+        },
+        {
+          "icon": "Award",
+          "label": "ACA Accreditation",
+          "value": "aca-level"
+        },
+        {
+          "icon": "Sun",
+          "label": "Renewable Energy Goal",
+          "value": "renewable-goal"
+        },
+        {
+          "icon": "Award",
+          "label": "LEED Buildings",
+          "value": "leed"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "eGSE Mandate",
+          "value": "egse-mandate"
+        },
+        {
+          "icon": "CircleOff",
+          "label": "No Formal Goals",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "26e85ba4-d9e2-4656-a47e-bab5b4ee0354",
+      "type": "text",
+      "required": false,
+      "defaultValue": "peak_shaving",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "Peak Shaving",
+          "value": "peak_shaving",
+          "description": "Reduce demand charges during peak hours"
+        },
+        {
+          "icon": "💰",
+          "label": "Energy Arbitrage",
+          "value": "arbitrage",
+          "description": "Buy low, use high - time-of-use optimization"
+        },
+        {
+          "icon": "🔋",
+          "label": "Backup/Resilience",
+          "value": "resilience",
+          "description": "Keep critical loads running during outages"
+        },
+        {
+          "icon": "☀️",
+          "label": "Renewable Integration",
+          "value": "renewable",
+          "description": "Maximize solar self-consumption"
+        },
+        {
+          "icon": "📊",
+          "label": "Demand Response",
+          "value": "demand_response",
+          "description": "Participate in utility programs for revenue"
+        }
+      ]
+    },
+    {
+      "id": "671520de-dc9b-41dc-8e15-1542207bf615",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Car",
+          "label": "Surface Lots",
+          "value": "surface"
+        },
+        {
+          "icon": "Building",
+          "label": "Parking Garages",
+          "value": "garage"
+        },
+        {
+          "icon": "Car",
+          "label": "Economy/Remote Lots",
+          "value": "economy"
+        },
+        {
+          "icon": "Car",
+          "label": "Rental Car Center",
+          "value": "rental-car"
+        },
+        {
+          "icon": "Key",
+          "label": "Valet Parking",
+          "value": "valet"
+        }
+      ]
+    },
+    {
+      "id": "1e10d8be-48ea-433a-aa41-139cbd9891e0",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No Airport-Owned Fleet",
+          "value": "no-fleet"
+        },
+        {
+          "icon": "Fuel",
+          "label": "Diesel/CNG Fleet",
+          "value": "diesel"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Hybrid Fleet",
+          "value": "hybrid"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "Partial Electric",
+          "value": "partial-ev"
+        },
+        {
+          "icon": "Leaf",
+          "label": "Full Electric Fleet",
+          "value": "full-ev"
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "peak_shaving"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "airport_load_v1",
+  "calculatorVersion": "1.0.0"
+}

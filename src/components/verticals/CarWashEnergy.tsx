@@ -12,8 +12,8 @@
  * 
  * Uses: calculateQuote() from unifiedQuoteCalculator (SINGLE SOURCE OF TRUTH)
  * 
- * REFACTORED Dec 2025: Now uses WizardV6 with car-wash industry selection
- * instead of separate CarWashWizard component (4K+ lines of duplicate code removed)
+ * UPDATED Feb 2026: Now uses WizardV7 (SSOT, non-blocking pricing)
+ * V7 is the production wizard as of Feb 1, 2026
  */
 
 import React, { useState, useEffect } from 'react';
@@ -35,8 +35,8 @@ import carWashPitStop3 from '@/assets/images/Car_Wash_PitStop3.jpg';
 import carWashPitStop4 from '@/assets/images/Car_Wash_PitStop4.jpg';
 import carWashPitStop5 from '@/assets/images/Car_Wash_PitStop5.jpg';
 import carWashPreen from '@/assets/images/Car_Wash_Preen.jpg';
-// V6 Wizard (Updated Dec 2025)
-import WizardV6 from '@/components/wizard/v6/WizardV6';
+// V7 Wizard (Updated Feb 2026 - V7 is now default)
+import WizardV7Page from '@/pages/WizardV7Page';
 import { TrueQuoteBadgeCanonical } from '@/components/shared/TrueQuoteBadgeCanonical';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 
@@ -1260,11 +1260,11 @@ export default function CarWashEnergy() {
       )}
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          CAR WASH WIZARD MODAL - Uses WizardV6 with car-wash industry selection
+          CAR WASH WIZARD MODAL - Uses WizardV7 (Feb 2026 - V7 is now default)
           ═══════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
         <div className="fixed inset-0 z-50">
-          <WizardV6 />
+          <WizardV7Page />
         </div>
       )}
       

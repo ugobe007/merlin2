@@ -158,9 +158,18 @@
                                               │ monteCarloService          │
                                               │   └─ estimateRiskMetrics   │
                                               └────────────────────────────┘
+                                                            │
+                                                            ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Layer B: MARGIN POLICY ENGINE (Feb 2026)                                   │
+│  truequoteV2Adapter.ts → applyMarginPolicy()                                │
+│  ├── sellPriceTotal = baseCostTotal + marginDollars                         │
+│  ├── Single insertion point (Steps 4/5/6 passive)                           │
+│  └── maxMarginCapApplied in audit trail                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**CALCULATION ARCHITECTURE - SIX PILLARS + JAN 2026 INTEGRATIONS:**
+**CALCULATION ARCHITECTURE - SIX PILLARS + FEB 2026 INTEGRATIONS:**
 
 1. **Quote Calculator** → `unifiedQuoteCalculator.ts` (Updated Jan 2026)
    - **USE THIS FOR ALL QUOTE CALCULATIONS**
@@ -211,6 +220,14 @@
    - Features: 3-Statement Model, DSCR, Levered/Unlevered IRR, MACRS, Revenue Stacking
    - `generateSensitivityMatrix()` - Parameter sensitivity for banks
    - ✅ **SINGLE SOURCE OF TRUTH** for professional project finance
+
+7. **Margin Policy Engine** → `marginPolicyEngine.ts` + `truequoteV2Adapter.ts` (Feb 2026)
+   - **SINGLE INSERTION POINT** for margin calculations
+   - `applyMarginPolicy()` - Apply commercial margin to base costs
+   - Integrated via `generateTrueQuoteV2()` in adapter
+   - Steps 4/5/6 of WizardV6 consume `sellPriceTotal` - NEVER compute margin themselves
+   - ✅ **SINGLE SOURCE OF TRUTH** for sell price commercialization
+   - See **MARGIN POLICY ENGINE** section below for full details
 
 **KNOWN GAPS (as of Dec 2025):**
 
@@ -297,6 +314,118 @@ ALL use cases default to `'natural-gas'` for generators. This is set in:
 - `pvWattsService.ts` - NREL PVWatts solar production (NEW Jan 2026)
 - `hourly8760AnalysisService.ts` - Full year hourly dispatch simulation (NEW Jan 2026)
 - `monteCarloService.ts` - Probabilistic P10/P50/P90 analysis (NEW Jan 2026)
+- `marginPolicyEngine.ts` - **Commercial margin policy (NEW Feb 2026)** - DO NOT BYPASS
+
+## 💰 MARGIN POLICY ENGINE (Feb 1, 2026)
+
+**The commercial layer that transforms base costs into sell prices.**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Layer A: Market/Base Pricing (SSOT - TrueQuote)                            │
+│  ├── equipmentPricingTiersService.ts                                        │
+│  ├── pricingTierService.ts                                                  │
+│  └── collected_market_prices table                                          │
+└───────────────────────────────┬─────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Layer B: MARGIN POLICY ENGINE (marginPolicyEngine.ts)                      │
+│  ├── Deal size bands (scale discount curve)                                 │
+│  ├── Product-class margins (BESS vs Solar vs EV)                            │
+│  ├── Risk/complexity adjusters                                              │
+│  ├── Customer segment adjusters (EPC partner, government)                   │
+│  ├── Floor/ceiling guards (prevents insane quotes)                          │
+│  └── Full audit trail for trust                                             │
+└───────────────────────────────┬─────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Step 4/5/6 - Render sell prices (not math problems)                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**KEY PRINCIPLE:**
+- TrueQuote computes "base cost" (SSOT market truth)
+- MarginPolicy applies "sell price policy" (commercialization)
+- If we mix them, drift detection becomes impossible
+
+**SINGLE INSERTION POINT (Feb 1, 2026):**
+- `generateTrueQuoteV2()` in `truequoteV2Adapter.ts` calls `applyMarginPolicy()`
+- This is the ONLY place margin is calculated
+- WizardV6 Steps 4/5/6 consume `sellPriceTotal` from the envelope - NEVER compute margin themselves
+- `QuoteCostsV2` now includes: `sellPriceTotal`, `baseCostTotal`, `marginDollars`
+
+**v1.1.0 Improvements (Feb 1, 2026):**
+- **maxMarginPercent is a HARD CAP**: Overrides band floor for competitive bids
+- **Negative margin protection**: `sellPrice >= baseCost` invariant always
+- **Quote-level guards with real enforcement**: `quoteUnits` input enables $/kWh_total checks
+- **maxMarginCapApplied in audit trail**: Tracks when hard cap was applied
+
+**Margin Bands by Deal Size:**
+| Deal Size | Margin Range | Target |
+|-----------|--------------|--------|
+| <$500K (Micro) | 18-25% | 20% |
+| $500K-$1.5M (Small) | 15-20% | 18% |
+| $1.5M-$3M (Small+) | 10-15% | 12% |
+| $3M-$5M (Mid) | 8-12% | 10% |
+| $5M-$10M (Mid+) | 6-9% | 7.5% |
+| $10M-$20M (Large) | 4-7% | 5.5% |
+| $20M-$100M (Enterprise) | 2-5% | 3.5% |
+| $100M+ (Mega) | 0.5-2% | 1.2% |
+
+**Product-Class Multipliers:**
+| Product | Multiplier | Reason |
+|---------|------------|--------|
+| BESS | 1.0x | Standard |
+| Solar | 0.75x | Commoditized |
+| EV Charger | 1.1x | Install complexity |
+| Microgrid | 1.2x | High complexity |
+| EMS Software | 1.25x | Software premium |
+| Labor | +15% | Fixed adder |
+
+**Usage in Code:**
+```typescript
+// RECOMMENDED: Use TrueQuoteV2 envelope (margin already applied)
+import { generateTrueQuoteV2 } from '@/services/truequoteV2Adapter';
+
+const envelope = await generateTrueQuoteV2(input);
+// envelope.marginPolicy.sellPriceTotal ← Use this in UI
+// envelope.outputs.costs.sellPriceTotal ← Also available here
+
+// LOWER-LEVEL: Direct margin policy (for testing/custom scenarios)
+import { applyMarginPolicy, estimateMargin } from '@/services/marginPolicyEngine';
+
+const result = applyMarginPolicy({
+  lineItems: [...],
+  totalBaseCost: 2_000_000,
+  riskLevel: 'standard',
+  customerSegment: 'direct',
+  maxMarginPercent: 0.08, // Optional: hard cap for competitive bids
+  quoteUnits: { bess: 4000 }, // Optional: enables quote-level guards
+});
+
+// Quick UI preview
+const { sellPrice, marginPercent, marginBand } = estimateMargin(2_000_000, 'bess');
+```
+
+**Database Tables (migration: `20260201_margin_policy_engine.sql`):**
+- `margin_policy_bands` - Deal size → margin %
+- `margin_policy_products` - Product-class multipliers
+- `margin_policy_risk_adjusters` - Risk complexity adders
+- `margin_policy_segment_adjusters` - Customer segment discounts
+- `margin_policy_price_guards` - Floor/ceiling guards
+- `margin_audit_log` - Audit trail
+
+**Test Coverage (43 tests in `tests/integration/margin-policy.test.ts`):**
+- Tier 0: Band selection (10 tests)
+- Tier 1: Product multipliers (7 tests)
+- Tier 2: Clamping behavior (4 tests)
+- Tier 3: No double-margin invariant (4 tests)
+- Tier 4: End-to-end quote policy (8 tests)
+- Tier 5: Convenience functions (2 tests)
+- Tier 6: Trust anchors (5 tests) - negative margin, hard cap, quote guards
+- Price guard coverage (3 tests)
 
 **DYNAMIC UTILITY RATES (Jan 14, 2026):**
 Utility rates are now **dynamically fetched by zip code** via `utilityRateService.ts`:

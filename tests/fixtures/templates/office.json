@@ -1,0 +1,668 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:35.638Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "e72265cf-d87e-41cc-9676-24dc215590b5",
+  "templateVersion": "2025-11-25T17:31:31.650493+00:00",
+  "industry": "office",
+  "useCase": "office",
+  "name": "Office Building",
+  "slug": "office",
+  "description": "Commercial office buildings including corporate headquarters, medical offices, research facilities, co-working spaces, and mixed-use developments",
+  "category": "commercial",
+  "questions": [
+    {
+      "id": "e117b609-8116-4845-ac79-21854f74bfc8",
+      "type": "text",
+      "required": false,
+      "defaultValue": "multi_tenant",
+      "options": [
+        {
+          "icon": "🏢",
+          "label": "Single tenant",
+          "value": "single_tenant",
+          "kWPerSqFt": 1.5,
+          "description": "Owner-occupied or single company"
+        },
+        {
+          "icon": "🏪",
+          "label": "Multi-tenant",
+          "value": "multi_tenant",
+          "kWPerSqFt": 1.3,
+          "description": "Multiple leased spaces"
+        },
+        {
+          "icon": "💼",
+          "label": "Coworking/flex space",
+          "value": "coworking",
+          "kWPerSqFt": 2,
+          "description": "Shared workspace, hot desking"
+        },
+        {
+          "icon": "🏥",
+          "label": "Medical office building",
+          "value": "medical_office",
+          "kWPerSqFt": 2.5,
+          "description": "Healthcare tenants"
+        },
+        {
+          "icon": "💻",
+          "label": "Tech/data-heavy office",
+          "value": "tech_office",
+          "kWPerSqFt": 3,
+          "description": "Server rooms, high equipment load"
+        }
+      ]
+    },
+    {
+      "id": "de002efd-f265-47e2-9420-a07e8ca0c481",
+      "type": "text",
+      "required": false,
+      "defaultValue": "50-100000",
+      "options": [
+        {
+          "icon": "🏢",
+          "sqft": 7500,
+          "label": "<10,000 sq ft",
+          "value": "<10000"
+        },
+        {
+          "icon": "🏪",
+          "sqft": 17500,
+          "label": "10,000–25,000 sq ft",
+          "value": "10-25000"
+        },
+        {
+          "icon": "🏬",
+          "sqft": 37500,
+          "label": "25,000–50,000 sq ft",
+          "value": "25-50000"
+        },
+        {
+          "icon": "🏢",
+          "sqft": 75000,
+          "label": "50,000–100,000 sq ft",
+          "value": "50-100000"
+        },
+        {
+          "icon": "🏰",
+          "sqft": 175000,
+          "label": "100,000–250,000 sq ft",
+          "value": "100-250000"
+        },
+        {
+          "icon": "🏙️",
+          "sqft": 350000,
+          "label": "250,000+ sq ft",
+          "value": "250000+"
+        }
+      ]
+    },
+    {
+      "id": "af2963f5-790e-47bb-a4de-160319a2ec8d",
+      "type": "text",
+      "required": false,
+      "defaultValue": "1200",
+      "options": [
+        {
+          "kW": 96,
+          "icon": "🔌",
+          "label": "400A",
+          "value": "400"
+        },
+        {
+          "kW": 192,
+          "icon": "⚡",
+          "label": "800A",
+          "value": "800"
+        },
+        {
+          "kW": 288,
+          "icon": "🔋",
+          "label": "1200A",
+          "value": "1200"
+        },
+        {
+          "kW": 384,
+          "icon": "⚙️",
+          "label": "1600A",
+          "value": "1600"
+        },
+        {
+          "kW": 480,
+          "icon": "🏭",
+          "label": "2000A+",
+          "value": "2000+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "41c882cc-aa6e-4765-9738-9be1cc17e4e1",
+      "type": "text",
+      "required": false,
+      "defaultValue": "277_480",
+      "options": [
+        {
+          "icon": "🔌",
+          "label": "208V",
+          "value": "208"
+        },
+        {
+          "icon": "⚡",
+          "label": "240V",
+          "value": "240"
+        },
+        {
+          "icon": "🔋",
+          "label": "277/480V",
+          "value": "277_480"
+        },
+        {
+          "icon": "⚙️",
+          "label": "Mixed",
+          "value": "mixed"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "2f13cc31-703b-412d-8b67-77c5eace0849",
+      "type": "text",
+      "required": false,
+      "defaultValue": "rooftop_units",
+      "options": [
+        {
+          "icon": "🏢",
+          "label": "Rooftop units (RTUs)",
+          "value": "rooftop_units",
+          "kWPerSqFt": 0.6
+        },
+        {
+          "icon": "🏭",
+          "label": "Central chiller plant",
+          "value": "central_chiller",
+          "kWPerSqFt": 0.7
+        },
+        {
+          "icon": "⚙️",
+          "label": "VRF/VRV system",
+          "value": "vrf",
+          "kWPerSqFt": 0.5
+        },
+        {
+          "icon": "♨️",
+          "label": "Heat pumps",
+          "value": "heat_pump",
+          "kWPerSqFt": 0.55
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "kWPerSqFt": 0.6
+        }
+      ]
+    },
+    {
+      "id": "e5b24224-47ab-4ea2-9525-23221bbc5815",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"server_room\", \"elevators\"]",
+      "options": [
+        {
+          "kW": 50,
+          "icon": "💻",
+          "label": "Server room",
+          "value": "server_room"
+        },
+        {
+          "kW": 150,
+          "icon": "🏭",
+          "label": "Data center",
+          "value": "data_center"
+        },
+        {
+          "kW": 30,
+          "icon": "🛗",
+          "label": "Elevators",
+          "value": "elevators"
+        },
+        {
+          "kW": 75,
+          "icon": "🍽️",
+          "label": "Kitchen/cafeteria",
+          "value": "kitchen_cafeteria"
+        },
+        {
+          "kW": 20,
+          "icon": "💪",
+          "label": "Fitness center",
+          "value": "fitness_center"
+        },
+        {
+          "kW": 40,
+          "icon": "🚗",
+          "label": "Parking garage (lighting, ventilation)",
+          "value": "parking_garage"
+        },
+        {
+          "kW": 50,
+          "icon": "🔌",
+          "label": "EV charging stations",
+          "value": "ev_charging"
+        },
+        {
+          "kW": 0,
+          "icon": "✅",
+          "label": "None",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "26519681-cf6b-4d9a-abeb-b2b9a4bb1d16",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "icon": "🏢",
+          "label": "Low (>250 sq ft/person)",
+          "value": "low",
+          "multiplier": 0.8,
+          "sqftPerPerson": 300
+        },
+        {
+          "icon": "🏪",
+          "label": "Medium (150–250 sq ft/person)",
+          "value": "medium",
+          "multiplier": 1,
+          "sqftPerPerson": 200
+        },
+        {
+          "icon": "🏬",
+          "label": "High (100–150 sq ft/person)",
+          "value": "high",
+          "multiplier": 1.2,
+          "sqftPerPerson": 125
+        },
+        {
+          "icon": "💼",
+          "label": "Very high (<100 sq ft/person)",
+          "value": "very_high",
+          "multiplier": 1.4,
+          "sqftPerPerson": 80
+        }
+      ]
+    },
+    {
+      "id": "6b778ce6-e171-4948-bf58-d1418ca2ba83",
+      "type": "text",
+      "required": false,
+      "defaultValue": "75-90",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "<50%",
+          "value": "<50",
+          "concurrency": 0.4
+        },
+        {
+          "icon": "📊",
+          "label": "50–75%",
+          "value": "50-75",
+          "concurrency": 0.65
+        },
+        {
+          "icon": "📈",
+          "label": "75–90%",
+          "value": "75-90",
+          "concurrency": 0.85
+        },
+        {
+          "icon": "🔥",
+          "label": "90%+",
+          "value": "90+",
+          "concurrency": 0.95
+        }
+      ]
+    },
+    {
+      "id": "32003f29-25c6-42f6-b93a-71364fa3e737",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "icon": "🕐",
+          "hours": 10,
+          "label": "Standard (8 AM–6 PM)",
+          "value": "standard",
+          "peakHour": 14
+        },
+        {
+          "icon": "🕔",
+          "hours": 12,
+          "label": "Extended (7 AM–7 PM)",
+          "value": "extended",
+          "peakHour": 14
+        },
+        {
+          "icon": "🕛",
+          "hours": 24,
+          "label": "24/7 operations",
+          "value": "24_7",
+          "peakHour": 14
+        },
+        {
+          "icon": "🔄",
+          "hours": 16,
+          "label": "Shift work (multiple peaks)",
+          "value": "shift_work",
+          "peakHour": 10
+        },
+        {
+          "icon": "💼",
+          "hours": 8,
+          "label": "Flexible/hybrid schedules",
+          "value": "flexible",
+          "peakHour": 11
+        }
+      ]
+    },
+    {
+      "id": "a8b2c11e-5b9f-4605-8c28-8b9d9125ce66",
+      "type": "text",
+      "required": false,
+      "defaultValue": "10-30",
+      "options": [
+        {
+          "icon": "🏢",
+          "label": "<10% (mostly in-office)",
+          "value": "<10",
+          "concurrency": 0.95
+        },
+        {
+          "icon": "🔄",
+          "label": "10–30% (hybrid)",
+          "value": "10-30",
+          "concurrency": 0.8
+        },
+        {
+          "icon": "💼",
+          "label": "30–50% (flexible)",
+          "value": "30-50",
+          "concurrency": 0.65
+        },
+        {
+          "icon": "🏠",
+          "label": "50%+ (mostly remote)",
+          "value": "50+",
+          "concurrency": 0.5
+        }
+      ]
+    },
+    {
+      "id": "810730c5-4c3e-46f6-99c2-5e6ade719504",
+      "type": "text",
+      "required": false,
+      "defaultValue": "light",
+      "options": [
+        {
+          "icon": "🌙",
+          "label": "Minimal (only security/HVAC setback)",
+          "value": "minimal",
+          "offHourLoad": 0.2
+        },
+        {
+          "icon": "🌆",
+          "label": "Light (cleaners, some late workers)",
+          "value": "light",
+          "offHourLoad": 0.3
+        },
+        {
+          "icon": "🌃",
+          "label": "Moderate (shift work, server rooms)",
+          "value": "moderate",
+          "offHourLoad": 0.5
+        },
+        {
+          "icon": "🕛",
+          "label": "High (24/7 operations)",
+          "value": "high",
+          "offHourLoad": 0.7
+        }
+      ]
+    },
+    {
+      "id": "43c4b030-4dc1-4c5f-8b63-7d2bdfc36b81",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000-30000",
+      "options": [
+        {
+          "icon": "💵",
+          "label": "<$5,000",
+          "value": "<5000"
+        },
+        {
+          "icon": "💰",
+          "label": "$5,000–$15,000",
+          "value": "5000-15000"
+        },
+        {
+          "icon": "💳",
+          "label": "$15,000–$30,000",
+          "value": "15000-30000"
+        },
+        {
+          "icon": "💸",
+          "label": "$30,000–$75,000",
+          "value": "30000-75000"
+        },
+        {
+          "icon": "🏦",
+          "label": "$75,000+",
+          "value": "75000+"
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "5b3ac8db-89a1-406d-9fba-a8c338eba3df",
+      "type": "text",
+      "required": false,
+      "defaultValue": "demand",
+      "options": [
+        {
+          "icon": "📊",
+          "label": "Flat rate only",
+          "value": "flat",
+          "savingsMultiplier": 0.5
+        },
+        {
+          "icon": "🕐",
+          "label": "Time-of-use (TOU)",
+          "value": "tou",
+          "savingsMultiplier": 0.8
+        },
+        {
+          "icon": "⚡",
+          "label": "Demand charges",
+          "value": "demand",
+          "savingsMultiplier": 1
+        },
+        {
+          "icon": "🎯",
+          "label": "TOU + demand charges",
+          "value": "tou_demand",
+          "savingsMultiplier": 1.2
+        },
+        {
+          "icon": "❓",
+          "label": "Not sure",
+          "value": "not_sure",
+          "savingsMultiplier": 0.8
+        }
+      ]
+    },
+    {
+      "id": "0bde957b-69b6-4acd-9479-bb725fd08c33",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "⚠️",
+          "label": "Breaker trips",
+          "value": "breaker_trips"
+        },
+        {
+          "icon": "📉",
+          "label": "Voltage sag/flicker",
+          "value": "voltage_sag"
+        },
+        {
+          "icon": "❄️",
+          "label": "HVAC system failures",
+          "value": "hvac_failures"
+        },
+        {
+          "icon": "🛗",
+          "label": "Elevator power issues",
+          "value": "elevator_issues"
+        },
+        {
+          "icon": "💻",
+          "label": "IT equipment restarts",
+          "value": "it_equipment_restarts"
+        },
+        {
+          "icon": "✅",
+          "label": "None",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "4f3c2893-cdd9-453d-9440-6bea042b13f5",
+      "type": "text",
+      "required": false,
+      "defaultValue": "major_disruption",
+      "options": [
+        {
+          "icon": "🛑",
+          "label": "Critical systems fail (elevators, IT)",
+          "value": "critical",
+          "backupHours": 6
+        },
+        {
+          "icon": "⚠️",
+          "label": "Major tenant disruption",
+          "value": "major_disruption",
+          "backupHours": 4
+        },
+        {
+          "icon": "📉",
+          "label": "Inconvenience (lights, HVAC out)",
+          "value": "inconvenience",
+          "backupHours": 2
+        },
+        {
+          "icon": "✅",
+          "label": "Minimal impact",
+          "value": "minimal",
+          "backupHours": 1
+        }
+      ]
+    },
+    {
+      "id": "604bd03b-4a01-4dd5-943f-e96a07199ac7",
+      "type": "text",
+      "required": false,
+      "defaultValue": "[\"none\"]",
+      "options": [
+        {
+          "icon": "🔨",
+          "label": "Major tenant improvements",
+          "value": "tenant_improvements",
+          "kWIncrease": 50
+        },
+        {
+          "icon": "💻",
+          "label": "New server room",
+          "value": "server_room",
+          "kWIncrease": 50
+        },
+        {
+          "icon": "🔌",
+          "label": "EV charging stations",
+          "value": "ev_chargers",
+          "kWIncrease": 75
+        },
+        {
+          "icon": "❄️",
+          "label": "HVAC system upgrade",
+          "value": "hvac_upgrade",
+          "kWIncrease": 100
+        },
+        {
+          "icon": "☀️",
+          "label": "Solar panels",
+          "value": "solar",
+          "kWIncrease": 0
+        },
+        {
+          "icon": "✅",
+          "label": "No expansion planned",
+          "value": "none",
+          "kWIncrease": 0
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "[\"none\"]"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "office_load_v1",
+  "calculatorVersion": "1.0.0"
+}

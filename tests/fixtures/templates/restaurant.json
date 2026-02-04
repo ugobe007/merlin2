@@ -1,0 +1,393 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:36.067Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "caa87723-45aa-4c38-adfc-fe2a9a5fc2ca",
+  "templateVersion": "2026-01-15T01:56:09.462971+00:00",
+  "industry": "restaurant",
+  "useCase": "restaurant",
+  "name": "Restaurant",
+  "slug": "restaurant",
+  "description": "Restaurants have high energy demands from commercial kitchen equipment, HVAC, refrigeration, and lighting. BESS can reduce peak demand charges.",
+  "category": "commercial",
+  "questions": [
+    {
+      "id": "27974308-918d-41a9-be62-f3de26d8d5b7",
+      "type": "text",
+      "required": false,
+      "defaultValue": "3000",
+      "options": [
+        {
+          "max": 1500,
+          "min": 0,
+          "label": "< 1,500",
+          "description": "Small café"
+        },
+        {
+          "max": 3000,
+          "min": 1500,
+          "label": "1,500-3,000",
+          "description": "Standard"
+        },
+        {
+          "max": 5000,
+          "min": 3000,
+          "label": "3,000-5,000",
+          "description": "Large"
+        },
+        {
+          "max": 10000,
+          "min": 5000,
+          "label": "5,000-10,000",
+          "description": "Very large"
+        },
+        {
+          "max": null,
+          "min": 10000,
+          "label": "10,000+",
+          "description": "Banquet/Multi-room"
+        }
+      ]
+    },
+    {
+      "id": "527f332e-a1ea-4b4e-9f7b-5360a5333f44",
+      "type": "text",
+      "required": false,
+      "defaultValue": "casual_dining",
+      "options": [
+        {
+          "icon": "🍔",
+          "label": "Quick Service / Fast Food",
+          "value": "quick_service",
+          "description": "Counter service, drive-thru"
+        },
+        {
+          "icon": "🥗",
+          "label": "Fast Casual",
+          "value": "fast_casual",
+          "description": "Fresh prep, counter service"
+        },
+        {
+          "icon": "🍽️",
+          "label": "Casual Dining",
+          "value": "casual_dining",
+          "description": "Full service, family restaurants"
+        },
+        {
+          "icon": "🥂",
+          "label": "Fine Dining",
+          "value": "fine_dining",
+          "description": "Upscale, full service"
+        },
+        {
+          "icon": "🍸",
+          "label": "Bar / Nightclub",
+          "value": "bar_nightclub",
+          "description": "Entertainment focus"
+        }
+      ]
+    },
+    {
+      "id": "d226642d-5876-4dfb-884e-5e017d98b85e",
+      "type": "text",
+      "required": false,
+      "defaultValue": "80",
+      "options": [
+        {
+          "max": 25,
+          "min": 1,
+          "label": "1-25",
+          "description": "Small café/counter"
+        },
+        {
+          "max": 50,
+          "min": 25,
+          "label": "25-50",
+          "description": "Small restaurant"
+        },
+        {
+          "max": 100,
+          "min": 50,
+          "label": "50-100",
+          "description": "Medium restaurant"
+        },
+        {
+          "max": 200,
+          "min": 100,
+          "label": "100-200",
+          "description": "Large restaurant"
+        },
+        {
+          "max": 300,
+          "min": 200,
+          "label": "200-300",
+          "description": "Very large/banquet"
+        }
+      ]
+    },
+    {
+      "id": "7a031fbb-4a17-400e-803b-6b791f6398a4",
+      "type": "text",
+      "required": false,
+      "defaultValue": "2500",
+      "options": [
+        {
+          "icon": "💵",
+          "label": "< $500/mo",
+          "value": "300"
+        },
+        {
+          "icon": "💰",
+          "label": "$500-1,500/mo",
+          "value": "1000"
+        },
+        {
+          "icon": "💳",
+          "label": "$1,500-3,000/mo",
+          "value": "2000"
+        },
+        {
+          "icon": "💲",
+          "label": "$3,000-6,000/mo",
+          "value": "4500"
+        },
+        {
+          "icon": "🏦",
+          "label": "$6,000+/mo",
+          "value": "8000"
+        }
+      ]
+    },
+    {
+      "id": "3ee5922c-222b-47cd-b1bb-149dfe37f34c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "14",
+      "options": [
+        {
+          "icon": "🌅",
+          "label": "6-8 hrs",
+          "value": "7",
+          "description": "Breakfast/lunch only"
+        },
+        {
+          "icon": "☀️",
+          "label": "10-12 hrs",
+          "value": "11",
+          "description": "Standard hours"
+        },
+        {
+          "icon": "🌇",
+          "label": "14-16 hrs",
+          "value": "15",
+          "description": "Breakfast thru dinner"
+        },
+        {
+          "icon": "🌙",
+          "label": "18-20 hrs",
+          "value": "19",
+          "description": "Extended hours"
+        },
+        {
+          "icon": "🕛",
+          "label": "24 hrs",
+          "value": "24",
+          "description": "24/7 operation"
+        }
+      ]
+    },
+    {
+      "id": "6c6a24ca-1800-40a3-a86e-f8b675bf2efb",
+      "type": "text",
+      "required": false,
+      "defaultValue": "true",
+      "options": null
+    },
+    {
+      "id": "d3f37f8c-2447-464c-88ff-52405fb1d7eb",
+      "type": "text",
+      "required": false,
+      "defaultValue": "true",
+      "options": null
+    },
+    {
+      "id": "1388ae89-71ab-4a3e-a7d0-76a249d22141",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "🔥",
+          "label": "Gas Range/Oven",
+          "value": "gas_range"
+        },
+        {
+          "icon": "⚡",
+          "label": "Electric Range/Oven",
+          "value": "electric_range"
+        },
+        {
+          "icon": "🍟",
+          "label": "Fryers",
+          "value": "fryers"
+        },
+        {
+          "icon": "🥞",
+          "label": "Flat Top Griddle",
+          "value": "griddle"
+        },
+        {
+          "icon": "🍕",
+          "label": "Pizza Oven",
+          "value": "pizza_oven"
+        },
+        {
+          "icon": "🌀",
+          "label": "Convection Oven",
+          "value": "convection"
+        }
+      ]
+    },
+    {
+      "id": "762b7f79-fe5c-46c3-b29b-dc35cbdbdd52",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "max": 0,
+          "min": 0,
+          "label": "0",
+          "description": "None"
+        },
+        {
+          "max": 1,
+          "min": 1,
+          "label": "1",
+          "description": "One unit"
+        },
+        {
+          "max": 3,
+          "min": 2,
+          "label": "2-3",
+          "description": "Small"
+        },
+        {
+          "max": 6,
+          "min": 4,
+          "label": "4-6",
+          "description": "Medium"
+        },
+        {
+          "max": null,
+          "min": 6,
+          "label": "6+",
+          "description": "Large"
+        }
+      ]
+    },
+    {
+      "id": "97563ddd-b94e-4e93-af7e-6526c947132d",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "🏠",
+          "label": "Rooftop Units",
+          "value": "rooftop"
+        },
+        {
+          "icon": "❄️",
+          "label": "Split Systems",
+          "value": "split"
+        },
+        {
+          "icon": "🌡️",
+          "label": "Central AC",
+          "value": "central"
+        },
+        {
+          "icon": "🎛️",
+          "label": "VRF/Mini-Split",
+          "value": "vrf"
+        }
+      ]
+    },
+    {
+      "id": "c9d3c8b8-371d-48e6-b079-6549e728ef5d",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": null
+    },
+    {
+      "id": "bb7dfc68-d4dc-4b8b-a187-c9d0b20bdfcf",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": null
+    },
+    {
+      "id": "24c35828-6070-48f0-bf03-500f37d2c9cf",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "🧽",
+          "label": "None/Manual",
+          "value": "none"
+        },
+        {
+          "icon": "📦",
+          "label": "Under-counter",
+          "value": "undercounter"
+        },
+        {
+          "icon": "🚪",
+          "label": "Door-type",
+          "value": "door"
+        },
+        {
+          "icon": "➡️",
+          "label": "Conveyor",
+          "value": "conveyor"
+        },
+        {
+          "icon": "✈️",
+          "label": "Flight-type",
+          "value": "flight"
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "true"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "restaurant_load_v1",
+  "calculatorVersion": "1.0.0"
+}

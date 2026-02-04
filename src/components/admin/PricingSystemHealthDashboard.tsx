@@ -219,42 +219,42 @@ export const PricingSystemHealthDashboard: React.FC = () => {
 
   const loadMLAgentStatus = async (): Promise<Partial<PricingHealthMetrics>> => {
     try {
-      // Get ML processing log
+      // Get ML processing log (cast to any for typing, then type the data)
       const { data: logData } = await supabase
-        .from('ml_processing_log')
+        .from('ml_processing_log' as any)
         .select('*')
         .order('processed_at', { ascending: false })
         .limit(1)
-        .single();
+        .single() as any; // Type assertion since table not in generated types
 
       // Get unprocessed records count
       const { count: unprocessedCount } = await supabase
-        .from('ai_training_data')
+        .from('ai_training_data' as any)
         .select('*', { count: 'exact', head: true })
         .eq('processed_for_ml', false)
         .eq('data_type', 'pricing');
 
       // Get ML trends count
       const { count: trendsCount } = await supabase
-        .from('ml_price_trends')
+        .from('ml_price_trends' as any)
         .select('*', { count: 'exact', head: true });
 
       // Get ML insights count
       const { count: insightsCount } = await supabase
-        .from('ml_market_insights')
+        .from('ml_market_insights' as any)
         .select('*', { count: 'exact', head: true });
 
       const status = logData 
-        ? (Date.now() - new Date(logData.processed_at).getTime() < 24 * 60 * 60 * 1000 ? 'active' : 'idle')
+        ? (Date.now() - new Date((logData as any).processed_at).getTime() < 24 * 60 * 60 * 1000 ? 'active' : 'idle')
         : 'idle';
 
       return {
         mlAgentStatus: status,
-        mlLastProcessed: logData ? new Date(logData.processed_at) : null,
+        mlLastProcessed: logData ? new Date((logData as any).processed_at) : null,
         mlTrendsGenerated: trendsCount || 0,
         mlInsightsGenerated: insightsCount || 0,
         mlUnprocessedRecords: unprocessedCount || 0,
-        mlProcessingTime: logData?.processing_time_seconds || 0
+        mlProcessingTime: (logData as any)?.processing_time_seconds || 0
       };
     } catch (error) {
       console.error('Error loading ML status:', error);
@@ -381,7 +381,7 @@ export const PricingSystemHealthDashboard: React.FC = () => {
   const loadMLTrends = async (): Promise<any[]> => {
     try {
       const { data, error } = await supabase
-        .from('ml_price_trends')
+        .from('ml_price_trends' as any)
         .select('*')
         .order('updated_at', { ascending: false })
         .limit(10);

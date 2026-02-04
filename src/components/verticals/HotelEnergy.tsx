@@ -29,8 +29,8 @@ import hotelImage3 from '@/assets/images/hotel_motel_holidayinn_2.jpg';
 import hotelImage4 from '@/assets/images/hotel_motel_holidayinn_3.jpg';
 import hotelImage5 from '@/assets/images/hotel_motel_holidayinn_4.jpg';
 import evChargingHotelImage from '@/assets/images/ev_charging_hotel.jpg';
-// V5 Wizard (Clean Build Dec 21, 2025)
-import WizardV6 from '@/components/wizard/v6/WizardV6';
+// V7 Wizard (Feb 2026 - V7 is now default)
+import WizardV7Page from '@/pages/WizardV7Page';
 import { MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 
@@ -535,7 +535,7 @@ function calculateHotelPower(inputs: HotelInputs): { peakKW: number; dailyKWh: n
 // ============================================
 
 export default function HotelEnergy() {
-  // Redirect to wizard with hotel pre-selected
+  // Redirect to wizard with hotel pre-selected (V7 is now default)
   useEffect(() => {
     window.location.href = '/wizard?industry=hotel';
   }, []);
@@ -1544,11 +1544,11 @@ export default function HotelEnergy() {
       )}
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          WIZARD MODAL - Uses WizardV5 with hotel pre-selected
+          WIZARD MODAL - Uses WizardV7 (Feb 2026 - V7 is now default)
           ═══════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
         <div className="fixed inset-0 z-50">
-          <WizardV6 />
+          <WizardV7Page />
         </div>
       )}
       {selectedCaseStudy && (

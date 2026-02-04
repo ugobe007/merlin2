@@ -1,0 +1,677 @@
+{
+  "_meta": {
+    "exportedAt": "2026-02-01T17:23:32.688Z",
+    "exporterVersion": "1.0.0",
+    "sourceTable": "use_cases + custom_questions"
+  },
+  "templateId": "2be3845b-66f2-4e36-985d-58cc3a488e21",
+  "templateVersion": "2025-11-28T04:59:13.77318+00:00",
+  "industry": "casino",
+  "useCase": "casino",
+  "name": "Casino & Gaming",
+  "slug": "casino",
+  "description": "Gaming facility with slot machines, table games, restaurants, and 24/7 HVAC",
+  "category": "commercial",
+  "questions": [
+    {
+      "id": "ac1e205b-f68b-4872-bc45-64968cef4c9c",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Building2",
+          "label": "Destination Resort",
+          "value": "destination-resort",
+          "description": "Large-scale integrated resort"
+        },
+        {
+          "icon": "Building",
+          "label": "Regional Casino",
+          "value": "regional",
+          "description": "Serves local/regional market"
+        },
+        {
+          "icon": "Landmark",
+          "label": "Tribal Gaming",
+          "value": "tribal",
+          "description": "Native American owned"
+        },
+        {
+          "icon": "Ship",
+          "label": "Riverboat/Dockside",
+          "value": "riverboat",
+          "description": "Water-based gaming"
+        },
+        {
+          "icon": "Trophy",
+          "label": "Racino",
+          "value": "racino",
+          "description": "Racetrack with gaming"
+        },
+        {
+          "icon": "Spade",
+          "label": "Card Room",
+          "value": "card-room",
+          "description": "Card games only"
+        }
+      ]
+    },
+    {
+      "id": "e1e9262a-b6cb-48a0-8b1e-44bb0eb8cceb",
+      "type": "text",
+      "required": false,
+      "defaultValue": "50000",
+      "options": {
+        "max": 500000,
+        "min": 1000,
+        "step": 1000,
+        "suffix": " sq ft"
+      }
+    },
+    {
+      "id": "f90dd4ba-0fe0-492e-9302-9bfefc695f98",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "ranges": [
+          {
+            "max": 25,
+            "min": 1,
+            "label": "1-25"
+          },
+          {
+            "max": 75,
+            "min": 26,
+            "label": "26-75"
+          },
+          {
+            "max": 150,
+            "min": 76,
+            "label": "76-150"
+          },
+          {
+            "max": 300,
+            "min": 151,
+            "label": "151-300"
+          },
+          {
+            "max": null,
+            "min": 301,
+            "label": "300+"
+          }
+        ],
+        "suffix": "rooms"
+      }
+    },
+    {
+      "id": "5c0cfbf7-51f4-45c2-a7b7-c4c237a84329",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "max": 1000,
+        "min": 0,
+        "step": 10
+      }
+    },
+    {
+      "id": "98861e69-d2f2-4df9-8329-3809cb40c753",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "max": 1000,
+        "min": 0,
+        "step": 10
+      }
+    },
+    {
+      "id": "d341c12e-d696-4844-a51f-07688989b391",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "No Sportsbook",
+          "value": "none"
+        },
+        {
+          "icon": "Monitor",
+          "label": "Small (under 50 seats)",
+          "value": "small"
+        },
+        {
+          "icon": "Monitor",
+          "label": "Medium (50-200 seats)",
+          "value": "medium"
+        },
+        {
+          "icon": "Tv",
+          "label": "Large (200+ seats)",
+          "value": "large"
+        }
+      ]
+    },
+    {
+      "id": "60b2b006-b4aa-46c2-95e2-0036b439f015",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "UtensilsCrossed",
+          "label": "Buffet",
+          "value": "buffet"
+        },
+        {
+          "icon": "Wine",
+          "label": "Fine Dining",
+          "value": "fine-dining"
+        },
+        {
+          "icon": "Coffee",
+          "label": "Casual Restaurants",
+          "value": "casual"
+        },
+        {
+          "icon": "Store",
+          "label": "Food Court",
+          "value": "food-court"
+        },
+        {
+          "icon": "Beer",
+          "label": "Bars/Lounges",
+          "value": "bars-lounges"
+        },
+        {
+          "icon": "Music",
+          "label": "Nightclub",
+          "value": "nightclub"
+        },
+        {
+          "icon": "ConciergeBell",
+          "label": "Room Service",
+          "value": "room-service"
+        }
+      ]
+    },
+    {
+      "id": "81f167c5-dde2-4ea0-a936-d18f8770f6f5",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Theater",
+          "label": "Theater/Showroom",
+          "value": "theater"
+        },
+        {
+          "icon": "Music",
+          "label": "Arena/Concert Venue",
+          "value": "arena"
+        },
+        {
+          "icon": "Users",
+          "label": "Convention Center",
+          "value": "convention"
+        },
+        {
+          "icon": "Waves",
+          "label": "Pool Complex",
+          "value": "pool"
+        },
+        {
+          "icon": "Sparkles",
+          "label": "Spa/Salon",
+          "value": "spa"
+        },
+        {
+          "icon": "Flag",
+          "label": "Golf Course",
+          "value": "golf"
+        },
+        {
+          "icon": "ShoppingBag",
+          "label": "Retail Shops",
+          "value": "retail"
+        }
+      ]
+    },
+    {
+      "id": "b9589cb3-9de1-409c-8844-9c230a6e762b",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": {
+        "max": 24,
+        "min": 6,
+        "step": 1,
+        "suffix": " hrs/day"
+      }
+    },
+    {
+      "id": "ff5817ee-cbe7-4b88-ab52-12c821800728",
+      "type": "text",
+      "required": false,
+      "defaultValue": "standard",
+      "options": [
+        {
+          "label": "Legacy (15+ years old)",
+          "value": "legacy",
+          "description": "Older, less efficient equipment"
+        },
+        {
+          "label": "Standard (5-15 years)",
+          "value": "standard",
+          "description": "Average efficiency"
+        },
+        {
+          "label": "Modern (under 5 years)",
+          "value": "modern",
+          "description": "High-efficiency equipment"
+        },
+        {
+          "label": "Premium/LEED",
+          "value": "premium",
+          "description": "Best-in-class efficiency"
+        }
+      ]
+    },
+    {
+      "id": "2e144fe0-fb5f-400b-88d1-93ec1002c5b7",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Snowflake",
+          "label": "Central Chiller Plant",
+          "value": "central-chiller"
+        },
+        {
+          "icon": "Wind",
+          "label": "Rooftop Units",
+          "value": "rooftop"
+        },
+        {
+          "icon": "Thermometer",
+          "label": "VRF System",
+          "value": "vrf"
+        },
+        {
+          "icon": "Settings",
+          "label": "Mixed Systems",
+          "value": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "33b105e0-ee88-468f-aa5a-452545cc8537",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Car",
+          "label": "Surface Lots Only",
+          "value": "surface"
+        },
+        {
+          "icon": "Building",
+          "label": "Parking Garage",
+          "value": "garage"
+        },
+        {
+          "icon": "Car",
+          "label": "Both Surface & Garage",
+          "value": "both"
+        },
+        {
+          "icon": "Key",
+          "label": "Valet Only",
+          "value": "valet-only"
+        }
+      ]
+    },
+    {
+      "id": "f56965ba-6190-4f5e-bc27-ad700ecaa43b",
+      "type": "text",
+      "required": false,
+      "defaultValue": "15000",
+      "options": [
+        {
+          "label": "$1,000 - $5,000/mo",
+          "value": "3000"
+        },
+        {
+          "label": "$5,000 - $15,000/mo",
+          "value": "10000"
+        },
+        {
+          "label": "$15,000 - $35,000/mo",
+          "value": "25000"
+        },
+        {
+          "label": "$35,000 - $75,000/mo",
+          "value": "50000"
+        },
+        {
+          "label": "$75,000 - $150,000/mo",
+          "value": "100000"
+        },
+        {
+          "label": "Over $150,000/mo",
+          "value": "200000"
+        }
+      ]
+    },
+    {
+      "id": "4a3f3b15-1eae-4243-b87d-998f3d15d254",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "DollarSign",
+          "label": "Under $100,000",
+          "value": "under-100k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$100,000 - $250,000",
+          "value": "100-250k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$250,000 - $500,000",
+          "value": "250-500k"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "$500,000 - $1M",
+          "value": "500k-1m"
+        },
+        {
+          "icon": "DollarSign",
+          "label": "Over $1M",
+          "value": "over-1m"
+        }
+      ]
+    },
+    {
+      "id": "873b8795-a36f-4a09-bf7c-b03cbb988059",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Zap",
+          "label": "Under 2 MW",
+          "value": "under-2mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "2-5 MW",
+          "value": "2-5mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "5-10 MW",
+          "value": "5-10mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "10-25 MW",
+          "value": "10-25mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "25-50 MW",
+          "value": "25-50mw"
+        },
+        {
+          "icon": "Zap",
+          "label": "Over 50 MW",
+          "value": "over-50mw"
+        }
+      ]
+    },
+    {
+      "id": "665de8c6-d1e7-48c4-b5d3-e73f3c31830c",
+      "type": "text",
+      "required": false,
+      "defaultValue": "medium",
+      "options": [
+        {
+          "label": "Under 200 kW",
+          "value": "small",
+          "description": "Small commercial service"
+        },
+        {
+          "label": "200-500 kW",
+          "value": "medium",
+          "description": "Medium commercial service"
+        },
+        {
+          "label": "500 kW - 2 MW",
+          "value": "large",
+          "description": "Large commercial service"
+        },
+        {
+          "label": "Over 2 MW",
+          "value": "utility",
+          "description": "Utility-scale connection"
+        }
+      ]
+    },
+    {
+      "id": "2490a95f-af09-4478-a721-7d3f4b4f28cb",
+      "type": "text",
+      "required": false,
+      "defaultValue": "true",
+      "options": null
+    },
+    {
+      "id": "e59533fe-c773-44e8-a185-09690d01feed",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "cb339c18-a753-4d8e-aa53-47ca28ede274",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "max": 500,
+        "min": 0,
+        "step": 10,
+        "suffix": " kW"
+      }
+    },
+    {
+      "id": "7a0ede03-f110-4910-a258-00d449b8300f",
+      "type": "text",
+      "required": false,
+      "defaultValue": "false",
+      "options": null
+    },
+    {
+      "id": "f604e0b2-91fa-4060-ab87-c1ecba6df509",
+      "type": "text",
+      "required": false,
+      "defaultValue": "0",
+      "options": {
+        "ranges": [
+          {
+            "max": 0,
+            "min": 0,
+            "label": "0"
+          },
+          {
+            "max": 5,
+            "min": 1,
+            "label": "1-5"
+          },
+          {
+            "max": 15,
+            "min": 6,
+            "label": "6-15"
+          },
+          {
+            "max": 30,
+            "min": 16,
+            "label": "16-30"
+          },
+          {
+            "max": null,
+            "min": 31,
+            "label": "30+"
+          }
+        ],
+        "suffix": "chargers"
+      }
+    },
+    {
+      "id": "6322070a-2ff7-47eb-b16f-a31ae6712425",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "Sun",
+          "label": "Solar PV",
+          "value": "solar"
+        },
+        {
+          "icon": "Fuel",
+          "label": "Backup Generators",
+          "value": "generator"
+        },
+        {
+          "icon": "Battery",
+          "label": "Battery Storage",
+          "value": "battery"
+        },
+        {
+          "icon": "Flame",
+          "label": "CHP/Cogeneration",
+          "value": "chp"
+        },
+        {
+          "icon": "PlugZap",
+          "label": "EV Chargers",
+          "value": "ev-chargers"
+        }
+      ]
+    },
+    {
+      "id": "e3166066-24d5-4646-8917-1039ed57c084",
+      "type": "text",
+      "required": false,
+      "defaultValue": null,
+      "options": [
+        {
+          "icon": "CircleOff",
+          "label": "Not Interested",
+          "value": "not_interested"
+        },
+        {
+          "icon": "HelpCircle",
+          "label": "Considering",
+          "value": "considering"
+        },
+        {
+          "icon": "Sun",
+          "label": "Very Interested",
+          "value": "very_interested"
+        },
+        {
+          "icon": "FileText",
+          "label": "PPA/No Capital Preferred",
+          "value": "ppa-preferred"
+        }
+      ]
+    },
+    {
+      "id": "5ae31b7e-bbc0-4d45-b041-0ce5aff04ae8",
+      "type": "text",
+      "required": false,
+      "defaultValue": "peak_shaving",
+      "options": [
+        {
+          "icon": "📉",
+          "label": "Peak Shaving",
+          "value": "peak_shaving",
+          "description": "Reduce demand charges during peak hours"
+        },
+        {
+          "icon": "💰",
+          "label": "Energy Arbitrage",
+          "value": "arbitrage",
+          "description": "Buy low, use high - time-of-use optimization"
+        },
+        {
+          "icon": "🔋",
+          "label": "Backup/Resilience",
+          "value": "resilience",
+          "description": "Keep critical loads running during outages"
+        },
+        {
+          "icon": "☀️",
+          "label": "Renewable Integration",
+          "value": "renewable",
+          "description": "Maximize solar self-consumption"
+        },
+        {
+          "icon": "📊",
+          "label": "Demand Response",
+          "value": "demand_response",
+          "description": "Participate in utility programs for revenue"
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "undefined": "peak_shaving"
+  },
+  "parts": [
+    {
+      "id": "profile",
+      "label": "Profile",
+      "questionIds": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "calculatorId": "casino_load_v1",
+  "calculatorVersion": "1.0.0"
+}

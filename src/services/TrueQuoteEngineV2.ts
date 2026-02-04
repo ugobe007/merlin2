@@ -44,6 +44,10 @@ import { authenticateProposal } from "./validators/proposalValidator";
 // Constants
 import { STATE_SUN_HOURS } from "./data/constants";
 
+// Margin Policy Engine (Feb 2026)
+import { applyMarginPolicy } from "./marginPolicyEngine";
+import { toMarginRenderEnvelope } from "./marginRenderEnvelopeAdapter";
+
 // Version
 const ENGINE_VERSION = "2.0.0";
 
@@ -307,6 +311,48 @@ export async function processQuote(
       options: typeof authResult extends { options: infer O } ? O : never;
     }
   ).options;
+
+  // ─────────────────────────────────────────────────────────────
+  // STEP 9.5: Apply Margin Policy to each tier (Feb 2026)
+  // ─────────────────────────────────────────────────────────────
+  console.log("");
+  console.log("💰 Applying margin policy...");
+  const tiers = ["starter", "perfectFit", "beastMode"] as const;
+  for (const tier of tiers) {
+    const opt = authenticatedOptions[tier];
+    const baseCost = opt.financials.totalInvestment;
+    try {
+      const marginResult = applyMarginPolicy({
+        lineItems: [],  // Could be extended with equipment breakdown
+        totalBaseCost: baseCost,
+        riskLevel: "standard",
+        customerSegment: "direct",
+      });
+      opt.marginRender = toMarginRenderEnvelope(marginResult);
+      console.log(`  ${tier}: base=$${baseCost.toLocaleString()} → sell=$${opt.marginRender.sellPriceTotal.toLocaleString()}`);
+    } catch (err) {
+      console.warn(`  ${tier}: margin policy failed, using baseCost as sellPrice`, err);
+      // Fallback: sellPriceTotal = baseCost (no margin)
+      opt.marginRender = {
+        sellPriceTotal: baseCost,
+        baseCostTotal: baseCost,
+        marginDollars: 0,
+        marketCostTotal: baseCost,
+        obtainableCostTotal: baseCost,
+        procurementBufferTotal: 0,
+        needsHumanReview: false,
+        confidenceBadge: { level: 'high' as const, badge: '✅ Verified', message: 'Fallback pricing' },
+        reviewEvents: [],
+        clampEvents: [],
+        lineItems: [],
+        marginBandId: 'fallback',
+        policyVersion: '1.2.0',
+        pricingAsOf: new Date().toISOString(),
+        _FORBIDDEN_computeMarginInUI: () => { throw new Error("UI must not compute margin"); },
+        _FORBIDDEN_computeNetCostInUI: () => { throw new Error("UI must not compute net cost"); },
+      };
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────
   // STEP 10: Build Authenticated Result

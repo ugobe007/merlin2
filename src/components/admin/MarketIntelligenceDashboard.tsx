@@ -17,6 +17,26 @@ import { TrendingUp, TrendingDown, Minus, BarChart3, Zap, Lightbulb, Building2, 
 import { runMarketInference, type MarketInference, type MarketTrend, type BESSConfigurationPattern, type CustomerDecisionIndicator, type EmergingOpportunity, type IndustryAdoptionRate, type PricingUpdateRecommendation } from '@/services/marketInferenceEngine';
 import { supabase } from '@/services/supabaseClient';
 import MarketIntelligenceDetailModal from './MarketIntelligenceDetailModal';
+import type { Json } from '@/types/database.types';
+
+// JSON normalizers for Supabase Json type safety
+function jsonArray<T>(value: Json | null | undefined): T[] {
+  if (Array.isArray(value)) return value as unknown as T[];
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? (parsed as T[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function asSentiment(v: string | null | undefined): "bullish" | "bearish" | "neutral" {
+  if (v === "bullish" || v === "bearish" || v === "neutral") return v;
+  return "neutral";
+}
 
 const MarketIntelligenceDashboard: React.FC = () => {
   const [inference, setInference] = useState<MarketInference | null>(null);
@@ -56,10 +76,18 @@ const MarketIntelligenceDashboard: React.FC = () => {
       }
 
       if (data) {
-        // If loaded data is empty or insufficient, generate sample data
-        const hasData = (data.market_trends?.length || 0) > 0 && 
-                       (data.bess_configurations?.length || 0) > 0 && 
-                       (data.industry_adoption?.length || 0) > 0;
+        // Normalize JSON fields to typed arrays
+        const marketTrends = jsonArray<MarketTrend>(data.market_trends);
+        const bessConfigs = jsonArray<BESSConfigurationPattern>(data.bess_configurations);
+        const indicators = jsonArray<CustomerDecisionIndicator>(data.decision_indicators);
+        const opportunities = jsonArray<EmergingOpportunity>(data.emerging_opportunities);
+        const adoption = jsonArray<IndustryAdoptionRate>(data.industry_adoption);
+        const recos = jsonArray<PricingUpdateRecommendation>(data.pricing_update_recommendations);
+        const sources = jsonArray<string>(data.sources);
+        
+        const hasData = marketTrends.length > 0 && 
+                       bessConfigs.length > 0 && 
+                       adoption.length > 0;
         
         if (!hasData) {
           // Data is incomplete - don't show placeholder data
@@ -67,17 +95,17 @@ const MarketIntelligenceDashboard: React.FC = () => {
         } else {
           setInference({
             analysisDate: data.analysis_date,
-            marketTrends: data.market_trends || [],
-            bessConfigurations: data.bess_configurations || [],
-            decisionIndicators: data.decision_indicators || [],
-            emergingOpportunities: data.emerging_opportunities || [],
-            industryAdoption: data.industry_adoption || [],
-            overallMarketSentiment: data.overall_sentiment,
-            confidence: data.confidence,
-            dataPointsAnalyzed: data.data_points_analyzed,
-            sources: data.sources || [],
-            requiresPricingUpdate: data.requires_pricing_update,
-            pricingUpdateRecommendations: data.pricing_update_recommendations || [],
+            marketTrends,
+            bessConfigurations: bessConfigs,
+            decisionIndicators: indicators,
+            emergingOpportunities: opportunities,
+            industryAdoption: adoption,
+            overallMarketSentiment: asSentiment(data.overall_sentiment),
+            confidence: data.confidence ?? 0,
+            dataPointsAnalyzed: data.data_points_analyzed ?? 0,
+            sources,
+            requiresPricingUpdate: data.requires_pricing_update ?? false,
+            pricingUpdateRecommendations: recos,
           });
         }
       } else {
@@ -174,16 +202,16 @@ const MarketIntelligenceDashboard: React.FC = () => {
           break;
       }
 
-      // Save to database
+      // Save to database (cast typed arrays to Json at storage boundary)
       const { error } = await supabase
         .from('market_inferences')
         .update({
-          market_trends: updatedInference.marketTrends,
-          bess_configurations: updatedInference.bessConfigurations,
-          decision_indicators: updatedInference.decisionIndicators,
-          emerging_opportunities: updatedInference.emergingOpportunities,
-          industry_adoption: updatedInference.industryAdoption,
-          pricing_update_recommendations: updatedInference.pricingUpdateRecommendations,
+          market_trends: updatedInference.marketTrends as unknown as Json,
+          bess_configurations: updatedInference.bessConfigurations as unknown as Json,
+          decision_indicators: updatedInference.decisionIndicators as unknown as Json,
+          emerging_opportunities: updatedInference.emergingOpportunities as unknown as Json,
+          industry_adoption: updatedInference.industryAdoption as unknown as Json,
+          pricing_update_recommendations: updatedInference.pricingUpdateRecommendations as unknown as Json,
           updated_at: new Date().toISOString(),
         })
         .eq('analysis_date', new Date(updatedInference.analysisDate).toISOString().split('T')[0]);
@@ -226,16 +254,16 @@ const MarketIntelligenceDashboard: React.FC = () => {
           break;
       }
 
-      // Save to database
+      // Save to database (cast typed arrays to Json at storage boundary)
       const { error } = await supabase
         .from('market_inferences')
         .update({
-          market_trends: updatedInference.marketTrends,
-          bess_configurations: updatedInference.bessConfigurations,
-          decision_indicators: updatedInference.decisionIndicators,
-          emerging_opportunities: updatedInference.emergingOpportunities,
-          industry_adoption: updatedInference.industryAdoption,
-          pricing_update_recommendations: updatedInference.pricingUpdateRecommendations,
+          market_trends: updatedInference.marketTrends as unknown as Json,
+          bess_configurations: updatedInference.bessConfigurations as unknown as Json,
+          decision_indicators: updatedInference.decisionIndicators as unknown as Json,
+          emerging_opportunities: updatedInference.emergingOpportunities as unknown as Json,
+          industry_adoption: updatedInference.industryAdoption as unknown as Json,
+          pricing_update_recommendations: updatedInference.pricingUpdateRecommendations as unknown as Json,
           updated_at: new Date().toISOString(),
         })
         .eq('analysis_date', new Date(updatedInference.analysisDate).toISOString().split('T')[0]);
