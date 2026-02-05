@@ -1,6 +1,6 @@
 // @ts-nocheck - WizardV7 has type mismatches with updated hooks (will fix separately)
 import React, { useCallback, useMemo, useEffect, useRef, useState } from "react";
-import WizardShellV7 from "@/wizard/v7/components/WizardShellV7";
+import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 import { useWizardV7 } from "@/wizard/v7/hooks/useWizardV7";
 import { wizardAIAgent } from "@/services/wizardAIAgentV2";
 import { wizardHealthMonitor } from "@/services/wizardHealthMonitor";
@@ -353,18 +353,138 @@ export default function WizardV7Page() {
     return <WizardHealthDashboard />;
   }
 
+  // Step labels for progress rail
+  const stepLabels = ["Location", "Industry", "Profile", "Quote"];
+  
+  // Current step index (0-based)
+  const currentStepIndex = 
+    state.step === "location" ? 0 :
+    state.step === "industry" ? 1 :
+    state.step === "profile" ? 2 :
+    state.step === "results" ? 3 : 0;
+
+  // Merlin Advisor panel with gate status
+  const advisorPanel = useMemo(() => {
+    // Gate status for location step
+    let gateStatus: "ok" | "blocked" | "pending" = "pending";
+    let gateMessage = "";
+    
+    if (state.step === "location") {
+      const hasValidZip = (state.locationRawInput || "").replace(/\D/g, "").length >= 5;
+      const hasLocation = Boolean(state.location?.formattedAddress);
+      
+      if (hasValidZip || hasLocation) {
+        gateStatus = "ok";
+        gateMessage = "You're clear to proceed to the next step.";
+      } else if (state.locationRawInput && state.locationRawInput.length > 0) {
+        gateStatus = "blocked";
+        gateMessage = "Enter a valid 5-digit ZIP code to continue.";
+      } else {
+        gateStatus = "pending";
+        gateMessage = "Enter your ZIP code or address to begin.";
+      }
+    } else if (state.step === "industry") {
+      gateStatus = state.industry && state.industry !== "auto" ? "ok" : "pending";
+      gateMessage = gateStatus === "ok" ? "Industry selected. Ready to continue!" : "Select your industry type.";
+    } else if (state.step === "profile") {
+      const answeredCount = Object.keys(state.step3Answers).length;
+      gateStatus = answeredCount > 0 ? "ok" : "pending";
+      gateMessage = answeredCount > 0 
+        ? `${answeredCount} question${answeredCount !== 1 ? 's' : ''} answered. Ready to generate quote!`
+        : "Answer profile questions to generate your quote.";
+    }
+
+    return (
+      <div
+        style={{
+          background: "rgba(16, 20, 36, 0.85)",
+          borderRadius: 16,
+          padding: 20,
+          boxShadow: `
+            0 4px 20px rgba(0, 0, 0, 0.4),
+            0 0 40px rgba(79, 140, 255, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05)
+          `,
+        }}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 4 }}>
+            Merlin Advisor
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.6)" }}>
+            Step: {state.step}
+          </div>
+        </div>
+
+        {/* Gate Status Badge */}
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "6px 12px",
+            borderRadius: 8,
+            fontSize: 12,
+            fontWeight: 600,
+            marginBottom: 12,
+            background:
+              gateStatus === "ok" ? "rgba(74, 222, 128, 0.15)" :
+              gateStatus === "blocked" ? "rgba(239, 68, 68, 0.15)" :
+              "rgba(251, 191, 36, 0.15)",
+            color:
+              gateStatus === "ok" ? "#4ade80" :
+              gateStatus === "blocked" ? "#ef4444" :
+              "#fbbf24",
+          }}
+        >
+          gate: {gateStatus}
+        </div>
+
+        {/* Gate Message */}
+        {gateMessage && (
+          <div
+            style={{
+              fontSize: 14,
+              color: "rgba(232, 235, 243, 0.85)",
+              lineHeight: 1.5,
+              padding: 12,
+              borderRadius: 8,
+              background: "rgba(79, 140, 255, 0.08)",
+            }}
+          >
+            › {gateMessage}
+          </div>
+        )}
+
+        {/* AI Agent Status */}
+        {import.meta.env.DEV && (
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 16,
+              borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+              fontSize: 12,
+              color: "rgba(232, 235, 243, 0.5)",
+            }}
+          >
+            🤖 AI Agent monitoring active
+          </div>
+        )}
+      </div>
+    );
+  }, [state.step, state.locationRawInput, state.location, state.industry, state.step3Answers]);
+
   return (
     <WizardShellV7
-      title={title}
-      step={stepMeta}
-      canBack={canBack}
-      canNext={shellCanNext}
+      currentStep={currentStepIndex}
+      stepLabels={stepLabels}
+      canGoBack={canBack}
+      canGoNext={shellCanNext}
       onBack={handleBack}
       onNext={handleNext}
-      onJump={handleJump}
-      left={left}
-      right={right}
-      state={state}
-    />
+      rightPanel={advisorPanel}
+    >
+      {right}
+    </WizardShellV7>
   );
 }
