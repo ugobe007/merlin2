@@ -516,6 +516,34 @@ function runContractQuote(params: {
       energyKWhPerDay: computed.energyKWhPerDay ?? 0,
     };
 
+    // ============================================================
+    // LOAD PROFILE CONSISTENCY CHECK (TrueQuote validation)
+    // ============================================================
+    if (import.meta.env.DEV) {
+      console.group(`[TrueQuote] Load Profile Consistency: ${tpl.industry}`);
+      console.log('Template:', { industry: tpl.industry, version: tpl.version, calculator: tpl.calculator.id });
+      console.log('Inputs Used:', inputs);
+      console.log('Load Profile:', loadProfile);
+      console.log('Duty Cycle:', computed.dutyCycle || 'not provided');
+      console.log('kW Contributors:', computed.kWContributors || 'not provided');
+      
+      // Sanity checks
+      const warnings: string[] = [];
+      if (loadProfile.peakLoadKW === 0) warnings.push('⚠️ Peak load is ZERO');
+      if (loadProfile.peakLoadKW < loadProfile.baseLoadKW) warnings.push('⚠️ Peak < Base (impossible)');
+      if (loadProfile.energyKWhPerDay === 0) warnings.push('⚠️ Daily energy is ZERO');
+      if (loadProfile.energyKWhPerDay > loadProfile.peakLoadKW * 24) {
+        warnings.push('⚠️ Daily energy > peak×24h (impossible)');
+      }
+      
+      if (warnings.length > 0) {
+        console.warn('Load Profile Sanity Issues:', warnings);
+      } else {
+        console.log('✅ Load profile passes sanity checks');
+      }
+      console.groupEnd();
+    }
+
     // 7. Get sizing hints (industry-specific defaults + input-based)
     const sizingDefaults = getSizingDefaults(tpl.industry);
     const sizingHints = {
@@ -569,6 +597,40 @@ function runContractQuote(params: {
     // Log warnings separately if present
     if (computed.warnings && computed.warnings.length > 0) {
       logger.logWarnings(computed.warnings);
+    }
+
+    // ============================================================
+    // QUOTE SANITY CHECKS (TrueQuote validation)
+    // ============================================================
+    if (import.meta.env.DEV) {
+      const quoteSanityWarnings: string[] = [];
+      
+      // Check sizing hints
+      if (!sizingHints.storageToPeakRatio || sizingHints.storageToPeakRatio <= 0) {
+        quoteSanityWarnings.push('⚠️ Storage-to-peak ratio invalid or zero');
+      }
+      if (!sizingHints.durationHours || sizingHints.durationHours <= 0) {
+        quoteSanityWarnings.push('⚠️ Duration hours invalid or zero');
+      }
+      
+      // Check pricing inputs
+      if (inputsUsed.electricityRate === 0.12) {
+        quoteSanityWarnings.push('ℹ️ Using default electricity rate (0.12 $/kWh)');
+      }
+      if (inputsUsed.demandCharge === 15) {
+        quoteSanityWarnings.push('ℹ️ Using default demand charge (15 $/kW)');
+      }
+      if (inputsUsed.location === 'unknown') {
+        quoteSanityWarnings.push('⚠️ Location unknown - using generic pricing');
+      }
+      
+      if (quoteSanityWarnings.length > 0) {
+        console.group('[TrueQuote] Quote Sanity Warnings');
+        quoteSanityWarnings.forEach(w => console.warn(w));
+        console.log('Sizing Hints:', sizingHints);
+        console.log('Inputs Used:', inputsUsed);
+        console.groupEnd();
+      }
     }
 
     return { 
@@ -1621,6 +1683,26 @@ function reduce(state: WizardState, intent: Intent): WizardState {
    Validators / Gates (SSOT)
 ============================================================ */
 
+/**
+ * Canonical ZIP normalization (single source of truth)
+ * 
+ * Usage:
+ * - Step 1 UI for validation
+ * - stepCanProceed gate logic
+ * - Intel fetch calls
+ * - Anywhere ZIP is checked
+ * 
+ * This prevents "ZIP value drift" between state.location.zip/postalCode/locationRawInput
+ */
+export function getNormalizedZip(state: WizardState): string {
+  const raw =
+    state.location?.zip ??
+    state.location?.postalCode ??
+    state.locationRawInput ??
+    "";
+  return raw.replace(/\D/g, "").slice(0, 5);
+}
+
 function hasState(location: LocationCard | null): boolean {
   // your bug: "STATE never confirms"
   return !!location?.state && location.state.trim().length >= 2;
@@ -1630,8 +1712,7 @@ function stepCanProceed(state: WizardState, step: WizardStep): { ok: boolean; re
   if (step === "location") {
     // Check for valid ZIP (5+ digits) OR location object with address
     // Business name and address are OPTIONAL - ZIP alone is sufficient
-    const zip = state.location?.zip || state.location?.postalCode || state.locationRawInput || "";
-    const normalizedZip = zip.replace(/\D/g, "");
+    const normalizedZip = getNormalizedZip(state);
     
     // Valid ZIP is always sufficient (5+ digits for US, 3+ for international)
     if (normalizedZip.length >= 5) {

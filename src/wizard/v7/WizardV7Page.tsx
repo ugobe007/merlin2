@@ -1,7 +1,34 @@
 // @ts-nocheck - WizardV7 has type mismatches with updated hooks (will fix separately)
 import React, { useCallback, useMemo, useEffect, useRef, useState } from "react";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
-import { useWizardV7 } from "@/wizard/v7/hooks/useWizardV7";
+import { useWizardV7, type WizardState, type WizardStep } from "@/wizard/v7/hooks/useWizardV7";
+
+/**
+ * ⚠️ IMPORT GATE FUNCTION FOR ADVISOR PANEL
+ * This ensures advisor panel uses EXACT SAME logic as navigation gates.
+ * Any mismatch causes "ZIP entered but gate still blocked" bug.
+ */
+function stepCanProceed(state: WizardState, step: WizardStep): { ok: boolean; reason?: string } {
+  if (step === "location") {
+    const zip = state.location?.zip || state.location?.postalCode || state.locationRawInput || "";
+    const normalizedZip = zip.replace(/\D/g, "");
+    if (normalizedZip.length >= 5) return { ok: true };
+    if (state.location?.formattedAddress) return { ok: true };
+    return { ok: false, reason: "Please enter a valid ZIP/postal code." };
+  }
+  if (step === "industry") {
+    if (!state.location) return { ok: false, reason: "Location missing." };
+    if (state.industry === "auto") return { ok: false, reason: "Industry not selected." };
+    return { ok: true };
+  }
+  if (step === "profile") {
+    if (!state.location) return { ok: false, reason: "Location missing." };
+    if (state.industry === "auto") return { ok: false, reason: "Industry missing." };
+    if (!state.step3Template) return { ok: false, reason: "Template missing." };
+    return { ok: true };
+  }
+  return { ok: false, reason: "Unknown step." };
+}
 import { wizardAIAgent } from "@/services/wizardAIAgentV2";
 import { wizardHealthMonitor } from "@/services/wizardHealthMonitor";
 
@@ -364,34 +391,39 @@ export default function WizardV7Page() {
     state.step === "results" ? 3 : 0;
 
   // Merlin Advisor panel with gate status
+  // ⚠️ CRITICAL: This MUST use the EXACT SAME logic as stepCanProceed() in useWizardV7.ts
+  // Any mismatch causes "ZIP entered but still blocked" bug
   const advisorPanel = useMemo(() => {
-    // Gate status for location step
-    let gateStatus: "ok" | "blocked" | "pending" = "pending";
+    // Use stepCanProceed directly for authoritative gate status
+    const gateResult = stepCanProceed(state, state.step);
+    
+    // Map gate result to crisp UI status (NO "pending" - only blocked/ok)
+    // "pending" = confusing UX (feels like "can't proceed")
+    // blocked = missing/invalid input
+    // ok = input valid, can proceed (intel is informational only)
+    let gateStatus: "ok" | "blocked";
     let gateMessage = "";
     
-    if (state.step === "location") {
-      const hasValidZip = (state.locationRawInput || "").replace(/\D/g, "").length >= 5;
-      const hasLocation = Boolean(state.location?.formattedAddress);
-      
-      if (hasValidZip || hasLocation) {
-        gateStatus = "ok";
-        gateMessage = "You're clear to proceed to the next step.";
-      } else if (state.locationRawInput && state.locationRawInput.length > 0) {
-        gateStatus = "blocked";
-        gateMessage = "Enter a valid 5-digit ZIP code to continue.";
-      } else {
-        gateStatus = "pending";
-        gateMessage = "Enter your ZIP code or address to begin.";
+    if (gateResult.ok) {
+      gateStatus = "ok";
+      if (state.step === "location") {
+        gateMessage = "✓ ZIP code confirmed. Click Next to continue.";
+      } else if (state.step === "industry") {
+        gateMessage = "✓ Industry selected. Ready to proceed.";
+      } else if (state.step === "profile") {
+        gateMessage = "✓ Ready to generate your quote.";
       }
-    } else if (state.step === "industry") {
-      gateStatus = state.industry && state.industry !== "auto" ? "ok" : "pending";
-      gateMessage = gateStatus === "ok" ? "Industry selected. Ready to continue!" : "Select your industry type.";
-    } else if (state.step === "profile") {
-      const answeredCount = Object.keys(state.step3Answers).length;
-      gateStatus = answeredCount > 0 ? "ok" : "pending";
-      gateMessage = answeredCount > 0 
-        ? `${answeredCount} question${answeredCount !== 1 ? 's' : ''} answered. Ready to generate quote!`
-        : "Answer profile questions to generate your quote.";
+    } else {
+      // Gate is blocking
+      gateStatus = "blocked";
+      if (state.step === "location") {
+        const typing = state.locationRawInput && state.locationRawInput.length > 0;
+        gateMessage = typing 
+          ? (gateResult.reason || "Enter a complete 5-digit ZIP code.")
+          : "Enter your ZIP code to begin.";
+      } else {
+        gateMessage = gateResult.reason || "Complete current step to continue.";
+      }
     }
 
     return (
@@ -456,6 +488,37 @@ export default function WizardV7Page() {
           </div>
         )}
 
+        {/* Location Intelligence Status (informational, non-blocking) */}
+        {state.step === "location" && state.locationRawInput && (
+          <div
+            style={{
+              marginTop: 12,
+              paddingTop: 12,
+              borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+              fontSize: 12,
+            }}
+          >
+            <div style={{ color: "rgba(232, 235, 243, 0.6)", marginBottom: 8 }}>
+              Location Intelligence:
+            </div>
+            {state.locationIntel ? (
+              <div style={{ color: "rgba(74, 222, 128, 0.8)", display: "flex", flexDirection: "column", gap: 4 }}>
+                {state.locationIntel.utilityRate && (
+                  <div>⚡ Rate: ${state.locationIntel.utilityRate}/kWh</div>
+                )}
+                {state.locationIntel.demandCharge && (
+                  <div>📊 Demand: ${state.locationIntel.demandCharge}/kW</div>
+                )}
+                {state.locationIntel.solarGrade && (
+                  <div>☀️ Solar: Grade {state.locationIntel.solarGrade}</div>
+                )}
+              </div>
+            ) : (
+              <div style={{ color: "rgba(251, 191, 36, 0.6)" }}>⏳ Loading...</div>
+            )}
+          </div>
+        )}
+
         {/* AI Agent Status */}
         {import.meta.env.DEV && (
           <div
@@ -472,7 +535,7 @@ export default function WizardV7Page() {
         )}
       </div>
     );
-  }, [state.step, state.locationRawInput, state.location, state.industry, state.step3Answers]);
+  }, [state.step, state.locationRawInput, state.location, state.locationIntel, state.industry, state.step3Answers]);
 
   return (
     <WizardShellV7
