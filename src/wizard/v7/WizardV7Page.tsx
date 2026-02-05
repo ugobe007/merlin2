@@ -1,13 +1,16 @@
 // @ts-nocheck - WizardV7 has type mismatches with updated hooks (will fix separately)
-import React, { useCallback, useMemo, useEffect, useRef } from "react";
+import React, { useCallback, useMemo, useEffect, useRef, useState } from "react";
 import WizardShellV7 from "@/wizard/v7/components/WizardShellV7";
 import { useWizardV7 } from "@/wizard/v7/hooks/useWizardV7";
+import { wizardAIAgent } from "@/services/wizardAIAgentV2";
+import { wizardHealthMonitor } from "@/services/wizardHealthMonitor";
 
 // Step components (fixed paths)
 import Step1LocationV7Clean from "@/components/wizard/v7/steps/Step1LocationV7Clean";
 import Step2IndustryV7 from "@/components/wizard/v7/steps/Step2IndustryV7";
 import Step3ProfileV7 from "@/components/wizard/v7/steps/Step3ProfileV7";
 import Step4ResultsV7 from "@/components/wizard/v7/steps/Step4ResultsV7";
+import WizardHealthDashboard from "@/components/wizard/v7/admin/WizardHealthDashboardV2";
 
 /**
  * WizardV7Page
@@ -21,6 +24,9 @@ import Step4ResultsV7 from "@/components/wizard/v7/steps/Step4ResultsV7";
  * - /wizard?step=industry|profile|results → Debug jump (dev only)
  */
 export default function WizardV7Page() {
+  // AI Agent Health Dashboard state
+  const [showHealthDashboard, setShowHealthDashboard] = useState(false);
+  
   const {
     state,
     progress,
@@ -64,9 +70,63 @@ export default function WizardV7Page() {
   // - ?step=X allows debug jumps (dev only, handled below)
   // ---------------------------------------------------------------------------
   const debugJumpApplied = useRef(false);
+  const sessionId = useRef(`session-${Date.now()}`);
+
+  // ---------------------------------------------------------------------------
+  // AI AGENT INTEGRATION (Feb 4, 2026)
+  // - Monitors wizard health in development
+  // - Detects dual validation systems, bottlenecks, error spikes
+  // - Access dashboard via /wizard?health=1
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('🤖 [Wizard AI Agent] Starting health monitoring...');
+      wizardAIAgent.start(30000); // Check every 30 seconds
+      
+      // Check if health dashboard requested via URL
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('health') === '1') {
+        console.log('📊 [Wizard Health Dashboard] Opening dashboard...');
+        setShowHealthDashboard(true);
+      }
+    }
+    
+    return () => {
+      if (import.meta.env.DEV) {
+        console.log('🤖 [Wizard AI Agent] Stopping health monitoring...');
+        wizardAIAgent.stop();
+      }
+    };
+  }, []);
+
+  // Track wizard events for health monitoring
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    // Track step enter
+    wizardHealthMonitor.track('step_enter', state.step, {
+      location: state.location,
+      locationConfirmed: state.locationConfirmed,
+      industry: state.industry,
+      step3Answers: Object.keys(state.step3Answers).length,
+    }, sessionId.current);
+
+    // Track gate checks
+    wizardHealthMonitor.track('gate_check', state.step, {
+      canProceed: canNext,
+      gateState: {
+        canGoIndustry: gates.canGoIndustry,
+        canGoProfile: gates.canGoProfile,
+      },
+      state: {
+        location: state.location,
+        locationConfirmed: state.locationConfirmed,
+        industry: state.industry,
+      },
+    }, sessionId.current);
+  }, [state.step, state.location, state.locationConfirmed, state.industry, state.step3Answers, canNext, gates]);
 
   useEffect(() => {
-    // Debug: allow step jump via URL (dev only)
     if (debugJumpApplied.current) return;
     debugJumpApplied.current = true;
 
@@ -287,6 +347,11 @@ export default function WizardV7Page() {
 
   // For Step 3, we want the shell "Next" disabled to force the Generate Quote action.
   const shellCanNext = state.step === "profile" ? false : canNext;
+
+  // Show health dashboard if requested via URL
+  if (showHealthDashboard && import.meta.env.DEV) {
+    return <WizardHealthDashboard />;
+  }
 
   return (
     <WizardShellV7

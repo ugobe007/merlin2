@@ -70,8 +70,8 @@ export interface WizardGateState {
 // ============================================================================
 /**
  * Location step is complete if we have:
- * - A valid 5-digit ZIP, OR
- * - A confirmed location (from address/business lookup)
+ * - A valid 5-digit ZIP (primary requirement - ALWAYS sufficient)
+ * - Business name and address are OPTIONAL and do NOT block navigation
  * 
  * NOTHING ELSE blocks this step.
  */
@@ -80,12 +80,13 @@ export function gateLocation(state: WizardGateState): WizardGateResult {
   const zip = state.location?.zip || state.location?.postalCode || state.locationRawInput || "";
   const normalizedZip = zip.replace(/\D/g, "");
   
+  // Valid ZIP is ALWAYS sufficient - business name/address are optional
   if (normalizedZip.length >= 5) {
     return { canContinue: true };
   }
 
-  // Check for confirmed location (from address lookup)
-  if (state.locationConfirmed && state.location?.formattedAddress) {
+  // Also allow if location resolved (from address lookup) even without ZIP
+  if (state.location?.formattedAddress) {
     return { canContinue: true };
   }
 

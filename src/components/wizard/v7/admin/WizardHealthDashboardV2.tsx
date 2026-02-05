@@ -9,11 +9,12 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { wizardHealthMonitor } from '@/services/wizardHealthMonitor';
+import { wizardHealthMonitor, type WizardBottleneck } from '@/services/wizardHealthMonitor';
 import { wizardAIAgent } from '@/services/wizardAIAgentV2';
+import type { AgentReport, AdminAlert, Issue } from '@/services/wizardAIAgentV2';
 
 export default function WizardHealthDashboard() {
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<AgentReport | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
   useEffect(() => {
@@ -129,7 +130,7 @@ export default function WizardHealthDashboard() {
           <p style={{ fontSize: 12, opacity: 0.8, marginBottom: 15 }}>
             These issues require administrator intervention (database, API, infrastructure problems)
           </p>
-          {report.adminAlerts.map((alert: any) => (
+          {report.adminAlerts.map((alert: AdminAlert) => (
             <div
               key={alert.id}
               style={{
@@ -205,7 +206,7 @@ export default function WizardHealthDashboard() {
       {report.issues.length > 0 && (
         <div style={{ marginBottom: 30 }}>
           <h3 style={{ marginBottom: 10 }}>🚨 Issues ({report.issues.length})</h3>
-          {report.issues.map((issue: any) => {
+          {report.issues.map((issue: Issue) => {
             const autoFixBadge = issue.autoFixAttempted ? (
               <span
                 style={{
@@ -345,7 +346,7 @@ export default function WizardHealthDashboard() {
               </tr>
             </thead>
             <tbody>
-              {report.metricsSnapshot.bottlenecks.map((b: any) => (
+              {report.metricsSnapshot.bottlenecks.map((b: WizardBottleneck) => (
                 <tr key={b.step} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: 12 }}>{b.step}</td>
                   <td style={{ padding: 12, textAlign: 'right', color: b.exitRate > 50 ? '#ef4444' : 'inherit' }}>

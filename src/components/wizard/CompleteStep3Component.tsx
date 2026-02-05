@@ -574,10 +574,10 @@ export function CompleteStep3Component({
   // ============================================================================
   // Step 3 must be resilient to different ways Step 2 might write industry data
   const industrySlugResolved = useMemo(() => {
-    const anyState = state as any;
+    const anyState = state as Record<string, unknown>;
     return (
       (typeof state.industry === "string" && state.industry.trim()) ||
-      anyState.industry?.type ||
+      (anyState.industry as { type?: string })?.type ||
       anyState.industryType ||
       anyState.industrySlug ||
       anyState.detectedIndustry ||
