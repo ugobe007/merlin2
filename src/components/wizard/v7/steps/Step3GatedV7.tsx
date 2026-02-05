@@ -235,7 +235,7 @@ function getQuestionsForPart(
 // HELPER: Check if part is complete (all required questions IN THIS PART answered)
 // =============================================================================
 
-function isPartComplete(
+function _isPartComplete(
   part: TemplatePart,
   questions: TemplateQuestion[],
   answers: Step3Answers

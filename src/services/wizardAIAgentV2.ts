@@ -25,7 +25,7 @@ const ADMIN_CONFIG = {
   enableConsoleAlerts: true, // Always log to console
 };
 
-interface Issue {
+export interface Issue {
   id: string;
   severity: 'critical' | 'high' | 'medium' | 'low';
   type: 'dual_validation' | 'broken_gate' | 'bottleneck' | 'error_spike' | 'api_failure' | 'database_error' | 'network_timeout';
@@ -39,7 +39,7 @@ interface Issue {
   timestamp: number;
 }
 
-interface AdminAlert {
+export interface AdminAlert {
   id: string;
   timestamp: number;
   severity: 'critical' | 'high';
@@ -51,7 +51,7 @@ interface AdminAlert {
   downtime?: number; // seconds
 }
 
-interface AgentReport {
+export interface AgentReport {
   timestamp: number;
   status: 'healthy' | 'warning' | 'critical';
   issues: Issue[];

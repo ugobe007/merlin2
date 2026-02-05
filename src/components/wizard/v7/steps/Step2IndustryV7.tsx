@@ -1,6 +1,18 @@
 import React, { useMemo } from "react";
 import type { IndustrySlug, WizardState as WizardV7State } from "@/wizard/v7/hooks/useWizardV7";
 
+// Industry images
+import carWashImg from "@/assets/images/car_wash_1.jpg";
+import evChargingImg from "@/assets/images/ev_charging_station.jpg";
+import hotelImg from "@/assets/images/hotel_motel_holidayinn_1.jpg";
+import restaurantImg from "@/assets/images/restaurant_1.jpg";
+import retailImg from "@/assets/images/retail_1.jpg";
+import logisticsImg from "@/assets/images/logistics_1.jpg";
+import manufacturingImg from "@/assets/images/manufacturing_1.jpg";
+import officeImg from "@/assets/images/office_building1.jpg";
+import healthcareImg from "@/assets/images/hospital_1.jpg";
+import dataCenterImg from "@/assets/images/data-center-1.jpg";
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Merlin Dark Theme Tokens (matching Step 1)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -111,35 +123,35 @@ const INDUSTRIES: Array<{
     label: "Car Wash",
     desc: "Tunnel / in-bay / single-site operators",
     emoji: "🚿",
-    image: "/src/assets/images/car_wash_1.jpg",
+    image: carWashImg,
   },
   {
     slug: "ev_charging",
     label: "EV Charging Hub",
     desc: "Depot / public charging sites",
     emoji: "⚡",
-    image: "/src/assets/images/ev_charging_station.jpg",
+    image: evChargingImg,
   },
-  { slug: "hotel", label: "Hotel / Hospitality", desc: "Hotels, resorts, properties", emoji: "🏨", image: "/src/assets/images/hotel_motel_holidayinn_1.jpg" },
-  { slug: "restaurant", label: "Restaurant", desc: "Quick service, full service", emoji: "🍽️", image: "/src/assets/images/restaurant_1.jpg" },
-  { slug: "retail", label: "Retail", desc: "Stores, malls, chain locations", emoji: "🛍️", image: "/src/assets/images/retail_1.jpg" },
+  { slug: "hotel", label: "Hotel / Hospitality", desc: "Hotels, resorts, properties", emoji: "🏨", image: hotelImg },
+  { slug: "restaurant", label: "Restaurant", desc: "Quick service, full service", emoji: "🍽️", image: restaurantImg },
+  { slug: "retail", label: "Retail", desc: "Stores, malls, chain locations", emoji: "🛍️", image: retailImg },
   {
     slug: "warehouse",
     label: "Warehouse / Logistics",
     desc: "Distribution, light industrial",
     emoji: "📦",
-    image: "/src/assets/images/logistics_1.jpg",
+    image: logisticsImg,
   },
   {
     slug: "manufacturing",
     label: "Manufacturing",
     desc: "Industrial loads, production lines",
     emoji: "🏭",
-    image: "/src/assets/images/manufacturing_1.jpg",
+    image: manufacturingImg,
   },
-  { slug: "office", label: "Office", desc: "Commercial office buildings", emoji: "🏢", image: "/src/assets/images/office_building1.jpg" },
-  { slug: "healthcare", label: "Healthcare", desc: "Clinics, hospitals, labs", emoji: "🏥", image: "/src/assets/images/hospital_1.jpg" },
-  { slug: "data_center", label: "Data Center", desc: "Critical loads + redundancy", emoji: "🖥️", image: "/src/assets/images/data-center-1.jpg" },
+  { slug: "office", label: "Office", desc: "Commercial office buildings", emoji: "🏢", image: officeImg },
+  { slug: "healthcare", label: "Healthcare", desc: "Clinics, hospitals, labs", emoji: "🏥", image: healthcareImg },
+  { slug: "data_center", label: "Data Center", desc: "Critical loads + redundancy", emoji: "🖥️", image: dataCenterImg },
   { slug: "other", label: "Other", desc: "If none fit, pick this", emoji: "✨", image: "" },
 ];
 

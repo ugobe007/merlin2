@@ -1628,10 +1628,22 @@ function hasState(location: LocationCard | null): boolean {
 
 function stepCanProceed(state: WizardState, step: WizardStep): { ok: boolean; reason?: string } {
   if (step === "location") {
-    if (!state.location) return { ok: false, reason: "Location not set." };
-    // We don't hard-require state for all countries, but if in US flows, you likely do.
-    // Keep soft gate: if formattedAddress includes ", " but no state, warn.
-    return { ok: true };
+    // Check for valid ZIP (5+ digits) OR location object with address
+    // Business name and address are OPTIONAL - ZIP alone is sufficient
+    const zip = state.location?.zip || state.location?.postalCode || state.locationRawInput || "";
+    const normalizedZip = zip.replace(/\D/g, "");
+    
+    // Valid ZIP is always sufficient (5+ digits for US, 3+ for international)
+    if (normalizedZip.length >= 5) {
+      return { ok: true };
+    }
+    
+    // Also allow if location resolved (from address lookup) even without ZIP
+    if (state.location?.formattedAddress) {
+      return { ok: true };
+    }
+    
+    return { ok: false, reason: "Please enter a valid ZIP/postal code." };
   }
   if (step === "industry") {
     if (!state.location) return { ok: false, reason: "Location missing." };
