@@ -7,10 +7,10 @@
  * Extracts the core TrueQuote Layer A logic from useWizardV7.
  */
 
-import { getTemplate } from "@/wizard/v7/templates/templateIndex";
-import { CALCULATORS_BY_ID } from "@/wizard/v7/calculators/registry";
-import { applyTemplateMapping } from "@/wizard/v7/templates/mappingEngine";
-import { getSizingDefaults } from "@/wizard/v7/pricing/sizingDefaults";
+import { getTemplate } from "../../wizard/v7/templates/templateIndex.ts";
+import { CALCULATORS_BY_ID } from "../../wizard/v7/calculators/registry.ts";
+import { applyTemplateMapping } from "../../wizard/v7/templates/applyMapping.ts";
+import { getSizingDefaults } from "../../wizard/v7/pricing/index.ts";
 
 export type WizardIndustry = string;
 
