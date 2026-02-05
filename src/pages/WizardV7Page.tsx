@@ -10,13 +10,17 @@
  * No cross-step dependencies. No pricing/DB/async blocking.
  */
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { useWizardV7 } from "@/wizard/v7/hooks/useWizardV7";
 import { V7_ENABLE_GATED_STEP3, V7_USE_CURATED_STEP3 } from "@/wizard/v7/featureFlags";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 import WizardErrorBoundary from "@/components/wizard/v7/shared/WizardErrorBoundary";
 import V7AdvisorPanel from "@/components/wizard/v7/shared/V7AdvisorPanel";
 import { resolveStep3Schema } from "@/wizard/v7/schema/curatedFieldsResolver";
+
+// 🤖 AI Agent for self-healing monitoring
+import { wizardAIAgent } from "@/services/wizardAIAgentV2";
+import { wizardHealthMonitor } from "@/services/wizardHealthMonitor";
 
 // 🔧 Debug Panel (dev-only: Ctrl+Shift+D)
 import V7DebugPanel from "@/components/wizard/v7/debug/V7DebugPanel";
@@ -56,6 +60,28 @@ const NEXT_HINTS: Record<StepKey, string> = {
 function WizardV7Page() {
   const wizard = useWizardV7();
   const { state } = wizard;
+
+  // 🤖 Start AI Agent for self-healing monitoring (Feb 4, 2026)
+  useEffect(() => {
+    wizardAIAgent.start();
+    console.log('🤖 [WizardV7] AI Agent started');
+    
+    return () => {
+      wizardAIAgent.stop();
+      console.log('🤖 [WizardV7] AI Agent stopped');
+    };
+  }, []);
+
+  // Track gate validation issues for AI agent
+  useEffect(() => {
+    const sessionId = `v7-${Date.now()}`;
+    wizardHealthMonitor.track('gate_check', state.step, {
+      location: state.location,
+      locationRawInput: state.locationRawInput,
+      locationConfirmed: state.locationConfirmed,
+      industry: state.industry,
+    }, sessionId);
+  }, [state.step, state.location, state.locationRawInput, state.industry]);
 
   // ✅ Robust 0-index mapping (no magic fallbacks to industry)
   const currentStep = useMemo(() => {

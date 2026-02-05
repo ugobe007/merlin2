@@ -80,6 +80,16 @@ export function gateLocation(state: WizardGateState): WizardGateResult {
   const zip = state.location?.zip || state.location?.postalCode || state.locationRawInput || "";
   const normalizedZip = zip.replace(/\D/g, "");
   
+  // Debug logging (temporary)
+  console.log('[gateLocation] Checking:', {
+    'location.zip': state.location?.zip,
+    'location.postalCode': state.location?.postalCode,
+    'locationRawInput': state.locationRawInput,
+    'combined zip': zip,
+    'normalized': normalizedZip,
+    'length': normalizedZip.length
+  });
+  
   // Valid ZIP is ALWAYS sufficient - business name/address are optional
   if (normalizedZip.length >= 5) {
     return { canContinue: true };
