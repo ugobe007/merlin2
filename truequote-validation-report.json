@@ -1,14 +1,16 @@
 {
-  "ts": "2026-02-05T15:36:12.580Z",
+  "ts": "2026-02-05T15:55:15.902Z",
+  "mode": "strict",
   "industries": 4,
-  "pass": 3,
-  "fail": 1,
+  "pass": 0,
+  "fail": 3,
+  "skip": 1,
   "rows": [
     {
       "industry": "car_wash",
-      "ok": true,
+      "status": "fail",
       "layerA": {
-        "ts": "2026-02-05T15:36:09.582Z",
+        "ts": "2026-02-05T15:55:13.233Z",
         "layer": "A",
         "template": {
           "industry": "car_wash",
@@ -24,11 +26,21 @@
           "demand_charge_rate": 0
         },
         "loadProfile": {
-          "baseLoadKW": 12,
+          "baseLoadKW": 20,
           "peakLoadKW": 240,
           "energyKWhPerDay": 1728
         },
         "computed": {
+          "dutyCycle": 0.6,
+          "kWContributors": {
+            "drying": 150,
+            "waterPumps": 49.919999999999995,
+            "vacuums": 19.92,
+            "lighting": 10.08,
+            "hvac": 5.04,
+            "controls": 5.04,
+            "other": 0
+          },
           "assumptions": [
             "Wash positions: 4 bays (4 total)",
             "Washes/day: 200",
@@ -68,14 +80,15 @@
       },
       "warnings": [
         "ℹ️ Default electricity rate used (0.12 $/kWh)",
-        "ℹ️ Default demand charge used (15 $/kW)"
+        "ℹ️ Default demand charge used (15 $/kW)",
+        "⚠️ STRICT MODE: Used default inputs: electricityRate, demandCharge"
       ]
     },
     {
       "industry": "hotel",
-      "ok": true,
+      "status": "fail",
       "layerA": {
-        "ts": "2026-02-05T15:36:11.095Z",
+        "ts": "2026-02-05T15:55:14.434Z",
         "layer": "A",
         "template": {
           "industry": "hotel",
@@ -96,10 +109,7 @@
           "energyKWhPerDay": 5670
         },
         "computed": {
-          "assumptions": [
-            "150 rooms (midscale)",
-            "Occupancy: 70%"
-          ],
+          "assumptions": ["150 rooms (midscale)", "Occupancy: 70%"],
           "warnings": []
         },
         "sizingHints": {
@@ -134,39 +144,21 @@
       },
       "warnings": [
         "ℹ️ Default electricity rate used (0.12 $/kWh)",
-        "ℹ️ Default demand charge used (15 $/kW)"
+        "ℹ️ Default demand charge used (15 $/kW)",
+        "⚠️ STRICT MODE: Used default inputs: electricityRate, demandCharge"
       ]
     },
     {
       "industry": "ev_charging",
-      "ok": false,
-      "layerA": {
-        "ts": "2026-02-05T15:36:11.835Z",
-        "layer": "A",
-        "template": {
-          "industry": "ev_charging"
-        },
-        "inputsUsed": {},
-        "loadProfile": {
-          "baseLoadKW": 0,
-          "peakLoadKW": 0,
-          "energyKWhPerDay": 0
-        },
-        "computed": {},
-        "warnings": [
-          "⚠️ Missing template for industry \"ev_charging\""
-        ]
-      },
-      "warnings": [
-        "⚠️ Missing template for industry \"ev_charging\"",
-        "⚠️ Pricing failed: Invalid system size: storageSizeMW and durationHours must be positive"
-      ]
+      "status": "skip",
+      "warnings": [],
+      "skipReason": "missing template (expected)"
     },
     {
       "industry": "data_center",
-      "ok": true,
+      "status": "fail",
       "layerA": {
-        "ts": "2026-02-05T15:36:11.836Z",
+        "ts": "2026-02-05T15:55:15.172Z",
         "layer": "A",
         "template": {
           "industry": "data_center",
@@ -229,7 +221,8 @@
       },
       "warnings": [
         "ℹ️ Default electricity rate used (0.12 $/kWh)",
-        "ℹ️ Default demand charge used (15 $/kW)"
+        "ℹ️ Default demand charge used (15 $/kW)",
+        "⚠️ STRICT MODE: Used default inputs: electricityRate, demandCharge"
       ]
     }
   ]

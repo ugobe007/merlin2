@@ -1,8 +1,6 @@
-/* eslint-disable no-console */
-
 /**
  * Pure Layer A Contract Quote Runner
- * 
+ *
  * Deterministic, no React hooks, can run in Node scripts.
  * Extracts the core TrueQuote Layer A logic from useWizardV7.
  */
@@ -68,7 +66,7 @@ function num(v: unknown, fallback = 0): number {
 
 export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResult {
   const tpl = getTemplate(args.industry);
-  
+
   if (!tpl) {
     return {
       industry: args.industry,
@@ -115,19 +113,20 @@ export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResu
   if (num(loadProfile.peakLoadKW) <= 0) warnings.push("⚠️ Peak load is ZERO/NEGATIVE");
   if (num(loadProfile.baseLoadKW) < 0) warnings.push("⚠️ Base load is NEGATIVE");
   if (num(loadProfile.energyKWhPerDay) < 0) warnings.push("⚠️ Energy/day is NEGATIVE");
-  if (num(loadProfile.peakLoadKW) < num(loadProfile.baseLoadKW)) warnings.push("⚠️ Peak < Base (impossible)");
+  if (num(loadProfile.peakLoadKW) < num(loadProfile.baseLoadKW))
+    warnings.push("⚠️ Peak < Base (impossible)");
   if (num(loadProfile.energyKWhPerDay) > num(loadProfile.peakLoadKW) * 24 * 1.05) {
     warnings.push("⚠️ Energy > peak×24h (impossible)");
   }
 
-  // Duty cycle sanity
-  const dc = computed?.dutyCycle;
+  // Duty cycle sanity (check both top-level and nested in computed)
+  const dc = computed?.dutyCycle ?? (computed as any)?.computed?.dutyCycle;
   if (typeof dc === "number" && (dc < 0 || dc > 1.25)) {
     warnings.push("⚠️ Duty cycle out of range [0, 1.25]");
   }
 
-  // Contributor sanity (no negatives, no NaN)
-  const contrib = computed?.kWContributors ?? {};
+  // Contributor sanity (check both top-level and nested in computed)
+  const contrib = computed?.kWContributors ?? (computed as any)?.computed?.kWContributors ?? {};
   for (const [k, v] of Object.entries(contrib)) {
     const n = num(v, NaN);
     if (!Number.isFinite(n)) warnings.push(`⚠️ kWContributors["${k}"] is NaN/invalid`);
@@ -165,15 +164,16 @@ export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResu
   }
 
   // Detect missing inputs from calculator warnings
-  const missingInputs = computed.warnings
-    ?.filter((w: string) => w.toLowerCase().includes("missing"))
-    .map((w: string) => w.split(":")[0].trim()) ?? [];
+  const missingInputs =
+    computed.warnings
+      ?.filter((w: string) => w.toLowerCase().includes("missing"))
+      .map((w: string) => w.split(":")[0].trim()) ?? [];
 
   // Provisional heuristics
   const isProvisional = Boolean(
-    missingInputs.length || 
-    Object.keys(inputFallbacks).length || 
-    warnings.some(w => w.startsWith("⚠️"))
+    missingInputs.length ||
+    Object.keys(inputFallbacks).length ||
+    warnings.some((w) => w.startsWith("⚠️"))
   );
 
   // Merge warnings from calculator
@@ -184,7 +184,11 @@ export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResu
   // DEV trace (mirrors useWizardV7 console logging)
   if (process.env.NODE_ENV === "development") {
     console.group(`[TrueQuote] Load Profile Consistency: ${tpl.industry}`);
-    console.log("Template:", { industry: tpl.industry, version: tpl.version, calculator: calculatorId });
+    console.log("Template:", {
+      industry: tpl.industry,
+      version: tpl.version,
+      calculator: calculatorId,
+    });
     console.log("Inputs Used:", inputsUsed);
     console.log("Load Profile:", loadProfile);
     console.log("Duty Cycle:", computed?.dutyCycle ?? "not provided");
@@ -193,6 +197,10 @@ export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResu
     console.groupEnd();
   }
 
+  // Extract kWContributors and dutyCycle (check both top-level and nested)
+  const finalDutyCycle = computed?.dutyCycle ?? (computed as any)?.computed?.dutyCycle;
+  const finalContributors = computed?.kWContributors ?? (computed as any)?.computed?.kWContributors;
+
   return {
     industry: args.industry,
     template: { industry: tpl.industry, version: tpl.version, calculator: calculatorId },
@@ -200,8 +208,8 @@ export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResu
     loadProfile,
     sizingHints,
     computed: {
-      dutyCycle: computed.dutyCycle,
-      kWContributors: computed.kWContributors,
+      dutyCycle: finalDutyCycle,
+      kWContributors: finalContributors,
       assumptions: computed.assumptions,
       warnings: computed.warnings,
     },
