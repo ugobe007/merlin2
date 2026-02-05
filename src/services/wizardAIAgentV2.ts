@@ -125,13 +125,22 @@ class WizardAIAgent {
 
     // 2. Check for bottlenecks (users getting stuck)
     healthReport.bottlenecks.forEach(bottleneck => {
-      if (bottleneck.exitRate > 50 || bottleneck.gateFailureRate > 30) {
+      // SPECIAL CASE: Location step is CRITICAL - be more aggressive
+      const isLocationStep = bottleneck.step === 'location';
+      const locationThreshold = isLocationStep ? 20 : 50; // Lower threshold for location
+      const gateThreshold = isLocationStep ? 15 : 30;
+      
+      if (bottleneck.exitRate > locationThreshold || bottleneck.gateFailureRate > gateThreshold) {
         const issue = this.createBottleneckIssue(bottleneck);
         issues.push(issue);
         
         // AUTO-FIX: Temporarily relax gate validation
         if (issue.autoFixAvailable && !issue.autoFixAttempted) {
           this.attemptAutoFix(issue);
+          
+          if (isLocationStep) {
+            console.warn(`🚨 [AI Agent] CRITICAL: Location step bottleneck - Auto-fix applied`);
+          }
         }
       }
     });
