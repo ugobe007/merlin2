@@ -7,7 +7,7 @@
  * No React hooks, can run in Node scripts.
  */
 
-import { calculateQuote } from "@/services/unifiedQuoteCalculator";
+import { calculateQuote } from "../unifiedQuoteCalculator.ts";
 import type { ContractQuoteResult } from "./runContractQuoteCore";
 
 export type PricingQuoteResult = {

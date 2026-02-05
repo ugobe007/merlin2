@@ -1,0 +1,236 @@
+{
+  "ts": "2026-02-05T15:36:12.580Z",
+  "industries": 4,
+  "pass": 3,
+  "fail": 1,
+  "rows": [
+    {
+      "industry": "car_wash",
+      "ok": true,
+      "layerA": {
+        "ts": "2026-02-05T15:36:09.582Z",
+        "layer": "A",
+        "template": {
+          "industry": "car_wash",
+          "version": "car_wash.v1.0.0",
+          "calculator": "car_wash_load_v1"
+        },
+        "inputsUsed": {
+          "electricityRate": 0.12,
+          "demandCharge": 15,
+          "location": "NV",
+          "industry": "car_wash",
+          "gridMode": "grid_tied",
+          "demand_charge_rate": 0
+        },
+        "loadProfile": {
+          "baseLoadKW": 12,
+          "peakLoadKW": 240,
+          "energyKWhPerDay": 1728
+        },
+        "computed": {
+          "assumptions": [
+            "Wash positions: 4 bays (4 total)",
+            "Washes/day: 200",
+            "Operating hours: 12h/day"
+          ],
+          "warnings": []
+        },
+        "sizingHints": {
+          "storageToPeakRatio": 0.35,
+          "durationHours": 2,
+          "source": "industry:car_wash"
+        },
+        "warnings": [],
+        "missingInputs": [],
+        "inputFallbacks": {
+          "electricityRate": {
+            "value": 0.12,
+            "reason": "default rate (no location intel)"
+          },
+          "demandCharge": {
+            "value": 15,
+            "reason": "default demand charge"
+          }
+        }
+      },
+      "layerB": {
+        "capexUSD": 145044.1692,
+        "annualSavingsUSD": 21932.399999999998,
+        "roiYears": 6.613237456913061,
+        "npvUSD": 134734.66738515216,
+        "irr": 24.174172279830067,
+        "pricingSnapshotId": "snap_ed2a4831",
+        "warnings": [
+          "ℹ️ Default electricity rate used (0.12 $/kWh)",
+          "ℹ️ Default demand charge used (15 $/kW)"
+        ]
+      },
+      "warnings": [
+        "ℹ️ Default electricity rate used (0.12 $/kWh)",
+        "ℹ️ Default demand charge used (15 $/kW)"
+      ]
+    },
+    {
+      "industry": "hotel",
+      "ok": true,
+      "layerA": {
+        "ts": "2026-02-05T15:36:11.095Z",
+        "layer": "A",
+        "template": {
+          "industry": "hotel",
+          "version": "hotel.v1.0.0",
+          "calculator": "hotel_load_v1"
+        },
+        "inputsUsed": {
+          "electricityRate": 0.12,
+          "demandCharge": 15,
+          "location": "NV",
+          "industry": "hotel",
+          "gridMode": "grid_tied",
+          "demand_charge_rate": 0
+        },
+        "loadProfile": {
+          "baseLoadKW": 135,
+          "peakLoadKW": 450,
+          "energyKWhPerDay": 5670
+        },
+        "computed": {
+          "assumptions": [
+            "150 rooms (midscale)",
+            "Occupancy: 70%"
+          ],
+          "warnings": []
+        },
+        "sizingHints": {
+          "storageToPeakRatio": 0.4,
+          "durationHours": 4,
+          "source": "industry:hotel"
+        },
+        "warnings": [],
+        "missingInputs": [],
+        "inputFallbacks": {
+          "electricityRate": {
+            "value": 0.12,
+            "reason": "default rate (no location intel)"
+          },
+          "demandCharge": {
+            "value": 15,
+            "reason": "default demand charge"
+          }
+        }
+      },
+      "layerB": {
+        "capexUSD": 261572.40899999999,
+        "annualSavingsUSD": 56196,
+        "roiYears": 4.65464461883408,
+        "npvUSD": 364878.9766660599,
+        "irr": 26.550738714807142,
+        "pricingSnapshotId": "snap_3a5de5dd",
+        "warnings": [
+          "ℹ️ Default electricity rate used (0.12 $/kWh)",
+          "ℹ️ Default demand charge used (15 $/kW)"
+        ]
+      },
+      "warnings": [
+        "ℹ️ Default electricity rate used (0.12 $/kWh)",
+        "ℹ️ Default demand charge used (15 $/kW)"
+      ]
+    },
+    {
+      "industry": "ev_charging",
+      "ok": false,
+      "layerA": {
+        "ts": "2026-02-05T15:36:11.835Z",
+        "layer": "A",
+        "template": {
+          "industry": "ev_charging"
+        },
+        "inputsUsed": {},
+        "loadProfile": {
+          "baseLoadKW": 0,
+          "peakLoadKW": 0,
+          "energyKWhPerDay": 0
+        },
+        "computed": {},
+        "warnings": [
+          "⚠️ Missing template for industry \"ev_charging\""
+        ]
+      },
+      "warnings": [
+        "⚠️ Missing template for industry \"ev_charging\"",
+        "⚠️ Pricing failed: Invalid system size: storageSizeMW and durationHours must be positive"
+      ]
+    },
+    {
+      "industry": "data_center",
+      "ok": true,
+      "layerA": {
+        "ts": "2026-02-05T15:36:11.836Z",
+        "layer": "A",
+        "template": {
+          "industry": "data_center",
+          "version": "dc.v1.0.0",
+          "calculator": "dc_load_v1"
+        },
+        "inputsUsed": {
+          "electricityRate": 0.12,
+          "demandCharge": 15,
+          "location": "NV",
+          "industry": "data_center",
+          "gridMode": "grid_tied",
+          "redundancy": "2n",
+          "pue": 1.5,
+          "demand_charge_rate": 0
+        },
+        "loadProfile": {
+          "baseLoadKW": 1400,
+          "peakLoadKW": 2000,
+          "energyKWhPerDay": 33600
+        },
+        "computed": {
+          "assumptions": [
+            "IT load: 500-1000",
+            "PUE: 1.3-1.5",
+            "Utilization: 60-80%",
+            "Tier: tier_3"
+          ],
+          "warnings": []
+        },
+        "sizingHints": {
+          "storageToPeakRatio": 0.4,
+          "durationHours": 4,
+          "source": "industry:data_center"
+        },
+        "warnings": [],
+        "missingInputs": [],
+        "inputFallbacks": {
+          "electricityRate": {
+            "value": 0.12,
+            "reason": "default rate (no location intel)"
+          },
+          "demandCharge": {
+            "value": 15,
+            "reason": "default demand charge"
+          }
+        }
+      },
+      "layerB": {
+        "capexUSD": 1055854.205,
+        "annualSavingsUSD": 249760,
+        "roiYears": 4.227475196188341,
+        "npvUSD": 1503898.8681083897,
+        "irr": 23.431115264731407,
+        "pricingSnapshotId": "snap_cf380060",
+        "warnings": [
+          "ℹ️ Default electricity rate used (0.12 $/kWh)",
+          "ℹ️ Default demand charge used (15 $/kW)"
+        ]
+      },
+      "warnings": [
+        "ℹ️ Default electricity rate used (0.12 $/kWh)",
+        "ℹ️ Default demand charge used (15 $/kW)"
+      ]
+    }
+  ]
+}
