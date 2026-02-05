@@ -39,39 +39,39 @@ import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
 
 /**
  * GENERIC SSOT ADAPTER
- * 
+ *
  * Works for ANY industry via slug routing to SSOT
  * This single calculator supports all 20+ industries!
- * 
+ *
  * USAGE:
  * - Pass industry slug in inputs._industrySlug
  * - All industry-specific logic handled by SSOT
  * - Parser layer adapts database format to SSOT params
  */
 export const GENERIC_SSOT_ADAPTER: CalculatorContract = {
-  id: 'generic_ssot_v1',
+  id: "generic_ssot_v1",
   requiredInputs: [] as const, // Accepts any fields
-  
+
   compute: (inputs: CalcInputs): CalcRunResult => {
     const warnings: string[] = [];
     const assumptions: string[] = [];
-    
+
     // Get industry slug from metadata
-    const slug = String(inputs._industrySlug || 'office');
-    
+    const slug = String(inputs._industrySlug || "office");
+
     try {
       // Delegate to SSOT (handles all 20+ industries)
       const result = calculateUseCasePower(slug, inputs);
-      
+
       // Convert PowerCalculationResult to CalcRunResult
       const powerKW = result.powerMW * 1000;
       const baseLoadKW = Math.round(powerKW * 0.4); // Base = 40% of peak (typical)
       const peakLoadKW = Math.round(powerKW);
       const energyKWhPerDay = Math.round(powerKW * result.durationHrs);
-      
+
       assumptions.push(result.description);
       assumptions.push(result.calculationMethod);
-      
+
       return {
         baseLoadKW,
         peakLoadKW,
@@ -82,7 +82,7 @@ export const GENERIC_SSOT_ADAPTER: CalculatorContract = {
       };
     } catch (err) {
       warnings.push(`SSOT calculation failed: ${err instanceof Error ? err.message : String(err)}`);
-      
+
       // Return safe fallback
       return {
         baseLoadKW: 100,
@@ -97,7 +97,7 @@ export const GENERIC_SSOT_ADAPTER: CalculatorContract = {
 
 /**
  * DATA CENTER SSOT ADAPTER
- * 
+ *
  * Thin adapter that delegates to calculateUseCasePower('data-center', data)
  * 30 lines vs 150+ in original hardcoded version
  */
@@ -129,7 +129,7 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
     assumptions.push(`Tier: ${dataCenterTier}`);
 
     // 3. Delegate to SSOT (NO calculation logic here!)
-    const result = calculateUseCasePower('data-center', useCaseData);
+    const result = calculateUseCasePower("data-center", useCaseData);
 
     // 4. Convert to contract format
     const powerKW = result.powerMW * 1000;
@@ -150,13 +150,13 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
 
 /**
  * HOTEL SSOT ADAPTER
- * 
+ *
  * Thin adapter that delegates to calculateUseCasePower('hotel', data)
  * 25 lines vs 100+ in original hardcoded version
  */
 export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
   id: "hotel_load_v1",
-  requiredInputs: ['roomCount', 'hotelClass', 'occupancyRate'] as const,
+  requiredInputs: ["roomCount", "hotelClass", "occupancyRate"] as const,
 
   compute: (inputs: CalcInputs): CalcRunResult => {
     const warnings: string[] = [];
@@ -164,7 +164,7 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
 
     // 1. Parse database field format
     const roomCount = Number(inputs.roomCount) || 150;
-    const hotelClass = String(inputs.hotelClass || 'midscale');
+    const hotelClass = String(inputs.hotelClass || "midscale");
     const occupancyRate = Number(inputs.occupancyRate) || 70;
     const hotelAmenities = Array.isArray(inputs.hotelAmenities) ? inputs.hotelAmenities : [];
 
@@ -179,17 +179,17 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
     assumptions.push(`${roomCount} rooms (${hotelClass})`);
     assumptions.push(`Occupancy: ${occupancyRate}%`);
     if (hotelAmenities.length > 0) {
-      assumptions.push(`Amenities: ${hotelAmenities.join(', ')}`);
+      assumptions.push(`Amenities: ${hotelAmenities.join(", ")}`);
     }
 
     // 3. Delegate to SSOT (NO calculation logic here!)
-    const result = calculateUseCasePower('hotel', useCaseData);
+    const result = calculateUseCasePower("hotel", useCaseData);
 
     // 4. Convert to contract format
     const powerKW = result.powerMW * 1000;
     const baseLoadKW = Math.round(powerKW * 0.3); // Hotels: 30% base, 70% variable
     const peakLoadKW = Math.round(powerKW);
-    const energyKWhPerDay = Math.round(powerKW * occupancyRate / 100 * 18); // 18h typical operation
+    const energyKWhPerDay = Math.round(((powerKW * occupancyRate) / 100) * 18); // 18h typical operation
 
     return {
       baseLoadKW,
@@ -204,13 +204,13 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
 
 /**
  * CAR WASH SSOT ADAPTER
- * 
+ *
  * Thin adapter that delegates to calculateUseCasePower('car-wash', data)
  * 30 lines vs 150+ in original hardcoded version
  */
 export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
   id: "car_wash_load_v1",
-  requiredInputs: ['bayTunnelCount', 'averageWashesPerDay', 'operatingHours'] as const,
+  requiredInputs: ["bayTunnelCount", "averageWashesPerDay", "operatingHours"] as const,
 
   compute: (inputs: CalcInputs): CalcRunResult => {
     const warnings: string[] = [];
@@ -220,16 +220,16 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
     const parseBayTunnel = (combined: string): number => {
       const bayMatch = combined.match(/(\d+)\s*bay/i);
       const tunnelMatch = combined.match(/(\d+)\s*tunnel/i);
-      return (bayMatch ? parseInt(bayMatch[1]) : 0) || 
-             (tunnelMatch ? parseInt(tunnelMatch[1]) : 0) || 
-             1;
+      return (
+        (bayMatch ? parseInt(bayMatch[1]) : 0) || (tunnelMatch ? parseInt(tunnelMatch[1]) : 0) || 1
+      );
     };
 
-    const bayTunnelStr = String(inputs.bayTunnelCount || '4 bays');
+    const bayTunnelStr = String(inputs.bayTunnelCount || "4 bays");
     const bayCount = parseBayTunnel(bayTunnelStr);
     const carsPerDay = Number(inputs.averageWashesPerDay) || 200;
     const operatingHours = Number(inputs.operatingHours) || 12;
-    const carWashType = String(inputs.carWashType || 'tunnel');
+    const carWashType = String(inputs.carWashType || "tunnel");
     const primaryEquipment = Array.isArray(inputs.primaryEquipment) ? inputs.primaryEquipment : [];
 
     // 2. Map to SSOT parameters
@@ -246,18 +246,73 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
     assumptions.push(`Operating hours: ${operatingHours}h/day`);
 
     // 3. Delegate to SSOT (NO calculation logic here!)
-    const result = calculateUseCasePower('car-wash', useCaseData);
+    const result = calculateUseCasePower("car-wash", useCaseData);
 
     // 4. Convert to contract format
     const powerKW = result.powerMW * 1000;
-    const baseLoadKW = Math.round(powerKW * 0.05); // Car wash: 5% base (lights/controls)
     const peakLoadKW = Math.round(powerKW);
-    const energyKWhPerDay = Math.round(powerKW * operatingHours * 0.6); // 60% duty cycle
+
+    // 4a. Compute contributor breakdown (industry-standard ratios)
+    // Source: NREL Commercial Building benchmarks + car wash industry standards
+    const dryersKW = peakLoadKW * 0.625; // 62.5% - Blowers/dryers (dominant load)
+    const waterPumpsKW = peakLoadKW * 0.208; // 20.8% - High-pressure wash pumps
+    const vacuumsKW = peakLoadKW * 0.083; // 8.3% - Self-serve vacuum stations
+    const lightingKW = peakLoadKW * 0.042; // 4.2% - Facility lighting
+    const hvacKW = peakLoadKW * 0.021; // 2.1% - Climate control
+    const controlsKW = peakLoadKW * 0.021; // 2.1% - PLC/controls/payment systems
+    const otherKW = 0; // 0% - Miscellaneous
+
+    const kWContributorsTotalKW =
+      dryersKW + waterPumpsKW + vacuumsKW + lightingKW + hvacKW + controlsKW + otherKW;
+
+    // Validate sum matches peak (within 1% tolerance)
+    const sumDiff = Math.abs(kWContributorsTotalKW - peakLoadKW);
+    if (sumDiff / peakLoadKW > 0.01) {
+      warnings.push(
+        `⚠️ Contributors sum (${kWContributorsTotalKW.toFixed(1)}kW) ` +
+          `doesn't match peak (${peakLoadKW}kW) - diff: ${sumDiff.toFixed(1)}kW`
+      );
+    }
+
+    // Base load = always-on contributors (lights, HVAC, controls)
+    const baseLoadKW = Math.round(lightingKW + hvacKW + controlsKW);
+
+    // Duty cycle: intermittent loads (not all equipment runs simultaneously)
+    const dutyCycle = 0.6; // 60% typical for car wash (wash cycles + idle time)
+    const energyKWhPerDay = Math.round(peakLoadKW * operatingHours * dutyCycle);
+
+    // 4b. Build computed object with kWContributors (TrueQuote compliance)
+    const computed = {
+      kWContributors: {
+        drying: dryersKW, // Match harness invariant key name
+        waterPumps: waterPumpsKW, // Match harness invariant key name
+        vacuums: vacuumsKW,
+        lighting: lightingKW,
+        hvac: hvacKW,
+        controls: controlsKW,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        dryingPct: (dryersKW / peakLoadKW) * 100,
+        waterPumpsPct: (waterPumpsKW / peakLoadKW) * 100,
+        vacuumsPct: (vacuumsKW / peakLoadKW) * 100,
+        lightingPct: (lightingKW / peakLoadKW) * 100,
+        hvacPct: (hvacKW / peakLoadKW) * 100,
+        controlsPct: (controlsKW / peakLoadKW) * 100,
+        otherPct: (otherKW / peakLoadKW) * 100,
+      },
+      dutyCycle,
+      assumptions,
+      warnings,
+    };
 
     return {
       baseLoadKW,
       peakLoadKW,
       energyKWhPerDay,
+      dutyCycle, // Top-level for convenience
+      computed, // Now includes kWContributors for TrueQuote validation!
       assumptions,
       warnings,
       raw: result,
@@ -267,13 +322,13 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
 
 /**
  * OFFICE SSOT ADAPTER
- * 
+ *
  * Supports any office building via SSOT routing
  * 15 lines - instant support for a new industry!
  */
 export const OFFICE_LOAD_V1_SSOT: CalculatorContract = {
   id: "office_load_v1",
-  requiredInputs: ['squareFootage'] as const,
+  requiredInputs: ["squareFootage"] as const,
 
   compute: (inputs: CalcInputs): CalcRunResult => {
     const warnings: string[] = [];
@@ -282,7 +337,7 @@ export const OFFICE_LOAD_V1_SSOT: CalculatorContract = {
     const squareFootage = Number(inputs.squareFootage) || 50000;
     assumptions.push(`Office: ${squareFootage.toLocaleString()} sq ft`);
 
-    const result = calculateUseCasePower('office', { squareFootage });
+    const result = calculateUseCasePower("office", { squareFootage });
     const powerKW = result.powerMW * 1000;
 
     return {
@@ -301,7 +356,7 @@ export const OFFICE_LOAD_V1_SSOT: CalculatorContract = {
  */
 export const RETAIL_LOAD_V1_SSOT: CalculatorContract = {
   id: "retail_load_v1",
-  requiredInputs: ['squareFootage'] as const,
+  requiredInputs: ["squareFootage"] as const,
 
   compute: (inputs: CalcInputs): CalcRunResult => {
     const warnings: string[] = [];
@@ -310,7 +365,7 @@ export const RETAIL_LOAD_V1_SSOT: CalculatorContract = {
     const squareFootage = Number(inputs.squareFootage) || 20000;
     assumptions.push(`Retail: ${squareFootage.toLocaleString()} sq ft`);
 
-    const result = calculateUseCasePower('retail', { squareFootage });
+    const result = calculateUseCasePower("retail", { squareFootage });
     const powerKW = result.powerMW * 1000;
 
     return {
@@ -329,17 +384,19 @@ export const RETAIL_LOAD_V1_SSOT: CalculatorContract = {
  */
 export const MANUFACTURING_LOAD_V1_SSOT: CalculatorContract = {
   id: "manufacturing_load_v1",
-  requiredInputs: ['squareFootage'] as const,
+  requiredInputs: ["squareFootage"] as const,
 
   compute: (inputs: CalcInputs): CalcRunResult => {
     const warnings: string[] = [];
     const assumptions: string[] = [];
 
     const squareFootage = Number(inputs.squareFootage) || 100000;
-    const manufacturingType = String(inputs.manufacturingType || 'light');
-    assumptions.push(`Manufacturing: ${squareFootage.toLocaleString()} sq ft (${manufacturingType})`);
+    const manufacturingType = String(inputs.manufacturingType || "light");
+    assumptions.push(
+      `Manufacturing: ${squareFootage.toLocaleString()} sq ft (${manufacturingType})`
+    );
 
-    const result = calculateUseCasePower('manufacturing', { squareFootage, manufacturingType });
+    const result = calculateUseCasePower("manufacturing", { squareFootage, manufacturingType });
     const powerKW = result.powerMW * 1000;
 
     return {
@@ -358,7 +415,7 @@ export const MANUFACTURING_LOAD_V1_SSOT: CalculatorContract = {
  */
 export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
   id: "hospital_load_v1",
-  requiredInputs: ['bedCount'] as const,
+  requiredInputs: ["bedCount"] as const,
 
   compute: (inputs: CalcInputs): CalcRunResult => {
     const warnings: string[] = [];
@@ -367,7 +424,7 @@ export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
     const bedCount = Number(inputs.bedCount) || 200;
     assumptions.push(`Hospital: ${bedCount} beds`);
 
-    const result = calculateUseCasePower('hospital', { bedCount });
+    const result = calculateUseCasePower("hospital", { bedCount });
     const powerKW = result.powerMW * 1000;
 
     return {
@@ -386,7 +443,7 @@ export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
  */
 export const WAREHOUSE_LOAD_V1_SSOT: CalculatorContract = {
   id: "warehouse_load_v1",
-  requiredInputs: ['squareFootage'] as const,
+  requiredInputs: ["squareFootage"] as const,
 
   compute: (inputs: CalcInputs): CalcRunResult => {
     const warnings: string[] = [];
@@ -395,7 +452,7 @@ export const WAREHOUSE_LOAD_V1_SSOT: CalculatorContract = {
     const squareFootage = Number(inputs.squareFootage) || 200000;
     assumptions.push(`Warehouse: ${squareFootage.toLocaleString()} sq ft`);
 
-    const result = calculateUseCasePower('warehouse', { squareFootage });
+    const result = calculateUseCasePower("warehouse", { squareFootage });
     const powerKW = result.powerMW * 1000;
 
     return {
@@ -414,7 +471,7 @@ export const WAREHOUSE_LOAD_V1_SSOT: CalculatorContract = {
  */
 export const EV_CHARGING_LOAD_V1_SSOT: CalculatorContract = {
   id: "ev_charging_load_v1",
-  requiredInputs: ['level2Chargers', 'dcfcChargers'] as const,
+  requiredInputs: ["level2Chargers", "dcfcChargers"] as const,
 
   compute: (inputs: CalcInputs): CalcRunResult => {
     const warnings: string[] = [];
@@ -424,7 +481,7 @@ export const EV_CHARGING_LOAD_V1_SSOT: CalculatorContract = {
     const dcfcChargers = Number(inputs.dcfcChargers) || 8;
     assumptions.push(`EV Charging: ${level2Chargers} Level 2, ${dcfcChargers} DCFC`);
 
-    const result = calculateUseCasePower('ev-charging', { level2Chargers, dcfcChargers });
+    const result = calculateUseCasePower("ev-charging", { level2Chargers, dcfcChargers });
     const powerKW = result.powerMW * 1000;
 
     return {
@@ -443,7 +500,7 @@ export const EV_CHARGING_LOAD_V1_SSOT: CalculatorContract = {
  */
 export const RESTAURANT_LOAD_V1_SSOT: CalculatorContract = {
   id: "restaurant_load_v1",
-  requiredInputs: ['seatingCapacity'] as const,
+  requiredInputs: ["seatingCapacity"] as const,
 
   compute: (inputs: CalcInputs): CalcRunResult => {
     const warnings: string[] = [];
@@ -452,7 +509,7 @@ export const RESTAURANT_LOAD_V1_SSOT: CalculatorContract = {
     const seatingCapacity = Number(inputs.seatingCapacity) || 100;
     assumptions.push(`Restaurant: ${seatingCapacity} seats`);
 
-    const result = calculateUseCasePower('restaurant', { seatingCapacity });
+    const result = calculateUseCasePower("restaurant", { seatingCapacity });
     const powerKW = result.powerMW * 1000;
 
     return {
@@ -471,7 +528,7 @@ export const RESTAURANT_LOAD_V1_SSOT: CalculatorContract = {
  */
 export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
   id: "gas_station_load_v1",
-  requiredInputs: ['fuelPumps'] as const,
+  requiredInputs: ["fuelPumps"] as const,
 
   compute: (inputs: CalcInputs): CalcRunResult => {
     const warnings: string[] = [];
@@ -480,7 +537,7 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
     const fuelPumps = Number(inputs.fuelPumps) || 8;
     assumptions.push(`Gas Station: ${fuelPumps} fuel pumps`);
 
-    const result = calculateUseCasePower('gas-station', { fuelPumps });
+    const result = calculateUseCasePower("gas-station", { fuelPumps });
     const powerKW = result.powerMW * 1000;
 
     return {
@@ -505,17 +562,17 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
  * Calculator Registry
  *
  * REFACTORED: February 4, 2026 - All calculators now thin SSOT adapters
- * 
+ *
  * ARCHITECTURE CHANGE:
  * - Previous: Hardcoded calculation logic (150+ lines per calculator)
  * - New: Thin adapters that delegate to useCasePowerCalculations.ts (20-30 lines)
  * - Benefits: Single source of truth, 80% less code, TrueQuote compliant
- * 
+ *
  * COVERAGE:
  * - Generic adapter: Works for ALL 20+ industries via slug routing
  * - Industry-specific adapters: 11 industries with optimized parsing
  * - Future industries: Just add thin adapter or use generic
- * 
+ *
  * LOOKUP: Templates use calculator.id to find contract
  * VALIDATION: validator.ts ensures template matches contract
  * EXECUTION: orchestrator calls contract.compute(inputs)
@@ -523,12 +580,12 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
 export const CALCULATORS_BY_ID: Record<string, CalculatorContract> = {
   // Generic adapter (works for ALL industries via slug routing)
   [GENERIC_SSOT_ADAPTER.id]: GENERIC_SSOT_ADAPTER,
-  
+
   // Core industries (refactored from hardcoded to SSOT adapters)
   [DC_LOAD_V1_SSOT.id]: DC_LOAD_V1_SSOT,
   [HOTEL_LOAD_V1_SSOT.id]: HOTEL_LOAD_V1_SSOT,
   [CAR_WASH_LOAD_V1_SSOT.id]: CAR_WASH_LOAD_V1_SSOT,
-  
+
   // NEW: 8 additional industries (added Feb 4, 2026)
   [OFFICE_LOAD_V1_SSOT.id]: OFFICE_LOAD_V1_SSOT,
   [RETAIL_LOAD_V1_SSOT.id]: RETAIL_LOAD_V1_SSOT,

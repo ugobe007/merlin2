@@ -25,7 +25,8 @@ export type CalcInputs = Record<string, CalcScalar | CalcScalar[]>;
  *
  * MINIMUM: QuoteEngine/Freeze layer can rely on baseLoadKW + peakLoadKW
  * OPTIONAL: energyKWhPerDay, assumptions, warnings for audit trail
- * RAW: Escape hatch for industry-specific outputs (PUE, cooling, etc.)
+ * TRUEQUOTE: dutyCycle, kWContributors, computed for validation harness
+ * RAW: Escape hatch for industry-specific outputs (PUE, redundancy, etc.)
  */
 export type CalcRunResult = {
   /** Average/baseline load in kW */
@@ -36,6 +37,22 @@ export type CalcRunResult = {
 
   /** Daily energy consumption in kWh */
   energyKWhPerDay?: number;
+
+  /** Duty cycle [0, 1] - fraction of time at peak (TrueQuote validation) */
+  dutyCycle?: number;
+
+  /** kW breakdown by contributor (TrueQuote validation) */
+  kWContributors?: Record<string, number>;
+
+  /** Computed object with detailed breakdown (TrueQuote validation) */
+  computed?: {
+    dutyCycle?: number;
+    kWContributors?: Record<string, number>;
+    kWContributorsTotalKW?: number;
+    kWContributorShares?: Record<string, number>;
+    assumptions?: string[];
+    warnings?: string[];
+  };
 
   /** Assumptions made by calculator (for audit trail) */
   assumptions?: string[];
