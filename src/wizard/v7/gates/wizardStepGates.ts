@@ -77,29 +77,44 @@ export interface WizardGateState {
  */
 export function gateLocation(state: WizardGateState): WizardGateResult {
   // Check for valid ZIP (5+ digits for US, 3+ for international)
-  const zip = state.location?.zip || state.location?.postalCode || state.locationRawInput || "";
+  // CRITICAL: locationRawInput is where typed ZIP lives (highest priority!)
+  const zip = state.locationRawInput || state.location?.postalCode || state.location?.zip || "";
   const normalizedZip = zip.replace(/\D/g, "");
   
-  // Debug logging (temporary)
+  // Debug logging
   console.log('[gateLocation] Checking:', {
-    'location.zip': state.location?.zip,
-    'location.postalCode': state.location?.postalCode,
     'locationRawInput': state.locationRawInput,
+    'location.postalCode': state.location?.postalCode,
+    'location.zip': state.location?.zip,
     'combined zip': zip,
     'normalized': normalizedZip,
-    'length': normalizedZip.length
+    'length': normalizedZip.length,
+    'locationConfirmed': state.locationConfirmed
   });
   
   // Valid ZIP is ALWAYS sufficient - business name/address are optional
   if (normalizedZip.length >= 5) {
+    console.log('[gateLocation] ✅ ZIP valid, allowing continue');
     return { canContinue: true };
   }
 
   // Also allow if location resolved (from address lookup) even without ZIP
   if (state.location?.formattedAddress) {
+    console.log('[gateLocation] ✅ Address resolved, allowing continue');
     return { canContinue: true };
   }
 
+  // AI Agent auto-fix: Check if gates are temporarily relaxed
+  if (typeof window !== 'undefined') {
+    const relaxed = localStorage.getItem('wizardRelaxedGates');
+    const expiry = Number(localStorage.getItem('wizardRelaxedGatesExpiry'));
+    if (relaxed === 'true' && expiry > Date.now()) {
+      console.warn('[gateLocation] ⚠️ Auto-fix: Relaxing gate validation (AI Agent intervention)');
+      return { canContinue: true };
+    }
+  }
+
+  console.warn('[gateLocation] ❌ Blocking: ZIP incomplete');
   return { canContinue: false, reason: "zip-incomplete" };
 }
 
