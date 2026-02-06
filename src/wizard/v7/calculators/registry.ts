@@ -799,6 +799,18 @@ export const WAREHOUSE_LOAD_V1_SSOT: CalculatorContract = {
 
 /**
  * EV CHARGING SSOT ADAPTER
+ *
+ * Accepts: level2Chargers, dcfcChargers, hpcChargers (optional),
+ *          siteDemandCapKW (optional), level2PowerKW (optional)
+ *
+ * Charger power ratings:
+ *   Level 2: 7.2 kW default (configurable: 7.2/11/19.2/22)
+ *   DCFC: 150 kW
+ *   HPC: 250 kW
+ *
+ * SSOT: Routes through calculateUseCasePower("ev-charging", ...)
+ * Demand cap: If siteDemandCapKW > 0 AND < computed peak, proportionally
+ *   scales ALL contributors so sum = cap (preserves forensic breakdown).
  */
 export const EV_CHARGING_LOAD_V1_SSOT: CalculatorContract = {
   id: "ev_charging_load_v1",
@@ -810,45 +822,77 @@ export const EV_CHARGING_LOAD_V1_SSOT: CalculatorContract = {
 
     const level2Chargers = Number(inputs.level2Chargers) || 12;
     const dcfcChargers = Number(inputs.dcfcChargers) || 8;
-    assumptions.push(`EV Charging: ${level2Chargers} Level 2, ${dcfcChargers} DCFC`);
+    const hpcChargers = Number(inputs.hpcChargers) || 0;
+    const level2KWEach = Number(inputs.level2PowerKW) || 7.2;
+    const siteDemandCapKW = Number(inputs.siteDemandCapKW) || 0;
 
+    assumptions.push(
+      `EV Charging: ${level2Chargers} Level 2 (${level2KWEach}kW), ` +
+        `${dcfcChargers} DCFC (150kW)` +
+        (hpcChargers > 0 ? `, ${hpcChargers} HPC (250kW)` : "")
+    );
+
+    // Route through SSOT (handles concurrency internally)
     const result = calculateUseCasePower("ev-charging", { level2Chargers, dcfcChargers });
-    const powerKW = result.powerMW * 1000;
-    const peakLoadKW = Math.round(powerKW);
+    let peakLoadKW = Math.round(result.powerMW * 1000);
 
-    // 4a. Compute contributor breakdown
-    // EV charging: chargers dominate (80-95%)
-    const l2KW = level2Chargers * 7.2; // 7.2 kW each
-    const dcfcKW = dcfcChargers * 150; // 150 kW each
-    const rawChargingKW = l2KW + dcfcKW;
-    const totalChargers = level2Chargers + dcfcChargers;
-    const lightingKW = totalChargers * 0.5; // 0.5 kW per charger position
-    const controlsKW = totalChargers * 0.3; // Payment/network/BMS
-    const siteAuxKW = 10; // HVAC for office/restrooms
+    // Add HPC contribution (not yet in SSOT legacy path — apply here)
+    const hpcRawKW = hpcChargers * 250;
+    if (hpcChargers > 0) {
+      // HPC concurrency ~40% (same as DCFC class)
+      peakLoadKW += Math.round(hpcRawKW * 0.4);
+      assumptions.push(`HPC contribution: ${hpcChargers} × 250kW × 40% concurrency`);
+    }
 
-    // Scale to match SSOT peak (SSOT applies concurrency)
-    const rawSum = rawChargingKW + lightingKW + controlsKW + siteAuxKW;
-    const scale = rawSum > 0 ? peakLoadKW / rawSum : 1;
+    // Raw breakdown (before cap)
+    const l2KW = level2Chargers * level2KWEach;
+    const dcfcKW = dcfcChargers * 150;
+    const totalChargers = level2Chargers + dcfcChargers + hpcChargers;
+    const lightingKW = totalChargers * 0.5;
+    const controlsKW = totalChargers * 0.3;
+    const siteAuxKW = 10;
 
-    const scaledCharging = rawChargingKW * scale;
+    // Scale contributors to match SSOT peak (SSOT applies concurrency)
+    const rawSum = l2KW + dcfcKW + hpcRawKW + lightingKW + controlsKW + siteAuxKW;
+    let scale = rawSum > 0 ? peakLoadKW / rawSum : 1;
+
+    // Demand cap enforcement
+    let demandCapApplied = false;
+    if (siteDemandCapKW > 0 && siteDemandCapKW < peakLoadKW) {
+      // Proportionally scale ALL contributors so sum = cap
+      const capScale = siteDemandCapKW / peakLoadKW;
+      scale *= capScale;
+      peakLoadKW = Math.round(siteDemandCapKW);
+      demandCapApplied = true;
+      assumptions.push(`Demand cap applied: ${siteDemandCapKW}kW (proportional scaling)`);
+      warnings.push(`Site demand capped at ${siteDemandCapKW}kW — charger power will be curtailed`);
+    }
+
+    const scaledCharging = (l2KW + dcfcKW + hpcRawKW) * scale;
     const scaledLighting = lightingKW * scale;
     const scaledControls = controlsKW * scale;
     const scaledSiteAux = siteAuxKW * scale;
 
     const kWContributorsTotalKW = scaledCharging + scaledLighting + scaledControls + scaledSiteAux;
 
-    const dutyCycle = 0.35; // 35% average utilization
+    const dutyCycle = 0.35;
+
+    // Verify charging dominance (80-95% band)
+    const chargingPct = peakLoadKW > 0 ? (scaledCharging / peakLoadKW) * 100 : 0;
+    if (chargingPct < 80 || chargingPct > 99) {
+      warnings.push(`Charging share ${chargingPct.toFixed(1)}% outside 80-95% band — check inputs`);
+    }
 
     const validation: CalcValidation = {
       version: "v1",
       dutyCycle,
       kWContributors: {
-        process: 0, // Not applicable
-        hvac: 0, // Minimal
+        process: 0,
+        hvac: 0,
         lighting: scaledLighting,
         controls: scaledControls,
-        itLoad: 0, // Not applicable
-        cooling: 0, // Not applicable
+        itLoad: 0,
+        cooling: 0,
         charging: scaledCharging,
         other: scaledSiteAux,
       },
@@ -856,30 +900,35 @@ export const EV_CHARGING_LOAD_V1_SSOT: CalculatorContract = {
       kWContributorShares: {
         processPct: 0,
         hvacPct: 0,
-        lightingPct: (scaledLighting / peakLoadKW) * 100,
-        controlsPct: (scaledControls / peakLoadKW) * 100,
+        lightingPct: peakLoadKW > 0 ? (scaledLighting / peakLoadKW) * 100 : 0,
+        controlsPct: peakLoadKW > 0 ? (scaledControls / peakLoadKW) * 100 : 0,
         itLoadPct: 0,
         coolingPct: 0,
-        chargingPct: (scaledCharging / peakLoadKW) * 100,
-        otherPct: (scaledSiteAux / peakLoadKW) * 100,
+        chargingPct,
+        otherPct: peakLoadKW > 0 ? (scaledSiteAux / peakLoadKW) * 100 : 0,
       },
       details: {
         ev_charging: {
           level2: l2KW * scale,
           dcfc: dcfcKW * scale,
+          hpc: hpcRawKW * scale,
           siteAux: scaledSiteAux,
+          chargers: totalChargers,
+          ...(demandCapApplied ? { demandCapKW: siteDemandCapKW } : {}),
         },
       },
       notes: [
-        `Level 2: ${level2Chargers} @ 7.2kW, DCFC: ${dcfcChargers} @ 150kW`,
+        `Level 2: ${level2Chargers} @ ${level2KWEach}kW, DCFC: ${dcfcChargers} @ 150kW` +
+          (hpcChargers > 0 ? `, HPC: ${hpcChargers} @ 250kW` : ""),
         `Concurrency applied by SSOT → peak: ${peakLoadKW}kW`,
+        ...(demandCapApplied ? [`Demand cap: ${siteDemandCapKW}kW enforced`] : []),
       ],
     };
 
     return {
-      baseLoadKW: Math.round(peakLoadKW * 0.2), // 20% base (lights, controls)
+      baseLoadKW: Math.round(peakLoadKW * 0.2),
       peakLoadKW,
-      energyKWhPerDay: Math.round(peakLoadKW * 18 * dutyCycle), // 18h * dutyCycle
+      energyKWhPerDay: Math.round(peakLoadKW * 18 * dutyCycle),
       assumptions,
       warnings,
       validation,

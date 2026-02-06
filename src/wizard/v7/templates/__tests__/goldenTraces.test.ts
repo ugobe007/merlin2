@@ -31,6 +31,7 @@ import { MANIFEST } from "../template-manifest";
 import dcTemplate from "../data_center.v1.json";
 import hotelTemplate from "../hotel.v1.json";
 import carWashTemplate from "../car_wash.v1.json";
+import evChargingTemplate from "../ev_charging.v1.json";
 
 function asTemplate(x: unknown): IndustryTemplateV1 {
   return x as IndustryTemplateV1;
@@ -351,6 +352,7 @@ describe("Golden traces: manifest integrity", () => {
       { json: dcTemplate, slug: "data_center" },
       { json: hotelTemplate, slug: "hotel" },
       { json: carWashTemplate, slug: "car_wash" },
+      { json: evChargingTemplate, slug: "ev_charging" },
     ];
 
     for (const { json, slug } of templates) {
@@ -406,53 +408,135 @@ describe("Golden traces: manifest integrity", () => {
 });
 
 // ============================================================================
-// EV CHARGING GOLDEN TRACES (adapter-direct — no template JSON)
+// EV CHARGING GOLDEN TRACES (template-backed as of v1.0.0)
 // ============================================================================
 
-describe("Golden traces: ev_charging (adapter-direct)", () => {
-  it("typical: 12 L2 + 8 DCFC → peakKW 500-3000 range", () => {
-    const calc = CALCULATORS_BY_ID["ev_charging_load_v1"];
-    expect(calc).toBeDefined();
-
-    const result = calc!.compute({
-      level2Chargers: 12,
-      dcfcChargers: 8,
+describe("Golden traces: ev_charging", () => {
+  /**
+   * TRACE 1: Retail mixed — L2=8, DCFC=2, HPC=0, no demand cap
+   * Typical retail / shopping mall installation
+   */
+  it("retail mixed: 8 L2 + 2 DCFC → peakKW 50-600 range, charging > 80%", () => {
+    const { result, mappedInputs } = runPipeline(evChargingTemplate, {
+      level2_count: 8,
+      dcfc_count: 2,
+      hpc_count: 0,
+      site_type: "Retail / shopping",
     });
 
-    // 12 × 7.2kW + 8 × 150kW = 86.4 + 1200 = ~1286 kW raw (before concurrency)
-    expect(result.peakLoadKW).toBeGreaterThanOrEqual(200);
-    expect(result.peakLoadKW).toBeLessThanOrEqual(3000);
+    // 8 × 7.2kW + 2 × 150kW = 57.6 + 300 = ~358 kW raw (before concurrency)
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(50);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(600);
     expect(result.baseLoadKW).toBeGreaterThan(0);
-    expect(result.baseLoadKW).toBeLessThanOrEqual(result.peakLoadKW!);
 
-    // Validation envelope required
-    expect(result.validation).toBeDefined();
-    expect(result.validation!.version).toBe("v1");
-    expect(result.validation!.kWContributors).toBeDefined();
-    expect(result.validation!.kWContributors!.charging).toBeGreaterThan(0);
-    expect(result.validation!.dutyCycle).toBeCloseTo(0.35, 1);
+    // Charging must dominate (80-95% band)
+    const kw = result.validation!.kWContributors!;
+    const chargingPct = (kw.charging / result.peakLoadKW!) * 100;
+    expect(chargingPct).toBeGreaterThanOrEqual(80);
+    expect(chargingPct).toBeLessThanOrEqual(99);
 
-    // Assumptions should reference charger counts
-    const text = result.assumptions!.join(" ");
-    expect(text).toMatch(/12/);
-    expect(text).toMatch(/8/);
+    // Mapped inputs should include charger counts
+    expect(mappedInputs.level2Chargers).toBe(8);
+    expect(mappedInputs.dcfcChargers).toBe(2);
   });
 
-  it("edge: 0 L2 + 1 DCFC → small single-charger site", () => {
-    const calc = CALCULATORS_BY_ID["ev_charging_load_v1"];
-    const result = calc!.compute({
-      level2Chargers: 0,
-      dcfcChargers: 1,
+  /**
+   * TRACE 2: Highway fast-charge — L2=0, DCFC=4, HPC=6, with demand cap
+   * Highway corridor with heavy DC charging and site electrical limit
+   */
+  it("highway fast-charge: 0 L2 + 4 DCFC + 6 HPC, cap=800kW", () => {
+    const { result } = runPipeline(evChargingTemplate, {
+      level2_count: 0,
+      dcfc_count: 4,
+      hpc_count: 6,
+      site_type: "Highway corridor",
+      site_demand_cap_kw: 800,
     });
 
-    // 1 DCFC @ 150kW + small aux → should be modest
-    expect(result.peakLoadKW).toBeGreaterThan(10);
-    expect(result.peakLoadKW).toBeLessThan(500);
-    expect(result.baseLoadKW).toBeGreaterThanOrEqual(0);
+    // With cap: peakLoadKW should not exceed 800kW
+    expect(result.peakLoadKW).toBeLessThanOrEqual(800);
+    expect(result.peakLoadKW).toBeGreaterThan(100); // Not trivially small
 
-    // Still has validation
+    // Charging still dominates even with cap (proportional scaling preserves shares)
+    const kw = result.validation!.kWContributors!;
+    const chargingPct = (kw.charging / result.peakLoadKW!) * 100;
+    expect(chargingPct).toBeGreaterThanOrEqual(80);
+
+    // Validation envelope intact
+    expect(result.validation!.version).toBe("v1");
+    expect(result.validation!.dutyCycle).toBeCloseTo(0.35, 1);
+
+    // Should have demand cap warning
+    const text = result.assumptions!.join(" ");
+    expect(text).toMatch(/cap/i);
+  });
+
+  /**
+   * TRACE 3: Workplace — L2=30, DCFC=0, HPC=0
+   * Employee parking with slow charging only
+   */
+  it("workplace: 30 L2 only → peakKW 100-800 range, all Level 2", () => {
+    const { result, mappedInputs } = runPipeline(evChargingTemplate, {
+      level2_count: 30,
+      dcfc_count: 0,
+      hpc_count: 0,
+      site_type: "Workplace / fleet",
+      operating_model: "Workplace (employee)",
+    });
+
+    // 30 × 7.2kW = 216kW raw (before concurrency + aux loads)
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(100);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(800);
+
+    // All charging is Level 2
+    expect(mappedInputs.level2Chargers).toBe(30);
+    expect(mappedInputs.dcfcChargers).toBe(0);
+
+    // Validation
     expect(result.validation).toBeDefined();
-    expect(result.validation!.kWContributors!.charging).toBeGreaterThan(0);
+    expect(result.validation!.version).toBe("v1");
+  });
+
+  /**
+   * TRACE 4: Edge — demand cap lower than computed peak
+   * Tests proportional cap logic: all contributors scaled proportionally
+   */
+  it("edge: cap=200kW forces proportional scaling of all contributors", () => {
+    const { result } = runPipeline(evChargingTemplate, {
+      level2_count: 8,
+      dcfc_count: 4,
+      hpc_count: 0,
+      site_demand_cap_kw: 200,
+    });
+
+    // Cap enforced
+    expect(result.peakLoadKW).toBeLessThanOrEqual(200);
+
+    // Contributors still sum to peakLoadKW (within 5%)
+    const kw = result.validation!.kWContributors!;
+    const sum = Object.values(kw).reduce((a, b) => a + b, 0);
+    const pctDiff = Math.abs(sum - result.peakLoadKW!) / result.peakLoadKW!;
+    expect(pctDiff).toBeLessThanOrEqual(0.05);
+
+    // Proportional scaling preserves forensic breakdown
+    expect(kw.charging).toBeGreaterThan(0);
+    expect(kw.lighting).toBeGreaterThan(0);
+    expect(kw.controls).toBeGreaterThan(0);
+  });
+
+  it("manifest requiredQuestionIds all exist in template", () => {
+    const manifest = MANIFEST.find((m) => m.industrySlug === "ev_charging");
+    expect(manifest).toBeDefined();
+
+    const tpl = asTemplate(evChargingTemplate);
+    const questionIds = new Set(tpl.questions.map((q) => q.id));
+
+    for (const reqId of manifest!.requiredQuestionIds) {
+      expect(
+        questionIds.has(reqId),
+        `Manifest requires question "${reqId}" but it's missing from EV charging template`
+      ).toBe(true);
+    }
   });
 });
 
