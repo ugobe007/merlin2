@@ -34,6 +34,7 @@ import hotelTemplate from "../hotel.v1.json";
 import carWashTemplate from "../car_wash.v1.json";
 import evChargingTemplate from "../ev_charging.v1.json";
 import hospitalTemplate from "../hospital.v1.json";
+import manufacturingTemplate from "../manufacturing.v1.json";
 
 /**
  * Type-safe JSON import helper
@@ -292,6 +293,36 @@ describe("Industry templates drift detection", () => {
     expect(tpl.questions.length).toBe(16);
   });
 
+  it("manufacturing template validates against manufacturing_load_v1 contract", () => {
+    const tpl = asTemplate(manufacturingTemplate);
+    const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+    expect(calc).toBeTruthy();
+
+    const res = validateTemplateAgainstCalculator(tpl, calc!, {
+      minQuestions: 16,
+      maxQuestions: 18,
+    });
+
+    if (!res.ok) {
+      const errorMsg = res.issues
+        .filter((i) => i.level === "error")
+        .map((i) => `${i.code}: ${i.message}`)
+        .join("\n");
+      throw new Error(`Manufacturing template validation failed:\n${errorMsg}`);
+    }
+
+    const warnings = res.issues.filter((i) => i.level === "warn");
+    if (warnings.length > 0) {
+      console.warn(
+        "[drift test] Manufacturing warnings:",
+        warnings.map((w) => w.message).join(", ")
+      );
+    }
+
+    // Manufacturing has 17 questions
+    expect(tpl.questions.length).toBe(17);
+  });
+
   /**
    * REGISTRY COMPLETENESS TEST
    *
@@ -306,6 +337,7 @@ describe("Industry templates drift detection", () => {
       carWashTemplate,
       evChargingTemplate,
       hospitalTemplate,
+      manufacturingTemplate,
     ];
 
     for (const tpl of templates) {
@@ -332,6 +364,7 @@ describe("Industry templates drift detection", () => {
       { tpl: asTemplate(carWashTemplate), name: "car_wash" },
       { tpl: asTemplate(evChargingTemplate), name: "ev_charging" },
       { tpl: asTemplate(hospitalTemplate), name: "hospital" },
+      { tpl: asTemplate(manufacturingTemplate), name: "manufacturing" },
     ];
 
     for (const { tpl, name } of templates) {

@@ -1,0 +1,231 @@
+{
+  "schema": "industry-template-v1",
+  "industry": "manufacturing",
+  "version": "manufacturing.v1.0.0",
+  "calculator": {
+    "id": "manufacturing_load_v1",
+    "requiredInputs": ["squareFootage"]
+  },
+  "parts": [
+    {
+      "id": "facility_type",
+      "label": "Manufacturing Type",
+      "description": "What kind of manufacturing happens here?",
+      "questionIds": ["manufacturing_type", "shift_pattern", "square_footage"]
+    },
+    {
+      "id": "process_equipment",
+      "label": "Process Equipment",
+      "description": "Major equipment that drives peak load.",
+      "questionIds": [
+        "has_compressed_air",
+        "compressor_hp",
+        "has_electric_furnace",
+        "furnace_kw",
+        "has_cnc_machines",
+        "cnc_count",
+        "has_refrigeration"
+      ]
+    },
+    {
+      "id": "environment",
+      "label": "Environment & HVAC",
+      "description": "Climate control and process cooling requirements.",
+      "questionIds": ["hvac_type", "process_cooling", "clean_room"]
+    },
+    {
+      "id": "billing",
+      "label": "Energy & Billing",
+      "description": "Current energy usage and demand charges.",
+      "questionIds": ["monthly_kwh", "peak_demand_kw", "demand_charge", "demand_charge_rate"]
+    }
+  ],
+  "defaults": {
+    "manufacturing_type": "Light assembly",
+    "shift_pattern": "1 shift (8 hours)",
+    "square_footage": 100000,
+    "has_compressed_air": true,
+    "compressor_hp": 50,
+    "has_electric_furnace": false,
+    "furnace_kw": 0,
+    "has_cnc_machines": false,
+    "cnc_count": 0,
+    "has_refrigeration": false,
+    "hvac_type": "Standard rooftop",
+    "process_cooling": false,
+    "clean_room": false,
+    "monthly_kwh": 200000,
+    "peak_demand_kw": 500,
+    "demand_charge": true,
+    "demand_charge_rate": 15
+  },
+  "questions": [
+    {
+      "id": "manufacturing_type",
+      "label": "Manufacturing type",
+      "type": "select",
+      "options": [
+        "Light assembly",
+        "Medium (machining, fabrication)",
+        "Heavy (foundry, steel, glass)",
+        "Electronics / clean room",
+        "Food processing"
+      ],
+      "required": true,
+      "hint": "Determines W/sqft power density (CBECS industrial benchmark)"
+    },
+    {
+      "id": "shift_pattern",
+      "label": "Shift pattern",
+      "type": "select",
+      "options": ["1 shift (8 hours)", "2 shifts (16 hours)", "3 shifts / 24-7"],
+      "required": true,
+      "hint": "Number of operating shifts affects duty cycle and energy consumption"
+    },
+    {
+      "id": "square_footage",
+      "label": "Facility square footage",
+      "type": "number",
+      "required": true,
+      "min": 1000,
+      "max": 5000000,
+      "unit": "sq ft",
+      "hint": "Total conditioned manufacturing space"
+    },
+    {
+      "id": "has_compressed_air",
+      "label": "Compressed air system?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Rotary screw or reciprocating compressors (major energy consumer)"
+    },
+    {
+      "id": "compressor_hp",
+      "label": "Total compressor horsepower",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 5000,
+      "unit": "HP",
+      "hint": "Sum of all compressor motors (1 HP = ~0.75 kW)"
+    },
+    {
+      "id": "has_electric_furnace",
+      "label": "Electric furnace / oven?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Arc furnaces, induction furnaces, or industrial ovens"
+    },
+    {
+      "id": "furnace_kw",
+      "label": "Furnace / oven power",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 50000,
+      "unit": "kW",
+      "hint": "Total nameplate kW of all furnaces and ovens"
+    },
+    {
+      "id": "has_cnc_machines",
+      "label": "CNC machines / lathes?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Computer-controlled machining centers"
+    },
+    {
+      "id": "cnc_count",
+      "label": "Number of CNC machines",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 200,
+      "hint": "Each CNC typically draws 10-30 kW depending on size"
+    },
+    {
+      "id": "has_refrigeration",
+      "label": "Process refrigeration?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Walk-in coolers, blast freezers, or process chillers"
+    },
+    {
+      "id": "hvac_type",
+      "label": "HVAC system type",
+      "type": "select",
+      "options": ["Standard rooftop", "Central chiller plant", "Process + comfort combined"],
+      "required": false,
+      "hint": "Central plants draw more but are more efficient at scale"
+    },
+    {
+      "id": "process_cooling",
+      "label": "Process cooling required?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Cooling towers, chilled water loops for process heat rejection"
+    },
+    {
+      "id": "clean_room",
+      "label": "Clean room / controlled environment?",
+      "type": "boolean",
+      "required": false,
+      "hint": "ISO-class clean rooms add 2-5x HVAC load for filtration and pressurization"
+    },
+    {
+      "id": "monthly_kwh",
+      "label": "Average monthly kWh",
+      "type": "number",
+      "required": false,
+      "min": 5000,
+      "max": 50000000,
+      "unit": "kWh",
+      "hint": "From your most recent utility bill"
+    },
+    {
+      "id": "peak_demand_kw",
+      "label": "Peak demand",
+      "type": "number",
+      "required": false,
+      "min": 50,
+      "max": 100000,
+      "unit": "kW",
+      "hint": "Highest 15-minute demand reading on recent bill"
+    },
+    {
+      "id": "demand_charge",
+      "label": "Demand charges apply?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Most industrial accounts pay $/kW demand charges"
+    },
+    {
+      "id": "demand_charge_rate",
+      "label": "Demand charge rate",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 100,
+      "unit": "$/kW-month",
+      "hint": "Typical industrial demand charges: $8-25/kW"
+    }
+  ],
+  "mapping": {
+    "squareFootage": { "from": "square_footage", "transform": "toNumber" },
+    "manufacturingType": { "from": "manufacturing_type", "transform": "mapManufacturingType" },
+    "shiftPattern": { "from": "shift_pattern", "transform": "mapShiftPattern" },
+    "hasCompressedAir": { "from": "has_compressed_air", "transform": "yesNoToBool" },
+    "compressorHP": { "from": "compressor_hp", "transform": "defaultZero" },
+    "hasElectricFurnace": { "from": "has_electric_furnace", "transform": "yesNoToBool" },
+    "furnaceKW": { "from": "furnace_kw", "transform": "defaultZero" },
+    "hasCNCMachines": { "from": "has_cnc_machines", "transform": "yesNoToBool" },
+    "cncCount": { "from": "cnc_count", "transform": "defaultZero" },
+    "hasRefrigeration": { "from": "has_refrigeration", "transform": "yesNoToBool" },
+    "hvacType": { "from": "hvac_type" },
+    "processCooling": { "from": "process_cooling", "transform": "yesNoToBool" },
+    "cleanRoom": { "from": "clean_room", "transform": "yesNoToBool" },
+    "monthly_kwh": { "from": "monthly_kwh" },
+    "peak_demand_kw": { "from": "peak_demand_kw" },
+    "demand_charge": { "from": "demand_charge" },
+    "demand_charge_rate": { "from": "demand_charge_rate", "transform": "ifDemandChargeElseZero" }
+  }
+}
