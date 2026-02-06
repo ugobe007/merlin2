@@ -2357,7 +2357,10 @@ export default function WizardV6() {
   const _canProceed = (): boolean => {
     switch (currentStep) {
       case 1:
-        return state.zipCode.length === 5 && state.state !== "" && state.goals.length >= 2;
+        // ✅ FIX (Feb 5, 2026): Don't gate on state.state — async lookup may not have
+        // resolved yet, and hardcoded fallback doesn't cover all states.
+        // Bulletproof rule: valid 5-digit ZIP + 2 goals = Continue unlocked.
+        return /^\d{5}$/.test(state.zipCode) && state.goals.length >= 2;
       case 2:
         // Industry must be selected AND business size tier must be set
         return state.industry !== "" && state.businessSizeTier !== undefined;
@@ -2405,9 +2408,8 @@ export default function WizardV6() {
 
     switch (currentStep) {
       case 1: {
-        // Root-cause precedence: ZIP → state → goals
-        if (state.zipCode.length !== 5) return 'zip-incomplete';
-        if (state.state === '') return 'state-missing';
+        // Root-cause precedence: ZIP → goals (state resolves async, don't gate on it)
+        if (!/^\d{5}$/.test(state.zipCode)) return 'zip-incomplete';
         if (state.goals.length < 2) return 'goals-need-2';
         return null;
       }
