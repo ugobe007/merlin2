@@ -33,6 +33,7 @@ import dcTemplate from "../data_center.v1.json";
 import hotelTemplate from "../hotel.v1.json";
 import carWashTemplate from "../car_wash.v1.json";
 import evChargingTemplate from "../ev_charging.v1.json";
+import hospitalTemplate from "../hospital.v1.json";
 
 /**
  * Type-safe JSON import helper
@@ -264,6 +265,33 @@ describe("Industry templates drift detection", () => {
     expect(tpl.questions.length).toBe(16);
   });
 
+  it("hospital template validates against hospital_load_v1 contract", () => {
+    const tpl = asTemplate(hospitalTemplate);
+    const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+    expect(calc).toBeTruthy();
+
+    const res = validateTemplateAgainstCalculator(tpl, calc!, {
+      minQuestions: 16,
+      maxQuestions: 18,
+    });
+
+    if (!res.ok) {
+      const errorMsg = res.issues
+        .filter((i) => i.level === "error")
+        .map((i) => `${i.code}: ${i.message}`)
+        .join("\n");
+      throw new Error(`Hospital template validation failed:\n${errorMsg}`);
+    }
+
+    const warnings = res.issues.filter((i) => i.level === "warn");
+    if (warnings.length > 0) {
+      console.warn("[drift test] Hospital warnings:", warnings.map((w) => w.message).join(", "));
+    }
+
+    // Hospital has 16 questions
+    expect(tpl.questions.length).toBe(16);
+  });
+
   /**
    * REGISTRY COMPLETENESS TEST
    *
@@ -272,7 +300,13 @@ describe("Industry templates drift detection", () => {
    * - No orphaned templates
    */
   it("all templates reference registered calculators", () => {
-    const templates = [dcTemplate, hotelTemplate, carWashTemplate, evChargingTemplate];
+    const templates = [
+      dcTemplate,
+      hotelTemplate,
+      carWashTemplate,
+      evChargingTemplate,
+      hospitalTemplate,
+    ];
 
     for (const tpl of templates) {
       const template = asTemplate(tpl);
@@ -297,6 +331,7 @@ describe("Industry templates drift detection", () => {
       { tpl: asTemplate(hotelTemplate), name: "hotel" },
       { tpl: asTemplate(carWashTemplate), name: "car_wash" },
       { tpl: asTemplate(evChargingTemplate), name: "ev_charging" },
+      { tpl: asTemplate(hospitalTemplate), name: "hospital" },
     ];
 
     for (const { tpl, name } of templates) {

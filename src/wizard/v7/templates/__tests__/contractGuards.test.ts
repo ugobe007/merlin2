@@ -41,6 +41,7 @@ import dcTemplate from "../data_center.v1.json";
 import hotelTemplate from "../hotel.v1.json";
 import carWashTemplate from "../car_wash.v1.json";
 import evChargingTemplate from "../ev_charging.v1.json";
+import hospitalTemplate from "../hospital.v1.json";
 
 function asTemplate(x: unknown): IndustryTemplateV1 {
   return x as IndustryTemplateV1;
@@ -121,6 +122,7 @@ describe("Guard 2: mapping output covers all requiredInputs", () => {
     { slug: "hotel", json: hotelTemplate },
     { slug: "car_wash", json: carWashTemplate },
     { slug: "ev_charging", json: evChargingTemplate },
+    { slug: "hospital", json: hospitalTemplate },
   ];
 
   for (const { slug, json } of templateBacked) {

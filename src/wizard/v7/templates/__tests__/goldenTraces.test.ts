@@ -32,6 +32,7 @@ import dcTemplate from "../data_center.v1.json";
 import hotelTemplate from "../hotel.v1.json";
 import carWashTemplate from "../car_wash.v1.json";
 import evChargingTemplate from "../ev_charging.v1.json";
+import hospitalTemplate from "../hospital.v1.json";
 
 function asTemplate(x: unknown): IndustryTemplateV1 {
   return x as IndustryTemplateV1;
@@ -353,6 +354,7 @@ describe("Golden traces: manifest integrity", () => {
       { json: hotelTemplate, slug: "hotel" },
       { json: carWashTemplate, slug: "car_wash" },
       { json: evChargingTemplate, slug: "ev_charging" },
+      { json: hospitalTemplate, slug: "hospital" },
     ];
 
     for (const { json, slug } of templates) {
@@ -541,49 +543,147 @@ describe("Golden traces: ev_charging", () => {
 });
 
 // ============================================================================
-// HOSPITAL GOLDEN TRACES (adapter-direct — no template JSON)
+// HOSPITAL GOLDEN TRACES (template-backed as of v1.0.0)
 // ============================================================================
 
-describe("Golden traces: hospital (adapter-direct)", () => {
-  it("typical: 200-bed hospital → peakKW 500-5000 range", () => {
-    const calc = CALCULATORS_BY_ID["hospital_load_v1"];
-    expect(calc).toBeDefined();
+describe("Golden traces: hospital", () => {
+  /**
+   * TRACE 1: Small clinic — 50 beds, community, limited hours, no imaging
+   */
+  it("clinic small: 50-bed community, limited hours → peakKW 50-500", () => {
+    const { result, mappedInputs } = runPipeline(hospitalTemplate, {
+      hospital_type: "Community",
+      operating_hours: "Limited (8 AM–6 PM outpatient)",
+      bed_count: 50,
+      icu_beds: 0,
+      surgical_suites: 0,
+      has_mri: false,
+      has_ct: false,
+    });
 
-    const result = calc!.compute({ bedCount: 200 });
-
-    // 200-bed hospital should be substantial
-    expect(result.peakLoadKW).toBeGreaterThanOrEqual(500);
-    expect(result.peakLoadKW).toBeLessThanOrEqual(5000);
+    // 50 beds × 4 kW/bed × 0.4 (limited) = 80kW base (min 200kW floor)
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(50);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(500);
     expect(result.baseLoadKW).toBeGreaterThan(0);
-    expect(result.baseLoadKW).toBeLessThanOrEqual(result.peakLoadKW!);
 
-    // Validation envelope
-    expect(result.validation).toBeDefined();
-    expect(result.validation!.version).toBe("v1");
-    expect(result.validation!.dutyCycle).toBeCloseTo(0.85, 1);
+    // Limited hours → lower dutyCycle
+    expect(result.validation!.dutyCycle).toBeCloseTo(0.4, 1);
 
-    // Hospital must have process (medical) + HVAC
-    const kw = result.validation!.kWContributors!;
-    expect(kw.process).toBeGreaterThan(0);
-    expect(kw.hvac).toBeGreaterThan(0);
-    expect(kw.lighting).toBeGreaterThan(0);
-    expect(kw.itLoad).toBeGreaterThan(0);
-
-    // Assumptions reference bed count
-    const text = result.assumptions!.join(" ");
-    expect(text).toContain("200");
+    // Bed count flows through
+    expect(mappedInputs.bedCount).toBe(50);
+    expect(mappedInputs.hospitalType).toBe("community");
+    expect(mappedInputs.operatingHours).toBe("limited");
   });
 
-  it("edge: 50-bed small clinic → peakKW 100-1500", () => {
-    const calc = CALCULATORS_BY_ID["hospital_load_v1"];
-    const result = calc!.compute({ bedCount: 50 });
+  /**
+   * TRACE 2: Mid-size regional hospital — 200 beds, 24/7, some equipment
+   */
+  it("hospital mid: 200-bed regional, 24/7, surgical suites → peakKW 500-3000", () => {
+    const { result, mappedInputs } = runPipeline(hospitalTemplate, {
+      hospital_type: "Regional",
+      operating_hours: "24/7 (full hospital)",
+      bed_count: 200,
+      icu_beds: 20,
+      surgical_suites: 4,
+      has_mri: false,
+      has_ct: true,
+      ct_count: 1,
+    });
 
-    expect(result.peakLoadKW).toBeGreaterThanOrEqual(100);
-    expect(result.peakLoadKW).toBeLessThanOrEqual(1500);
+    // 200 beds × 5 kW/bed = 1000kW base + 4×40kW surgical + 20×2kW ICU + 1×100kW CT
+    // = 1000 + 160 + 40 + 100 = ~1300kW
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(500);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(3000);
 
-    // Still has validation with contributors
-    expect(result.validation).toBeDefined();
+    // 24/7 → dutyCycle 0.85
+    expect(result.validation!.dutyCycle).toBeCloseTo(0.85, 1);
+
+    // HVAC + process must both be significant (not smeared equally)
+    const kw = result.validation!.kWContributors!;
+    expect(kw.hvac).toBeGreaterThan(0);
+    expect(kw.process).toBeGreaterThan(0);
+    expect(kw.itLoad).toBeGreaterThan(0);
+
+    // Process should be > lighting for a hospital with equipment
+    expect(kw.process).toBeGreaterThan(kw.lighting);
+
+    // Equipment detail in notes
+    const notes = result.validation!.notes!.join(" ");
+    expect(notes).toMatch(/surgical/i);
+
+    expect(mappedInputs.bedCount).toBe(200);
+  });
+
+  /**
+   * TRACE 3: Imaging-heavy academic hospital — 500 beds, MRI+CT, surgical
+   */
+  it("imaging heavy: 500-bed academic, MRI+CT+OR → peakKW 2000-8000", () => {
+    const { result } = runPipeline(hospitalTemplate, {
+      hospital_type: "Academic / teaching",
+      operating_hours: "24/7 (full hospital)",
+      bed_count: 500,
+      icu_beds: 50,
+      surgical_suites: 10,
+      has_mri: true,
+      mri_count: 3,
+      has_ct: true,
+      ct_count: 4,
+      has_sterilization: true,
+      has_lab: true,
+    });
+
+    // 500 × 6 kW/bed = 3000kW base + 10×40 + 50×2 + 3×100 + 4×100 + 75 + 50
+    // = 3000 + 400 + 100 + 300 + 400 + 75 + 50 = ~4325kW
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(2000);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(8000);
+
+    // Hospital detail should include equipment info
+    const details = result.validation!.details!.hospital;
+    expect(details).toBeDefined();
+    expect(details.equipmentLoadKW).toBeGreaterThan(0);
+    expect(details.hospitalType).toBe("academic");
+
+    // Process % should be elevated due to imaging equipment
+    const shares = result.validation!.kWContributorShares!;
+    expect(shares.processPct).toBeGreaterThan(30); // Equipment pushes process share up
+  });
+
+  /**
+   * TRACE 4: Tiny edge — 10 beds, should still produce valid output
+   */
+  it("edge: 10-bed specialty clinic → still produces valid v1 envelope", () => {
+    const { result } = runPipeline(hospitalTemplate, {
+      hospital_type: "Specialty (cardiac, trauma, cancer)",
+      operating_hours: "Extended (6 AM–10 PM)",
+      bed_count: 10,
+    });
+
+    // 10 × 7.5 kW/bed × 0.7 (extended) = 52.5kW → but SSOT floors at 200kW
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(50);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(500);
+
+    // Extended hours → dutyCycle 0.65
+    expect(result.validation!.dutyCycle).toBeCloseTo(0.65, 1);
+
+    // Valid v1 envelope
+    expect(result.validation!.version).toBe("v1");
+    expect(result.validation!.kWContributors!.hvac).toBeGreaterThan(0);
     expect(result.validation!.kWContributors!.process).toBeGreaterThan(0);
+  });
+
+  it("manifest requiredQuestionIds all exist in template", () => {
+    const manifest = MANIFEST.find((m) => m.industrySlug === "hospital");
+    expect(manifest).toBeDefined();
+
+    const tpl = asTemplate(hospitalTemplate);
+    const questionIds = new Set(tpl.questions.map((q) => q.id));
+
+    for (const reqId of manifest!.requiredQuestionIds) {
+      expect(
+        questionIds.has(reqId),
+        `Manifest requires question "${reqId}" but it's missing from hospital template`
+      ).toBe(true);
+    }
   });
 });
 

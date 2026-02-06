@@ -33,7 +33,7 @@
 import type { CalculatorContract, CalcInputs, CalcRunResult, CalcValidation } from "./contract";
 
 // SSOT: Single source of truth for ALL industry power calculations
-import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
+import { calculateUseCasePower, calculateHospitalPower } from "@/services/useCasePowerCalculations";
 
 // ========== SSOT ADAPTERS ==========
 
@@ -691,6 +691,14 @@ export const MANUFACTURING_LOAD_V1_SSOT: CalculatorContract = {
 
 /**
  * HOSPITAL SSOT ADAPTER
+ *
+ * Supports template-backed flow (hospital.v1.json) with:
+ * - hospitalType: community | regional | academic | specialty
+ * - operatingHours: limited | extended | 24_7
+ * - Imaging equipment: MRI, CT, surgical suites, ICU beds
+ * - Sterilization, lab, critical load fraction
+ *
+ * Base load via calculateHospitalPower (ASHRAE kW/bed), equipment loads additive.
  */
 export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
   id: "hospital_load_v1",
@@ -700,25 +708,106 @@ export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
     const warnings: string[] = [];
     const assumptions: string[] = [];
 
+    // --- Core inputs ---
     const bedCount = Number(inputs.bedCount) || 200;
-    assumptions.push(`Hospital: ${bedCount} beds`);
+    const hospitalType =
+      (inputs.hospitalType as "community" | "regional" | "academic" | "specialty") || "regional";
+    const operatingHours = (inputs.operatingHours as "limited" | "extended" | "24_7") || "24_7";
 
-    const result = calculateUseCasePower("hospital", { bedCount });
-    const powerKW = result.powerMW * 1000;
-    const peakLoadKW = Math.round(powerKW);
+    assumptions.push(`Hospital: ${bedCount} beds, ${hospitalType}, ${operatingHours}`);
 
-    // 4a. Compute contributor breakdown (hospital = HVAC + process + IT)
-    const hvacKW = peakLoadKW * 0.35; // 35% HVAC (large facility, strict temp control)
-    const processKW = peakLoadKW * 0.3; // 30% process (medical equipment, surgical, laundry)
-    const lightingKW = peakLoadKW * 0.1; // 10% lighting (24/7 operation)
-    const itLoadKW = peakLoadKW * 0.1; // 10% IT (EMR, imaging systems)
-    const controlsKW = peakLoadKW * 0.05; // 5% BMS/controls
-    const otherKW = peakLoadKW * 0.1; // 10% other (elevators, kitchen, misc)
+    // 1. Base load via SSOT calculateHospitalPower (accepts hospitalType + operatingHours)
+    const baseResult = calculateHospitalPower(bedCount, hospitalType, operatingHours);
+    const basePowerKW = baseResult.powerMW * 1000;
 
-    const kWContributorsTotalKW = hvacKW + processKW + lightingKW + itLoadKW + controlsKW + otherKW;
+    // 2. Additive equipment loads (ASHRAE healthcare standards)
+    let equipmentLoadKW = 0;
+    const equipmentDetails: string[] = [];
 
-    const dutyCycle = 0.85; // 85% base (24/7 critical)
+    // Surgical suites: ~40 kW each (lighting, equipment, HVAC)
+    const surgicalSuites = Number(inputs.surgicalSuites) || 0;
+    if (surgicalSuites > 0) {
+      const surgicalPower = surgicalSuites * 40;
+      equipmentLoadKW += surgicalPower;
+      equipmentDetails.push(`${surgicalSuites} surgical suites @ 40kW`);
+    }
+
+    // MRI: ~100 kW each (magnet + cooling)
+    const hasMRI = inputs.hasMRI === true || inputs.hasMRI === "true";
+    const mriCount = Number(inputs.mriCount) || (hasMRI ? 1 : 0);
+    if (mriCount > 0) {
+      const mriPower = mriCount * 100;
+      equipmentLoadKW += mriPower;
+      equipmentDetails.push(`${mriCount} MRI @ 100kW`);
+    }
+
+    // CT: ~100 kW each
+    const hasCT = inputs.hasCT === true || inputs.hasCT === "true";
+    const ctCount = Number(inputs.ctCount) || (hasCT ? 1 : 0);
+    if (ctCount > 0) {
+      const ctPower = ctCount * 100;
+      equipmentLoadKW += ctPower;
+      equipmentDetails.push(`${ctCount} CT @ 100kW`);
+    }
+
+    // ICU beds: +2 kW each (monitors, ventilators, infusion)
+    const icuBeds = Number(inputs.icuBeds) || 0;
+    if (icuBeds > 0) {
+      const icuPower = icuBeds * 2;
+      equipmentLoadKW += icuPower;
+      equipmentDetails.push(`${icuBeds} ICU beds @ 2kW`);
+    }
+
+    // Sterilization department: ~75 kW (autoclaves, washers)
+    const hasSterilization = inputs.hasSterilization === true || inputs.hasSterilization === "true";
+    if (hasSterilization) {
+      equipmentLoadKW += 75;
+      equipmentDetails.push("Central sterilization @ 75kW");
+    }
+
+    // Lab: ~50 kW (refrigeration, analyzers, centrifuges)
+    const hasLab = inputs.hasLab === true || inputs.hasLab === "true";
+    if (hasLab) {
+      equipmentLoadKW += 50;
+      equipmentDetails.push("Clinical lab @ 50kW");
+    }
+
+    if (equipmentDetails.length > 0) {
+      assumptions.push(`Equipment: ${equipmentDetails.join(", ")}`);
+    }
+
+    // 3. Total peak
+    const peakLoadKW = Math.round(basePowerKW + equipmentLoadKW);
+
+    // 4. Contributor breakdown (percentages of total, not just base)
+    // SSOT rule: HVAC + process/critical + IT should never smear equally
+    const hvacPct = 0.35;
+    const processPct = Math.min(0.3 + (equipmentLoadKW / peakLoadKW) * 0.5, 0.55); // process rises with equipment
+    const itPct = 0.1;
+    const lightingPct = 0.1;
+    const controlsPct = 0.05;
+    const otherPct = Math.max(0.0, 1.0 - hvacPct - processPct - itPct - lightingPct - controlsPct);
+
+    const hvacKW = peakLoadKW * hvacPct;
+    const processKW = peakLoadKW * processPct;
+    const itLoadKW = peakLoadKW * itPct;
+    const lightingKW = peakLoadKW * lightingPct;
+    const controlsKW = peakLoadKW * controlsPct;
+    const otherKW = peakLoadKW * otherPct;
+
+    const kWContributorsTotalKW = hvacKW + processKW + itLoadKW + lightingKW + controlsKW + otherKW;
+
+    // Duty cycle depends on operating hours
+    const dutyCycleMap: Record<string, number> = {
+      "24_7": 0.85,
+      extended: 0.65,
+      limited: 0.4,
+    };
+    const dutyCycle = dutyCycleMap[operatingHours] || 0.85;
     const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    // Critical load (NEC 517 / NFPA 99)
+    const criticalLoadPct = Number(inputs.criticalLoadPct) || 0.85;
 
     const validation: CalcValidation = {
       version: "v1",
@@ -746,25 +835,35 @@ export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
       },
       details: {
         hospital: {
-          medical: processKW * 0.6, // 60% of process = medical equipment
-          surgical: processKW * 0.25, // 25% of process = surgical suites
-          laundry: processKW * 0.15, // 15% of process = laundry/sterilization
+          hospitalType,
+          operatingHours,
+          basePowerKW,
+          equipmentLoadKW,
+          medical: processKW * 0.6,
+          surgical: processKW * 0.25,
+          laundry: processKW * 0.15,
+          criticalLoadPct,
+          criticalLoadKW: Math.round(peakLoadKW * criticalLoadPct),
         },
       },
       notes: [
-        `Hospital: ${bedCount} beds → peak ${peakLoadKW}kW`,
-        `Critical 24/7 operations: dutyCycle=${dutyCycle}`,
+        `Hospital: ${bedCount} beds (${hospitalType}, ${operatingHours}) → peak ${peakLoadKW}kW`,
+        `Critical: ${Math.round(criticalLoadPct * 100)}% = ${Math.round(peakLoadKW * criticalLoadPct)}kW (NEC 517)`,
+        ...(equipmentDetails.length > 0
+          ? [`Equipment adds ${equipmentLoadKW}kW: ${equipmentDetails.join(", ")}`]
+          : []),
+        `dutyCycle=${dutyCycle}`,
       ],
     };
 
     return {
       baseLoadKW,
       peakLoadKW,
-      energyKWhPerDay: Math.round(baseLoadKW * 24), // 24h continuous
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
       assumptions,
       warnings,
       validation,
-      raw: result,
+      raw: baseResult,
     };
   },
 };
