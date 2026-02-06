@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck - WizardV7 has type mismatches with updated hooks (will fix separately)
 import React, { useCallback, useMemo, useEffect, useRef, useState } from "react";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 import {
@@ -76,9 +74,10 @@ export default function WizardV7Page() {
     // Step 1
     updateLocationRaw,
     submitLocation,
-    confirmLocation,
+    primeLocationIntel,
     setBusinessDraft,
     confirmBusiness,
+    skipBusiness,
 
     // Step 2
     selectIndustry,
@@ -92,6 +91,9 @@ export default function WizardV7Page() {
     hasDefaultsApplied,
     markDefaultsApplied,
     resetToDefaults,
+
+    // Step 4: pricing retry
+    retryPricing,
 
     clearError,
 
@@ -472,23 +474,23 @@ export default function WizardV7Page() {
     state.quote,
   ]);
 
-  // Step 1 actions object (compile-time type checking)
+  // Step 1 actions object — must match Step1LocationV7's Actions type exactly
   const step1Actions = useMemo(
     () => ({
       updateLocationRaw,
       submitLocation,
-      confirmLocation,
-      setBusinessDraft,
+      primeLocationIntel,
       confirmBusiness,
-      nextStep,
+      skipBusiness,
+      setBusinessDraft,
     }),
     [
       updateLocationRaw,
       submitLocation,
-      confirmLocation,
-      setBusinessDraft,
+      primeLocationIntel,
       confirmBusiness,
-      nextStep,
+      skipBusiness,
+      setBusinessDraft,
     ]
   );
 
@@ -498,7 +500,7 @@ export default function WizardV7Page() {
         return <Step1LocationV7Clean state={state} actions={step1Actions} />;
 
       case "industry":
-        return <Step2IndustryV7 state={state} selectIndustry={selectIndustry} goBack={goBack} />;
+        return <Step2IndustryV7 state={state} actions={{ selectIndustry, goBack }} />;
 
       case "profile":
         return (
@@ -519,7 +521,17 @@ export default function WizardV7Page() {
         );
 
       case "results":
-        return <Step4ResultsV7 state={state} resetSession={resetSession} />;
+        return (
+          <Step4ResultsV7
+            state={state}
+            actions={{
+              goBack,
+              resetSession,
+              goToStep,
+              retryPricing,
+            }}
+          />
+        );
 
       default:
         return null;
@@ -537,6 +549,8 @@ export default function WizardV7Page() {
     markDefaultsApplied,
     resetToDefaults,
     goBack,
+    goToStep,
+    retryPricing,
   ]);
 
   // For Step 3, we want the shell "Next" disabled to force the Generate Quote action.

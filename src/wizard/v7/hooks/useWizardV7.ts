@@ -2584,8 +2584,69 @@ export function useWizardV7() {
         console.log("[V7 SSOT] selectIndustry: transitioned to profile step");
       } catch (err: unknown) {
         console.error("[V7 SSOT] selectIndustry ERROR:", err);
-        if (isAbort(err)) setError({ code: "ABORTED", message: "Request cancelled." });
-        else setError(err);
+
+        // AbortError = user navigated away — just surface it
+        if (isAbort(err)) {
+          setError({ code: "ABORTED", message: "Request cancelled." });
+          return; // finally still runs
+        }
+
+        // ──────────────────────────────────────────────────────────
+        // RECOVERY: Template load failed → load generic fallback and
+        // navigate to Step 3 anyway. Merlin never gets stuck.
+        // ──────────────────────────────────────────────────────────
+        console.warn("[V7 SSOT] selectIndustry: template load failed — activating fallback path");
+        try {
+          const { getFallbackTemplate } = await import("@/wizard/v7/templates/templateIndex");
+          const genericTpl = getFallbackTemplate();
+
+          const fallbackTemplate: Step3Template = {
+            id: `generic.fallback`,
+            industry: "other" as IndustrySlug,
+            selectedIndustry: industry,
+            version: genericTpl.version,
+            questions: genericTpl.questions.map((q) => ({
+              id: q.id,
+              label: q.label,
+              type: q.type as Step3Template["questions"][number]["type"],
+              required: q.required,
+              options: q.options as Step3Template["questions"][number]["options"],
+              unit: q.unit,
+              hint: q.hint,
+              min: q.min,
+              max: q.max,
+              defaultValue: genericTpl.defaults?.[q.id] as
+                | string
+                | number
+                | boolean
+                | string[]
+                | undefined,
+            })),
+            defaults: genericTpl.defaults,
+            _effectiveTemplate: "generic",
+          };
+
+          dispatch({ type: "SET_STEP3_TEMPLATE", template: fallbackTemplate });
+
+          // Apply generic defaults
+          const { answers: fallbackAnswers } = api.computeSmartDefaults(
+            fallbackTemplate,
+            null,
+            null
+          );
+          dispatch({
+            type: "SET_STEP3_ANSWERS",
+            answers: fallbackAnswers,
+            source: "template_default",
+          });
+
+          console.log("[V7 SSOT] selectIndustry: fallback template loaded, navigating to profile");
+          setStep("profile", "industry_selected_fallback");
+        } catch (fallbackErr: unknown) {
+          // Even the fallback import failed — surface the original error
+          console.error("[V7 SSOT] selectIndustry: fallback also failed", fallbackErr);
+          setError(err);
+        }
       } finally {
         setBusy(false);
         abortRef.current = null;
