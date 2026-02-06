@@ -25,7 +25,7 @@
 import { describe, it, expect } from "vitest";
 import type { IndustryTemplateV1 } from "../types";
 import { validateTemplateAgainstCalculator } from "../validator";
-import { CALCULATORS_BY_ID, DC_LOAD_V1_16Q } from "../../calculators/registry";
+import { CALCULATORS_BY_ID, DC_LOAD_V1_SSOT } from "../../calculators/registry";
 import { applyTemplateMapping } from "../applyMapping";
 
 // Import JSON templates (Vite supports JSON import)
@@ -59,7 +59,7 @@ describe("Industry templates drift detection", () => {
     // 1) Calculator must exist in registry
     const calc = CALCULATORS_BY_ID[tpl.calculator.id];
     expect(calc).toBeTruthy();
-    expect(calc?.id).toBe(DC_LOAD_V1_16Q.id);
+    expect(calc?.id).toBe(DC_LOAD_V1_SSOT.id);
 
     // 2) Template must validate against contract
     const res = validateTemplateAgainstCalculator(tpl, calc!, {
@@ -127,6 +127,15 @@ describe("Industry templates drift detection", () => {
     // Verify transform worked
     expect(inputs.demand_charge_rate).toBe(0); // ifDemandChargeElseZero applied
 
+    // CRITICAL: Verify required calculator keys are present in mapped output
+    for (const req of calc!.requiredInputs) {
+      expect(inputs).toHaveProperty(req);
+    }
+    expect(inputs.itLoadCapacity).toBe(500);
+    expect(inputs.currentPUE).toBe(1.5);
+    expect(inputs.itUtilization).toBe(75);
+    expect(inputs.dataCenterTier).toBe("Tier III");
+
     // Run calculator
     const result = calc!.compute(inputs);
 
@@ -160,7 +169,7 @@ describe("Industry templates drift detection", () => {
 
     const res = validateTemplateAgainstCalculator(tpl, calc!, {
       minQuestions: 16,
-      maxQuestions: 18,
+      maxQuestions: 20,
     });
 
     if (!res.ok) {
@@ -177,7 +186,7 @@ describe("Industry templates drift detection", () => {
       console.warn("[drift test] Hotel warnings:", warnings.map((w) => w.message).join(", "));
     }
 
-    // Hotel should have 18 questions
+    // Hotel has 18 questions
     expect(tpl.questions.length).toBe(18);
   });
 
@@ -233,6 +242,37 @@ describe("Industry templates drift detection", () => {
       const calc = CALCULATORS_BY_ID[template.calculator.id];
       expect(calc).toBeTruthy();
       expect(calc?.id).toBe(template.calculator.id);
+    }
+  });
+
+  /**
+   * MAPPING KEY CORRECTNESS TEST (Phase 1 truth pipeline)
+   *
+   * CRITICAL: Ensures mapping output keys match what calculator adapters ACTUALLY READ
+   *
+   * This catches the "plausible nonsense" bug where mapping sends bay_count
+   * but calculator reads bayTunnelCount — producing silently wrong results
+   * based on defaults instead of user answers.
+   */
+  it("all template mapping output keys include calculator.requiredInputs", () => {
+    const templates = [
+      { tpl: asTemplate(dcTemplate), name: "data_center" },
+      { tpl: asTemplate(hotelTemplate), name: "hotel" },
+      { tpl: asTemplate(carWashTemplate), name: "car_wash" },
+    ];
+
+    for (const { tpl, name } of templates) {
+      const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+      expect(calc).toBeTruthy();
+
+      const mappingOutputKeys = new Set(Object.keys(tpl.mapping));
+
+      for (const req of calc!.requiredInputs) {
+        expect(
+          mappingOutputKeys.has(req),
+          `${name}: mapping must produce key "${req}" (required by calculator ${calc!.id})`
+        ).toBe(true);
+      }
     }
   });
 });

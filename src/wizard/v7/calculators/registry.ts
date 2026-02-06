@@ -109,21 +109,26 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
     const warnings: string[] = [];
     const assumptions: string[] = [];
 
-    // 1. Parse database field format (string ranges)
-    const itLoadCapacity = String(inputs.itLoadCapacity || "500-1000");
+    // 1. Parse fields from template mapping (itLoadCapacity, currentPUE, etc.)
+    //    Then translate to SSOT field names (itLoadKW, rackCount, etc.)
+    const itLoadKW = Number(inputs.itLoadCapacity) || undefined;
     const currentPUE = String(inputs.currentPUE || "1.3-1.5");
     const itUtilization = String(inputs.itUtilization || "60-80%");
     const dataCenterTier = String(inputs.dataCenterTier || "tier_3");
 
-    // 2. Map to SSOT parameters
-    const useCaseData = {
-      itLoadCapacity,
+    // 2. Map to SSOT parameters (field names the SSOT actually reads)
+    const useCaseData: Record<string, unknown> = {
+      itLoadKW: itLoadKW ?? inputs.itLoadCapacity,
       currentPUE,
       itUtilization,
       dataCenterTier,
+      // Pass through any extra fields the SSOT might use
+      rackCount: inputs.rackCount,
+      averageRackDensity: inputs.averageRackDensity,
+      rackDensityKW: inputs.rackDensityKW,
     };
 
-    assumptions.push(`IT load: ${itLoadCapacity}`);
+    assumptions.push(`IT load: ${itLoadKW ?? "default"} kW`);
     assumptions.push(`PUE: ${currentPUE}`);
     assumptions.push(`Utilization: ${itUtilization}`);
     assumptions.push(`Tier: ${dataCenterTier}`);
@@ -166,7 +171,19 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
     const roomCount = Number(inputs.roomCount) || 150;
     const hotelClass = String(inputs.hotelClass || "midscale");
     const occupancyRate = Number(inputs.occupancyRate) || 70;
-    const hotelAmenities = Array.isArray(inputs.hotelAmenities) ? inputs.hotelAmenities : [];
+
+    // Build amenities from either array or individual boolean flags (template format)
+    let hotelAmenities: string[] = [];
+    if (Array.isArray(inputs.hotelAmenities)) {
+      hotelAmenities = inputs.hotelAmenities;
+    } else {
+      // Template sends individual booleans: pool_on_site, spa_on_site, etc.
+      if (inputs.pool_on_site) hotelAmenities.push("pool");
+      if (inputs.spa_on_site) hotelAmenities.push("spa");
+      if (inputs.restaurant_on_site) hotelAmenities.push("restaurant");
+      if (inputs.bar_on_site) hotelAmenities.push("bar");
+      if (inputs.laundry_on_site) hotelAmenities.push("laundry");
+    }
 
     // 2. Map to SSOT parameters
     const useCaseData = {
@@ -216,17 +233,22 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
     const warnings: string[] = [];
     const assumptions: string[] = [];
 
-    // 1. Parse combined bayTunnelCount field
-    const parseBayTunnel = (combined: string): number => {
-      const bayMatch = combined.match(/(\d+)\s*bay/i);
-      const tunnelMatch = combined.match(/(\d+)\s*tunnel/i);
+    // 1. Parse combined bayTunnelCount field (handles both formats)
+    const parseBayTunnel = (combined: unknown): number => {
+      // Handle plain number (from template: bay_count → number)
+      const asNum = Number(combined);
+      if (!isNaN(asNum) && asNum > 0) return Math.round(asNum);
+      // Handle formatted string (from database: "4 bays, 1 tunnel")
+      const str = String(combined || "4 bays");
+      const bayMatch = str.match(/(\d+)\s*bay/i);
+      const tunnelMatch = str.match(/(\d+)\s*tunnel/i);
       return (
         (bayMatch ? parseInt(bayMatch[1]) : 0) || (tunnelMatch ? parseInt(tunnelMatch[1]) : 0) || 1
       );
     };
 
     const bayTunnelStr = String(inputs.bayTunnelCount || "4 bays");
-    const bayCount = parseBayTunnel(bayTunnelStr);
+    const bayCount = parseBayTunnel(inputs.bayTunnelCount);
     const carsPerDay = Number(inputs.averageWashesPerDay) || 200;
     const operatingHours = Number(inputs.operatingHours) || 12;
     const carWashType = String(inputs.carWashType || "tunnel");
@@ -310,19 +332,19 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
     // 4c. Build validation envelope with canonical contributor keys (TrueQuote compliance)
     // Car wash process loads: drying (blowers) + waterPumps (wash system) + vacuums
     const processKW = dryersKW + waterPumpsKW + vacuumsKW;
-    
+
     const validation: CalcValidation = {
       version: "v1", // Versioned contract (prevents silent drift)
       dutyCycle,
       kWContributors: {
-        process: processKW,        // Canonical: car wash-specific loads (dryers+pumps+vacuums)
-        hvac: hvacKW,              // Canonical: climate control
-        lighting: lightingKW,      // Canonical: facility lighting
-        controls: controlsKW,      // Canonical: PLC/payment/controls
-        itLoad: 0,                 // Canonical: IT equipment (not applicable)
-        cooling: 0,                // Canonical: dedicated cooling (not applicable)
-        charging: 0,               // Canonical: EV charging (not applicable)
-        other: otherKW,            // Canonical: miscellaneous
+        process: processKW, // Canonical: car wash-specific loads (dryers+pumps+vacuums)
+        hvac: hvacKW, // Canonical: climate control
+        lighting: lightingKW, // Canonical: facility lighting
+        controls: controlsKW, // Canonical: PLC/payment/controls
+        itLoad: 0, // Canonical: IT equipment (not applicable)
+        cooling: 0, // Canonical: dedicated cooling (not applicable)
+        charging: 0, // Canonical: EV charging (not applicable)
+        other: otherKW, // Canonical: miscellaneous
       },
       kWContributorsTotalKW,
       kWContributorShares: {
@@ -343,7 +365,7 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
         },
       },
       notes: [
-        `Process breakdown: dryers=${dryersKW.toFixed(1)}kW (${((dryersKW/peakLoadKW)*100).toFixed(0)}%), pumps=${waterPumpsKW.toFixed(1)}kW (${((waterPumpsKW/peakLoadKW)*100).toFixed(0)}%), vacuums=${vacuumsKW.toFixed(1)}kW (${((vacuumsKW/peakLoadKW)*100).toFixed(0)}%)`,
+        `Process breakdown: dryers=${dryersKW.toFixed(1)}kW (${((dryersKW / peakLoadKW) * 100).toFixed(0)}%), pumps=${waterPumpsKW.toFixed(1)}kW (${((waterPumpsKW / peakLoadKW) * 100).toFixed(0)}%), vacuums=${vacuumsKW.toFixed(1)}kW (${((vacuumsKW / peakLoadKW) * 100).toFixed(0)}%)`,
       ],
     };
 
@@ -353,7 +375,7 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
       energyKWhPerDay,
       assumptions,
       warnings,
-      validation,  // TrueQuote validation envelope (namespaced, clean)
+      validation, // TrueQuote validation envelope (namespaced, clean)
       raw: result,
     };
   },
