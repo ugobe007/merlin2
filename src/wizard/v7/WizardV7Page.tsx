@@ -365,7 +365,13 @@ export default function WizardV7Page() {
       }
 
       if (state.step === "results") {
-        if (state.templateMode === "fallback") {
+        // TrueQuote™ claim requires BOTH conditions:
+        // 1. templateMode === "industry" (not generic fallback)
+        // 2. confidence.industry === "v1" (validated template, not fallback confidence)
+        const isTrueQuoteEligible =
+          state.templateMode === "industry" && state.quote?.confidence?.industry === "v1";
+
+        if (!isTrueQuoteEligible) {
           return {
             message:
               "This is a preliminary estimate based on a general facility model. For a TrueQuote™ with full source attribution, try reloading the industry profile.",

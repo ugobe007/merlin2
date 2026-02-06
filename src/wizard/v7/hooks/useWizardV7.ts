@@ -1079,6 +1079,8 @@ const api = {
         template?: Step3Template;
         reason?: string;
         notes?: string[];
+        requestedIndustry?: string;
+        availableIndustries?: string[];
       }>(API_ENDPOINTS.TEMPLATE_LOAD, {
         method: "POST",
         body: JSON.stringify({ industry: effective }),
@@ -1091,7 +1093,17 @@ const api = {
         _apiError = {
           code: "API",
           message: response.notes?.join(" ") || `Template not found for ${selected}`,
+          reason: response.reason,
         };
+
+        if (import.meta.env.DEV) {
+          console.warn(
+            `[V7 SSOT] Template API returned {ok:false}:`,
+            `reason=${response.reason}`,
+            `industry=${response.requestedIndustry ?? effective}`,
+            `available=[${response.availableIndustries?.join(", ") ?? "?"}]`
+          );
+        }
       }
     } catch (err: unknown) {
       // AbortError should propagate immediately — user navigated away
@@ -2292,7 +2304,10 @@ export function useWizardV7() {
           dispatch({ type: "DEBUG_TAG", lastApi: "loadStep3Template" });
           const template = await api.loadStep3Template(inferred.industry, controller.signal);
           dispatch({ type: "SET_STEP3_TEMPLATE", template });
-          dispatch({ type: "SET_TEMPLATE_MODE", mode: template.industry === "generic" ? "fallback" : "industry" });
+          dispatch({
+            type: "SET_TEMPLATE_MODE",
+            mode: template.industry === "generic" ? "fallback" : "industry",
+          });
 
           // ✅ PROVENANCE: Apply baseline defaults (template + question defaults)
           const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
@@ -2486,7 +2501,10 @@ export function useWizardV7() {
           dispatch({ type: "DEBUG_TAG", lastApi: "loadStep3Template" });
           const template = await api.loadStep3Template(inferred.industry, controller.signal);
           dispatch({ type: "SET_STEP3_TEMPLATE", template });
-          dispatch({ type: "SET_TEMPLATE_MODE", mode: template.industry === "generic" ? "fallback" : "industry" });
+          dispatch({
+            type: "SET_TEMPLATE_MODE",
+            mode: template.industry === "generic" ? "fallback" : "industry",
+          });
 
           // ✅ PROVENANCE: Apply baseline defaults (template + question defaults)
           const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
@@ -3283,13 +3301,16 @@ export function useWizardV7() {
         dispatch({ type: "PATCH_STEP3_ANSWERS", patch, source: "template_default" });
       }
 
-      console.log("[V7] Template retry result:", template.industry === "generic" ? "fallback" : "industry");
+      console.log(
+        "[V7] Template retry result:",
+        template.industry === "generic" ? "fallback" : "industry"
+      );
     } catch (err) {
       console.warn("[V7] Template retry failed:", err instanceof Error ? err.message : err);
     } finally {
       setBusy(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- setBusy is stable (useState setter)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setBusy is stable (useState setter)
   }, [state.industry, state.templateMode, state.step3Answers]);
 
   // Step 3: validate + go to results (pricing is NON-BLOCKING)
@@ -3489,7 +3510,10 @@ export function useWizardV7() {
             setBusy(true, "Loading profile template...");
             const template = await api.loadStep3Template(state.industry, controller.signal);
             dispatch({ type: "SET_STEP3_TEMPLATE", template });
-            dispatch({ type: "SET_TEMPLATE_MODE", mode: template.industry === "generic" ? "fallback" : "industry" });
+            dispatch({
+              type: "SET_TEMPLATE_MODE",
+              mode: template.industry === "generic" ? "fallback" : "industry",
+            });
 
             // ✅ PROVENANCE: Apply baseline defaults on navigation too
             const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);

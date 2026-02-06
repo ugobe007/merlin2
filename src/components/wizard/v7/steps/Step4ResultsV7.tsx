@@ -1,5 +1,9 @@
 import React, { useMemo } from "react";
-import type { WizardState as WizardV7State, WizardStep, PricingStatus } from "@/wizard/v7/hooks/useWizardV7";
+import type {
+  WizardState as WizardV7State,
+  WizardStep,
+  PricingStatus,
+} from "@/wizard/v7/hooks/useWizardV7";
 import { sanitizeQuoteForDisplay } from "@/wizard/v7/utils/pricingSanity";
 
 type Props = {
@@ -106,35 +110,36 @@ export default function Step4ResultsV7({ state, actions }: Props) {
 
   // Raw quote from state (may contain poison: NaN, Infinity, negative)
   const quoteRaw = state.quote ?? null;
-  
+
   // Sanitized quote — poison values replaced with null for safe rendering
   // Now includes Layer A (load profile) + Layer B (financial metrics)
   const quote = useMemo(
-    () => sanitizeQuoteForDisplay(quoteRaw) as Record<string, unknown> & {
-      // Layer A: Load Profile
-      baseLoadKW?: number | null;
-      peakLoadKW?: number | null;
-      energyKWhPerDay?: number | null;
-      storageToPeakRatio?: number | null;
-      durationHours?: number | null;
-      // Layer B: Financial Metrics
-      capexUSD?: number | null;
-      annualSavingsUSD?: number | null;
-      roiYears?: number | null;
-      npv?: number | null;
-      irr?: number | null;
-      paybackYears?: number | null;
-      demandChargeSavings?: number | null;
-      // Equipment Sizing
-      bessKWh?: number | null;
-      bessKW?: number | null;
-      solarKW?: number | null;
-      generatorKW?: number | null;
-      // Audit
-      pricingSnapshotId?: string | null;
-      pricingComplete?: boolean | null;
-      notes?: string[];
-    },
+    () =>
+      sanitizeQuoteForDisplay(quoteRaw) as Record<string, unknown> & {
+        // Layer A: Load Profile
+        baseLoadKW?: number | null;
+        peakLoadKW?: number | null;
+        energyKWhPerDay?: number | null;
+        storageToPeakRatio?: number | null;
+        durationHours?: number | null;
+        // Layer B: Financial Metrics
+        capexUSD?: number | null;
+        annualSavingsUSD?: number | null;
+        roiYears?: number | null;
+        npv?: number | null;
+        irr?: number | null;
+        paybackYears?: number | null;
+        demandChargeSavings?: number | null;
+        // Equipment Sizing
+        bessKWh?: number | null;
+        bessKW?: number | null;
+        solarKW?: number | null;
+        generatorKW?: number | null;
+        // Audit
+        pricingSnapshotId?: string | null;
+        pricingComplete?: boolean | null;
+        notes?: string[];
+      },
     [quoteRaw]
   );
 
@@ -221,10 +226,9 @@ export default function Step4ResultsV7({ state, actions }: Props) {
         >
           <div style={{ fontWeight: 700 }}>⚠️ Provisional Results</div>
           <div style={{ marginTop: 6, fontSize: 13, opacity: 0.9 }}>
-            {quote.missingInputs && quote.missingInputs.length > 0 
+            {quote.missingInputs && quote.missingInputs.length > 0
               ? `${quote.missingInputs.length} inputs missing — using defaults. `
-              : "Some inputs missing — using defaults. "
-            }
+              : "Some inputs missing — using defaults. "}
             Results may not reflect your actual load profile.
             <button
               onClick={() => actions.goToStep?.("profile")}
@@ -264,9 +268,9 @@ export default function Step4ResultsV7({ state, actions }: Props) {
         >
           <div style={{ fontWeight: 700, fontSize: 14 }}>📋 Estimate Mode</div>
           <div style={{ marginTop: 6, fontSize: 13, opacity: 0.9 }}>
-            This quote uses a general facility model because the industry-specific profile
-            wasn't available. Numbers are directionally correct but won't carry TrueQuote™
-            source attribution.
+            This quote uses a general facility model because the industry-specific profile wasn't
+            available. Numbers are directionally correct but won't carry TrueQuote™ source
+            attribution.
           </div>
           {actions.retryTemplate && (
             <button
@@ -392,7 +396,8 @@ export default function Step4ResultsV7({ state, actions }: Props) {
               opacity: 0.9,
             }}
           >
-            The quote calculation exceeded the time limit. Your load profile is still available below.
+            The quote calculation exceeded the time limit. Your load profile is still available
+            below.
           </div>
           {actions.retryPricing && (
             <button
@@ -510,9 +515,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
         </div>
 
         {pricingStatus === "pending" ? (
-          <div style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>
-            ⏳ Calculating quote…
-          </div>
+          <div style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>⏳ Calculating quote…</div>
         ) : pricingStatus === "error" ? (
           <div style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>
             ❌ Quote unavailable due to pricing error. Use the Retry button above.
@@ -525,22 +528,56 @@ export default function Step4ResultsV7({ state, actions }: Props) {
           <div style={{ marginTop: 10 }}>
             {/* Load Profile Section (Layer A) */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.6, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  opacity: 0.6,
+                  marginBottom: 8,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
                 Load Profile
               </div>
               <Row k="Base Load" v={quote.baseLoadKW ? `${fmtNum(quote.baseLoadKW)} kW` : "—"} />
               <Row k="Peak Load" v={quote.peakLoadKW ? `${fmtNum(quote.peakLoadKW)} kW` : "—"} />
-              <Row k="Daily Energy" v={quote.energyKWhPerDay ? `${fmtNum(Math.round(quote.energyKWhPerDay))} kWh/day` : "—"} />
+              <Row
+                k="Daily Energy"
+                v={
+                  quote.energyKWhPerDay
+                    ? `${fmtNum(Math.round(quote.energyKWhPerDay))} kWh/day`
+                    : "—"
+                }
+              />
             </div>
 
             {/* Equipment Sizing Section */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.6, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  opacity: 0.6,
+                  marginBottom: 8,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
                 Recommended Equipment
               </div>
-              <Row k="BESS Capacity" v={quote.bessKWh ? `${fmtNum(Math.round(quote.bessKWh))} kWh` : "—"} />
-              <Row k="BESS Power" v={quote.bessKW ? `${fmtNum(Math.round(quote.bessKW))} kW` : "—"} />
-              <Row k="Duration" v={quote.durationHours ? `${fmtNum(quote.durationHours)} hrs` : "—"} />
+              <Row
+                k="BESS Capacity"
+                v={quote.bessKWh ? `${fmtNum(Math.round(quote.bessKWh))} kWh` : "—"}
+              />
+              <Row
+                k="BESS Power"
+                v={quote.bessKW ? `${fmtNum(Math.round(quote.bessKW))} kW` : "—"}
+              />
+              <Row
+                k="Duration"
+                v={quote.durationHours ? `${fmtNum(quote.durationHours)} hrs` : "—"}
+              />
               {quote.solarKW && quote.solarKW > 0 && (
                 <Row k="Solar" v={`${fmtNum(Math.round(quote.solarKW))} kW`} />
               )}
@@ -551,77 +588,125 @@ export default function Step4ResultsV7({ state, actions }: Props) {
 
             {/* Financial Summary Section (Layer B) */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.6, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  opacity: 0.6,
+                  marginBottom: 8,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
                 Financial Summary
               </div>
               <Row k="Total Investment" v={fmtUSD(quote.capexUSD as number | null)} />
               <Row k="Annual Savings" v={fmtUSD(quote.annualSavingsUSD as number | null)} />
               {quote.demandChargeSavings && (
-                <Row k="Demand Charge Savings" v={fmtUSD(quote.demandChargeSavings as number | null)} />
+                <Row
+                  k="Demand Charge Savings"
+                  v={fmtUSD(quote.demandChargeSavings as number | null)}
+                />
               )}
-              <Row k="Simple Payback" v={quote.roiYears ? `${fmtNum(Number(quote.roiYears).toFixed(1))} years` : "—"} />
+              <Row
+                k="Simple Payback"
+                v={quote.roiYears ? `${fmtNum(Number(quote.roiYears).toFixed(1))} years` : "—"}
+              />
               {quote.npv && <Row k="NPV (25yr)" v={fmtUSD(quote.npv as number | null)} />}
-              {quote.irr && <Row k="IRR" v={quote.irr ? `${(Number(quote.irr) * 100).toFixed(1)}%` : "—"} />}
+              {quote.irr && (
+                <Row k="IRR" v={quote.irr ? `${(Number(quote.irr) * 100).toFixed(1)}%` : "—"} />
+              )}
               {quote.paybackYears && (
-                <Row k="Discounted Payback" v={`${fmtNum(Number(quote.paybackYears).toFixed(1))} years`} />
+                <Row
+                  k="Discounted Payback"
+                  v={`${fmtNum(Number(quote.paybackYears).toFixed(1))} years`}
+                />
               )}
             </div>
 
-            {/* Pricing Status Badge */}
-            {quote.pricingComplete && state.templateMode !== "fallback" ? (
-              <div style={{ 
-                display: "inline-flex", 
-                alignItems: "center", 
-                gap: 6, 
-                padding: "6px 12px", 
-                borderRadius: 8, 
-                background: "rgba(34, 197, 94, 0.1)", 
-                border: "1px solid rgba(34, 197, 94, 0.3)",
-                color: "#16a34a",
-                fontSize: 12,
-                fontWeight: 600,
-                marginBottom: 12,
-              }}>
-                ✓ TrueQuote™ Complete
-                {quote.pricingSnapshotId && (
-                  <span style={{ opacity: 0.7, fontSize: 10, fontFamily: "monospace" }}>
-                    #{quote.pricingSnapshotId.slice(0, 8)}
-                  </span>
-                )}
-              </div>
-            ) : quote.pricingComplete && state.templateMode === "fallback" ? (
-              <div style={{ 
-                display: "inline-flex", 
-                alignItems: "center", 
-                gap: 6, 
-                padding: "6px 12px", 
-                borderRadius: 8, 
-                background: "rgba(59, 130, 246, 0.1)", 
-                border: "1px solid rgba(59, 130, 246, 0.3)",
-                color: "#2563eb",
-                fontSize: 12,
-                fontWeight: 600,
-                marginBottom: 12,
-              }}>
-                📊 Estimate — Based on general facility model
-              </div>
-            ) : (
-              <div style={{ 
-                display: "inline-flex", 
-                alignItems: "center", 
-                gap: 6, 
-                padding: "6px 12px", 
-                borderRadius: 8, 
-                background: "rgba(251, 191, 36, 0.1)", 
-                border: "1px solid rgba(251, 191, 36, 0.3)",
-                color: "#b45309",
-                fontSize: 12,
-                fontWeight: 600,
-                marginBottom: 12,
-              }}>
-                ⚠️ Load Profile Only — Financial calculations pending
-              </div>
-            )}
+            {/* ============================================================
+                PRICING STATUS BADGE — TrueQuote™ Honesty Rules:
+                ✓ TrueQuote™ Complete  → pricingComplete + templateMode=industry + confidence.industry=v1
+                📊 Estimate Mode       → pricingComplete + (fallback template OR fallback confidence)
+                ⚠️ Load Profile Only   → pricing not yet complete
+                INVARIANT: confidence.industry !== "v1" → NEVER show TrueQuote™ Complete
+            ============================================================ */}
+            {(() => {
+              const isTrueQuote =
+                quote.pricingComplete &&
+                state.templateMode !== "fallback" &&
+                quote.confidence?.industry !== "fallback";
+              const isEstimate =
+                quote.pricingComplete &&
+                (state.templateMode === "fallback" || quote.confidence?.industry === "fallback");
+
+              if (isTrueQuote) {
+                return (
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "6px 12px",
+                      borderRadius: 8,
+                      background: "rgba(34, 197, 94, 0.1)",
+                      border: "1px solid rgba(34, 197, 94, 0.3)",
+                      color: "#16a34a",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      marginBottom: 12,
+                    }}
+                  >
+                    ✓ TrueQuote™ Complete
+                    {quote.pricingSnapshotId && (
+                      <span style={{ opacity: 0.7, fontSize: 10, fontFamily: "monospace" }}>
+                        #{quote.pricingSnapshotId.slice(0, 8)}
+                      </span>
+                    )}
+                  </div>
+                );
+              }
+              if (isEstimate) {
+                return (
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "6px 12px",
+                      borderRadius: 8,
+                      background: "rgba(59, 130, 246, 0.1)",
+                      border: "1px solid rgba(59, 130, 246, 0.3)",
+                      color: "#2563eb",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      marginBottom: 12,
+                    }}
+                  >
+                    📊 Estimate — Based on general facility model
+                  </div>
+                );
+              }
+              return (
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    background: "rgba(251, 191, 36, 0.1)",
+                    border: "1px solid rgba(251, 191, 36, 0.3)",
+                    color: "#b45309",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    marginBottom: 12,
+                  }}
+                >
+                  ⚠️ Load Profile Only — Financial calculations pending
+                </div>
+              );
+            })()}
 
             <div style={{ marginTop: 12 }}>
               <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>Notes & Assumptions</div>
