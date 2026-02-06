@@ -4,7 +4,7 @@ import type {
   WizardState as WizardV7State,
   OptionItem,
 } from "@/wizard/v7/hooks/useWizardV7";
-import { getTier1Blockers, isBlockerQuestion } from "@/wizard/v7/schema/curatedFieldsResolver";
+import { getTier1Blockers } from "@/wizard/v7/schema/curatedFieldsResolver";
 
 // ============================================================================
 // INDUSTRY IMAGE IMPORTS (Vite-safe for production builds)
@@ -24,11 +24,11 @@ type Step3Answers = Record<string, unknown>;
 
 /**
  * MINIMAL ACTIONS CONTRACT (Feb 1, 2026)
- * 
+ *
  * This step ONLY needs:
  * - setStep3Answer: update a single answer
  * - submitStep3: move to results (optional, shell may handle nav)
- * 
+ *
  * We DO NOT call:
  * - canApplyDefaults (was causing crashes)
  * - canResetToDefaults (not needed for gate compliance)
@@ -44,7 +44,7 @@ type Props = {
   actions?: {
     setStep3Answer?: (id: string, value: unknown) => void;
     submitStep3?: (answersOverride?: Step3Answers) => Promise<void>;
-    submitStep3Partial?: () => Promise<void>;  // Escape hatch for incomplete
+    submitStep3Partial?: () => Promise<void>; // Escape hatch for incomplete
     goBack?: () => void;
   };
 
@@ -87,7 +87,7 @@ function isAnswered(value: unknown): boolean {
   if (typeof value === "number") return Number.isFinite(value);
   if (typeof value === "boolean") return true;
   if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") return Object.keys(value as any).length > 0;
+  if (typeof value === "object") return Object.keys(value as Record<string, unknown>).length > 0;
   return true;
 }
 
@@ -123,20 +123,19 @@ export default function Step3ProfileV7(props: Props) {
   const { state, updateState, actions } = props;
 
   // Prefer explicit props if your shell passes them; otherwise read from state.
-  const template: Step3Template | null =
-    (props.template as any) ??
-    ((state as any).step3Template ?? (state as any).profileTemplate ?? null);
+  const template: Step3Template | null = props.template ?? state.step3Template ?? null;
 
-  const answers: Step3Answers =
-    (props.answers as any) ??
-    ((state as any).step3Answers ?? (state as any).profileAnswers ?? {});
+  const answers: Step3Answers = useMemo(
+    () => props.answers ?? state.step3Answers ?? {},
+    [props.answers, state.step3Answers]
+  );
 
-  const industry = (state as any).industry ?? (state as any).industry?.selected;
+  const industry = state.industry;
 
   const hero = useMemo(() => getIndustryHero(industry), [industry]);
 
   const questions: QuestionLike[] = useMemo(() => {
-    const q = (template as any)?.questions;
+    const q = template?.questions;
     return Array.isArray(q) ? (q as QuestionLike[]) : [];
   }, [template]);
 
@@ -149,12 +148,12 @@ export default function Step3ProfileV7(props: Props) {
     if (!industry) return [];
     const tier1 = getTier1Blockers(industry);
     // Only include blockers that exist in the current question set
-    return tier1.filter(id => questions.some(q => q.id === id));
+    return tier1.filter((id) => questions.some((q) => q.id === id));
   }, [industry, questions]);
 
   // Tier 2: Recommended IDs (doesn't gate, but shown as "recommended")
-  const recommendedIds: string[] = useMemo(() => {
-    return requiredIds.filter(id => !blockerIds.includes(id));
+  const _recommendedIds: string[] = useMemo(() => {
+    return requiredIds.filter((id) => !blockerIds.includes(id));
   }, [requiredIds, blockerIds]);
 
   const missingRequired: string[] = useMemo(() => {
@@ -181,40 +180,47 @@ export default function Step3ProfileV7(props: Props) {
    * - If template is absent OR has no blocker questions => allow continue (non-blocking)
    * - If Tier 1 blockers exist => gate until all blockers answered
    * - Tier 2 (recommended) questions don't gate, but shown as "recommended" for emphasis
-   * 
+   *
    * Updated: Feb 3, 2026 — Car wash reduced from 24 to 8 blockers
    */
   const step3Complete: boolean = useMemo(() => {
     if (!template) return true;
-    if (!blockerIds.length) return true;  // No blockers = always passable
-    return missingBlockers.length === 0;  // Only blockers gate completion
+    if (!blockerIds.length) return true; // No blockers = always passable
+    return missingBlockers.length === 0; // Only blockers gate completion
   }, [template, blockerIds.length, missingBlockers.length]);
 
   // Write completion back to state for gates (SSOT)
   // NOTE: Only needed when shell uses updateState pattern
+  //
+  // step3MissingRequired / step3MissingBlockers are runtime-patched via updateState
+  // but do not exist on the WizardV7State type. We use a typed accessor to avoid `as any`.
+  type StateWithGatePatch = WizardV7State & {
+    step3MissingRequired?: string[];
+    step3MissingBlockers?: string[];
+  };
+  const stateExt = state as StateWithGatePatch;
+
   useEffect(() => {
     if (!updateState) return;
 
-    const current = (state as any).step3Complete;
-    const currentMissing = (state as any).step3MissingRequired;
-    const currentMissingBlockers = (state as any).step3MissingBlockers;
+    const current = stateExt.step3Complete;
+    const currentMissing = stateExt.step3MissingRequired;
+    const currentMissingBlockers = stateExt.step3MissingBlockers;
 
     // Avoid loops: only write when changes
-    const missingChanged =
-      Array.isArray(currentMissing)
-        ? currentMissing.join("|") !== missingRequired.join("|")
-        : missingRequired.length > 0;
-    
-    const blockersChanged =
-      Array.isArray(currentMissingBlockers)
-        ? currentMissingBlockers.join("|") !== missingBlockers.join("|")
-        : missingBlockers.length > 0;
+    const missingChanged = Array.isArray(currentMissing)
+      ? currentMissing.join("|") !== missingRequired.join("|")
+      : missingRequired.length > 0;
+
+    const blockersChanged = Array.isArray(currentMissingBlockers)
+      ? currentMissingBlockers.join("|") !== missingBlockers.join("|")
+      : missingBlockers.length > 0;
 
     if (current !== step3Complete || missingChanged || blockersChanged) {
       updateState({
         step3Complete,
         step3MissingRequired: missingRequired,
-        step3MissingBlockers: missingBlockers,  // NEW: Track blocker progress
+        step3MissingBlockers: missingBlockers,
       } as Partial<WizardV7State>);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -267,11 +273,15 @@ export default function Step3ProfileV7(props: Props) {
             onChange={(e) => setAnswer(q.id, e.target.value)}
           >
             <option value="">Select…</option>
-            {opts.map((o: any) => (
-              <option key={o.value ?? o.id ?? o.label} value={asString(o.value ?? o.id ?? o.label)}>
-                {o.label ?? o.name ?? asString(o.value)}
-              </option>
-            ))}
+            {opts.map((o) => {
+              const optVal = typeof o === "string" ? o : o.value;
+              const optLabel = typeof o === "string" ? o : o.label;
+              return (
+                <option key={optVal} value={optVal}>
+                  {optLabel}
+                </option>
+              );
+            })}
           </select>
         </div>
       );
@@ -355,8 +365,8 @@ export default function Step3ProfileV7(props: Props) {
           {/* Step3SystemAssist requires SSOT actions we no longer have.
               For now, show a simple banner. Replace when actions are wired. */}
           <div className="rounded-lg bg-slate-800/50 p-3 text-sm text-slate-300">
-            <span className="text-slate-100 font-medium">💡 Tip:</span>{" "}
-            Fill in your facility details below for an accurate quote.
+            <span className="text-slate-100 font-medium">💡 Tip:</span> Fill in your facility
+            details below for an accurate quote.
           </div>
 
           {/* Fallback mode banner — visible when using generic template */}
@@ -364,7 +374,8 @@ export default function Step3ProfileV7(props: Props) {
             <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-950/30 p-3 text-sm text-amber-200">
               <span className="font-medium text-amber-100">📋 General template active</span>
               <span className="mx-1.5 text-amber-500/50">·</span>
-              I'm using a universal questionnaire so you can keep going. Once the industry profile loads, I'll tighten the assumptions.
+              I'm using a universal questionnaire so you can keep going. Once the industry profile
+              loads, I'll tighten the assumptions.
             </div>
           )}
         </div>
@@ -399,9 +410,10 @@ export default function Step3ProfileV7(props: Props) {
           disabled={!step3Complete || state.pricingStatus === "pending"}
           className={`
             px-6 py-3 rounded-xl font-bold text-base transition-all
-            ${step3Complete && state.pricingStatus !== "pending"
-              ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 cursor-pointer"
-              : "bg-slate-800 text-slate-500 cursor-not-allowed"
+            ${
+              step3Complete && state.pricingStatus !== "pending"
+                ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 cursor-pointer"
+                : "bg-slate-800 text-slate-500 cursor-not-allowed"
             }
           `}
         >
