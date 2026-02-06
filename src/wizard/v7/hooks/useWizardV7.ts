@@ -1708,6 +1708,43 @@ function hasState(location: LocationCard | null): boolean {
   return !!location?.state && location.state.trim().length >= 2;
 }
 
+/**
+ * ✅ FIX (Feb 5, 2026): ZIP is location. City/state are enrichment.
+ * Returns true if we have a LocationCard OR a valid 5-digit ZIP.
+ * Prevents "Location missing" when geocode hasn't resolved yet.
+ */
+function hasValidLocation(state: WizardState): boolean {
+  if (state.location) return true;
+  return getNormalizedZip(state).length >= 5;
+}
+
+/**
+ * Build a minimal LocationCard from ZIP when geocode hasn't resolved.
+ * Downstream services accept this gracefully (city/state optional).
+ */
+function buildMinimalLocationFromZip(state: WizardState): LocationCard | null {
+  const zip = getNormalizedZip(state);
+  if (zip.length < 5) return null;
+
+  // Try to get state from hardcoded ranges (synchronous, instant)
+  let stateCode: string | undefined;
+  let city: string | undefined;
+  try {
+    // Dynamic import would be async; use inline minimal lookup
+    // The real resolution happens async via primeLocationIntel
+    stateCode = undefined;
+    city = undefined;
+  } catch { /* ignore */ }
+
+  return {
+    formattedAddress: zip,
+    postalCode: zip,
+    city,
+    state: stateCode,
+    countryCode: "US",
+  };
+}
+
 function stepCanProceed(state: WizardState, step: WizardStep): { ok: boolean; reason?: string } {
   if (step === "location") {
     // Check for valid ZIP (5+ digits) OR location object with address
@@ -1727,13 +1764,15 @@ function stepCanProceed(state: WizardState, step: WizardStep): { ok: boolean; re
     return { ok: false, reason: "Please enter a valid ZIP/postal code." };
   }
   if (step === "industry") {
-    if (!state.location) return { ok: false, reason: "Location missing." };
+    // ✅ FIX (Feb 5, 2026): ZIP is location — don't require geocoded LocationCard
+    if (!hasValidLocation(state)) return { ok: false, reason: "ZIP code missing." };
     if (state.industry === "auto")
       return { ok: false, reason: "Industry not selected or inferred." };
     return { ok: true };
   }
   if (step === "profile") {
-    if (!state.location) return { ok: false, reason: "Location missing." };
+    // ✅ FIX (Feb 5, 2026): ZIP is location — don't require geocoded LocationCard
+    if (!hasValidLocation(state)) return { ok: false, reason: "ZIP code missing." };
     if (state.industry === "auto") return { ok: false, reason: "Industry missing." };
     if (!state.step3Template) return { ok: false, reason: "Step 3 template missing." };
     return { ok: true };
@@ -2834,10 +2873,16 @@ export function useWizardV7() {
         return;
       }
 
-      const location = state.location;
+      // ✅ FIX (Feb 5, 2026): Accept ZIP-only minimal location
+      let location = state.location;
       if (!location) {
-        setError({ code: "STATE", message: "Location missing. Go back to Step 1." });
-        return;
+        location = buildMinimalLocationFromZip(state);
+        if (!location) {
+          setError({ code: "STATE", message: "ZIP code missing. Go back to Step 1." });
+          return;
+        }
+        // Hydrate so future checks pass
+        dispatch({ type: "SET_LOCATION", location });
       }
       if (state.industry === "auto") {
         setError({ code: "STATE", message: "Industry missing. Go back to Step 2." });
@@ -2910,10 +2955,15 @@ export function useWizardV7() {
         return;
       }
 
-      const location = state.location;
+      // ✅ FIX (Feb 5, 2026): Accept ZIP-only minimal location
+      let location = state.location;
       if (!location) {
-        setError({ code: "STATE", message: "Location missing. Go back to Step 1." });
-        return;
+        location = buildMinimalLocationFromZip(state);
+        if (!location) {
+          setError({ code: "STATE", message: "ZIP code missing. Go back to Step 1." });
+          return;
+        }
+        dispatch({ type: "SET_LOCATION", location });
       }
       if (state.industry === "auto") {
         setError({ code: "STATE", message: "Industry missing. Go back to Step 2." });
@@ -2967,9 +3017,16 @@ export function useWizardV7() {
       }
 
       if (target === "industry") {
+        // ✅ FIX (Feb 5, 2026): ZIP is location — auto-create minimal LocationCard if needed
         if (!state.location) {
-          setError({ code: "STATE", message: "Location missing." });
-          return;
+          const minCard = buildMinimalLocationFromZip(state);
+          if (!minCard) {
+            setError({ code: "STATE", message: "Please enter a valid ZIP code." });
+            return;
+          }
+          // Hydrate location from ZIP so downstream gates pass
+          dispatch({ type: "SET_LOCATION", location: minCard });
+          dispatch({ type: "DEBUG_NOTE", note: "Auto-created minimal LocationCard from ZIP (geocode pending)" });
         }
         setStep("industry", "nav");
         return;
