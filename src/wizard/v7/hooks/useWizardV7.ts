@@ -361,6 +361,7 @@ export type WizardState = {
 
   // Step 3: profile template + answers
   step3Template: Step3Template | null;
+  templateMode: "industry" | "fallback"; // Whether using real industry template or generic fallback
   step3Answers: Step3Answers;
   step3AnswersMeta: Step3AnswersMeta; // Provenance tracking
   step3Complete: boolean;
@@ -419,6 +420,7 @@ type Intent =
   | { type: "SET_BUSINESS_CONFIRMED"; confirmed: boolean }
   | { type: "SET_INDUSTRY"; industry: IndustrySlug; locked?: boolean }
   | { type: "SET_STEP3_TEMPLATE"; template: Step3Template | null }
+  | { type: "SET_TEMPLATE_MODE"; mode: "industry" | "fallback" }
   | { type: "SET_STEP3_ANSWER"; id: string; value: unknown; source?: AnswerSource }
   | { type: "SET_STEP3_ANSWERS"; answers: Step3Answers; source?: AnswerSource }
   | { type: "PATCH_STEP3_ANSWERS"; patch: Step3Answers; source: AnswerSource } // Intel/detection patches
@@ -1289,6 +1291,7 @@ function initialState(): WizardState {
     industryLocked: false,
 
     step3Template: null,
+    templateMode: "industry",
     step3Answers: {},
     step3AnswersMeta: {}, // Provenance tracking
     step3Complete: false,
@@ -1458,6 +1461,9 @@ function reduce(state: WizardState, intent: Intent): WizardState {
 
     case "SET_STEP3_TEMPLATE":
       return { ...state, step3Template: intent.template };
+
+    case "SET_TEMPLATE_MODE":
+      return { ...state, templateMode: intent.mode };
 
     case "SET_STEP3_ANSWER": {
       // Single answer mutation with provenance tracking
@@ -2286,6 +2292,7 @@ export function useWizardV7() {
           dispatch({ type: "DEBUG_TAG", lastApi: "loadStep3Template" });
           const template = await api.loadStep3Template(inferred.industry, controller.signal);
           dispatch({ type: "SET_STEP3_TEMPLATE", template });
+          dispatch({ type: "SET_TEMPLATE_MODE", mode: template.industry === "generic" ? "fallback" : "industry" });
 
           // ✅ PROVENANCE: Apply baseline defaults (template + question defaults)
           const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
@@ -2479,6 +2486,7 @@ export function useWizardV7() {
           dispatch({ type: "DEBUG_TAG", lastApi: "loadStep3Template" });
           const template = await api.loadStep3Template(inferred.industry, controller.signal);
           dispatch({ type: "SET_STEP3_TEMPLATE", template });
+          dispatch({ type: "SET_TEMPLATE_MODE", mode: template.industry === "generic" ? "fallback" : "industry" });
 
           // ✅ PROVENANCE: Apply baseline defaults (template + question defaults)
           const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
@@ -2553,6 +2561,7 @@ export function useWizardV7() {
         const template = await api.loadStep3Template(industry, controller.signal);
         console.log("[V7 SSOT] selectIndustry: template loaded", template?.id);
         dispatch({ type: "SET_STEP3_TEMPLATE", template });
+        dispatch({ type: "SET_TEMPLATE_MODE", mode: "industry" });
 
         // ✅ PROVENANCE: Apply baseline defaults (template + question defaults)
         const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
@@ -2627,6 +2636,7 @@ export function useWizardV7() {
           };
 
           dispatch({ type: "SET_STEP3_TEMPLATE", template: fallbackTemplate });
+          dispatch({ type: "SET_TEMPLATE_MODE", mode: "fallback" });
 
           // Apply generic defaults
           const { answers: fallbackAnswers } = api.computeSmartDefaults(
@@ -3234,6 +3244,54 @@ export function useWizardV7() {
     });
   }, [runPricingSafe, state.industry, state.step3Answers, state.location, state.locationIntel]);
 
+  /**
+   * retryTemplate — Attempt to reload an industry-specific template when currently in fallback mode.
+   * Exposed to Step 4 so users can upgrade from "Estimate" → "TrueQuote™" without restarting.
+   */
+  const retryTemplate = useCallback(async () => {
+    if (state.industry === "auto") {
+      console.warn("[V7] Cannot retry template: industry not set");
+      return;
+    }
+    if (state.templateMode === "industry") {
+      console.log("[V7] Already have industry template — skipping retry");
+      return;
+    }
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      setBusy(true, "Retrying industry template...");
+      const template = await api.loadStep3Template(state.industry, controller.signal);
+      dispatch({ type: "SET_STEP3_TEMPLATE", template });
+      dispatch({
+        type: "SET_TEMPLATE_MODE",
+        mode: template.industry === "generic" ? "fallback" : "industry",
+      });
+
+      // Re-apply defaults from the new template without stomping user answers
+      const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
+      // Only fill in blanks — don't overwrite user-provided answers
+      const patch: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(baselineAnswers)) {
+        if (state.step3Answers[key] == null || state.step3Answers[key] === "") {
+          patch[key] = val;
+        }
+      }
+      if (Object.keys(patch).length > 0) {
+        dispatch({ type: "PATCH_STEP3_ANSWERS", patch, source: "template_default" });
+      }
+
+      console.log("[V7] Template retry result:", template.industry === "generic" ? "fallback" : "industry");
+    } catch (err) {
+      console.warn("[V7] Template retry failed:", err instanceof Error ? err.message : err);
+    } finally {
+      setBusy(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- setBusy is stable (useState setter)
+  }, [state.industry, state.templateMode, state.step3Answers]);
+
   // Step 3: validate + go to results (pricing is NON-BLOCKING)
   //
   // Phase 6 Doctrine:
@@ -3431,6 +3489,7 @@ export function useWizardV7() {
             setBusy(true, "Loading profile template...");
             const template = await api.loadStep3Template(state.industry, controller.signal);
             dispatch({ type: "SET_STEP3_TEMPLATE", template });
+            dispatch({ type: "SET_TEMPLATE_MODE", mode: template.industry === "generic" ? "fallback" : "industry" });
 
             // ✅ PROVENANCE: Apply baseline defaults on navigation too
             const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
@@ -3751,6 +3810,7 @@ export function useWizardV7() {
 
     // step 4: pricing (Phase 6: non-blocking)
     retryPricing, // Retry pricing from Results page
+    retryTemplate, // Retry industry template load (upgrade fallback → industry)
 
     // misc
     clearError,
