@@ -41,7 +41,7 @@ import { wizardAIAgent } from "@/services/wizardAIAgentV2";
 import { wizardHealthMonitor } from "@/services/wizardHealthMonitor";
 
 // Step components (fixed paths)
-import Step1LocationV7Clean from "@/components/wizard/v7/steps/Step1LocationV7Clean";
+import Step1LocationV7 from "@/components/wizard/v7/steps/Step1LocationV7";
 import Step2IndustryV7 from "@/components/wizard/v7/steps/Step2IndustryV7";
 import Step3ProfileV7 from "@/components/wizard/v7/steps/Step3ProfileV7";
 import Step4ResultsV7 from "@/components/wizard/v7/steps/Step4ResultsV7";
@@ -566,7 +566,7 @@ export default function WizardV7Page() {
   const right = useMemo(() => {
     switch (state.step) {
       case "location":
-        return <Step1LocationV7Clean state={state} actions={step1Actions} />;
+        return <Step1LocationV7 state={state} actions={step1Actions} />;
 
       case "industry":
         return <Step2IndustryV7 state={state} actions={{ selectIndustry, goBack }} />;
