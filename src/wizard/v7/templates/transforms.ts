@@ -156,6 +156,32 @@ export const TRANSFORMS: Record<string, TransformFn> = {
     if (v === "full commercial") return "upscale";
     return "midscale";
   },
+
+  /**
+   * Map template wash type labels to SSOT-expected slugs
+   *
+   * USE CASE: Car wash template offers human-readable options
+   * ("Self-serve bays", "Tunnel (single)", etc.) but the SSOT
+   * calculateCarWashPower() expects machine slugs ("self-service",
+   * "tunnel", "automatic", etc.).
+   *
+   * MAPPING:
+   * - "In-bay automatic"  → "automatic"
+   * - "Tunnel (single)"   → "tunnel"
+   * - "Self-serve bays"   → "self-service"
+   * - "Detail shop"       → "full-service"
+   * - default             → "tunnel" (most common for BESS customers)
+   */
+  mapWashType: (value) => {
+    const v = String(value || "")
+      .toLowerCase()
+      .trim();
+    if (v.includes("self-serve") || v.includes("self-service")) return "self-service";
+    if (v.includes("in-bay") || v.includes("automatic")) return "automatic";
+    if (v.includes("tunnel")) return "tunnel";
+    if (v.includes("detail") || v.includes("full-service")) return "full-service";
+    return "tunnel"; // Default for BESS customers
+  },
 };
 
 /**
