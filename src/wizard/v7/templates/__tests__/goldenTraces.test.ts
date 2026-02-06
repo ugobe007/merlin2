@@ -34,6 +34,7 @@ import carWashTemplate from "../car_wash.v1.json";
 import evChargingTemplate from "../ev_charging.v1.json";
 import hospitalTemplate from "../hospital.v1.json";
 import manufacturingTemplate from "../manufacturing.v1.json";
+import officeTemplate from "../office.v1.json";
 
 function asTemplate(x: unknown): IndustryTemplateV1 {
   return x as IndustryTemplateV1;
@@ -883,6 +884,164 @@ describe("Golden traces: office (adapter-direct)", () => {
     expect(result.peakLoadKW).toBeGreaterThanOrEqual(1000);
     expect(result.peakLoadKW).toBeLessThanOrEqual(1500);
     expect(result.assumptions!.length).toBeGreaterThan(0);
+  });
+});
+
+// ============================================================================
+// OFFICE GOLDEN TRACES (template-backed pipeline — office.v1.json)
+// ============================================================================
+
+describe("Golden traces: office (template pipeline)", () => {
+  it("typical: 50k sqft corporate w/ server room → peakKW 300-500, HVAC+IT contributors", () => {
+    const { mappedInputs, result } = runPipeline(officeTemplate, {
+      office_type: "Corporate / Multi-tenant",
+      square_footage: 50000,
+      has_server_room: "Yes",
+      server_room_kw: 20,
+      elevator_count: 2,
+      lighting_type: "LED",
+    });
+
+    // Mapping correctness
+    expect(mappedInputs.squareFootage).toBe(50000);
+    expect(mappedInputs.officeType).toBe("corporate");
+    expect(mappedInputs.hasServerRoom).toBe(true);
+    expect(mappedInputs.serverRoomKW).toBe(20);
+    expect(mappedInputs.lightingType).toBe("LED");
+
+    // 50k × 6 W/sqft = 300kW base + 30kW server (20×1.5) + 60kW elevators = ~390kW
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(300);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(500);
+
+    // v1 envelope
+    expect(result.validation!.version).toBe("v1");
+
+    // Server room → itLoad contributor non-zero
+    const kw = result.validation!.kWContributors!;
+    expect(kw.itLoad).toBeGreaterThan(0);
+    expect(kw.hvac).toBeGreaterThan(kw.lighting); // HVAC dominant
+
+    // Details trace input
+    expect(result.validation!.details!.office.serverRoomKW).toBe(20);
+    expect(result.validation!.details!.office.officeType).toBe("corporate");
+  });
+
+  it("small: 5k sqft professional → peakKW 30-60, no additive loads", () => {
+    const { mappedInputs, result } = runPipeline(officeTemplate, {
+      office_type: "Small Professional",
+      square_footage: 5000,
+      has_server_room: "No",
+      elevator_count: 0,
+      ev_chargers_count: 0,
+    });
+
+    expect(mappedInputs.squareFootage).toBe(5000);
+    expect(mappedInputs.officeType).toBe("small-professional");
+    expect(mappedInputs.hasServerRoom).toBe(false);
+
+    // 5k × 6 W/sqft = 30kW (min bound in SSOT)
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(20);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(60);
+
+    // No server room = itLoad is 0
+    expect(result.validation!.kWContributors!.itLoad).toBe(0);
+    expect(result.validation!.kWContributors!.charging).toBe(0);
+  });
+
+  it("large tech office: 200k sqft + EV + large server room → peakKW 1200-2000", () => {
+    const { mappedInputs, result } = runPipeline(officeTemplate, {
+      office_type: "Tech / R&D Campus",
+      square_footage: 200000,
+      has_server_room: "Yes",
+      server_room_kw: 100,
+      elevator_count: 6,
+      ev_chargers_count: 20,
+      ev_charger_power_kw: 7.2,
+      lighting_type: "LED",
+    });
+
+    expect(mappedInputs.officeType).toBe("tech");
+    expect(mappedInputs.serverRoomKW).toBe(100);
+    expect(mappedInputs.evChargersCount).toBe(20);
+
+    // 200k × 6 W/sqft = 1200kW base + 150kW server + 180kW elevators + 100kW EV = ~1630kW
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(1200);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(2000);
+
+    // Tech office: process share elevated (1.5× from adapter)
+    const shares = result.validation!.kWContributorShares!;
+    expect(shares.processPct).toBeGreaterThan(10); // Tech offices have higher plug load
+
+    // EV charging contributor present
+    expect(result.validation!.kWContributors!.charging).toBeGreaterThan(0);
+    expect(result.validation!.details!.office.evKW).toBeGreaterThan(0);
+  });
+
+  it("server-heavy: 50k sqft with 100kW server room → itLoad contributor dominant additive", () => {
+    const { result } = runPipeline(officeTemplate, {
+      square_footage: 50000,
+      has_server_room: "Yes",
+      server_room_kw: 100,
+      elevator_count: 0,
+      ev_chargers_count: 0,
+    });
+
+    // 300kW base + 150kW server (100 × 1.5 PUE) = ~450kW
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(350);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(550);
+
+    const kw = result.validation!.kWContributors!;
+    expect(kw.itLoad).toBe(100); // IT equipment only (no cooling)
+    expect(kw.cooling).toBe(50); // Server cooling overhead (100 × 0.5)
+
+    // Server room raises duty cycle (24/7 operation)
+    expect(result.validation!.dutyCycle).toBe(0.55);
+  });
+
+  it("defaults-only: no overrides → uses template defaults, sane output", () => {
+    const { mappedInputs, result } = runPipeline(officeTemplate);
+
+    // Template defaults: 50k sqft, corporate, server room 20kW, 2 elevators, no EV
+    expect(mappedInputs.squareFootage).toBe(50000);
+    expect(mappedInputs.officeType).toBe("corporate");
+    expect(mappedInputs.hasServerRoom).toBe(true);
+    expect(mappedInputs.elevatorCount).toBe(2);
+
+    // Should produce reasonable output
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(200);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(500);
+    expect(result.baseLoadKW).toBeGreaterThan(0);
+    expect(result.energyKWhPerDay).toBeGreaterThan(0);
+
+    // No warnings when defaults are used
+    expect(result.warnings!.length).toBe(0);
+    expect(result.assumptions!.length).toBeGreaterThan(0);
+  });
+
+  it("demand charge transform: demand_charge=false → demandChargeRate=0", () => {
+    const { mappedInputs } = runPipeline(officeTemplate, {
+      demand_charge: false,
+      demand_charge_rate: 25, // Should be forced to 0
+    });
+
+    expect(mappedInputs.demand_charge_rate).toBe(0);
+  });
+
+  it("manifest entry aligns with template file", () => {
+    const tpl = asTemplate(officeTemplate);
+    const entry = MANIFEST.find((m) => m.industrySlug === "office");
+    expect(entry).toBeDefined();
+    expect(entry!.calculatorId).toBe(tpl.calculator.id);
+    expect(entry!.templateVersion).toBe("office.v1.0.0");
+
+    // All manifest requiredQuestionIds exist in template
+    const questionIds = new Set(tpl.questions.map((q) => q.id));
+    for (const reqId of entry!.requiredQuestionIds) {
+      expect(
+        questionIds.has(reqId),
+        `Manifest requires question "${reqId}" but it's missing from office template`
+      ).toBe(true);
+    }
   });
 });
 

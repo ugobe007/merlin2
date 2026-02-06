@@ -35,6 +35,7 @@ import carWashTemplate from "../car_wash.v1.json";
 import evChargingTemplate from "../ev_charging.v1.json";
 import hospitalTemplate from "../hospital.v1.json";
 import manufacturingTemplate from "../manufacturing.v1.json";
+import officeTemplate from "../office.v1.json";
 
 /**
  * Type-safe JSON import helper
@@ -324,6 +325,92 @@ describe("Industry templates drift detection", () => {
   });
 
   /**
+   * OFFICE TEMPLATE CONTRACT TEST
+   *
+   * ENFORCES:
+   * - 17 questions for office (facility + systems + additions + billing)
+   * - Calculator ID: office_load_v1
+   * - All required inputs mapped
+   * - mapOfficeType + ifDemandChargeElseZero transforms applied
+   */
+  it("office template validates against office_load_v1 contract", () => {
+    const tpl = asTemplate(officeTemplate);
+    const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+    expect(calc).toBeTruthy();
+    expect(calc?.id).toBe("office_load_v1");
+
+    const res = validateTemplateAgainstCalculator(tpl, calc!, {
+      minQuestions: 16,
+      maxQuestions: 18,
+    });
+
+    if (!res.ok) {
+      const errorMsg = res.issues
+        .filter((i) => i.level === "error")
+        .map((i) => `${i.code}: ${i.message}`)
+        .join("\n");
+      throw new Error(`Office template validation failed:\n${errorMsg}`);
+    }
+
+    const warnings = res.issues.filter((i) => i.level === "warn");
+    if (warnings.length > 0) {
+      console.warn("[drift test] Office warnings:", warnings.map((w) => w.message).join(", "));
+    }
+
+    // Office has 17 questions
+    expect(tpl.questions.length).toBe(17);
+  });
+
+  it("office template mapping produces valid calculator inputs", () => {
+    const tpl = asTemplate(officeTemplate);
+    const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+    expect(calc).toBeTruthy();
+
+    // Sample answers
+    const answers: Record<string, unknown> = {
+      office_type: "Corporate / Multi-tenant",
+      square_footage: 50000,
+      floor_count: 3,
+      occupancy_pct: 80,
+      hvac_type: "Central rooftop HVAC",
+      hvac_age_years: 10,
+      lighting_type: "LED",
+      has_server_room: "Yes",
+      server_room_kw: 20,
+      elevator_count: 2,
+      ev_chargers_count: 4,
+      ev_charger_power_kw: 7.2,
+      has_rooftop_solar: "No",
+      monthly_kwh: 75000,
+      peak_demand_kw: 250,
+      demand_charge: true,
+      demand_charge_rate: 15,
+    };
+
+    const inputs = applyTemplateMapping(tpl, answers);
+
+    // Verify transform: mapOfficeType converts label → slug
+    expect(inputs.officeType).toBe("corporate");
+
+    // Verify required calculator key present
+    for (const req of calc!.requiredInputs) {
+      expect(inputs).toHaveProperty(req);
+    }
+    expect(inputs.squareFootage).toBe(50000);
+    expect(inputs.serverRoomKW).toBe(20);
+    expect(inputs.evChargersCount).toBe(4);
+
+    // Verify demand charge transform
+    expect(inputs.demand_charge_rate).toBe(15);
+
+    // Run calculator — should not throw
+    const result = calc!.compute(inputs);
+    expect(result.baseLoadKW).toBeGreaterThan(0);
+    expect(result.peakLoadKW).toBeGreaterThan(0);
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(result.baseLoadKW!);
+  });
+
+  /**
    * REGISTRY COMPLETENESS TEST
    *
    * ENFORCES:
@@ -338,6 +425,7 @@ describe("Industry templates drift detection", () => {
       evChargingTemplate,
       hospitalTemplate,
       manufacturingTemplate,
+      officeTemplate,
     ];
 
     for (const tpl of templates) {
@@ -365,6 +453,7 @@ describe("Industry templates drift detection", () => {
       { tpl: asTemplate(evChargingTemplate), name: "ev_charging" },
       { tpl: asTemplate(hospitalTemplate), name: "hospital" },
       { tpl: asTemplate(manufacturingTemplate), name: "manufacturing" },
+      { tpl: asTemplate(officeTemplate), name: "office" },
     ];
 
     for (const { tpl, name } of templates) {

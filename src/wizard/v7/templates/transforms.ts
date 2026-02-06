@@ -253,6 +253,35 @@ export const TRANSFORMS: Record<string, TransformFn> = {
     if (v.includes("1") || v.includes("single") || v.includes("8")) return "1-shift";
     return "1-shift"; // Default
   },
+
+  /**
+   * Map office type display labels to adapter-expected slugs
+   *
+   * Used by: office adapter for occupant density + plug load profiling
+   * "small-professional" | "corporate" | "government" | "tech" | "medical"
+   *
+   * Office type affects plug load density (CBECS 2018):
+   * - Tech: 50% higher plug loads (monitors, workstations)
+   * - Medical: 20% higher (diagnostic equipment)
+   * - Government: standard
+   * - Small professional: lower density
+   */
+  mapOfficeType: (value) => {
+    const v = String(value || "")
+      .toLowerCase()
+      .trim();
+    if (
+      v.includes("small") ||
+      v.includes("professional") ||
+      v.includes("dental") ||
+      v.includes("cpa")
+    )
+      return "small-professional";
+    if (v.includes("tech") || v.includes("high-density") || v.includes("open floor")) return "tech";
+    if (v.includes("government") || v.includes("municipal")) return "government";
+    if (v.includes("medical")) return "medical";
+    return "corporate"; // Default: multi-tenant corporate
+  },
 };
 
 /**
