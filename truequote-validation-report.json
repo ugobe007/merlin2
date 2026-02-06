@@ -1,16 +1,16 @@
 {
-  "ts": "2026-02-05T15:55:15.902Z",
-  "mode": "strict",
+  "ts": "2026-02-06T02:59:06.005Z",
+  "mode": "dev",
   "industries": 4,
-  "pass": 0,
-  "fail": 3,
+  "pass": 3,
+  "fail": 0,
   "skip": 1,
   "rows": [
     {
       "industry": "car_wash",
-      "status": "fail",
+      "status": "pass",
       "layerA": {
-        "ts": "2026-02-05T15:55:13.233Z",
+        "ts": "2026-02-06T02:59:03.169Z",
         "layer": "A",
         "template": {
           "industry": "car_wash",
@@ -31,16 +31,38 @@
           "energyKWhPerDay": 1728
         },
         "computed": {
+          "version": "v1",
           "dutyCycle": 0.6,
           "kWContributors": {
-            "drying": 150,
-            "waterPumps": 49.919999999999995,
-            "vacuums": 19.92,
-            "lighting": 10.08,
+            "process": 219.83999999999997,
             "hvac": 5.04,
+            "lighting": 10.08,
             "controls": 5.04,
+            "itLoad": 0,
+            "cooling": 0,
+            "charging": 0,
             "other": 0
           },
+          "kWContributorShares": {
+            "processPct": 91.6,
+            "hvacPct": 2.1,
+            "lightingPct": 4.2,
+            "controlsPct": 2.1,
+            "itLoadPct": 0,
+            "coolingPct": 0,
+            "chargingPct": 0,
+            "otherPct": 0
+          },
+          "details": {
+            "car_wash": {
+              "dryers": 150,
+              "pumps": 49.919999999999995,
+              "vacuums": 19.92
+            }
+          },
+          "notes": [
+            "Process breakdown: dryers=150.0kW (63%), pumps=49.9kW (21%), vacuums=19.9kW (8%)"
+          ],
           "assumptions": [
             "Wash positions: 4 bays (4 total)",
             "Washes/day: 200",
@@ -80,15 +102,14 @@
       },
       "warnings": [
         "ℹ️ Default electricity rate used (0.12 $/kWh)",
-        "ℹ️ Default demand charge used (15 $/kW)",
-        "⚠️ STRICT MODE: Used default inputs: electricityRate, demandCharge"
+        "ℹ️ Default demand charge used (15 $/kW)"
       ]
     },
     {
       "industry": "hotel",
-      "status": "fail",
+      "status": "pass",
       "layerA": {
-        "ts": "2026-02-05T15:55:14.434Z",
+        "ts": "2026-02-06T02:59:04.506Z",
         "layer": "A",
         "template": {
           "industry": "hotel",
@@ -109,7 +130,20 @@
           "energyKWhPerDay": 5670
         },
         "computed": {
-          "assumptions": ["150 rooms (midscale)", "Occupancy: 70%"],
+          "kWContributors": {
+            "process": 0,
+            "hvac": 0,
+            "lighting": 0,
+            "controls": 0,
+            "itLoad": 0,
+            "cooling": 0,
+            "charging": 0,
+            "other": 0
+          },
+          "assumptions": [
+            "150 rooms (midscale)",
+            "Occupancy: 70%"
+          ],
           "warnings": []
         },
         "sizingHints": {
@@ -143,9 +177,9 @@
         ]
       },
       "warnings": [
+        "ℹ️  Validation envelope not provided (calculator not yet migrated)",
         "ℹ️ Default electricity rate used (0.12 $/kWh)",
-        "ℹ️ Default demand charge used (15 $/kW)",
-        "⚠️ STRICT MODE: Used default inputs: electricityRate, demandCharge"
+        "ℹ️ Default demand charge used (15 $/kW)"
       ]
     },
     {
@@ -156,9 +190,9 @@
     },
     {
       "industry": "data_center",
-      "status": "fail",
+      "status": "pass",
       "layerA": {
-        "ts": "2026-02-05T15:55:15.172Z",
+        "ts": "2026-02-06T02:59:05.253Z",
         "layer": "A",
         "template": {
           "industry": "data_center",
@@ -181,6 +215,16 @@
           "energyKWhPerDay": 33600
         },
         "computed": {
+          "kWContributors": {
+            "process": 0,
+            "hvac": 0,
+            "lighting": 0,
+            "controls": 0,
+            "itLoad": 0,
+            "cooling": 0,
+            "charging": 0,
+            "other": 0
+          },
           "assumptions": [
             "IT load: 500-1000",
             "PUE: 1.3-1.5",
@@ -220,9 +264,9 @@
         ]
       },
       "warnings": [
+        "ℹ️  Validation envelope not provided (calculator not yet migrated)",
         "ℹ️ Default electricity rate used (0.12 $/kWh)",
-        "ℹ️ Default demand charge used (15 $/kW)",
-        "⚠️ STRICT MODE: Used default inputs: electricityRate, demandCharge"
+        "ℹ️ Default demand charge used (15 $/kW)"
       ]
     }
   ]

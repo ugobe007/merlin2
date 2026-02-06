@@ -30,7 +30,7 @@
  * - Templates bind to specific calculator versions
  */
 
-import type { CalculatorContract, CalcInputs, CalcRunResult } from "./contract";
+import type { CalculatorContract, CalcInputs, CalcRunResult, CalcValidation } from "./contract";
 
 // SSOT: Single source of truth for ALL industry power calculations
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
@@ -307,14 +307,53 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
       warnings,
     };
 
+    // 4c. Build validation envelope with canonical contributor keys (TrueQuote compliance)
+    // Car wash process loads: drying (blowers) + waterPumps (wash system) + vacuums
+    const processKW = dryersKW + waterPumpsKW + vacuumsKW;
+    
+    const validation: CalcValidation = {
+      version: "v1", // Versioned contract (prevents silent drift)
+      dutyCycle,
+      kWContributors: {
+        process: processKW,        // Canonical: car wash-specific loads (dryers+pumps+vacuums)
+        hvac: hvacKW,              // Canonical: climate control
+        lighting: lightingKW,      // Canonical: facility lighting
+        controls: controlsKW,      // Canonical: PLC/payment/controls
+        itLoad: 0,                 // Canonical: IT equipment (not applicable)
+        cooling: 0,                // Canonical: dedicated cooling (not applicable)
+        charging: 0,               // Canonical: EV charging (not applicable)
+        other: otherKW,            // Canonical: miscellaneous
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        processPct: (processKW / peakLoadKW) * 100,
+        hvacPct: (hvacKW / peakLoadKW) * 100,
+        lightingPct: (lightingKW / peakLoadKW) * 100,
+        controlsPct: (controlsKW / peakLoadKW) * 100,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: (otherKW / peakLoadKW) * 100,
+      },
+      details: {
+        car_wash: {
+          dryers: dryersKW,
+          pumps: waterPumpsKW,
+          vacuums: vacuumsKW,
+        },
+      },
+      notes: [
+        `Process breakdown: dryers=${dryersKW.toFixed(1)}kW (${((dryersKW/peakLoadKW)*100).toFixed(0)}%), pumps=${waterPumpsKW.toFixed(1)}kW (${((waterPumpsKW/peakLoadKW)*100).toFixed(0)}%), vacuums=${vacuumsKW.toFixed(1)}kW (${((vacuumsKW/peakLoadKW)*100).toFixed(0)}%)`,
+      ],
+    };
+
     return {
       baseLoadKW,
       peakLoadKW,
       energyKWhPerDay,
-      dutyCycle, // Top-level for convenience
-      computed, // Now includes kWContributors for TrueQuote validation!
       assumptions,
       warnings,
+      validation,  // TrueQuote validation envelope (namespaced, clean)
       raw: result,
     };
   },

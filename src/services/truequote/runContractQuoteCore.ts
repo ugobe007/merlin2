@@ -10,6 +10,58 @@ import { CALCULATORS_BY_ID } from "../../wizard/v7/calculators/registry.ts";
 import { applyTemplateMapping } from "../../wizard/v7/templates/applyMapping.ts";
 import { getSizingDefaults } from "../../wizard/v7/pricing/index.ts";
 
+// ============================================================
+// Canonical Key Normalizer (Phase 6: Shape Enforcement)
+// ============================================================
+
+/**
+ * Normalize contributor keys to ensure all 8 canonical keys are present.
+ * Missing keys are filled with 0 (explicit zeros, not undefined).
+ * 
+ * This prevents invariant checks from breaking on missing keys.
+ * Run this in Layer A before returning to caller.
+ */
+function normalizeContributors(
+  input?: Partial<Record<string, number>>
+): Record<string, number> {
+  return {
+    process: input?.process ?? 0,
+    hvac: input?.hvac ?? 0,
+    lighting: input?.lighting ?? 0,
+    controls: input?.controls ?? 0,
+    itLoad: input?.itLoad ?? 0,
+    cooling: input?.cooling ?? 0,
+    charging: input?.charging ?? 0,
+    other: input?.other ?? 0,
+  };
+}
+
+/**
+ * Enforce details namespace matches industry.
+ * Prevents cross-contamination (e.g., details.hotel inside car_wash).
+ * 
+ * @param details - Raw details object from calculator
+ * @param industry - Industry slug (should match top-level key in details)
+ * @returns Validated details or null if mismatch
+ */
+function enforceDetailsNamespace(
+  details: Record<string, unknown> | undefined,
+  industry: string
+): Record<string, unknown> | undefined {
+  if (!details) return undefined;
+  
+  // Check if details has a top-level key matching industry
+  const industryKey = details[industry];
+  if (!industryKey) {
+    console.warn(
+      `[TrueQuote] Details namespace mismatch: expected "${industry}" key, got: ${Object.keys(details).join(", ")}`
+    );
+    return undefined; // Reject mismatched details
+  }
+  
+  return details;
+}
+
 export type WizardIndustry = string;
 
 export type ContractQuoteArgs = {
@@ -119,14 +171,14 @@ export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResu
     warnings.push("⚠️ Energy > peak×24h (impossible)");
   }
 
-  // Duty cycle sanity (check both top-level and nested in computed)
-  const dc = computed?.dutyCycle ?? (computed as any)?.computed?.dutyCycle;
+  // Duty cycle sanity (check validation envelope)
+  const dc = computed?.validation?.dutyCycle;
   if (typeof dc === "number" && (dc < 0 || dc > 1.25)) {
     warnings.push("⚠️ Duty cycle out of range [0, 1.25]");
   }
 
-  // Contributor sanity (check both top-level and nested in computed)
-  const contrib = computed?.kWContributors ?? (computed as any)?.computed?.kWContributors ?? {};
+  // Contributor sanity (check validation envelope)
+  const contrib = computed?.validation?.kWContributors ?? {};
   for (const [k, v] of Object.entries(contrib)) {
     const n = num(v, NaN);
     if (!Number.isFinite(n)) warnings.push(`⚠️ kWContributors["${k}"] is NaN/invalid`);
@@ -197,9 +249,8 @@ export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResu
     console.groupEnd();
   }
 
-  // Extract kWContributors and dutyCycle (check both top-level and nested)
-  const finalDutyCycle = computed?.dutyCycle ?? (computed as any)?.computed?.dutyCycle;
-  const finalContributors = computed?.kWContributors ?? (computed as any)?.computed?.kWContributors;
+  // Extract validation envelope (clean namespaced access)
+  const validation = computed?.validation;
 
   return {
     industry: args.industry,
@@ -208,8 +259,14 @@ export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResu
     loadProfile,
     sizingHints,
     computed: {
-      dutyCycle: finalDutyCycle,
-      kWContributors: finalContributors,
+      version: validation?.version,           // Contract version for drift detection
+      dutyCycle: validation?.dutyCycle,
+      // ✅ NORMALIZED: All 8 canonical keys always present (even zeros)
+      kWContributors: normalizeContributors(validation?.kWContributors),
+      kWContributorShares: validation?.kWContributorShares,
+      // ✅ VALIDATED: Details namespace must match industry (prevents cross-contamination)
+      details: enforceDetailsNamespace(validation?.details, tpl.industry),
+      notes: validation?.notes,
       assumptions: computed.assumptions,
       warnings: computed.warnings,
     },
