@@ -447,34 +447,38 @@ export default function WizardV7Page() {
           <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 4 }}>
             Merlin Advisor
           </div>
-          <div style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.6)" }}>
-            Step: {state.step}
-          </div>
+          {import.meta.env.DEV && (
+            <div style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.6)" }}>
+              Step: {state.step}
+            </div>
+          )}
         </div>
 
-        {/* Gate Status Badge */}
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "6px 12px",
-            borderRadius: 8,
-            fontSize: 12,
-            fontWeight: 600,
-            marginBottom: 12,
-            background:
-              gateStatus === "ok" ? "rgba(74, 222, 128, 0.15)" :
-              gateStatus === "blocked" ? "rgba(239, 68, 68, 0.15)" :
-              "rgba(251, 191, 36, 0.15)",
-            color:
-              gateStatus === "ok" ? "#4ade80" :
-              gateStatus === "blocked" ? "#ef4444" :
-              "#fbbf24",
-          }}
-        >
-          gate: {gateStatus}
-        </div>
+        {/* Gate Status Badge — DEV only (internal diagnostics) */}
+        {import.meta.env.DEV && (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 12px",
+              borderRadius: 8,
+              fontSize: 12,
+              fontWeight: 600,
+              marginBottom: 12,
+              background:
+                gateStatus === "ok" ? "rgba(74, 222, 128, 0.15)" :
+                gateStatus === "blocked" ? "rgba(239, 68, 68, 0.15)" :
+                "rgba(251, 191, 36, 0.15)",
+              color:
+                gateStatus === "ok" ? "#4ade80" :
+                gateStatus === "blocked" ? "#ef4444" :
+                "#fbbf24",
+            }}
+          >
+            gate: {gateStatus}
+          </div>
+        )}
 
         {/* Gate Message */}
         {gateMessage && (
