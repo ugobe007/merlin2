@@ -544,8 +544,15 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
 /**
  * OFFICE SSOT ADAPTER
  *
- * Supports any office building via SSOT routing
- * 15 lines - instant support for a new industry!
+ * CalcValidation v1 envelope with contributor breakdown.
+ * SSOT: calculateUseCasePower("office", { squareFootage }) → 6 W/sqft (ASHRAE 90.1)
+ *
+ * Contributor model:
+ *   hvac (40%) - Primary load in commercial offices (ASHRAE)
+ *   lighting (25%) - Fluorescent/LED overhead + task
+ *   plugLoads mapped to process (20%) - Computers, monitors, printers
+ *   controls (5%) - BMS, security, fire panel
+ *   other (10%) - Elevators, common areas, misc
  */
 export const OFFICE_LOAD_V1_SSOT: CalculatorContract = {
   id: "office_load_v1",
@@ -556,17 +563,71 @@ export const OFFICE_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     const squareFootage = Number(inputs.squareFootage) || 50000;
-    assumptions.push(`Office: ${squareFootage.toLocaleString()} sq ft`);
+    if (!inputs.squareFootage) {
+      assumptions.push("Default: 50,000 sq ft (no user input)");
+    }
+    assumptions.push(`Office: ${squareFootage.toLocaleString()} sq ft @ 6 W/sqft (ASHRAE 90.1)`);
 
-    const result = calculateUseCasePower("office", { squareFootage });
-    const powerKW = result.powerMW * 1000;
+    const result = calculateUseCasePower("office", { sqFt: squareFootage });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // Contributor breakdown (CBECS 2018 commercial office)
+    const hvacKW = peakLoadKW * 0.4;
+    const lightingKW = peakLoadKW * 0.25;
+    const processKW = peakLoadKW * 0.2; // plug loads (computers, monitors)
+    const controlsKW = peakLoadKW * 0.05;
+    const otherKW = peakLoadKW * 0.1; // elevators, common areas
+
+    const kWContributorsTotalKW = hvacKW + lightingKW + processKW + controlsKW + otherKW;
+
+    // Office hours: ~12h active, base load ~50% (HVAC standby + security)
+    const dutyCycle = 0.5;
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: 0,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: 40,
+        lightingPct: 25,
+        processPct: 20,
+        controlsPct: 5,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: 10,
+      },
+      details: {
+        office: {
+          sqFt: squareFootage,
+          wattsPerSqFt: 6.0,
+        },
+      },
+      notes: [
+        `Office: ${squareFootage.toLocaleString()} sq ft → peak ${peakLoadKW}kW`,
+        `HVAC-dominant: 40% of load (CBECS 2018)`,
+        `Duty cycle: ${dutyCycle} (12h active day)`,
+      ],
+    };
 
     return {
-      baseLoadKW: Math.round(powerKW * 0.5), // 50% base (HVAC, lights)
-      peakLoadKW: Math.round(powerKW),
-      energyKWhPerDay: Math.round(powerKW * 12), // 12h typical office hours
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
       assumptions,
       warnings,
+      validation,
       raw: result,
     };
   },
@@ -574,6 +635,16 @@ export const OFFICE_LOAD_V1_SSOT: CalculatorContract = {
 
 /**
  * RETAIL SSOT ADAPTER
+ *
+ * CalcValidation v1 envelope with contributor breakdown.
+ * SSOT: calculateUseCasePower("retail", { squareFootage }) → 8 W/sqft (CBECS 2018)
+ *
+ * Contributor model:
+ *   lighting (35%) - Dominant in retail (display + accent + signage)
+ *   hvac (30%) - High due to customer traffic / door openings
+ *   process (15%) - POS, refrigeration (if grocery), security cameras
+ *   controls (5%) - BMS, security, fire
+ *   other (15%) - Signage, escalators, loading dock
  */
 export const RETAIL_LOAD_V1_SSOT: CalculatorContract = {
   id: "retail_load_v1",
@@ -584,17 +655,71 @@ export const RETAIL_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     const squareFootage = Number(inputs.squareFootage) || 20000;
-    assumptions.push(`Retail: ${squareFootage.toLocaleString()} sq ft`);
+    if (!inputs.squareFootage) {
+      assumptions.push("Default: 20,000 sq ft (no user input)");
+    }
+    assumptions.push(`Retail: ${squareFootage.toLocaleString()} sq ft @ 8 W/sqft (CBECS 2018)`);
 
-    const result = calculateUseCasePower("retail", { squareFootage });
-    const powerKW = result.powerMW * 1000;
+    const result = calculateUseCasePower("retail", { squareFeet: squareFootage });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // Contributor breakdown (CBECS 2018 retail)
+    const lightingKW = peakLoadKW * 0.35;
+    const hvacKW = peakLoadKW * 0.3;
+    const processKW = peakLoadKW * 0.15; // POS, coolers, display electronics
+    const controlsKW = peakLoadKW * 0.05;
+    const otherKW = peakLoadKW * 0.15; // signage, escalators, loading
+
+    const kWContributorsTotalKW = lightingKW + hvacKW + processKW + controlsKW + otherKW;
+
+    // Retail hours: ~14h active, base load ~40% (security lighting, some HVAC)
+    const dutyCycle = 0.45;
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: 0,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: 30,
+        lightingPct: 35,
+        processPct: 15,
+        controlsPct: 5,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: 15,
+      },
+      details: {
+        retail: {
+          sqFt: squareFootage,
+          wattsPerSqFt: 8.0,
+        },
+      },
+      notes: [
+        `Retail: ${squareFootage.toLocaleString()} sq ft → peak ${peakLoadKW}kW`,
+        `Lighting-dominant: 35% of load (CBECS 2018 retail)`,
+        `Duty cycle: ${dutyCycle} (14h active, some overnight)`,
+      ],
+    };
 
     return {
-      baseLoadKW: Math.round(powerKW * 0.4), // 40% base
-      peakLoadKW: Math.round(powerKW),
-      energyKWhPerDay: Math.round(powerKW * 14), // 14h typical retail hours
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
       assumptions,
       warnings,
+      validation,
       raw: result,
     };
   },
@@ -962,6 +1087,16 @@ export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
 
 /**
  * WAREHOUSE SSOT ADAPTER
+ *
+ * CalcValidation v1 envelope with contributor breakdown.
+ * SSOT: calculateUseCasePower("warehouse", { squareFootage }) → 2 W/sqft (CBECS)
+ *
+ * Contributor model:
+ *   lighting (40%) - High bay LED, often dominant in warehouses
+ *   hvac (15%) - Minimal in standard warehouse (high ceilings, dock doors)
+ *   process (25%) - Material handling (forklifts, conveyors, dock levelers)
+ *   controls (5%) - WMS, barcode scanners, security
+ *   other (15%) - Dock doors, compactors, charging stations
  */
 export const WAREHOUSE_LOAD_V1_SSOT: CalculatorContract = {
   id: "warehouse_load_v1",
@@ -972,17 +1107,99 @@ export const WAREHOUSE_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     const squareFootage = Number(inputs.squareFootage) || 200000;
-    assumptions.push(`Warehouse: ${squareFootage.toLocaleString()} sq ft`);
+    const isColdStorage = inputs.isColdStorage === true || inputs.isColdStorage === "true";
 
-    const result = calculateUseCasePower("warehouse", { squareFootage });
-    const powerKW = result.powerMW * 1000;
+    if (!inputs.squareFootage) {
+      assumptions.push("Default: 200,000 sq ft (no user input)");
+    }
+
+    const wattsPerSqFt = isColdStorage ? 8.0 : 2.0;
+    assumptions.push(
+      `${isColdStorage ? "Cold Storage" : "Warehouse"}: ${squareFootage.toLocaleString()} sq ft @ ${wattsPerSqFt} W/sqft (CBECS)`
+    );
+
+    const result = calculateUseCasePower("warehouse", {
+      warehouseSqFt: squareFootage,
+      isColdStorage,
+    });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // Contributor breakdown varies: cold storage is refrigeration-dominant
+    let lightingPct: number, hvacPct: number, processPct: number, otherPct: number;
+    if (isColdStorage) {
+      // Cold storage: refrigeration compressors dominate
+      lightingPct = 0.1;
+      hvacPct = 0.1;
+      processPct = 0.65; // Refrigeration compressors
+      otherPct = 0.1;
+    } else {
+      // Standard warehouse: lighting-dominant
+      lightingPct = 0.4;
+      hvacPct = 0.15;
+      processPct = 0.25; // Material handling
+      otherPct = 0.15;
+    }
+    const controlsPct = 0.05;
+
+    const lightingKW = peakLoadKW * lightingPct;
+    const hvacKW = peakLoadKW * hvacPct;
+    const processKW = peakLoadKW * processPct;
+    const controlsKW = peakLoadKW * controlsPct;
+    const otherKW = peakLoadKW * otherPct;
+
+    const kWContributorsTotalKW = lightingKW + hvacKW + processKW + controlsKW + otherKW;
+
+    // Warehouse: 16h active (2 shifts typical), low overnight
+    const dutyCycle = isColdStorage ? 0.85 : 0.35;
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: 0,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: hvacPct * 100,
+        lightingPct: lightingPct * 100,
+        processPct: processPct * 100,
+        controlsPct: controlsPct * 100,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: otherPct * 100,
+      },
+      details: {
+        warehouse: {
+          sqFt: squareFootage,
+          wattsPerSqFt,
+          isColdStorage,
+        },
+      },
+      notes: [
+        `${isColdStorage ? "Cold Storage" : "Warehouse"}: ${squareFootage.toLocaleString()} sq ft → peak ${peakLoadKW}kW`,
+        isColdStorage
+          ? `Refrigeration-dominant: 65% of load (compressor cycling)`
+          : `Lighting-dominant: 40% of load (high-bay LED)`,
+        `Duty cycle: ${dutyCycle} (${isColdStorage ? "near-continuous refrigeration" : "daytime operations"})`,
+      ],
+    };
 
     return {
-      baseLoadKW: Math.round(powerKW * 0.3), // 30% base
-      peakLoadKW: Math.round(powerKW),
-      energyKWhPerDay: Math.round(powerKW * 16), // 16h typical warehouse operations
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
       assumptions,
       warnings,
+      validation,
       raw: result,
     };
   },
@@ -1130,6 +1347,21 @@ export const EV_CHARGING_LOAD_V1_SSOT: CalculatorContract = {
 
 /**
  * RESTAURANT SSOT ADAPTER
+ *
+ * CalcValidation v1 envelope with contributor breakdown.
+ * NOTE: SSOT calculateUseCasePower("restaurant") has no dedicated handler,
+ * so we compute directly from seating capacity using industry standards.
+ *
+ * Industry benchmark: 30-50 W per seat (full-service), 15-25 W (fast food)
+ * Source: Energy Star Portfolio Manager, CBECS 2018 food service
+ *
+ * Contributor model:
+ *   process (45%) - Kitchen cooking (ranges, fryers, grills, ovens)
+ *   hvac (20%) - Kitchen exhaust makeup air is significant
+ *   cooling (15%) - Walk-in coolers, reach-in refrigeration (mapped to cooling)
+ *   lighting (10%) - Dining room + kitchen + exterior
+ *   controls (5%) - POS, hood controls, fire suppression
+ *   other (5%) - Dishwashing, hot water, misc
  */
 export const RESTAURANT_LOAD_V1_SSOT: CalculatorContract = {
   id: "restaurant_load_v1",
@@ -1140,24 +1372,103 @@ export const RESTAURANT_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     const seatingCapacity = Number(inputs.seatingCapacity) || 100;
-    assumptions.push(`Restaurant: ${seatingCapacity} seats`);
+    if (!inputs.seatingCapacity) {
+      assumptions.push("Default: 100 seats (no user input)");
+    }
 
-    const result = calculateUseCasePower("restaurant", { seatingCapacity });
-    const powerKW = result.powerMW * 1000;
+    // Full-service restaurant: ~40 W/seat (Energy Star Portfolio Manager)
+    // Fast food: ~20 W/seat — we'll default to full-service
+    const wattsPerSeat = 40;
+    const peakLoadKW = Math.max(
+      30,
+      Math.round(((seatingCapacity * wattsPerSeat) / 1000) * 1000) / 1000
+    );
+    // Round to whole kW
+    const peakKW = Math.round(peakLoadKW);
+
+    assumptions.push(
+      `Restaurant: ${seatingCapacity} seats @ ${wattsPerSeat} W/seat = ${peakKW}kW (Energy Star)`
+    );
+
+    // Contributor breakdown (CBECS 2018 food service)
+    const processKW = peakKW * 0.45; // Kitchen equipment
+    const hvacKW = peakKW * 0.2; // Makeup air + dining HVAC
+    const coolingKW = peakKW * 0.15; // Walk-in + reach-in refrigeration
+    const lightingKW = peakKW * 0.1;
+    const controlsKW = peakKW * 0.05; // POS, hood controls
+    const otherKW = peakKW * 0.05; // Dishwashing, hot water
+
+    const kWContributorsTotalKW =
+      processKW + hvacKW + coolingKW + lightingKW + controlsKW + otherKW;
+
+    // Restaurant: 14h active (lunch + dinner service), some overnight for refrigeration
+    const dutyCycle = 0.45;
+    const baseLoadKW = Math.round(peakKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: coolingKW,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: 20,
+        lightingPct: 10,
+        processPct: 45,
+        controlsPct: 5,
+        itLoadPct: 0,
+        coolingPct: 15,
+        chargingPct: 0,
+        otherPct: 5,
+      },
+      details: {
+        restaurant: {
+          seats: seatingCapacity,
+          wattsPerSeat,
+          kitchenLoadKW: processKW,
+          refrigerationKW: coolingKW,
+        },
+      },
+      notes: [
+        `Restaurant: ${seatingCapacity} seats → peak ${peakKW}kW`,
+        `Kitchen-dominant: 45% cooking + 15% refrigeration (CBECS food service)`,
+        `Duty cycle: ${dutyCycle} (lunch+dinner service hours)`,
+      ],
+    };
 
     return {
-      baseLoadKW: Math.round(powerKW * 0.4), // 40% base (refrigeration, HVAC)
-      peakLoadKW: Math.round(powerKW),
-      energyKWhPerDay: Math.round(powerKW * 14), // 14h typical restaurant hours
+      baseLoadKW,
+      peakLoadKW: peakKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
       assumptions,
       warnings,
-      raw: result,
+      validation,
+      raw: { seatingCapacity, wattsPerSeat, peakKW },
     };
   },
 };
 
 /**
  * GAS STATION SSOT ADAPTER
+ *
+ * CalcValidation v1 envelope with contributor breakdown.
+ * SSOT: calculateGasStationPower(dispenserCount, hasConvenienceStore, stationType)
+ *
+ * Contributor model:
+ *   process (varies) - Fuel pumps (1.5-2.5 kW each) — small but critical
+ *   lighting (varies) - Canopy lighting is significant (24/7)
+ *   hvac (varies) - C-store HVAC (if present)
+ *   cooling (varies) - C-store refrigeration (coolers, freezers)
+ *   controls (5%) - POS, tank monitoring, payment systems
+ *   other (varies) - Car wash, air/vacuum, signage
  */
 export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
   id: "gas_station_load_v1",
@@ -1168,17 +1479,127 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     const fuelPumps = Number(inputs.fuelPumps) || 8;
-    assumptions.push(`Gas Station: ${fuelPumps} fuel pumps`);
+    const hasConvenienceStore =
+      inputs.hasConvenienceStore !== false && inputs.hasConvenienceStore !== "false";
+    const hasCarWash = inputs.hasCarWash === true || inputs.hasCarWash === "true";
 
-    const result = calculateUseCasePower("gas-station", { fuelPumps });
-    const powerKW = result.powerMW * 1000;
+    if (!inputs.fuelPumps) {
+      assumptions.push("Default: 8 fuel pumps (no user input)");
+    }
+
+    const result = calculateUseCasePower("gas-station", {
+      fuelPumps,
+      hasConvenienceStore,
+      stationType: hasConvenienceStore ? "with-cstore" : "gas-only",
+    });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // Build contributor breakdown based on facility configuration
+    const pumpKW = fuelPumps * 1.5;
+    const canopyLightingKW = fuelPumps * 1.0; // ~1 kW per pump position for canopy
+    let cstoreHvacKW = 0;
+    let refrigerationKW = 0;
+    let carWashKW = 0;
+
+    if (hasConvenienceStore) {
+      cstoreHvacKW = 8; // ~3000 sqft c-store
+      refrigerationKW = 5; // Walk-in cooler + reach-in
+      assumptions.push(`C-store: HVAC ${cstoreHvacKW}kW + refrigeration ${refrigerationKW}kW`);
+    }
+
+    if (hasCarWash) {
+      carWashKW = 15; // Single-bay auto wash
+      assumptions.push(`Car wash: ${carWashKW}kW`);
+    }
+
+    const controlsKW = peakLoadKW * 0.05; // POS, tank monitors, payment
+
+    // Scale contributors to match SSOT peak (SSOT may include store load)
+    const rawSum =
+      pumpKW + canopyLightingKW + cstoreHvacKW + refrigerationKW + carWashKW + controlsKW;
+    const scale = rawSum > 0 && peakLoadKW > 0 ? peakLoadKW / rawSum : 1;
+
+    const scaledPumps = pumpKW * scale;
+    const scaledLighting = canopyLightingKW * scale;
+    const scaledHvac = cstoreHvacKW * scale;
+    const scaledCooling = refrigerationKW * scale;
+    const scaledCarWash = carWashKW * scale;
+    const scaledControls = controlsKW * scale;
+    const scaledOther = Math.max(
+      0,
+      peakLoadKW -
+        scaledPumps -
+        scaledLighting -
+        scaledHvac -
+        scaledCooling -
+        scaledCarWash -
+        scaledControls
+    );
+
+    const kWContributorsTotalKW =
+      scaledPumps +
+      scaledLighting +
+      scaledHvac +
+      scaledCooling +
+      scaledControls +
+      scaledCarWash +
+      scaledOther;
+
+    assumptions.push(
+      `Gas Station: ${fuelPumps} pumps${hasConvenienceStore ? " + C-store" : ""}${hasCarWash ? " + car wash" : ""} → ${peakLoadKW}kW (NACS benchmark)`
+    );
+
+    // Gas stations: ~20h active, pumps/lights nearly 24/7
+    const dutyCycle = 0.55;
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: scaledHvac,
+        lighting: scaledLighting,
+        process: scaledPumps, // Fuel dispensing = process
+        controls: scaledControls,
+        itLoad: 0,
+        cooling: scaledCooling,
+        charging: 0,
+        other: scaledCarWash + scaledOther,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: peakLoadKW > 0 ? (scaledHvac / peakLoadKW) * 100 : 0,
+        lightingPct: peakLoadKW > 0 ? (scaledLighting / peakLoadKW) * 100 : 0,
+        processPct: peakLoadKW > 0 ? (scaledPumps / peakLoadKW) * 100 : 0,
+        controlsPct: peakLoadKW > 0 ? (scaledControls / peakLoadKW) * 100 : 0,
+        itLoadPct: 0,
+        coolingPct: peakLoadKW > 0 ? (scaledCooling / peakLoadKW) * 100 : 0,
+        chargingPct: 0,
+        otherPct: peakLoadKW > 0 ? ((scaledCarWash + scaledOther) / peakLoadKW) * 100 : 0,
+      },
+      details: {
+        gas_station: {
+          pumps: fuelPumps,
+          hasConvenienceStore,
+          hasCarWash,
+          pumpKW: scaledPumps,
+          cstoreKW: scaledHvac + scaledCooling,
+        },
+      },
+      notes: [
+        `Gas Station: ${fuelPumps} pumps → ${peakLoadKW}kW`,
+        hasConvenienceStore ? `C-store adds HVAC + refrigeration` : `No convenience store`,
+        `Duty cycle: ${dutyCycle} (near-24/7 canopy lighting + pumps)`,
+      ],
+    };
 
     return {
-      baseLoadKW: Math.round(powerKW * 0.5), // 50% base (pumps, lights, coolers)
-      peakLoadKW: Math.round(powerKW),
-      energyKWhPerDay: Math.round(powerKW * 20), // 20h typical gas station hours
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
       assumptions,
       warnings,
+      validation,
       raw: result,
     };
   },
