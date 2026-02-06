@@ -4,24 +4,7 @@
   "version": "hotel.v1.0.0",
   "calculator": {
     "id": "hotel_load_v1",
-    "requiredInputs": [
-      "room_count",
-      "occupancy_avg_pct",
-      "occupancy_peak_pct",
-      "laundry_on_site",
-      "kitchen_type",
-      "restaurant_on_site",
-      "bar_on_site",
-      "pool_on_site",
-      "spa_on_site",
-      "conference_sqft",
-      "hvac_type",
-      "has_electric_hot_water",
-      "monthly_kwh",
-      "peak_demand_kw",
-      "demand_charge",
-      "demand_charge_rate"
-    ]
+    "requiredInputs": ["roomCount", "hotelClass", "occupancyRate"]
   },
   "parts": [
     {
@@ -34,13 +17,25 @@
       "id": "amenities",
       "label": "Amenities & Services",
       "description": "What services does your hotel offer?",
-      "questionIds": ["laundry_on_site", "kitchen_type", "restaurant_on_site", "bar_on_site", "pool_on_site", "spa_on_site"]
+      "questionIds": [
+        "laundry_on_site",
+        "kitchen_type",
+        "restaurant_on_site",
+        "bar_on_site",
+        "pool_on_site",
+        "spa_on_site"
+      ]
     },
     {
       "id": "systems",
       "label": "Building Systems",
       "description": "HVAC and utilities",
-      "questionIds": ["hvac_type", "has_electric_hot_water", "ev_chargers_count", "ev_charger_power_kw"]
+      "questionIds": [
+        "hvac_type",
+        "has_electric_hot_water",
+        "ev_chargers_count",
+        "ev_charger_power_kw"
+      ]
     },
     {
       "id": "billing",
@@ -220,8 +215,9 @@
     }
   ],
   "mapping": {
-    "room_count": { "from": "room_count" },
-    "occupancy_avg_pct": { "from": "occupancy_avg_pct" },
+    "roomCount": { "from": "room_count" },
+    "occupancyRate": { "from": "occupancy_avg_pct" },
+    "hotelClass": { "from": "kitchen_type", "transform": "inferHotelClass" },
     "occupancy_peak_pct": { "from": "occupancy_peak_pct" },
     "laundry_on_site": { "from": "laundry_on_site" },
     "kitchen_type": { "from": "kitchen_type" },

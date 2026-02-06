@@ -4,24 +4,7 @@
   "version": "dc.v1.0.0",
   "calculator": {
     "id": "dc_load_v1",
-    "requiredInputs": [
-      "it_load_kw",
-      "peak_it_load_kw",
-      "avg_utilization_pct",
-      "growth_pct_24mo",
-      "power_capacity_kw",
-      "tier",
-      "redundancy",
-      "required_runtime_min",
-      "generator_present",
-      "ups_present",
-      "cooling_type",
-      "pue",
-      "cooling_peak_kw",
-      "monthly_kwh",
-      "demand_charge",
-      "demand_charge_rate"
-    ]
+    "requiredInputs": ["itLoadCapacity", "currentPUE", "itUtilization", "dataCenterTier"]
   },
   "parts": [
     {
@@ -40,7 +23,15 @@
       "id": "backup",
       "label": "Backup & Cooling",
       "description": "Generators, UPS, and cooling systems",
-      "questionIds": ["generator_present", "generator_kw", "ups_present", "ups_runtime_min", "cooling_type", "pue", "cooling_peak_kw"]
+      "questionIds": [
+        "generator_present",
+        "generator_kw",
+        "ups_present",
+        "ups_runtime_min",
+        "cooling_type",
+        "pue",
+        "cooling_peak_kw"
+      ]
     },
     {
       "id": "billing",
@@ -225,12 +216,12 @@
     }
   ],
   "mapping": {
-    "it_load_kw": { "from": "it_load_kw" },
+    "itLoadCapacity": { "from": "it_load_kw" },
     "peak_it_load_kw": { "from": "peak_it_load_kw" },
-    "avg_utilization_pct": { "from": "avg_utilization_pct" },
+    "itUtilization": { "from": "avg_utilization_pct" },
     "growth_pct_24mo": { "from": "growth_pct_24mo" },
     "power_capacity_kw": { "from": "power_capacity_kw" },
-    "tier": { "from": "tier" },
+    "dataCenterTier": { "from": "tier" },
     "redundancy": { "from": "redundancy" },
     "required_runtime_min": { "from": "required_runtime_min" },
     "generator_present": { "from": "generator_present" },
@@ -238,7 +229,7 @@
     "ups_present": { "from": "ups_present" },
     "ups_runtime_min": { "from": "ups_runtime_min" },
     "cooling_type": { "from": "cooling_type" },
-    "pue": { "from": "pue" },
+    "currentPUE": { "from": "pue" },
     "cooling_peak_kw": { "from": "cooling_peak_kw" },
     "monthly_kwh": { "from": "monthly_kwh" },
     "demand_charge": { "from": "demand_charge" },

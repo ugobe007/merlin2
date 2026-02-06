@@ -133,6 +133,29 @@ export const TRANSFORMS: Record<string, TransformFn> = {
     }
     return undefined;
   },
+
+  /**
+   * Infer hotel class from kitchen type (template proxy)
+   *
+   * USE CASE: Hotel template has no direct "hotelClass" question but
+   * kitchen_type is a strong proxy for hotel tier.
+   *
+   * MAPPING:
+   * - "None" / "Light prep" → "economy"
+   * - "Full commercial"     → "upscale"
+   * - default               → "midscale"
+   *
+   * NOTE: This is a best-effort heuristic. The calculator adapter
+   * also defaults to "midscale" if hotelClass is unrecognized.
+   */
+  inferHotelClass: (value) => {
+    const v = String(value || "")
+      .toLowerCase()
+      .trim();
+    if (v === "none" || v === "light prep") return "economy";
+    if (v === "full commercial") return "upscale";
+    return "midscale";
+  },
 };
 
 /**

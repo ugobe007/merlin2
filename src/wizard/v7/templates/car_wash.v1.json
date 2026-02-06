@@ -4,33 +4,20 @@
   "version": "car_wash.v1.0.0",
   "calculator": {
     "id": "car_wash_load_v1",
-    "requiredInputs": [
-      "wash_type",
-      "bay_count",
-      "tunnel_length_ft",
-      "cars_per_day_avg",
-      "cars_per_hour_peak",
-      "operating_hours_per_day",
-      "days_per_week",
-      "dryer_present",
-      "dryer_kw",
-      "water_heating_type",
-      "uses_hot_water",
-      "reclaim_system",
-      "vacuum_count",
-      "vacuum_kw_each",
-      "monthly_kwh",
-      "peak_demand_kw",
-      "demand_charge",
-      "demand_charge_rate"
-    ]
+    "requiredInputs": ["bayTunnelCount", "averageWashesPerDay", "operatingHours"]
   },
   "parts": [
     {
       "id": "operations",
       "label": "Wash Operations",
       "description": "Type and throughput",
-      "questionIds": ["wash_type", "bay_count", "tunnel_length_ft", "cars_per_day_avg", "cars_per_hour_peak"]
+      "questionIds": [
+        "wash_type",
+        "bay_count",
+        "tunnel_length_ft",
+        "cars_per_day_avg",
+        "cars_per_hour_peak"
+      ]
     },
     {
       "id": "schedule",
@@ -42,7 +29,15 @@
       "id": "equipment",
       "label": "Equipment & Systems",
       "description": "Dryers, water heating, vacuums",
-      "questionIds": ["dryer_present", "dryer_kw", "water_heating_type", "uses_hot_water", "reclaim_system", "vacuum_count", "vacuum_kw_each"]
+      "questionIds": [
+        "dryer_present",
+        "dryer_kw",
+        "water_heating_type",
+        "uses_hot_water",
+        "reclaim_system",
+        "vacuum_count",
+        "vacuum_kw_each"
+      ]
     },
     {
       "id": "billing",
@@ -228,12 +223,12 @@
     }
   ],
   "mapping": {
-    "wash_type": { "from": "wash_type" },
-    "bay_count": { "from": "bay_count" },
+    "carWashType": { "from": "wash_type" },
+    "bayTunnelCount": { "from": "bay_count" },
     "tunnel_length_ft": { "from": "tunnel_length_ft" },
-    "cars_per_day_avg": { "from": "cars_per_day_avg" },
+    "averageWashesPerDay": { "from": "cars_per_day_avg" },
     "cars_per_hour_peak": { "from": "cars_per_hour_peak" },
-    "operating_hours_per_day": { "from": "operating_hours_per_day" },
+    "operatingHours": { "from": "operating_hours_per_day" },
     "days_per_week": { "from": "days_per_week" },
     "dryer_present": { "from": "dryer_present" },
     "dryer_kw": { "from": "dryer_kw" },
