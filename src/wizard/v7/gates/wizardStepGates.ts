@@ -81,26 +81,28 @@ export function gateLocation(state: WizardGateState): WizardGateResult {
   const zip = state.locationRawInput || state.location?.postalCode || state.location?.zip || "";
   const normalizedZip = zip.replace(/\D/g, "");
   
-  // Debug logging
-  console.log('[gateLocation] Checking:', {
-    'locationRawInput': state.locationRawInput,
-    'location.postalCode': state.location?.postalCode,
-    'location.zip': state.location?.zip,
-    'combined zip': zip,
-    'normalized': normalizedZip,
-    'length': normalizedZip.length,
-    'locationConfirmed': state.locationConfirmed
-  });
+  // Debug logging (DEV only — prevents console spam in production)
+  if (import.meta.env.DEV) {
+    console.log('[gateLocation] Checking:', {
+      'locationRawInput': state.locationRawInput,
+      'location.postalCode': state.location?.postalCode,
+      'location.zip': state.location?.zip,
+      'combined zip': zip,
+      'normalized': normalizedZip,
+      'length': normalizedZip.length,
+      'locationConfirmed': state.locationConfirmed
+    });
+  }
   
   // Valid ZIP is ALWAYS sufficient - business name/address are optional
   if (normalizedZip.length >= 5) {
-    console.log('[gateLocation] ✅ ZIP valid, allowing continue');
+    if (import.meta.env.DEV) console.log('[gateLocation] ✅ ZIP valid, allowing continue');
     return { canContinue: true };
   }
 
   // Also allow if location resolved (from address lookup) even without ZIP
   if (state.location?.formattedAddress) {
-    console.log('[gateLocation] ✅ Address resolved, allowing continue');
+    if (import.meta.env.DEV) console.log('[gateLocation] ✅ Address resolved, allowing continue');
     return { canContinue: true };
   }
 
@@ -109,12 +111,12 @@ export function gateLocation(state: WizardGateState): WizardGateResult {
     const relaxed = localStorage.getItem('wizardRelaxedGates');
     const expiry = Number(localStorage.getItem('wizardRelaxedGatesExpiry'));
     if (relaxed === 'true' && expiry > Date.now()) {
-      console.warn('[gateLocation] ⚠️ Auto-fix: Relaxing gate validation (AI Agent intervention)');
+      if (import.meta.env.DEV) console.warn('[gateLocation] ⚠️ Auto-fix: Relaxing gate validation (AI Agent intervention)');
       return { canContinue: true };
     }
   }
 
-  console.warn('[gateLocation] ❌ Blocking: ZIP incomplete');
+  if (import.meta.env.DEV) console.warn('[gateLocation] ❌ Blocking: ZIP incomplete');
   return { canContinue: false, reason: "zip-incomplete" };
 }
 

@@ -995,10 +995,9 @@ const api = {
   },
 
   // Load Step 3 template by industry
+  // RESILIENCE: API is an enhancement, not a dependency.
+  // If the backend is down (ECONNREFUSED / 500), fall back to local JSON templates.
   async loadStep3Template(industry: IndustrySlug, signal?: AbortSignal): Promise<Step3Template> {
-    // Import API helper
-    const { apiCall, API_ENDPOINTS } = await import("@/config/api");
-
     // Map industry slugs that don't have dedicated templates to closest match
     const templateMapping: Record<string, string> = {
       manufacturing: "data_center", // Use data center template (industrial loads)
@@ -1017,34 +1016,102 @@ const api = {
     
     console.log(`[V7 SSOT] Step3 template resolved: selected=${selected} effective=${effective}`);
 
-    // Call backend template loader with EFFECTIVE industry
-    const response = await apiCall<{
-      ok: boolean;
-      template?: Step3Template;
-      reason?: string;
-      notes?: string[];
-    }>(API_ENDPOINTS.TEMPLATE_LOAD, {
-      method: "POST",
-      body: JSON.stringify({ industry: effective }),
-      signal,
-    });
+    // ============================================================
+    // Phase 1: Try remote API (preferred — freshest data)
+    // ============================================================
+    let remoteTemplate: Step3Template | null = null;
+    let apiError: unknown = null;
 
-    // Handle rejection
-    if (!response.ok || !response.template) {
-      throw {
-        code: "API",
-        message: response.notes?.join(" ") || `Template not found for ${selected}`,
-      };
+    try {
+      const { apiCall, API_ENDPOINTS } = await import("@/config/api");
+
+      const response = await apiCall<{
+        ok: boolean;
+        template?: Step3Template;
+        reason?: string;
+        notes?: string[];
+      }>(API_ENDPOINTS.TEMPLATE_LOAD, {
+        method: "POST",
+        body: JSON.stringify({ industry: effective }),
+        signal,
+      });
+
+      if (response.ok && response.template) {
+        remoteTemplate = response.template;
+      } else {
+        apiError = {
+          code: "API",
+          message: response.notes?.join(" ") || `Template not found for ${selected}`,
+        };
+      }
+    } catch (err: unknown) {
+      // AbortError should propagate immediately — user navigated away
+      if (signal?.aborted || (err instanceof DOMException && err.name === "AbortError")) {
+        throw err;
+      }
+      apiError = err;
+      console.warn(
+        `[V7 SSOT] Template API failed (will try local fallback):`,
+        err instanceof Error ? err.message : err
+      );
     }
 
-    // Generate deterministic template ID if not provided by backend
+    // ============================================================
+    // Phase 2: Resolve template (remote OR local fallback)
+    // ============================================================
+    let sourceLabel: "api" | "local" = "api";
+
+    if (!remoteTemplate) {
+      // Fallback: load from bundled JSON templates
+      const { getTemplate } = await import("@/wizard/v7/templates/templateIndex");
+      const localTpl = getTemplate(effective);
+
+      if (!localTpl) {
+        // Neither API nor local template available — hard fail
+        throw apiError ?? {
+          code: "NO_TEMPLATE",
+          message: `No template available for "${selected}" (effective: "${effective}"). API down and no local fallback.`,
+        };
+      }
+
+      // Convert IndustryTemplateV1 → Step3Template shape
+      remoteTemplate = {
+        id: localTpl.id ?? `${localTpl.industry}.${localTpl.version}`,
+        industry: localTpl.industry as IndustrySlug,
+        version: localTpl.version,
+        questions: localTpl.questions.map((q) => ({
+          id: q.id,
+          label: q.label,
+          type: q.type as Step3Template["questions"][number]["type"],
+          required: q.required,
+          options: q.options as Step3Template["questions"][number]["options"],
+          unit: q.unit,
+          hint: q.hint,
+          min: q.min,
+          max: q.max,
+          defaultValue: q.defaultValue,
+        })),
+        defaults: localTpl.defaults,
+      };
+      sourceLabel = "local";
+
+      console.warn(
+        `[V7 SSOT] ⚠ Using LOCAL template fallback for "${effective}" (API unavailable)`
+      );
+    }
+
+    // ============================================================
+    // Phase 3: Stamp identity fields + validate
+    // ============================================================
+
+    // Generate deterministic template ID if not provided
     const templateId =
-      (response.template as Record<string, unknown>).id ??
-      `${effective}.${response.template.version}`;
+      (remoteTemplate as Record<string, unknown>).id ??
+      `${effective}.${remoteTemplate.version}`;
 
     // Build final template with proper identity fields
     const finalTemplate: Step3Template = {
-      ...response.template,
+      ...remoteTemplate,
 
       // Stable identity for keying
       id: templateId as string,
@@ -1086,7 +1153,7 @@ const api = {
     }
 
     console.log(
-      `[V7 SSOT] Loaded Step3 template: selected=${selected} effective=${effective} v=${response.template.version} id=${templateId} questions=${finalTemplate.questions.length} ✓`
+      `[V7 SSOT] Loaded Step3 template: selected=${selected} effective=${effective} source=${sourceLabel} v=${remoteTemplate.version} id=${templateId} questions=${finalTemplate.questions.length} ✓`
     );
 
     return finalTemplate;
