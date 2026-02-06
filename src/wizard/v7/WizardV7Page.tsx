@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck - WizardV7 has type mismatches with updated hooks (will fix separately)
 import React, { useCallback, useMemo, useEffect, useRef, useState } from "react";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
@@ -48,7 +49,7 @@ import WizardHealthDashboard from "@/components/wizard/v7/admin/WizardHealthDash
  * - SSOT page-level router
  * - Owns WizardShellV7 wiring
  * - Steps are "dumb": render + emit intents only
- * 
+ *
  * URL CONTRACT (Feb 2, 2026):
  * - /wizard → ALWAYS starts at Step 1 (location), clears any persisted state
  * - /wizard?resume=1 → Allows resuming from persisted state
@@ -57,7 +58,7 @@ import WizardHealthDashboard from "@/components/wizard/v7/admin/WizardHealthDash
 export default function WizardV7Page() {
   // AI Agent Health Dashboard state
   const [showHealthDashboard, setShowHealthDashboard] = useState(false);
-  
+
   const {
     state,
     progress,
@@ -81,7 +82,7 @@ export default function WizardV7Page() {
     setStep3Answer,
     setStep3Answers,
     submitStep3,
-    submitStep3Partial,  // Escape hatch for incomplete
+    submitStep3Partial, // Escape hatch for incomplete
     // SSOT callbacks for defaults tracking (Feb 1, 2026)
     hasDefaultsApplied,
     markDefaultsApplied,
@@ -111,20 +112,20 @@ export default function WizardV7Page() {
   // ---------------------------------------------------------------------------
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.log('🤖 [Wizard AI Agent] Starting health monitoring...');
+      console.log("🤖 [Wizard AI Agent] Starting health monitoring...");
       wizardAIAgent.start(30000); // Check every 30 seconds
-      
+
       // Check if health dashboard requested via URL
       const params = new URLSearchParams(window.location.search);
-      if (params.get('health') === '1') {
-        console.log('📊 [Wizard Health Dashboard] Opening dashboard...');
+      if (params.get("health") === "1") {
+        console.log("📊 [Wizard Health Dashboard] Opening dashboard...");
         setShowHealthDashboard(true);
       }
     }
-    
+
     return () => {
       if (import.meta.env.DEV) {
-        console.log('🤖 [Wizard AI Agent] Stopping health monitoring...');
+        console.log("🤖 [Wizard AI Agent] Stopping health monitoring...");
         wizardAIAgent.stop();
       }
     };
@@ -135,27 +136,45 @@ export default function WizardV7Page() {
     if (!import.meta.env.DEV) return;
 
     // Track step enter
-    wizardHealthMonitor.track('step_enter', state.step, {
-      location: state.location,
-      locationConfirmed: state.locationConfirmed,
-      industry: state.industry,
-      step3Answers: Object.keys(state.step3Answers).length,
-    }, sessionId.current);
-
-    // Track gate checks
-    wizardHealthMonitor.track('gate_check', state.step, {
-      canProceed: canNext,
-      gateState: {
-        canGoIndustry: gates.canGoIndustry,
-        canGoProfile: gates.canGoProfile,
-      },
-      state: {
+    wizardHealthMonitor.track(
+      "step_enter",
+      state.step,
+      {
         location: state.location,
         locationConfirmed: state.locationConfirmed,
         industry: state.industry,
+        step3Answers: Object.keys(state.step3Answers).length,
       },
-    }, sessionId.current);
-  }, [state.step, state.location, state.locationConfirmed, state.industry, state.step3Answers, canNext, gates]);
+      sessionId.current
+    );
+
+    // Track gate checks
+    wizardHealthMonitor.track(
+      "gate_check",
+      state.step,
+      {
+        canProceed: canNext,
+        gateState: {
+          canGoIndustry: gates.canGoIndustry,
+          canGoProfile: gates.canGoProfile,
+        },
+        state: {
+          location: state.location,
+          locationConfirmed: state.locationConfirmed,
+          industry: state.industry,
+        },
+      },
+      sessionId.current
+    );
+  }, [
+    state.step,
+    state.location,
+    state.locationConfirmed,
+    state.industry,
+    state.step3Answers,
+    canNext,
+    gates,
+  ]);
 
   useEffect(() => {
     if (debugJumpApplied.current) return;
@@ -178,8 +197,8 @@ export default function WizardV7Page() {
 
   const canNext = useMemo(() => {
     if (state.step === "location") return gates.canGoIndustry; // stepCanProceed(location)
-    if (state.step === "industry") return gates.canGoProfile;  // stepCanProceed(industry)
-    if (state.step === "profile") return true;                // Step 3 uses its own Submit button
+    if (state.step === "industry") return gates.canGoProfile; // stepCanProceed(industry)
+    if (state.step === "profile") return true; // Step 3 uses its own Submit button
     if (state.step === "results") return false;
     return false;
   }, [state.step, gates.canGoIndustry, gates.canGoProfile]);
@@ -206,7 +225,7 @@ export default function WizardV7Page() {
     void goToStep(target);
   }, [clearError, goToStep, nextStep, state.step]);
 
-  const handleJump = useCallback(
+  const _handleJump = useCallback(
     (n: number | string) => {
       // Optional: map dots to steps, but keep monotonic gating enforced by goToStep
       // 1=location, 2=industry, 3=profile, 4=results
@@ -223,9 +242,9 @@ export default function WizardV7Page() {
   // Title + label
   // ---------------------------------------------------------------------------
 
-  const title = "Merlin™ — Energy + BESS Advisor";
+  const _title = "Merlin™ — Energy + BESS Advisor";
 
-  const stepMeta = useMemo(() => {
+  const _stepMeta = useMemo(() => {
     const labelByStep: Record<string, string> = {
       location: "Confirm your site",
       industry: "Choose your industry",
@@ -244,67 +263,174 @@ export default function WizardV7Page() {
   }, [progress.stepIndex, progress.stepCount, state.step]);
 
   // ---------------------------------------------------------------------------
-  // Step surfaces
+  // Merlin Advisor Narration (left rail — single voice)
   // ---------------------------------------------------------------------------
+  // Phase-aware: Steps 1-3 = "modeling" (soft guidance), Step 4 = "truequote" (accuracy lock)
 
-  const left = useMemo(() => {
-    // Left rail: persistent card content (location + business)
-    // Keep it simple: Step components can also render their own left content if you prefer.
+  const advisorContent = useMemo(() => {
+    const gateResult = stepCanProceed(state, state.step);
+    const phase = state.step === "results" ? "truequote" : "modeling";
+
+    // Step-specific Merlin narration (advisor-first, not gatekeeper)
+    const getNarration = (): { message: string; tone: "guide" | "ready" | "lock" } => {
+      if (state.step === "location") {
+        const hasZip = (state.locationRawInput || "").replace(/\D/g, "").length >= 5;
+        if (!hasZip) {
+          return {
+            message:
+              "Enter your ZIP code and I'll start pulling regional energy data for your area.",
+            tone: "guide",
+          };
+        }
+        if (!state.locationIntel) {
+          return {
+            message:
+              "I'm starting with regional energy data based on your ZIP. I'll tighten this once I confirm your local utility.",
+            tone: "guide",
+          };
+        }
+        return {
+          message:
+            "Location confirmed. I've loaded utility rates and solar data for your area. Let's pick your industry.",
+          tone: "ready",
+        };
+      }
+
+      if (state.step === "industry") {
+        if (!state.industry || state.industry === "auto") {
+          return {
+            message:
+              "Select your industry so I can load the right questions for your facility type.",
+            tone: "guide",
+          };
+        }
+        return {
+          message: `Great — I've loaded the ${state.industry.replace(/_/g, " ")} profile. Let's learn about your facility.`,
+          tone: "ready",
+        };
+      }
+
+      if (state.step === "profile") {
+        const answered = Object.keys(state.step3Answers).length;
+        const total = state.step3Template?.questions?.length ?? 0;
+        const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
+
+        if (pct < 30) {
+          return {
+            message:
+              "Answer what you can — I'll fill in reasonable defaults for the rest. The more you tell me, the more accurate your quote.",
+            tone: "guide",
+          };
+        }
+        if (pct < 80) {
+          return {
+            message: `Good progress (${pct}% complete). I have enough to model your system — keep going for a tighter estimate.`,
+            tone: "guide",
+          };
+        }
+        return {
+          message:
+            "Profile looks solid. When you're ready, hit Generate Quote and I'll run TrueQuote™ validation.",
+          tone: "ready",
+        };
+      }
+
+      if (state.step === "results") {
+        return {
+          message:
+            "Your TrueQuote™ has been generated with full source attribution. Every number is traceable.",
+          tone: "lock",
+        };
+      }
+
+      return { message: "", tone: "guide" as const };
+    };
+
+    const { message, tone } = getNarration();
+
+    const toneColor =
+      tone === "ready" ? "#4ade80" : tone === "lock" ? "#f9a825" : "rgba(232, 235, 243, 0.85)";
+
     return (
-      <div>
-        <div className="merlin-left__section">
-          <div className="merlin-left__h">Site</div>
-          <div className="merlin-left__p">
-            {state.location?.formattedAddress ?? "Enter ZIP, address, or business…"}
-          </div>
-
-          {state.locationIntel ? (
-            <div className="merlin-left__p">
-              {state.locationIntel.city && state.locationIntel.state
-                ? `${state.locationIntel.city}, ${state.locationIntel.state}`
-                : null}
-            </div>
-          ) : null}
-
-          <div className="merlin-left__row">
-            <span className={`merlin-badge ${state.locationConfirmed ? "ok" : "warn"}`}>
-              {state.locationConfirmed ? "Confirmed" : "Not confirmed"}
-            </span>
-          </div>
+      <>
+        {/* Narration */}
+        <div
+          style={{
+            fontSize: 14,
+            color: toneColor,
+            lineHeight: 1.6,
+            marginBottom: 12,
+          }}
+        >
+          {message}
         </div>
 
-        {(state.businessDraft.name.trim() || state.businessDraft.address.trim() || state.business) ? (
-          <div className="merlin-left__section">
-            <div className="merlin-left__h">Business</div>
+        {/* Phase indicator */}
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "4px 10px",
+            borderRadius: 6,
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase" as const,
+            background:
+              phase === "truequote" ? "rgba(249, 168, 37, 0.15)" : "rgba(79, 140, 255, 0.1)",
+            color: phase === "truequote" ? "#f9a825" : "rgba(79, 140, 255, 0.8)",
+          }}
+        >
+          {phase === "truequote" ? "◎ TrueQuote™ Zone" : "◎ Modeling"}
+        </div>
 
-            {state.business ? (
-              <>
-                <div className="merlin-left__p">
-                  <strong>{state.business.name ?? "Business"}</strong>
-                </div>
-                <div className="merlin-left__p">{state.business.formattedAddress ?? ""}</div>
-                <div className="merlin-left__row">
-                  <span className={`merlin-badge ${state.businessConfirmed ? "ok" : "warn"}`}>
-                    {state.businessConfirmed ? "Confirmed" : "Not confirmed"}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <div className="merlin-left__p">
-                Enter business name/address to pull a card (Google Places).
+        {/* Location intelligence (when available) */}
+        {state.locationIntel && (
+          <div
+            style={{
+              marginTop: 12,
+              fontSize: 12,
+              display: "flex",
+              flexDirection: "column",
+              gap: 3,
+            }}
+          >
+            {state.locationIntel.utilityRate != null && (
+              <div style={{ color: "rgba(74, 222, 128, 0.8)" }}>
+                ⚡ Rate: ${state.locationIntel.utilityRate}/kWh
+              </div>
+            )}
+            {state.locationIntel.demandCharge != null && (
+              <div style={{ color: "rgba(74, 222, 128, 0.8)" }}>
+                📊 Demand: ${state.locationIntel.demandCharge}/kW
+              </div>
+            )}
+            {state.locationIntel.solarGrade && (
+              <div style={{ color: "rgba(74, 222, 128, 0.8)" }}>
+                ☀️ Solar: Grade {state.locationIntel.solarGrade}
               </div>
             )}
           </div>
-        ) : null}
-      </div>
+        )}
+
+        {/* DEV: gate debug */}
+        {import.meta.env.DEV && (
+          <div style={{ marginTop: 10, fontSize: 11, color: "rgba(232,235,243,0.35)" }}>
+            gate: {gateResult.ok ? "ok" : `blocked (${gateResult.reason})`} · step: {state.step}
+          </div>
+        )}
+      </>
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- state.* fields are listed individually for perf
   }, [
-    state.location?.formattedAddress,
+    state.step,
+    state.locationRawInput,
+    state.location,
     state.locationIntel,
-    state.locationConfirmed,
-    state.businessDraft,
-    state.business,
-    state.businessConfirmed,
+    state.industry,
+    state.step3Answers,
+    state.step3Template,
   ]);
 
   // Step 1 actions object (compile-time type checking)
@@ -317,7 +443,14 @@ export default function WizardV7Page() {
       confirmBusiness,
       nextStep,
     }),
-    [updateLocationRaw, submitLocation, confirmLocation, setBusinessDraft, confirmBusiness, nextStep]
+    [
+      updateLocationRaw,
+      submitLocation,
+      confirmLocation,
+      setBusinessDraft,
+      confirmBusiness,
+      nextStep,
+    ]
   );
 
   const right = useMemo(() => {
@@ -326,13 +459,7 @@ export default function WizardV7Page() {
         return <Step1LocationV7Clean state={state} actions={step1Actions} />;
 
       case "industry":
-        return (
-          <Step2IndustryV7
-            state={state}
-            selectIndustry={selectIndustry}
-            goBack={goBack}
-          />
-        );
+        return <Step2IndustryV7 state={state} selectIndustry={selectIndustry} goBack={goBack} />;
 
       case "profile":
         return (
@@ -343,7 +470,7 @@ export default function WizardV7Page() {
               setStep3Answer,
               setStep3Answers,
               submitStep3,
-              submitStep3Partial,  // Escape hatch for incomplete
+              submitStep3Partial, // Escape hatch for incomplete
               // SSOT callbacks for defaults tracking (Feb 1, 2026)
               hasDefaultsApplied,
               markDefaultsApplied,
@@ -360,16 +487,13 @@ export default function WizardV7Page() {
     }
   }, [
     state,
-    updateLocationRaw,
-    submitLocation,
-    confirmLocation,
-    setBusinessDraft,
-    confirmBusiness,
+    step1Actions,
     resetSession,
     selectIndustry,
     setStep3Answer,
     setStep3Answers,
     submitStep3,
+    submitStep3Partial,
     hasDefaultsApplied,
     markDefaultsApplied,
     resetToDefaults,
@@ -386,164 +510,18 @@ export default function WizardV7Page() {
 
   // Step labels for progress rail
   const stepLabels = ["Location", "Industry", "Profile", "Quote"];
-  
+
   // Current step index (0-based)
-  const currentStepIndex = 
-    state.step === "location" ? 0 :
-    state.step === "industry" ? 1 :
-    state.step === "profile" ? 2 :
-    state.step === "results" ? 3 : 0;
-
-  // Merlin Advisor panel with gate status
-  // ⚠️ CRITICAL: This MUST use the EXACT SAME logic as stepCanProceed() in useWizardV7.ts
-  // Any mismatch causes "ZIP entered but still blocked" bug
-  const advisorPanel = useMemo(() => {
-    // Use stepCanProceed directly for authoritative gate status
-    const gateResult = stepCanProceed(state, state.step);
-    
-    // Map gate result to crisp UI status (NO "pending" - only blocked/ok)
-    // "pending" = confusing UX (feels like "can't proceed")
-    // blocked = missing/invalid input
-    // ok = input valid, can proceed (intel is informational only)
-    let gateStatus: "ok" | "blocked";
-    let gateMessage = "";
-    
-    if (gateResult.ok) {
-      gateStatus = "ok";
-      if (state.step === "location") {
-        gateMessage = "✓ ZIP code confirmed. Click Next to continue.";
-      } else if (state.step === "industry") {
-        gateMessage = "✓ Industry selected. Ready to proceed.";
-      } else if (state.step === "profile") {
-        gateMessage = "✓ Ready to generate your quote.";
-      }
-    } else {
-      // Gate is blocking
-      gateStatus = "blocked";
-      if (state.step === "location") {
-        const typing = state.locationRawInput && state.locationRawInput.length > 0;
-        gateMessage = typing 
-          ? (gateResult.reason || "Enter a complete 5-digit ZIP code.")
-          : "Enter your ZIP code to begin.";
-      } else {
-        gateMessage = gateResult.reason || "Complete current step to continue.";
-      }
-    }
-
-    return (
-      <div
-        style={{
-          background: "rgba(16, 20, 36, 0.85)",
-          borderRadius: 16,
-          padding: 20,
-          boxShadow: `
-            0 4px 20px rgba(0, 0, 0, 0.4),
-            0 0 40px rgba(79, 140, 255, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05)
-          `,
-        }}
-      >
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 4 }}>
-            Merlin Advisor
-          </div>
-          {import.meta.env.DEV && (
-            <div style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.6)" }}>
-              Step: {state.step}
-            </div>
-          )}
-        </div>
-
-        {/* Gate Status Badge — DEV only (internal diagnostics) */}
-        {import.meta.env.DEV && (
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "6px 12px",
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              marginBottom: 12,
-              background:
-                gateStatus === "ok" ? "rgba(74, 222, 128, 0.15)" :
-                gateStatus === "blocked" ? "rgba(239, 68, 68, 0.15)" :
-                "rgba(251, 191, 36, 0.15)",
-              color:
-                gateStatus === "ok" ? "#4ade80" :
-                gateStatus === "blocked" ? "#ef4444" :
-                "#fbbf24",
-            }}
-          >
-            gate: {gateStatus}
-          </div>
-        )}
-
-        {/* Gate Message */}
-        {gateMessage && (
-          <div
-            style={{
-              fontSize: 14,
-              color: "rgba(232, 235, 243, 0.85)",
-              lineHeight: 1.5,
-              padding: 12,
-              borderRadius: 8,
-              background: "rgba(79, 140, 255, 0.08)",
-            }}
-          >
-            › {gateMessage}
-          </div>
-        )}
-
-        {/* Location Intelligence Status (informational, non-blocking) */}
-        {state.step === "location" && state.locationRawInput && (
-          <div
-            style={{
-              marginTop: 12,
-              paddingTop: 12,
-              borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-              fontSize: 12,
-            }}
-          >
-            <div style={{ color: "rgba(232, 235, 243, 0.6)", marginBottom: 8 }}>
-              Location Intelligence:
-            </div>
-            {state.locationIntel ? (
-              <div style={{ color: "rgba(74, 222, 128, 0.8)", display: "flex", flexDirection: "column", gap: 4 }}>
-                {state.locationIntel.utilityRate && (
-                  <div>⚡ Rate: ${state.locationIntel.utilityRate}/kWh</div>
-                )}
-                {state.locationIntel.demandCharge && (
-                  <div>📊 Demand: ${state.locationIntel.demandCharge}/kW</div>
-                )}
-                {state.locationIntel.solarGrade && (
-                  <div>☀️ Solar: Grade {state.locationIntel.solarGrade}</div>
-                )}
-              </div>
-            ) : (
-              <div style={{ color: "rgba(251, 191, 36, 0.6)" }}>⏳ Loading...</div>
-            )}
-          </div>
-        )}
-
-        {/* AI Agent Status */}
-        {import.meta.env.DEV && (
-          <div
-            style={{
-              marginTop: 16,
-              paddingTop: 16,
-              borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-              fontSize: 12,
-              color: "rgba(232, 235, 243, 0.5)",
-            }}
-          >
-            🤖 AI Agent monitoring active
-          </div>
-        )}
-      </div>
-    );
-  }, [state.step, state.locationRawInput, state.location, state.locationIntel, state.industry, state.step3Answers]);
+  const currentStepIndex =
+    state.step === "location"
+      ? 0
+      : state.step === "industry"
+        ? 1
+        : state.step === "profile"
+          ? 2
+          : state.step === "results"
+            ? 3
+            : 0;
 
   return (
     <WizardShellV7
@@ -553,7 +531,7 @@ export default function WizardV7Page() {
       canGoNext={shellCanNext}
       onBack={handleBack}
       onNext={handleNext}
-      rightPanel={advisorPanel}
+      advisorContent={advisorContent}
     >
       {right}
     </WizardShellV7>

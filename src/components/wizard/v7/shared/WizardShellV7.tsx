@@ -21,10 +21,20 @@ interface WizardShellV7Props {
   onBack?: () => void;
   onNext?: () => void;
   isVerified?: boolean;
-  rightPanel?: React.ReactNode; // ✅ Optional right panel (Advisor, etc.)
+  /** Advisor narration + intel rendered in left rail below progress steps */
+  advisorContent?: React.ReactNode;
   children: React.ReactNode;
 }
 
+/**
+ * WizardShellV7 — 2-Column Layout (Feb 6, 2026)
+ *
+ * LEFT RAIL (360px): Merlin avatar + progress + advisor narration (single voice)
+ * RIGHT PANEL (flex): Input fields + step content (full width)
+ *
+ * REMOVED: 3rd column (rightPanel). Advisor is now unified in the left rail.
+ * This gives input fields more space and creates a single Merlin voice.
+ */
 export default function WizardShellV7({
   currentStep,
   stepLabels,
@@ -35,13 +45,15 @@ export default function WizardShellV7({
   onBack,
   onNext,
   isVerified = true,
-  rightPanel,
+  advisorContent,
   children,
 }: WizardShellV7Props) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
 
   const totalSteps = stepLabels?.length ?? 0;
-  const safeStep = Number.isFinite(currentStep) ? Math.max(0, Math.min(currentStep, totalSteps - 1)) : 0;
+  const safeStep = Number.isFinite(currentStep)
+    ? Math.max(0, Math.min(currentStep, totalSteps - 1))
+    : 0;
 
   return (
     <>
@@ -152,7 +164,8 @@ export default function WizardShellV7({
                   marginBottom: 12,
                 }}
               >
-                Hi, I'm <span style={{ color: "#22D3EE" }}>Merlin</span> — your energy savings advisor.
+                Hi, I'm <span style={{ color: "#22D3EE" }}>Merlin</span> — your energy savings
+                advisor.
               </div>
               <div
                 style={{
@@ -197,8 +210,8 @@ export default function WizardShellV7({
                         background: isActive
                           ? "linear-gradient(135deg, rgba(79, 140, 255, 0.4), rgba(139, 92, 246, 0.35))"
                           : isComplete
-                          ? "rgba(74, 222, 128, 0.2)"
-                          : "rgba(255, 255, 255, 0.06)",
+                            ? "rgba(74, 222, 128, 0.2)"
+                            : "rgba(255, 255, 255, 0.06)",
                         color: isComplete ? "#4ade80" : "#e8ebf3",
                         boxShadow: isActive ? "0 4px 12px rgba(79, 140, 255, 0.3)" : "none",
                       }}
@@ -220,70 +233,75 @@ export default function WizardShellV7({
                 );
               })}
             </div>
-          </div>
 
-          {/* RIGHT PANEL */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* TrueQuote Badge */}
-            <div
-              onClick={() => setShowTrueQuoteModal(true)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "8px 16px",
-                borderRadius: 20,
-                background: "rgba(16, 20, 36, 0.7)",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
-                cursor: "pointer",
-                width: "fit-content",
-                transition: "transform 0.15s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-            >
-              <span style={{ fontSize: 16 }}>◎</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "#f9a825" }}>TrueQuote™</span>
-              {isVerified && (
-                <>
-                  <span style={{ color: "rgba(255,255,255,0.3)" }}>•</span>
-                  <span style={{ fontSize: 12, color: "#4ade80" }}>Verified</span>
-                </>
-              )}
-            </div>
-
-            {/* Main Content + Optional Advisor Panel */}
-            <div style={{ display: "flex", gap: 20, flex: 1 }}>
-              {/* Main Content Area (min-width: 0 prevents squeeze/overflow) */}
+            {/* ── Merlin Advisor Narration (Feb 6, 2026) ──────────── */}
+            {/* Single voice: contextual guidance, intel, assumptions. */}
+            {/* This replaces the old 3rd-column rightPanel.           */}
+            {advisorContent && (
               <div
-                className="merlin-step"
                 style={{
-                  flex: 1,
-                  minWidth: 0, // ✅ Prevents text overflow on narrow viewports
-                  background: "rgba(16, 20, 36, 0.75)",
-                  borderRadius: 20,
-                  padding: 36,
-                  boxShadow: `
-                    0 8px 40px rgba(0, 0, 0, 0.5),
-                    0 0 60px rgba(79, 140, 255, 0.12),
-                    0 0 80px rgba(139, 92, 246, 0.08),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.05)
-                  `,
+                  marginTop: 4,
+                  padding: 16,
+                  borderRadius: 14,
+                  background:
+                    "linear-gradient(135deg, rgba(79, 140, 255, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
                 }}
               >
-                {children}
+                {advisorContent}
               </div>
+            )}
 
-              {/* Advisor Panel (optional, hidden below xl breakpoint) */}
-              {rightPanel ? (
-                <aside 
-                  className="hidden xl:block"
-                  style={{ width: 320, flexShrink: 0 }}
-                >
-                  {rightPanel}
-                </aside>
-              ) : null}
+            {/* TrueQuote Badge — bottom of left rail */}
+            <div style={{ marginTop: "auto", paddingTop: 16 }}>
+              <div
+                onClick={() => setShowTrueQuoteModal(true)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 14px",
+                  borderRadius: 20,
+                  background: "rgba(255, 255, 255, 0.04)",
+                  cursor: "pointer",
+                  transition: "background 0.15s ease",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)")
+                }
+              >
+                <span style={{ fontSize: 14 }}>◎</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#f9a825" }}>TrueQuote™</span>
+                {isVerified && (
+                  <>
+                    <span style={{ color: "rgba(255,255,255,0.2)" }}>•</span>
+                    <span style={{ fontSize: 11, color: "#4ade80" }}>Verified</span>
+                  </>
+                )}
+              </div>
             </div>
+          </div>
+
+          {/* ── RIGHT: CONTENT AREA (full width) ─────────────── */}
+          <div
+            className="merlin-step"
+            style={{
+              background: "rgba(16, 20, 36, 0.75)",
+              borderRadius: 20,
+              padding: 36,
+              boxShadow: `
+                0 8px 40px rgba(0, 0, 0, 0.5),
+                0 0 60px rgba(79, 140, 255, 0.12),
+                0 0 80px rgba(139, 92, 246, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05)
+              `,
+              minHeight: 500,
+            }}
+          >
+            {children}
           </div>
         </div>
 
