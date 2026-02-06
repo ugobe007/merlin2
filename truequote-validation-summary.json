@@ -1,0 +1,38 @@
+[
+  {
+    "industry": "car_wash",
+    "status": "pass",
+    "peak": 240,
+    "base": 20,
+    "energy": 1728,
+    "capex": 145044.1692,
+    "roi": 6.613237456913061,
+    "valVersion": "v1",
+    "mix": "process:219.83999999999997 hvac:5.04 lighting:10.08 controls:5.04",
+    "defaultsUsed": 0
+  },
+  {
+    "industry": "hotel",
+    "status": "pass",
+    "peak": 450,
+    "base": 135,
+    "energy": 5670,
+    "capex": 261572.40899999999,
+    "roi": 4.65464461883408,
+    "valVersion": null,
+    "mix": "",
+    "defaultsUsed": 0
+  },
+  {
+    "industry": "data_center",
+    "status": "pass",
+    "peak": 2000,
+    "base": 1400,
+    "energy": 33600,
+    "capex": 1055854.205,
+    "roi": 4.227475196188341,
+    "valVersion": null,
+    "mix": "",
+    "defaultsUsed": 0
+  }
+]
