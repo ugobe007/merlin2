@@ -46,6 +46,7 @@ type Props = {
     submitStep3?: (answersOverride?: Step3Answers) => Promise<void>;
     submitStep3Partial?: () => Promise<void>; // Escape hatch for incomplete
     goBack?: () => void;
+    retryTemplate?: () => Promise<void>; // Upgrade fallback → industry
   };
 
   /**
@@ -369,13 +370,26 @@ export default function Step3ProfileV7(props: Props) {
             details below for an accurate quote.
           </div>
 
-          {/* Fallback mode banner — visible when using generic template */}
+          {/* Fallback mode banner — canonical copy (Feb 6, 2026)
+              Contract: templateMode === "fallback" → Estimate Mode label + retry CTA */}
           {state.templateMode === "fallback" && (
             <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-950/30 p-3 text-sm text-amber-200">
-              <span className="font-medium text-amber-100">📋 General template active</span>
-              <span className="mx-1.5 text-amber-500/50">·</span>
-              I'm using a universal questionnaire so you can keep going. Once the industry profile
-              loads, I'll tighten the assumptions.
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <span className="font-medium text-amber-100">📋 General template active</span>
+                  <span className="mx-1.5 text-amber-500/50">—</span>
+                  you're in Estimate Mode. Retry industry profile to upgrade to TrueQuote™.
+                </div>
+                {actions?.retryTemplate && (
+                  <button
+                    type="button"
+                    onClick={() => void actions.retryTemplate?.()}
+                    className="shrink-0 rounded-md border border-amber-500/40 bg-amber-900/40 px-3 py-1 text-xs font-semibold text-amber-100 transition hover:bg-amber-800/60"
+                  >
+                    Retry Profile
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>

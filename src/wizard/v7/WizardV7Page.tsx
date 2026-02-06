@@ -280,83 +280,113 @@ export default function WizardV7Page() {
     const gateResult = stepCanProceed(state, state.step);
     const phase = getPhase(state.step);
 
-    // Step-specific Merlin narration (advisor-first, not gatekeeper)
+    // =========================================================================
+    // Canonical Advisor Narration Scripts (Feb 6, 2026)
+    // Deterministic, mode-aware, honest about TrueQuote™ vs Estimate.
+    // Each step has 3-4 states keyed off observable wizard state fields.
+    // =========================================================================
     const getNarration = (): { message: string; tone: "guide" | "ready" | "lock" } => {
+      // ----- Step 1: Location (ZIP) -----
       if (state.step === "location") {
-        const hasZip = (state.locationRawInput || "").replace(/\D/g, "").length >= 5;
+        const rawDigits = (state.locationRawInput || "").replace(/\D/g, "");
+        const hasZip = rawDigits.length >= 5;
+        const isPartial = rawDigits.length > 0 && rawDigits.length < 5;
+
+        // ZIP invalid (partial or non-numeric attempt)
+        if (isPartial) {
+          return {
+            message:
+              "I need a valid 5-digit ZIP to continue. Example: 90210. If you're outside the U.S., tell me and we'll switch modes.",
+            tone: "guide",
+          };
+        }
+        // No input yet (initial)
         if (!hasZip) {
           return {
             message:
-              "Enter your ZIP code and I'll start pulling regional energy data for your area.",
+              "Where should I model your site? Enter a 5-digit ZIP code. I'll use it to pull local utility patterns and weather context.",
             tone: "guide",
           };
         }
+        // ZIP entered but intel not yet back (validating)
         if (!state.locationIntel) {
           return {
-            message:
-              "I'm starting with regional energy data based on your ZIP. I'll tighten this once I confirm your local utility.",
+            message: "Checking that ZIP… If anything looks off, you can correct it and try again.",
             tone: "guide",
           };
         }
+        // ZIP valid + intel loaded
         return {
           message:
-            "Location confirmed. I've loaded utility rates and solar data for your area. Let's pick your industry.",
+            "Perfect. Location locked. Next I'll tailor the questionnaire to your facility type.",
           tone: "ready",
         };
       }
 
+      // ----- Step 2: Industry selection (critical path) -----
       if (state.step === "industry") {
+        // No industry selected yet
         if (!state.industry || state.industry === "auto") {
           return {
             message:
-              "Select your industry so I can load the right questions for your facility type.",
+              "Pick your facility type. This determines your TrueQuote™ profile — the questions I ask and the physics model behind your numbers.",
             tone: "guide",
           };
         }
+        // Industry selected, template loading in progress
+        if (state.isBusy && state.busyLabel?.toLowerCase().includes("template")) {
+          return {
+            message: "Loading your industry profile… This should take a moment.",
+            tone: "guide",
+          };
+        }
+        // Fallback mode triggered (API down / template not found)
         if (state.templateMode === "fallback") {
           return {
-            message: `I couldn't load the ${state.industry.replace(/_/g, " ")} profile, so I'm using a general-purpose questionnaire. Your quote will be an estimate — still useful, just less precise.`,
+            message:
+              "I couldn't load your industry profile right now. No problem — I'm switching to a general facility questionnaire so you can keep moving. You'll get a solid estimate, and we can retry the industry profile anytime to upgrade to TrueQuote™.",
             tone: "guide",
           };
         }
+        // Industry loaded successfully
         return {
-          message: `Great — I've loaded the ${state.industry.replace(/_/g, " ")} profile. Let's learn about your facility.`,
+          message:
+            "Great — industry profile loaded. Now I'll ask the minimum set of questions needed for a TrueQuote-grade result.",
           tone: "ready",
         };
       }
 
+      // ----- Step 3: Profile questions (industry vs fallback) -----
       if (state.step === "profile") {
         const answered = Object.keys(state.step3Answers).length;
         const total = state.step3Template?.questions?.length ?? 0;
         const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
 
+        // Fallback mode
         if (state.templateMode === "fallback") {
-          if (pct < 30) {
-            return {
-              message:
-                "I'm working with a general-purpose template. Answer what you can — it'll help me give you a solid ballpark.",
-              tone: "guide",
-            };
-          }
           return {
-            message: `Good — ${pct}% filled in. With a generic template I can still give you a useful estimate. Industry-specific numbers come once the profile loads.`,
+            message:
+              "We're in Estimate Mode using a general facility template. Answer what you can — this gives a reliable ballpark. When the industry profile loads, we'll swap in the TrueQuote™ questionnaire and keep your answers.",
             tone: "guide",
           };
         }
 
+        // Industry mode — low progress
         if (pct < 30) {
           return {
             message:
-              "Answer what you can — I'll fill in reasonable defaults for the rest. The more you tell me, the more accurate your quote.",
+              "These questions tune the model to your site. Answer what you know — every response tightens accuracy and reduces assumptions. If you're unsure, choose the closest option; I'll mark anything that's an assumption.",
             tone: "guide",
           };
         }
+        // Industry mode — good progress
         if (pct < 80) {
           return {
             message: `Good progress (${pct}% complete). I have enough to model your system — keep going for a tighter estimate.`,
             tone: "guide",
           };
         }
+        // Industry mode — nearly complete
         return {
           message:
             "Profile looks solid. When you're ready, hit Generate Quote and I'll run TrueQuote™ validation.",
@@ -364,6 +394,7 @@ export default function WizardV7Page() {
         };
       }
 
+      // ----- Step 4: Results (TrueQuote™ honesty) -----
       if (state.step === "results") {
         // TrueQuote™ claim requires BOTH conditions:
         // 1. templateMode === "industry" (not generic fallback)
@@ -504,6 +535,8 @@ export default function WizardV7Page() {
     state.location,
     state.locationIntel,
     state.industry,
+    state.isBusy,
+    state.busyLabel,
     state.step3Answers,
     state.step3Template,
     state.templateMode,
@@ -548,6 +581,7 @@ export default function WizardV7Page() {
               setStep3Answers,
               submitStep3,
               submitStep3Partial, // Escape hatch for incomplete
+              retryTemplate, // Upgrade fallback → industry without losing answers
               // SSOT callbacks for defaults tracking (Feb 1, 2026)
               hasDefaultsApplied,
               markDefaultsApplied,
