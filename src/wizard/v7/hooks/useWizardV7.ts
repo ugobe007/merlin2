@@ -460,7 +460,7 @@ function runContractQuote(params: {
   answers: Record<string, unknown>;
   location?: LocationCard;
   locationIntel?: LocationIntel;
-}): ContractQuoteResult {
+}): ContractQuoteResult & { freeze: PricingFreeze; quote: QuoteOutput; sessionId: string } {
   // Initialize telemetry logger
   let logger: ContractRunLogger | undefined;
   
@@ -524,8 +524,8 @@ function runContractQuote(params: {
       console.log('Template:', { industry: tpl.industry, version: tpl.version, calculator: tpl.calculator.id });
       console.log('Inputs Used:', inputs);
       console.log('Load Profile:', loadProfile);
-      console.log('Duty Cycle:', computed.dutyCycle || 'not provided');
-      console.log('kW Contributors:', computed.kWContributors || 'not provided');
+      console.log('Duty Cycle:', (computed as Record<string, unknown>).dutyCycle || 'not provided');
+      console.log('kW Contributors:', (computed as Record<string, unknown>).kWContributors || 'not provided');
       
       // Sanity checks
       const warnings: string[] = [];
@@ -549,7 +549,7 @@ function runContractQuote(params: {
     const sizingHints = {
       storageToPeakRatio: sizingDefaults.ratio,
       durationHours: sizingDefaults.hours,
-      source: `industry:${tpl.industry}` as const,
+      source: "industry-default" as const,
     };
 
     // 8. Collect inputs used for pricing (for audit trail)
@@ -557,7 +557,11 @@ function runContractQuote(params: {
     const inputsUsed = {
       electricityRate: locationIntel?.utilityRate ?? 0.12,
       demandCharge: locationIntel?.demandCharge ?? 15,
-      location: params.location?.state ?? "unknown",
+      location: {
+        state: params.location?.state ?? "unknown",
+        zip: params.location?.postalCode,
+        city: params.location?.city,
+      },
       industry: tpl.industry,
       gridMode: (params.answers.gridMode as GridMode) ?? "grid_tied",
     };
@@ -1089,7 +1093,7 @@ const api = {
           hint: q.hint,
           min: q.min,
           max: q.max,
-          defaultValue: q.defaultValue,
+          defaultValue: localTpl.defaults?.[q.id] as string | number | boolean | string[] | undefined,
         })),
         defaults: localTpl.defaults,
       };
@@ -1487,8 +1491,9 @@ function reduce(state: WizardState, intent: Intent): WizardState {
         // Reset only questions in the specified part
         // For now, treat partId as a prefix filter (e.g., "part1_" questions)
         // In practice, this should use template.parts structure
+        const scopeObj = intent.scope as { partId: string };
         questionIdsToReset = template.questions
-          .filter(q => q.id.startsWith(intent.scope.partId))
+          .filter(q => q.id.startsWith(scopeObj.partId))
           .map(q => q.id);
       }
       
@@ -1533,7 +1538,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
         newDefaultsApplied = [];
       } else {
         newDefaultsApplied = state.step3DefaultsAppliedParts.filter(
-          p => !p.includes(intent.scope.partId)
+          p => !p.includes((intent.scope as { partId: string }).partId)
         );
       }
       
@@ -1763,7 +1768,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
  */
 export function getNormalizedZip(state: WizardState): string {
   const raw =
-    state.location?.zip ??
+    state.location?.postalCode ??
     state.location?.postalCode ??
     state.locationRawInput ??
     "";
@@ -2762,9 +2767,7 @@ export function useWizardV7() {
             inputsUsed: {
               electricityRate: inputsUsed.electricityRate,
               demandCharge: inputsUsed.demandCharge,
-              location: {
-                state: inputsUsed.location,
-              },
+              location: inputsUsed.location,
               industry: inputsUsed.industry,
               gridMode: inputsUsed.gridMode,
             },
@@ -2778,7 +2781,7 @@ export function useWizardV7() {
             storageToPeakRatio: sizingHints.storageToPeakRatio,
             durationHours: sizingHints.durationHours,
             industry: inputsUsed.industry,
-            state: inputsUsed.location,
+            state: inputsUsed.location.state,
             electricityRate: inputsUsed.electricityRate,
           });
 
@@ -2816,7 +2819,7 @@ export function useWizardV7() {
           inputFallbacks.demandCharge = { value: inputsUsed.demandCharge, reason: 'Default demand charge (no utility data)' };
         }
         if (!args.location?.state) {
-          inputFallbacks.location = { value: inputsUsed.location, reason: 'Location not resolved' };
+          inputFallbacks.location = { value: inputsUsed.location.state ?? 'unknown', reason: 'Location not resolved' };
         }
 
         const mergedQuote: QuoteOutput = {
@@ -2835,11 +2838,11 @@ export function useWizardV7() {
             npv: pricingResult.data.financials?.npv,
             irr: pricingResult.data.financials?.irr,
             paybackYears: pricingResult.data.financials?.paybackYears,
-            demandChargeSavings: pricingResult.data.financials?.demandChargeSavings,
-            bessKWh: pricingResult.data.breakdown?.bessKWh,
-            bessKW: pricingResult.data.breakdown?.bessKW,
-            solarKW: pricingResult.data.breakdown?.solarKW,
-            generatorKW: pricingResult.data.breakdown?.generatorKW,
+            demandChargeSavings: (pricingResult.data.financials as Record<string, unknown> | undefined)?.demandChargeSavings as number | undefined,
+            bessKWh: pricingResult.data.breakdown?.batteries ? pricingResult.data.breakdown.batteries.unitEnergyMWh * pricingResult.data.breakdown.batteries.quantity * 1000 : undefined,
+            bessKW: pricingResult.data.breakdown?.batteries ? pricingResult.data.breakdown.batteries.unitPowerMW * pricingResult.data.breakdown.batteries.quantity * 1000 : undefined,
+            solarKW: pricingResult.data.breakdown?.solar ? pricingResult.data.breakdown.solar.totalMW * 1000 : undefined,
+            generatorKW: pricingResult.data.breakdown?.generators ? pricingResult.data.breakdown.generators.unitPowerMW * pricingResult.data.breakdown.generators.quantity * 1000 : undefined,
             pricingSnapshotId: pricingResult.data.pricingSnapshotId,
             pricingComplete: true,
           } : {
