@@ -21,11 +21,69 @@ export type CalcScalar = number | string | boolean | null;
 export type CalcInputs = Record<string, CalcScalar | CalcScalar[]>;
 
 /**
+ * Canonical contributor keys across all industries
+ * 
+ * Use these standard keys to avoid invariant drift:
+ * - hvac: HVAC/climate control
+ * - lighting: Facility lighting
+ * - controls: PLC/controls/BMS/payment systems
+ * - process: Industry-specific process loads (dryers, pumps, ovens, etc.)
+ * - itLoad: IT equipment (data centers)
+ * - cooling: Dedicated cooling (separate from HVAC)
+ * - charging: EV charging equipment
+ * - other: Miscellaneous loads
+ */
+export type ContributorKeys =
+  | 'hvac'
+  | 'lighting'
+  | 'controls'
+  | 'process'
+  | 'itLoad'
+  | 'cooling'
+  | 'charging'
+  | 'other';
+
+/**
+ * TrueQuote validation envelope
+ * 
+ * Namespaced container for validation-specific fields.
+ * Keeps calculator contract "product clean" while enabling harness validation.
+ */
+export type CalcValidation = {
+  /** Schema version (for drift detection) */
+  version: "v1";
+
+  /** Duty cycle [0, 1.25] - fraction of time at peak */
+  dutyCycle?: number;
+
+  /** kW breakdown by canonical contributor keys (ALWAYS use these 8 keys) */
+  kWContributors?: Record<ContributorKeys, number>;
+
+  /** Sum of all contributors (for sanity checking) */
+  kWContributorsTotalKW?: number;
+
+  /** Percentage shares of each contributor */
+  kWContributorShares?: Record<string, number>;
+
+  /** Industry-specific forensic details (sub-breakdowns) */
+  details?: {
+    car_wash?: { dryers?: number; pumps?: number; vacuums?: number };
+    hotel?: { rooms?: number; kitchen?: number; laundry?: number; pool?: number };
+    data_center?: { upsLosses?: number; pdus?: number; fans?: number };
+    ev_charging?: { chargers?: number; siteAux?: number };
+    [industry: string]: Record<string, number> | undefined;
+  };
+
+  /** Validation notes (non-blocking observations) */
+  notes?: string[];
+};
+
+/**
  * Normalized calculator output
  *
  * MINIMUM: QuoteEngine/Freeze layer can rely on baseLoadKW + peakLoadKW
  * OPTIONAL: energyKWhPerDay, assumptions, warnings for audit trail
- * TRUEQUOTE: dutyCycle, kWContributors, computed for validation harness
+ * VALIDATION: TrueQuote validation envelope (harness-only, namespaced)
  * RAW: Escape hatch for industry-specific outputs (PUE, redundancy, etc.)
  */
 export type CalcRunResult = {
@@ -38,27 +96,14 @@ export type CalcRunResult = {
   /** Daily energy consumption in kWh */
   energyKWhPerDay?: number;
 
-  /** Duty cycle [0, 1] - fraction of time at peak (TrueQuote validation) */
-  dutyCycle?: number;
-
-  /** kW breakdown by contributor (TrueQuote validation) */
-  kWContributors?: Record<string, number>;
-
-  /** Computed object with detailed breakdown (TrueQuote validation) */
-  computed?: {
-    dutyCycle?: number;
-    kWContributors?: Record<string, number>;
-    kWContributorsTotalKW?: number;
-    kWContributorShares?: Record<string, number>;
-    assumptions?: string[];
-    warnings?: string[];
-  };
-
   /** Assumptions made by calculator (for audit trail) */
   assumptions?: string[];
 
   /** Warnings about input quality or missing data */
   warnings?: string[];
+
+  /** TrueQuote validation envelope (optional, harness-only) */
+  validation?: CalcValidation;
 
   /** Raw industry-specific outputs (PUE, redundancy, etc.) */
   raw?: unknown;
