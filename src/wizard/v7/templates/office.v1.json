@@ -1,0 +1,244 @@
+{
+  "schema": "industry-template-v1",
+  "industry": "office",
+  "version": "office.v1.0.0",
+  "calculator": {
+    "id": "office_load_v1",
+    "requiredInputs": ["squareFootage"]
+  },
+  "parts": [
+    {
+      "id": "facility",
+      "label": "Facility Profile",
+      "description": "Building size, type, and occupancy.",
+      "questionIds": ["office_type", "square_footage", "floor_count", "occupancy_pct"]
+    },
+    {
+      "id": "systems",
+      "label": "Building Systems",
+      "description": "HVAC, lighting, and major loads.",
+      "questionIds": [
+        "hvac_type",
+        "hvac_age_years",
+        "lighting_type",
+        "has_server_room",
+        "server_room_kw",
+        "elevator_count"
+      ]
+    },
+    {
+      "id": "additions",
+      "label": "EV & On-Site Generation",
+      "description": "Electric vehicle charging and renewables.",
+      "questionIds": ["ev_chargers_count", "ev_charger_power_kw", "has_rooftop_solar"]
+    },
+    {
+      "id": "billing",
+      "label": "Energy & Billing",
+      "description": "Current energy usage and demand charges from your utility bill.",
+      "questionIds": ["monthly_kwh", "peak_demand_kw", "demand_charge", "demand_charge_rate"]
+    }
+  ],
+  "defaults": {
+    "office_type": "Corporate / multi-tenant",
+    "square_footage": 50000,
+    "floor_count": 3,
+    "occupancy_pct": 80,
+    "hvac_type": "Central rooftop",
+    "hvac_age_years": 10,
+    "lighting_type": "LED (full or partial)",
+    "has_server_room": true,
+    "server_room_kw": 20,
+    "elevator_count": 2,
+    "ev_chargers_count": 0,
+    "ev_charger_power_kw": 7.2,
+    "has_rooftop_solar": false,
+    "monthly_kwh": 75000,
+    "peak_demand_kw": 250,
+    "demand_charge": true,
+    "demand_charge_rate": 15
+  },
+  "questions": [
+    {
+      "id": "office_type",
+      "label": "Office type",
+      "type": "select",
+      "options": [
+        "Small professional (law, dental, CPA)",
+        "Corporate / multi-tenant",
+        "Government / municipal",
+        "Tech / high-density open floor",
+        "Medical office building"
+      ],
+      "required": true,
+      "hint": "Affects plug load density and HVAC profile (CBECS 2018)"
+    },
+    {
+      "id": "square_footage",
+      "label": "Total conditioned square footage",
+      "type": "number",
+      "required": true,
+      "min": 500,
+      "max": 2000000,
+      "unit": "sq ft",
+      "hint": "All floors combined. Excludes parking garage. ASHRAE 90.1 uses 6 W/sqft peak."
+    },
+    {
+      "id": "floor_count",
+      "label": "Number of floors",
+      "type": "number",
+      "required": false,
+      "min": 1,
+      "max": 100,
+      "hint": "Affects elevator load and HVAC zoning"
+    },
+    {
+      "id": "occupancy_pct",
+      "label": "Typical occupancy",
+      "type": "number",
+      "required": false,
+      "min": 10,
+      "max": 100,
+      "unit": "%",
+      "hint": "Average weekday occupancy — affects plug load and HVAC"
+    },
+    {
+      "id": "hvac_type",
+      "label": "HVAC system",
+      "type": "select",
+      "options": [
+        "Window / split units",
+        "Central rooftop",
+        "Central chiller plant",
+        "VRF / mini-split"
+      ],
+      "required": false,
+      "hint": "Chiller plants have higher peak demand but better efficiency"
+    },
+    {
+      "id": "hvac_age_years",
+      "label": "HVAC system age",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 40,
+      "unit": "years",
+      "hint": "Systems > 15 years often 20-40% less efficient (DOE Commercial Buildings)"
+    },
+    {
+      "id": "lighting_type",
+      "label": "Lighting type",
+      "type": "select",
+      "options": ["Fluorescent (T8/T12)", "LED (full or partial)", "Mixed fluorescent + LED"],
+      "required": false,
+      "hint": "LED reduces lighting load by 40-60% vs fluorescent (DOE SSL)"
+    },
+    {
+      "id": "has_server_room",
+      "label": "On-site server / IT closet?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Even a small server closet can add 10-50 kW with cooling"
+    },
+    {
+      "id": "server_room_kw",
+      "label": "Server room IT load",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 500,
+      "unit": "kW",
+      "hint": "IT equipment power (not including cooling). Typical: 5-50 kW for office server rooms."
+    },
+    {
+      "id": "elevator_count",
+      "label": "Number of elevators",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 30,
+      "hint": "Each elevator adds ~25-40 kW peak demand during starts"
+    },
+    {
+      "id": "ev_chargers_count",
+      "label": "EV chargers on site",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 200,
+      "hint": "Number of electric vehicle charging stations in parking"
+    },
+    {
+      "id": "ev_charger_power_kw",
+      "label": "Charger power rating",
+      "type": "number",
+      "required": false,
+      "unit": "kW",
+      "min": 0,
+      "hint": "Power per charger (typical: 7.2 kW Level 2, 50+ kW DCFC)"
+    },
+    {
+      "id": "has_rooftop_solar",
+      "label": "Rooftop solar installed?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Existing PV reduces net demand but creates export opportunity for BESS"
+    },
+    {
+      "id": "monthly_kwh",
+      "label": "Average monthly kWh",
+      "type": "number",
+      "required": false,
+      "min": 500,
+      "max": 10000000,
+      "unit": "kWh",
+      "hint": "From your most recent utility bill"
+    },
+    {
+      "id": "peak_demand_kw",
+      "label": "Peak demand",
+      "type": "number",
+      "required": false,
+      "min": 10,
+      "max": 50000,
+      "unit": "kW",
+      "hint": "Highest 15-minute demand reading on recent bill"
+    },
+    {
+      "id": "demand_charge",
+      "label": "Demand charges apply?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Most commercial offices > 25 kW pay $/kW demand charges"
+    },
+    {
+      "id": "demand_charge_rate",
+      "label": "Demand charge rate",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 100,
+      "unit": "$/kW-month",
+      "hint": "Typical office demand charges: $8-20/kW"
+    }
+  ],
+  "mapping": {
+    "squareFootage": { "from": "square_footage", "transform": "toNumber" },
+    "officeType": { "from": "office_type", "transform": "mapOfficeType" },
+    "floorCount": { "from": "floor_count", "transform": "defaultZero" },
+    "occupancyPct": { "from": "occupancy_pct", "transform": "toNumber" },
+    "hvacType": { "from": "hvac_type" },
+    "hvacAgeYears": { "from": "hvac_age_years", "transform": "defaultZero" },
+    "lightingType": { "from": "lighting_type" },
+    "hasServerRoom": { "from": "has_server_room", "transform": "yesNoToBool" },
+    "serverRoomKW": { "from": "server_room_kw", "transform": "defaultZero" },
+    "elevatorCount": { "from": "elevator_count", "transform": "defaultZero" },
+    "evChargersCount": { "from": "ev_chargers_count", "transform": "defaultZero" },
+    "evChargerPowerKW": { "from": "ev_charger_power_kw", "transform": "defaultZero" },
+    "hasRooftopSolar": { "from": "has_rooftop_solar", "transform": "yesNoToBool" },
+    "monthly_kwh": { "from": "monthly_kwh" },
+    "peak_demand_kw": { "from": "peak_demand_kw" },
+    "demand_charge": { "from": "demand_charge" },
+    "demand_charge_rate": { "from": "demand_charge_rate", "transform": "ifDemandChargeElseZero" }
+  }
+}
