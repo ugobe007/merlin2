@@ -387,15 +387,20 @@ describe("Golden traces: manifest integrity", () => {
     }
   });
 
-  it("all 6 manifest entries present", () => {
+  it("all 11 manifest entries present", () => {
     const slugs = MANIFEST.map((m) => m.industrySlug).sort();
     expect(slugs).toEqual([
       "car_wash",
       "data_center",
       "ev_charging",
+      "gas_station",
       "hospital",
       "hotel",
       "manufacturing",
+      "office",
+      "restaurant",
+      "retail",
+      "warehouse",
     ]);
   });
 });

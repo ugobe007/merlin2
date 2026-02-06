@@ -214,6 +214,81 @@ export const MANIFEST: ManifestEntry[] = [
     typicalPeakKWRange: [200, 10000],
     detailKeys: ["type", "processIntensity", "sqFt"],
   },
+
+  // ──────────────────────────────────────────────────────
+  // OFFICE (adapter-only, no template JSON yet)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "office",
+    templateVersion: "adapter-only",
+    calculatorId: "office_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["squareFootage"],
+    contributorKeysExpected: ["hvac", "lighting", "controls", "other"],
+    dutyCycleRange: [0.35, 0.55],
+    typicalPeakKWRange: [50, 2000],
+  },
+
+  // ──────────────────────────────────────────────────────
+  // RETAIL (adapter-only, no template JSON yet)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "retail",
+    templateVersion: "adapter-only",
+    calculatorId: "retail_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["squareFootage"],
+    contributorKeysExpected: ["hvac", "lighting", "controls", "other"],
+    dutyCycleRange: [0.35, 0.55],
+    typicalPeakKWRange: [30, 1500],
+  },
+
+  // ──────────────────────────────────────────────────────
+  // WAREHOUSE (adapter-only, no template JSON yet)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "warehouse",
+    templateVersion: "adapter-only",
+    calculatorId: "warehouse_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["squareFootage"],
+    contributorKeysExpected: ["hvac", "lighting", "controls", "other"],
+    dutyCycleRange: [0.25, 0.45],
+    typicalPeakKWRange: [50, 3000],
+  },
+
+  // ──────────────────────────────────────────────────────
+  // RESTAURANT (adapter-only, no template JSON yet)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "restaurant",
+    templateVersion: "adapter-only",
+    calculatorId: "restaurant_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["seatingCapacity"],
+    contributorKeysExpected: ["hvac", "lighting", "controls", "process", "other"],
+    dutyCycleRange: [0.35, 0.55],
+    typicalPeakKWRange: [30, 500],
+  },
+
+  // ──────────────────────────────────────────────────────
+  // GAS STATION (adapter-only, no template JSON yet)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "gas_station",
+    templateVersion: "adapter-only",
+    calculatorId: "gas_station_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["fuelPumps"],
+    contributorKeysExpected: ["hvac", "lighting", "controls", "other"],
+    dutyCycleRange: [0.4, 0.6],
+    typicalPeakKWRange: [30, 500],
+  },
 ];
 
 // ──────────────────────────────────────────────────────
