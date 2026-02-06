@@ -223,7 +223,7 @@
     }
   ],
   "mapping": {
-    "carWashType": { "from": "wash_type" },
+    "carWashType": { "from": "wash_type", "transform": "mapWashType" },
     "bayTunnelCount": { "from": "bay_count" },
     "tunnel_length_ft": { "from": "tunnel_length_ft" },
     "averageWashesPerDay": { "from": "cars_per_day_avg" },
