@@ -358,6 +358,15 @@ export default function Step3ProfileV7(props: Props) {
             <span className="text-slate-100 font-medium">💡 Tip:</span>{" "}
             Fill in your facility details below for an accurate quote.
           </div>
+
+          {/* Fallback mode banner — visible when using generic template */}
+          {state.templateMode === "fallback" && (
+            <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-950/30 p-3 text-sm text-amber-200">
+              <span className="font-medium text-amber-100">📋 General template active</span>
+              <span className="mx-1.5 text-amber-500/50">·</span>
+              I'm using a universal questionnaire so you can keep going. Once the industry profile loads, I'll tighten the assumptions.
+            </div>
+          )}
         </div>
       </div>
 

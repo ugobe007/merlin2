@@ -94,6 +94,8 @@ export default function WizardV7Page() {
 
     // Step 4: pricing retry
     retryPricing,
+    retryTemplate,
+    retryTemplate,
 
     clearError,
 
@@ -311,6 +313,12 @@ export default function WizardV7Page() {
             tone: "guide",
           };
         }
+        if (state.templateMode === "fallback") {
+          return {
+            message: `I couldn't load the ${state.industry.replace(/_/g, " ")} profile, so I'm using a general-purpose questionnaire. Your quote will be an estimate — still useful, just less precise.`,
+            tone: "guide",
+          };
+        }
         return {
           message: `Great — I've loaded the ${state.industry.replace(/_/g, " ")} profile. Let's learn about your facility.`,
           tone: "ready",
@@ -321,6 +329,20 @@ export default function WizardV7Page() {
         const answered = Object.keys(state.step3Answers).length;
         const total = state.step3Template?.questions?.length ?? 0;
         const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
+
+        if (state.templateMode === "fallback") {
+          if (pct < 30) {
+            return {
+              message:
+                "I'm working with a general-purpose template. Answer what you can — it'll help me give you a solid ballpark.",
+              tone: "guide",
+            };
+          }
+          return {
+            message: `Good — ${pct}% filled in. With a generic template I can still give you a useful estimate. Industry-specific numbers come once the profile loads.`,
+            tone: "guide",
+          };
+        }
 
         if (pct < 30) {
           return {
@@ -343,6 +365,13 @@ export default function WizardV7Page() {
       }
 
       if (state.step === "results") {
+        if (state.templateMode === "fallback") {
+          return {
+            message:
+              "This is a preliminary estimate based on a general facility model. For a TrueQuote™ with full source attribution, try reloading the industry profile.",
+            tone: "guide",
+          };
+        }
         return {
           message:
             "Your TrueQuote™ has been generated with full source attribution. Every number is traceable.",
@@ -471,6 +500,7 @@ export default function WizardV7Page() {
     state.industry,
     state.step3Answers,
     state.step3Template,
+    state.templateMode,
     state.quote,
   ]);
 
@@ -529,6 +559,7 @@ export default function WizardV7Page() {
               resetSession,
               goToStep,
               retryPricing,
+              retryTemplate,
             }}
           />
         );
@@ -551,6 +582,7 @@ export default function WizardV7Page() {
     goBack,
     goToStep,
     retryPricing,
+    retryTemplate,
   ]);
 
   // For Step 3, we want the shell "Next" disabled to force the Generate Quote action.

@@ -10,6 +10,8 @@ type Props = {
     goToStep: (step: WizardStep) => Promise<void>;
     // Phase 6: Pricing retry (non-blocking)
     retryPricing?: () => Promise<{ ok: boolean; error?: string }>;
+    // Phase 7: Template retry (upgrade fallback → industry)
+    retryTemplate?: () => Promise<void>;
   };
 };
 
@@ -242,6 +244,49 @@ export default function Step4ResultsV7({ state, actions }: Props) {
           <div style={{ marginTop: 10, fontSize: 12, opacity: 0.8, fontStyle: "italic" }}>
             💡 Pricing disabled until inputs complete
           </div>
+        </div>
+      )}
+
+      {/* ================================================================
+          FALLBACK TEMPLATE BANNER
+          Shows when using generic facility template instead of industry-specific
+          Offers retry to upgrade from Estimate → TrueQuote™
+      ================================================================ */}
+      {state.templateMode === "fallback" && (
+        <div
+          style={{
+            borderRadius: 16,
+            border: "1px solid rgba(59, 130, 246, 0.3)",
+            background: "rgba(59, 130, 246, 0.06)",
+            padding: 16,
+            color: "#1e40af",
+          }}
+        >
+          <div style={{ fontWeight: 700, fontSize: 14 }}>📋 Estimate Mode</div>
+          <div style={{ marginTop: 6, fontSize: 13, opacity: 0.9 }}>
+            This quote uses a general facility model because the industry-specific profile
+            wasn't available. Numbers are directionally correct but won't carry TrueQuote™
+            source attribution.
+          </div>
+          {actions.retryTemplate && (
+            <button
+              onClick={() => void actions.retryTemplate?.()}
+              disabled={state.busy}
+              style={{
+                marginTop: 10,
+                padding: "6px 14px",
+                borderRadius: 10,
+                border: "1px solid rgba(59, 130, 246, 0.4)",
+                background: state.busy ? "rgba(59, 130, 246, 0.08)" : "rgba(59, 130, 246, 0.12)",
+                color: state.busy ? "#93c5fd" : "#2563eb",
+                cursor: state.busy ? "not-allowed" : "pointer",
+                fontWeight: 700,
+                fontSize: 12,
+              }}
+            >
+              {state.busy ? "Retrying…" : "Retry industry profile →"}
+            </button>
+          )}
         </div>
       )}
 
@@ -523,7 +568,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
             </div>
 
             {/* Pricing Status Badge */}
-            {quote.pricingComplete ? (
+            {quote.pricingComplete && state.templateMode !== "fallback" ? (
               <div style={{ 
                 display: "inline-flex", 
                 alignItems: "center", 
@@ -543,6 +588,22 @@ export default function Step4ResultsV7({ state, actions }: Props) {
                     #{quote.pricingSnapshotId.slice(0, 8)}
                   </span>
                 )}
+              </div>
+            ) : quote.pricingComplete && state.templateMode === "fallback" ? (
+              <div style={{ 
+                display: "inline-flex", 
+                alignItems: "center", 
+                gap: 6, 
+                padding: "6px 12px", 
+                borderRadius: 8, 
+                background: "rgba(59, 130, 246, 0.1)", 
+                border: "1px solid rgba(59, 130, 246, 0.3)",
+                color: "#2563eb",
+                fontSize: 12,
+                fontWeight: 600,
+                marginBottom: 12,
+              }}>
+                📊 Estimate — Based on general facility model
               </div>
             ) : (
               <div style={{ 
