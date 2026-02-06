@@ -22,6 +22,8 @@
  */
 
 import type { ContributorKeys } from "../calculators/contract";
+import type { SSOTFieldAlias } from "../calculators/ssotInputAliases";
+import { SSOT_ALIASES } from "../calculators/ssotInputAliases";
 
 /** One entry per industry template */
 export type ManifestEntry = {
@@ -54,6 +56,19 @@ export type ManifestEntry = {
 
   /** Industry-specific validation details keys */
   detailKeys?: string[];
+
+  /**
+   * SSOT field alias map for this industry.
+   *
+   * Documents which adapter field names map to which SSOT field names.
+   * Used by:
+   * - Input sensitivity tests (verify user input actually reaches SSOT)
+   * - CI checks (verify adapters use buildSSOTInput, not raw objects)
+   * - Documentation (field name truth table)
+   *
+   * Phase 2A (Feb 2026): Prevents the "silent default" bug class.
+   */
+  ssotInputAliases?: Record<string, SSOTFieldAlias>;
 };
 
 /**
@@ -97,6 +112,7 @@ export const MANIFEST: ManifestEntry[] = [
     dutyCycleRange: [0.85, 1.0],
     typicalPeakKWRange: [500, 10000],
     detailKeys: ["upsLosses", "pdus", "fans"],
+    ssotInputAliases: SSOT_ALIASES.data_center,
   },
 
   // ──────────────────────────────────────────────────────
@@ -130,6 +146,7 @@ export const MANIFEST: ManifestEntry[] = [
     dutyCycleRange: [0.35, 0.65],
     typicalPeakKWRange: [200, 3000],
     detailKeys: ["rooms", "kitchen", "laundry", "pool"],
+    ssotInputAliases: SSOT_ALIASES.hotel,
   },
 
   // ──────────────────────────────────────────────────────
@@ -165,6 +182,7 @@ export const MANIFEST: ManifestEntry[] = [
     dutyCycleRange: [0.5, 0.85],
     typicalPeakKWRange: [50, 400],
     detailKeys: ["dryers", "pumps", "vacuums"],
+    ssotInputAliases: SSOT_ALIASES.car_wash,
   },
 
   // ──────────────────────────────────────────────────────
@@ -198,6 +216,7 @@ export const MANIFEST: ManifestEntry[] = [
     dutyCycleRange: [0.25, 0.45],
     typicalPeakKWRange: [50, 5000],
     detailKeys: ["level2", "dcfc", "siteAux"],
+    ssotInputAliases: SSOT_ALIASES.ev_charging,
   },
 
   // ──────────────────────────────────────────────────────
@@ -231,10 +250,11 @@ export const MANIFEST: ManifestEntry[] = [
     dutyCycleRange: [0.35, 0.95],
     typicalPeakKWRange: [200, 15000],
     detailKeys: ["medical", "surgical", "laundry"],
+    ssotInputAliases: SSOT_ALIASES.hospital,
   },
 
-  // ──────────────────────────────────────────────────────
-  // MANUFACTURING (template-backed v1.0.0 — 17 questions)
+  // ──────────────────────────────────────────────────────  // RETAIL (adapter-only, no template JSON yet)
+  // ──────────────────────────────────────────────────────  // MANUFACTURING (template-backed v1.0.0 — 17 questions)
   // ──────────────────────────────────────────────────────
   {
     industrySlug: "manufacturing",
@@ -265,6 +285,7 @@ export const MANIFEST: ManifestEntry[] = [
     dutyCycleRange: [0.5, 0.95],
     typicalPeakKWRange: [100, 25000],
     detailKeys: ["type", "shiftPattern", "processIntensity", "sqFt", "equipmentLoadKW"],
+    ssotInputAliases: SSOT_ALIASES.manufacturing,
   },
 
   // ──────────────────────────────────────────────────────
@@ -280,10 +301,8 @@ export const MANIFEST: ManifestEntry[] = [
     contributorKeysExpected: ["hvac", "lighting", "controls", "other"],
     dutyCycleRange: [0.35, 0.55],
     typicalPeakKWRange: [50, 2000],
+    ssotInputAliases: SSOT_ALIASES.office,
   },
-
-  // ──────────────────────────────────────────────────────
-  // RETAIL (adapter-only, no template JSON yet)
   // ──────────────────────────────────────────────────────
   {
     industrySlug: "retail",
@@ -295,6 +314,7 @@ export const MANIFEST: ManifestEntry[] = [
     contributorKeysExpected: ["hvac", "lighting", "controls", "other"],
     dutyCycleRange: [0.35, 0.55],
     typicalPeakKWRange: [30, 1500],
+    ssotInputAliases: SSOT_ALIASES.retail,
   },
 
   // ──────────────────────────────────────────────────────
@@ -310,6 +330,7 @@ export const MANIFEST: ManifestEntry[] = [
     contributorKeysExpected: ["hvac", "lighting", "controls", "other"],
     dutyCycleRange: [0.25, 0.45],
     typicalPeakKWRange: [50, 3000],
+    ssotInputAliases: SSOT_ALIASES.warehouse,
   },
 
   // ──────────────────────────────────────────────────────
@@ -325,6 +346,7 @@ export const MANIFEST: ManifestEntry[] = [
     contributorKeysExpected: ["hvac", "lighting", "controls", "process", "other"],
     dutyCycleRange: [0.35, 0.55],
     typicalPeakKWRange: [30, 500],
+    ssotInputAliases: SSOT_ALIASES.restaurant,
   },
 
   // ──────────────────────────────────────────────────────
@@ -340,6 +362,7 @@ export const MANIFEST: ManifestEntry[] = [
     contributorKeysExpected: ["hvac", "lighting", "controls", "other"],
     dutyCycleRange: [0.4, 0.6],
     typicalPeakKWRange: [30, 500],
+    ssotInputAliases: SSOT_ALIASES.gas_station,
   },
 ];
 

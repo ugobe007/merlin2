@@ -35,6 +35,9 @@ import type { CalculatorContract, CalcInputs, CalcRunResult, CalcValidation } fr
 // SSOT: Single source of truth for ALL industry power calculations
 import { calculateUseCasePower, calculateHospitalPower } from "@/services/useCasePowerCalculations";
 
+// Centralized field-name resolver (Phase 2A: prevents silent default fallback)
+import { buildSSOTInput } from "./ssotInputAliases";
+
 // ========== SSOT ADAPTERS ==========
 
 /**
@@ -568,7 +571,7 @@ export const OFFICE_LOAD_V1_SSOT: CalculatorContract = {
     }
     assumptions.push(`Office: ${squareFootage.toLocaleString()} sq ft @ 6 W/sqft (ASHRAE 90.1)`);
 
-    const result = calculateUseCasePower("office", { sqFt: squareFootage });
+    const result = calculateUseCasePower("office", buildSSOTInput("office", { squareFootage }));
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // Contributor breakdown (CBECS 2018 commercial office)
@@ -660,7 +663,7 @@ export const RETAIL_LOAD_V1_SSOT: CalculatorContract = {
     }
     assumptions.push(`Retail: ${squareFootage.toLocaleString()} sq ft @ 8 W/sqft (CBECS 2018)`);
 
-    const result = calculateUseCasePower("retail", { squareFeet: squareFootage });
+    const result = calculateUseCasePower("retail", buildSSOTInput("retail", { squareFootage }));
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // Contributor breakdown (CBECS 2018 retail)
@@ -754,7 +757,10 @@ export const MANUFACTURING_LOAD_V1_SSOT: CalculatorContract = {
     );
 
     // 1. Base load via SSOT
-    const result = calculateUseCasePower("manufacturing", { squareFootage, manufacturingType });
+    const result = calculateUseCasePower(
+      "manufacturing",
+      buildSSOTInput("manufacturing", { squareFootage, manufacturingType })
+    );
     const basePowerKW = result.powerMW * 1000;
 
     // 2. Additive equipment loads
@@ -1118,10 +1124,13 @@ export const WAREHOUSE_LOAD_V1_SSOT: CalculatorContract = {
       `${isColdStorage ? "Cold Storage" : "Warehouse"}: ${squareFootage.toLocaleString()} sq ft @ ${wattsPerSqFt} W/sqft (CBECS)`
     );
 
-    const result = calculateUseCasePower("warehouse", {
-      warehouseSqFt: squareFootage,
-      isColdStorage,
-    });
+    const result = calculateUseCasePower(
+      "warehouse",
+      buildSSOTInput("warehouse", {
+        squareFootage,
+        isColdStorage,
+      })
+    );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // Contributor breakdown varies: cold storage is refrigeration-dominant
@@ -1487,11 +1496,14 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
       assumptions.push("Default: 8 fuel pumps (no user input)");
     }
 
-    const result = calculateUseCasePower("gas-station", {
-      fuelPumps,
-      hasConvenienceStore,
-      stationType: hasConvenienceStore ? "with-cstore" : "gas-only",
-    });
+    const result = calculateUseCasePower(
+      "gas-station",
+      buildSSOTInput("gas_station", {
+        fuelPumps,
+        hasConvenienceStore,
+        stationType: hasConvenienceStore ? "with-cstore" : "gas-only",
+      })
+    );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // Build contributor breakdown based on facility configuration
