@@ -26,6 +26,7 @@ import type { IndustryTemplateV1 } from "./types";
 import dataCenter from "./data_center.v1.json";
 import hotel from "./hotel.v1.json";
 import carWash from "./car_wash.v1.json";
+import genericFacility from "./generic_facility.v1.json";
 
 /**
  * Template Metadata
@@ -57,6 +58,7 @@ export const TEMPLATES: IndustryTemplateV1[] = [
   dataCenter as IndustryTemplateV1,
   hotel as IndustryTemplateV1,
   carWash as IndustryTemplateV1,
+  genericFacility as IndustryTemplateV1,
 ];
 
 /**
@@ -108,6 +110,22 @@ export function getTemplate(industry: string, version?: string): IndustryTemplat
 
   // Specific version requested
   return candidates.find((t) => t.version === version) ?? null;
+}
+
+/**
+ * Get the universal fallback template (generic_facility)
+ *
+ * Used when:
+ * - No industry-specific template exists (API and local)
+ * - User selects an industry we don't have a template for yet
+ * - Template loading fails entirely
+ *
+ * The generic template asks universal questions (sqft, kWh, peak demand, goals)
+ * that work for ANY facility type. Merlin narrates: "I don't have an industry-
+ * specific profile for that yet, but I can still model your system."
+ */
+export function getFallbackTemplate(): IndustryTemplateV1 {
+  return genericFacility as IndustryTemplateV1;
 }
 
 /**

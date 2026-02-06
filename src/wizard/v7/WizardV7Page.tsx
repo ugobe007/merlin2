@@ -2,7 +2,12 @@
 // @ts-nocheck - WizardV7 has type mismatches with updated hooks (will fix separately)
 import React, { useCallback, useMemo, useEffect, useRef, useState } from "react";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
-import { useWizardV7, type WizardState, type WizardStep } from "@/wizard/v7/hooks/useWizardV7";
+import {
+  useWizardV7,
+  type WizardState,
+  type WizardStep,
+  getPhase,
+} from "@/wizard/v7/hooks/useWizardV7";
 
 /**
  * ⚠️ IMPORT GATE FUNCTION FOR ADVISOR PANEL
@@ -269,7 +274,7 @@ export default function WizardV7Page() {
 
   const advisorContent = useMemo(() => {
     const gateResult = stepCanProceed(state, state.step);
-    const phase = state.step === "results" ? "truequote" : "modeling";
+    const phase = getPhase(state.step);
 
     // Step-specific Merlin narration (advisor-first, not gatekeeper)
     const getNarration = (): { message: string; tone: "guide" | "ready" | "lock" } => {
@@ -414,6 +419,39 @@ export default function WizardV7Page() {
           </div>
         )}
 
+        {/* Confidence badge (results step only) */}
+        {state.step === "results" && state.quote?.confidence && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: "8px 12px",
+              borderRadius: 8,
+              fontSize: 12,
+              background:
+                state.quote.confidence.overall === "high"
+                  ? "rgba(74, 222, 128, 0.1)"
+                  : state.quote.confidence.overall === "medium"
+                    ? "rgba(251, 191, 36, 0.1)"
+                    : "rgba(239, 68, 68, 0.1)",
+              color:
+                state.quote.confidence.overall === "high"
+                  ? "#4ade80"
+                  : state.quote.confidence.overall === "medium"
+                    ? "#fbbf24"
+                    : "#ef4444",
+            }}
+          >
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>
+              Confidence: {state.quote.confidence.overall.toUpperCase()}
+            </div>
+            <div style={{ opacity: 0.8 }}>
+              {state.quote.confidence.userInputs} user inputs ·{" "}
+              {state.quote.confidence.defaultsUsed} defaults
+              {state.quote.confidence.industry === "fallback" && " · generic template"}
+            </div>
+          </div>
+        )}
+
         {/* DEV: gate debug */}
         {import.meta.env.DEV && (
           <div style={{ marginTop: 10, fontSize: 11, color: "rgba(232,235,243,0.35)" }}>
@@ -431,6 +469,7 @@ export default function WizardV7Page() {
     state.industry,
     state.step3Answers,
     state.step3Template,
+    state.quote,
   ]);
 
   // Step 1 actions object (compile-time type checking)
