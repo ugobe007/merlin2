@@ -182,6 +182,43 @@ export const TRANSFORMS: Record<string, TransformFn> = {
     if (v.includes("detail") || v.includes("full-service")) return "full-service";
     return "tunnel"; // Default for BESS customers
   },
+
+  /**
+   * Map hospital type display labels to SSOT-expected slugs
+   *
+   * SSOT: calculateHospitalPower(bedCount, hospitalType, operatingHours)
+   * hospitalType: "community" | "regional" | "academic" | "specialty"
+   */
+  mapHospitalType: (value) => {
+    const v = String(value || "")
+      .toLowerCase()
+      .trim();
+    if (v.includes("community")) return "community";
+    if (v.includes("academic") || v.includes("teaching")) return "academic";
+    if (
+      v.includes("specialty") ||
+      v.includes("cardiac") ||
+      v.includes("trauma") ||
+      v.includes("cancer")
+    )
+      return "specialty";
+    return "regional"; // Most common
+  },
+
+  /**
+   * Map operating hours display labels to SSOT-expected slugs
+   *
+   * SSOT: calculateHospitalPower(bedCount, hospitalType, operatingHours)
+   * operatingHours: "limited" | "extended" | "24_7"
+   */
+  mapOperatingHours: (value) => {
+    const v = String(value || "")
+      .toLowerCase()
+      .trim();
+    if (v.includes("limited") || v.includes("8 am") || v.includes("outpatient")) return "limited";
+    if (v.includes("extended") || v.includes("6 am")) return "extended";
+    return "24_7"; // Default for hospitals
+  },
 };
 
 /**

@@ -1,0 +1,226 @@
+{
+  "schema": "industry-template-v1",
+  "industry": "hospital",
+  "version": "hospital.v1.0.0",
+  "calculator": {
+    "id": "hospital_load_v1",
+    "requiredInputs": ["bedCount"]
+  },
+  "parts": [
+    {
+      "id": "facility_class",
+      "label": "Facility Classification",
+      "description": "What type of healthcare facility is this?",
+      "questionIds": ["hospital_type", "operating_hours"]
+    },
+    {
+      "id": "size_and_layout",
+      "label": "Size & Layout",
+      "description": "Help us understand the physical scale of the facility.",
+      "questionIds": ["bed_count", "icu_beds"]
+    },
+    {
+      "id": "imaging_and_equipment",
+      "label": "Imaging & Specialized Equipment",
+      "description": "High-draw medical equipment significantly affects BESS sizing.",
+      "questionIds": [
+        "surgical_suites",
+        "has_mri",
+        "mri_count",
+        "has_ct",
+        "ct_count",
+        "has_sterilization",
+        "has_lab",
+        "critical_load_pct"
+      ]
+    },
+    {
+      "id": "billing",
+      "label": "Utility & Billing",
+      "description": "Current energy costs and demand charges.",
+      "questionIds": ["monthly_kwh", "peak_demand_kw", "demand_charge", "demand_charge_rate"]
+    }
+  ],
+  "defaults": {
+    "hospital_type": "Regional",
+    "operating_hours": "24/7 (full hospital)",
+    "bed_count": 200,
+    "icu_beds": 0,
+    "surgical_suites": 0,
+    "has_mri": false,
+    "mri_count": 0,
+    "has_ct": false,
+    "ct_count": 0,
+    "has_sterilization": false,
+    "has_lab": false,
+    "critical_load_pct": 85,
+    "monthly_kwh": 1500000,
+    "peak_demand_kw": 1500,
+    "demand_charge": true,
+    "demand_charge_rate": 20
+  },
+  "questions": [
+    {
+      "id": "hospital_type",
+      "label": "Facility type",
+      "type": "select",
+      "options": [
+        "Community",
+        "Regional",
+        "Academic / teaching",
+        "Specialty (cardiac, trauma, cancer)"
+      ],
+      "required": true,
+      "hint": "Determines base kW-per-bed (ASHRAE healthcare standard)"
+    },
+    {
+      "id": "operating_hours",
+      "label": "Operating hours",
+      "type": "select",
+      "options": [
+        "24/7 (full hospital)",
+        "Extended (6 AM\u201310 PM)",
+        "Limited (8 AM\u20136 PM outpatient)"
+      ],
+      "required": true,
+      "hint": "Clinics and urgent care centers draw less overnight"
+    },
+    {
+      "id": "bed_count",
+      "label": "Licensed bed count",
+      "type": "number",
+      "required": true,
+      "min": 10,
+      "max": 2000,
+      "hint": "Total licensed beds (occupied + unoccupied)"
+    },
+    {
+      "id": "icu_beds",
+      "label": "ICU / critical-care beds",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 500,
+      "hint": "ICU beds have higher power draw (ventilators, monitors, infusion pumps)"
+    },
+    {
+      "id": "surgical_suites",
+      "label": "Operating / surgical suites",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 50,
+      "hint": "Each surgical suite draws ~40 kW (lighting, equipment, HVAC)"
+    },
+    {
+      "id": "has_mri",
+      "label": "MRI scanner(s)?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Each MRI draws ~100 kW with cooling"
+    },
+    {
+      "id": "mri_count",
+      "label": "Number of MRI units",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 10,
+      "hint": "Only needed if MRI is yes"
+    },
+    {
+      "id": "has_ct",
+      "label": "CT scanner(s)?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Each CT scanner draws ~100 kW with cooling"
+    },
+    {
+      "id": "ct_count",
+      "label": "Number of CT scanners",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 10,
+      "hint": "Only needed if CT is yes"
+    },
+    {
+      "id": "has_sterilization",
+      "label": "Central sterilization department?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Steam autoclaves and washers add ~50-100 kW"
+    },
+    {
+      "id": "has_lab",
+      "label": "On-site laboratory?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Clinical labs add refrigeration, centrifuges, analyzers"
+    },
+    {
+      "id": "critical_load_pct",
+      "label": "Critical load percentage",
+      "type": "number",
+      "required": false,
+      "min": 30,
+      "max": 100,
+      "hint": "Fraction of total load that must stay powered during outage (NEC 517 / NFPA 99)"
+    },
+    {
+      "id": "monthly_kwh",
+      "label": "Average monthly kWh",
+      "type": "number",
+      "required": false,
+      "min": 50000,
+      "max": 50000000,
+      "unit": "kWh",
+      "hint": "From your most recent utility bill"
+    },
+    {
+      "id": "peak_demand_kw",
+      "label": "Peak demand",
+      "type": "number",
+      "required": false,
+      "min": 100,
+      "max": 50000,
+      "unit": "kW",
+      "hint": "Highest 15-minute demand reading on recent bill"
+    },
+    {
+      "id": "demand_charge",
+      "label": "Do you pay a demand charge?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Most commercial/institutional accounts pay $/kW demand charges"
+    },
+    {
+      "id": "demand_charge_rate",
+      "label": "Demand charge rate",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 100,
+      "unit": "$/kW-month",
+      "hint": "Typical hospital demand charges: $10-30/kW"
+    }
+  ],
+  "mapping": {
+    "hospitalType": { "from": "hospital_type", "transform": "mapHospitalType" },
+    "operatingHours": { "from": "operating_hours", "transform": "mapOperatingHours" },
+    "bedCount": { "from": "bed_count", "transform": "toNumber" },
+    "icuBeds": { "from": "icu_beds", "transform": "defaultZero" },
+    "surgicalSuites": { "from": "surgical_suites", "transform": "defaultZero" },
+    "hasMRI": { "from": "has_mri", "transform": "yesNoToBool" },
+    "mriCount": { "from": "mri_count", "transform": "defaultZero" },
+    "hasCT": { "from": "has_ct", "transform": "yesNoToBool" },
+    "ctCount": { "from": "ct_count", "transform": "defaultZero" },
+    "hasSterilization": { "from": "has_sterilization", "transform": "yesNoToBool" },
+    "hasLab": { "from": "has_lab", "transform": "yesNoToBool" },
+    "criticalLoadPct": { "from": "critical_load_pct", "transform": "percentToDecimal" },
+    "monthly_kwh": { "from": "monthly_kwh" },
+    "peak_demand_kw": { "from": "peak_demand_kw" },
+    "demand_charge": { "from": "demand_charge" },
+    "demand_charge_rate": { "from": "demand_charge_rate", "transform": "ifDemandChargeElseZero" }
+  }
+}

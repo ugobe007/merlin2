@@ -201,18 +201,35 @@ export const MANIFEST: ManifestEntry[] = [
   },
 
   // ──────────────────────────────────────────────────────
-  // HOSPITAL (adapter-only, no template JSON yet)
+  // HOSPITAL (template-backed v1.0.0 — 16 questions)
   // ──────────────────────────────────────────────────────
   {
     industrySlug: "hospital",
-    templateVersion: "adapter-only",
+    templateVersion: "hospital_v1.0.0",
     calculatorId: "hospital_load_v1",
     validationVersion: "v1",
-    requiredQuestionIds: [], // No template JSON — adapter is called directly
+    requiredQuestionIds: [
+      "hospital_type",
+      "operating_hours",
+      "bed_count",
+      "icu_beds",
+      "surgical_suites",
+      "has_mri",
+      "mri_count",
+      "has_ct",
+      "ct_count",
+      "has_sterilization",
+      "has_lab",
+      "critical_load_pct",
+      "monthly_kwh",
+      "peak_demand_kw",
+      "demand_charge",
+      "demand_charge_rate",
+    ],
     requiredCalcFields: ["bedCount"],
     contributorKeysExpected: ["process", "hvac", "lighting", "controls", "itLoad", "other"],
-    dutyCycleRange: [0.8, 0.95],
-    typicalPeakKWRange: [500, 8000],
+    dutyCycleRange: [0.35, 0.95],
+    typicalPeakKWRange: [200, 15000],
     detailKeys: ["medical", "surgical", "laundry"],
   },
 
