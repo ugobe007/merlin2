@@ -168,14 +168,31 @@ export const MANIFEST: ManifestEntry[] = [
   },
 
   // ──────────────────────────────────────────────────────
-  // EV CHARGING (adapter-only, no template JSON yet)
+  // EV CHARGING (template-backed as of v1.0.0)
   // ──────────────────────────────────────────────────────
   {
     industrySlug: "ev_charging",
-    templateVersion: "adapter-only",
+    templateVersion: "ev_charging.v1.0.0",
     calculatorId: "ev_charging_load_v1",
     validationVersion: "v1",
-    requiredQuestionIds: [], // No template JSON — adapter is called directly
+    requiredQuestionIds: [
+      "level2_count",
+      "dcfc_count",
+      "hpc_count",
+      "charger_power_level2_kw",
+      "site_type",
+      "operating_model",
+      "operating_hours_per_day",
+      "concurrency_pct",
+      "site_demand_cap_kw",
+      "existing_service_amps",
+      "grid_upgrade_planned",
+      "behind_meter_solar",
+      "monthly_kwh",
+      "peak_demand_kw",
+      "demand_charge",
+      "demand_charge_rate",
+    ],
     requiredCalcFields: ["level2Chargers", "dcfcChargers"],
     contributorKeysExpected: ["charging", "lighting", "controls", "other"],
     dutyCycleRange: [0.25, 0.45],

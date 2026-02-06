@@ -1,0 +1,236 @@
+{
+  "schema": "industry-template-v1",
+  "industry": "ev_charging",
+  "version": "ev_charging.v1.0.0",
+  "calculator": {
+    "id": "ev_charging_load_v1",
+    "requiredInputs": ["level2Chargers", "dcfcChargers"]
+  },
+  "parts": [
+    {
+      "id": "charger_mix",
+      "label": "Charger Configuration",
+      "description": "What chargers does the site have?",
+      "questionIds": ["level2_count", "dcfc_count", "hpc_count", "charger_power_level2_kw"]
+    },
+    {
+      "id": "site_config",
+      "label": "Site & Operations",
+      "description": "Site type and operating model",
+      "questionIds": ["site_type", "operating_model", "operating_hours_per_day", "concurrency_pct"]
+    },
+    {
+      "id": "demand",
+      "label": "Demand & Grid",
+      "description": "Electrical demand and grid connection",
+      "questionIds": [
+        "site_demand_cap_kw",
+        "existing_service_amps",
+        "grid_upgrade_planned",
+        "behind_meter_solar"
+      ]
+    },
+    {
+      "id": "billing",
+      "label": "Energy & Billing",
+      "description": "Current energy usage and demand charges",
+      "questionIds": ["monthly_kwh", "peak_demand_kw", "demand_charge", "demand_charge_rate"]
+    }
+  ],
+  "defaults": {
+    "level2_count": 8,
+    "dcfc_count": 2,
+    "hpc_count": 0,
+    "charger_power_level2_kw": 7.2,
+    "site_type": "Retail / shopping",
+    "operating_model": "Public paid",
+    "operating_hours_per_day": 18,
+    "concurrency_pct": 40,
+    "site_demand_cap_kw": 0,
+    "existing_service_amps": 400,
+    "grid_upgrade_planned": false,
+    "behind_meter_solar": false,
+    "monthly_kwh": 15000,
+    "peak_demand_kw": 250,
+    "demand_charge": true,
+    "demand_charge_rate": 15
+  },
+  "questions": [
+    {
+      "id": "level2_count",
+      "label": "Number of Level 2 chargers",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 200,
+      "unit": "chargers",
+      "hint": "AC chargers (typically 7.2-19.2 kW each)"
+    },
+    {
+      "id": "dcfc_count",
+      "label": "Number of DC Fast Chargers (DCFC)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 50,
+      "unit": "chargers",
+      "hint": "50-150 kW DC chargers"
+    },
+    {
+      "id": "hpc_count",
+      "label": "Number of High Power Chargers (HPC)",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 20,
+      "unit": "chargers",
+      "hint": "250-350 kW ultra-fast chargers"
+    },
+    {
+      "id": "charger_power_level2_kw",
+      "label": "Level 2 charger power rating",
+      "type": "select",
+      "required": false,
+      "options": ["7.2", "11", "19.2", "22"],
+      "hint": "Power per Level 2 port (kW)"
+    },
+    {
+      "id": "site_type",
+      "label": "Site type",
+      "type": "select",
+      "required": true,
+      "options": [
+        "Retail / shopping",
+        "Highway corridor",
+        "Workplace / fleet",
+        "Multifamily residential",
+        "Municipal / public",
+        "Destination / hospitality"
+      ],
+      "hint": "Primary use of the charging location"
+    },
+    {
+      "id": "operating_model",
+      "label": "Operating model",
+      "type": "select",
+      "required": true,
+      "options": [
+        "Public paid",
+        "Public free (amenity)",
+        "Fleet / private",
+        "Workplace (employee)",
+        "Mixed (public + fleet)"
+      ],
+      "hint": "How is charging provided?"
+    },
+    {
+      "id": "operating_hours_per_day",
+      "label": "Operating hours per day",
+      "type": "number",
+      "required": true,
+      "min": 1,
+      "max": 24,
+      "unit": "hours",
+      "hint": "Hours the station is available"
+    },
+    {
+      "id": "concurrency_pct",
+      "label": "Estimated peak concurrency",
+      "type": "number",
+      "required": false,
+      "min": 10,
+      "max": 100,
+      "unit": "%",
+      "hint": "What % of chargers are in use simultaneously at peak? (typically 30-50%)"
+    },
+    {
+      "id": "site_demand_cap_kw",
+      "label": "Site demand capacity limit (kW)",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 10000,
+      "unit": "kW",
+      "hint": "If utility limits your total demand, enter cap here. 0 = no limit."
+    },
+    {
+      "id": "existing_service_amps",
+      "label": "Existing electrical service (amps)",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 4000,
+      "unit": "A",
+      "hint": "Main panel amperage — helps size BESS for demand avoidance"
+    },
+    {
+      "id": "grid_upgrade_planned",
+      "label": "Grid / transformer upgrade planned?",
+      "type": "boolean",
+      "required": false,
+      "hint": "If yes, BESS can defer or downsize the upgrade"
+    },
+    {
+      "id": "behind_meter_solar",
+      "label": "Behind-the-meter solar on site?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Solar paired with BESS improves ROI and peak shaving"
+    },
+    {
+      "id": "monthly_kwh",
+      "label": "Monthly electricity usage (kWh)",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 500000,
+      "unit": "kWh",
+      "hint": "If known — from utility bill"
+    },
+    {
+      "id": "peak_demand_kw",
+      "label": "Peak demand (kW) — if known",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 10000,
+      "unit": "kW",
+      "hint": "From utility bill or meter — helps calibrate BESS sizing"
+    },
+    {
+      "id": "demand_charge",
+      "label": "Subject to demand charges?",
+      "type": "boolean",
+      "required": false,
+      "hint": "Most commercial rates include $/kW demand charges"
+    },
+    {
+      "id": "demand_charge_rate",
+      "label": "Demand charge rate ($/kW)",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 100,
+      "unit": "$/kW",
+      "hint": "Monthly demand charge from utility bill"
+    }
+  ],
+  "mapping": {
+    "level2Chargers": { "from": "level2_count" },
+    "dcfcChargers": { "from": "dcfc_count" },
+    "hpcChargers": { "from": "hpc_count", "transform": "defaultZero" },
+    "level2PowerKW": { "from": "charger_power_level2_kw", "transform": "toNumber" },
+    "siteType": { "from": "site_type" },
+    "operatingModel": { "from": "operating_model" },
+    "operatingHours": { "from": "operating_hours_per_day" },
+    "concurrencyPct": { "from": "concurrency_pct" },
+    "siteDemandCapKW": { "from": "site_demand_cap_kw", "transform": "defaultZero" },
+    "existingServiceAmps": { "from": "existing_service_amps" },
+    "gridUpgradePlanned": { "from": "grid_upgrade_planned" },
+    "behindMeterSolar": { "from": "behind_meter_solar" },
+    "monthly_kwh": { "from": "monthly_kwh" },
+    "peak_demand_kw": { "from": "peak_demand_kw" },
+    "demand_charge": { "from": "demand_charge" },
+    "demand_charge_rate": { "from": "demand_charge_rate", "transform": "ifDemandChargeElseZero" }
+  }
+}
