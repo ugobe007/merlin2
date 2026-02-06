@@ -219,6 +219,40 @@ export const TRANSFORMS: Record<string, TransformFn> = {
     if (v.includes("extended") || v.includes("6 am")) return "extended";
     return "24_7"; // Default for hospitals
   },
+
+  /**
+   * Map manufacturing type display labels to SSOT-expected slugs
+   *
+   * SSOT: calculateManufacturingPower(sqFt, industryType)
+   * industryType: "light" | "medium" | "heavy" | "electronics" | "food"
+   */
+  mapManufacturingType: (value) => {
+    const v = String(value || "")
+      .toLowerCase()
+      .trim();
+    if (v.includes("light") || v.includes("assembly")) return "light";
+    if (v.includes("heavy") || v.includes("foundry") || v.includes("steel") || v.includes("glass"))
+      return "heavy";
+    if (v.includes("electronics") || v.includes("clean room")) return "electronics";
+    if (v.includes("food")) return "food";
+    return "medium"; // Default: machining, fabrication
+  },
+
+  /**
+   * Map shift pattern display labels to adapter-expected slugs
+   *
+   * Used by: manufacturing adapter for dutyCycle calculation
+   * "1-shift" | "2-shift" | "3-shift"
+   */
+  mapShiftPattern: (value) => {
+    const v = String(value || "")
+      .toLowerCase()
+      .trim();
+    if (v.includes("3") || v.includes("24")) return "3-shift";
+    if (v.includes("2") || v.includes("16")) return "2-shift";
+    if (v.includes("1") || v.includes("single") || v.includes("8")) return "1-shift";
+    return "1-shift"; // Default
+  },
 };
 
 /**

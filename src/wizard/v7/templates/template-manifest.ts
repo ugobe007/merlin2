@@ -234,19 +234,37 @@ export const MANIFEST: ManifestEntry[] = [
   },
 
   // ──────────────────────────────────────────────────────
-  // MANUFACTURING (adapter-only, no template JSON yet)
+  // MANUFACTURING (template-backed v1.0.0 — 17 questions)
   // ──────────────────────────────────────────────────────
   {
     industrySlug: "manufacturing",
-    templateVersion: "adapter-only",
+    templateVersion: "manufacturing_v1.0.0",
     calculatorId: "manufacturing_load_v1",
     validationVersion: "v1",
-    requiredQuestionIds: [], // No template JSON — adapter is called directly
+    requiredQuestionIds: [
+      "manufacturing_type",
+      "shift_pattern",
+      "square_footage",
+      "has_compressed_air",
+      "compressor_hp",
+      "has_electric_furnace",
+      "furnace_kw",
+      "has_cnc_machines",
+      "cnc_count",
+      "has_refrigeration",
+      "hvac_type",
+      "process_cooling",
+      "clean_room",
+      "monthly_kwh",
+      "peak_demand_kw",
+      "demand_charge",
+      "demand_charge_rate",
+    ],
     requiredCalcFields: ["squareFootage"],
     contributorKeysExpected: ["process", "hvac", "lighting", "controls", "other"],
-    dutyCycleRange: [0.7, 0.9],
-    typicalPeakKWRange: [200, 10000],
-    detailKeys: ["type", "processIntensity", "sqFt"],
+    dutyCycleRange: [0.5, 0.95],
+    typicalPeakKWRange: [100, 25000],
+    detailKeys: ["type", "shiftPattern", "processIntensity", "sqFt", "equipmentLoadKW"],
   },
 
   // ──────────────────────────────────────────────────────

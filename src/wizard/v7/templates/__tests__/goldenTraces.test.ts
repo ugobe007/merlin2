@@ -33,6 +33,7 @@ import hotelTemplate from "../hotel.v1.json";
 import carWashTemplate from "../car_wash.v1.json";
 import evChargingTemplate from "../ev_charging.v1.json";
 import hospitalTemplate from "../hospital.v1.json";
+import manufacturingTemplate from "../manufacturing.v1.json";
 
 function asTemplate(x: unknown): IndustryTemplateV1 {
   return x as IndustryTemplateV1;
@@ -355,6 +356,7 @@ describe("Golden traces: manifest integrity", () => {
       { json: carWashTemplate, slug: "car_wash" },
       { json: evChargingTemplate, slug: "ev_charging" },
       { json: hospitalTemplate, slug: "hospital" },
+      { json: manufacturingTemplate, slug: "manufacturing" },
     ];
 
     for (const { json, slug } of templates) {
@@ -688,58 +690,147 @@ describe("Golden traces: hospital", () => {
 });
 
 // ============================================================================
-// MANUFACTURING GOLDEN TRACES (adapter-direct — no template JSON)
+// MANUFACTURING GOLDEN TRACES (template-backed as of v1.0.0)
 // ============================================================================
 
-describe("Golden traces: manufacturing (adapter-direct)", () => {
-  it("typical: 100k sqft light manufacturing → peakKW 200-3000", () => {
-    const calc = CALCULATORS_BY_ID["manufacturing_load_v1"];
-    expect(calc).toBeDefined();
+describe("Golden traces: manufacturing", () => {
+  /**
+   * TRACE 1: Light assembly, 1 shift — small facility, no equipment
+   */
+  it("light 1-shift: 50k sqft light assembly → peakKW 100-1500, dutyCycle ~0.55", () => {
+    const { result, mappedInputs } = runPipeline(manufacturingTemplate, {
+      manufacturing_type: "Light assembly",
+      shift_pattern: "1 shift (8 hours)",
+      square_footage: 50000,
+    });
 
-    const result = calc!.compute({
-      squareFootage: 100000,
-      manufacturingType: "light",
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(100);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(1500);
+    expect(result.baseLoadKW).toBeGreaterThan(0);
+
+    // 1-shift → dutyCycle 0.55
+    expect(result.validation!.dutyCycle).toBeCloseTo(0.55, 1);
+
+    // Mapping transforms verified
+    expect(mappedInputs.manufacturingType).toBe("light");
+    expect(mappedInputs.shiftPattern).toBe("1-shift");
+    expect(mappedInputs.squareFootage).toBe(50000);
+
+    // Light manufacturing: process dominant but moderate
+    const shares = result.validation!.kWContributorShares!;
+    expect(shares.processPct).toBeGreaterThanOrEqual(40);
+    expect(shares.processPct).toBeLessThanOrEqual(60);
+  });
+
+  /**
+   * TRACE 2: Medium manufacturing, 2 shifts — 100k sqft
+   */
+  it("medium 2-shift: 100k sqft → peakKW 200-3000, dutyCycle ~0.75", () => {
+    const { result, mappedInputs } = runPipeline(manufacturingTemplate, {
+      manufacturing_type: "Medium (machining, welding)",
+      shift_pattern: "2 shifts (16 hours)",
+      square_footage: 100000,
     });
 
     expect(result.peakLoadKW).toBeGreaterThanOrEqual(200);
     expect(result.peakLoadKW).toBeLessThanOrEqual(3000);
-    expect(result.baseLoadKW).toBeGreaterThan(0);
-    expect(result.baseLoadKW).toBeLessThanOrEqual(result.peakLoadKW!);
 
-    // Validation envelope
-    expect(result.validation).toBeDefined();
-    expect(result.validation!.version).toBe("v1");
-    expect(result.validation!.dutyCycle).toBeCloseTo(0.8, 1);
+    // 2-shift → dutyCycle 0.75
+    expect(result.validation!.dutyCycle).toBeCloseTo(0.75, 1);
 
-    // Manufacturing must have dominant process load
+    // Medium type mapped correctly
+    expect(mappedInputs.manufacturingType).toBe("medium");
+    expect(mappedInputs.shiftPattern).toBe("2-shift");
+
+    // Medium process share: ~55% base
     const kw = result.validation!.kWContributors!;
-    expect(kw.process).toBeGreaterThan(0);
-    expect(kw.hvac).toBeGreaterThan(0);
-    expect(kw.process).toBeGreaterThan(kw.hvac); // Process-dominant
+    expect(kw.process).toBeGreaterThan(kw.hvac);
 
-    // Details should include type
-    expect(result.validation!.details!.manufacturing).toBeDefined();
-    expect(result.validation!.details!.manufacturing.type).toBe("light");
-
-    // Assumptions reference sqft
-    const text = result.assumptions!.join(" ");
-    expect(text).toMatch(/100,000|100000/);
+    // Details present
+    const details = result.validation!.details!.manufacturing;
+    expect(details.type).toBe("medium");
+    expect(details.shiftPattern).toBe("2-shift");
+    expect(details.sqFt).toBe(100000);
   });
 
-  it("edge: 10k sqft heavy → process even more dominant", () => {
-    const calc = CALCULATORS_BY_ID["manufacturing_load_v1"];
-    const result = calc!.compute({
-      squareFootage: 10000,
-      manufacturingType: "heavy",
+  /**
+   * TRACE 3: Heavy 3-shift — 200k sqft with furnace → high peak, dutyCycle ~0.90
+   */
+  it("heavy 3-shift: 200k sqft + furnace → peakKW 1000-15000, process > 60%", () => {
+    const { result, mappedInputs } = runPipeline(manufacturingTemplate, {
+      manufacturing_type: "Heavy (casting, forging)",
+      shift_pattern: "3 shifts (24 hours)",
+      square_footage: 200000,
+      has_electric_furnace: true,
+      furnace_kw: 500,
     });
 
-    expect(result.peakLoadKW).toBeGreaterThan(50);
-    expect(result.peakLoadKW).toBeLessThan(5000);
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(1000);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(15000);
 
-    // Heavy manufacturing should have high process %
-    const kw = result.validation!.kWContributors!;
-    const processPct = (kw.process / result.peakLoadKW!) * 100;
-    expect(processPct).toBeGreaterThanOrEqual(55); // heavy = 65% process
+    // 3-shift → dutyCycle 0.90
+    expect(result.validation!.dutyCycle).toBeCloseTo(0.9, 1);
+
+    // Heavy + furnace: process share elevated
+    const shares = result.validation!.kWContributorShares!;
+    expect(shares.processPct).toBeGreaterThan(60);
+
+    // Furnace adds to equipment load
+    const details = result.validation!.details!.manufacturing;
+    expect(details.equipmentLoadKW).toBeGreaterThanOrEqual(500);
+    expect(details.type).toBe("heavy");
+
+    // Assumptions mention equipment
+    const text = result.assumptions!.join(" ");
+    expect(text).toMatch(/[Ff]urnace/);
+  });
+
+  /**
+   * TRACE 4: Equipment-heavy edge — compressed air + CNC + furnace push process share
+   */
+  it("edge: equipment-heavy facility → process share elevated by equipment adder", () => {
+    const { result } = runPipeline(manufacturingTemplate, {
+      manufacturing_type: "Light assembly",
+      shift_pattern: "1 shift (8 hours)",
+      square_footage: 20000,
+      has_compressed_air: true,
+      compressor_hp: 200,
+      has_electric_furnace: true,
+      furnace_kw: 300,
+      has_cnc_machines: true,
+      cnc_count: 5,
+    });
+
+    // Small sqft but heavy equipment: 200HP×0.75=150kW + 300kW + 5×20=100kW = 550kW equipment
+    const details = result.validation!.details!.manufacturing;
+    expect(details.equipmentLoadKW).toBeGreaterThanOrEqual(500);
+
+    // Process share should be elevated above light's base 45% due to equipment adder
+    const shares = result.validation!.kWContributorShares!;
+    expect(shares.processPct).toBeGreaterThan(50);
+
+    // Equipment ratio is high → adjustedProcessPct shifted up
+    expect(details.processIntensity).toBeGreaterThan(0.45);
+
+    // Valid envelope
+    expect(result.validation!.version).toBe("v1");
+    expect(result.peakLoadKW).toBeGreaterThan(0);
+    expect(result.baseLoadKW).toBeGreaterThan(0);
+  });
+
+  it("manifest requiredQuestionIds all exist in template", () => {
+    const manifest = MANIFEST.find((m) => m.industrySlug === "manufacturing");
+    expect(manifest).toBeDefined();
+
+    const tpl = asTemplate(manufacturingTemplate);
+    const questionIds = new Set(tpl.questions.map((q) => q.id));
+
+    for (const reqId of manifest!.requiredQuestionIds) {
+      expect(
+        questionIds.has(reqId),
+        `Manifest requires question "${reqId}" but it's missing from manufacturing template`
+      ).toBe(true);
+    }
   });
 });
 
