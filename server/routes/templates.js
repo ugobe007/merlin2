@@ -440,45 +440,67 @@ const TEMPLATE_REGISTRY = {
  * If version is omitted, returns latest version.
  */
 router.post("/load", async (req, res) => {
+  const availableIndustries = Object.keys(TEMPLATE_REGISTRY);
+
   try {
     const { industry, version } = req.body;
 
+    // Diagnostic: always log what the client sent
+    console.log(`[templates/load] Request: industry=${JSON.stringify(industry)} version=${JSON.stringify(version)}`);
+
     if (!industry || typeof industry !== "string") {
+      console.warn(`[templates/load] ❌ Missing/invalid industry in payload:`, req.body);
       return res.json({
         ok: false,
         reason: "missing_industry",
         notes: ["Industry slug is required"],
+        requestedIndustry: industry ?? null,
+        availableIndustries,
       });
     }
 
+    // Normalize: trim whitespace, lowercase
+    const normalizedIndustry = industry.trim().toLowerCase();
+
     // Lookup template
-    const template = TEMPLATE_REGISTRY[industry];
+    const template = TEMPLATE_REGISTRY[normalizedIndustry];
     
     if (!template) {
+      console.warn(`[templates/load] ❌ No template for "${normalizedIndustry}" (available: ${availableIndustries.join(", ")})`);
       return res.json({
         ok: false,
         reason: "template_not_found",
-        notes: [`No template found for industry: ${industry}`],
+        notes: [
+          `No template found for industry: "${normalizedIndustry}"`,
+          `Available templates: ${availableIndustries.join(", ")}`,
+          "Client should fall back to local JSON or generic template",
+        ],
+        requestedIndustry: normalizedIndustry,
+        availableIndustries,
       });
     }
 
     // Version check (for now, we only have v7.0.0)
     if (version && version !== template.version) {
-      console.warn(`[templates/load] Requested version ${version}, but only ${template.version} available`);
+      console.warn(`[templates/load] ⚠️ Version mismatch: requested=${version} available=${template.version}`);
     }
 
-    console.log(`[templates/load] ✅ Loaded template: ${template.industry} ${template.version}`);
+    console.log(`[templates/load] ✅ Loaded: ${template.industry} ${template.version} (${template.questions.length} questions)`);
 
     return res.json({
       ok: true,
       template,
     });
   } catch (error) {
-    console.error("[templates/load] Error:", error);
-    return res.json({
+    console.error("[templates/load] 💥 Unhandled error:", error?.message ?? error, error?.stack);
+    return res.status(500).json({
       ok: false,
       reason: "server_error",
-      notes: ["Failed to load template"],
+      notes: [
+        "Internal server error during template load",
+        process.env.NODE_ENV !== "production" ? String(error?.message ?? error) : "Contact support",
+      ],
+      availableIndustries,
     });
   }
 });
