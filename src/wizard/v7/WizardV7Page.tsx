@@ -9,20 +9,24 @@ import { useWizardV7, type WizardState, type WizardStep } from "@/wizard/v7/hook
  * Any mismatch causes "ZIP entered but gate still blocked" bug.
  */
 function stepCanProceed(state: WizardState, step: WizardStep): { ok: boolean; reason?: string } {
+  // ✅ FIX (Feb 5, 2026): ZIP is location. City/state are enrichment.
+  // Hoist ZIP normalization so all step gates can use it.
+  const zip = state.location?.zip || state.location?.postalCode || state.locationRawInput || "";
+  const normalizedZip = zip.replace(/\D/g, "");
+  const hasLoc = !!state.location || normalizedZip.length >= 5;
+
   if (step === "location") {
-    const zip = state.location?.zip || state.location?.postalCode || state.locationRawInput || "";
-    const normalizedZip = zip.replace(/\D/g, "");
     if (normalizedZip.length >= 5) return { ok: true };
     if (state.location?.formattedAddress) return { ok: true };
     return { ok: false, reason: "Please enter a valid ZIP/postal code." };
   }
   if (step === "industry") {
-    if (!state.location) return { ok: false, reason: "Location missing." };
+    if (!hasLoc) return { ok: false, reason: "ZIP code missing." };
     if (state.industry === "auto") return { ok: false, reason: "Industry not selected." };
     return { ok: true };
   }
   if (step === "profile") {
-    if (!state.location) return { ok: false, reason: "Location missing." };
+    if (!hasLoc) return { ok: false, reason: "ZIP code missing." };
     if (state.industry === "auto") return { ok: false, reason: "Industry missing." };
     if (!state.step3Template) return { ok: false, reason: "Template missing." };
     return { ok: true };
