@@ -375,4 +375,296 @@ describe("Golden traces: manifest integrity", () => {
       }
     }
   });
+
+  it("adapter-only manifest entries have empty requiredQuestionIds", () => {
+    const adapterOnly = MANIFEST.filter((m) => m.templateVersion === "adapter-only");
+    expect(adapterOnly.length).toBeGreaterThanOrEqual(3);
+    for (const entry of adapterOnly) {
+      expect(
+        entry.requiredQuestionIds.length,
+        `${entry.industrySlug}: adapter-only entry should have no requiredQuestionIds`
+      ).toBe(0);
+    }
+  });
+
+  it("all 6 manifest entries present", () => {
+    const slugs = MANIFEST.map((m) => m.industrySlug).sort();
+    expect(slugs).toEqual([
+      "car_wash",
+      "data_center",
+      "ev_charging",
+      "hospital",
+      "hotel",
+      "manufacturing",
+    ]);
+  });
+});
+
+// ============================================================================
+// EV CHARGING GOLDEN TRACES (adapter-direct — no template JSON)
+// ============================================================================
+
+describe("Golden traces: ev_charging (adapter-direct)", () => {
+  it("typical: 12 L2 + 8 DCFC → peakKW 500-3000 range", () => {
+    const calc = CALCULATORS_BY_ID["ev_charging_load_v1"];
+    expect(calc).toBeDefined();
+
+    const result = calc!.compute({
+      level2Chargers: 12,
+      dcfcChargers: 8,
+    });
+
+    // 12 × 7.2kW + 8 × 150kW = 86.4 + 1200 = ~1286 kW raw (before concurrency)
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(200);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(3000);
+    expect(result.baseLoadKW).toBeGreaterThan(0);
+    expect(result.baseLoadKW).toBeLessThanOrEqual(result.peakLoadKW!);
+
+    // Validation envelope required
+    expect(result.validation).toBeDefined();
+    expect(result.validation!.version).toBe("v1");
+    expect(result.validation!.kWContributors).toBeDefined();
+    expect(result.validation!.kWContributors!.charging).toBeGreaterThan(0);
+    expect(result.validation!.dutyCycle).toBeCloseTo(0.35, 1);
+
+    // Assumptions should reference charger counts
+    const text = result.assumptions!.join(" ");
+    expect(text).toMatch(/12/);
+    expect(text).toMatch(/8/);
+  });
+
+  it("edge: 0 L2 + 1 DCFC → small single-charger site", () => {
+    const calc = CALCULATORS_BY_ID["ev_charging_load_v1"];
+    const result = calc!.compute({
+      level2Chargers: 0,
+      dcfcChargers: 1,
+    });
+
+    // 1 DCFC @ 150kW + small aux → should be modest
+    expect(result.peakLoadKW).toBeGreaterThan(10);
+    expect(result.peakLoadKW).toBeLessThan(500);
+    expect(result.baseLoadKW).toBeGreaterThanOrEqual(0);
+
+    // Still has validation
+    expect(result.validation).toBeDefined();
+    expect(result.validation!.kWContributors!.charging).toBeGreaterThan(0);
+  });
+});
+
+// ============================================================================
+// HOSPITAL GOLDEN TRACES (adapter-direct — no template JSON)
+// ============================================================================
+
+describe("Golden traces: hospital (adapter-direct)", () => {
+  it("typical: 200-bed hospital → peakKW 500-5000 range", () => {
+    const calc = CALCULATORS_BY_ID["hospital_load_v1"];
+    expect(calc).toBeDefined();
+
+    const result = calc!.compute({ bedCount: 200 });
+
+    // 200-bed hospital should be substantial
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(500);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(5000);
+    expect(result.baseLoadKW).toBeGreaterThan(0);
+    expect(result.baseLoadKW).toBeLessThanOrEqual(result.peakLoadKW!);
+
+    // Validation envelope
+    expect(result.validation).toBeDefined();
+    expect(result.validation!.version).toBe("v1");
+    expect(result.validation!.dutyCycle).toBeCloseTo(0.85, 1);
+
+    // Hospital must have process (medical) + HVAC
+    const kw = result.validation!.kWContributors!;
+    expect(kw.process).toBeGreaterThan(0);
+    expect(kw.hvac).toBeGreaterThan(0);
+    expect(kw.lighting).toBeGreaterThan(0);
+    expect(kw.itLoad).toBeGreaterThan(0);
+
+    // Assumptions reference bed count
+    const text = result.assumptions!.join(" ");
+    expect(text).toContain("200");
+  });
+
+  it("edge: 50-bed small clinic → peakKW 100-1500", () => {
+    const calc = CALCULATORS_BY_ID["hospital_load_v1"];
+    const result = calc!.compute({ bedCount: 50 });
+
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(100);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(1500);
+
+    // Still has validation with contributors
+    expect(result.validation).toBeDefined();
+    expect(result.validation!.kWContributors!.process).toBeGreaterThan(0);
+  });
+});
+
+// ============================================================================
+// MANUFACTURING GOLDEN TRACES (adapter-direct — no template JSON)
+// ============================================================================
+
+describe("Golden traces: manufacturing (adapter-direct)", () => {
+  it("typical: 100k sqft light manufacturing → peakKW 200-3000", () => {
+    const calc = CALCULATORS_BY_ID["manufacturing_load_v1"];
+    expect(calc).toBeDefined();
+
+    const result = calc!.compute({
+      squareFootage: 100000,
+      manufacturingType: "light",
+    });
+
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(200);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(3000);
+    expect(result.baseLoadKW).toBeGreaterThan(0);
+    expect(result.baseLoadKW).toBeLessThanOrEqual(result.peakLoadKW!);
+
+    // Validation envelope
+    expect(result.validation).toBeDefined();
+    expect(result.validation!.version).toBe("v1");
+    expect(result.validation!.dutyCycle).toBeCloseTo(0.8, 1);
+
+    // Manufacturing must have dominant process load
+    const kw = result.validation!.kWContributors!;
+    expect(kw.process).toBeGreaterThan(0);
+    expect(kw.hvac).toBeGreaterThan(0);
+    expect(kw.process).toBeGreaterThan(kw.hvac); // Process-dominant
+
+    // Details should include type
+    expect(result.validation!.details!.manufacturing).toBeDefined();
+    expect(result.validation!.details!.manufacturing.type).toBe("light");
+
+    // Assumptions reference sqft
+    const text = result.assumptions!.join(" ");
+    expect(text).toMatch(/100,000|100000/);
+  });
+
+  it("edge: 10k sqft heavy → process even more dominant", () => {
+    const calc = CALCULATORS_BY_ID["manufacturing_load_v1"];
+    const result = calc!.compute({
+      squareFootage: 10000,
+      manufacturingType: "heavy",
+    });
+
+    expect(result.peakLoadKW).toBeGreaterThan(50);
+    expect(result.peakLoadKW).toBeLessThan(5000);
+
+    // Heavy manufacturing should have high process %
+    const kw = result.validation!.kWContributors!;
+    const processPct = (kw.process / result.peakLoadKW!) * 100;
+    expect(processPct).toBeGreaterThanOrEqual(55); // heavy = 65% process
+  });
+});
+
+// ============================================================================
+// TRACE COMPLETENESS GATE (applies to ALL adapters with val=v1)
+// ============================================================================
+
+describe("Trace completeness gate: val=v1 requirements", () => {
+  const testCases = [
+    { id: "dc_load_v1", inputs: { itLoadCapacity: 500, currentPUE: 1.5 }, slug: "dc" },
+    { id: "hotel_load_v1", inputs: { roomCount: 150 }, slug: "hotel" },
+    {
+      id: "car_wash_load_v1",
+      inputs: { bayTunnelCount: 6, averageWashesPerDay: 200, operatingHours: 12 },
+      slug: "car_wash",
+    },
+    { id: "ev_charging_load_v1", inputs: { level2Chargers: 12, dcfcChargers: 8 }, slug: "ev" },
+    { id: "hospital_load_v1", inputs: { bedCount: 200 }, slug: "hospital" },
+    {
+      id: "manufacturing_load_v1",
+      inputs: { squareFootage: 100000, manufacturingType: "light" },
+      slug: "manufacturing",
+    },
+  ];
+
+  for (const { id, inputs, slug } of testCases) {
+    describe(`${slug} (${id})`, () => {
+      const calc = CALCULATORS_BY_ID[id]!;
+      const result = calc.compute(inputs);
+
+      it("has validation envelope with version v1", () => {
+        expect(result.validation).toBeDefined();
+        expect(result.validation!.version).toBe("v1");
+      });
+
+      it("has ≥3 non-zero kWContributors", () => {
+        const kw = result.validation!.kWContributors!;
+        const nonZero = Object.values(kw).filter((v) => v > 0);
+        expect(
+          nonZero.length,
+          `${slug}: only ${nonZero.length} non-zero contributors — need ≥3 for TrueQuote`
+        ).toBeGreaterThanOrEqual(3);
+      });
+
+      it("has non-empty assumptions[]", () => {
+        expect(result.assumptions).toBeDefined();
+        expect(result.assumptions!.length).toBeGreaterThan(0);
+      });
+
+      it("contributor sum within 5% of peakLoadKW", () => {
+        const kw = result.validation!.kWContributors!;
+        const sum = Object.values(kw).reduce((a, b) => a + b, 0);
+        const peak = result.peakLoadKW!;
+        const pctDiff = Math.abs(sum - peak) / peak;
+        expect(
+          pctDiff,
+          `${slug}: contributor sum ${sum.toFixed(0)} vs peak ${peak} — ${(pctDiff * 100).toFixed(1)}% drift (max 5%)`
+        ).toBeLessThanOrEqual(0.05);
+      });
+
+      it("has dutyCycle in [0, 1]", () => {
+        expect(result.validation!.dutyCycle).toBeGreaterThanOrEqual(0);
+        expect(result.validation!.dutyCycle).toBeLessThanOrEqual(1);
+      });
+    });
+  }
+});
+
+// ============================================================================
+// FALLBACK NON-TRUEQUOTE ASSERTION
+// ============================================================================
+
+describe("Fallback (generic) cannot produce TrueQuote v1", () => {
+  it("generic_ssot_v1 adapter does NOT return validation.version='v1'", () => {
+    const calc = CALCULATORS_BY_ID["generic_ssot_v1"];
+    expect(calc).toBeDefined();
+
+    const result = calc!.compute({
+      monthlyKwh: 50000,
+      peakDemandKw: 200,
+    });
+
+    // Generic adapter should NOT have a v1 validation envelope
+    // (this is what prevents fallback from getting TrueQuote badge)
+    if (result.validation) {
+      expect(result.validation.version).not.toBe("v1");
+    }
+    // It's also valid for validation to be undefined (no envelope at all)
+  });
+
+  it("generic_facility template route does not set validation v1", () => {
+    const genericTpl = asTemplate(
+      // Simulate generic_facility template import
+      {
+        schemaVersion: "1.0",
+        industry: "generic",
+        version: "generic.v1.0.0",
+        calculator: { id: "generic_ssot_v1" },
+        questions: [],
+        mapping: {},
+        defaults: {},
+      }
+    );
+
+    const calc = CALCULATORS_BY_ID[genericTpl.calculator.id];
+    expect(calc).toBeDefined();
+
+    const result = calc!.compute({ monthlyKwh: 50000, peakDemandKw: 200 });
+
+    // This is the trust boundary: generic → no TrueQuote badge
+    const hasV1 = result.validation?.version === "v1";
+    expect(
+      hasV1,
+      "CRITICAL: Generic/fallback calculator produced val=v1! This would grant TrueQuote badge to non-industry templates."
+    ).toBe(false);
+  });
 });

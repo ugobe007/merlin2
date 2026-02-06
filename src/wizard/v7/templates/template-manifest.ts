@@ -166,6 +166,54 @@ export const MANIFEST: ManifestEntry[] = [
     typicalPeakKWRange: [50, 400],
     detailKeys: ["dryers", "pumps", "vacuums"],
   },
+
+  // ──────────────────────────────────────────────────────
+  // EV CHARGING (adapter-only, no template JSON yet)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "ev_charging",
+    templateVersion: "adapter-only",
+    calculatorId: "ev_charging_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [], // No template JSON — adapter is called directly
+    requiredCalcFields: ["level2Chargers", "dcfcChargers"],
+    contributorKeysExpected: ["charging", "lighting", "controls", "other"],
+    dutyCycleRange: [0.25, 0.45],
+    typicalPeakKWRange: [50, 5000],
+    detailKeys: ["level2", "dcfc", "siteAux"],
+  },
+
+  // ──────────────────────────────────────────────────────
+  // HOSPITAL (adapter-only, no template JSON yet)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "hospital",
+    templateVersion: "adapter-only",
+    calculatorId: "hospital_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [], // No template JSON — adapter is called directly
+    requiredCalcFields: ["bedCount"],
+    contributorKeysExpected: ["process", "hvac", "lighting", "controls", "itLoad", "other"],
+    dutyCycleRange: [0.8, 0.95],
+    typicalPeakKWRange: [500, 8000],
+    detailKeys: ["medical", "surgical", "laundry"],
+  },
+
+  // ──────────────────────────────────────────────────────
+  // MANUFACTURING (adapter-only, no template JSON yet)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "manufacturing",
+    templateVersion: "adapter-only",
+    calculatorId: "manufacturing_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [], // No template JSON — adapter is called directly
+    requiredCalcFields: ["squareFootage"],
+    contributorKeysExpected: ["process", "hvac", "lighting", "controls", "other"],
+    dutyCycleRange: [0.7, 0.9],
+    typicalPeakKWRange: [200, 10000],
+    detailKeys: ["type", "processIntensity", "sqFt"],
+  },
 ];
 
 // ──────────────────────────────────────────────────────

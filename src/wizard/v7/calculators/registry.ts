@@ -138,9 +138,79 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
 
     // 4. Convert to contract format
     const powerKW = result.powerMW * 1000;
-    const baseLoadKW = Math.round(powerKW * 0.7); // Data centers: 70% base load
     const peakLoadKW = Math.round(powerKW);
+    const dutyCycle = 0.95; // Data centers run 95% load (near-continuous)
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
     const energyKWhPerDay = Math.round(baseLoadKW * 24);
+
+    // 4a. Compute contributor breakdown (PUE-based exact-sum accounting)
+    // Parse PUE to numeric
+    const pueStr = String(currentPUE || "1.5");
+    const pueNum = parseFloat(pueStr.split("-")[0]) || 1.5; // "1.3-1.5" → 1.3
+
+    // IT load is the primary payload
+    const itLoadKWActual = itLoadKW ? Number(itLoadKW) : peakLoadKW / pueNum;
+
+    // Infrastructure losses (non-cooling)
+    const upsLossesKW = itLoadKWActual * 0.05; // 5% UPS loss
+    const pdusKW = itLoadKWActual * 0.03; // 3% PDU loss
+    const fansKW = itLoadKWActual * 0.04; // 4% CRAC/CRAH fans
+    let otherKW = upsLossesKW + pdusKW + fansKW;
+
+    // Lighting & controls as % of total
+    const lightingKW = peakLoadKW * 0.02; // 2% lighting
+    const controlsKW = peakLoadKW * 0.02; // 2% BMS/monitoring
+
+    // Cooling = remainder (sum=total by construction)
+    let coolingKW = peakLoadKW - itLoadKWActual - otherKW - lightingKW - controlsKW;
+
+    // Guard: prevent negative cooling (low PUE edge case)
+    if (coolingKW < 0) {
+      otherKW += coolingKW; // Roll negative into other to preserve sum
+      coolingKW = 0;
+      warnings.push("cooling_remainder_negative: low PUE caused negative cooling allocation");
+    }
+
+    const kWContributorsTotalKW = itLoadKWActual + coolingKW + otherKW + lightingKW + controlsKW;
+
+    // 4b. Build validation envelope (TrueQuote v1)
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        process: 0, // Not applicable
+        hvac: 0, // Separate cooling category for DC
+        lighting: lightingKW,
+        controls: controlsKW,
+        itLoad: itLoadKWActual,
+        cooling: coolingKW,
+        charging: 0, // Not applicable
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        processPct: 0,
+        hvacPct: 0,
+        lightingPct: (lightingKW / peakLoadKW) * 100,
+        controlsPct: (controlsKW / peakLoadKW) * 100,
+        itLoadPct: (itLoadKWActual / peakLoadKW) * 100,
+        coolingPct: (coolingKW / peakLoadKW) * 100,
+        chargingPct: 0,
+        otherPct: (otherKW / peakLoadKW) * 100,
+      },
+      details: {
+        data_center: {
+          upsLosses: upsLossesKW,
+          pdus: pdusKW,
+          fans: fansKW,
+          pue: pueNum,
+        },
+      },
+      notes: [
+        `PUE: ${pueNum.toFixed(2)} → cooling allocation: ${coolingKW.toFixed(1)}kW`,
+        `Infrastructure losses: UPS=${upsLossesKW.toFixed(1)}kW, PDU=${pdusKW.toFixed(1)}kW, Fans=${fansKW.toFixed(1)}kW`,
+      ],
+    };
 
     return {
       baseLoadKW,
@@ -148,6 +218,7 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
       energyKWhPerDay,
       assumptions,
       warnings,
+      validation,
       raw: result,
     };
   },
@@ -204,9 +275,97 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
 
     // 4. Convert to contract format
     const powerKW = result.powerMW * 1000;
-    const baseLoadKW = Math.round(powerKW * 0.3); // Hotels: 30% base, 70% variable
     const peakLoadKW = Math.round(powerKW);
-    const energyKWhPerDay = Math.round(((powerKW * occupancyRate) / 100) * 18); // 18h typical operation
+
+    // 4a. Compute contributor breakdown (class-based HVAC + process decomposition)
+    const HVAC_KW_PER_ROOM: Record<string, number> = {
+      economy: 1.0,
+      midscale: 1.5,
+      upscale: 2.2,
+      luxury: 2.5,
+    };
+    const hvacRate = HVAC_KW_PER_ROOM[hotelClass] ?? 1.5;
+    const hvacKW = roomCount * hvacRate;
+
+    // Process = intermittent loads (kitchen, laundry, pool)
+    const kitchenKW = hotelAmenities.includes("restaurant") ? roomCount * 0.8 : 0;
+    const laundryKW = hotelAmenities.includes("laundry") ? roomCount * 0.3 : roomCount * 0.15;
+    const poolKW = hotelAmenities.includes("pool") ? 50 : 0;
+    const processKW = kitchenKW + laundryKW + poolKW;
+
+    const lightingKW = roomCount * 0.5; // 0.5 kW per room
+    const controlsKW = roomCount * 0.1; // BMS + elevators
+    const miscPlugKW = roomCount * 0.15; // In-room misc plugs
+
+    // "other" = always-on-ish loads (misc plugs, elevators)
+    const otherKW = miscPlugKW + roomCount * 0.05; // + 0.05 kW/room for elevators/common
+
+    // Scale to match SSOT peak (contributors may not sum exactly to SSOT result)
+    const rawSum = hvacKW + processKW + lightingKW + controlsKW + otherKW;
+    const scale = rawSum > 0 ? peakLoadKW / rawSum : 1;
+
+    const scaledHvac = hvacKW * scale;
+    const scaledProcess = processKW * scale;
+    const scaledLighting = lightingKW * scale;
+    const scaledControls = controlsKW * scale;
+    const scaledOther = otherKW * scale;
+
+    const kWContributorsTotalKW =
+      scaledHvac + scaledProcess + scaledLighting + scaledControls + scaledOther;
+
+    // Derived base load from always-on components
+    let baseLoadKW = Math.round(
+      scaledControls + 0.6 * scaledLighting + 0.5 * scaledHvac + 0.2 * scaledProcess
+    );
+    // Clamp: base can't exceed 95% of peak
+    if (baseLoadKW > 0.95 * peakLoadKW) {
+      baseLoadKW = Math.round(0.95 * peakLoadKW);
+    }
+    const dutyCycle = peakLoadKW > 0 ? baseLoadKW / peakLoadKW : 0.5;
+
+    // Energy: two-level schedule (base 24h + peaks 8h)
+    const peakHours = 8;
+    const energyKWhPerDay = Math.round(baseLoadKW * 24 + (peakLoadKW - baseLoadKW) * peakHours);
+
+    // 4b. Build validation envelope (TrueQuote v1)
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        process: scaledProcess,
+        hvac: scaledHvac,
+        lighting: scaledLighting,
+        controls: scaledControls,
+        itLoad: 0, // Not applicable
+        cooling: 0, // HVAC handles cooling
+        charging: 0, // Not applicable
+        other: scaledOther,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        processPct: (scaledProcess / peakLoadKW) * 100,
+        hvacPct: (scaledHvac / peakLoadKW) * 100,
+        lightingPct: (scaledLighting / peakLoadKW) * 100,
+        controlsPct: (scaledControls / peakLoadKW) * 100,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: (scaledOther / peakLoadKW) * 100,
+      },
+      details: {
+        hotel: {
+          kitchen: kitchenKW * scale,
+          laundry: laundryKW * scale,
+          pool: poolKW * scale,
+          miscPlug: miscPlugKW * scale,
+        },
+      },
+      notes: [
+        `Hotel class: ${hotelClass} (HVAC: ${hvacRate} kW/room)`,
+        `Amenities: ${hotelAmenities.length > 0 ? hotelAmenities.join(", ") : "none"}`,
+        `Process breakdown: kitchen=${(kitchenKW * scale).toFixed(1)}kW, laundry=${(laundryKW * scale).toFixed(1)}kW, pool=${(poolKW * scale).toFixed(1)}kW`,
+      ],
+    };
 
     return {
       baseLoadKW,
@@ -214,6 +373,7 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
       energyKWhPerDay,
       assumptions,
       warnings,
+      validation,
       raw: result,
     };
   },
@@ -459,13 +619,71 @@ export const MANUFACTURING_LOAD_V1_SSOT: CalculatorContract = {
 
     const result = calculateUseCasePower("manufacturing", { squareFootage, manufacturingType });
     const powerKW = result.powerMW * 1000;
+    const peakLoadKW = Math.round(powerKW);
+
+    // 4a. Compute contributor breakdown by manufacturing type
+    const typeMultipliers: Record<string, { process: number; hvac: number; lighting: number }> = {
+      light: { process: 0.45, hvac: 0.25, lighting: 0.1 },
+      medium: { process: 0.55, hvac: 0.2, lighting: 0.08 },
+      heavy: { process: 0.65, hvac: 0.15, lighting: 0.06 },
+    };
+    const mults = typeMultipliers[manufacturingType] ?? typeMultipliers.light;
+
+    const processKW = peakLoadKW * mults.process;
+    const hvacKW = peakLoadKW * mults.hvac;
+    const lightingKW = peakLoadKW * mults.lighting;
+    const controlsKW = peakLoadKW * 0.05; // 5% BMS/SCADA/controls
+    const otherKW = peakLoadKW - processKW - hvacKW - lightingKW - controlsKW; // remainder
+
+    const kWContributorsTotalKW = processKW + hvacKW + lightingKW + controlsKW + otherKW;
+
+    const dutyCycle = 0.8; // 80% base (continuous operations)
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        process: processKW,
+        hvac: hvacKW,
+        lighting: lightingKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: 0, // Included in HVAC
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        processPct: (processKW / peakLoadKW) * 100,
+        hvacPct: (hvacKW / peakLoadKW) * 100,
+        lightingPct: (lightingKW / peakLoadKW) * 100,
+        controlsPct: (controlsKW / peakLoadKW) * 100,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: (otherKW / peakLoadKW) * 100,
+      },
+      details: {
+        manufacturing: {
+          type: manufacturingType,
+          processIntensity: mults.process,
+          sqFt: squareFootage,
+        },
+      },
+      notes: [
+        `Manufacturing (${manufacturingType}): ${squareFootage.toLocaleString()} sq ft → peak ${peakLoadKW}kW`,
+        `Process-dominant: ${(mults.process * 100).toFixed(0)}% of load`,
+      ],
+    };
 
     return {
-      baseLoadKW: Math.round(powerKW * 0.8), // 80% base (continuous operations)
-      peakLoadKW: Math.round(powerKW),
-      energyKWhPerDay: Math.round(powerKW * 20), // 20h typical manufacturing
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(peakLoadKW * 20), // 20h typical manufacturing
       assumptions,
       warnings,
+      validation,
       raw: result,
     };
   },
@@ -487,13 +705,65 @@ export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
 
     const result = calculateUseCasePower("hospital", { bedCount });
     const powerKW = result.powerMW * 1000;
+    const peakLoadKW = Math.round(powerKW);
+
+    // 4a. Compute contributor breakdown (hospital = HVAC + process + IT)
+    const hvacKW = peakLoadKW * 0.35; // 35% HVAC (large facility, strict temp control)
+    const processKW = peakLoadKW * 0.3; // 30% process (medical equipment, surgical, laundry)
+    const lightingKW = peakLoadKW * 0.1; // 10% lighting (24/7 operation)
+    const itLoadKW = peakLoadKW * 0.1; // 10% IT (EMR, imaging systems)
+    const controlsKW = peakLoadKW * 0.05; // 5% BMS/controls
+    const otherKW = peakLoadKW * 0.1; // 10% other (elevators, kitchen, misc)
+
+    const kWContributorsTotalKW = hvacKW + processKW + lightingKW + itLoadKW + controlsKW + otherKW;
+
+    const dutyCycle = 0.85; // 85% base (24/7 critical)
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        process: processKW,
+        hvac: hvacKW,
+        lighting: lightingKW,
+        controls: controlsKW,
+        itLoad: itLoadKW,
+        cooling: 0, // Included in HVAC for hospitals
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        processPct: (processKW / peakLoadKW) * 100,
+        hvacPct: (hvacKW / peakLoadKW) * 100,
+        lightingPct: (lightingKW / peakLoadKW) * 100,
+        controlsPct: (controlsKW / peakLoadKW) * 100,
+        itLoadPct: (itLoadKW / peakLoadKW) * 100,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: (otherKW / peakLoadKW) * 100,
+      },
+      details: {
+        hospital: {
+          medical: processKW * 0.6, // 60% of process = medical equipment
+          surgical: processKW * 0.25, // 25% of process = surgical suites
+          laundry: processKW * 0.15, // 15% of process = laundry/sterilization
+        },
+      },
+      notes: [
+        `Hospital: ${bedCount} beds → peak ${peakLoadKW}kW`,
+        `Critical 24/7 operations: dutyCycle=${dutyCycle}`,
+      ],
+    };
 
     return {
-      baseLoadKW: Math.round(powerKW * 0.85), // 85% base (24/7 critical operations)
-      peakLoadKW: Math.round(powerKW),
-      energyKWhPerDay: Math.round(powerKW * 24), // 24h continuous
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24), // 24h continuous
       assumptions,
       warnings,
+      validation,
       raw: result,
     };
   },
@@ -544,13 +814,75 @@ export const EV_CHARGING_LOAD_V1_SSOT: CalculatorContract = {
 
     const result = calculateUseCasePower("ev-charging", { level2Chargers, dcfcChargers });
     const powerKW = result.powerMW * 1000;
+    const peakLoadKW = Math.round(powerKW);
+
+    // 4a. Compute contributor breakdown
+    // EV charging: chargers dominate (80-95%)
+    const l2KW = level2Chargers * 7.2; // 7.2 kW each
+    const dcfcKW = dcfcChargers * 150; // 150 kW each
+    const rawChargingKW = l2KW + dcfcKW;
+    const totalChargers = level2Chargers + dcfcChargers;
+    const lightingKW = totalChargers * 0.5; // 0.5 kW per charger position
+    const controlsKW = totalChargers * 0.3; // Payment/network/BMS
+    const siteAuxKW = 10; // HVAC for office/restrooms
+
+    // Scale to match SSOT peak (SSOT applies concurrency)
+    const rawSum = rawChargingKW + lightingKW + controlsKW + siteAuxKW;
+    const scale = rawSum > 0 ? peakLoadKW / rawSum : 1;
+
+    const scaledCharging = rawChargingKW * scale;
+    const scaledLighting = lightingKW * scale;
+    const scaledControls = controlsKW * scale;
+    const scaledSiteAux = siteAuxKW * scale;
+
+    const kWContributorsTotalKW = scaledCharging + scaledLighting + scaledControls + scaledSiteAux;
+
+    const dutyCycle = 0.35; // 35% average utilization
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        process: 0, // Not applicable
+        hvac: 0, // Minimal
+        lighting: scaledLighting,
+        controls: scaledControls,
+        itLoad: 0, // Not applicable
+        cooling: 0, // Not applicable
+        charging: scaledCharging,
+        other: scaledSiteAux,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        processPct: 0,
+        hvacPct: 0,
+        lightingPct: (scaledLighting / peakLoadKW) * 100,
+        controlsPct: (scaledControls / peakLoadKW) * 100,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: (scaledCharging / peakLoadKW) * 100,
+        otherPct: (scaledSiteAux / peakLoadKW) * 100,
+      },
+      details: {
+        ev_charging: {
+          level2: l2KW * scale,
+          dcfc: dcfcKW * scale,
+          siteAux: scaledSiteAux,
+        },
+      },
+      notes: [
+        `Level 2: ${level2Chargers} @ 7.2kW, DCFC: ${dcfcChargers} @ 150kW`,
+        `Concurrency applied by SSOT → peak: ${peakLoadKW}kW`,
+      ],
+    };
 
     return {
-      baseLoadKW: Math.round(powerKW * 0.2), // 20% base (lights, controls)
-      peakLoadKW: Math.round(powerKW),
-      energyKWhPerDay: Math.round(powerKW * 18), // 18h typical charging operations
+      baseLoadKW: Math.round(peakLoadKW * 0.2), // 20% base (lights, controls)
+      peakLoadKW,
+      energyKWhPerDay: Math.round(peakLoadKW * 18 * dutyCycle), // 18h * dutyCycle
       assumptions,
       warnings,
+      validation,
       raw: result,
     };
   },
