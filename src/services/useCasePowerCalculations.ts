@@ -5689,9 +5689,9 @@ export function calculateCarWashPowerFromEquipment(
   // Sum all categories
   totalConnectedKW = Object.values(breakdown).reduce((sum, kw) => sum + (kw || 0), 0);
 
-  // For multi-bay self-service, scale certain equipment by bay count
+  // Scale equipment by bay/position count based on wash type
   if (washType === "multiBaySelfService") {
-    // Pumps shared (1 per 2 bays), foam per bay
+    // Independent bays: pumps shared (1 per 2 bays), foam per bay
     const scaledPumps = Math.ceil(bayCount / 2) * power.highPressurePump.typical;
     const scaledFoam = bayCount * power.foamApplicator.typical;
     totalConnectedKW =
@@ -5703,6 +5703,29 @@ export function calculateCarWashPowerFromEquipment(
       power.ledTunnelLighting.typical +
       power.airCompressor.typical +
       power.securitySurveillance.typical;
+  } else if (washType === "singleBayAutomatic" && bayCount > 1) {
+    // Multiple independent automatic bays each have their own equipment set
+    const perBayCategories = ["washEquipment", "drying", "waterPumps"];
+    let scaledTotal = 0;
+    for (const [cat, kw] of Object.entries(breakdown)) {
+      if (perBayCategories.includes(cat)) {
+        scaledTotal += (kw || 0) * bayCount;
+      } else {
+        scaledTotal += kw || 0;
+      }
+    }
+    totalConnectedKW = scaledTotal;
+  } else if (bayCount > 1) {
+    // Tunnel types: more bays/lanes = longer tunnel = more wash positions
+    // Drying and wash equipment scale with tunnel length (bay count proxy)
+    // Shared infrastructure (pumps, controls, facility) stays fixed
+    const dryerBase = breakdown["drying"] || 0;
+    const washBase = breakdown["washEquipment"] || 0;
+    // Scale factor: diminishing returns (sqrt) — 6 bays ≈ 2.4x, not 6x
+    const tunnelScale = Math.sqrt(bayCount);
+    const dryerScaled = dryerBase * tunnelScale;
+    const washScaled = washBase * tunnelScale;
+    totalConnectedKW = totalConnectedKW - dryerBase - washBase + dryerScaled + washScaled;
   }
 
   // Peak demand is typically 70-80% of connected load
@@ -5710,8 +5733,15 @@ export function calculateCarWashPowerFromEquipment(
   const powerMW = peakDemandKW / 1000;
 
   // Validate against facility type benchmarks
+  // Scale benchmarks for independent bays (singleBayAutomatic with multiple bays)
+  // Tunnel types: benchmarks are per-tunnel (bayCount just extends the tunnel)
   const facilityPeak = facilityType.peak;
-  const validatedPeakKW = Math.max(facilityPeak.min, Math.min(facilityPeak.max, peakDemandKW));
+  const bayScale = (washType === "singleBayAutomatic" && bayCount > 1) ? bayCount :
+                   (washType === "multiBaySelfService") ? 1 :
+                   Math.sqrt(Math.max(1, bayCount)); // Tunnel: sqrt scaling
+  const scaledMin = facilityPeak.min * bayScale;
+  const scaledMax = facilityPeak.max * bayScale;
+  const validatedPeakKW = Math.max(scaledMin, Math.min(scaledMax, peakDemandKW));
 
   // Build description with top power consumers
   const sortedBreakdown = Object.entries(breakdown)
@@ -6042,26 +6072,27 @@ export function calculateUseCasePower(
         hpc_350kw: parseInt(useCaseData.hpc_350kw) || 0,
         // Legacy fields for backward compatibility - support ALL field name variants
         // Database uses: numberOfLevel1Chargers, numberOfLevel2Chargers, numberOfDCFastChargers
+        // CRITICAL: Use ?? (nullish coalescing) so explicit 0 is NOT treated as missing
         level1Count:
           parseInt(
-            useCaseData.numberOfLevel1Chargers ||
-              useCaseData.level1Count ||
-              useCaseData.level1Chargers ||
+            useCaseData.numberOfLevel1Chargers ??
+              useCaseData.level1Count ??
+              useCaseData.level1Chargers ??
               useCaseData.l1Count
           ) || 0,
         level2Count:
           parseInt(
-            useCaseData.numberOfLevel2Chargers ||
-              useCaseData.level2Count ||
-              useCaseData.level2Chargers ||
+            useCaseData.numberOfLevel2Chargers ??
+              useCaseData.level2Count ??
+              useCaseData.level2Chargers ??
               useCaseData.l2Count
           ) || 0,
         dcFastCount:
           parseInt(
-            useCaseData.numberOfDCFastChargers ||
-              useCaseData.dcFastCount ||
-              useCaseData.dcfastCount ||
-              useCaseData.dcFastChargers ||
+            useCaseData.numberOfDCFastChargers ??
+              useCaseData.dcFastCount ??
+              useCaseData.dcfastCount ??
+              useCaseData.dcFastChargers ??
               useCaseData.dcfc
           ) || 0,
       };
@@ -6098,9 +6129,13 @@ export function calculateUseCasePower(
       }
 
       // Fall back to legacy calculation for simple configs
-      // If ALL values are 0 (no user input), apply database defaults
+      // If NO charger field was provided, apply database defaults
       // DB defaults: numberOfDCFastChargers=8, numberOfLevel2Chargers=12
+      // CRITICAL: Use != null to detect explicit zero (0 is valid input)
       const hasAnyChargerInput =
+        useCaseData.numberOfLevel2Chargers != null ||
+        useCaseData.numberOfDCFastChargers != null ||
+        useCaseData.numberOfLevel1Chargers != null ||
         evConfig.level1Count > 0 || evConfig.level2Count > 0 || evConfig.dcFastCount > 0;
 
       const evLevel1 = evConfig.level1Count;
@@ -6290,9 +6325,9 @@ export function calculateUseCasePower(
       // Microgrid: Calculate based on total connected loads
       // If EV chargers specified, use EV calculation
       const mgLevel2 =
-        parseInt(useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0;
+        parseInt(useCaseData.numberOfLevel2Chargers ?? useCaseData.level2Chargers) || 0;
       const mgDcFast =
-        parseInt(useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0;
+        parseInt(useCaseData.numberOfDCFastChargers ?? useCaseData.dcFastChargers) || 0;
 
       if (mgLevel2 > 0 || mgDcFast > 0) {
         // Has EV chargers - use EV calculation

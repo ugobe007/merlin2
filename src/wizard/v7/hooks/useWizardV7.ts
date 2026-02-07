@@ -1049,13 +1049,12 @@ const api = {
   async loadStep3Template(industry: IndustrySlug, signal?: AbortSignal): Promise<Step3Template> {
     // Map industry slugs that don't have dedicated templates to closest match
     const templateMapping: Record<string, string> = {
-      manufacturing: "data_center", // Use data center template (industrial loads)
-      warehouse: "data_center", // Similar profile
-      office: "hotel", // Commercial building profile
+      // Industries with dedicated templates: resolve UI slug → template industry key
+      healthcare: "hospital", // IndustrySlug="healthcare" → hospital.v1.json
+      // Industries WITHOUT templates: map to closest match
+      warehouse: "data_center", // Similar industrial profile
       retail: "hotel", // Commercial building profile
       restaurant: "hotel", // Commercial building profile
-      healthcare: "data_center", // Critical loads
-      ev_charging: "car_wash", // High peak loads, similar profile
       other: "hotel", // Default fallback
     };
 
