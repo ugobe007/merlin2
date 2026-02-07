@@ -1679,3 +1679,384 @@ Key docs in root:
 - `CALCULATION_FILES_AUDIT.md` - Single source of truth documentation (NEW)
 
 For AI data collection features, see `AI_SYSTEM_IMPLEMENTATION_COMPLETE.md`.
+
+---
+
+## 🧙‍♂️ WIZARD V7 ARCHITECTURE (Feb 2026)
+
+**WizardV7 is the NEXT-GENERATION PRODUCTION WIZARD** (launched Feb 2026).
+
+**Route:** `/v7`
+**Entry:** `src/wizard/v7/WizardV7Page.tsx`
+**Orchestrator:** `src/wizard/v7/hooks/useWizardV7.ts` (3,931 lines)
+**Architecture:** 4-step wizard with template-driven questionnaires + TrueQuote™ validation
+
+### V7 Design Principles
+
+1. **Steps are dumb renderers** — ZERO business logic in step components
+2. **useWizardV7 owns ALL state** — single orchestrator hook
+3. **Templates drive questions** — JSON templates define per-industry questionnaires
+4. **Calculator adapters are thin** — delegate to SSOT `calculateUseCasePower()`
+5. **TrueQuote validation is mandatory** — every quote needs kW contributor envelope
+6. **No silent defaults** — `buildSSOTInput()` translates field names to prevent SSOT falls through to default
+
+### File Structure
+
+```
+src/wizard/v7/                          ← Domain logic (no React)
+├── hooks/
+│   └── useWizardV7.ts                  ← 3,931 lines — SSOT orchestrator
+├── calculators/
+│   ├── registry.ts                     ← All calculator adapters (1,805 lines)
+│   ├── contract.ts                     ← CalcContract type (per-industry metadata)
+│   └── ssotInputAliases.ts             ← Field-name translation layer
+├── templates/
+│   ├── templateIndex.ts                ← Template loader (lazy JSON imports)
+│   ├── applyMapping.ts                 ← Template answers → calculator inputs
+│   ├── template-manifest.ts            ← Machine-readable template registry
+│   ├── transforms.ts                   ← Answer transform functions
+│   ├── validator.ts                    ← Template JSON schema validation
+│   ├── types.ts                        ← Template type definitions
+│   └── __tests__/                      ← 383 tests across 6 files
+│       ├── goldenTraces.test.ts        ← Golden value range tests (all industries)
+│       ├── trueQuoteSanity.test.ts     ← TrueQuote envelope + contributor checks
+│       ├── templateDrift.test.ts       ← Template ↔ calculator contract drift
+│       ├── inputSensitivity.test.ts    ← Input changes → output changes
+│       ├── contractGuards.test.ts      ← CalcContract schema tests
+│       └── adapterHardening.test.ts    ← Edge cases, boundary values
+├── schema/
+│   └── curatedFieldsResolver.ts        ← Step 3 curated field definitions
+├── expression/                         ← lifeSignals-driven UI layer
+│   ├── components.tsx                  ← Confidence bars, phase indicators
+│   ├── hooks.ts                        ← useExpressionEngine()
+│   ├── types.ts                        ← LifeSignals, Phase types
+│   └── index.ts
+├── gates/
+│   └── wizardStepGates.ts              ← Step transition validators
+├── fsm/
+│   └── step3FSM.ts                     ← Step 3 finite state machine
+├── pricing/
+│   └── pricingBridge.ts                ← Price calculation integration
+├── telemetry/
+│   └── contractTelemetry.ts            ← Runtime contract violation logging
+├── validation/
+│   └── templateValidator.ts            ← Template structure validator
+├── debug/
+│   └── provenanceAudit.ts              ← Data provenance tracing
+├── featureFlags.ts                     ← V7 feature flags
+├── industryMeta.ts                     ← Canonical industry icons/labels/metadata
+└── WizardV7Page.tsx                    ← Entry point (React)
+
+src/components/wizard/v7/               ← UI components (React only)
+├── steps/
+│   ├── Step1LocationV7.tsx             ← Google Places address input
+│   ├── Step2IndustryV7.tsx             ← Industry card grid (from industryMeta)
+│   ├── Step3ProfileV7Curated.tsx       ← ✅ ACTIVE — Curated 16Q questionnaire
+│   ├── Step3ProfileV7.tsx              ← Alternative: template-driven renderer
+│   ├── Step3GatedV7.tsx                ← Alternative: FSM-gated step 3
+│   ├── Step4ResultsV7.tsx              ← Quote results + export
+│   └── index.ts
+├── shared/
+│   ├── WizardShellV7.tsx               ← Layout shell
+│   ├── TopNavBar.tsx                   ← Header navigation
+│   ├── BottomNavigation.tsx            ← Step navigation buttons
+│   ├── ProgressTracker.tsx             ← Step progress indicator
+│   ├── IntelStrip.tsx                  ← Intelligence strip
+│   ├── WizardErrorBoundary.tsx         ← Error boundary
+│   └── ...
+├── live-preview/
+│   ├── LiveCalculationPanel.tsx        ← Real-time power gauge
+│   ├── PowerGauge.tsx                  ← kW visualization
+│   └── SavingsCounter.tsx              ← Savings animation
+├── advisor/
+│   ├── AIEnergyAdvisor.tsx             ← Advisor chat panel
+│   └── AdvisorAvatar.tsx               ← Advisor avatar
+├── admin/
+│   └── WizardHealthDashboardV2.tsx     ← Admin monitoring
+└── debug/
+    └── V7DebugPanel.tsx                ← Debug overlay
+```
+
+### Data Flow: Template → Calculator → Quote
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  Step 3: User answers questions                                     │
+│  (Step3ProfileV7Curated renders curated fields)                     │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │ answers: Record<string, any>
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  applyTemplateMapping(answers, template.mapping)                    │
+│  Converts question IDs → calculator input keys                      │
+│  Applies transforms (parseFloat, booleans, option maps)             │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │ calcInputs: Record<string, any>
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  buildSSOTInput(industry, calcInputs)                               │
+│  Translates adapter field names → SSOT field names                  │
+│  e.g., dcfcChargers → numberOfDCFastChargers                       │
+│  ⚠️ CRITICAL: Prevents "silent default" bug class                  │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │ ssotData: Record<string, any>
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  Calculator adapter (from CALCULATORS_BY_ID in registry.ts)         │
+│  Thin wrapper that calls SSOT:                                      │
+│    calculateUseCasePower(slug, ssotData)                             │
+│  Returns: { peakLoadKW, validation: CalcValidation }                │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  CalcValidation envelope (TrueQuote™)                               │
+│  ├── version: "v1"                                                  │
+│  ├── kWContributors: { hvac: 120, lighting: 30, process: 50, ... } │
+│  ├── dutyCycle: 0.55                                                │
+│  ├── contributorShares: { hvac: 0.48, lighting: 0.12, ... }       │
+│  ├── assumptions: ["ASHRAE 90.1", "4 W/sqft HVAC"]                │
+│  └── details: { sqFt: 50000, wattsPerSqFt: 4.5, ... }            │
+│                                                                     │
+│  VALIDATION RULES:                                                  │
+│  - version must be "v1" for TrueQuote badge                        │
+│  - ≥3 non-zero kWContributors                                      │
+│  - contributor sum within 5% of peakLoadKW                          │
+│  - dutyCycle in [0, 1]                                              │
+│  - non-empty assumptions[]                                          │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Industry Calculator Registry
+
+Every industry has a registered calculator adapter in `registry.ts`:
+
+| Industry | Calculator ID | Template? | Curated? | Status |
+|----------|--------------|-----------|----------|--------|
+| data_center | `dc_load_v1` | ✅ JSON | ✅ | Full TrueQuote |
+| hotel | `hotel_load_v1` | ✅ JSON | ✅ | Full TrueQuote |
+| car_wash | `car_wash_load_v1` | ✅ JSON | ✅ | Full TrueQuote |
+| ev_charging | `ev_charging_load_v1` | ✅ JSON | ✅ | Full TrueQuote |
+| hospital | `hospital_load_v1` | ✅ JSON | ✅ | Full TrueQuote |
+| manufacturing | `manufacturing_load_v1` | ✅ JSON | ✅ | Full TrueQuote |
+| office | `office_load_v1` | ✅ JSON | ✅ | Full TrueQuote |
+| retail | `retail_load_v1` | — | ✅ | Adapter-direct |
+| warehouse | `warehouse_load_v1` | — | ✅ | Adapter-direct |
+| restaurant | `restaurant_load_v1` | — | ✅ | Adapter-direct |
+| gas_station | `gas_station_load_v1` | — | ✅ | Adapter-direct |
+| healthcare | (maps to hospital) | — | ✅ | Alias |
+| other | `generic_ssot_v1` | — | — | Fallback (no TrueQuote) |
+
+### SSOT Input Aliases (Critical)
+
+The `buildSSOTInput()` function in `ssotInputAliases.ts` prevents the **#1 silent bug class**: adapter field names that don't match SSOT function parameter names.
+
+**How it works:**
+```typescript
+// SSOT_ALIASES truth table:
+// adapter field → SSOT field → SSOT alternates → default
+{
+  ev_charging: {
+    level2Chargers: { ssotField: "numberOfLevel2Chargers", ssotDefault: 12 },
+    dcfcChargers:   { ssotField: "numberOfDCFastChargers", ssotDefault: 8 },
+  },
+  office: {
+    squareFootage:  { ssotField: "officeSqFt", ssotDefault: 50000 },
+  },
+  // ...
+}
+```
+
+**⚠️ RULE: Every calculator adapter MUST call `buildSSOTInput()` before passing data to SSOT.**
+
+```typescript
+// ✅ CORRECT — field names translated
+const ssotData = buildSSOTInput("ev_charging", { level2Chargers: 10, dcfcChargers: 4 });
+const result = calculateUseCasePower("ev-charging", ssotData);
+// ssotData = { numberOfLevel2Chargers: 10, numberOfDCFastChargers: 4 }
+
+// ❌ WRONG — SSOT doesn't recognize "dcfcChargers", falls through to default=8
+const result = calculateUseCasePower("ev-charging", { level2Chargers: 10, dcfcChargers: 4 });
+```
+
+### Feature Flags
+
+In `featureFlags.ts`:
+
+| Flag | Default | Effect |
+|------|---------|--------|
+| `V7_USE_CURATED_STEP3` | `true` | Use curated schema (not backend templates) |
+| `V7_ENABLE_GATED_STEP3` | `false` | FSM-gated step 3 (experimental) |
+| `V7_ENABLE_EXPRESSION` | `true` | lifeSignals expression layer |
+| `V7_ENABLE_DEBUG_PANEL` | `false` | Debug overlay |
+| `V7_PRICING_BRIDGE` | `true` | Real pricing integration |
+
+### Industry Metadata (SSOT)
+
+`src/wizard/v7/industryMeta.ts` is the **canonical source** for industry display properties:
+
+```typescript
+import { INDUSTRY_META, getIndustryMeta, canonicalizeSlug } from '@/wizard/v7/industryMeta';
+
+const meta = getIndustryMeta('data-center');
+// → { icon: '🖥️', label: 'Data Center', slug: 'data_center', hasTemplate: true }
+
+canonicalizeSlug('healthcare');  // → 'hospital'
+canonicalizeSlug('car-wash');    // → 'car_wash'
+canonicalizeSlug('EV_Charging'); // → 'ev_charging'
+```
+
+Step2IndustryV7 imports from this SSOT. Any new industry display needs should go here.
+
+### Template JSON Format
+
+Templates live in `src/wizard/v7/templates/json/`:
+
+```json
+{
+  "industry": "car_wash",
+  "version": "car_wash.v1.0.0",
+  "calculator": "car_wash_load_v1",
+  "questions": [
+    {
+      "id": "wash_type",
+      "label": "Wash type",
+      "type": "select",
+      "options": [
+        { "value": "tunnel", "label": "Tunnel (conveyor)" },
+        { "value": "automatic", "label": "In-Bay Automatic" },
+        { "value": "self_service", "label": "Self-Service Bays" }
+      ],
+      "default": "tunnel"
+    },
+    {
+      "id": "bay_count",
+      "label": "Number of bays / tunnels",
+      "type": "number",
+      "default": 4,
+      "validation": { "min": 1, "max": 20 }
+    }
+  ],
+  "mapping": [
+    { "from": "wash_type", "to": "washType" },
+    { "from": "bay_count", "to": "bayTunnelCount", "transform": "parseFloat" }
+  ],
+  "defaults": {
+    "wash_type": "tunnel",
+    "bay_count": 4
+  }
+}
+```
+
+### Template Manifest
+
+`template-manifest.ts` is a machine-readable registry that test suites use to validate contracts:
+
+```typescript
+interface ManifestEntry {
+  industrySlug: string;
+  templateVersion: string;
+  calculatorId: string;
+  validationVersion: string;           // "v1" for TrueQuote
+  requiredQuestionIds: string[];        // Questions template MUST have
+  requiredCalcFields: string[];         // Fields calculator MUST receive
+  contributorKeysExpected: string[];    // kW contributors in validation envelope
+  dutyCycleRange: [number, number];     // Expected duty cycle bounds
+  typicalPeakKWRange: [number, number]; // Sanity bounds
+  detailKeys: string[];                 // Extra detail fields
+  ssotInputAliases: Record<string, AliasEntry>; // Field name mapping
+}
+```
+
+### Test Architecture (383 tests)
+
+Run with: `npm run test:v7` or `npx vitest run src/wizard/v7/`
+
+| Test File | Count | Purpose |
+|-----------|-------|---------|
+| `goldenTraces.test.ts` | ~120 | Per-industry golden value range tests (typical/small/large) |
+| `trueQuoteSanity.test.ts` | ~60 | TrueQuote envelope validity for all templates |
+| `templateDrift.test.ts` | ~50 | Template ↔ calculator contract alignment |
+| `inputSensitivity.test.ts` | ~50 | Input changes produce output changes (no silent defaults) |
+| `contractGuards.test.ts` | ~40 | CalcContract schema and structural checks |
+| `adapterHardening.test.ts` | ~30 | Edge cases, boundary values, NaN protection |
+| (+ gates, pricing) | ~30 | Step gate validation, pricing sanity |
+
+**Ship gate:** `npm run ship:v7` (typecheck + test:v7 + build)
+
+### Adding a New Industry to V7
+
+1. **Add calculator adapter** in `registry.ts`:
+   - Create `YOUR_INDUSTRY_LOAD_V1_SSOT` adapter
+   - Call `buildSSOTInput(industry, inputs)` before SSOT
+   - Register in `CALCULATORS_BY_ID`
+   - Return `{ peakLoadKW, validation: CalcValidation }`
+
+2. **Add SSOT aliases** in `ssotInputAliases.ts`:
+   - Map adapter field names → SSOT field names
+   - Include `ssotDefault` for each field
+
+3. **Add to manifest** in `template-manifest.ts`:
+   - Define `ManifestEntry` with required fields/questions
+
+4. **Add curated fields** in `curatedFieldsResolver.ts`:
+   - Define questions with types, options, validation
+
+5. **Add to industryMeta.ts**:
+   - Icon, label, slug, description, hasTemplate
+
+6. **Add golden trace tests** in `goldenTraces.test.ts`:
+   - typical, small, large scenarios with expected kW ranges
+
+7. **Run full test suite:** `npm run ship:v7`
+
+### Curated Step 3 (Active Path)
+
+`Step3ProfileV7Curated.tsx` renders questions from `curatedFieldsResolver.ts`.
+
+**Input types rendered:**
+- **Button cards** — for ≤6 option questions (ALL current questions)
+- **Number input** — with inline unit suffix, smart placeholder, min/max validation
+- **Toggle** — Yes/No as two button cards
+- **Slider** — for continuous ranges (currently no questions use this)
+
+**⚠️ UI Rules:**
+- NO `<select>` dropdowns — all options rendered as button cards
+- NO toast spam — validation shown inline with amber highlight
+- Units shown IN-FIELD (absolute-positioned suffix, e.g., "kW", "sq ft")
+- Smart placeholders from `q.smartDefault`
+
+### Null-Safety Pattern (Critical)
+
+```typescript
+// ❌ WRONG — 0 is falsy, falls through to default
+const count = Number(inputs.dcfcChargers) || 8;
+
+// ✅ CORRECT — preserves explicit zero
+const count = inputs.dcfcChargers != null ? Number(inputs.dcfcChargers) : 8;
+```
+
+This pattern MUST be used for ALL numeric inputs in calculator adapters.
+
+### PROTECTED V7 FILES — DO NOT MODIFY WITHOUT REVIEW:
+
+- `useWizardV7.ts` — SSOT orchestrator (3,931 lines)
+- `registry.ts` — Calculator adapter registry
+- `ssotInputAliases.ts` — Field name translation layer
+- `template-manifest.ts` — Test contract definitions
+- `curatedFieldsResolver.ts` — Curated field schemas
+- `contract.ts` — CalcContract type definition
+- `useCasePowerCalculations.ts` — SSOT power calculations (in `src/services/`)
+
+### V7 vs V6 Comparison
+
+| Feature | V7 | V6 |
+|---------|----|----|
+| **Steps** | 4 (location → industry → profile → results) | 6 (+ options + magic fit) |
+| **Orchestrator** | `useWizardV7.ts` hook | `WizardV6.tsx` monolith |
+| **Questionnaire** | Template/curated-driven | Database-driven |
+| **Calculator** | Adapter registry + SSOT | Direct SSOT |
+| **Validation** | TrueQuote CalcValidation envelope | Basic checks |
+| **Field names** | `buildSSOTInput()` translation | Direct mapping |
+| **Tests** | 383 automated (golden + drift + sanity) | Manual + e2e |
+| **Expression** | lifeSignals (confidence, phases) | Advisor rail |
