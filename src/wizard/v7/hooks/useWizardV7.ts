@@ -298,6 +298,17 @@ export type QuoteOutput = {
 
   // Confidence scoring (Recovery Strategy Pillar 3)
   confidence?: QuoteConfidence;
+
+  // TrueQuote™ validation envelope (kW contributors, duty cycle, assumptions)
+  // Populated from CalcValidation in Layer A — used by export templates
+  trueQuoteValidation?: {
+    version: "v1";
+    dutyCycle?: number;
+    kWContributors?: Record<string, number>;
+    kWContributorsTotalKW?: number;
+    kWContributorShares?: Record<string, number>;
+    assumptions?: string[];
+  };
 };
 
 export type BusinessDraft = {
@@ -619,6 +630,7 @@ function runContractQuote(params: {
     };
 
     // 10. Build base quote output (load profile only - no financials yet)
+    const computedAny = computed as Record<string, unknown>;
     const quote: QuoteOutput = {
       baseLoadKW: loadProfile.baseLoadKW,
       peakLoadKW: loadProfile.peakLoadKW,
@@ -627,6 +639,27 @@ function runContractQuote(params: {
       durationHours: sizingHints.durationHours,
       notes: [...(computed.assumptions ?? []), ...(computed.warnings ?? []).map((w) => `⚠️ ${w}`)],
       pricingComplete: false, // Will be set true after Layer B
+
+      // TrueQuote™ validation envelope — persisted for export/audit
+      trueQuoteValidation: computed.validation
+        ? {
+            version: computed.validation.version,
+            dutyCycle: computed.validation.dutyCycle,
+            kWContributors: computed.validation.kWContributors as
+              | Record<string, number>
+              | undefined,
+            kWContributorsTotalKW: computed.validation.kWContributorsTotalKW,
+            kWContributorShares: computed.validation.kWContributorShares,
+            assumptions: computed.assumptions,
+          }
+        : computedAny.kWContributors
+          ? {
+              version: "v1" as const,
+              kWContributors: computedAny.kWContributors as Record<string, number>,
+              dutyCycle: computedAny.dutyCycle as number | undefined,
+              assumptions: computed.assumptions,
+            }
+          : undefined,
     };
 
     // 11. Log success telemetry
@@ -3133,6 +3166,9 @@ export function useWizardV7() {
 
           // Input fallbacks for transparency
           inputFallbacks: Object.keys(inputFallbacks).length > 0 ? inputFallbacks : undefined,
+
+          // TrueQuote™ validation envelope (carried from Layer A)
+          trueQuoteValidation: baseQuote.trueQuoteValidation,
 
           // Notes (merged from both layers)
           notes: [...(baseQuote.notes?.filter((n) => !n.startsWith("⚠️")) ?? []), ...allWarnings],
