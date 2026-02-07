@@ -14,7 +14,7 @@
 
 import React from "react";
 import { TrendingUp, Target, CloudRain, Building2 } from "lucide-react";
-import { TrueQuoteBadge } from "@/components/shared/TrueQuoteBadge";
+import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import { SourceAttributionTooltip } from "@/components/quotes/SourceAttributionTooltip";
 import type {
   ValueTeaserMetric,
@@ -62,11 +62,7 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Sites like yours typically see:</span>
           </div>
-          <TrueQuoteBadge
-            size="sm"
-            variant="pill"
-            className="scale-90 shadow-lg shadow-purple-500/30"
-          />
+          <TrueQuoteBadgeCanonical showTooltip={false} />
         </div>
         <ul className="space-y-2">
           {metrics.map((metric, idx) => (
@@ -122,11 +118,7 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
             <Target className="w-3.5 h-3.5" />
             <span>Merlin recommends these priorities:</span>
           </div>
-          <TrueQuoteBadge
-            size="sm"
-            variant="pill"
-            className="scale-90 shadow-lg shadow-purple-500/30"
-          />
+          <TrueQuoteBadgeCanonical showTooltip={false} />
         </div>
         <div className="space-y-3">
           {goals.map((goal) => (
@@ -186,11 +178,7 @@ export function IntelligencePanel({ type, data, className = "" }: IntelligencePa
             <CloudRain className="w-3.5 h-3.5" />
             <span>Climate impact on your business:</span>
           </div>
-          <TrueQuoteBadge
-            size="sm"
-            variant="pill"
-            className="scale-90 shadow-lg shadow-purple-500/30"
-          />
+          <TrueQuoteBadgeCanonical showTooltip={false} />
         </div>
         <div className="text-xs text-slate-100/90">
           <div className="font-semibold text-white leading-relaxed">{impact.impactDescription}</div>

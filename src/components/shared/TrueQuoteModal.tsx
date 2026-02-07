@@ -29,7 +29,7 @@ import {
   EyeOff,
   Zap,
 } from "lucide-react";
-import { TrueQuoteBadge } from "./TrueQuoteBadge";
+import { TrueQuoteBadgeCanonical } from "./TrueQuoteBadgeCanonical";
 import { AUTHORITY_SOURCES } from "./IndustryComplianceBadges";
 
 export type TrueQuoteModalMode = "about" | "proof";
@@ -167,7 +167,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
           {/* Content */}
           <div className="relative flex flex-col items-center gap-3">
             {/* TrueQuote Badge - at top of purple section */}
-            <TrueQuoteBadge size="lg" showTooltip={false} />
+            <TrueQuoteBadgeCanonical showTooltip={false} />
 
             {/* Tagline */}
             <p className="text-purple-200 text-lg font-medium mt-1">
@@ -271,7 +271,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <TrueQuoteBadge size="sm" showTooltip={false} />
+                    <TrueQuoteBadgeCanonical showTooltip={false} />
                     <h3 className="font-bold text-amber-900 text-lg">Merlin TrueQuote™</h3>
                   </div>
 
@@ -544,7 +544,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
         <div className="border-t border-gray-200 bg-gray-50 px-8 py-5 flex-shrink-0">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <TrueQuoteBadge size="sm" showTooltip={false} />
+              <TrueQuoteBadgeCanonical showTooltip={false} />
               <span className="text-gray-600">Ready to see the difference?</span>
             </div>
             <button
