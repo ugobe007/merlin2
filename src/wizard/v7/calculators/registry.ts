@@ -417,14 +417,15 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
     const carWashType = String(inputs.carWashType || "tunnel");
     const primaryEquipment = Array.isArray(inputs.primaryEquipment) ? inputs.primaryEquipment : [];
 
-    // 2. Map to SSOT parameters
-    const useCaseData = {
-      bayCount,
+    // 2. Map to SSOT parameters (use buildSSOTInput for field name safety)
+    const useCaseData = buildSSOTInput("car_wash", { bayTunnelCount: bayCount });
+    // Pass through extra fields SSOT may read
+    Object.assign(useCaseData, {
       carsPerDay,
       operatingHours,
       carWashType,
       primaryEquipment,
-    };
+    });
 
     assumptions.push(`Wash positions: ${bayTunnelStr} (${bayCount} total)`);
     assumptions.push(`Washes/day: ${carsPerDay}`);
@@ -1346,11 +1347,11 @@ export const EV_CHARGING_LOAD_V1_SSOT: CalculatorContract = {
     const warnings: string[] = [];
     const assumptions: string[] = [];
 
-    const level2Chargers = Number(inputs.level2Chargers) || 12;
-    const dcfcChargers = Number(inputs.dcfcChargers) || 8;
-    const hpcChargers = Number(inputs.hpcChargers) || 0;
-    const level2KWEach = Number(inputs.level2PowerKW) || 7.2;
-    const siteDemandCapKW = Number(inputs.siteDemandCapKW) || 0;
+    const level2Chargers = inputs.level2Chargers != null ? Number(inputs.level2Chargers) : 12;
+    const dcfcChargers = inputs.dcfcChargers != null ? Number(inputs.dcfcChargers) : 8;
+    const hpcChargers = inputs.hpcChargers != null ? Number(inputs.hpcChargers) : 0;
+    const level2KWEach = inputs.level2PowerKW != null ? Number(inputs.level2PowerKW) : 7.2;
+    const siteDemandCapKW = inputs.siteDemandCapKW != null ? Number(inputs.siteDemandCapKW) : 0;
 
     assumptions.push(
       `EV Charging: ${level2Chargers} Level 2 (${level2KWEach}kW), ` +
@@ -1359,7 +1360,10 @@ export const EV_CHARGING_LOAD_V1_SSOT: CalculatorContract = {
     );
 
     // Route through SSOT (handles concurrency internally)
-    const result = calculateUseCasePower("ev-charging", { level2Chargers, dcfcChargers });
+    // Use buildSSOTInput to map adapter field names → SSOT field names
+    // (dcfcChargers → numberOfDCFastChargers, level2Chargers → numberOfLevel2Chargers)
+    const evSSOTInput = buildSSOTInput("ev_charging", { level2Chargers, dcfcChargers });
+    const result = calculateUseCasePower("ev-charging", evSSOTInput);
     let peakLoadKW = Math.round(result.powerMW * 1000);
 
     // Add HPC contribution (not yet in SSOT legacy path — apply here)

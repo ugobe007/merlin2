@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
 import type { IndustrySlug, WizardState as WizardV7State } from "@/wizard/v7/hooks/useWizardV7";
+import { INDUSTRY_META, type IndustryMetaEntry } from "@/wizard/v7/industryMeta";
 
-// Industry images
+// Vite requires static image imports — map canonical slug → resolved asset
 import carWashImg from "@/assets/images/car_wash_1.jpg";
 import evChargingImg from "@/assets/images/ev_charging_station.jpg";
 import hotelImg from "@/assets/images/hotel_motel_holidayinn_1.jpg";
@@ -12,6 +13,20 @@ import manufacturingImg from "@/assets/images/manufacturing_1.jpg";
 import officeImg from "@/assets/images/office_building1.jpg";
 import healthcareImg from "@/assets/images/hospital_1.jpg";
 import dataCenterImg from "@/assets/images/data-center-1.jpg";
+
+const IMAGE_MAP: Record<string, string> = {
+  car_wash: carWashImg,
+  ev_charging: evChargingImg,
+  hotel: hotelImg,
+  restaurant: restaurantImg,
+  retail: retailImg,
+  warehouse: logisticsImg,
+  manufacturing: manufacturingImg,
+  office: officeImg,
+  hospital: healthcareImg,
+  healthcare: healthcareImg,
+  data_center: dataCenterImg,
+};
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Merlin Dark Theme Tokens (matching Step 1)
@@ -111,49 +126,40 @@ function Pill({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Build the display list from INDUSTRY_META (SSOT).
+ * Order is explicit — we control the grid position here, not in the registry.
+ */
+const DISPLAY_ORDER: string[] = [
+  "car_wash",
+  "ev_charging",
+  "hotel",
+  "restaurant",
+  "retail",
+  "warehouse",
+  "manufacturing",
+  "office",
+  "healthcare",
+  "data_center",
+  "other",
+];
+
 const INDUSTRIES: Array<{
   slug: IndustrySlug;
   label: string;
   desc: string;
   emoji: string;
   image: string;
-}> = [
-  {
-    slug: "car_wash",
-    label: "Car Wash",
-    desc: "Tunnel / in-bay / single-site operators",
-    emoji: "🚿",
-    image: carWashImg,
-  },
-  {
-    slug: "ev_charging",
-    label: "EV Charging Hub",
-    desc: "Depot / public charging sites",
-    emoji: "⚡",
-    image: evChargingImg,
-  },
-  { slug: "hotel", label: "Hotel / Hospitality", desc: "Hotels, resorts, properties", emoji: "🏨", image: hotelImg },
-  { slug: "restaurant", label: "Restaurant", desc: "Quick service, full service", emoji: "🍽️", image: restaurantImg },
-  { slug: "retail", label: "Retail", desc: "Stores, malls, chain locations", emoji: "🛍️", image: retailImg },
-  {
-    slug: "warehouse",
-    label: "Warehouse / Logistics",
-    desc: "Distribution, light industrial",
-    emoji: "📦",
-    image: logisticsImg,
-  },
-  {
-    slug: "manufacturing",
-    label: "Manufacturing",
-    desc: "Industrial loads, production lines",
-    emoji: "🏭",
-    image: manufacturingImg,
-  },
-  { slug: "office", label: "Office", desc: "Commercial office buildings", emoji: "🏢", image: officeImg },
-  { slug: "healthcare", label: "Healthcare", desc: "Clinics, hospitals, labs", emoji: "🏥", image: healthcareImg },
-  { slug: "data_center", label: "Data Center", desc: "Critical loads + redundancy", emoji: "🖥️", image: dataCenterImg },
-  { slug: "other", label: "Other", desc: "If none fit, pick this", emoji: "✨", image: "" },
-];
+}> = DISPLAY_ORDER.map((slug) => {
+  const meta: IndustryMetaEntry = INDUSTRY_META[slug] ?? INDUSTRY_META.other;
+  return {
+    slug: slug as IndustrySlug,
+    label: meta.label,
+    desc: meta.description ?? "",
+    emoji: meta.icon,
+    image: IMAGE_MAP[slug] ?? "",
+  };
+});
 
 export default function Step2IndustryV7({ state, actions }: Props) {
   const locationLine = useMemo(() => {
@@ -165,11 +171,6 @@ export default function Step2IndustryV7({ state, actions }: Props) {
   }, [state.location]);
 
   const disabled = !state.location || state.isBusy;
-  
-  // Debug logging
-  console.log("[Step2] state.location:", state.location);
-  console.log("[Step2] state.isBusy:", state.isBusy);
-  console.log("[Step2] disabled:", disabled);
 
   return (
     <div
@@ -221,7 +222,6 @@ export default function Step2IndustryV7({ state, actions }: Props) {
                 data-testid={`industry-card-${it.slug.replace(/_/g, "-")}`}
                 disabled={disabled}
                 onClick={() => {
-                  console.log("[Step2] Clicked industry:", it.slug, "disabled:", disabled);
                   if (!disabled) {
                     actions.selectIndustry(it.slug);
                   }

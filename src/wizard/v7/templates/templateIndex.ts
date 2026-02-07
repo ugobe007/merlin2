@@ -26,6 +26,10 @@ import type { IndustryTemplateV1 } from "./types";
 import dataCenter from "./data_center.v1.json";
 import hotel from "./hotel.v1.json";
 import carWash from "./car_wash.v1.json";
+import hospital from "./hospital.v1.json";
+import evCharging from "./ev_charging.v1.json";
+import manufacturing from "./manufacturing.v1.json";
+import office from "./office.v1.json";
 import genericFacility from "./generic_facility.v1.json";
 
 /**
@@ -58,6 +62,10 @@ export const TEMPLATES: IndustryTemplateV1[] = [
   dataCenter as IndustryTemplateV1,
   hotel as IndustryTemplateV1,
   carWash as IndustryTemplateV1,
+  hospital as IndustryTemplateV1,
+  evCharging as IndustryTemplateV1,
+  manufacturing as IndustryTemplateV1,
+  office as IndustryTemplateV1,
   genericFacility as IndustryTemplateV1,
 ];
 

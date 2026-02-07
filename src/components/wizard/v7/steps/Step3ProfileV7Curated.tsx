@@ -19,7 +19,6 @@ import {
   resolveStep3Schema, 
   CANONICAL_INDUSTRY_KEYS,
   getTier1Blockers,
-  isBlockerQuestion,
   type CuratedField, 
   type CuratedSchema,
   type CanonicalIndustryKey,
@@ -385,13 +384,23 @@ export default function Step3ProfileV7Curated(props: Props) {
             </select>
           )}
           
-          {/* Number input */}
+          {/* Number input — unit suffix inside field, smart placeholder, inline validation */}
           {inputType === 'number' && (
-            <div className="flex items-center gap-2">
+            <div className="relative">
               <input
                 type="number"
-                className="flex-1 rounded-lg bg-slate-950/60 border border-slate-700/60 px-3 py-2.5 text-slate-100"
-                placeholder={q.placeholder || ''}
+                className={`w-full rounded-lg bg-slate-950/60 border px-3 py-2.5 text-slate-100 ${
+                  (q.suffix || q.unit) ? 'pr-14' : ''
+                } ${
+                  value !== null && value !== undefined && value !== '' &&
+                  ((q.range?.min != null && Number(value) < q.range.min) ||
+                   (q.range?.max != null && Number(value) > q.range.max) ||
+                   (q.validation?.min != null && Number(value) < q.validation.min) ||
+                   (q.validation?.max != null && Number(value) > q.validation.max))
+                    ? 'border-amber-500/60 focus:ring-amber-500/40'
+                    : 'border-slate-700/60 focus:ring-violet-500/40'
+                } focus:ring-1 focus:outline-none transition-colors`}
+                placeholder={q.placeholder || (q.smartDefault != null ? String(q.smartDefault) : '')}
                 value={value === null || value === undefined ? '' : String(value)}
                 onChange={e => {
                   const raw = e.target.value;
@@ -403,8 +412,19 @@ export default function Step3ProfileV7Curated(props: Props) {
                 max={q.range?.max ?? q.validation?.max}
               />
               {(q.suffix || q.unit) && (
-                <span className="text-slate-400 text-sm">{q.suffix || q.unit}</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none">
+                  {q.suffix || q.unit}
+                </span>
               )}
+              {/* Inline validation hint */}
+              {value !== null && value !== undefined && value !== '' && (() => {
+                const n = Number(value);
+                const min = q.range?.min ?? q.validation?.min;
+                const max = q.range?.max ?? q.validation?.max;
+                if (min != null && n < min) return <p className="text-amber-400 text-xs mt-1">Minimum: {min}{q.unit ? ` ${q.unit}` : ''}</p>;
+                if (max != null && n > max) return <p className="text-amber-400 text-xs mt-1">Maximum: {max}{q.unit ? ` ${q.unit}` : ''}</p>;
+                return null;
+              })()}
             </div>
           )}
           
