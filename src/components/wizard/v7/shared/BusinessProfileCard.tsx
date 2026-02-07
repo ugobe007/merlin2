@@ -1,4 +1,5 @@
 import React from "react";
+import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 
 // Original Places API shape
 type BusinessProfile = {
@@ -49,7 +50,7 @@ export default function BusinessProfileCard({
   business,
   data,
   subtitle = "Business Profile",
-  rightTag = "TrueQuote™ Verified",
+  rightTag,
   showIndustryInference = false,
   onEdit,
 }: BusinessProfileCardProps) {
@@ -72,9 +73,13 @@ export default function BusinessProfileCard({
 
         <div className="flex items-center gap-2">
           {biz.isVerified && (
-            <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-200 shadow-[0_2px_6px_rgba(16,185,129,0.12)]">
-              ✓ {rightTag}
-            </span>
+            rightTag ? (
+              <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-200 shadow-[0_2px_6px_rgba(16,185,129,0.12)]">
+                ✓ {rightTag}
+              </span>
+            ) : (
+              <TrueQuoteBadgeCanonical showTooltip={false} />
+            )
           )}
           {onEdit && (
             <button

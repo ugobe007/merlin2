@@ -351,7 +351,7 @@ function WizardV7Page() {
       const badges: Array<{ label: string; tone: "green" | "amber" | "violet" | "blue" }> = [];
       
       if (pricingStatus === "ok" && pricingComplete) {
-        badges.push({ label: "TrueQuote™ ✓", tone: "green" });
+        badges.push({ label: "TrueQuote™ • Verified", tone: "green" });
       } else if (pricingStatus === "pending") {
         badges.push({ label: "calculating...", tone: "blue" });
       } else if (pricingStatus === "timed_out") {

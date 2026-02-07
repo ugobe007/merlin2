@@ -792,22 +792,18 @@ export default function EVChargingEnergy() {
                     </div>
                   </div>
                   
-                  {/* TrueQuote™ Attribution - NEW Dec 13, 2025 */}
+                  {/* TrueQuote™ Attribution */}
                   {quoteResult.benchmarkAudit && (
-                    <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 rounded-xl p-4 border border-emerald-400/30">
-                      <div className="flex items-start gap-3">
-                        <Shield className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                    <div className="rounded-xl p-4 border border-indigo-400/20 bg-slate-800/30 backdrop-blur-sm">
+                      <div className="flex items-center gap-3">
+                        <TrueQuoteBadgeCanonical onClick={() => setShowTrueQuoteModal(true)} />
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-bold text-emerald-300">TrueQuote™ Verified</span>
-                            <CheckCircle className="w-4 h-4 text-emerald-400" />
-                          </div>
-                          <p className="text-xs text-emerald-200/80 mb-2">
+                          <p className="text-xs text-slate-300/80 mb-1">
                             All costs traceable to {quoteResult.benchmarkAudit.sources?.length || 0} authoritative sources
                           </p>
                           <button
                             onClick={() => setShowTrueQuoteModal(true)}
-                            className="text-xs text-emerald-300 hover:text-emerald-200 underline flex items-center gap-1"
+                            className="text-xs text-indigo-300 hover:text-indigo-200 underline flex items-center gap-1"
                           >
                             View Source Attribution
                             <ChevronDown className="w-3 h-3" />

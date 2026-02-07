@@ -7,6 +7,7 @@ import type {
 import { sanitizeQuoteForDisplay } from "@/wizard/v7/utils/pricingSanity";
 import { buildV7ExportData } from "@/utils/buildV7ExportData";
 import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
+import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 
 type Props = {
   state: WizardV7State;
@@ -795,9 +796,9 @@ function ExportBar({ state }: { state: WizardV7State }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: 14, fontWeight: 900 }}>Download Quote</div>
-          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
             {isTrueQuote
-              ? "✓ TrueQuote™ verified — includes kW breakdown, confidence score & methodology"
+              ? <><TrueQuoteBadgeCanonical showTooltip={false} /><span>includes kW breakdown, confidence score & methodology</span></>
               : hasPricing
                 ? "📊 Estimate — includes financial projections"
                 : "📋 Load profile only — pricing pending"}
