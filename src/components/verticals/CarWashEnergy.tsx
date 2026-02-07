@@ -1087,16 +1087,19 @@ export default function CarWashEnergy() {
             Ready to Start Saving?
           </h2>
           <p className="text-xl text-cyan-200/70 mb-8">
-            Get a free, no-obligation quote in under 5 minutes
+            Get a free, no-obligation TrueQuote™ in under 5 minutes
           </p>
           <button
             onClick={() => setShowWizard(true)}
             className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-500 hover:via-purple-500 hover:to-indigo-500 text-white px-12 py-5 rounded-full font-bold text-xl shadow-xl hover:shadow-2xl hover:shadow-purple-500/40 transition-all hover:scale-105 border border-purple-400/30"
           >
             <Sparkles className="w-6 h-6" />
-            Start My Free Quote
+            Get My TrueQuote™
             <ArrowRight className="w-6 h-6" />
           </button>
+          <p className="mt-4 text-sm text-slate-400">
+            ◎ Every number backed by NREL, IEEE & IRA 2022 sources
+          </p>
         </div>
       </section>
       

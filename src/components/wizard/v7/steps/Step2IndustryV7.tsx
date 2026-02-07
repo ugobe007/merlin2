@@ -175,9 +175,7 @@ export default function Step2IndustryV7({ state, actions }: Props) {
   return (
     <div
       style={{
-        minHeight: "100vh",
-        background: DARK.bgGradient,
-        padding: "40px 24px",
+        padding: "0",
         color: DARK.textPrimary,
       }}
     >

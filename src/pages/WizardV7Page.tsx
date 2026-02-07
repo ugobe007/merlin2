@@ -57,6 +57,14 @@ const NEXT_HINTS: Record<StepKey, string> = {
   results: "finalize your quote",
 };
 
+// Contextual Next button labels
+const NEXT_LABELS: Record<StepKey, string> = {
+  location: "Choose Industry →",
+  industry: "Build Profile →",
+  profile: "See Results →",
+  results: "Done",
+};
+
 function WizardV7Page() {
   const wizard = useWizardV7();
   const { state } = wizard;
@@ -90,6 +98,7 @@ function WizardV7Page() {
   }, [state.step]);
 
   const nextHint = (NEXT_HINTS[state.step as StepKey] ?? "") as string;
+  const nextLabel = (NEXT_LABELS[state.step as StepKey] ?? "Next Step") as string;
 
   // ============================================================================
   // GATE CHECK — SSOT (Feb 1, 2026)
@@ -419,7 +428,76 @@ function WizardV7Page() {
       );
     }
 
-    // Location / Industry steps: minimal guidance
+    // Location step: location-specific guidance
+    if (state.step === "location") {
+      const hasZip = !!state.locationRawInput?.trim();
+      const hasLocation = !!state.location;
+      const hasBusiness = !!state.businessCard;
+      const needsConfirm = hasBusiness && !state.businessConfirmed;
+
+      const bullets: string[] = [];
+      if (!hasZip) {
+        bullets.push("Enter your ZIP code to unlock utility rates, solar potential & incentives.");
+        bullets.push("Merlin auto-detects your state, climate zone & grid region.");
+      } else if (!hasLocation) {
+        bullets.push("Resolving your location…");
+      } else if (needsConfirm) {
+        bullets.push("Confirm your business to auto-detect industry.");
+        bullets.push("Or skip and choose industry manually.");
+      } else {
+        bullets.push("✅ Location locked.");
+        if (state.locationIntel?.utilityRate) {
+          bullets.push(`⚡ Utility rate: $${state.locationIntel.utilityRate.toFixed(4)}/kWh`);
+        }
+        if (state.locationIntel?.peakSunHours) {
+          bullets.push(`☀️ Solar: ${state.locationIntel.peakSunHours.toFixed(1)} peak sun hours`);
+        }
+        bullets.push("Click Next to choose your industry.");
+      }
+
+      return (
+        <V7AdvisorPanel
+          title="Merlin Advisor"
+          subtitle="Location • Step 1"
+          badges={[
+            { label: hasLocation ? "location: set" : "location: needed", tone: hasLocation ? "green" : "amber" },
+            { label: gate.canContinue ? "gate: ok" : "gate: blocked", tone: gate.canContinue ? "green" : "amber" },
+          ]}
+          bullets={bullets}
+        />
+      );
+    }
+
+    // Industry step: guide the choice
+    if (state.step === "industry") {
+      const locLine = state.location
+        ? [state.location.city, state.location.state].filter(Boolean).join(", ")
+        : "Unknown";
+
+      const bullets: string[] = [
+        `📍 Location: ${locLine}`,
+        "Select the industry that best matches your facility.",
+        "This determines your load profile, peak demand, and savings model.",
+      ];
+
+      if (state.industryLocked && state.industry !== "auto") {
+        bullets.push(`✅ Industry auto-detected: ${state.industry}. Click Next to skip.`);
+      }
+
+      return (
+        <V7AdvisorPanel
+          title="Merlin Advisor"
+          subtitle="Industry • Step 2"
+          badges={[
+            { label: state.industry && state.industry !== "auto" ? `industry: ${state.industry}` : "industry: needed", tone: state.industry && state.industry !== "auto" ? "green" : "amber" },
+            { label: gate.canContinue ? "gate: ok" : "gate: blocked", tone: gate.canContinue ? "green" : "amber" },
+          ]}
+          bullets={bullets}
+        />
+      );
+    }
+
+    // Fallback (shouldn't reach here, but safe)
     return (
       <V7AdvisorPanel
         title="Merlin Advisor"
@@ -442,13 +520,14 @@ function WizardV7Page() {
         currentStep={currentStep}         // 0-index internal
         stepLabels={[...STEP_LABELS]}     // ✅ shell no longer has its own steps list
         nextHint={nextHint}
+        nextLabel={nextLabel}
         canGoBack={canGoBack}
         canGoNext={canGoNext}
         isNextLoading={state.isBusy}
         onBack={handleBack}
         onNext={handleNext}
         isVerified={isVerified}
-        rightPanel={rightPanel}           // ✅ Advisor panel
+        advisorContent={rightPanel}    // ✅ Advisor panel in left rail
       >
         {/* DEV-ONLY: Gate Debug Panel */}
         {import.meta.env.DEV && !gate.canContinue && gateReason && (

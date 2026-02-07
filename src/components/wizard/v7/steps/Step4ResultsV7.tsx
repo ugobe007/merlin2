@@ -27,10 +27,11 @@ function Card({ children }: { children: React.ReactNode }) {
     <div
       style={{
         borderRadius: 16,
-        border: "1px solid rgba(0,0,0,0.10)",
-        background: "white",
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(255,255,255,0.04)",
         padding: 16,
-        boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)",
+        backdropFilter: "blur(12px)",
       }}
     >
       {children}
@@ -46,11 +47,11 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
         gridTemplateColumns: "220px 1fr",
         gap: 12,
         padding: "8px 0",
-        borderBottom: "1px solid rgba(0,0,0,0.06)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}
     >
-      <div style={{ fontSize: 12, opacity: 0.7 }}>{k}</div>
-      <div style={{ fontSize: 13, fontWeight: 800 }}>{v}</div>
+      <div style={{ fontSize: 12, color: "rgba(232,235,243,0.5)" }}>{k}</div>
+      <div style={{ fontSize: 13, fontWeight: 800, color: "rgba(232,235,243,0.95)" }}>{v}</div>
     </div>
   );
 }
@@ -64,10 +65,10 @@ function Pill({ children }: { children: React.ReactNode }) {
         gap: 6,
         padding: "6px 10px",
         borderRadius: 999,
-        background: "rgba(0,0,0,0.05)",
-        border: "1px solid rgba(0,0,0,0.08)",
+        background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.1)",
         fontSize: 12,
-        opacity: 0.9,
+        color: "rgba(232,235,243,0.8)",
       }}
     >
       {children}
@@ -164,10 +165,10 @@ export default function Step4ResultsV7({ state, actions }: Props) {
       <Card>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.2px" }}>
+            <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.2px", color: "rgba(232,235,243,0.95)" }}>
               Step 4 — Results
             </div>
-            <div style={{ marginTop: 6, fontSize: 13, opacity: 0.75 }}>
+            <div style={{ marginTop: 6, fontSize: 13, color: "rgba(232,235,243,0.6)" }}>
               Location: <b>{locLine}</b> • Industry: <b>{state.industry}</b>
             </div>
 
@@ -185,8 +186,9 @@ export default function Step4ResultsV7({ state, actions }: Props) {
                 height: 36,
                 padding: "0 12px",
                 borderRadius: 12,
-                border: "1px solid rgba(0,0,0,0.12)",
-                background: "rgba(0,0,0,0.05)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.06)",
+                color: "rgba(232,235,243,0.8)",
                 cursor: "pointer",
                 fontWeight: 900,
               }}
@@ -200,8 +202,9 @@ export default function Step4ResultsV7({ state, actions }: Props) {
                 height: 36,
                 padding: "0 12px",
                 borderRadius: 12,
-                border: "1px solid rgba(0,0,0,0.12)",
-                background: "rgba(255,0,0,0.06)",
+                border: "1px solid rgba(239,68,68,0.25)",
+                background: "rgba(239,68,68,0.1)",
+                color: "rgba(239,68,68,0.9)",
                 cursor: "pointer",
                 fontWeight: 900,
               }}
@@ -306,14 +309,14 @@ export default function Step4ResultsV7({ state, actions }: Props) {
         <div
           style={{
             borderRadius: 16,
-            border: "1px solid rgba(100,100,100,0.2)",
-            background: "rgba(250,250,250,0.95)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.04)",
             padding: 16,
-            color: "#555",
+            color: "rgba(232,235,243,0.7)",
           }}
         >
           <div style={{ fontWeight: 700 }}>💤 Pricing queued…</div>
-          <div style={{ marginTop: 6, fontSize: 13, opacity: 0.8 }}>
+          <div style={{ marginTop: 6, fontSize: 13, color: "rgba(232,235,243,0.5)" }}>
             Your quote will be calculated shortly.
           </div>
         </div>
@@ -456,15 +459,16 @@ export default function Step4ResultsV7({ state, actions }: Props) {
       {/* Pricing Freeze Snapshot */}
       <Card>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <div style={{ fontSize: 14, fontWeight: 900 }}>Pricing Freeze (SSOT Snapshot)</div>
+          <div style={{ fontSize: 14, fontWeight: 900, color: "rgba(232,235,243,0.95)" }}>Pricing Freeze (SSOT Snapshot)</div>
           <button
             onClick={() => actions.goToStep("profile")}
             style={{
               height: 34,
               padding: "0 10px",
               borderRadius: 12,
-              border: "1px solid rgba(0,0,0,0.12)",
-              background: "rgba(0,0,0,0.05)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(255,255,255,0.06)",
+              color: "rgba(232,235,243,0.8)",
               cursor: "pointer",
               fontWeight: 900,
             }}
@@ -474,7 +478,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
         </div>
 
         {!freeze ? (
-          <div style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>
+          <div style={{ marginTop: 10, fontSize: 13, color: "rgba(232,235,243,0.5)" }}>
             ⚠️ No pricing freeze found. This usually means QuoteEngine didn't run or SSOT didn't
             persist outputs.
           </div>
@@ -500,15 +504,16 @@ export default function Step4ResultsV7({ state, actions }: Props) {
       {/* Quote Output */}
       <Card>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <div style={{ fontSize: 14, fontWeight: 900 }}>Quote Output</div>
+          <div style={{ fontSize: 14, fontWeight: 900, color: "rgba(232,235,243,0.95)" }}>Quote Output</div>
           <button
             onClick={() => actions.goToStep("location")}
             style={{
               height: 34,
               padding: "0 10px",
               borderRadius: 12,
-              border: "1px solid rgba(0,0,0,0.12)",
-              background: "rgba(0,0,0,0.05)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(255,255,255,0.06)",
+              color: "rgba(232,235,243,0.8)",
               cursor: "pointer",
               fontWeight: 900,
             }}
@@ -518,13 +523,13 @@ export default function Step4ResultsV7({ state, actions }: Props) {
         </div>
 
         {pricingStatus === "pending" ? (
-          <div style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>⏳ Calculating quote…</div>
+          <div style={{ marginTop: 10, fontSize: 13, color: "rgba(232,235,243,0.5)" }}>⏳ Calculating quote…</div>
         ) : pricingStatus === "error" ? (
-          <div style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>
+          <div style={{ marginTop: 10, fontSize: 13, color: "rgba(239,68,68,0.8)" }}>
             ❌ Quote unavailable due to pricing error. Use the Retry button above.
           </div>
         ) : !quoteReady ? (
-          <div style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>
+          <div style={{ marginTop: 10, fontSize: 13, color: "rgba(232,235,243,0.5)" }}>
             ⚠️ No quote found. Wire <code>api.runQuoteEngine()</code> in SSOT to populate outputs.
           </div>
         ) : (
@@ -535,7 +540,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
                 style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  opacity: 0.6,
+                  color: "rgba(139,92,246,0.8)",
                   marginBottom: 8,
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
@@ -561,7 +566,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
                 style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  opacity: 0.6,
+                  color: "rgba(139,92,246,0.8)",
                   marginBottom: 8,
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
@@ -595,7 +600,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
                 style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  opacity: 0.6,
+                  color: "rgba(139,92,246,0.8)",
                   marginBottom: 8,
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
@@ -712,15 +717,15 @@ export default function Step4ResultsV7({ state, actions }: Props) {
             })()}
 
             <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>Notes & Assumptions</div>
+              <div style={{ fontSize: 12, color: "rgba(232,235,243,0.5)", marginBottom: 6 }}>Notes & Assumptions</div>
               {quote.notes?.length ? (
-                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, opacity: 0.85 }}>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "rgba(232,235,243,0.7)" }}>
                   {quote.notes.map((n, i) => (
                     <li key={i}>{n}</li>
                   ))}
                 </ul>
               ) : (
-                <div style={{ fontSize: 13, opacity: 0.75 }}>—</div>
+                <div style={{ fontSize: 13, color: "rgba(232,235,243,0.4)" }}>—</div>
               )}
             </div>
           </div>
@@ -733,7 +738,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
       ================================================================ */}
       {quote && quote.peakLoadKW != null && <ExportBar state={state} />}
 
-      <div style={{ fontSize: 12, opacity: 0.6 }}>
+      <div style={{ fontSize: 12, color: "rgba(232,235,243,0.3)" }}>
         Results is a renderer. SSOT owns pricing, freezing, validation, and transitions.
       </div>
     </div>
@@ -795,13 +800,13 @@ function ExportBar({ state }: { state: WizardV7State }) {
     <Card>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 900 }}>Download Quote</div>
-          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: "rgba(232,235,243,0.95)" }}>Download Quote</div>
+          <div style={{ fontSize: 12, color: "rgba(232,235,243,0.5)", marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
             {isTrueQuote
               ? <><TrueQuoteBadgeCanonical showTooltip={false} /><span>includes kW breakdown, confidence score & methodology</span></>
               : hasPricing
-                ? "📊 Estimate — includes financial projections"
-                : "📋 Load profile only — pricing pending"}
+                ? <span style={{ color: "rgba(232,235,243,0.6)" }}>📊 Estimate — includes financial projections</span>
+                : <span style={{ color: "rgba(232,235,243,0.5)" }}>📋 Load profile only — pricing pending</span>}
           </div>
         </div>
 
@@ -819,10 +824,10 @@ function ExportBar({ state }: { state: WizardV7State }) {
                 height: 36,
                 padding: "0 14px",
                 borderRadius: 10,
-                border: "1px solid rgba(30, 64, 175, 0.25)",
+                border: "1px solid rgba(79,140,255,0.3)",
                 background:
-                  exporting === format ? "rgba(30, 64, 175, 0.12)" : "rgba(30, 64, 175, 0.06)",
-                color: exporting !== null && exporting !== format ? "#94a3b8" : "#1e40af",
+                  exporting === format ? "rgba(79,140,255,0.2)" : "rgba(79,140,255,0.08)",
+                color: exporting !== null && exporting !== format ? "rgba(232,235,243,0.3)" : "rgba(79,140,255,0.9)",
                 cursor: exporting !== null ? "not-allowed" : "pointer",
                 fontWeight: 700,
                 fontSize: 13,
@@ -842,9 +847,9 @@ function ExportBar({ state }: { state: WizardV7State }) {
             marginTop: 10,
             padding: "8px 12px",
             borderRadius: 8,
-            background: "rgba(239, 68, 68, 0.08)",
-            border: "1px solid rgba(239, 68, 68, 0.2)",
-            color: "#dc2626",
+            background: "rgba(239, 68, 68, 0.1)",
+            border: "1px solid rgba(239, 68, 68, 0.25)",
+            color: "rgba(239,68,68,0.9)",
             fontSize: 12,
           }}
         >
