@@ -3,7 +3,16 @@
  * Generate PDF, Word (.docx), and Excel (.xlsx) files with watermarks
  */
 
-import { Document, Paragraph, TextRun, AlignmentType, Header, PageNumber, Footer, BorderStyle } from "docx";
+import {
+  Document,
+  Paragraph,
+  TextRun,
+  AlignmentType,
+  Header,
+  PageNumber,
+  Footer,
+  BorderStyle,
+} from "docx";
 import { saveAs } from "file-saver";
 import { loadWatermarkSettings } from "../components/AdminWatermarkSettings";
 
@@ -67,6 +76,45 @@ export interface QuoteExportData {
 
   // Options
   showAiNote?: boolean;
+
+  // ─── V7 TrueQuote™ Extensions ────────────────────────────────────
+  // Load Profile (Layer A)
+  loadProfile?: {
+    baseLoadKW: number;
+    peakLoadKW: number;
+    energyKWhPerDay: number;
+  };
+
+  // Financial Analysis (Layer B)
+  financialAnalysis?: {
+    annualSavingsUSD: number;
+    paybackYears: number;
+    npv?: number;
+    irr?: number;
+    demandChargeSavings?: number;
+  };
+
+  // TrueQuote™ Confidence
+  trueQuoteConfidence?: {
+    overall: "high" | "medium" | "low";
+    location: string;
+    industry: "v1" | "fallback";
+    profileCompleteness: number;
+    userInputs: number;
+    defaultsUsed: number;
+  };
+
+  // TrueQuote™ Validation (kW contributors breakdown)
+  trueQuoteValidation?: {
+    version: "v1";
+    dutyCycle?: number;
+    kWContributors?: Record<string, number>;
+    kWContributorShares?: Record<string, number>;
+    assumptions?: string[];
+  };
+
+  // Pricing Snapshot (audit trail)
+  pricingSnapshotId?: string;
 }
 
 /**
@@ -149,17 +197,6 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                     text: ` | ${watermarkText}`,
                     size: 18,
                     color: "999999",
-                  }),
-                ],
-              }),
-              new Paragraph({
-                alignment: AlignmentType.LEFT,
-                children: [
-                  new TextRun({
-                    text: "NOTE: The AI Assistant is not working for [grid connection capacity].",
-                    size: 18,
-                    color: "CC0000",
-                    italics: true,
                   }),
                 ],
               }),
@@ -361,6 +398,301 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             spacing: { after: 400 },
           }),
 
+          // ─── Load Profile (V7 TrueQuote™) ─────────────────────────
+          ...(data.loadProfile
+            ? [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "Load Profile",
+                      size: 32,
+                      bold: true,
+                      color: "1E40AF",
+                    }),
+                  ],
+                  spacing: { before: 400, after: 200 },
+                  border: {
+                    bottom: {
+                      color: "1E40AF",
+                      space: 1,
+                      style: BorderStyle.SINGLE,
+                      size: 6,
+                    },
+                  },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Base Load: ", bold: true }),
+                    new TextRun({ text: `${Math.round(data.loadProfile.baseLoadKW)} kW` }),
+                  ],
+                  spacing: { after: 100 },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Peak Load: ", bold: true }),
+                    new TextRun({ text: `${Math.round(data.loadProfile.peakLoadKW)} kW` }),
+                  ],
+                  spacing: { after: 100 },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Daily Energy: ", bold: true }),
+                    new TextRun({
+                      text: `${Math.round(data.loadProfile.energyKWhPerDay).toLocaleString()} kWh/day`,
+                    }),
+                  ],
+                  spacing: { after: 400 },
+                }),
+              ]
+            : []),
+
+          // ─── Financial Analysis (V7 TrueQuote™) ────────────────────
+          ...(data.financialAnalysis
+            ? [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "Financial Analysis",
+                      size: 32,
+                      bold: true,
+                      color: "1E40AF",
+                    }),
+                  ],
+                  spacing: { before: 400, after: 200 },
+                  border: {
+                    bottom: {
+                      color: "1E40AF",
+                      space: 1,
+                      style: BorderStyle.SINGLE,
+                      size: 6,
+                    },
+                  },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Annual Savings: ", bold: true }),
+                    new TextRun({
+                      text: `$${Math.round(data.financialAnalysis.annualSavingsUSD).toLocaleString()}`,
+                      color: "059669",
+                      bold: true,
+                    }),
+                  ],
+                  spacing: { after: 100 },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Simple Payback: ", bold: true }),
+                    new TextRun({
+                      text: `${data.financialAnalysis.paybackYears.toFixed(1)} years`,
+                    }),
+                  ],
+                  spacing: { after: 100 },
+                }),
+                ...(data.financialAnalysis.npv != null
+                  ? [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "NPV (25 yr): ", bold: true }),
+                          new TextRun({
+                            text: `$${Math.round(data.financialAnalysis.npv).toLocaleString()}`,
+                          }),
+                        ],
+                        spacing: { after: 100 },
+                      }),
+                    ]
+                  : []),
+                ...(data.financialAnalysis.irr != null
+                  ? [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "IRR: ", bold: true }),
+                          new TextRun({
+                            text: `${(data.financialAnalysis.irr * 100).toFixed(1)}%`,
+                          }),
+                        ],
+                        spacing: { after: 100 },
+                      }),
+                    ]
+                  : []),
+                ...(data.financialAnalysis.demandChargeSavings != null
+                  ? [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "Demand Charge Savings: ", bold: true }),
+                          new TextRun({
+                            text: `$${Math.round(data.financialAnalysis.demandChargeSavings).toLocaleString()}/yr`,
+                          }),
+                        ],
+                        spacing: { after: 100 },
+                      }),
+                    ]
+                  : []),
+              ]
+            : []),
+
+          // ─── kW Contributors (V7 TrueQuote™) ──────────────────────
+          ...(data.trueQuoteValidation?.kWContributors
+            ? [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "Load Breakdown — TrueQuote™ Verified",
+                      size: 32,
+                      bold: true,
+                      color: "1E40AF",
+                    }),
+                  ],
+                  spacing: { before: 400, after: 200 },
+                  border: {
+                    bottom: {
+                      color: "1E40AF",
+                      space: 1,
+                      style: BorderStyle.SINGLE,
+                      size: 6,
+                    },
+                  },
+                }),
+                ...Object.entries(data.trueQuoteValidation.kWContributors)
+                  .filter(([, kw]) => kw > 0)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(
+                    ([key, kw]) =>
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: `${key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())}: `,
+                            bold: true,
+                          }),
+                          new TextRun({ text: `${Math.round(kw)} kW` }),
+                          ...(data.trueQuoteValidation?.kWContributorShares?.[key] != null
+                            ? [
+                                new TextRun({
+                                  text: ` (${(data.trueQuoteValidation.kWContributorShares[key] * 100).toFixed(0)}%)`,
+                                  color: "6B7280",
+                                }),
+                              ]
+                            : []),
+                        ],
+                        spacing: { after: 80 },
+                      })
+                  ),
+                ...(data.trueQuoteValidation.dutyCycle != null
+                  ? [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "Duty Cycle: ", bold: true }),
+                          new TextRun({
+                            text: `${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)}%`,
+                          }),
+                        ],
+                        spacing: { before: 100, after: 100 },
+                      }),
+                    ]
+                  : []),
+              ]
+            : []),
+
+          // ─── TrueQuote™ Confidence (V7) ────────────────────────────
+          ...(data.trueQuoteConfidence
+            ? [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "TrueQuote™ Confidence",
+                      size: 32,
+                      bold: true,
+                      color: "1E40AF",
+                    }),
+                  ],
+                  spacing: { before: 400, after: 200 },
+                  border: {
+                    bottom: {
+                      color: "1E40AF",
+                      space: 1,
+                      style: BorderStyle.SINGLE,
+                      size: 6,
+                    },
+                  },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Overall: ", bold: true }),
+                    new TextRun({
+                      text:
+                        data.trueQuoteConfidence.overall === "high"
+                          ? "✓ High Confidence"
+                          : data.trueQuoteConfidence.overall === "medium"
+                            ? "◐ Medium Confidence"
+                            : "○ Low Confidence",
+                      color:
+                        data.trueQuoteConfidence.overall === "high"
+                          ? "059669"
+                          : data.trueQuoteConfidence.overall === "medium"
+                            ? "D97706"
+                            : "DC2626",
+                      bold: true,
+                    }),
+                  ],
+                  spacing: { after: 100 },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Profile Completeness: ", bold: true }),
+                    new TextRun({
+                      text: `${data.trueQuoteConfidence.profileCompleteness}%`,
+                    }),
+                    new TextRun({
+                      text: ` (${data.trueQuoteConfidence.userInputs} user inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults)`,
+                      color: "6B7280",
+                    }),
+                  ],
+                  spacing: { after: 100 },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Industry Model: ", bold: true }),
+                    new TextRun({
+                      text:
+                        data.trueQuoteConfidence.industry === "v1"
+                          ? "Industry-Specific (TrueQuote™)"
+                          : "General Facility Estimate",
+                    }),
+                  ],
+                  spacing: { after: 100 },
+                }),
+                ...(data.pricingSnapshotId
+                  ? [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "Pricing Snapshot: ", bold: true }),
+                          new TextRun({
+                            text: `#${data.pricingSnapshotId.slice(0, 12)}`,
+                            color: "6B7280",
+                            size: 18,
+                          }),
+                        ],
+                        spacing: { after: 100 },
+                      }),
+                    ]
+                  : []),
+                ...(data.trueQuoteValidation?.assumptions?.length
+                  ? [
+                      new Paragraph({
+                        children: [new TextRun({ text: "Methodology & Sources:", bold: true })],
+                        spacing: { before: 100, after: 80 },
+                      }),
+                      ...data.trueQuoteValidation.assumptions.map(
+                        (a) =>
+                          new Paragraph({
+                            children: [new TextRun({ text: `• ${a}`, size: 18, color: "475569" })],
+                            spacing: { after: 40 },
+                          })
+                      ),
+                    ]
+                  : []),
+              ]
+            : []),
+
           // Footer Notes
           new Paragraph({
             children: [
@@ -529,11 +861,82 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
         <div class="row"><div class="label">Cost per kWh:</div><div class="value">$${(data.systemCost / (data.storageSizeMWh * 1000)).toFixed(0)}/kWh</div></div>
       </div>
 
+      ${
+        data.loadProfile
+          ? `
+      <div class="section">
+        <div class="section-title">Load Profile</div>
+        <div class="row"><div class="label">Base Load:</div><div class="value">${Math.round(data.loadProfile.baseLoadKW)} kW</div></div>
+        <div class="row"><div class="label">Peak Load:</div><div class="value">${Math.round(data.loadProfile.peakLoadKW)} kW</div></div>
+        <div class="row"><div class="label">Daily Energy:</div><div class="value">${Math.round(data.loadProfile.energyKWhPerDay).toLocaleString()} kWh/day</div></div>
+      </div>
+      `
+          : ""
+      }
+
+      ${
+        data.financialAnalysis
+          ? `
+      <div class="section">
+        <div class="section-title">Financial Analysis</div>
+        <div class="row"><div class="label">Annual Savings:</div><div class="value" style="color: #059669; font-weight: bold;">$${Math.round(data.financialAnalysis.annualSavingsUSD).toLocaleString()}</div></div>
+        <div class="row"><div class="label">Simple Payback:</div><div class="value">${data.financialAnalysis.paybackYears.toFixed(1)} years</div></div>
+        ${data.financialAnalysis.npv != null ? `<div class="row"><div class="label">NPV (25 yr):</div><div class="value">$${Math.round(data.financialAnalysis.npv).toLocaleString()}</div></div>` : ""}
+        ${data.financialAnalysis.irr != null ? `<div class="row"><div class="label">IRR:</div><div class="value">${(data.financialAnalysis.irr * 100).toFixed(1)}%</div></div>` : ""}
+        ${data.financialAnalysis.demandChargeSavings != null ? `<div class="row"><div class="label">Demand Charge Savings:</div><div class="value">$${Math.round(data.financialAnalysis.demandChargeSavings).toLocaleString()}/yr</div></div>` : ""}
+      </div>
+      `
+          : ""
+      }
+
+      ${
+        data.trueQuoteValidation?.kWContributors
+          ? `
+      <div class="section">
+        <div class="section-title">Load Breakdown — TrueQuote™ Verified</div>
+        ${Object.entries(data.trueQuoteValidation.kWContributors)
+          .filter(([, kw]) => kw > 0)
+          .sort(([, a], [, b]) => b - a)
+          .map(([key, kw]) => {
+            const share = data.trueQuoteValidation?.kWContributorShares?.[key];
+            const label = key
+              .replace(/([A-Z])/g, " $1")
+              .replace(/^./, (s: string) => s.toUpperCase());
+            return `<div class="row"><div class="label">${label}:</div><div class="value">${Math.round(kw)} kW${share != null ? ` <span style="color:#6b7280">(${(share * 100).toFixed(0)}%)</span>` : ""}</div></div>`;
+          })
+          .join("\n        ")}
+        ${data.trueQuoteValidation.dutyCycle != null ? `<div class="row"><div class="label">Duty Cycle:</div><div class="value">${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)}%</div></div>` : ""}
+      </div>
+      `
+          : ""
+      }
+
+      ${
+        data.trueQuoteConfidence
+          ? `
+      <div class="section" style="background: ${data.trueQuoteConfidence.overall === "high" ? "#f0fdf4" : data.trueQuoteConfidence.overall === "medium" ? "#fffbeb" : "#fef2f2"}; border-radius: 8px; padding: 15px; border: 1px solid ${data.trueQuoteConfidence.overall === "high" ? "#bbf7d0" : data.trueQuoteConfidence.overall === "medium" ? "#fde68a" : "#fecaca"};">
+        <div class="section-title" style="border-bottom: none; margin-bottom: 8px;">TrueQuote™ Confidence</div>
+        <div class="row"><div class="label">Overall:</div><div class="value" style="font-weight: bold; color: ${data.trueQuoteConfidence.overall === "high" ? "#059669" : data.trueQuoteConfidence.overall === "medium" ? "#d97706" : "#dc2626"};">${data.trueQuoteConfidence.overall === "high" ? "✓ High Confidence" : data.trueQuoteConfidence.overall === "medium" ? "◐ Medium Confidence" : "○ Low Confidence"}</div></div>
+        <div class="row"><div class="label">Profile Completeness:</div><div class="value">${data.trueQuoteConfidence.profileCompleteness}% <span style="color:#6b7280">(${data.trueQuoteConfidence.userInputs} user inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults)</span></div></div>
+        <div class="row"><div class="label">Industry Model:</div><div class="value">${data.trueQuoteConfidence.industry === "v1" ? "Industry-Specific (TrueQuote™)" : "General Facility Estimate"}</div></div>
+        ${data.pricingSnapshotId ? `<div class="row"><div class="label">Pricing Snapshot:</div><div class="value" style="font-family: monospace; color: #6b7280;">#${data.pricingSnapshotId.slice(0, 12)}</div></div>` : ""}
+        ${
+          data.trueQuoteValidation?.assumptions?.length
+            ? `
+          <div style="margin-top: 10px; font-weight: bold; font-size: 10pt;">Methodology & Sources:</div>
+          ${data.trueQuoteValidation.assumptions.map((a: string) => `<div style="font-size: 9pt; color: #475569; margin: 3px 0;">• ${a}</div>`).join("\n")}
+        `
+            : ""
+        }
+      </div>
+      `
+          : ""
+      }
+
       <div class="footer">
         <p>• This quote is valid for 30 days from the date of issue.</p>
         <p>• Payment Terms: 50% deposit upon contract signing, 50% upon commissioning.</p>
         <p>• Warranty: ${data.warrantyYears} year comprehensive warranty included.</p>
-        <p class="ai-note">NOTE: The AI Assistant is not working for [grid connection capacity].</p>
       </div>
     </body>
     </html>
@@ -602,8 +1005,51 @@ Total System Cost,$${(data.systemCost / 1000000).toFixed(2)}M,USD
 Cost per kW,$${(data.systemCost / (data.storageSizeMW * 1000)).toFixed(0)},$/kW
 Cost per kWh,$${(data.systemCost / (data.storageSizeMWh * 1000)).toFixed(0)},$/kWh
 Warranty Period,${data.warrantyYears},years
+${
+  data.loadProfile
+    ? `
+LOAD PROFILE
+Base Load,${Math.round(data.loadProfile.baseLoadKW)},kW
+Peak Load,${Math.round(data.loadProfile.peakLoadKW)},kW
+Daily Energy,${Math.round(data.loadProfile.energyKWhPerDay)},kWh/day`
+    : ""
+}
+${
+  data.financialAnalysis
+    ? `
+FINANCIAL ANALYSIS
+Annual Savings,$${Math.round(data.financialAnalysis.annualSavingsUSD)},USD/yr
+Simple Payback,${data.financialAnalysis.paybackYears.toFixed(1)},years${data.financialAnalysis.npv != null ? `\nNPV (25 yr),$${Math.round(data.financialAnalysis.npv)},USD` : ""}${data.financialAnalysis.irr != null ? `\nIRR,${(data.financialAnalysis.irr * 100).toFixed(1)},%` : ""}${data.financialAnalysis.demandChargeSavings != null ? `\nDemand Charge Savings,$${Math.round(data.financialAnalysis.demandChargeSavings)},USD/yr` : ""}`
+    : ""
+}
+${
+  data.trueQuoteValidation?.kWContributors
+    ? `
+LOAD BREAKDOWN (TrueQuote Verified)
+Component,Load,Unit${Object.entries(data.trueQuoteValidation.kWContributors)
+        .filter(([, kw]) => kw > 0)
+        .sort(([, a], [, b]) => b - a)
+        .map(
+          ([key, kw]) =>
+            `\n${key.replace(/([A-Z])/g, " $1").replace(/^./, (s: string) => s.toUpperCase())},${Math.round(kw)},kW`
+        )
+        .join(
+          ""
+        )}${data.trueQuoteValidation.dutyCycle != null ? `\nDuty Cycle,${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)},%` : ""}`
+    : ""
+}
+${
+  data.trueQuoteConfidence
+    ? `
+TRUEQUOTE CONFIDENCE
+Overall,${data.trueQuoteConfidence.overall === "high" ? "High" : data.trueQuoteConfidence.overall === "medium" ? "Medium" : "Low"},-
+Profile Completeness,${data.trueQuoteConfidence.profileCompleteness},%
+User Inputs,${data.trueQuoteConfidence.userInputs},fields
+Defaults Used,${data.trueQuoteConfidence.defaultsUsed},fields
+Industry Model,${data.trueQuoteConfidence.industry === "v1" ? "Industry-Specific" : "General Estimate"},-${data.pricingSnapshotId ? `\nPricing Snapshot,${data.pricingSnapshotId.slice(0, 12)},-` : ""}`
+    : ""
+}
 
-NOTE: The AI Assistant is not working for [grid connection capacity].
 Quote Valid: 30 days from issue date
 Payment Terms: 50% deposit upon contract signing, 50% upon commissioning
 `.trim();

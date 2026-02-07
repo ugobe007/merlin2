@@ -1,10 +1,12 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import type {
   WizardState as WizardV7State,
   WizardStep,
   PricingStatus,
 } from "@/wizard/v7/hooks/useWizardV7";
 import { sanitizeQuoteForDisplay } from "@/wizard/v7/utils/pricingSanity";
+import { buildV7ExportData } from "@/utils/buildV7ExportData";
+import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
 
 type Props = {
   state: WizardV7State;
@@ -724,9 +726,130 @@ export default function Step4ResultsV7({ state, actions }: Props) {
         )}
       </Card>
 
+      {/* ================================================================
+          EXPORT / DOWNLOAD — TrueQuote™ branded exports
+          Available whenever we have at least a load profile (Layer A)
+      ================================================================ */}
+      {quote && quote.peakLoadKW != null && <ExportBar state={state} />}
+
       <div style={{ fontSize: 12, opacity: 0.6 }}>
         Results is a renderer. SSOT owns pricing, freezing, validation, and transitions.
       </div>
     </div>
+  );
+}
+
+// ============================================================================
+// EXPORT BAR — Download PDF / Word / Excel
+// ============================================================================
+
+type ExportFormat = "pdf" | "word" | "excel";
+
+function ExportBar({ state }: { state: WizardV7State }) {
+  const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleExport = useCallback(
+    async (format: ExportFormat) => {
+      setExporting(format);
+      setError(null);
+
+      try {
+        const data = buildV7ExportData(state);
+
+        switch (format) {
+          case "pdf":
+            await exportQuoteAsPDF(data);
+            break;
+          case "word":
+            await exportQuoteAsWord(data);
+            break;
+          case "excel":
+            await exportQuoteAsExcel(data);
+            break;
+        }
+      } catch (err) {
+        console.error(`Export ${format} failed:`, err);
+        setError(`Export failed — ${(err as Error).message || "please try again"}`);
+      } finally {
+        setExporting(null);
+      }
+    },
+    [state]
+  );
+
+  const hasPricing = state.quote?.pricingComplete;
+  const isTrueQuote =
+    hasPricing &&
+    state.templateMode !== "fallback" &&
+    state.quote?.confidence?.industry !== "fallback";
+
+  const buttons: { format: ExportFormat; icon: string; label: string }[] = [
+    { format: "pdf", icon: "📄", label: "PDF" },
+    { format: "word", icon: "📝", label: "Word" },
+    { format: "excel", icon: "📊", label: "Excel" },
+  ];
+
+  return (
+    <Card>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 900 }}>Download Quote</div>
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>
+            {isTrueQuote
+              ? "✓ TrueQuote™ verified — includes kW breakdown, confidence score & methodology"
+              : hasPricing
+                ? "📊 Estimate — includes financial projections"
+                : "📋 Load profile only — pricing pending"}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          {buttons.map(({ format, icon, label }) => (
+            <button
+              key={format}
+              type="button"
+              onClick={() => void handleExport(format)}
+              disabled={exporting !== null}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                height: 36,
+                padding: "0 14px",
+                borderRadius: 10,
+                border: "1px solid rgba(30, 64, 175, 0.25)",
+                background:
+                  exporting === format ? "rgba(30, 64, 175, 0.12)" : "rgba(30, 64, 175, 0.06)",
+                color: exporting !== null && exporting !== format ? "#94a3b8" : "#1e40af",
+                cursor: exporting !== null ? "not-allowed" : "pointer",
+                fontWeight: 700,
+                fontSize: 13,
+                transition: "all 0.15s",
+              }}
+            >
+              <span>{exporting === format ? "⏳" : icon}</span>
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {error && (
+        <div
+          style={{
+            marginTop: 10,
+            padding: "8px 12px",
+            borderRadius: 8,
+            background: "rgba(239, 68, 68, 0.08)",
+            border: "1px solid rgba(239, 68, 68, 0.2)",
+            color: "#dc2626",
+            fontSize: 12,
+          }}
+        >
+          {error}
+        </div>
+      )}
+    </Card>
   );
 }
