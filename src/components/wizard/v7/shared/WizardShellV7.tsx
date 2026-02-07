@@ -15,6 +15,8 @@ interface WizardShellV7Props {
   currentStep: number; // 0-indexed from parent
   stepLabels: string[]; // ✅ single source of truth from parent
   nextHint?: string;
+  /** Contextual label for Next button, e.g. "Choose Industry →" */
+  nextLabel?: string;
   canGoBack?: boolean;
   canGoNext?: boolean;
   isNextLoading?: boolean;
@@ -39,6 +41,7 @@ export default function WizardShellV7({
   currentStep,
   stepLabels,
   nextHint = "Next step",
+  nextLabel,
   canGoBack = true,
   canGoNext = true,
   isNextLoading = false,
@@ -287,7 +290,8 @@ export default function WizardShellV7({
 
           {/* ── RIGHT: CONTENT AREA (full width) ─────────────── */}
           <div
-            className="merlin-step"
+            key={`step-${safeStep}`}
+            className="merlin-step merlin-step-enter"
             style={{
               background: "rgba(16, 20, 36, 0.75)",
               borderRadius: 20,
@@ -299,10 +303,19 @@ export default function WizardShellV7({
                 inset 0 1px 0 rgba(255, 255, 255, 0.05)
               `,
               minHeight: 500,
+              animation: "merlin-step-fadein 0.3s ease-out",
             }}
           >
             {children}
           </div>
+
+          {/* Step transition animation */}
+          <style>{`
+            @keyframes merlin-step-fadein {
+              from { opacity: 0; transform: translateY(12px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
         </div>
 
         {/* BOTTOM NAV */}
@@ -371,7 +384,7 @@ export default function WizardShellV7({
               transition: "all 0.15s ease",
             }}
           >
-            {isNextLoading ? "Working..." : "Next Step"} <span>›</span>
+            {isNextLoading ? "Working..." : (nextLabel || "Next Step")} <span>›</span>
           </button>
         </div>
       </div>
