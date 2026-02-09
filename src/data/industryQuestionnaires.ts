@@ -243,10 +243,10 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "heatedWater",
         label: "Do you use heated water?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "yes", label: "✅ Yes (Higher energy use)" },
-          { value: "no", label: "❌ No" },
+          { value: "yes", label: "Yes", icon: "✅", description: "Higher energy use" },
+          { value: "no", label: "No", icon: "❌", description: "Lower energy use" },
         ],
       },
     ],
@@ -331,22 +331,22 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "gridConnection",
         label: "Grid connection status?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "on-grid", label: "🔌 On-Grid (Utility connected)" },
-          { value: "off-grid", label: "🏝️ Off-Grid (Standalone)" },
-          { value: "hybrid", label: "🔄 Hybrid (Grid + Backup)" },
+          { value: "on-grid", label: "On-Grid", icon: "🔌", description: "Utility connected" },
+          { value: "off-grid", label: "Off-Grid", icon: "🏝️", description: "Standalone" },
+          { value: "hybrid", label: "Hybrid", icon: "🔄", description: "Grid + Backup" },
         ],
       },
       {
         id: "occupancyRate",
         label: "Average occupancy rate?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "high", label: "📈 High (75-100%)" },
-          { value: "medium", label: "📊 Medium (50-75%)" },
-          { value: "seasonal", label: "🍂 Seasonal/Variable" },
-          { value: "low", label: "📉 Low (< 50%)" },
+          { value: "high", label: "High", icon: "📈", description: "75-100%" },
+          { value: "medium", label: "Medium", icon: "📊", description: "50-75%" },
+          { value: "seasonal", label: "Seasonal", icon: "🍂", description: "Variable" },
+          { value: "low", label: "Low", icon: "📉", description: "< 50%" },
         ],
       },
       {
@@ -364,11 +364,16 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "evChargers",
         label: "Want to add EV charging for guests?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "yes", label: "✅ Yes - How many chargers?" },
-          { value: "no", label: "❌ No" },
-          { value: "future", label: "🔮 Maybe in the future" },
+          { value: "yes", label: "Yes", icon: "✅", description: "How many chargers?" },
+          { value: "no", label: "No", icon: "❌", description: "Skip EV charging" },
+          {
+            value: "future",
+            label: "Maybe later",
+            icon: "🔮",
+            description: "Future consideration",
+          },
         ],
       },
       {
@@ -382,10 +387,10 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "utilityRate",
         label: "Do you know your utility rate?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "yes", label: "✅ Yes - I know my rate" },
-          { value: "no", label: "❓ No - Help me calculate" },
+          { value: "yes", label: "Yes", icon: "✅", description: "I know my rate" },
+          { value: "no", label: "No", icon: "❓", description: "Help me calculate" },
         ],
       },
       {
@@ -399,11 +404,11 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "gridReliability",
         label: "Grid reliability in your area?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "reliable", label: "✅ Reliable (Rare outages)" },
-          { value: "moderate", label: "⚠️ Moderate (Occasional outages)" },
-          { value: "unreliable", label: "❌ Unreliable (Frequent outages)" },
+          { value: "reliable", label: "Reliable", icon: "✅", description: "Rare outages" },
+          { value: "moderate", label: "Moderate", icon: "⚠️", description: "Occasional outages" },
+          { value: "unreliable", label: "Unreliable", icon: "❌", description: "Frequent outages" },
         ],
       },
     ],
@@ -749,10 +754,20 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "backupCritical",
         label: "How critical is backup power?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "mission-critical", label: "🚨 Mission Critical (Gaming/Hospitality)" },
-          { value: "important", label: "⚠️ Important (Minimize downtime)" },
+          {
+            value: "mission-critical",
+            label: "Mission Critical",
+            icon: "🚨",
+            description: "Gaming/Hospitality - instant switchover required",
+          },
+          {
+            value: "important",
+            label: "Important",
+            icon: "⚠️",
+            description: "Minimize downtime",
+          },
         ],
       },
     ],
@@ -780,43 +795,68 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "facilityType",
         label: "Facility type?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "fulfillment", label: "📦 Fulfillment Center (Amazon-style)" },
-          { value: "distribution", label: "🚚 Distribution Hub (FedEx/UPS)" },
-          { value: "cold-storage", label: "❄️ Cold Storage/Refrigerated" },
-          { value: "warehouse", label: "🏭 Standard Warehouse" },
+          {
+            value: "fulfillment",
+            label: "Fulfillment Center",
+            icon: "📦",
+            description: "Amazon-style",
+          },
+          {
+            value: "distribution",
+            label: "Distribution Hub",
+            icon: "🚚",
+            description: "FedEx/UPS",
+          },
+          {
+            value: "cold-storage",
+            label: "Cold Storage",
+            icon: "❄️",
+            description: "Refrigerated",
+          },
+          {
+            value: "warehouse",
+            label: "Standard Warehouse",
+            icon: "🏭",
+            description: "General warehousing",
+          },
         ],
       },
       {
         id: "facilitySize",
         label: "Facility size?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "micro", label: "🟢 Micro (< 50,000 sq ft)" },
-          { value: "small", label: "🟡 Small (50,000-150,000 sq ft)" },
-          { value: "medium", label: "🟠 Medium (150,000-350,000 sq ft)" },
-          { value: "large", label: "🔴 Large (> 350,000 sq ft)" },
+          { value: "micro", label: "Micro", icon: "🟢", description: "< 50,000 sq ft" },
+          { value: "small", label: "Small", icon: "🟡", description: "50,000-150,000 sq ft" },
+          { value: "medium", label: "Medium", icon: "🟠", description: "150,000-350,000 sq ft" },
+          { value: "large", label: "Large", icon: "🔴", description: "> 350,000 sq ft" },
         ],
       },
       {
         id: "gridConnection",
         label: "Grid connection status?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "on-grid", label: "🔌 On-Grid (Utility connected)" },
-          { value: "limited", label: "⚠️ Limited Grid Capacity" },
-          { value: "hybrid", label: "🔄 Hybrid (Grid + Backup)" },
+          { value: "on-grid", label: "On-Grid", icon: "🔌", description: "Utility connected" },
+          {
+            value: "limited",
+            label: "Limited Capacity",
+            icon: "⚠️",
+            description: "Grid constraints",
+          },
+          { value: "hybrid", label: "Hybrid", icon: "🔄", description: "Grid + Backup" },
         ],
       },
       {
         id: "operations",
         label: "Operations schedule?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "24-7", label: "🌙 24/7 Operations" },
-          { value: "2-shift", label: "🌅 Two Shifts (16 hrs/day)" },
-          { value: "1-shift", label: "🏢 Single Shift (8-10 hrs/day)" },
+          { value: "24-7", label: "24/7 Operations", icon: "🌙", description: "Round-the-clock" },
+          { value: "2-shift", label: "Two Shifts", icon: "🌅", description: "16 hrs/day" },
+          { value: "1-shift", label: "Single Shift", icon: "🏢", description: "8-10 hrs/day" },
         ],
       },
       {
@@ -854,11 +894,16 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "centerSize",
         label: "Center size?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "strip", label: "🟢 Strip Center (< 100,000 sq ft)" },
-          { value: "community", label: "🟡 Community Center (100,000-400,000 sq ft)" },
-          { value: "regional", label: "🔴 Regional Mall (> 400,000 sq ft)" },
+          { value: "strip", label: "Strip Center", icon: "🟢", description: "< 100,000 sq ft" },
+          {
+            value: "community",
+            label: "Community Center",
+            icon: "🟡",
+            description: "100,000-400,000 sq ft",
+          },
+          { value: "regional", label: "Regional Mall", icon: "🔴", description: "> 400,000 sq ft" },
         ],
       },
       {
@@ -871,10 +916,10 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "gridConnection",
         label: "Grid connection status?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "on-grid", label: "🔌 On-Grid (Utility connected)" },
-          { value: "hybrid", label: "🔄 Hybrid (Grid + Backup)" },
+          { value: "on-grid", label: "On-Grid", icon: "🔌", description: "Utility connected" },
+          { value: "hybrid", label: "Hybrid", icon: "🔄", description: "Grid + Backup" },
         ],
       },
       {
@@ -892,11 +937,16 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "hvacLoad",
         label: "HVAC load?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "high", label: "🔥 High (Central system for entire mall)" },
-          { value: "medium", label: "🌡️ Medium (Shared systems)" },
-          { value: "tenant-controlled", label: "🏢 Tenant-Controlled" },
+          {
+            value: "high",
+            label: "High",
+            icon: "🔥",
+            description: "Central system for entire mall",
+          },
+          { value: "medium", label: "Medium", icon: "🌡️", description: "Shared systems" },
+          { value: "tenant-controlled", label: "Tenant-Controlled", icon: "🏢" },
         ],
       },
     ],
@@ -917,11 +967,16 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "stationType",
         label: "Station type?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "gas-only", label: "⛽ Gas Pumps Only" },
-          { value: "with-cstore", label: "🏪 Gas + Convenience Store" },
-          { value: "truck-stop", label: "🚛 Truck Stop/Travel Center" },
+          { value: "gas-only", label: "Gas Pumps Only", icon: "⛽" },
+          {
+            value: "with-cstore",
+            label: "Gas + C-Store",
+            icon: "🏪",
+            description: "Convenience store",
+          },
+          { value: "truck-stop", label: "Truck Stop", icon: "🚛", description: "Travel center" },
         ],
       },
       {
@@ -934,21 +989,21 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "gridConnection",
         label: "Grid connection status?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "on-grid", label: "🔌 On-Grid (Utility connected)" },
-          { value: "off-grid", label: "🏝️ Off-Grid (Remote location)" },
-          { value: "hybrid", label: "🔄 Hybrid (Grid + Backup)" },
+          { value: "on-grid", label: "On-Grid", icon: "🔌", description: "Utility connected" },
+          { value: "off-grid", label: "Off-Grid", icon: "🏝️", description: "Remote location" },
+          { value: "hybrid", label: "Hybrid", icon: "🔄", description: "Grid + Backup" },
         ],
       },
       {
         id: "operations",
         label: "Operating hours?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "24-7", label: "🌙 24/7 Operations" },
-          { value: "extended", label: "🌅 Extended Hours (16-20 hrs/day)" },
-          { value: "standard", label: "🏢 Standard Hours (12-14 hrs/day)" },
+          { value: "24-7", label: "24/7 Operations", icon: "🌙" },
+          { value: "extended", label: "Extended Hours", icon: "🌅", description: "16-20 hrs/day" },
+          { value: "standard", label: "Standard Hours", icon: "🏢", description: "12-14 hrs/day" },
         ],
       },
       {
