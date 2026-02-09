@@ -228,7 +228,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
           </div>
           <h1 className="text-2xl font-black text-white flex items-center gap-2.5">
             <Sparkles className="w-6 h-6 text-purple-400" />
-            Your Energy Quote
+            {!addOnsConfigured ? "Configure Your System" : "Your Energy Quote"}
           </h1>
         </div>
         <div className="flex gap-2.5">
@@ -248,6 +248,39 @@ export default function Step4ResultsV7({ state, actions }: Props) {
           </button>
         </div>
       </div>
+
+      {/* ================================================================
+          SYSTEM ADD-ONS CONFIGURATION — SHOW FIRST
+          User configures solar/generator/wind before seeing quote
+      ================================================================ */}
+      {!addOnsConfigured && quote && quote.peakLoadKW != null && (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-purple-500/25 bg-purple-500/[0.06] p-4">
+            <div className="flex items-start gap-2.5">
+              <Sparkles className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="font-bold text-purple-300 text-sm">Enhance Your System</div>
+                <p className="text-purple-200/70 text-xs mt-1">
+                  Add solar panels, backup generators, or wind turbines to maximize savings and resilience. Configure your options below and click "Generate Quote" to see your results.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <SystemAddOnsCards
+            state={state}
+            currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
+            onRecalculate={handleAddOnsConfirmed}
+            pricingStatus={pricingStatus}
+            showGenerateButton={true}
+          />
+        </div>
+      )}
+
+      {/* ================================================================
+          QUOTE RESULTS — SHOW AFTER ADD-ONS CONFIGURED
+      ================================================================ */}
+      {addOnsConfigured && (<>
 
       {/* ================================================================
           PARTIAL RESULTS / FALLBACK / STATUS BANNERS — Kept from original
@@ -640,15 +673,20 @@ export default function Step4ResultsV7({ state, actions }: Props) {
       )}
 
       {/* ================================================================
-          SYSTEM ADD-ONS — Solar / EV Charging / Generator preset cards
-          Appears after initial quote is ready; triggers re-pricing on change
+          EDIT SYSTEM ADD-ONS — Allow modification after initial quote
       ================================================================ */}
       {quote && quote.peakLoadKW != null && (
         <SystemAddOnsCards
           state={state}
           currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
-          onRecalculate={actions.recalculateWithAddOns}
+          onRecalculate={async (addOns) => {
+            if (actions.recalculateWithAddOns) {
+              return await actions.recalculateWithAddOns(addOns);
+            }
+            return { ok: true };
+          }}
           pricingStatus={pricingStatus}
+          showGenerateButton={false}
         />
       )}
 
@@ -657,6 +695,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
           Available whenever we have at least a load profile (Layer A)
       ================================================================ */}
       {quote && quote.peakLoadKW != null && <ExportBar state={state} />}
+      </>) /* End addOnsConfigured */}
     </div>
   );
 }
