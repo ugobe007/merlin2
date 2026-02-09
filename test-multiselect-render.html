@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Multiselect Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 p-8">
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl text-white mb-4">CheckboxGrid Test (Multi-Select)</h1>
+    <p class="text-slate-400 mb-6">This tests the new button card style for multi-select questions</p>
+    
+    <!-- Simulated multiselect rendering -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <!-- ICU -->
+      <button class="p-3 rounded-lg border text-left transition-all relative border-violet-500 bg-violet-500/15 text-white ring-1 ring-violet-500/40">
+        <span class="absolute top-2 right-2 w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center text-white text-xs font-bold">✓</span>
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🏥</span>
+          <span class="font-medium text-sm">ICU</span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">Intensive Care Unit</p>
+      </button>
+      
+      <!-- Surgery (unselected) -->
+      <button class="p-3 rounded-lg border text-left transition-all relative border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500 cursor-pointer">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🔪</span>
+          <span class="font-medium text-sm">Surgery</span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">Operating rooms</p>
+      </button>
+      
+      <!-- Imaging (selected) -->
+      <button class="p-3 rounded-lg border text-left transition-all relative border-violet-500 bg-violet-500/15 text-white ring-1 ring-violet-500/40">
+        <span class="absolute top-2 right-2 w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center text-white text-xs font-bold">✓</span>
+        <div class="flex items-center gap-2">
+          <span class="text-lg">📷</span>
+          <span class="font-medium text-sm">Imaging</span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">MRI, CT, X-ray</p>
+      </button>
+      
+      <!-- Lab (unselected) -->
+      <button class="p-3 rounded-lg border text-left transition-all relative border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500 cursor-pointer">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🧪</span>
+          <span class="font-medium text-sm">Lab</span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">Clinical labs</p>
+      </button>
+      
+      <!-- Pharmacy (unselected) -->
+      <button class="p-3 rounded-lg border text-left transition-all relative border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500 cursor-pointer">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">💊</span>
+          <span class="font-medium text-sm">Pharmacy</span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">Medication storage</p>
+      </button>
+    </div>
+    
+    <p class="text-emerald-400 mt-6">✅ Selected: ICU, Imaging</p>
+    <p class="text-slate-400 mt-2 text-sm">Compare with old checkbox style (deprecated):</p>
+    
+    <!-- Old style for comparison -->
+    <div class="mt-4 space-y-2 opacity-50">
+      <label class="flex items-center gap-3 p-3 rounded-lg border border-violet-500 bg-violet-500/20">
+        <input type="checkbox" class="accent-violet-500" checked>
+        <span class="text-lg">🏥</span>
+        <span class="text-sm text-slate-200">ICU</span>
+        <span class="text-xs text-slate-400">— Intensive Care Unit</span>
+      </label>
+    </div>
+  </div>
+</body>
+</html>
