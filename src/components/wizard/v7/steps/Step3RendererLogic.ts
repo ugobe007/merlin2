@@ -17,6 +17,8 @@ export type RendererType =
   | "compact_grid"
   | "select"
   | "number"
+  | "number_stepper" // NEW: Number input with +/- buttons for discrete counts
+  | "range_buttons" // NEW: Button card selection for ranges (e.g., "100-250 rooms")
   | "slider"
   | "toggle"
   | "text"
@@ -41,11 +43,11 @@ export function normalizeFieldType(t?: string): string {
   // ⚠️ Car wash/hotel/EV custom types → standard renderers
   if (x === "conditional_buttons") return "buttons";
   if (x === "type_then_quantity") return "buttons"; // FIX: Has options → show as buttons (not number)
-  if (x === "increment_box") return "number";
+  if (x === "increment_box") return "number_stepper"; // NEW: Use stepper for discrete counts
   if (x === "hours_grid") return "buttons"; // Hour grid → button selection
   if (x === "existing_then_planned") return "number"; // Existing + planned → simplified to number input
   if (x === "auto_confirm") return "toggle";
-  if (x === "range_buttons") return "buttons"; // Range selection (e.g., "100-250 rooms")
+  if (x === "range_buttons") return "range_buttons"; // NEW: Use range button renderer
   if (x === "wheel") return "select"; // Wheel picker → dropdown
   if (x === "multiselect") return "multiselect"; // Multi-select → checkbox list (NOT buttons)
   if (x === "number_input") return "number";
@@ -53,7 +55,17 @@ export function normalizeFieldType(t?: string): string {
   // Fallback with dev warning
   if (
     import.meta.env.DEV &&
-    !["text", "number", "select", "buttons", "toggle", "slider", "multiselect"].includes(x)
+    ![
+      "text",
+      "number",
+      "number_stepper",
+      "range_buttons",
+      "select",
+      "buttons",
+      "toggle",
+      "slider",
+      "multiselect",
+    ].includes(x)
   ) {
     console.warn(`[Step3Curated] Unknown field type "${t}" → using "text". Add mapping if needed.`);
   }

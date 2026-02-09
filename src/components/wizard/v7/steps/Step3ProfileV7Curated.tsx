@@ -565,6 +565,137 @@ export default function Step3ProfileV7Curated(props: Props) {
             </div>
           )}
 
+          {/* Number Stepper — Enhanced number input with +/- buttons for discrete counts */}
+          {renderer === "number_stepper" && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                {/* Decrement button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = typeof value === "number" ? value : (q.smartDefault ?? 0);
+                    const min = q.range?.min ?? q.validation?.min ?? 0;
+                    const step = q.range?.step ?? 1;
+                    const next = Math.max(min, current - step);
+                    setAnswer(q.id, next);
+                  }}
+                  className="w-12 h-12 rounded-lg border border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-violet-500 hover:bg-violet-500/10 hover:text-violet-300 transition-all flex items-center justify-center text-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+                  disabled={
+                    value !== null &&
+                    value !== undefined &&
+                    typeof value === "number" &&
+                    (q.range?.min != null || q.validation?.min != null) &&
+                    value <= (q.range?.min ?? q.validation?.min ?? 0)
+                  }
+                >
+                  −
+                </button>
+
+                {/* Number display with unit */}
+                <div className="flex-1 relative">
+                  <input
+                    type="number"
+                    className={`w-full rounded-lg bg-slate-950/60 border px-4 py-3 text-center text-lg font-semibold text-slate-100 ${
+                      q.suffix || q.unit ? "pr-16" : ""
+                    } border-slate-700/60 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/40 focus:outline-none transition-colors`}
+                    value={value === null || value === undefined ? "" : String(value)}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === "") return setAnswer(q.id, "");
+                      const n = Number(raw);
+                      if (Number.isFinite(n)) {
+                        const min = q.range?.min ?? q.validation?.min;
+                        const max = q.range?.max ?? q.validation?.max;
+                        if (min != null && n < min) return;
+                        if (max != null && n > max) return;
+                        setAnswer(q.id, n);
+                      }
+                    }}
+                    placeholder={
+                      q.placeholder || (q.smartDefault != null ? String(q.smartDefault) : "0")
+                    }
+                    min={q.range?.min ?? q.validation?.min}
+                    max={q.range?.max ?? q.validation?.max}
+                    step={q.range?.step ?? 1}
+                  />
+                  {(q.suffix || q.unit) && (
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pointer-events-none">
+                      {q.suffix || q.unit}
+                    </span>
+                  )}
+                </div>
+
+                {/* Increment button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = typeof value === "number" ? value : (q.smartDefault ?? 0);
+                    const max = q.range?.max ?? q.validation?.max ?? 9999;
+                    const step = q.range?.step ?? 1;
+                    const next = Math.min(max, current + step);
+                    setAnswer(q.id, next);
+                  }}
+                  className="w-12 h-12 rounded-lg border border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-violet-500 hover:bg-violet-500/10 hover:text-violet-300 transition-all flex items-center justify-center text-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+                  disabled={
+                    value !== null &&
+                    value !== undefined &&
+                    typeof value === "number" &&
+                    (q.range?.max != null || q.validation?.max != null) &&
+                    value >= (q.range?.max ?? q.validation?.max ?? 9999)
+                  }
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Range hint */}
+              {(q.range?.min != null || q.range?.max != null) && (
+                <p className="text-xs text-slate-500 text-center">
+                  Range: {q.range.min ?? 0} - {q.range.max ?? "∞"}
+                  {q.unit ? ` ${q.unit}` : ""}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Range Buttons — Button card selection for range values (e.g., "100-250 rooms") */}
+          {renderer === "range_buttons" && options.length > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              {options.map((opt) => {
+                const optVal = String(opt.value);
+                const selected = asString(value) === optVal;
+                return (
+                  <button
+                    key={optVal}
+                    type="button"
+                    onClick={() => setAnswer(q.id, optVal)}
+                    className={`
+                      p-3.5 rounded-lg border text-center transition-all relative
+                      ${
+                        selected
+                          ? "border-violet-500 bg-violet-500/15 text-white ring-1 ring-violet-500/40"
+                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500"
+                      }
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                    `}
+                    disabled={opt.disabled}
+                  >
+                    {selected && (
+                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center text-white text-xs font-bold">
+                        ✓
+                      </span>
+                    )}
+                    {opt.icon && <div className="text-2xl mb-1.5">{opt.icon}</div>}
+                    <div className="font-semibold text-sm">{opt.label}</div>
+                    {opt.description && (
+                      <p className="text-xs text-slate-400 mt-1">{opt.description}</p>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Slider */}
           {renderer === "slider" &&
             q.range &&
