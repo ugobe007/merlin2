@@ -24,6 +24,10 @@ import {
   type CanonicalIndustryKey,
 } from "@/wizard/v7/schema/curatedFieldsResolver";
 import type { WizardState as WizardV7State } from "@/wizard/v7/hooks/useWizardV7";
+import {
+  normalizeFieldType as normalizeFieldTypeUtil,
+  chooseRendererForQuestion,
+} from "./Step3RendererLogic";
 
 // Industry images (same as original)
 import hotelImg from "@/assets/images/hotel_motel_holidayinn_1.jpg";
@@ -101,34 +105,9 @@ function isRequired(q: CuratedField): boolean {
   return q.required ?? q.validation?.required ?? false;
 }
 
-// Normalize field type to prevent mis-rendering from legacy/variant type names
+// Normalize field type - delegates to extracted utility
 function normalizeFieldType(t?: string): string {
-  const x = (t || "").toLowerCase();
-  // Map all custom types to canonical renderer types
-  if (x === "multi-select") return "multiselect";
-  if (x === "dropdown") return "select";
-  if (x === "radio") return "buttons";
-  if (x === "boolean" || x === "yesno" || x === "switch") return "toggle";
-  if (x === "range") return "slider";
-  // ⚠️ Car wash/hotel/EV custom types → standard renderers
-  if (x === "conditional_buttons") return "buttons";
-  if (x === "type_then_quantity") return "buttons"; // FIX: Has options → show as buttons (not number)
-  if (x === "increment_box") return "number";
-  if (x === "hours_grid") return "buttons"; // Hour grid → button selection
-  if (x === "existing_then_planned") return "number"; // Existing + planned → simplified to number input
-  if (x === "auto_confirm") return "toggle";
-  if (x === "range_buttons") return "buttons"; // Range selection (e.g., "100-250 rooms")
-  if (x === "wheel") return "select"; // Wheel picker → dropdown
-  if (x === "multiselect") return "buttons"; // Multi-select → button group (handle array values)
-  if (x === "number_input") return "number";
-  // Fallback with dev warning
-  if (
-    import.meta.env.DEV &&
-    !["text", "number", "select", "buttons", "toggle", "slider", "multiselect"].includes(x)
-  ) {
-    console.warn(`[Step3Curated] Unknown field type "${t}" → using "text". Add mapping if needed.`);
-  }
-  return x || "text";
+  return normalizeFieldTypeUtil(t);
 }
 
 export default function Step3ProfileV7Curated(props: Props) {
@@ -358,8 +337,8 @@ export default function Step3ProfileV7Curated(props: Props) {
     // Get options (applies modifyOptions if present - enables dynamic option mutation)
     const options = getOptions(q);
 
-    // Determine input type (normalized to prevent legacy/variant type mis-rendering)
-    const inputType = normalizeFieldType(q.type || (options.length ? "select" : "text"));
+    // Choose renderer based on type and option count (extracted for testability)
+    const renderer = chooseRendererForQuestion(q);
 
     return (
       <div
@@ -432,7 +411,7 @@ export default function Step3ProfileV7Curated(props: Props) {
         {/* Input Component */}
         <div className="mt-2">
           {/* Buttons for small option sets (≤6 options: 2-column grid) */}
-          {inputType === "buttons" && options.length > 0 && options.length <= 6 && (
+          {renderer === "grid" && (
             <div className="grid grid-cols-2 gap-2">
               {options.map((opt) => {
                 const optVal = String(opt.value);
@@ -472,7 +451,7 @@ export default function Step3ProfileV7Curated(props: Props) {
           )}
 
           {/* Buttons for medium option sets (7-18 options: compact grid for hours/ranges) */}
-          {inputType === "buttons" && options.length > 6 && options.length <= 18 && (
+          {renderer === "compact_grid" && (
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-2">
               {options.map((opt) => {
                 const optVal = String(opt.value);
@@ -504,28 +483,27 @@ export default function Step3ProfileV7Curated(props: Props) {
           )}
 
           {/* Select dropdown (for very large option sets >18) */}
-          {(inputType === "select" || (inputType === "buttons" && options.length > 18)) &&
-            options.length > 0 && (
-              <select
-                className="w-full rounded-lg bg-slate-950/60 border border-slate-700/60 px-3 py-2.5 text-slate-100"
-                value={asString(value)}
-                onChange={(e) => setAnswer(q.id, e.target.value)}
-              >
-                <option value="">Select…</option>
-                {options.map((opt) => {
-                  const optVal = String(opt.value);
-                  return (
-                    <option key={optVal} value={optVal}>
-                      {opt.icon ? `${opt.icon} ` : ""}
-                      {opt.label}
-                    </option>
-                  );
-                })}
-              </select>
-            )}
+          {renderer === "select" && options.length > 0 && (
+            <select
+              className="w-full rounded-lg bg-slate-950/60 border border-slate-700/60 px-3 py-2.5 text-slate-100"
+              value={asString(value)}
+              onChange={(e) => setAnswer(q.id, e.target.value)}
+            >
+              <option value="">Select…</option>
+              {options.map((opt) => {
+                const optVal = String(opt.value);
+                return (
+                  <option key={optVal} value={optVal}>
+                    {opt.icon ? `${opt.icon} ` : ""}
+                    {opt.label}
+                  </option>
+                );
+              })}
+            </select>
+          )}
 
           {/* Number input — unit suffix inside field, smart placeholder, inline validation */}
-          {inputType === "number" && (
+          {renderer === "number" && (
             <div className="relative">
               <input
                 type="number"
@@ -588,7 +566,7 @@ export default function Step3ProfileV7Curated(props: Props) {
           )}
 
           {/* Slider */}
-          {inputType === "slider" &&
+          {renderer === "slider" &&
             q.range &&
             (() => {
               const sliderVal =
@@ -642,7 +620,7 @@ export default function Step3ProfileV7Curated(props: Props) {
             })()}
 
           {/* Toggle (stores boolean) */}
-          {inputType === "toggle" && (
+          {renderer === "toggle" && (
             <div className="flex gap-2">
               {[true, false].map((opt) => (
                 <button
@@ -671,7 +649,7 @@ export default function Step3ProfileV7Curated(props: Props) {
           )}
 
           {/* Text input (fallback) */}
-          {inputType === "text" && (
+          {renderer === "text" && (
             <input
               type="text"
               className="w-full rounded-lg bg-slate-950/60 border border-slate-700/60 px-3 py-2.5 text-slate-100"
@@ -682,7 +660,7 @@ export default function Step3ProfileV7Curated(props: Props) {
           )}
 
           {/* Multiselect (values coerced to strings for consistent comparison) */}
-          {inputType === "multiselect" && options.length > 0 && (
+          {renderer === "multiselect" && options.length > 0 && (
             <div className="space-y-2">
               {options.map((opt) => {
                 const optVal = String(opt.value);
