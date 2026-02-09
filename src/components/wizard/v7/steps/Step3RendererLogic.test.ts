@@ -22,8 +22,8 @@ describe("Step3RendererLogic", () => {
       expect(normalizeFieldType("conditional_buttons")).toBe("buttons");
       expect(normalizeFieldType("type_then_quantity")).toBe("buttons");
       expect(normalizeFieldType("hours_grid")).toBe("buttons");
-      expect(normalizeFieldType("range_buttons")).toBe("buttons");
-      expect(normalizeFieldType("increment_box")).toBe("number");
+      expect(normalizeFieldType("range_buttons")).toBe("range_buttons");
+      expect(normalizeFieldType("increment_box")).toBe("number_stepper");
       expect(normalizeFieldType("existing_then_planned")).toBe("number");
       expect(normalizeFieldType("auto_confirm")).toBe("toggle");
       expect(normalizeFieldType("wheel")).toBe("select");
@@ -151,7 +151,7 @@ describe("Step3RendererLogic", () => {
       expect(chooseRendererForQuestion(q)).toBe("compact_grid");
     });
 
-    it("range_buttons → grid/compact_grid", () => {
+    it("range_buttons → range_buttons", () => {
       const q = {
         id: "range",
         type: "range_buttons",
@@ -161,7 +161,7 @@ describe("Step3RendererLogic", () => {
           { value: "11-50", label: "11-50" },
         ],
       } as CuratedField;
-      expect(chooseRendererForQuestion(q)).toBe("grid");
+      expect(chooseRendererForQuestion(q)).toBe("range_buttons");
     });
   });
 
@@ -171,9 +171,14 @@ describe("Step3RendererLogic", () => {
       expect(chooseRendererForQuestion(q)).toBe("number");
     });
 
-    it("increment_box → number", () => {
+    it("increment_box → number_stepper", () => {
       const q = { id: "inc", type: "increment_box", title: "Increment" } as CuratedField;
-      expect(chooseRendererForQuestion(q)).toBe("number");
+      expect(chooseRendererForQuestion(q)).toBe("number_stepper");
+    });
+
+    it("number_stepper → number_stepper", () => {
+      const q = { id: "stepper", type: "number_stepper", title: "Stepper" } as CuratedField;
+      expect(chooseRendererForQuestion(q)).toBe("number_stepper");
     });
 
     it("slider → slider", () => {
@@ -268,11 +273,13 @@ describe("Step3RendererLogic", () => {
       expect(types).toContain("compact_grid");
       expect(types).toContain("select");
       expect(types).toContain("number");
+      expect(types).toContain("number_stepper");
+      expect(types).toContain("range_buttons");
       expect(types).toContain("slider");
       expect(types).toContain("toggle");
       expect(types).toContain("text");
       expect(types).toContain("multiselect");
-      expect(types.length).toBe(8);
+      expect(types.length).toBe(10);
     });
   });
 });
