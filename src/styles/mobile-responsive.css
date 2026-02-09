@@ -184,14 +184,18 @@ body {
 /* ==================== TOP NAV BAR MOBILE ==================== */
 
 @media (max-width: 767px) {
+  /* Top nav bar: vertical layout on mobile */
   .flex.justify-between.items-center.px-6.py-2\\.5 {
     flex-direction: column !important;
     gap: 12px !important;
     padding: 12px !important;
   }
 
-  /* Hide step pills on mobile, show only counter */
-  .flex.items-center.gap-1 {
+  /* Hide step pills on mobile (ONLY in top nav), show only counter */
+  /* More specific selector to avoid hiding other flex containers like Step 1 inputs */
+  nav .flex.items-center.gap-1,
+  header .flex.items-center.gap-1,
+  .flex.justify-between.items-center.px-6 .flex.items-center.gap-1 {
     display: none !important;
   }
 
