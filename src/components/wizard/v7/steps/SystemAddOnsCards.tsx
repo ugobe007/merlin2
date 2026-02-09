@@ -169,6 +169,7 @@ interface SystemAddOnsCardsProps {
   currentAddOns: SystemAddOns;
   onRecalculate?: (addOns: SystemAddOns) => Promise<{ ok: boolean; error?: string }>;
   pricingStatus: PricingStatus;
+  showGenerateButton?: boolean; // If true, show "Generate Quote" button; if false, show "Update Quote"
 }
 
 export function SystemAddOnsCards({
@@ -176,6 +177,7 @@ export function SystemAddOnsCards({
   currentAddOns,
   onRecalculate,
   pricingStatus,
+  showGenerateButton = false,
 }: SystemAddOnsCardsProps) {
   // Selections
   const [selectedOptions, setSelectedOptions] = useState<Set<string>>(() => {
@@ -717,7 +719,10 @@ export function SystemAddOnsCards({
                 letterSpacing: "-0.2px",
               }}
             >
-              {busy ? "Updating Quote…" : "Update Quote with Add-Ons →"}
+              {busy 
+                ? (showGenerateButton ? "Generating Quote…" : "Updating Quote…")
+                : (showGenerateButton ? "Generate Quote →" : "Update Quote with Add-Ons →")
+              }
             </button>
           )}
         </div>
