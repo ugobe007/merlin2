@@ -27,7 +27,8 @@ type Actions = {
   submitLocation: (rawInput?: string, businessInfo?: BusinessInfo) => Promise<void>;
 
   // Progressive hydration for intel (ZIP change)
-  primeLocationIntel: (zipOrInput: string) => Promise<void> | void;
+  // Returns intel for callers that need it; UI components can ignore the return value
+  primeLocationIntel: (zipOrInput: string) => Promise<unknown> | void;
 
   // Explicit business gate actions (SSOT)
   confirmBusiness: (value: boolean) => Promise<void>;
@@ -166,45 +167,31 @@ export default function Step1LocationV7({ state, actions }: Props) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, position: "relative" }}>
-      {/* Ambient Glow */}
-      <div
-        style={{
-          position: "absolute",
-          top: -80,
-          right: -120,
-          width: 480,
-          height: 480,
-          borderRadius: "50%",
-          background: `
-            radial-gradient(circle at 40% 40%, rgba(34, 211, 238, 0.18) 0%, transparent 45%),
-            radial-gradient(circle at 60% 60%, rgba(79, 140, 255, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 60%)
-          `,
-          filter: "blur(60px)",
-          opacity: 0.85,
-          pointerEvents: "none",
-          animation: "merlin-glow-pulse 8s ease-in-out infinite",
-        }}
-      />
-
-      {/* Secondary Glow */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: -100,
-          left: -80,
-          width: 300,
-          height: 300,
-          borderRadius: "50%",
-          background: `radial-gradient(circle, rgba(251, 191, 36, 0.12) 0%, transparent 60%)`,
-          filter: "blur(50px)",
-          opacity: 0.6,
-          pointerEvents: "none",
-        }}
-      />
 
       {/* Headline */}
       <div style={{ position: "relative", zIndex: 1 }}>
+        {/* TrueQuote badge — aligned with subtitle, right side */}
+        <div
+          style={{
+            position: "absolute",
+            top: 120,
+            right: 24,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "10px 18px",
+            borderRadius: 12,
+            background: "rgba(249, 168, 37, 0.06)",
+            border: "1px solid rgba(249, 168, 37, 0.18)",
+            zIndex: 2,
+          }}
+        >
+          <span style={{ fontSize: 16, color: "#f9a825" }}>◎</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#f9a825", letterSpacing: "0.3px" }}>TrueQuote™</span>
+          <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.10)" }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#4ade80" }}>Verified</span>
+        </div>
+
         <h1
           style={{
             fontSize: 64,
@@ -261,7 +248,58 @@ export default function Step1LocationV7({ state, actions }: Props) {
           Your location helps us estimate savings using utility rates, demand charges, solar potential,
           weather profile, and incentives.
         </p>
+
+        {/* Resolved City/State — shown right below description when ZIP resolves */}
+        {state.location && (
+          <div
+            style={{
+              marginTop: 16,
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: "#4ade80",
+                boxShadow: "0 0 8px rgba(74, 222, 128, 0.5)",
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 20,
+                fontWeight: 700,
+                color: "rgba(232, 235, 243, 0.92)",
+                letterSpacing: "-0.3px",
+              }}
+            >
+              {state.location.city && (
+                <span>{state.location.city}</span>
+              )}
+              {state.location.state && state.location.city && (
+                <span style={{ color: "rgba(232, 235, 243, 0.35)", margin: "0 4px" }}>,</span>
+              )}
+              {state.location.state && (
+                <span style={{ color: "#22D3EE" }}>
+                  {state.location.state}
+                </span>
+              )}
+            </span>
+          </div>
+        )}
       </div>
+
+      {/* ── Location Results (above ZIP so users see feedback immediately) ── */}
+      {isValidZip && (state.location || state.locationIntel) && (
+        <div style={{ position: "relative", zIndex: 1 }}>
+          {/* Intel Strip — energy metrics */}
+          <IntelStrip intel={state.locationIntel} />
+        </div>
+      )}
 
       {/* Country Toggle + ZIP */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", gap: 12, alignItems: "center" }}>
@@ -319,6 +357,7 @@ export default function Step1LocationV7({ state, actions }: Props) {
 
           <input
             type="text"
+            inputMode="numeric"
             value={zipValue}
             onChange={(e) => {
               const raw = e.target.value;
@@ -327,6 +366,12 @@ export default function Step1LocationV7({ state, actions }: Props) {
               setZipValue(v);
             }}
             placeholder={country === "US" ? "ZIP code (e.g., 89052)" : "Postal code"}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            data-lpignore="true"
+            data-1p-ignore
+            name="merlin-zip-nofill"
             className={`merlin-zip-input${isValidZip ? " zip-valid" : ""}`}
             style={{
               width: "100%",
@@ -346,31 +391,58 @@ export default function Step1LocationV7({ state, actions }: Props) {
         </div>
       </div>
 
-      {/* Intel Strip */}
-      {isValidZip && <IntelStrip intel={state.locationIntel} />}
-
       {/* Business Lookup */}
       <div
         style={{
-          padding: 20,
-          borderRadius: 16,
-          background: "rgba(18, 22, 40, 0.35)",
-          boxShadow: "0 2px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03)",
+          padding: 24,
+          borderRadius: 18,
+          background: "linear-gradient(135deg, rgba(18, 22, 40, 0.55) 0%, rgba(79, 140, 255, 0.04) 100%)",
+          border: "1px solid rgba(79, 140, 255, 0.15)",
+          boxShadow: "0 4px 24px rgba(0, 0, 0, 0.2), 0 0 40px rgba(79, 140, 255, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
           position: "relative",
           zIndex: 1,
         }}
       >
+        {/* Header row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: "linear-gradient(135deg, rgba(79, 140, 255, 0.25) 0%, rgba(139, 92, 246, 0.15) 100%)",
+              boxShadow: "0 0 16px rgba(79, 140, 255, 0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4F8CFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(232, 235, 243, 0.92)", letterSpacing: "0.2px" }}>
+              Find Your Business
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 500, color: "rgba(232, 235, 243, 0.4)", textTransform: "uppercase", letterSpacing: "0.4px" }}>
+              Optional — improves accuracy
+            </div>
+          </div>
+        </div>
+
         <div
           style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: "rgba(232, 235, 243, 0.4)",
-            marginBottom: 14,
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
+            fontSize: 13,
+            color: "rgba(34, 211, 238, 0.7)",
+            marginBottom: 18,
+            lineHeight: 1.6,
+            paddingLeft: 48,
           }}
         >
-          Optional: Find your business
+          Adding your business helps Merlin tailor equipment sizing, load profiles, and incentive eligibility to your exact facility.
         </div>
 
         <div style={{ marginBottom: 12 }}>
@@ -597,51 +669,6 @@ export default function Step1LocationV7({ state, actions }: Props) {
         </div>
       )}
 
-      {/* ZIP-only resolved location summary */}
-      {state.location && !state.businessCard && (
-        <div
-          style={{
-            padding: 16,
-            borderRadius: 14,
-            background: "rgba(28, 32, 58, 0.4)",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.03)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "rgba(232, 235, 243, 0.5)",
-              marginBottom: 8,
-              textTransform: "uppercase",
-              letterSpacing: "0.3px",
-            }}
-          >
-            📍 Resolved Location
-          </div>
-
-          <div style={{ fontSize: 15, fontWeight: 800, color: "rgba(232, 235, 243, 0.92)" }}>
-            {state.location.formattedAddress}
-          </div>
-
-          {!!state.location.state && (
-            <div
-              style={{
-                marginTop: 8,
-                display: "inline-flex",
-                padding: "4px 10px",
-                borderRadius: 6,
-                background: "rgba(74, 222, 128, 0.1)",
-                boxShadow: "0 2px 6px rgba(74, 222, 128, 0.12)",
-                fontSize: 12,
-                color: "rgba(74, 222, 128, 0.9)",
-              }}
-            >
-              ✓ State: {state.location.state}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

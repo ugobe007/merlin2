@@ -14,7 +14,7 @@
  * - This component renders from curated schema
  */
 
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import { 
   resolveStep3Schema, 
   CANONICAL_INDUSTRY_KEYS,
@@ -104,11 +104,27 @@ function isRequired(q: CuratedField): boolean {
 // Normalize field type to prevent mis-rendering from legacy/variant type names
 function normalizeFieldType(t?: string): string {
   const x = (t || "").toLowerCase();
+  // Map all custom types to canonical renderer types
   if (x === "multi-select") return "multiselect";
   if (x === "dropdown") return "select";
   if (x === "radio") return "buttons";
   if (x === "boolean" || x === "yesno" || x === "switch") return "toggle";
   if (x === "range") return "slider";
+  // ⚠️ Car wash/hotel/EV custom types → standard renderers
+  if (x === "conditional_buttons") return "buttons";
+  if (x === "type_then_quantity") return "number";      // Pick type + qty → simplified to number input
+  if (x === "increment_box") return "number";
+  if (x === "hours_grid") return "buttons";            // Hour grid → button selection
+  if (x === "existing_then_planned") return "number";  // Existing + planned → simplified to number input
+  if (x === "auto_confirm") return "toggle";
+  if (x === "range_buttons") return "buttons";         // Range selection (e.g., "100-250 rooms")
+  if (x === "wheel") return "select";                  // Wheel picker → dropdown
+  if (x === "multiselect") return "buttons";           // Multi-select → button group (handle array values)
+  if (x === "number_input") return "number";
+  // Fallback with dev warning
+  if (import.meta.env.DEV && !["text", "number", "select", "buttons", "toggle", "slider", "multiselect"].includes(x)) {
+    console.warn(`[Step3Curated] Unknown field type "${t}" → using "text". Add mapping if needed.`);
+  }
   return x || "text";
 }
 
@@ -130,6 +146,76 @@ export default function Step3ProfileV7Curated(props: Props) {
   
   const { questions, displayName, icon, source } = schema;
   // Note: sections available via schema.sections when needed for grouped rendering
+  
+  // ============================================================================
+  // AUTO-APPLY SMART DEFAULTS (Pre-fill with industry-typical values)
+  // ============================================================================
+  
+  // Track which fields were auto-filled (vs user-edited)
+  const [defaultFilledIds, setDefaultFilledIds] = useState<Set<string>>(new Set());
+  const appliedSchemaRef = useRef<string>('');
+  
+  // On schema load, pre-fill any unanswered fields with their smartDefault
+  useEffect(() => {
+    const schemaKey = `${schema.industry}-${schema.questionCount}`;
+    if (appliedSchemaRef.current === schemaKey) return; // Already applied for this schema
+    
+    const toApply: Record<string, unknown> = {};
+    const newDefaultIds = new Set<string>();
+    
+    for (const q of questions) {
+      if (q.smartDefault !== undefined && q.smartDefault !== null && q.smartDefault !== '') {
+        // Only pre-fill if not already answered
+        if (!isAnswered(answers[q.id])) {
+          toApply[q.id] = q.smartDefault;
+          newDefaultIds.add(q.id);
+        }
+      }
+    }
+    
+    if (Object.keys(toApply).length > 0) {
+      // Apply all defaults in one batch
+      for (const [id, value] of Object.entries(toApply)) {
+        if (actions?.setStep3Answer) {
+          actions.setStep3Answer(id, value);
+        } else if (updateState) {
+          // Fallback: batch via updateState
+          const nextAnswers = { ...answers, ...toApply };
+          updateState({ step3Answers: nextAnswers } as Partial<WizardV7State>);
+          break; // Only need one updateState call for batch
+        }
+      }
+      
+      setDefaultFilledIds(newDefaultIds);
+      appliedSchemaRef.current = schemaKey;
+      
+      if (import.meta.env.DEV) {
+        console.log(`[Step3Curated] ✅ Auto-filled ${Object.keys(toApply).length} fields with industry defaults:`, Object.keys(toApply));
+      }
+    } else {
+      appliedSchemaRef.current = schemaKey;
+    }
+  }, [schema.industry, schema.questionCount, questions]); // eslint-disable-line react-hooks/exhaustive-deps
+  
+  // When user edits a field, remove it from "default-filled" tracking
+  const setAnswerWithTracking = useCallback((id: string, value: unknown) => {
+    // Remove from default-filled set (user now owns this value)
+    setDefaultFilledIds(prev => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    
+    if (actions?.setStep3Answer) {
+      actions.setStep3Answer(id, value);
+      return;
+    }
+    if (updateState) {
+      const nextAnswers = { ...answers, [id]: value };
+      updateState({ step3Answers: nextAnswers } as Partial<WizardV7State>);
+    }
+  }, [actions, updateState, answers]);
   
   // Get hero image (keyed off normalized schema.industry - type-enforced)
   const heroKey = schema.industry as CanonicalIndustryKey;
@@ -169,21 +255,8 @@ export default function Step3ProfileV7Curated(props: Props) {
     }
   }, [answers]);
   
-  // Answer setter (prefer actions.setStep3Answer; updateState is legacy fallback)
-  const setAnswer = useCallback((id: string, value: unknown) => {
-    if (actions?.setStep3Answer) {
-      actions.setStep3Answer(id, value);
-      return;
-    }
-    // Legacy fallback - may drop rapid updates if batched
-    if (import.meta.env.DEV && updateState && !actions?.setStep3Answer) {
-      console.warn("[Step3Curated] updateState fallback in use; may drop rapid updates.");
-    }
-    if (updateState) {
-      const nextAnswers = { ...answers, [id]: value };
-      updateState({ step3Answers: nextAnswers } as Partial<WizardV7State>);
-    }
-  }, [actions, updateState, answers]);
+  // Answer setter uses tracking wrapper (keeps default-filled state accurate)
+  const setAnswer = setAnswerWithTracking;
   
   // Required fields (ALL required - stable count for debugging)
   const requiredIds = useMemo(() => {
@@ -195,11 +268,6 @@ export default function Step3ProfileV7Curated(props: Props) {
     const tier1 = getTier1Blockers(industry);
     return tier1.filter(id => questions.some(q => q.id === id));
   }, [industry, questions]);
-  
-  // Tier 2 recommended (visible, doesn't gate)
-  const recommendedIds = useMemo(() => {
-    return requiredIds.filter(id => !blockerIds.includes(id));
-  }, [requiredIds, blockerIds]);
   
   // Missing blockers (Tier 1 only - actually gates completion)
   const missingBlockers = useMemo(() => {
@@ -261,6 +329,7 @@ export default function Step3ProfileV7Curated(props: Props) {
     const label = q.title || q.label || q.id;
     const required = isRequired(q);
     const hasValue = isAnswered(value);
+    const isDefaultFilled = defaultFilledIds.has(q.id) && hasValue;
     
     // Get options (applies modifyOptions if present - enables dynamic option mutation)
     const options = getOptions(q);
@@ -271,7 +340,11 @@ export default function Step3ProfileV7Curated(props: Props) {
     return (
       <div 
         key={q.id} 
-        className="rounded-xl border border-slate-700/60 p-4 bg-slate-900/40 transition-all hover:border-violet-500/40"
+        className={`rounded-xl border p-4 transition-all ${
+          isDefaultFilled
+            ? 'border-cyan-500/30 bg-cyan-950/20 hover:border-cyan-400/40'
+            : 'border-slate-700/60 bg-slate-900/40 hover:border-violet-500/40'
+        }`}
       >
         {/* Question Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -289,8 +362,14 @@ export default function Step3ProfileV7Curated(props: Props) {
                   Required
                 </span>
               )}
-              {hasValue && (
+              {hasValue && !isDefaultFilled && (
                 <span className="text-green-400 text-sm">✓</span>
+              )}
+              {isDefaultFilled && (
+                <span className="px-2 py-0.5 bg-cyan-500/15 text-cyan-300 text-[10px] font-medium rounded-full border border-cyan-500/20 flex items-center gap-1">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 0.5L6.09 3.26L9.09 3.64L6.95 5.64L7.55 8.59L5 7.15L2.45 8.59L3.05 5.64L0.91 3.64L3.91 3.26L5 0.5Z" fill="currentColor" /></svg>
+                  Industry default
+                </span>
               )}
             </div>
             
@@ -343,15 +422,18 @@ export default function Step3ProfileV7Curated(props: Props) {
                     type="button"
                     onClick={() => setAnswer(q.id, optVal)}
                     className={`
-                      p-3 rounded-lg border text-left transition-all
+                      p-3 rounded-lg border text-left transition-all relative
                       ${selected
-                        ? 'border-violet-500 bg-violet-500/20 text-white'
+                        ? 'border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500/40'
                         : 'border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500'
                       }
                       ${opt.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                     `}
                     disabled={opt.disabled}
                   >
+                    {selected && (
+                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">✓</span>
+                    )}
                     <div className="flex items-center gap-2">
                       {opt.icon && <span className="text-lg">{opt.icon}</span>}
                       <span className="font-medium text-sm">{opt.label}</span>
@@ -429,26 +511,43 @@ export default function Step3ProfileV7Curated(props: Props) {
           )}
           
           {/* Slider */}
-          {inputType === 'slider' && q.range && (
-            <div className="space-y-2">
-              <input
-                type="range"
-                className="w-full accent-violet-500"
-                min={q.range.min}
-                max={q.range.max}
-                step={q.range.step}
-                value={typeof value === 'number' ? value : (typeof q.smartDefault === 'number' ? q.smartDefault : q.range.min)}
-                onChange={e => setAnswer(q.id, Number(e.target.value))}
-              />
-              <div className="flex justify-between text-xs text-slate-400">
-                <span>{q.range.min}{q.unit || ''}</span>
-                <span className="text-violet-300 font-medium">
-                  {typeof value === 'number' ? value : (typeof q.smartDefault === 'number' ? q.smartDefault : q.range.min)}{q.unit || ''}
-                </span>
-                <span>{q.range.max}{q.unit || ''}</span>
+          {inputType === 'slider' && q.range && (() => {
+            const sliderVal = typeof value === 'number' ? value : (typeof q.smartDefault === 'number' ? q.smartDefault : q.range.min);
+            const pct = q.range.max > q.range.min
+              ? ((sliderVal - q.range.min) / (q.range.max - q.range.min)) * 100
+              : 0;
+            return (
+              <div className="space-y-3">
+                {/* Current value badge */}
+                <div className="flex justify-center">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/30 text-violet-200 font-bold text-base">
+                    {sliderVal}{q.unit || ''}
+                  </span>
+                </div>
+                {/* Track with filled portion */}
+                <div className="relative pt-1">
+                  <input
+                    type="range"
+                    className="w-full h-2 rounded-full appearance-none cursor-pointer
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-violet-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-violet-300 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-violet-500/40 [&::-webkit-slider-thumb]:cursor-pointer
+                      [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-violet-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-violet-300 [&::-moz-range-thumb]:cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, rgb(139 92 246) 0%, rgb(139 92 246) ${pct}%, rgb(51 65 85) ${pct}%, rgb(51 65 85) 100%)`,
+                    }}
+                    min={q.range.min}
+                    max={q.range.max}
+                    step={q.range.step}
+                    value={sliderVal}
+                    onChange={e => setAnswer(q.id, Number(e.target.value))}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>{q.range.min}{q.unit || ''}</span>
+                  <span>{q.range.max}{q.unit || ''}</span>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           
           {/* Toggle (stores boolean) */}
           {inputType === 'toggle' && (
@@ -459,13 +558,16 @@ export default function Step3ProfileV7Curated(props: Props) {
                   type="button"
                   onClick={() => setAnswer(q.id, opt)}
                   className={`
-                    flex-1 p-3 rounded-lg border transition-all
+                    flex-1 p-3 rounded-lg border transition-all relative
                     ${value === opt
-                      ? 'border-violet-500 bg-violet-500/20 text-white'
+                      ? 'border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500/40'
                       : 'border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500'
                     }
                   `}
                 >
+                  {value === opt && (
+                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">✓</span>
+                  )}
                   <span className="text-lg mr-2">{opt ? '✅' : '❌'}</span>
                   <span className="font-medium">{opt ? 'Yes' : 'No'}</span>
                 </button>
@@ -588,6 +690,19 @@ export default function Step3ProfileV7Curated(props: Props) {
         
         {/* Progress banner */}
         <div className="p-4 border-t border-slate-700/40">
+          {/* Pre-filled hint (shows when defaults were applied) */}
+          {defaultFilledIds.size > 0 && (
+            <div className="flex items-center gap-2 mb-3 p-2.5 bg-cyan-950/30 border border-cyan-500/20 rounded-lg">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-cyan-400 flex-shrink-0">
+                <path d="M8 1L10.18 5.42L15 6.11L11.5 9.52L12.36 14.31L8 12.01L3.64 14.31L4.5 9.52L1 6.11L5.82 5.42L8 1Z" fill="currentColor" opacity="0.7" />
+              </svg>
+              <p className="text-xs text-cyan-300/90">
+                <span className="font-semibold text-cyan-200">Pre-filled with industry defaults.</span>{' '}
+                Review and adjust any values that differ for your specific facility.
+              </p>
+            </div>
+          )}
+          
           <div className="flex items-center justify-between">
             <div className="text-sm text-slate-300">
               <span className="text-violet-300 font-semibold">{visibleQuestions.length}</span> questions
@@ -639,36 +754,10 @@ export default function Step3ProfileV7Curated(props: Props) {
             }
           `}
         >
-          See Results →
+          Continue →
         </button>
       </div>
       
-      {/* DEV Diagnostics */}
-      {import.meta.env.DEV && (
-        <div className="mt-6 rounded-xl border border-slate-700/40 bg-slate-950/40 p-4 text-xs font-mono text-slate-400">
-          <div className="text-slate-300 font-bold mb-2">🔧 DEV: Curated Schema Resolver</div>
-          <div>Industry: <span className="text-violet-300">{industry}</span> → <span className="text-green-300">{heroKey}</span> (normalized)</div>
-          <div>Source: <span className={source === 'curated-complete' ? 'text-green-300' : source === 'curated-legacy' ? 'text-blue-300' : 'text-amber-300'}>{source}</span></div>
-          <div>Questions: {questions.length} total, {visibleQuestions.length} visible</div>
-          <div>Required: {requiredIds.length} total, {visibleRequiredCount} visible</div>
-          <div className="text-violet-300 font-bold mt-1">Tier 1 Blockers: {blockerIds.length > 0 ? `${answeredRequired}/${effectiveRequired}` : 'Not configured'}</div>
-          {blockerIds.length > 0 && (
-            <div className="text-blue-300">Tier 2 Recommended: {recommendedIds.length}</div>
-          )}
-          <div>Progress: <span className="text-violet-300">{progressPct.toFixed(0)}%</span></div>
-          <div>Complete: <span className={isComplete ? 'text-green-300' : 'text-red-300'}>{String(isComplete)}</span></div>
-          {missingBlockers.length > 0 && (
-            <div className="mt-2 text-red-300">
-              Missing Blockers: {missingBlockers.join(', ')}
-            </div>
-          )}
-          {missingRequired.length > 0 && blockerIds.length === 0 && (
-            <div className="mt-2 text-amber-300">
-              Missing: {missingRequired.join(', ')}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

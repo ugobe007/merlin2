@@ -76,6 +76,12 @@ export interface ContractQuoteResult {
     };
     industry: string;
     gridMode?: string;
+
+    // System add-ons (Step 4 configuration → feeds into SSOT calculateQuote)
+    solarMW?: number;
+    generatorMW?: number;
+    generatorFuelType?: 'natural-gas' | 'diesel' | 'dual-fuel';
+    windMW?: number;
   };
 }
 
@@ -301,6 +307,11 @@ export async function runPricingQuote(
     useCase: contract.inputsUsed.industry,
     gridConnection: mapGridMode(contract.inputsUsed.gridMode),
     includeAdvancedAnalysis: config.includeAdvancedAnalysis,
+    // System add-ons (from Step 4 configuration)
+    solarMW: contract.inputsUsed.solarMW,
+    generatorMW: contract.inputsUsed.generatorMW,
+    generatorFuelType: contract.inputsUsed.generatorFuelType,
+    windMW: contract.inputsUsed.windMW,
   };
 
   // 4. Call SSOT calculator

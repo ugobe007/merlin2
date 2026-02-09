@@ -124,9 +124,49 @@ const markupCache: MarkupConfig = {
   tableUnavailable: false
 };
 
+// ✅ FIX Feb 7, 2026: Deduplication lock prevents parallel calls from ALL hitting DB
+let markupProbeInFlight: Promise<boolean> | null = null;
+
+/**
+ * Probe whether the pricing_markup_config table exists (single attempt, cached).
+ * Returns true if table is available, false if not.
+ */
+async function probeMarkupTable(): Promise<boolean> {
+  if (markupCache.tableUnavailable) return false;
+  if (markupProbeInFlight) return markupProbeInFlight;
+
+  markupProbeInFlight = (async () => {
+    try {
+      const { error } = await supabase
+        .from('pricing_markup_config')
+        .select('config_key')
+        .limit(1);
+
+      if (error) {
+        if (import.meta.env.DEV) {
+          console.debug('[MarkupService] pricing_markup_config table unavailable, using defaults');
+        }
+        markupCache.tableUnavailable = true;
+        return false;
+      }
+      return true;
+    } catch {
+      markupCache.tableUnavailable = true;
+      return false;
+    } finally {
+      markupProbeInFlight = null;
+    }
+  })();
+
+  return markupProbeInFlight;
+}
+
 /**
  * Get markup percentage for equipment type
  * Priority: item-specific > equipment-type > global default
+ * 
+ * ✅ FIX Feb 7, 2026: Probes table existence ONCE; all parallel calls share result.
+ * Eliminates 404 spam when pricing_markup_config table doesn't exist.
  */
 export async function getMarkupPercentage(
   equipmentType: EquipmentType,
@@ -142,35 +182,24 @@ export async function getMarkupPercentage(
     return markupCache.data.get(equipmentType)!;
   }
   
-  // ✅ If table was previously unavailable, skip DB attempts and use default
-  if (markupCache.tableUnavailable) {
-    const defaultMarkup = 15;
-    markupCache.data.set(equipmentType, defaultMarkup);
+  const DEFAULT_MARKUP = 15;
+
+  // ✅ Probe table existence (deduplicated — only ONE network request ever)
+  const tableExists = await probeMarkupTable();
+  if (!tableExists) {
+    markupCache.data.set(equipmentType, DEFAULT_MARKUP);
     markupCache.expiry = Date.now() + CACHE_DURATION_MS;
-    return defaultMarkup;
+    return DEFAULT_MARKUP;
   }
   
   try {
-    // Try equipment-specific markup first (optional table - may not exist in all environments)
+    // Try equipment-specific markup first
     const { data: typeMarkup, error: typeError } = await supabase
       .from('pricing_markup_config')
       .select('markup_percentage')
       .eq('config_key', equipmentType)
       .eq('is_active', true)
       .single();
-    
-    // Silently handle missing table (404) or bad requests (400) - these are non-critical
-    if (typeError && (typeError.code === 'PGRST116' || typeError.message?.includes('404') || typeError.message?.includes('400'))) {
-      if (import.meta.env.DEV) {
-        console.debug('[MarkupService] pricing_markup_config table not available, using defaults');
-      }
-      // ✅ Mark table as unavailable to prevent future 404 spam
-      markupCache.tableUnavailable = true;
-      const defaultMarkup = 15;
-      markupCache.data.set(equipmentType, defaultMarkup);
-      markupCache.expiry = Date.now() + CACHE_DURATION_MS;
-      return defaultMarkup;
-    }
     
     if (!typeError && typeMarkup) {
       markupCache.data.set(equipmentType, typeMarkup.markup_percentage);
@@ -186,7 +215,7 @@ export async function getMarkupPercentage(
       .eq('is_active', true)
       .single();
     
-    const markup = globalMarkup?.markup_percentage ?? 15; // 15% default
+    const markup = globalMarkup?.markup_percentage ?? DEFAULT_MARKUP;
     markupCache.data.set(equipmentType, markup);
     markupCache.expiry = Date.now() + CACHE_DURATION_MS;
     return markup;
@@ -194,9 +223,10 @@ export async function getMarkupPercentage(
   } catch (error) {
     // Silently fail - these are optional features
     if (import.meta.env.DEV) {
-      console.debug(`[MarkupService] Optional pricing table unavailable, using 15% default`);
+      console.debug(`[MarkupService] Optional pricing table unavailable, using ${DEFAULT_MARKUP}% default`);
     }
-    return 15; // Safe default
+    markupCache.tableUnavailable = true;
+    return DEFAULT_MARKUP;
   }
 }
 

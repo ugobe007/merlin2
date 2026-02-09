@@ -146,7 +146,7 @@ export default function WizardShellV7({
               </div>
             </div>
 
-            {/* Merlin Welcome Message */}
+            {/* Unified Merlin Advisor — single voice (Feb 6, 2026) */}
             <div
               style={{
                 marginBottom: 28,
@@ -156,29 +156,37 @@ export default function WizardShellV7({
                   "linear-gradient(135deg, rgba(79, 140, 255, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%)",
                 boxShadow:
                   "inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 40px rgba(79, 140, 255, 0.12)",
+                transition: "all 0.25s ease",
               }}
             >
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  lineHeight: 1.6,
-                  color: "rgba(255, 255, 255, 0.95)",
-                  marginBottom: 12,
-                }}
-              >
-                Hi, I'm <span style={{ color: "#22D3EE" }}>Merlin</span> — your energy savings
-                advisor.
-              </div>
-              <div
-                style={{
-                  fontSize: 14,
-                  color: "rgba(232, 235, 243, 0.7)",
-                  lineHeight: 1.65,
-                }}
-              >
-                In just a few steps, I'll help you discover how much you could save.
-              </div>
+              {advisorContent ? (
+                advisorContent
+              ) : (
+                /* Fallback welcome when no step-specific advisor data */
+                <>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 600,
+                      lineHeight: 1.6,
+                      color: "rgba(255, 255, 255, 0.95)",
+                      marginBottom: 12,
+                    }}
+                  >
+                    Hi, I'm <span style={{ color: "#22D3EE" }}>Merlin</span> — your energy savings
+                    advisor.
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      color: "rgba(232, 235, 243, 0.7)",
+                      lineHeight: 1.65,
+                    }}
+                  >
+                    In just a few steps, I'll help you discover how much you could save.
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Progress Steps */}
@@ -237,55 +245,8 @@ export default function WizardShellV7({
               })}
             </div>
 
-            {/* ── Merlin Advisor Narration (Feb 6, 2026) ──────────── */}
-            {/* Single voice: contextual guidance, intel, assumptions. */}
-            {/* This replaces the old 3rd-column rightPanel.           */}
-            {advisorContent && (
-              <div
-                style={{
-                  marginTop: 4,
-                  padding: 16,
-                  borderRadius: 14,
-                  background:
-                    "linear-gradient(135deg, rgba(79, 140, 255, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-                }}
-              >
-                {advisorContent}
-              </div>
-            )}
-
-            {/* TrueQuote Badge — bottom of left rail */}
-            <div style={{ marginTop: "auto", paddingTop: 16 }}>
-              <div
-                onClick={() => setShowTrueQuoteModal(true)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "8px 14px",
-                  borderRadius: 20,
-                  background: "rgba(255, 255, 255, 0.04)",
-                  cursor: "pointer",
-                  transition: "background 0.15s ease",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)")
-                }
-              >
-                <span style={{ fontSize: 14 }}>◎</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#f9a825" }}>TrueQuote™</span>
-                {isVerified && (
-                  <>
-                    <span style={{ color: "rgba(255,255,255,0.2)" }}>•</span>
-                    <span style={{ fontSize: 11, color: "#4ade80" }}>Verified</span>
-                  </>
-                )}
-              </div>
-            </div>
+            {/* Spacer to push content up — TrueQuote badge lives in content panel now */}
+            <div style={{ marginTop: "auto" }} />
           </div>
 
           {/* ── RIGHT: CONTENT AREA (full width) ─────────────── */}

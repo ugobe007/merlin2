@@ -17,6 +17,7 @@ import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 import WizardErrorBoundary from "@/components/wizard/v7/shared/WizardErrorBoundary";
 import V7AdvisorPanel from "@/components/wizard/v7/shared/V7AdvisorPanel";
 import { resolveStep3Schema } from "@/wizard/v7/schema/curatedFieldsResolver";
+import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 
 // 🤖 AI Agent for self-healing monitoring
 import { wizardAIAgent } from "@/services/wizardAIAgentV2";
@@ -179,16 +180,14 @@ function WizardV7Page() {
 
   const canGoBack = currentStep > 0 && !state.isBusy;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (state.step === "location") {
       if (state.businessCard && !state.businessConfirmed) return;
 
-      // SSOT: if industry locked, skip industry step
-      if (state.industryLocked && state.industry !== "auto") {
-        wizard.goToStep("profile");
-      } else {
-        wizard.goToStep("industry");
-      }
+      // ✅ FIX Feb 2026: Call submitLocation to properly resolve city/state + intel
+      // submitLocation handles: resolveLocation → primeLocationIntel → inferIndustry → navigation
+      // If location already fully resolved (from business lookup), submitLocation will skip redundant work
+      await wizard.submitLocation(state.locationRawInput ?? "");
       return;
     }
 
@@ -327,33 +326,23 @@ function WizardV7Page() {
       const bullets: string[] = [];
       
       if (pricingStatus === "pending") {
-        bullets.push("⏳ Calculating your TrueQuote™...");
+        bullets.push("Calculating your TrueQuote™...");
       } else if (pricingStatus === "timed_out") {
-        bullets.push("⏱️ Pricing timed out — load profile available");
-        bullets.push("Use Retry button to try again");
+        bullets.push("Pricing timed out — load profile available.");
+        bullets.push("Use Retry button to try again.");
       } else if (pricingStatus === "error") {
-        bullets.push("⚠️ Pricing error — use Retry button below");
+        bullets.push("Pricing error — use Retry button below.");
       } else if (pricingComplete) {
-        if (capexUSD) bullets.push(`💰 Investment: ${capexUSD}`);
-        if (annualSavingsUSD) bullets.push(`📈 Annual Savings: ${annualSavingsUSD}`);
-        if (roiYears) bullets.push(`⏱️ Payback: ${roiYears}`);
-        if (bessKWh) bullets.push(`🔋 BESS: ${bessKWh}`);
+        if (capexUSD) bullets.push(`Investment: ${capexUSD}`);
+        if (annualSavingsUSD) bullets.push(`Annual Savings: ${annualSavingsUSD}`);
+        if (roiYears) bullets.push(`Payback: ${roiYears}`);
+        if (bessKWh) bullets.push(`BESS: ${bessKWh}`);
         if (bullets.length === 0) {
-          bullets.push("Quote calculated — see details below");
-        }
-        // Show fallbacks used (transparency: "why these numbers?")
-        if (fallbackLines.length > 0) {
-          bullets.push("ℹ️ Default inputs used:");
-          fallbackLines.forEach(line => bullets.push(`  • ${line}`));
+          bullets.push("Quote calculated — see details below.");
         }
       } else {
-        if (peakLoadKW) bullets.push(`⚡ Peak Load: ${peakLoadKW}`);
-        bullets.push("Load profile ready — financials pending");
-        // Show what's missing
-        if (fallbackLines.length > 0) {
-          bullets.push("ℹ️ Using default values for:");
-          fallbackLines.forEach(line => bullets.push(`  • ${line}`));
-        }
+        if (peakLoadKW) bullets.push(`Peak Load: ${peakLoadKW}`);
+        bullets.push("Load profile ready — financials pending.");
       }
       
       // Status badges
@@ -371,14 +360,10 @@ function WizardV7Page() {
         badges.push({ label: "load profile only", tone: "amber" });
       }
       
-      if (pricingSnapshotId) {
-        badges.push({ label: `snap:${pricingSnapshotId.slice(5, 13)}`, tone: "violet" });
-      }
-      
       return (
         <V7AdvisorPanel
           title="Merlin Advisor"
-          subtitle="Results • Step 4"
+          subtitle="Your TrueQuote™ Results"
           badges={badges}
           bullets={bullets}
           progressPct={pricingComplete ? 100 : (pricingStatus === "pending" ? 50 : 25)}
@@ -394,7 +379,6 @@ function WizardV7Page() {
           subtitle="TrueQuote™ • Verified"
           badges={[
             { label: "quote-ready", tone: "green" },
-            { label: gate.canContinue ? "gate: ok" : "gate: blocked", tone: gate.canContinue ? "green" : "amber" },
           ]}
           bullets={[
             "Review your savings breakdown below.",
@@ -406,24 +390,32 @@ function WizardV7Page() {
 
     // Step 3: Real-time progress from curated resolver
     if (state.step === "profile" && step3Advisor) {
+      const pct = step3Advisor.progressPct;
+      const remaining = step3Advisor.missing.length;
+
+      const bullets: string[] = [];
+      if (pct === 0) {
+        bullets.push("Answer the questions below so Merlin can size your system accurately.");
+      } else if (remaining > 0) {
+        bullets.push(`${remaining} field${remaining === 1 ? "" : "s"} remaining — almost there.`);
+      } else {
+        bullets.push("✅ All required fields complete. You're ready for your quote.");
+      }
+      bullets.push("Merlin uses your answers to calculate peak demand, equipment sizing, and savings.");
+
       return (
         <V7AdvisorPanel
           title="Merlin Advisor"
-          subtitle={`${step3Advisor.schema.displayName} • Step 3`}
+          subtitle={step3Advisor.schema.displayName}
           badges={[
-            { label: `source: ${step3Advisor.schema.source}`, tone: "violet" },
             { 
-              label: `required: ${step3Advisor.answeredCount}/${step3Advisor.visibleRequiredCount}`, 
+              label: `${step3Advisor.answeredCount}/${step3Advisor.visibleRequiredCount} complete`, 
               tone: step3Advisor.missing.length ? "amber" : "green" 
             },
-            { label: gate.canContinue ? "gate: ok" : "gate: blocked", tone: gate.canContinue ? "green" : "amber" },
           ]}
           progressPct={step3Advisor.progressPct}
-          bullets={[
-            "Progress only counts required fields you can see.",
-            "Conditional visibility fails open — no deadlocks.",
-          ]}
-          missing={step3Advisor.missing.slice(0, 12)} // keep it readable
+          bullets={bullets}
+          missing={step3Advisor.missing.slice(0, 6)}
         />
       );
     }
@@ -435,33 +427,83 @@ function WizardV7Page() {
       const hasBusiness = !!state.businessCard;
       const needsConfirm = hasBusiness && !state.businessConfirmed;
 
+      let subtitle = "Let's start with your location";
       const bullets: string[] = [];
+      let badgeLabel = "getting started";
+      let badgeTone: "green" | "amber" | "blue" = "blue";
+
+      // Check if location intelligence data is already available (loads in parallel with location resolution)
+      const hasIntel = !!(state.locationIntel?.utilityRate || state.locationIntel?.peakSunHours);
+      // ✅ FIX Feb 2026: Also detect when intel fetch completed (even with errors/no data)
+      // so advisor doesn't stay stuck at "analyzing" forever
+      const intelAttempted = !!(
+        state.locationIntel?.utilityStatus === "ready" ||
+        state.locationIntel?.utilityStatus === "error" ||
+        state.locationIntel?.solarStatus === "ready" ||
+        state.locationIntel?.solarStatus === "error"
+      );
+
       if (!hasZip) {
-        bullets.push("Enter your ZIP code to unlock utility rates, solar potential & incentives.");
-        bullets.push("Merlin auto-detects your state, climate zone & grid region.");
-      } else if (!hasLocation) {
-        bullets.push("Resolving your location…");
-      } else if (needsConfirm) {
-        bullets.push("Confirm your business to auto-detect industry.");
-        bullets.push("Or skip and choose industry manually.");
-      } else {
-        bullets.push("✅ Location locked.");
+        bullets.push("Enter your ZIP code and I'll pull your local utility rates, solar potential, and available incentives.");
+        bullets.push("This takes about 10 seconds — then we'll size your system.");
+      } else if (!hasLocation && !hasIntel && !intelAttempted) {
+        // Only show 'analyzing' when BOTH location and intel are still loading (not yet attempted)
+        subtitle = "Looking up your area…";
+        badgeLabel = "analyzing";
+        badgeTone = "amber";
+        bullets.push("Pulling utility data, solar irradiance, and weather profile for your area…");
+      } else if (!hasLocation && !hasIntel && intelAttempted) {
+        // Intel fetched but returned no usable data — still allow proceeding
+        subtitle = "ZIP recognized ✓";
+        badgeLabel = "ready";
+        badgeTone = "amber";
+        bullets.push("Couldn't find local utility data for this ZIP — we'll use regional estimates.");
+        bullets.push("Hit Next to choose your industry.");
+      } else if (!hasLocation && hasIntel) {
+        // Intel arrived before location card — show ready state, not analyzing
+        subtitle = "Location data loaded ✓";
+        badgeLabel = "ready";
+        badgeTone = "green";
+        const intelBits: string[] = [];
         if (state.locationIntel?.utilityRate) {
-          bullets.push(`⚡ Utility rate: $${state.locationIntel.utilityRate.toFixed(4)}/kWh`);
+          intelBits.push(`$${state.locationIntel.utilityRate.toFixed(4)}/kWh`);
         }
         if (state.locationIntel?.peakSunHours) {
-          bullets.push(`☀️ Solar: ${state.locationIntel.peakSunHours.toFixed(1)} peak sun hours`);
+          intelBits.push(`${state.locationIntel.peakSunHours.toFixed(1)} peak sun hrs`);
         }
-        bullets.push("Click Next to choose your industry.");
+        if (intelBits.length) {
+          bullets.push(`I found ${intelBits.join(", ")} for your area — looking good for savings.`);
+        }
+        bullets.push("Hit Next to choose your industry.");
+      } else if (needsConfirm) {
+        subtitle = "I found your business";
+        badgeLabel = "business found";
+        badgeTone = "green";
+        bullets.push("If this is correct, confirming helps me auto-detect your industry and tailor the analysis.");
+        bullets.push("Not your business? Skip it and choose your industry on the next step.");
+      } else {
+        subtitle = "Location locked in ✓";
+        badgeLabel = "ready";
+        badgeTone = "green";
+        const intelBits: string[] = [];
+        if (state.locationIntel?.utilityRate) {
+          intelBits.push(`$${state.locationIntel.utilityRate.toFixed(4)}/kWh`);
+        }
+        if (state.locationIntel?.peakSunHours) {
+          intelBits.push(`${state.locationIntel.peakSunHours.toFixed(1)} peak sun hrs`);
+        }
+        if (intelBits.length) {
+          bullets.push(`I found ${intelBits.join(", ")} for your area — looking good for savings.`);
+        }
+        bullets.push("Add your business name for a more accurate quote, or hit Next to choose your industry.");
       }
 
       return (
         <V7AdvisorPanel
           title="Merlin Advisor"
-          subtitle="Location • Step 1"
+          subtitle={subtitle}
           badges={[
-            { label: hasLocation ? "location: set" : "location: needed", tone: hasLocation ? "green" : "amber" },
-            { label: gate.canContinue ? "gate: ok" : "gate: blocked", tone: gate.canContinue ? "green" : "amber" },
+            { label: badgeLabel, tone: badgeTone },
           ]}
           bullets={bullets}
         />
@@ -472,42 +514,44 @@ function WizardV7Page() {
     if (state.step === "industry") {
       const locLine = state.location
         ? [state.location.city, state.location.state].filter(Boolean).join(", ")
-        : "Unknown";
+        : null;
 
-      const bullets: string[] = [
-        `📍 Location: ${locLine}`,
-        "Select the industry that best matches your facility.",
-        "This determines your load profile, peak demand, and savings model.",
-      ];
+      const hasIndustry = state.industry && state.industry !== "auto";
 
-      if (state.industryLocked && state.industry !== "auto") {
-        bullets.push(`✅ Industry auto-detected: ${state.industry}. Click Next to skip.`);
+      const bullets: string[] = [];
+      if (locLine) {
+        bullets.push(`Analyzing options for ${locLine}.`);
+      }
+
+      const industryLabel = hasIndustry ? getIndustryMeta(state.industry).label : null;
+
+      if (state.industryLocked && hasIndustry) {
+        bullets.push(`I detected your industry as ${industryLabel} — hit Next to continue, or pick a different one.`);
+      } else {
+        bullets.push("Choose the industry that best describes your facility. This shapes your load profile and savings model.");
       }
 
       return (
         <V7AdvisorPanel
           title="Merlin Advisor"
-          subtitle="Industry • Step 2"
+          subtitle={hasIndustry ? `${industryLabel}` : "What's your industry?"}
           badges={[
-            { label: state.industry && state.industry !== "auto" ? `industry: ${state.industry}` : "industry: needed", tone: state.industry && state.industry !== "auto" ? "green" : "amber" },
-            { label: gate.canContinue ? "gate: ok" : "gate: blocked", tone: gate.canContinue ? "green" : "amber" },
+            { label: hasIndustry ? "industry set" : "pick one below", tone: hasIndustry ? "green" : "amber" },
           ]}
           bullets={bullets}
         />
       );
     }
 
-    // Fallback (shouldn't reach here, but safe)
+    // Fallback
     return (
       <V7AdvisorPanel
         title="Merlin Advisor"
-        subtitle={`Step: ${state.step}`}
-        badges={[
-          { label: gate.canContinue ? "gate: ok" : "gate: blocked", tone: gate.canContinue ? "green" : "amber" },
-        ]}
+        subtitle="Merlin is here to help"
+        badges={[]}
         bullets={[
           gate.canContinue
-            ? "You're clear to proceed to the next step."
+            ? "You're all set — hit Next to continue."
             : gate.reason ?? "Complete this step to continue.",
         ]}
       />
@@ -529,27 +573,6 @@ function WizardV7Page() {
         isVerified={isVerified}
         advisorContent={rightPanel}    // ✅ Advisor panel in left rail
       >
-        {/* DEV-ONLY: Gate Debug Panel */}
-        {import.meta.env.DEV && !gate.canContinue && gateReason && (
-          <div
-            data-testid="wizard-gate-debug"
-            data-step={state.step}
-            data-reason={gateReason}
-            style={{
-              padding: "10px 14px",
-            borderRadius: 10,
-            background: "rgba(251, 191, 36, 0.1)",
-            border: "1px solid rgba(251, 191, 36, 0.25)",
-            marginBottom: 16,
-            fontSize: 13,
-            color: "rgba(251, 191, 36, 0.9)",
-            fontFamily: "monospace",
-          }}
-        >
-          <strong>Gate blocked:</strong> {gateReason} (step: {state.step})
-        </div>
-      )}
-
       {/* Error overlay */}
       {state.error?.message && (
         <div
@@ -668,6 +691,8 @@ function WizardV7Page() {
             goToStep: wizard.goToStep,
             // Phase 6: Pricing retry (non-blocking)
             retryPricing: wizard.retryPricing,
+            // Phase 8: System add-ons (solar/generator/wind)
+            recalculateWithAddOns: wizard.recalculateWithAddOns,
           }}
         />
       )}

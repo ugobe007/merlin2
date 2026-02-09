@@ -4,10 +4,10 @@ import type { UseCaseData } from "../UseCaseROI";
 import RealWorldApplicationModal from "../modals/RealWorldApplicationModal";
 import { QuoteEngine } from "@/core/calculations";
 import merlinImage from "../../assets/images/new_profile_merlin.png";
+import badgeIcon from "../../assets/images/badge_icon.jpg";
 import { MethodologyStatement } from "../shared/IndustryComplianceBadges";
 import { TrueQuoteModal } from "../shared/TrueQuoteModal";
 import { TrueQuoteBadgeCanonical } from "../shared/TrueQuoteBadgeCanonical";
-import badgeIcon from "../../assets/images/badge_icon.jpg";
 
 // Marketing constants for display-only calculations (hero stats, not quotes)
 import { COST_MULTIPLIERS } from "@/constants/marketing";
@@ -314,8 +314,7 @@ export default function HeroSection({
     null
   );
 
-  // Merlin Intelligence Engine popup states
-  const [activeInfoPopup, setActiveInfoPopup] = useState<string | null>(null);
+  // Modal and popup states
   const [showMerlinVideo, setShowMerlinVideo] = useState(false);
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
 
@@ -447,79 +446,77 @@ export default function HeroSection({
 
   return (
     <>
-      {/* ========== MERLIN HERO - POLISHED PROFESSIONAL DESIGN ========== */}
-      <section className="relative py-8 px-4 md:px-8 lg:px-12">
-        {/* Hero Card with rounded corners and drop shadow */}
+      {/* ========== MERLIN HERO - EDGE TO EDGE ========== */}
+      <section className="relative">
         <div
-          className="relative min-h-[85vh] overflow-hidden rounded-3xl"
-          style={{
-            boxShadow: "0 25px 80px rgba(0,0,0,0.4), 0 10px 30px rgba(91,33,182,0.3)",
-          }}
+          className="relative min-h-[85vh] overflow-hidden"
         >
-          {/* Purple gradient background - Merlin brand */}
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-900 via-purple-900 to-indigo-950 rounded-3xl"></div>
+          {/* Deep dark blue background */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: "linear-gradient(135deg, #060d1f 0%, #0c1631 40%, #091228 70%, #060d1f 100%)",
+            }}
+          />
 
           {/* Subtle ambient glow */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div
-              className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full opacity-20"
+              className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full opacity-15"
               style={{
-                background: "radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%)",
+                background: "radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)",
               }}
             />
             <div
-              className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-15"
+              className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-10"
               style={{
-                background: "radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%)",
+                background: "radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%)",
               }}
             />
           </div>
 
-          <div className="relative z-10 min-h-screen">
-            {/* ========== NEW HERO DESIGN - Two Column Grid ========== */}
-            <div className="grid min-h-screen lg:grid-cols-[minmax(420px,560px)_1fr] grid-cols-1 lg:grid-rows-none grid-rows-[auto_1fr] items-stretch">
-              {/* ========== LEFT PANEL - Darker Purple Gradient ========== */}
+          <div className="relative z-10 min-h-[80vh]">
+            {/* ========== HERO - Two Column Grid ========== */}
+            <div className="grid min-h-[80vh] lg:grid-cols-[minmax(420px,560px)_1fr] grid-cols-1 lg:grid-rows-none grid-rows-[auto_1fr] items-stretch">
+              {/* ========== LEFT PANEL ========== */}
               <div
                 className="flex flex-col justify-center lg:px-14 lg:py-16 px-8 py-12 relative z-10 lg:rounded-r-[40px] rounded-b-[40px] lg:rounded-bl-none my-0 lg:h-full"
                 style={{
                   background:
-                    "linear-gradient(165deg, #2d1a54 0%, #3d2272 40%, #4a2888 70%, #3d2272 100%)",
-                  boxShadow: "20px 0 80px rgba(0,0,0,0.5)",
+                    "linear-gradient(165deg, #081029 0%, #0e1a3a 40%, #132044 70%, #0e1a3a 100%)",
+                  boxShadow: "20px 0 80px rgba(0,0,0,0.6)",
                 }}
               >
                 {/* AI Badge */}
                 <div
                   className="inline-flex items-center gap-2 mb-8"
                   style={{
-                    background: "rgba(255,255,255,0.12)",
+                    background: "transparent",
                     border: "1px solid rgba(255,255,255,0.2)",
-                    padding: "10px 18px",
+                    padding: "8px 16px",
                     borderRadius: "100px",
-                    fontSize: "15px",
+                    fontSize: "13px",
                     fontWeight: 600,
-                    color: "#fff",
+                    color: "rgba(255,255,255,0.7)",
                     width: "fit-content",
+                    letterSpacing: "0.02em",
                   }}
                 >
-                  <span style={{ fontSize: "14px" }}>✨</span>
-                  <span>AI-Powered Energy Solutions</span>
+                  <span className="font-semibold" style={{ color: "#F1F5F9" }}>TrueQuote™</span>
+                  <span
+                    style={{
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      background: "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
+                      boxShadow: "0 0 6px rgba(242, 193, 79, 0.45)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ color: "#94A3B8" }}>Verified Energy Quotes</span>
                 </div>
 
-                {/* Intro Text */}
-                <p
-                  className="mb-4 lg:text-[18px] md:text-[22px] text-[18px]"
-                  style={{
-                    fontWeight: 500,
-                    color: "rgba(255,255,255,0.85)",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Welcome to{" "}
-                  <span style={{ color: "#fbbf24", fontWeight: 800 }}>Merlin Energy</span> —
-                  Advanced AI powered energy solutions and services company.
-                </p>
-
-                {/* Main Headline - Improved Typography */}
+                {/* Main Headline */}
                 <h1
                   className="mb-8 lg:text-[72px] md:text-[48px] text-[36px]"
                   style={{
@@ -564,127 +561,87 @@ export default function HeroSection({
                   </span>
                 </div>
 
-                {/* CTA Button - Professional Typography */}
+                {/* CTA Button - Solid Amber */}
                 <button
                   onClick={() => {
-                    // ✅ FIXED: Clear persisted wizard state to ensure fresh start at Step 1
                     try {
-                      // Clear bufferService storage (uses 'merlin_wizard_buffer' key)
                       localStorage.removeItem("merlin_wizard_buffer");
                       sessionStorage.removeItem("merlin_wizard_buffer");
-                      // Also clear legacy keys just in case
                       localStorage.removeItem("merlin-wizard-state");
                       sessionStorage.removeItem("merlin-wizard-step");
-                      // Add URL parameter to force fresh start
                       const url = new URL(window.location.href);
                       url.searchParams.set("fresh", "true");
                       window.history.replaceState({}, "", url.toString());
-                      console.log("✅ Cleared wizard state for fresh start");
                     } catch (e) {
                       console.error("Failed to clear wizard state:", e);
                     }
                     setShowSmartWizard(true);
                   }}
-                  className="inline-flex items-center justify-center gap-2.5 mb-4 transition-all duration-300"
+                  className="inline-flex items-center justify-center gap-2.5 mb-6 transition-all duration-200 cursor-pointer"
                   style={{
-                    background:
-                      "linear-gradient(135deg, rgba(56, 189, 248, 0.85) 0%, rgba(34, 211, 238, 0.85) 50%, rgba(34, 197, 94, 0.85) 100%)",
-                    backdropFilter: "blur(12px)",
-                    WebkitBackdropFilter: "blur(12px)",
-                    border: "2px solid rgba(255, 255, 255, 0.25)",
-                    color: "#5B21B6",
-                    borderRadius: "16px",
-                    fontWeight: 900,
+                    background: "#fbbf24",
+                    border: "none",
+                    color: "#1a0a2e",
+                    borderRadius: "100px",
+                    fontWeight: 700,
                     fontSize: "20px",
-                    lineHeight: "1.2",
-                    letterSpacing: "-0.02em",
-                    fontKerning: "auto",
-                    textRendering: "optimizeLegibility",
-                    WebkitFontSmoothing: "antialiased",
-                    MozOsxFontSmoothing: "grayscale",
-                    fontFamily: "system-ui, -apple-system, sans-serif",
-                    WebkitTextStroke: "0.3px rgba(91, 33, 182, 0.3)",
-                    padding: "18px 40px",
-                    boxShadow:
-                      "0 4px 20px rgba(56, 189, 248, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.3)",
-                    textShadow: "0 1px 2px rgba(255,255,255,0.5)",
+                    letterSpacing: "-0.01em",
+                    padding: "18px 42px",
+                    boxShadow: "0 4px 24px rgba(251,191,36,0.3)",
                   }}
                   aria-label="Start Saving with SmartWizard"
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background =
-                      "linear-gradient(135deg, rgba(56, 189, 248, 0.95) 0%, rgba(34, 211, 238, 0.95) 50%, rgba(34, 197, 94, 0.95) 100%)";
-                    e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.4)";
-                    e.currentTarget.style.boxShadow =
-                      "0 6px 28px rgba(56, 189, 248, 0.5), 0 0 60px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255,255,255,0.4)";
-                    e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
+                    e.currentTarget.style.background = "#fcd34d";
+                    e.currentTarget.style.boxShadow = "0 6px 32px rgba(251,191,36,0.45)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background =
-                      "linear-gradient(135deg, rgba(56, 189, 248, 0.85) 0%, rgba(34, 211, 238, 0.85) 50%, rgba(34, 197, 94, 0.85) 100%)";
-                    e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.25)";
-                    e.currentTarget.style.boxShadow =
-                      "0 4px 20px rgba(56, 189, 248, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.3)";
-                    e.currentTarget.style.transform = "translateY(0) scale(1)";
+                    e.currentTarget.style.background = "#fbbf24";
+                    e.currentTarget.style.boxShadow = "0 4px 24px rgba(251,191,36,0.3)";
+                    e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  <span style={{ fontSize: "22px", lineHeight: "1" }}>✨</span>
-                  <span style={{ letterSpacing: "-0.01em", fontWeight: 900 }}>
-                    Get My Free Quote
-                  </span>
-                  <span style={{ fontSize: "20px", marginLeft: "2px" }}>→</span>
+                  <span style={{ fontWeight: 700 }}>Get My Free Quote</span>
+                  <span style={{ fontSize: "22px", marginLeft: "6px" }}>→</span>
                 </button>
 
-                {/* ProQuote Panel - Advanced Configuration Option */}
-                <div
-                  className="mb-6 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer group"
+                {/* ProQuote - Full-width ghost button matching CTA */}
+                <button
                   onClick={() => setShowAdvancedQuoteBuilder(true)}
+                  className="inline-flex items-center justify-center gap-2.5 mb-6 transition-all duration-200 cursor-pointer"
                   style={{
-                    background:
-                      "linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(49, 46, 129, 0.9) 100%)",
-                    border: "2px solid rgba(99, 102, 241, 0.5)",
-                    boxShadow:
-                      "0 8px 32px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(255,255,255,0.05) inset",
+                    background: "transparent",
+                    border: "1px solid rgba(255,255,255,0.25)",
+                    color: "rgba(255,255,255,0.75)",
+                    borderRadius: "100px",
+                    fontWeight: 700,
+                    fontSize: "18px",
+                    letterSpacing: "-0.01em",
+                    padding: "16px 42px",
                     width: "100%",
-                    maxWidth: "460px",
-                    backdropFilter: "blur(8px)",
+                    maxWidth: "480px",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.45)";
+                    e.currentTarget.style.color = "#fff";
+                    e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+                    e.currentTarget.style.color = "rgba(255,255,255,0.75)";
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  <div className="px-4 py-3 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={badgeIcon}
-                        alt="ProQuote Badge"
-                        className="w-10 h-10 flex-shrink-0 object-contain"
-                        style={{
-                          filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.3))",
-                        }}
-                      />
-                      <div>
-                        <div className="text-white font-bold text-sm flex items-center gap-2">
-                          ProQuote™
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-200 font-medium">
-                            PRO
-                          </span>
-                        </div>
-                        <div className="text-indigo-300/80 text-xs">
-                          Custom system configuration
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-white/20 transition-colors"
-                      style={{
-                        background: "rgba(255,255,255,0.1)",
-                      }}
-                    >
-                      <span className="text-white/80 text-sm group-hover:text-white transition-colors">
-                        →
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                  <img src={badgeIcon} alt="ProQuote" style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                  <span>ProQuote™</span>
+                  <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "4px", background: "rgba(255,255,255,0.1)", fontWeight: 600 }}>PRO</span>
+                  <span style={{ fontSize: "20px", marginLeft: "4px" }}>→</span>
+                </button>
 
                 {/* Merlin Link */}
+                <div className="flex justify-center w-full" style={{ maxWidth: "480px" }}>
                 <button
                   onClick={() => setShowAbout(true)}
                   className="inline-flex items-center gap-2 transition-all"
@@ -700,9 +657,33 @@ export default function HeroSection({
                     e.currentTarget.style.color = "rgba(255,255,255,0.6)";
                   }}
                 >
-                  <span style={{ fontSize: "18px" }}>🧙</span>
+                  <img src={merlinImage} alt="Merlin" className="w-7 h-7 rounded-full" />
                   <span>About Merlin AI →</span>
                 </button>
+                </div>
+
+                {/* Trust Strip - Data Source Badges */}
+                <div className="mt-6 flex flex-wrap items-center gap-2">
+                  <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+                    Powered by
+                  </span>
+                  {["NREL", "DOE", "Sandia", "UL", "IEEE", "EIA"].map((src) => (
+                    <span
+                      key={src}
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        color: "rgba(255,255,255,0.45)",
+                        padding: "3px 8px",
+                        borderRadius: "4px",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      {src}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               {/* ========== RIGHT SIDE - Image Carousel with Stats Card ========== */}
@@ -878,821 +859,101 @@ export default function HeroSection({
         </div>
       </section>
 
-      {/* ========== THE MERLIN INTELLIGENCE ENGINE ========== */}
-      <section className="py-24 px-4 md:px-8 lg:px-12 relative overflow-hidden">
-        {/* Deep purple gradient background */}
+      {/* ========== VALUE PROPOSITIONS + STATS ========== */}
+      <section className="py-20 px-4 md:px-8 lg:px-12 relative overflow-hidden">
+        {/* Deep blue professional background */}
         <div
           className="absolute inset-0"
           style={{
-            background:
-              "linear-gradient(180deg, #4c1d95 0%, #6b21a8 30%, #7c3aed 60%, #8b5cf6 100%)",
+            background: "linear-gradient(180deg, #060d1f 0%, #0c1631 50%, #071024 100%)",
           }}
         />
 
-        {/* Animated grid pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: "50px 50px",
-          }}
-        />
+        {/* Subtle top border line */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-        {/* Glowing orbs */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px] animate-pulse" />
-          <div className="absolute bottom-20 right-1/4 w-[400px] h-[400px] bg-amber-500/15 rounded-full blur-[80px]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px]" />
-        </div>
+        <div className="max-w-5xl mx-auto relative z-10">
 
-        <div className="max-w-7xl mx-auto relative z-10">
           {/* Section Header */}
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-amber-500/20 backdrop-blur-sm rounded-full px-5 py-2 mb-8 border border-purple-400/30">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              <span className="text-purple-200 text-sm font-medium tracking-wide">
-                POWERED BY ADVANCED AI
-              </span>
-            </div>
-
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight">
-              The Merlin Intelligence
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-400">
-                Engine
-              </span>
+          <div className="text-center mb-16">
+            <p
+              className="text-sm font-medium tracking-widest uppercase mb-4"
+              style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em" }}
+            >
+              Why Merlin
+            </p>
+            <h2
+              className="text-3xl md:text-4xl font-bold mb-4"
+              style={{ color: "#fff", letterSpacing: "-0.02em" }}
+            >
+              Get accurate quotes{" "}
+              <span style={{ color: "#fbbf24" }}>without the runaround</span>
             </h2>
-
-            <p className="text-lg md:text-xl text-purple-200/80 max-w-3xl mx-auto leading-relaxed mb-8">
-              Stop guessing. Stop calling multiple vendors. Our AI analyzes{" "}
-              <span className="text-amber-300 font-semibold">30+ industry configurations</span>,
-              real utility rates, and{" "}
-              <span className="text-cyan-300 font-semibold">NREL-validated pricing</span> to build
-              your optimal energy system in 5 easy steps.
+            <p
+              className="text-base max-w-2xl mx-auto"
+              style={{ color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}
+            >
+              Our AI analyzes 30+ industry configurations, real utility rates, and NREL-validated
+              pricing to design your optimal energy system.
             </p>
-
-            {/* Data Sources Badge */}
-            <div className="flex justify-center">
-              <div className="flex items-center gap-4 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
-                <span className="text-sm text-purple-300 font-medium">Data sourced from:</span>
-                <div className="flex items-center gap-3">
-                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-sm font-semibold rounded-lg border border-blue-400/30">
-                    NREL
-                  </span>
-                  <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-sm font-semibold rounded-lg border border-emerald-400/30">
-                    DOE
-                  </span>
-                  <span className="px-3 py-1 bg-orange-500/20 text-orange-300 text-sm font-semibold rounded-lg border border-orange-400/30">
-                    Sandia
-                  </span>
-                  <span className="px-3 py-1 bg-red-500/20 text-red-300 text-sm font-semibold rounded-lg border border-red-400/30">
-                    UL
-                  </span>
-                  <span className="px-3 py-1 bg-purple-500/20 text-purple-300 text-sm font-semibold rounded-lg border border-purple-400/30">
-                    IEEE
-                  </span>
-                  <span className="px-3 py-1 bg-cyan-500/20 text-cyan-300 text-sm font-semibold rounded-lg border border-cyan-400/30">
-                    EIA
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* Main Visual: AI System Diagram */}
-          <div className="relative mb-20">
-            {/* Central AI Hub */}
-            <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-0">
-              {/* Left Side - Inputs */}
-              <div className="flex flex-col gap-6 lg:w-1/3">
-                {/* Input 1: Your Business */}
-                <div className="group relative">
-                  <div
-                    onClick={() =>
-                      setActiveInfoPopup(activeInfoPopup === "facility" ? null : "facility")
-                    }
-                    className="relative bg-gradient-to-br from-purple-900/90 to-indigo-950/90 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
-                    style={{ boxShadow: "0 0 30px rgba(139,92,246,0.15)" }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <span
-                        className="text-4xl shrink-0"
-                        style={{ filter: "drop-shadow(0 4px 8px rgba(139,92,246,0.5))" }}
-                      >
-                        🏢
-                      </span>
-                      <div>
-                        <h4 className="text-white font-bold text-lg mb-1">Your Facility</h4>
-                        <p className="text-purple-300/70 text-sm">
-                          Industry type, square footage, operating hours, peak demand
-                        </p>
-                      </div>
-                    </div>
-                    {/* Click indicator */}
-                    <div className="absolute top-2 right-2 text-purple-400/60 text-xs">
-                      Click to learn more
-                    </div>
-                    {/* Connection line */}
-                    <div
-                      className="hidden lg:block absolute right-0 top-1/2 w-8 h-0.5 bg-gradient-to-r from-purple-500 to-transparent"
-                      style={{ transform: "translateX(100%)" }}
-                    />
-                  </div>
-                  {/* Popup for Facility */}
-                  {activeInfoPopup === "facility" && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-purple-500/50 shadow-2xl">
-                      <h5 className="text-amber-400 font-bold mb-2">How Facility Analysis Works</h5>
-                      <p className="text-purple-200 text-sm mb-3">
-                        Merlin uses industry-specific power profiles from ASHRAE, CBECS, and Energy
-                        Star databases to understand your energy needs:
-                      </p>
-                      <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>
-                          • <span className="text-white">Industry Type:</span> 30+ pre-configured
-                          profiles (hospitals, hotels, data centers, EV charging, manufacturing...)
-                        </li>
-                        <li>
-                          • <span className="text-white">Square Footage:</span> Calculates base load
-                          using industry W/sqft standards
-                        </li>
-                        <li>
-                          • <span className="text-white">Operating Hours:</span> Determines peak
-                          demand windows and TOU optimization
-                        </li>
-                        <li>
-                          • <span className="text-white">Peak Demand:</span> Sizes battery for
-                          maximum demand charge reduction
-                        </li>
-                      </ul>
-                      <div className="mt-3 text-xs text-cyan-300">
-                        💡 We know a hospital needs different power than a car wash!
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Input 2: Location & Rates */}
-                <div className="group relative">
-                  <div
-                    onClick={() =>
-                      setActiveInfoPopup(activeInfoPopup === "location" ? null : "location")
-                    }
-                    className="relative bg-gradient-to-br from-purple-900/90 to-indigo-950/90 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
-                    style={{ boxShadow: "0 0 30px rgba(6,182,212,0.15)" }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <span
-                        className="text-4xl shrink-0"
-                        style={{ filter: "drop-shadow(0 4px 8px rgba(6,182,212,0.5))" }}
-                      >
-                        📍
-                      </span>
-                      <div>
-                        <h4 className="text-white font-bold text-lg mb-1">Location & Utility</h4>
-                        <p className="text-purple-300/70 text-sm">
-                          Local utility rates, demand charges, TOU schedules
-                        </p>
-                      </div>
-                    </div>
-                    <div className="absolute top-2 right-2 text-cyan-400/60 text-xs">
-                      Click to learn more
-                    </div>
-                    <div
-                      className="hidden lg:block absolute right-0 top-1/2 w-8 h-0.5 bg-gradient-to-r from-cyan-500 to-transparent"
-                      style={{ transform: "translateX(100%)" }}
-                    />
-                  </div>
-                  {/* Popup for Location */}
-                  {activeInfoPopup === "location" && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-cyan-500/50 shadow-2xl">
-                      <h5 className="text-amber-400 font-bold mb-2">
-                        How Location & Utility Works
-                      </h5>
-                      <p className="text-purple-200 text-sm mb-3">
-                        Your location directly impacts savings potential and ROI:
-                      </p>
-                      <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>
-                          • <span className="text-white">Utility Rates:</span> We pull actual $/kWh
-                          rates for your region (CA has higher rates = bigger savings!)
-                        </li>
-                        <li>
-                          • <span className="text-white">Demand Charges:</span> $/kW charges that
-                          battery storage can dramatically reduce
-                        </li>
-                        <li>
-                          • <span className="text-white">TOU Schedules:</span> Time-of-use pricing
-                          lets you buy low, use high—battery arbitrage
-                        </li>
-                        <li>
-                          • <span className="text-white">Incentives:</span> State and local rebates
-                          stacked on top of 30% federal ITC
-                        </li>
-                      </ul>
-                      <div className="mt-3 text-xs text-emerald-300">
-                        📊 A facility in California vs. Texas can see 2-3x different savings!
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Input 3: Goals */}
-                <div className="group relative">
-                  <div
-                    onClick={() => setActiveInfoPopup(activeInfoPopup === "goals" ? null : "goals")}
-                    className="relative bg-gradient-to-br from-purple-900/90 to-indigo-950/90 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
-                    style={{ boxShadow: "0 0 30px rgba(16,185,129,0.15)" }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <span
-                        className="text-4xl shrink-0"
-                        style={{ filter: "drop-shadow(0 4px 8px rgba(16,185,129,0.5))" }}
-                      >
-                        🎯
-                      </span>
-                      <div>
-                        <h4 className="text-white font-bold text-lg mb-1">Your Goals</h4>
-                        <p className="text-purple-300/70 text-sm">
-                          Cost savings, backup power, sustainability, EV charging
-                        </p>
-                      </div>
-                    </div>
-                    <div className="absolute top-2 right-2 text-emerald-400/60 text-xs">
-                      Click to learn more
-                    </div>
-                    <div
-                      className="hidden lg:block absolute right-0 top-1/2 w-8 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent"
-                      style={{ transform: "translateX(100%)" }}
-                    />
-                  </div>
-                  {/* Popup for Goals */}
-                  {activeInfoPopup === "goals" && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-emerald-500/50 shadow-2xl">
-                      <h5 className="text-amber-400 font-bold mb-2">How Goal Optimization Works</h5>
-                      <p className="text-purple-200 text-sm mb-3">
-                        Different goals require different system configurations:
-                      </p>
-                      <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>
-                          • <span className="text-white">Cost Savings:</span> Optimize for peak
-                          shaving + TOU arbitrage = maximum ROI
-                        </li>
-                        <li>
-                          • <span className="text-white">Backup Power:</span> Size battery for
-                          critical load hours (4-8 hour backup typical)
-                        </li>
-                        <li>
-                          • <span className="text-white">Sustainability:</span> Pair with solar for
-                          net-zero goals, carbon reduction metrics
-                        </li>
-                        <li>
-                          • <span className="text-white">EV Charging:</span> Level 2, DCFC, or
-                          HPC—we calculate infrastructure needs
-                        </li>
-                      </ul>
-                      <div className="mt-3 text-xs text-amber-300">
-                        ⚡ Multi-goal optimization: save money AND go green AND add EV charging!
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Center: Merlin AI Core - LARGER, NO CIRCLE */}
-              <div className="lg:w-1/3 flex justify-center py-8 lg:py-0">
-                <div className="relative">
-                  {/* Ambient glow behind Merlin */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-80 h-80 bg-gradient-to-r from-purple-500/40 via-amber-500/30 to-cyan-500/40 rounded-full blur-[80px] animate-pulse" />
-                  </div>
-
-                  {/* Floating magical particles around Merlin */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    <div
-                      className="absolute top-8 left-12 w-3 h-3 bg-amber-400 rounded-full animate-ping opacity-60"
-                      style={{ animationDuration: "2s" }}
-                    />
-                    <div
-                      className="absolute top-16 right-8 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-50"
-                      style={{ animationDuration: "2.5s", animationDelay: "0.5s" }}
-                    />
-                    <div
-                      className="absolute bottom-20 left-8 w-2.5 h-2.5 bg-purple-400 rounded-full animate-ping opacity-60"
-                      style={{ animationDuration: "3s", animationDelay: "1s" }}
-                    />
-                    <div
-                      className="absolute bottom-12 right-16 w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-50"
-                      style={{ animationDuration: "2.2s", animationDelay: "0.8s" }}
-                    />
-                  </div>
-
-                  {/* Core container - CLICKABLE - NO HARD CIRCLE EDGE */}
-                  <div
-                    onClick={() => setShowMerlinVideo(true)}
-                    className="relative flex flex-col items-center justify-center cursor-pointer group transition-transform hover:scale-105 active:scale-95 py-8"
-                    title="Merlin Magic - Click to see how it works"
-                  >
-                    {/* Click glow effect - expands on click */}
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-500/0 via-amber-500/0 to-amber-500/0 group-active:from-amber-500/30 group-active:via-amber-500/40 group-active:to-amber-500/30 transition-all duration-300 blur-xl scale-90 group-active:scale-125" />
-
-                    {/* Merlin Image - MUCH LARGER and FLOATING with STRONG DROP SHADOW */}
-                    <img
-                      src={merlinImage}
-                      alt="Merlin AI"
-                      className="w-56 h-56 md:w-72 md:h-72 lg:w-80 lg:h-80 mb-2 object-contain animate-float relative z-10"
-                      style={{
-                        filter:
-                          "drop-shadow(0 20px 40px rgba(0,0,0,0.6)) drop-shadow(0 0 60px rgba(139,92,246,0.4))",
-                      }}
-                    />
-
-                    {/* Text below Merlin */}
-                    <div className="text-center relative z-10 mt-4">
-                      <div className="text-amber-400 font-black text-2xl tracking-wide drop-shadow-lg">
-                        MERLIN AI
-                      </div>
-                      <div className="text-purple-300/80 text-sm mt-1 flex items-center gap-2 justify-center">
-                        <span className="w-5 h-5 rounded-full bg-amber-500/80 flex items-center justify-center text-xs">
-                          ▶
-                        </span>
-                        <span>Click to see the magic</span>
-                      </div>
-                    </div>
-
-                    {/* Processing indicators - BELOW */}
-                    <div className="flex gap-2 mt-6 relative z-10">
-                      <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-500/50" />
-                      <div
-                        className="w-3 h-3 bg-amber-400 rounded-full animate-pulse shadow-lg shadow-amber-500/50"
-                        style={{ animationDelay: "0.2s" }}
-                      />
-                      <div
-                        className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse shadow-lg shadow-cyan-500/50"
-                        style={{ animationDelay: "0.4s" }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Data flow labels around Merlin */}
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-950/90 px-4 py-1.5 rounded-full border border-purple-500/30 shadow-lg">
-                    <span className="text-purple-300 text-sm font-medium">
-                      30+ Industry Configs
-                    </span>
-                  </div>
-                  <div className="absolute top-1/2 -left-28 -translate-y-1/2 bg-purple-950/90 px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-lg hidden xl:block">
-                    <span className="text-cyan-300 text-sm font-medium">NREL ATB 2024</span>
-                  </div>
-                  <div className="absolute top-1/2 -right-28 -translate-y-1/2 bg-purple-950/90 px-4 py-1.5 rounded-full border border-amber-500/30 shadow-lg hidden xl:block">
-                    <span className="text-amber-300 text-sm font-medium">Real-time Pricing</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Side - Outputs */}
-              <div className="flex flex-col gap-6 lg:w-1/3">
-                {/* Output 1: Optimal System */}
-                <div className="group relative">
-                  <div
-                    className="hidden lg:block absolute left-0 top-1/2 w-8 h-0.5 bg-gradient-to-l from-amber-500 to-transparent"
-                    style={{ transform: "translateX(-100%)" }}
-                  />
-                  <div
-                    onClick={() =>
-                      setActiveInfoPopup(activeInfoPopup === "system" ? null : "system")
-                    }
-                    className="relative bg-gradient-to-br from-amber-500/20 to-amber-600/10 backdrop-blur-xl rounded-2xl p-6 border border-amber-500/40 cursor-pointer hover:scale-[1.02] transition-transform"
-                    style={{ boxShadow: "0 0 30px rgba(251,191,36,0.15)" }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <span
-                        className="text-4xl shrink-0"
-                        style={{ filter: "drop-shadow(0 4px 8px rgba(251,191,36,0.5))" }}
-                      >
-                        ⚡
-                      </span>
-                      <div>
-                        <h4 className="text-white font-bold text-lg mb-1">Perfect System Size</h4>
-                        <p className="text-purple-300/70 text-sm">
-                          Battery kWh, inverter capacity, duration optimized for your load
-                        </p>
-                      </div>
-                    </div>
-                    <div className="absolute top-2 right-2 text-amber-400/60 text-xs">
-                      Click to learn more
-                    </div>
-                  </div>
-                  {/* Popup for System Size */}
-                  {activeInfoPopup === "system" && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-amber-500/50 shadow-2xl">
-                      <h5 className="text-amber-400 font-bold mb-2">Perfect System Sizing</h5>
-                      <p className="text-purple-200 text-sm mb-3">
-                        Merlin calculates your optimal BESS size based on your actual load profile:
-                      </p>
-                      <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>
-                          • <span className="text-white">Battery kWh:</span> Sized to shave peak
-                          demand while maximizing ROI
-                        </li>
-                        <li>
-                          • <span className="text-white">Inverter Capacity:</span> Power rating
-                          matched to discharge requirements
-                        </li>
-                        <li>
-                          • <span className="text-white">Duration:</span> 2-4 hour systems most
-                          common; we recommend based on your TOU schedule
-                        </li>
-                      </ul>
-                      <div className="mt-3 text-xs text-emerald-300">
-                        🔋 No oversizing = lower cost. No undersizing = captured savings!
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Output 2: Add-ons */}
-                <div className="group relative">
-                  <div
-                    className="hidden lg:block absolute left-0 top-1/2 w-8 h-0.5 bg-gradient-to-l from-amber-500 to-transparent"
-                    style={{ transform: "translateX(-100%)" }}
-                  />
-                  <div
-                    onClick={() =>
-                      setActiveInfoPopup(activeInfoPopup === "addons" ? null : "addons")
-                    }
-                    className="relative bg-gradient-to-br from-amber-500/20 to-amber-600/10 backdrop-blur-xl rounded-2xl p-6 border border-amber-500/40 cursor-pointer hover:scale-[1.02] transition-transform"
-                    style={{ boxShadow: "0 0 30px rgba(251,191,36,0.15)" }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <span
-                        className="text-4xl shrink-0"
-                        style={{ filter: "drop-shadow(0 4px 8px rgba(251,191,36,0.5))" }}
-                      >
-                        ☀️
-                      </span>
-                      <div>
-                        <h4 className="text-white font-bold text-lg mb-1">Solar & Generation</h4>
-                        <p className="text-purple-300/70 text-sm">
-                          Exact solar kWp, generator sizing, EV charger specs
-                        </p>
-                      </div>
-                    </div>
-                    <div className="absolute top-2 right-2 text-amber-400/60 text-xs">
-                      Click to learn more
-                    </div>
-                  </div>
-                  {/* Popup for Add-ons */}
-                  {activeInfoPopup === "addons" && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-amber-500/50 shadow-2xl">
-                      <h5 className="text-amber-400 font-bold mb-2">
-                        Smart Add-on Recommendations
-                      </h5>
-                      <p className="text-purple-200 text-sm mb-3">
-                        Merlin suggests complementary systems to maximize value:
-                      </p>
-                      <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>
-                          • <span className="text-white">Solar PV:</span> Sized to offset load +
-                          charge batteries during cheap hours
-                        </li>
-                        <li>
-                          • <span className="text-white">EV Charging:</span> Level 2, DCFC, or HPC
-                          infrastructure recommendations
-                        </li>
-                        <li>
-                          • <span className="text-white">Generators:</span> Backup power sizing for
-                          critical loads during outages
-                        </li>
-                        <li>
-                          • <span className="text-white">Grid Services:</span> Frequency regulation,
-                          demand response revenue streams
-                        </li>
-                      </ul>
-                      <div className="mt-3 text-xs text-cyan-300">
-                        💡 Solar + Storage can double your savings vs. storage alone!
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Output 3: Full Financial */}
-                <div className="group relative">
-                  <div
-                    className="hidden lg:block absolute left-0 top-1/2 w-8 h-0.5 bg-gradient-to-l from-emerald-500 to-transparent"
-                    style={{ transform: "translateX(-100%)" }}
-                  />
-                  <div
-                    onClick={() =>
-                      setActiveInfoPopup(activeInfoPopup === "financial" ? null : "financial")
-                    }
-                    className="relative bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/40 cursor-pointer hover:scale-[1.02] transition-transform"
-                    style={{ boxShadow: "0 0 30px rgba(16,185,129,0.2)" }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <span
-                        className="text-4xl shrink-0"
-                        style={{ filter: "drop-shadow(0 4px 8px rgba(16,185,129,0.5))" }}
-                      >
-                        💰
-                      </span>
-                      <div>
-                        <h4 className="text-white font-bold text-lg mb-1">Complete Quote</h4>
-                        <p className="text-purple-300/70 text-sm">
-                          ROI, payback, NPV, 30% ITC, exportable reports
-                        </p>
-                      </div>
-                    </div>
-                    <div className="absolute top-2 right-2 text-emerald-400/60 text-xs">
-                      Click to learn more
-                    </div>
-                  </div>
-                  {/* Popup for Financial */}
-                  {activeInfoPopup === "financial" && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-emerald-500/50 shadow-2xl">
-                      <h5 className="text-amber-400 font-bold mb-2">
-                        Bank-Ready Financial Analysis
-                      </h5>
-                      <p className="text-purple-200 text-sm mb-3">
-                        Professional-grade financials you can take to investors:
-                      </p>
-                      <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>
-                          • <span className="text-white">Simple Payback:</span> Years to recover
-                          investment from savings
-                        </li>
-                        <li>
-                          • <span className="text-white">NPV & IRR:</span> Net present value and
-                          internal rate of return
-                        </li>
-                        <li>
-                          • <span className="text-white">30% Federal ITC:</span> Investment Tax
-                          Credit automatically included
-                        </li>
-                        <li>
-                          • <span className="text-white">Revenue Stacking:</span> Peak shaving + TOU
-                          + grid services combined
-                        </li>
-                        <li>
-                          • <span className="text-white">Export:</span> Word, Excel, or PDF reports
-                          for financing applications
-                        </li>
-                      </ul>
-                      <div className="mt-3 text-xs text-amber-300">
-                        📊 DSCR, MACRS depreciation, and 25-year cash flows included!
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+          {/* Value Props — Clean inline text */}
+          <div className="space-y-5 mb-16 max-w-3xl mx-auto">
+            <p className="text-lg leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
+              <span className="font-bold text-white text-xl">📐 Zero Guesswork</span>
+              <span style={{ color: "rgba(255,255,255,0.3)" }}>{" — "}</span>
+              ASHRAE, CBECS, and Energy Star formulas calculate exactly what your facility needs. Every number is traceable.
+            </p>
+            <p className="text-lg leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
+              <span className="font-bold text-white text-xl">⚡ Skip the Vendor Calls</span>
+              <span style={{ color: "rgba(255,255,255,0.3)" }}>{" — "}</span>
+              Get accurate quotes in minutes, not weeks. Real NREL benchmark pricing instead of sales tactics.
+            </p>
+            <p className="text-lg leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
+              <span className="font-bold text-white text-xl">💰 Maximum Savings</span>
+              <span style={{ color: "rgba(255,255,255,0.3)" }}>{" — "}</span>
+              AI optimizes peak shaving, demand reduction, and time-of-use arbitrage to maximize your ROI.
+            </p>
           </div>
 
-          {/* Value Proposition Cards - Enhanced with animated illustrations */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-            {/* No Guesswork - with visual diagram */}
-            <div
-              className="group bg-gradient-to-br from-purple-900/80 to-indigo-950/80 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/20 text-center hover:border-purple-400/40 transition-all hover:-translate-y-1"
-              style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}
-            >
-              {/* Animated Icon Container */}
-              <div className="relative w-24 h-24 mx-auto mb-5">
-                {/* Animated rings */}
-                <div
-                  className="absolute inset-0 border-2 border-dashed border-purple-500/30 rounded-full animate-spin"
-                  style={{ animationDuration: "20s" }}
-                />
-                <div
-                  className="absolute inset-2 border border-purple-400/20 rounded-full animate-spin"
-                  style={{ animationDuration: "15s", animationDirection: "reverse" }}
-                />
-                {/* Center icon with glow */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative">
-                    <div className="absolute -inset-2 bg-purple-500/30 rounded-full blur-lg group-hover:bg-purple-400/40 transition-colors" />
-                    <span
-                      className="relative text-5xl"
-                      style={{ filter: "drop-shadow(0 4px 12px rgba(139,92,246,0.5))" }}
-                    >
-                      🎯
-                    </span>
-                  </div>
-                </div>
-                {/* Mini data points around */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-                <div
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 w-2 h-2 bg-cyan-400 rounded-full animate-pulse"
-                  style={{ animationDelay: "0.3s" }}
-                />
-                <div
-                  className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-amber-400 rounded-full animate-pulse"
-                  style={{ animationDelay: "0.6s" }}
-                />
-                <div
-                  className="absolute right-0 top-1/2 translate-x-1 -translate-y-1/2 w-2 h-2 bg-emerald-400 rounded-full animate-pulse"
-                  style={{ animationDelay: "0.9s" }}
-                />
-              </div>
-              <h4 className="text-xl font-bold text-white mb-3">Zero Guesswork</h4>
-              <p className="text-purple-300/70 text-sm leading-relaxed mb-4">
-                Industry-tested formulas from ASHRAE, CBECS, and Energy Star calculate exactly what
-                you need.
-              </p>
-              {/* Visual detail - mini formula */}
-              <div className="text-xs text-purple-400/60 font-mono bg-purple-900/50 rounded-lg py-2 px-3 inline-block">
-                Peak kW × Duration = Optimal Size
-              </div>
-            </div>
-
-            {/* No Vendor Calls - with phone/time visual */}
-            <div
-              className="group bg-gradient-to-br from-purple-900/80 to-indigo-950/80 backdrop-blur-xl rounded-2xl p-6 border border-amber-500/20 text-center hover:border-amber-400/40 transition-all hover:-translate-y-1"
-              style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}
-            >
-              {/* Animated Icon Container */}
-              <div className="relative w-24 h-24 mx-auto mb-5">
-                {/* Background glow */}
-                <div className="absolute inset-0 bg-amber-500/10 rounded-full animate-pulse" />
-                {/* Crossed out phone animation */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative">
-                    <div className="absolute -inset-2 bg-amber-500/30 rounded-full blur-lg group-hover:bg-amber-400/40 transition-colors" />
-                    <span
-                      className="relative text-5xl"
-                      style={{ filter: "drop-shadow(0 4px 12px rgba(251,191,36,0.5))" }}
-                    >
-                      📞
-                    </span>
-                    {/* X mark overlay - animated */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-0.5 bg-red-500 rotate-45 opacity-80 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </div>
-                </div>
-                {/* Time saved indicators */}
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
-                  Save 10+ hours
-                </div>
-              </div>
-              <h4 className="text-xl font-bold text-white mb-3">Skip the Vendor Calls</h4>
-              <p className="text-purple-300/70 text-sm leading-relaxed mb-4">
-                Get accurate quotes instantly. Real market pricing from NREL benchmarks, not sales
-                tactics.
-              </p>
-              {/* Comparison bar */}
-              <div className="flex items-center justify-center gap-3 text-xs">
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 bg-red-500/60 rounded-full" />
-                  <span className="text-red-300/70 line-through">5 vendor calls</span>
-                </div>
-                <span className="text-purple-400">→</span>
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 bg-emerald-500 rounded-full" />
-                  <span className="text-emerald-300">1 Merlin quote</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Maximum Savings - with chart animation */}
-            <div
-              className="group bg-gradient-to-br from-purple-900/80 to-indigo-950/80 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/20 text-center hover:border-emerald-400/40 transition-all hover:-translate-y-1"
-              style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}
-            >
-              {/* Animated Chart Visual */}
-              <div className="relative w-24 h-24 mx-auto mb-5">
-                {/* Background glow */}
-                <div className="absolute inset-0 bg-emerald-500/10 rounded-full animate-pulse" />
-                {/* Mini bar chart rising animation */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-end gap-1 h-12">
-                  <div
-                    className="w-3 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-sm animate-pulse"
-                    style={{ height: "40%", animationDelay: "0s" }}
-                  />
-                  <div
-                    className="w-3 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-sm animate-pulse"
-                    style={{ height: "60%", animationDelay: "0.2s" }}
-                  />
-                  <div
-                    className="w-3 bg-gradient-to-t from-amber-600 to-amber-400 rounded-t-sm animate-pulse"
-                    style={{ height: "100%", animationDelay: "0.4s" }}
-                  />
-                </div>
-                {/* Up arrow */}
-                <div
-                  className="absolute top-2 right-2 text-emerald-400 animate-bounce"
-                  style={{ animationDuration: "1.5s" }}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={3}
-                      d="M5 15l7-7 7 7"
-                    />
-                  </svg>
-                </div>
-                {/* $ indicator */}
-                <div className="absolute top-2 left-2 text-amber-400 font-bold text-lg">$</div>
-              </div>
-              <h4 className="text-xl font-bold text-white mb-3">Maximum Savings</h4>
-              <p className="text-purple-300/70 text-sm leading-relaxed mb-4">
-                AI optimizes peak shaving, demand reduction, and TOU arbitrage to maximize ROI.
-              </p>
-              {/* Savings breakdown mini */}
-              <div className="flex justify-center gap-2 text-xs">
-                <span className="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full">
-                  Peak Shaving
-                </span>
-                <span className="bg-amber-500/20 text-amber-300 px-2 py-1 rounded-full">TOU</span>
-                <span className="bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded-full">Grid</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Bar - Enhanced with animated counters and icons */}
+          {/* Stats Bar — Minimal horizontal strip */}
           <div
-            className="relative bg-gradient-to-r from-purple-900/60 via-purple-900/40 to-purple-900/60 backdrop-blur-xl rounded-2xl p-8 border border-purple-500/20 mb-16 overflow-hidden"
-            style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}
+            className="rounded-xl px-8 py-6"
+            style={{
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
           >
-            {/* Animated background shimmer */}
-            <div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent"
-              style={{ animation: "shimmer 4s ease-in-out infinite" }}
-            />
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center relative z-10">
-              <div className="group">
-                <div className="flex justify-center mb-2">
-                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">
-                    🏢
-                  </span>
-                </div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500 mb-2 group-hover:scale-110 transition-transform">
-                  30+
-                </div>
-                <div className="text-purple-300/70 text-sm">Industry Templates</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+              <div>
+                <div className="text-2xl font-bold text-white mb-1">30+</div>
+                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Industry Templates</div>
               </div>
-              <div className="group">
-                <div className="flex justify-center mb-2">
-                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">
-                    💰
-                  </span>
-                </div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-cyan-500 mb-2 group-hover:scale-110 transition-transform">
-                  $2M+
-                </div>
-                <div className="text-purple-300/70 text-sm">Savings Calculated</div>
+              <div>
+                <div className="text-2xl font-bold text-white mb-1">$2M+</div>
+                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Savings Calculated</div>
               </div>
-              <div className="group">
-                <div className="flex justify-center mb-2">
-                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">
-                    ⚡
-                  </span>
-                </div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 mb-2 group-hover:scale-110 transition-transform">
-                  5 Steps
-                </div>
-                <div className="text-purple-300/70 text-sm">Easy Quote Process</div>
+              <div>
+                <div className="text-2xl font-bold text-white mb-1">5 Steps</div>
+                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Easy Quote Process</div>
               </div>
-              <div className="group">
-                <div className="flex justify-center mb-2">
-                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">
-                    🎁
-                  </span>
-                </div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-purple-500 mb-2 group-hover:scale-110 transition-transform">
-                  30%
-                </div>
-                <div className="text-purple-300/70 text-sm">Federal Tax Credit</div>
+              <div>
+                <div className="text-2xl font-bold text-white mb-1">30%</div>
+                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Federal Tax Credit</div>
               </div>
             </div>
-          </div>
-
-          {/* CTA */}
-          <div className="text-center">
-            <button
-              onClick={() => setShowSmartWizard(true)}
-              className="group relative inline-flex items-center gap-4 px-12 py-5 rounded-full font-bold text-xl transition-all hover:scale-105 overflow-hidden"
-              style={{
-                background: "linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%)",
-                boxShadow: "0 0 50px rgba(139,92,246,0.5), 0 10px 40px rgba(0,0,0,0.3)",
-              }}
-            >
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
-              <img src={merlinImage} alt="" className="w-8 h-8 relative z-10" />
-              <span className="text-white relative z-10">Start SmartWizard</span>
-              <span className="text-amber-300 relative z-10 group-hover:translate-x-1 transition-transform">
-                →
-              </span>
-            </button>
-            <p className="text-purple-300/50 mt-4 text-sm">
-              No signup required • Get your quote in 5 easy steps
-            </p>
           </div>
         </div>
       </section>
 
       {/* ========== REAL-WORLD SUCCESS STORIES ========== */}
-      <section className="py-20 px-4 md:px-8 lg:px-12 relative">
+      <section
+        className="py-20 px-4 md:px-8 lg:px-12 relative"
+        style={{
+          background: "linear-gradient(180deg, #071024 0%, #0c1631 50%, #060d1f 100%)",
+        }}
+      >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">

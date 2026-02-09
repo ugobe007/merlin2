@@ -80,17 +80,18 @@ export const TrueQuoteBadgeCanonical: React.FC<TrueQuoteBadgeCanonicalProps> = (
           truequote-badge
           inline-flex items-center gap-2
           h-7 px-3 rounded-full
-          bg-slate-800/40 border backdrop-blur-sm
-          text-[12px] tracking-wide
+          bg-slate-800/60 border backdrop-blur-md
+          text-[12px] tracking-[0.04em]
           transition-all duration-200
-          ${isHovered ? 'border-indigo-400/45' : 'border-indigo-400/30'}
+          ${isHovered ? 'border-indigo-400/60' : 'border-indigo-400/40'}
           ${onClick ? 'cursor-pointer' : 'cursor-default'}
           ${className}
         `}
+        style={{ WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}
         aria-label="TrueQuote verified quote"
       >
         {/* Brand: TrueQuote™ */}
-        <span className="tq-brand text-slate-100 font-semibold">
+        <span className="tq-brand text-white font-bold" style={{ letterSpacing: '0.02em' }}>
           TrueQuote™
         </span>
 
@@ -106,7 +107,7 @@ export const TrueQuoteBadgeCanonical: React.FC<TrueQuoteBadgeCanonicalProps> = (
         />
 
         {/* Trust Label */}
-        <span className="tq-label text-slate-400 font-medium">
+        <span className="tq-label text-slate-300 font-semibold">
           {label}
         </span>
       </button>

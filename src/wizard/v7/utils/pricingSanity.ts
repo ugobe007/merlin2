@@ -141,23 +141,200 @@ export function sanityCheckQuote(quote: unknown): PricingSanity {
   return { ok: warnings.length === 0, warnings };
 }
 
+// ============================================================================
+// Display Hint Types — Pre-computed display-ready data for Step 4
+// ============================================================================
+
+export type ContributorDisplay = {
+  key: string;
+  label: string;
+  kW: number;
+  pct: number;
+};
+
+export type DisplayHints = {
+  /** Top 3 kW contributors, sorted by kW descending, stable order */
+  topContributors: ContributorDisplay[];
+  /** Number of non-zero contributors */
+  contributorCount: number;
+  /** Total contributor kW (for sanity display) */
+  contributorTotalKW: number;
+  /** Fields that were null/NaN-sanitized (for policy signal) */
+  sanitizedFields: string[];
+};
+
+// ============================================================================
+// DisplayQuote — The TYPED contract between sanitizeQuoteForDisplay and Step 4
+// ============================================================================
+
+/** TrueQuote validation envelope (as consumed by Step 4) */
+export type DisplayTrueQuoteValidation = {
+  version: string;
+  dutyCycle?: number;
+  kWContributors?: Record<string, number>;
+  kWContributorsTotalKW?: number;
+  assumptions?: string[];
+};
+
+/** Confidence breakdown (as consumed by Step 4 badge resolver) */
+export type DisplayConfidence = {
+  location?: string;
+  industry?: string;
+  overall?: string;
+};
+
+/**
+ * DisplayQuote — The ONLY type Step 4 should read from.
+ *
+ * CONTRACT:
+ *   - All `number | null` fields: null means "not available" → render "—"
+ *   - All optional fields: undefined means "not included in quote"
+ *   - _displayHints is ALWAYS present after sanitization
+ *   - trueQuoteValidation is optional (only present for TrueQuote-tier quotes)
+ *
+ * Step 4 MUST NOT cast `quote.foo as number` — use `quote.foo ?? null` instead.
+ */
+export type DisplayQuote = {
+  // --- Pricing gate ---
+  pricingComplete: boolean;
+
+  // --- Primary engineering numbers (null = render "—") ---
+  peakLoadKW: number | null;
+  baseLoadKW: number | null;
+  bessKWh: number | null;
+  bessKW: number | null;
+  durationHours: number | null;
+
+  // --- Primary money numbers (null = render "—") ---
+  capexUSD: number | null;
+  annualSavingsUSD: number | null;
+  roiYears: number | null;
+  npv: number | null;
+  irr: number | null;
+  paybackYears: number | null;
+  demandChargeSavings: number | null;
+
+  // --- Optional system add-ons (0 = not included, null = unknown) ---
+  solarKW: number | null;
+  generatorKW: number | null;
+
+  // --- Confidence + validation ---
+  confidence: DisplayConfidence | null;
+  trueQuoteValidation: DisplayTrueQuoteValidation | null;
+
+  // --- Metadata ---
+  notes: string[];
+  missingInputs: string[];
+
+  // --- Display hints (always present after sanitization) ---
+  _displayHints: DisplayHints;
+
+  // --- Overflow bucket: upstream fields we don't model yet ---
+  // Constrained to a named container so Step 4 can't accidentally
+  // bypass the typed boundary via quote.randomField.
+  _extra?: Record<string, unknown>;
+};
+
+// Stable contributor labels (display-only)
+const CONTRIBUTOR_DISPLAY_LABELS: Record<string, string> = {
+  hvac: "HVAC",
+  lighting: "Lighting",
+  process: "Process Equipment",
+  controls: "Controls & BMS",
+  itLoad: "IT Load",
+  cooling: "Cooling",
+  charging: "EV Charging",
+  other: "Other Loads",
+};
+
+function labelContributor(key: string): string {
+  return CONTRIBUTOR_DISPLAY_LABELS[key] ?? key.replace(/([A-Z])/g, " $1").trim();
+}
+
+/**
+ * Compute display-ready top-3 contributors from kWContributors map.
+ * Pure function — sorted descending by kW, stable tiebreak by key name.
+ */
+function computeTopContributors(
+  kWContributors: Record<string, number> | undefined,
+  count: number
+): { top: ContributorDisplay[]; total: number; nonZeroCount: number } {
+  if (!kWContributors) return { top: [], total: 0, nonZeroCount: 0 };
+
+  const entries = Object.entries(kWContributors)
+    .filter(([, v]) => typeof v === "number" && Number.isFinite(v) && v > 0)
+    .sort(([kA, a], [kB, b]) => b - a || kA.localeCompare(kB)); // Stable: by kW desc, then alpha
+
+  const total = entries.reduce((s, [, v]) => s + v, 0);
+  if (total <= 0) return { top: [], total: 0, nonZeroCount: 0 };
+
+  const top = entries.slice(0, count).map(([key, kW]) => ({
+    key,
+    label: labelContributor(key),
+    kW,
+    pct: kW / total,
+  }));
+
+  return { top, total, nonZeroCount: entries.length };
+}
+
+/**
+ * Empty DisplayQuote — safe default when input is null/undefined.
+ * Every field is null or empty, so Step 4 renders "—" everywhere.
+ */
+function emptyDisplayQuote(): DisplayQuote {
+  return {
+    pricingComplete: false,
+    peakLoadKW: null,
+    baseLoadKW: null,
+    bessKWh: null,
+    bessKW: null,
+    durationHours: null,
+    capexUSD: null,
+    annualSavingsUSD: null,
+    roiYears: null,
+    npv: null,
+    irr: null,
+    paybackYears: null,
+    demandChargeSavings: null,
+    solarKW: null,
+    generatorKW: null,
+    confidence: null,
+    trueQuoteValidation: null,
+    notes: [],
+    missingInputs: [],
+    _displayHints: {
+      topContributors: [],
+      contributorCount: 0,
+      contributorTotalKW: 0,
+      sanitizedFields: [],
+    },
+  };
+}
+
 /**
  * Sanitize a quote object by replacing poison values with safe defaults.
- * Use this when you need to render something even if math is broken.
+ *
+ * LAST-MILE CONTRACT (Move 7):
+ *   1. No NaN/Infinity — replaced with null (renders as "—")
+ *   2. No silent zeros — missing values become null, not 0
+ *   3. Currency-safe — all USD fields are finite or null
+ *   4. Stable contributor ordering — top3 pre-computed, sorted, stable tiebreak
+ *   5. displayHints attached — Step 4 reads, doesn't compute
  */
-export function sanitizeQuoteForDisplay(quote: unknown): Record<string, unknown> {
+export function sanitizeQuoteForDisplay(quote: unknown): DisplayQuote {
   if (!quote || typeof quote !== "object") {
-    return {};
+    return emptyDisplayQuote();
   }
 
   const q = quote as Record<string, unknown>;
   const sanitized = { ...q };
+  const sanitizedFields: string[] = [];
 
-  // Replace NaN/Infinity with null (displayable as "—" or "N/A")
+  // ── 1. Replace NaN/Infinity with null (displayable as "—") ──
   const nums = scanNumbers(q);
   for (const { path, value } of nums) {
     if (!isFiniteNumber(value)) {
-      // Navigate to the path and replace
       const parts = path.split(/\.|\[|\]/).filter(Boolean);
       let current: Record<string, unknown> = sanitized;
       for (let i = 0; i < parts.length - 1; i++) {
@@ -169,9 +346,83 @@ export function sanitizeQuoteForDisplay(quote: unknown): Record<string, unknown>
       const lastKey = parts[parts.length - 1];
       if (lastKey && current) {
         current[lastKey] = null;
+        sanitizedFields.push(path);
       }
     }
   }
 
-  return sanitized;
+  // ── 2. Zero-guard: key fields that should NEVER be silent 0 ──
+  // If a value is exactly 0 and it's a "must-have" field, set to null
+  // so Step 4 renders "—" instead of "$0" or "0 kW"
+  const noSilentZeroFields = [
+    "capexUSD", "annualSavingsUSD", "roiYears", "npv",
+    "paybackYears", "bessKWh", "bessKW", "peakLoadKW",
+  ];
+  for (const field of noSilentZeroFields) {
+    if (sanitized[field] === 0) {
+      sanitized[field] = null;
+      sanitizedFields.push(field);
+    }
+  }
+
+  // ── 3. Negative-guard: capex and savings should not be negative ──
+  if (typeof sanitized.capexUSD === "number" && sanitized.capexUSD < 0) {
+    sanitized.capexUSD = null;
+    sanitizedFields.push("capexUSD(negative)");
+  }
+
+  // ── 4. Compute display hints (pre-computed, stable, Step 4 reads only) ──
+  const tqv = sanitized.trueQuoteValidation as Record<string, unknown> | undefined;
+  const kWContributors = tqv?.kWContributors as Record<string, number> | undefined;
+  const { top, total, nonZeroCount } = computeTopContributors(kWContributors, 3);
+
+  const displayHints: DisplayHints = {
+    topContributors: top,
+    contributorCount: nonZeroCount,
+    contributorTotalKW: total,
+    sanitizedFields,
+  };
+
+  // ── 5. Build typed DisplayQuote — known fields only, extras in _extra ──
+  const KNOWN_KEYS = new Set<string>([
+    "pricingComplete", "peakLoadKW", "baseLoadKW", "bessKWh", "bessKW",
+    "durationHours", "capexUSD", "annualSavingsUSD", "roiYears", "npv",
+    "irr", "paybackYears", "demandChargeSavings", "solarKW", "generatorKW",
+    "confidence", "trueQuoteValidation", "notes", "missingInputs",
+    "_displayHints",
+  ]);
+
+  // Collect unmodeled upstream fields into _extra
+  const extra: Record<string, unknown> = {};
+  for (const key of Object.keys(sanitized)) {
+    if (!KNOWN_KEYS.has(key)) {
+      extra[key] = sanitized[key];
+    }
+  }
+
+  const result: DisplayQuote = {
+    pricingComplete: (sanitized.pricingComplete as boolean) ?? false,
+    peakLoadKW: sanitized.peakLoadKW as number | null ?? null,
+    baseLoadKW: sanitized.baseLoadKW as number | null ?? null,
+    bessKWh: sanitized.bessKWh as number | null ?? null,
+    bessKW: sanitized.bessKW as number | null ?? null,
+    durationHours: sanitized.durationHours as number | null ?? null,
+    capexUSD: sanitized.capexUSD as number | null ?? null,
+    annualSavingsUSD: sanitized.annualSavingsUSD as number | null ?? null,
+    roiYears: sanitized.roiYears as number | null ?? null,
+    npv: sanitized.npv as number | null ?? null,
+    irr: sanitized.irr as number | null ?? null,
+    paybackYears: sanitized.paybackYears as number | null ?? null,
+    demandChargeSavings: sanitized.demandChargeSavings as number | null ?? null,
+    solarKW: sanitized.solarKW as number | null ?? null,
+    generatorKW: sanitized.generatorKW as number | null ?? null,
+    confidence: (sanitized.confidence as DisplayConfidence) ?? null,
+    trueQuoteValidation: (sanitized.trueQuoteValidation as DisplayTrueQuoteValidation) ?? null,
+    notes: Array.isArray(sanitized.notes) ? sanitized.notes as string[] : [],
+    missingInputs: Array.isArray(sanitized.missingInputs) ? sanitized.missingInputs as string[] : [],
+    _displayHints: displayHints,
+    _extra: Object.keys(extra).length > 0 ? extra : undefined,
+  };
+
+  return result;
 }

@@ -1493,38 +1493,78 @@ export const RESTAURANT_LOAD_V1_SSOT: CalculatorContract = {
     const warnings: string[] = [];
     const assumptions: string[] = [];
 
-    const seatingCapacity = Number(inputs.seatingCapacity) || 100;
-    if (!inputs.seatingCapacity) {
+    const rawSeatingCapacity = inputs.seatingCapacity != null
+      ? Number(inputs.seatingCapacity)
+      : 100;
+    const seatingCapacity = Number.isFinite(rawSeatingCapacity) && rawSeatingCapacity > 0
+      ? rawSeatingCapacity
+      : 100;
+    if (!inputs.seatingCapacity || !Number.isFinite(Number(inputs.seatingCapacity))) {
       assumptions.push("Default: 100 seats (no user input)");
     }
 
-    // Full-service restaurant: ~40 W/seat (Energy Star Portfolio Manager)
-    // Fast food: ~20 W/seat — we'll default to full-service
-    const wattsPerSeat = 40;
-    const peakLoadKW = Math.max(
-      30,
-      Math.round(((seatingCapacity * wattsPerSeat) / 1000) * 1000) / 1000
-    );
-    // Round to whole kW
-    const peakKW = Math.round(peakLoadKW);
+    // Restaurant type (from adapter _rawExtensions or direct input)
+    const restaurantType = String(inputs.restaurantType || inputs.subType || "full-service").toLowerCase();
+
+    // ── Per-seat peak demand intensity by type (CBECS 2018 + PG&E Commercial Kitchen studies) ─
+    // Full facility peak demand: cooking, hood exhaust, HVAC (makeup air), refrigeration,
+    // dishwashing, lighting, POS/controls. Based on CBECS median EUI ~200 kBtu/sqft/yr
+    // at ~20 sqft/seat → converted to peak electrical demand.
+    const INTENSITY_MAP: Record<string, number> = {
+      "fast-food":     200, // Quick-service: fryers + grills + drive-thru HVAC
+      "fast_food":     200,
+      "quick-service": 200,
+      "cafe":          120, // Espresso machines, display cases, minimal cooking
+      "casual":        350, // Mid-range kitchen + full HVAC + bar
+      "full-service":  450, // Full kitchen + hood exhaust + dining HVAC + dishwasher
+      "full_service":  450,
+      "fine-dining":   550, // Intense kitchen + ambience + wine storage + extensive HVAC
+      "fine_dining":   550,
+      "food-hall":     250, // Shared kitchen infrastructure, multiple vendors
+      "food_hall":     250,
+      "buffet":        500, // Steam tables + large refrigeration + high HVAC
+    };
+    const wattsPerSeat = INTENSITY_MAP[restaurantType] ?? 450;
+
+    // ── Base load from seating capacity ────────────────────────────────────
+    const seatingLoadKW = (seatingCapacity * wattsPerSeat) / 1000;
+
+    // ── Kitchen base load (scales with restaurant size, not just seats) ────
+    // Even a tiny restaurant has fixed kitchen infrastructure:
+    // Walk-in cooler (~3kW), hood exhaust (~2kW), dishwasher (~5kW), hot water (~3kW)
+    const kitchenBaseKW = seatingCapacity <= 50 ? 15
+      : seatingCapacity <= 100 ? 25
+      : seatingCapacity <= 200 ? 40
+      : 60;
+
+    // ── Peak load = max(kitchen base, seating load) ───────────────────────
+    // Even a 20-seat fine dining has significant kitchen infrastructure
+    const peakKW = Math.round(Math.max(kitchenBaseKW, seatingLoadKW));
 
     assumptions.push(
-      `Restaurant: ${seatingCapacity} seats @ ${wattsPerSeat} W/seat = ${peakKW}kW (Energy Star)`
+      `Restaurant (${restaurantType}): ${seatingCapacity} seats × ${wattsPerSeat} W/seat = ${seatingLoadKW.toFixed(1)}kW, kitchen base ${kitchenBaseKW}kW → peak ${peakKW}kW`
     );
 
-    // Contributor breakdown (CBECS 2018 food service)
-    const processKW = peakKW * 0.45; // Kitchen equipment
-    const hvacKW = peakKW * 0.2; // Makeup air + dining HVAC
-    const coolingKW = peakKW * 0.15; // Walk-in + reach-in refrigeration
-    const lightingKW = peakKW * 0.1;
-    const controlsKW = peakKW * 0.05; // POS, hood controls
-    const otherKW = peakKW * 0.05; // Dishwashing, hot water
+    // ── Contributor breakdown (CBECS 2018 food service) ───────────────────
+    const processKW = peakKW * 0.40;   // Kitchen: cooking, hood exhaust, dishwashing
+    const hvacKW = peakKW * 0.22;      // Makeup air + dining HVAC (higher due to kitchen heat)
+    const coolingKW = peakKW * 0.18;   // Walk-in cooler + reach-in + wine storage
+    const lightingKW = peakKW * 0.10;  // Dining ambience + kitchen task lighting
+    const controlsKW = peakKW * 0.05;  // POS, hood controls, fire suppression
+    const otherKW = peakKW * 0.05;     // Hot water, restrooms, signage
 
     const kWContributorsTotalKW =
       processKW + hvacKW + coolingKW + lightingKW + controlsKW + otherKW;
 
-    // Restaurant: 14h active (lunch + dinner service), some overnight for refrigeration
-    const dutyCycle = 0.45;
+    // Restaurant: ~14h active (lunch + dinner), refrigeration overnight
+    const dutyCycleMap: Record<string, number> = {
+      "fast-food": 0.55, "fast_food": 0.55, "quick-service": 0.55,
+      "cafe": 0.40,
+      "casual": 0.45, "full-service": 0.45, "full_service": 0.45,
+      "fine-dining": 0.35, "fine_dining": 0.35, // Dinner-only service
+      "buffet": 0.50,
+    };
+    const dutyCycle = dutyCycleMap[restaurantType] ?? 0.45;
     const baseLoadKW = Math.round(peakKW * dutyCycle);
 
     const validation: CalcValidation = {
@@ -1542,27 +1582,31 @@ export const RESTAURANT_LOAD_V1_SSOT: CalculatorContract = {
       },
       kWContributorsTotalKW,
       kWContributorShares: {
-        hvacPct: 20,
-        lightingPct: 10,
-        processPct: 45,
-        controlsPct: 5,
+        hvacPct: peakKW > 0 ? (hvacKW / peakKW) * 100 : 0,
+        lightingPct: peakKW > 0 ? (lightingKW / peakKW) * 100 : 0,
+        processPct: peakKW > 0 ? (processKW / peakKW) * 100 : 0,
+        controlsPct: peakKW > 0 ? (controlsKW / peakKW) * 100 : 0,
         itLoadPct: 0,
-        coolingPct: 15,
+        coolingPct: peakKW > 0 ? (coolingKW / peakKW) * 100 : 0,
         chargingPct: 0,
-        otherPct: 5,
+        otherPct: peakKW > 0 ? (otherKW / peakKW) * 100 : 0,
       },
       details: {
         restaurant: {
           seats: seatingCapacity,
+          restaurantType,
           wattsPerSeat,
+          kitchenBaseKW,
+          seatingLoadKW,
           kitchenLoadKW: processKW,
           refrigerationKW: coolingKW,
         },
       },
       notes: [
-        `Restaurant: ${seatingCapacity} seats → peak ${peakKW}kW`,
-        `Kitchen-dominant: 45% cooking + 15% refrigeration (CBECS food service)`,
-        `Duty cycle: ${dutyCycle} (lunch+dinner service hours)`,
+        `Restaurant (${restaurantType}): ${seatingCapacity} seats → peak ${peakKW}kW`,
+        `Kitchen-dominant: 40% cooking + 18% refrigeration (CBECS food service)`,
+        `Kitchen base load: ${kitchenBaseKW}kW (hood exhaust, walk-in, dishwasher)`,
+        `Duty cycle: ${dutyCycle} (${restaurantType} service hours)`,
       ],
     };
 
@@ -1573,7 +1617,193 @@ export const RESTAURANT_LOAD_V1_SSOT: CalculatorContract = {
       assumptions,
       warnings,
       validation,
-      raw: { seatingCapacity, wattsPerSeat, peakKW },
+      raw: { seatingCapacity, restaurantType, wattsPerSeat, kitchenBaseKW, peakKW },
+    };
+  },
+};
+
+/**
+ * TRUCK STOP / TRAVEL CENTER SSOT ADAPTER (Feb 2026)
+ *
+ * CalcValidation v1 envelope with contributor breakdown.
+ * Dedicated calculator — does NOT borrow from gas_station.
+ *
+ * LOAD MODEL (Love's / Pilot J class):
+ *   Diesel fueling:   lanes × 2.5 kW  + DEF dispensing
+ *   C-store HVAC:     sqft × 5 W/sqft (high due to frequent door openings)
+ *   Refrigeration:    sqft × 2 W/sqft (walk-in coolers, freezers, beverage)
+ *   Canopy lighting:  lanes × 1.5 kW  + parking × 0.05 kW
+ *   Shore power:      spots × 2 kW × utilization (IdleAire standard)
+ *   Showers:          25 kW (water heating + ventilation)
+ *   Laundry:          15 kW (commercial washers/dryers)
+ *   Restaurant/Deli:  40-60 kW (kitchen + prep + walk-in)
+ *   Controls:         5 kW (POS, tank monitors, CAT scale, security)
+ *
+ * Typical ranges: small 80-150 kW, medium 180-300 kW, large 250-450 kW
+ *
+ * Sources: NACS Convenience Store benchmark, IdleAire shore power specs,
+ *          ASHRAE Commercial HVAC standards
+ */
+export const TRUCK_STOP_LOAD_V1_SSOT: CalculatorContract = {
+  id: "truck_stop_load_v1",
+  requiredInputs: ["fuelPumps"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    // Core sizing inputs (from adapter _rawExtensions or direct answers)
+    const rawDieselLanes = inputs.fuelPumps != null ? Number(inputs.fuelPumps) : 12;
+    const dieselLanes = Number.isFinite(rawDieselLanes) && rawDieselLanes > 0 ? rawDieselLanes : 12;
+    const rawCStoreSqFt = inputs.cStoreSqFt != null ? Number(inputs.cStoreSqFt) : 5000;
+    const cStoreSqFt = Number.isFinite(rawCStoreSqFt) && rawCStoreSqFt > 0 ? rawCStoreSqFt : 5000;
+    const rawParkingSpots = inputs.truckParkingSpots != null ? Number(inputs.truckParkingSpots) : 80;
+    const parkingSpots = Number.isFinite(rawParkingSpots) && rawParkingSpots > 0 ? rawParkingSpots : 80;
+    const stationType = String(inputs.stationType || "truck-stop");
+
+    const hasShowers = inputs.hasShowers !== false && inputs.hasShowers !== "false";
+    const hasLaundry = inputs.hasLaundry !== false && inputs.hasLaundry !== "false";
+    const hasRestaurant = inputs.hasRestaurant !== false && inputs.hasRestaurant !== "false";
+    const hasCarWash = inputs.hasCarWash === true || inputs.hasCarWash === "true";
+
+    if (!inputs.fuelPumps || !Number.isFinite(Number(inputs.fuelPumps))) {
+      assumptions.push("Default: 12 diesel lanes (no user input)");
+    }
+
+    // ── kW contributors (bottom-up engineering model) ──────────────────
+
+    // 1. Diesel fueling infrastructure (2.5 kW/lane including DEF)
+    const fuelingKW = dieselLanes * 2.5;
+    assumptions.push(`Diesel fueling: ${dieselLanes} lanes × 2.5 kW = ${fuelingKW.toFixed(0)}kW`);
+
+    // 2. C-store HVAC (5 W/sqft — high due to frequent door openings, makeup air)
+    const hvacKW = cStoreSqFt * 0.005;
+    assumptions.push(`C-store HVAC: ${cStoreSqFt.toLocaleString()} sqft × 5 W/sqft = ${hvacKW.toFixed(0)}kW`);
+
+    // 3. Refrigeration (2 W/sqft — walk-in coolers, beverage, freezers, ice machines)
+    const refrigerationKW = cStoreSqFt * 0.002;
+    assumptions.push(`Refrigeration: ${cStoreSqFt.toLocaleString()} sqft × 2 W/sqft = ${refrigerationKW.toFixed(0)}kW`);
+
+    // 4. Canopy + lot lighting (1.5 kW/lane + 0.05 kW/parking spot)
+    const lightingKW = dieselLanes * 1.5 + parkingSpots * 0.05;
+    assumptions.push(`Lighting: canopy + lot = ${lightingKW.toFixed(0)}kW`);
+
+    // 5. Shore power / idle reduction (2 kW/spot × 10% utilization)
+    const shorePowerKW = parkingSpots * 2 * 0.10;
+    if (parkingSpots > 0) {
+      assumptions.push(`Shore power: ${parkingSpots} spots × 2kW × 10% util = ${shorePowerKW.toFixed(0)}kW`);
+    }
+
+    // 6. Showers (25 kW — commercial water heaters + exhaust ventilation)
+    const showerKW = hasShowers ? 25 : 0;
+    if (hasShowers) assumptions.push("Shower facilities: 25kW (water heating + ventilation)");
+
+    // 7. Laundry (15 kW — commercial washers/dryers)
+    const laundryKW = hasLaundry ? 15 : 0;
+    if (hasLaundry) assumptions.push("Laundry: 15kW (commercial washers/dryers)");
+
+    // 8. Restaurant/Deli (scales with truck stop size)
+    let restaurantKW = 0;
+    if (hasRestaurant) {
+      // Small stops: 40kW (deli/sub shop), large: 60kW (full restaurant w/ kitchen)
+      restaurantKW = dieselLanes >= 16 ? 60 : 40;
+      assumptions.push(`Restaurant/Deli: ${restaurantKW}kW (kitchen + prep + walk-in cooler)`);
+    }
+
+    // 9. Car wash (optional)
+    const carWashKW = hasCarWash ? 25 : 0;
+    if (hasCarWash) assumptions.push("Truck/car wash: 25kW");
+
+    // 10. Controls (POS, tank monitors, CAT scale, security cameras, payment)
+    const controlsKW = 5;
+
+    // ── Total peak ─────────────────────────────────────────────────────
+    const rawPeakKW = fuelingKW + hvacKW + refrigerationKW + lightingKW +
+      shorePowerKW + showerKW + laundryKW + restaurantKW + carWashKW + controlsKW;
+
+    // Apply diversity factor: not all loads peak simultaneously
+    const diversityFactor = 0.85;
+    const peakLoadKW = Math.round(rawPeakKW * diversityFactor);
+
+    assumptions.push(`Raw sum: ${rawPeakKW.toFixed(0)}kW × ${diversityFactor} diversity = ${peakLoadKW}kW`);
+
+    // ── Duty cycle (24/7 operation, ~65% average utilization) ──────────
+    const dutyCycle = 0.65;
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    // ── Contributor breakdown (attribute kW to canonical categories) ────
+    // "process" = fueling + showers + laundry + restaurant + car wash
+    const processKW = fuelingKW + showerKW + laundryKW + restaurantKW + carWashKW;
+    const totalRaw = processKW + hvacKW + refrigerationKW + lightingKW + shorePowerKW + controlsKW;
+    // Scale all contributors down by diversity factor to match peakLoadKW
+    const scaleFactor = totalRaw > 0 ? peakLoadKW / totalRaw : 1;
+
+    const scaledProcess = processKW * scaleFactor;
+    const scaledHvac = hvacKW * scaleFactor;
+    const scaledCooling = refrigerationKW * scaleFactor;
+    const scaledLighting = lightingKW * scaleFactor;
+    const scaledOther = (shorePowerKW + controlsKW) * scaleFactor;
+
+    const kWContributorsTotalKW = scaledProcess + scaledHvac + scaledCooling + scaledLighting + scaledOther;
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: scaledHvac,
+        lighting: scaledLighting,
+        process: scaledProcess,
+        controls: controlsKW * scaleFactor,
+        itLoad: 0,
+        cooling: scaledCooling,
+        charging: 0,
+        other: shorePowerKW * scaleFactor,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: peakLoadKW > 0 ? (scaledHvac / peakLoadKW) * 100 : 0,
+        lightingPct: peakLoadKW > 0 ? (scaledLighting / peakLoadKW) * 100 : 0,
+        processPct: peakLoadKW > 0 ? (scaledProcess / peakLoadKW) * 100 : 0,
+        controlsPct: peakLoadKW > 0 ? (controlsKW * scaleFactor / peakLoadKW) * 100 : 0,
+        itLoadPct: 0,
+        coolingPct: peakLoadKW > 0 ? (scaledCooling / peakLoadKW) * 100 : 0,
+        chargingPct: 0,
+        otherPct: peakLoadKW > 0 ? (shorePowerKW * scaleFactor / peakLoadKW) * 100 : 0,
+      },
+      details: {
+        truck_stop: {
+          dieselLanes,
+          cStoreSqFt,
+          parkingSpots,
+          hasShowers,
+          hasLaundry,
+          hasRestaurant,
+          hasCarWash,
+          fuelingKW,
+          hvacKW,
+          refrigerationKW,
+          lightingKW,
+          shorePowerKW,
+          restaurantKW,
+          diversityFactor,
+        },
+      },
+      notes: [
+        `Truck Stop: ${dieselLanes} diesel lanes, ${cStoreSqFt.toLocaleString()} sqft c-store → ${peakLoadKW}kW peak`,
+        `Amenities: ${[hasShowers && "showers", hasLaundry && "laundry", hasRestaurant && "restaurant", hasCarWash && "car wash"].filter(Boolean).join(", ") || "none"}`,
+        `Shore power: ${parkingSpots} truck parking spots (${shorePowerKW.toFixed(0)}kW @ 10% utilization)`,
+        `Duty cycle: ${dutyCycle} (24/7 operation)`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: { dieselLanes, cStoreSqFt, parkingSpots, stationType, peakLoadKW },
     };
   },
 };
@@ -1773,6 +2003,7 @@ export const CALCULATORS_BY_ID: Record<string, CalculatorContract> = {
   [WAREHOUSE_LOAD_V1_SSOT.id]: WAREHOUSE_LOAD_V1_SSOT,
   [EV_CHARGING_LOAD_V1_SSOT.id]: EV_CHARGING_LOAD_V1_SSOT,
   [RESTAURANT_LOAD_V1_SSOT.id]: RESTAURANT_LOAD_V1_SSOT,
+  [TRUCK_STOP_LOAD_V1_SSOT.id]: TRUCK_STOP_LOAD_V1_SSOT,
   [GAS_STATION_LOAD_V1_SSOT.id]: GAS_STATION_LOAD_V1_SSOT,
 };
 
