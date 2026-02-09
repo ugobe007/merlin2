@@ -1,4 +1,5 @@
 import "./styles/merlin-design-system.css";
+import "./styles/mobile-responsive.css";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";

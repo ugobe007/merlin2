@@ -425,15 +425,15 @@ export default function Step3ProfileV7Curated(props: Props) {
                       p-3 rounded-lg border text-left transition-all relative
                       ${
                         selected
-                          ? "border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500/40"
-                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500"
+                          ? "border-emerald-500 bg-emerald-500/20 text-white ring-2 ring-emerald-500/50 shadow-lg shadow-emerald-500/20 scale-[1.02]"
+                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-emerald-400/40 hover:bg-slate-800/80 hover:scale-[1.01]"
                       }
-                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-[0.98]"}
                     `}
                     disabled={opt.disabled}
                   >
                     {selected && (
-                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">
+                      <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm font-bold shadow-md animate-in fade-in zoom-in duration-200">
                         ✓
                       </span>
                     )}
@@ -465,10 +465,10 @@ export default function Step3ProfileV7Curated(props: Props) {
                       px-2 py-2.5 rounded-lg border text-center transition-all relative
                       ${
                         selected
-                          ? "border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500/40 font-bold"
-                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500"
+                          ? "border-emerald-500 bg-emerald-500/20 text-white ring-2 ring-emerald-500/50 font-bold shadow-lg shadow-emerald-500/20"
+                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-emerald-400/40 hover:bg-slate-800/80"
                       }
-                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-95"}
                     `}
                     disabled={opt.disabled}
                   >
@@ -579,7 +579,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                     const next = Math.max(min, current - step);
                     setAnswer(q.id, next);
                   }}
-                  className="w-12 h-12 rounded-lg border border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-violet-500 hover:bg-violet-500/10 hover:text-violet-300 transition-all flex items-center justify-center text-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-12 h-12 rounded-lg border border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-violet-500 hover:bg-violet-500/20 hover:text-violet-200 hover:shadow-lg hover:shadow-violet-500/20 transition-all flex items-center justify-center text-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 active:bg-violet-500/30"
                   disabled={
                     value !== null &&
                     value !== undefined &&
@@ -673,15 +673,15 @@ export default function Step3ProfileV7Curated(props: Props) {
                       p-3.5 rounded-lg border text-center transition-all relative
                       ${
                         selected
-                          ? "border-violet-500 bg-violet-500/15 text-white ring-1 ring-violet-500/40"
-                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500"
+                          ? "border-violet-500 bg-violet-500/20 text-white ring-2 ring-violet-500/50 shadow-lg shadow-violet-500/20 scale-[1.02]"
+                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-violet-400/40 hover:bg-slate-800/80 hover:scale-[1.01]"
                       }
-                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-[0.98]"}
                     `}
                     disabled={opt.disabled}
                   >
                     {selected && (
-                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center text-white text-xs font-bold">
+                      <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center text-white text-sm font-bold shadow-md animate-in fade-in zoom-in duration-200">
                         ✓
                       </span>
                     )}
@@ -762,8 +762,8 @@ export default function Step3ProfileV7Curated(props: Props) {
                     flex-1 p-3 rounded-lg border transition-all relative
                     ${
                       value === opt
-                        ? "border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500/40"
-                        : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500"
+                        ? "border-emerald-500 bg-emerald-500/20 text-white ring-2 ring-emerald-500/50 shadow-lg shadow-emerald-500/20 scale-[1.02]"
+                        : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-emerald-400/40 hover:bg-slate-800/80 hover:scale-[1.01] active:scale-[0.98]"
                     }
                   `}
                 >
@@ -815,15 +815,15 @@ export default function Step3ProfileV7Curated(props: Props) {
                       p-3 rounded-lg border text-left transition-all relative
                       ${
                         selected
-                          ? "border-violet-500 bg-violet-500/15 text-white ring-1 ring-violet-500/40"
-                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500"
+                          ? "border-violet-500 bg-violet-500/20 text-white ring-2 ring-violet-500/50 shadow-lg shadow-violet-500/20 scale-[1.02]"
+                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-violet-400/40 hover:bg-slate-800/80 hover:scale-[1.01]"
                       }
-                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-[0.98]"}
                     `}
                     disabled={opt.disabled}
                   >
                     {selected && (
-                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center text-white text-xs font-bold">
+                      <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center text-white text-sm font-bold shadow-md animate-in fade-in zoom-in duration-200">
                         ✓
                       </span>
                     )}

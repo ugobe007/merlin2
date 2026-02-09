@@ -1,0 +1,419 @@
+/**
+ * Mobile-First Responsive Styles for Merlin BESS
+ * Created: February 9, 2026
+ * 
+ * Design Principles:
+ * - Mobile-first (320px+)
+ * - Touch-friendly (min 44px tap targets)
+ * - Readable text (16px+ body, no horizontal scroll)
+ * - Performance-optimized (CSS-only, no JS)
+ */
+
+/* ==================== BASE MOBILE STYLES ==================== */
+
+/* Prevent horizontal scroll on all devices */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Touch-friendly minimum tap target: 44x44px (iOS HIG / Material Design) */
+button,
+a,
+input[type="button"],
+input[type="submit"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Readable text on mobile (WCAG 2.1) */
+body {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ==================== WIZARD SHELL RESPONSIVE ==================== */
+
+/* Mobile: Single column layout */
+@media (max-width: 767px) {
+  /* Main wizard container */
+  [data-merlin="hud"] {
+    min-height: 100vh;
+    padding: 0 !important;
+  }
+
+  /* Main layout grid - Force single column on mobile */
+  [data-merlin="hud"] > div > div:first-child {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+
+  /* Left rail: Compact on mobile */
+  [data-merlin="hud"] > div > div:first-child > div:first-child {
+    padding: 12px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Right panel: Full width on mobile */
+  [data-merlin="hud"] > div > div:first-child > div:nth-child(2) {
+    padding: 16px !important;
+    border-radius: 8px !important;
+    min-height: auto !important;
+  }
+
+  /* Bottom navigation: Stack buttons vertically */
+  [data-merlin="hud"] > div > div:last-child {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+
+  /* Back and Next buttons: Full width on mobile */
+  [data-merlin="hud"] > div > div:last-child button {
+    width: 100% !important;
+    min-height: 48px !important;
+    font-size: 16px !important;
+  }
+}
+
+/* Tablet and up: Keep 2-column layout */
+@media (min-width: 768px) {
+  /* Maintain original layout on larger screens */
+  [data-merlin="hud"] > div > div:first-child {
+    grid-template-columns: 360px 1fr !important;
+    gap: 28px !important;
+    padding: 24px 32px !important;
+  }
+}
+
+/* ==================== STEP 3 QUESTION GRIDS ==================== */
+
+/* Mobile: 1-2 columns for button grids */
+@media (max-width: 767px) {
+  /* Grid buttons: 1 column for ≤6 options (fully visible cards) */
+  .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Compact grid: 3 columns on mobile for 7-18 options */
+  .grid.grid-cols-4.sm\\:grid-cols-5.md\\:grid-cols-7 {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  /* Range buttons: 1 column on mobile */
+  .grid.grid-cols-2.gap-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Multiselect: 1 column on mobile */
+  .grid.grid-cols-1.sm\\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Question cards: Full width */
+  .rounded-xl.border {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Buttons in grids: Larger tap targets */
+  .grid button {
+    min-height: 48px !important;
+    padding: 12px 16px !important;
+  }
+}
+
+/* Tablet: 2-3 columns */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid.grid-cols-4.sm\\:grid-cols-5.md\\:grid-cols-7 {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+/* Desktop: Original grid columns */
+@media (min-width: 1024px) {
+  .grid.grid-cols-4.sm\\:grid-cols-5.md\\:grid-cols-7 {
+    grid-template-columns: repeat(7, 1fr) !important;
+  }
+}
+
+/* ==================== NUMBER STEPPER MOBILE ==================== */
+
+@media (max-width: 767px) {
+  /* Number stepper: Stack vertically or keep inline but larger */
+  .space-y-2 .flex.items-center.gap-3 {
+    gap: 12px !important;
+  }
+
+  /* Increment/decrement buttons: Larger on mobile */
+  .w-12.h-12 {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 24px !important;
+  }
+
+  /* Number input: Larger text */
+  input[type="number"] {
+    font-size: 18px !important;
+    padding: 12px 16px !important;
+  }
+}
+
+/* ==================== SLIDER MOBILE ==================== */
+
+@media (max-width: 767px) {
+  /* Slider: Full width, larger thumb */
+  input[type="range"] {
+    width: 100%;
+    height: 8px !important;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 28px !important;
+    height: 28px !important;
+  }
+}
+
+/* ==================== TOP NAV BAR MOBILE ==================== */
+
+@media (max-width: 767px) {
+  .flex.justify-between.items-center.px-6.py-2\\.5 {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+
+  /* Hide step pills on mobile, show only counter */
+  .flex.items-center.gap-1 {
+    display: none !important;
+  }
+
+  /* Home and Start Over: Smaller on mobile */
+  .flex.items-center.gap-4 {
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+
+  .w-9.h-9 {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+
+/* ==================== STEP 2 INDUSTRY CARDS ==================== */
+
+@media (max-width: 767px) {
+  /* Industry cards: 1 column on mobile */
+  .grid[class*="grid-cols-"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Industry card buttons: Full width, larger tap area */
+  button[class*="rounded-"] {
+    min-height: 64px !important;
+    padding: 16px !important;
+  }
+}
+
+/* ==================== MODALS & OVERLAYS MOBILE ==================== */
+
+@media (max-width: 767px) {
+  /* Modals: Full screen on mobile */
+  [role="dialog"],
+  .modal {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Modal content: Scrollable */
+  .modal-content,
+  [role="dialog"] > div {
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ==================== FORM INPUTS MOBILE ==================== */
+
+@media (max-width: 767px) {
+  /* All inputs: Larger for mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+    padding: 12px 16px !important;
+    min-height: 48px !important;
+  }
+
+  /* Prevent iOS double-tap zoom */
+  input,
+  button,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+}
+
+/* ==================== TEXT LEGIBILITY MOBILE ==================== */
+
+@media (max-width: 767px) {
+  /* Headings: Slightly smaller on mobile */
+  h1 {
+    font-size: 24px !important;
+  }
+  h2 {
+    font-size: 20px !important;
+  }
+  h3 {
+    font-size: 18px !important;
+  }
+  h4 {
+    font-size: 16px !important;
+  }
+
+  /* Body text: Maintain 16px (don't scale down) */
+  p,
+  div,
+  span {
+    font-size: 16px;
+  }
+
+  /* Small text: Not smaller than 14px */
+  .text-xs,
+  .text-sm {
+    font-size: 14px !important;
+  }
+}
+
+/* ==================== IMAGES & MEDIA MOBILE ==================== */
+
+@media (max-width: 767px) {
+  /* Images: Responsive */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Hero images: Smaller aspect ratio on mobile */
+  .relative.h-36 {
+    height: 120px !important;
+  }
+}
+
+/* ==================== PROGRESS INDICATORS MOBILE ==================== */
+
+@media (max-width: 767px) {
+  /* Progress steps: Smaller icons, compact text */
+  .flex.items-center.gap-2 {
+    gap: 8px !important;
+  }
+
+  /* Step numbers: Smaller */
+  .w-8.h-8 {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  /* Progress labels: Hide on very small screens */
+  @media (max-width: 374px) {
+    .text-sm.text-slate-300 {
+      display: none;
+    }
+  }
+}
+
+/* ==================== CHECKMARK BADGES MOBILE ==================== */
+
+@media (max-width: 767px) {
+  /* Checkmark badges: Slightly smaller on mobile */
+  .absolute.top-2.right-2.w-6.h-6 {
+    width: 24px !important;
+    height: 24px !important;
+    top: 8px !important;
+    right: 8px !important;
+  }
+}
+
+/* ==================== SAFE AREA INSETS (iOS Notch) ==================== */
+
+@supports (padding: max(0px)) {
+  body {
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+
+  .wizard-bottom-nav {
+    padding-bottom: max(12px, calc(12px + env(safe-area-inset-bottom))) !important;
+  }
+}
+
+/* ==================== PERFORMANCE OPTIMIZATIONS ==================== */
+
+/* Hardware acceleration for animations */
+button,
+a,
+.transition-all {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==================== LANDSCAPE MOBILE ADJUSTMENTS ==================== */
+
+@media (max-width: 767px) and (orientation: landscape) {
+  /* Compact header in landscape */
+  .wizard-left-rail {
+    max-height: 80px;
+    overflow: hidden;
+  }
+
+  /* More vertical space for content */
+  .wizard-right-panel {
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+  }
+}
+
+/* ==================== PRINT STYLES ==================== */
+
+@media print {
+  .wizard-bottom-nav,
+  .wizard-left-rail,
+  button {
+    display: none !important;
+  }
+
+  .wizard-right-panel {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+}
