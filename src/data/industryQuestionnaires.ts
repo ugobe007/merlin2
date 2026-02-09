@@ -82,7 +82,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "level2Chargers",
         label: "Level 2 Chargers (7-19 kW)",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 20",
         suffix: "chargers",
       },
@@ -100,7 +100,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "dcFastChargers",
         label: "DC Fast Chargers (50-350 kW)",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 8",
         suffix: "chargers",
       },
@@ -136,7 +136,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "customUtilization",
         label: "Average utilization rate (%)",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 65",
         suffix: "%",
         conditional: { field: "utilizationProfile", operator: "==", value: "custom" },
@@ -209,7 +209,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "numBays",
         label: "Number of wash bays?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 3",
         suffix: "bays",
       },
@@ -236,7 +236,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "operatingHours",
         label: "Operating hours per day?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 12",
         suffix: "hours",
       },
@@ -266,7 +266,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "numRooms",
         label: "How many rooms?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 120",
         suffix: "rooms",
       },
@@ -379,7 +379,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "numEVChargers",
         label: "How many EV chargers? (if yes above)",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 4",
         suffix: "chargers",
         conditional: { dependsOn: "evChargers", value: "yes" },
@@ -437,7 +437,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "capacity",
         label: "Total IT capacity?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 5",
         suffix: "MW",
       },
@@ -551,7 +551,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "bedCount",
         label: "Number of beds?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 200",
         suffix: "beds",
       },
@@ -695,7 +695,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "squareFootage",
         label: "Total facility square footage (optional)",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 75000",
         suffix: "sq ft",
       },
@@ -909,7 +909,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "numTenants",
         label: "Approximate number of tenants?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 25",
         suffix: "tenants",
       },
@@ -982,7 +982,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "numPumps",
         label: "Number of fuel pumps?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 8",
         suffix: "pumps",
       },
@@ -1102,7 +1102,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "numberOfUnits",
         label: "How many apartment units?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 400",
         suffix: "units",
         helpText: "Total number of residential units - drives base electrical load",
@@ -1187,7 +1187,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "evChargingPorts",
         label: "How many EV charging ports? (existing or planned)",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 50",
         suffix: "ports",
         helpText: "Total number of EV charging ports - each Level 2 port adds ~7-19 kW",
@@ -1224,7 +1224,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "parkingSpaces",
         label: "How many parking spaces does the complex have?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 500",
         suffix: "spaces",
         helpText: "Parking lot carports can host large solar arrays (150W per space)",
@@ -1232,7 +1232,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "buildingStories",
         label: "How many stories/floors?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 4",
         suffix: "floors",
         helpText: "Building height affects elevator load and rooftop solar potential",
@@ -1283,14 +1283,14 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "peakLoad",
         label: "Estimated peak load?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 1.5",
         suffix: "MW",
       },
       {
         id: "operatingHours",
         label: "Operating hours per day?",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 16",
         suffix: "hours",
       },
@@ -1305,7 +1305,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "mcsChargers",
         label: "MCS Chargers (1,250 kW each)",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 2",
         suffix: "chargers",
         helpText: "Megawatt Charging System for Semi Trucks",
@@ -1313,7 +1313,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "dcfc350",
         label: "DC Fast Chargers (350 kW each)",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 10",
         suffix: "chargers",
         helpText: "For Class 8 Trucks & RVs",
@@ -1321,7 +1321,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "level2",
         label: "Level 2 Chargers (19.2 kW each)",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 20",
         suffix: "chargers",
         helpText: "For Passenger Vehicles",
@@ -1329,7 +1329,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "serviceBays",
         label: "Service Bays (Speedco)",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 6",
         suffix: "bays",
         helpText: "Maintenance facility bays",
@@ -1337,7 +1337,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "truckWashBays",
         label: "Truck Wash Bays",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 2",
         suffix: "bays",
         helpText: "Truck wash tunnels",
@@ -1345,7 +1345,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "restaurantSeats",
         label: "Restaurant Seats",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 150",
         suffix: "seats",
         helpText: "Food court / QSR capacity",
@@ -1371,7 +1371,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "parkingLotAcres",
         label: "Parking Lot Size",
-        type: "number",
+        type: "number_stepper",
         placeholder: "e.g., 5",
         suffix: "acres",
         helpText: "For lighting load calculation",
