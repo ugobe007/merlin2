@@ -1,13 +1,13 @@
 /**
  * Step 3 Profile V7 — Curated Schema Edition
- * 
+ *
  * Created: February 2, 2026
- * 
+ *
  * FIXES:
  * - Uses resolveStep3Schema() instead of backend template questions
  * - Preserves icons, Merlin tips, conditional logic, validation
  * - Renders per-industry curated fields (NOT collapsed 3-template mapping)
- * 
+ *
  * ARCHITECTURE:
  * - Curated schema resolver is SSOT for field definitions
  * - Backend template (if any) provides section order/copy only
@@ -15,11 +15,11 @@
  */
 
 import React, { useMemo, useCallback, useEffect, useRef, useState } from "react";
-import { 
-  resolveStep3Schema, 
+import {
+  resolveStep3Schema,
   CANONICAL_INDUSTRY_KEYS,
   getTier1Blockers,
-  type CuratedField, 
+  type CuratedField,
   type CuratedSchema,
   type CanonicalIndustryKey,
 } from "@/wizard/v7/schema/curatedFieldsResolver";
@@ -62,16 +62,16 @@ const INDUSTRY_IMAGES: Record<CanonicalIndustryKey, string> = {
   casino: casinoImg,
   warehouse: warehouseImg,
   retail: retailImg,
-  "gas-station": hotelImg,       // TODO: add gas station image
+  "gas-station": hotelImg, // TODO: add gas station image
   office: officeImg,
   manufacturing: manufacturingImg,
   restaurant: restaurantImg,
-  college: hotelImg,             // TODO: add college image
-  agriculture: hotelImg,         // TODO: add agriculture image
-  "cold-storage": warehouseImg,  // uses warehouse as fallback
-  apartment: hotelImg,           // TODO: add apartment image
-  residential: hotelImg,         // TODO: add residential image
-  "indoor-farm": hotelImg,       // TODO: add indoor farm image
+  college: hotelImg, // TODO: add college image
+  agriculture: hotelImg, // TODO: add agriculture image
+  "cold-storage": warehouseImg, // uses warehouse as fallback
+  apartment: hotelImg, // TODO: add apartment image
+  residential: hotelImg, // TODO: add residential image
+  "indoor-farm": hotelImg, // TODO: add indoor farm image
   other: hotelImg,
   auto: hotelImg,
 };
@@ -112,17 +112,20 @@ function normalizeFieldType(t?: string): string {
   if (x === "range") return "slider";
   // ⚠️ Car wash/hotel/EV custom types → standard renderers
   if (x === "conditional_buttons") return "buttons";
-  if (x === "type_then_quantity") return "number";      // Pick type + qty → simplified to number input
+  if (x === "type_then_quantity") return "buttons"; // FIX: Has options → show as buttons (not number)
   if (x === "increment_box") return "number";
-  if (x === "hours_grid") return "buttons";            // Hour grid → button selection
-  if (x === "existing_then_planned") return "number";  // Existing + planned → simplified to number input
+  if (x === "hours_grid") return "buttons"; // Hour grid → button selection
+  if (x === "existing_then_planned") return "number"; // Existing + planned → simplified to number input
   if (x === "auto_confirm") return "toggle";
-  if (x === "range_buttons") return "buttons";         // Range selection (e.g., "100-250 rooms")
-  if (x === "wheel") return "select";                  // Wheel picker → dropdown
-  if (x === "multiselect") return "buttons";           // Multi-select → button group (handle array values)
+  if (x === "range_buttons") return "buttons"; // Range selection (e.g., "100-250 rooms")
+  if (x === "wheel") return "select"; // Wheel picker → dropdown
+  if (x === "multiselect") return "buttons"; // Multi-select → button group (handle array values)
   if (x === "number_input") return "number";
   // Fallback with dev warning
-  if (import.meta.env.DEV && !["text", "number", "select", "buttons", "toggle", "slider", "multiselect"].includes(x)) {
+  if (
+    import.meta.env.DEV &&
+    !["text", "number", "select", "buttons", "toggle", "slider", "multiselect"].includes(x)
+  ) {
     console.warn(`[Step3Curated] Unknown field type "${t}" → using "text". Add mapping if needed.`);
   }
   return x || "text";
@@ -130,41 +133,42 @@ function normalizeFieldType(t?: string): string {
 
 export default function Step3ProfileV7Curated(props: Props) {
   const { state, actions, updateState } = props;
-  
+
   // Get industry from state (fix operator precedence)
-  const industry =
-    ((state as Record<string, unknown>).industry as string | undefined) ?? "other";
-  
-  // Get answers from state (fix operator precedence)
-  const answers: Step3Answers =
-    ((state as Record<string, unknown>).step3Answers as Step3Answers | undefined) ?? {};
-  
+  const industry = ((state as Record<string, unknown>).industry as string | undefined) ?? "other";
+
+  // Get answers from state (wrapped in useMemo to prevent dep warnings)
+  const answers: Step3Answers = useMemo(
+    () => ((state as Record<string, unknown>).step3Answers as Step3Answers | undefined) ?? {},
+    [state]
+  );
+
   // ✅ RESOLVE CURATED SCHEMA (NOT from backend template)
   const schema: CuratedSchema = useMemo(() => {
     return resolveStep3Schema(industry);
   }, [industry]);
-  
+
   const { questions, displayName, icon, source } = schema;
   // Note: sections available via schema.sections when needed for grouped rendering
-  
+
   // ============================================================================
   // AUTO-APPLY SMART DEFAULTS (Pre-fill with industry-typical values)
   // ============================================================================
-  
+
   // Track which fields were auto-filled (vs user-edited)
   const [defaultFilledIds, setDefaultFilledIds] = useState<Set<string>>(new Set());
-  const appliedSchemaRef = useRef<string>('');
-  
+  const appliedSchemaRef = useRef<string>("");
+
   // On schema load, pre-fill any unanswered fields with their smartDefault
   useEffect(() => {
     const schemaKey = `${schema.industry}-${schema.questionCount}`;
     if (appliedSchemaRef.current === schemaKey) return; // Already applied for this schema
-    
+
     const toApply: Record<string, unknown> = {};
     const newDefaultIds = new Set<string>();
-    
+
     for (const q of questions) {
-      if (q.smartDefault !== undefined && q.smartDefault !== null && q.smartDefault !== '') {
+      if (q.smartDefault !== undefined && q.smartDefault !== null && q.smartDefault !== "") {
         // Only pre-fill if not already answered
         if (!isAnswered(answers[q.id])) {
           toApply[q.id] = q.smartDefault;
@@ -172,7 +176,7 @@ export default function Step3ProfileV7Curated(props: Props) {
         }
       }
     }
-    
+
     if (Object.keys(toApply).length > 0) {
       // Apply all defaults in one batch
       for (const [id, value] of Object.entries(toApply)) {
@@ -185,90 +189,110 @@ export default function Step3ProfileV7Curated(props: Props) {
           break; // Only need one updateState call for batch
         }
       }
-      
+
       setDefaultFilledIds(newDefaultIds);
       appliedSchemaRef.current = schemaKey;
-      
+
       if (import.meta.env.DEV) {
-        console.log(`[Step3Curated] ✅ Auto-filled ${Object.keys(toApply).length} fields with industry defaults:`, Object.keys(toApply));
+        console.log(
+          `[Step3Curated] ✅ Auto-filled ${Object.keys(toApply).length} fields with industry defaults:`,
+          Object.keys(toApply)
+        );
       }
     } else {
       appliedSchemaRef.current = schemaKey;
     }
   }, [schema.industry, schema.questionCount, questions]); // eslint-disable-line react-hooks/exhaustive-deps
-  
+
   // When user edits a field, remove it from "default-filled" tracking
-  const setAnswerWithTracking = useCallback((id: string, value: unknown) => {
-    // Remove from default-filled set (user now owns this value)
-    setDefaultFilledIds(prev => {
-      if (!prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-    
-    if (actions?.setStep3Answer) {
-      actions.setStep3Answer(id, value);
-      return;
-    }
-    if (updateState) {
-      const nextAnswers = { ...answers, [id]: value };
-      updateState({ step3Answers: nextAnswers } as Partial<WizardV7State>);
-    }
-  }, [actions, updateState, answers]);
-  
+  const setAnswerWithTracking = useCallback(
+    (id: string, value: unknown) => {
+      // Remove from default-filled set (user now owns this value)
+      setDefaultFilledIds((prev) => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+
+      if (actions?.setStep3Answer) {
+        actions.setStep3Answer(id, value);
+        return;
+      }
+      if (updateState) {
+        const nextAnswers = { ...answers, [id]: value };
+        updateState({ step3Answers: nextAnswers } as Partial<WizardV7State>);
+      }
+    },
+    [actions, updateState, answers]
+  );
+
   // Get hero image (keyed off normalized schema.industry - type-enforced)
   const heroKey = schema.industry as CanonicalIndustryKey;
   const heroImg = INDUSTRY_IMAGES[heroKey] ?? INDUSTRY_IMAGES.other;
-  
+
   // Check conditional visibility (fail-open to avoid deadlocks)
-  const isQuestionVisible = useCallback((q: CuratedField): boolean => {
-    const c = q.conditionalLogic;
-    // No conditional = always visible
-    if (!c?.dependsOn || typeof c.showIf !== "function") return true;
-    
-    try {
-      return !!c.showIf(answers[c.dependsOn]);
-    } catch (e) {
-      // Fail-open: show question if conditional throws (prevents UI deadlocks)
-      if (import.meta.env.DEV) {
-        console.warn("[Step3Curated] conditionalLogic threw", { id: q.id, dependsOn: c.dependsOn, e });
+  const isQuestionVisible = useCallback(
+    (q: CuratedField): boolean => {
+      const c = q.conditionalLogic;
+      // No conditional = always visible
+      if (!c?.dependsOn || typeof c.showIf !== "function") return true;
+
+      try {
+        return !!c.showIf(answers[c.dependsOn]);
+      } catch (e) {
+        // Fail-open: show question if conditional throws (prevents UI deadlocks)
+        if (import.meta.env.DEV) {
+          console.warn("[Step3Curated] conditionalLogic threw", {
+            id: q.id,
+            dependsOn: c.dependsOn,
+            e,
+          });
+        }
+        return true;
       }
-      return true;
-    }
-  }, [answers]);
-  
+    },
+    [answers]
+  );
+
   // Get options (applies modifyOptions if present - enables dynamic option mutation)
-  const getOptions = useCallback((q: CuratedField) => {
-    const base = q.options ?? [];
-    const c = q.conditionalLogic;
-    if (!c?.modifyOptions || !c.dependsOn) return base;
-    
-    try {
-      const next = c.modifyOptions(answers[c.dependsOn]);
-      return Array.isArray(next) ? next : base;
-    } catch (e) {
-      if (import.meta.env.DEV) {
-        console.warn("[Step3Curated] modifyOptions threw", { id: q.id, dependsOn: c.dependsOn, e });
+  const getOptions = useCallback(
+    (q: CuratedField) => {
+      const base = q.options ?? [];
+      const c = q.conditionalLogic;
+      if (!c?.modifyOptions || !c.dependsOn) return base;
+
+      try {
+        const next = c.modifyOptions(answers[c.dependsOn]);
+        return Array.isArray(next) ? next : base;
+      } catch (e) {
+        if (import.meta.env.DEV) {
+          console.warn("[Step3Curated] modifyOptions threw", {
+            id: q.id,
+            dependsOn: c.dependsOn,
+            e,
+          });
+        }
+        return base; // fail-open
       }
-      return base; // fail-open
-    }
-  }, [answers]);
-  
+    },
+    [answers]
+  );
+
   // Answer setter uses tracking wrapper (keeps default-filled state accurate)
   const setAnswer = setAnswerWithTracking;
-  
+
   // Required fields (ALL required - stable count for debugging)
-  const requiredIds = useMemo(() => {
-    return questions.filter(isRequired).map(q => q.id);
+  const _requiredIds = useMemo(() => {
+    return questions.filter(isRequired).map((q) => q.id);
   }, [questions]);
-  
+
   // Tier 1 blockers (gates completion)
   const blockerIds = useMemo(() => {
     const tier1 = getTier1Blockers(industry);
-    return tier1.filter(id => questions.some(q => q.id === id));
+    return tier1.filter((id) => questions.some((q) => q.id === id));
   }, [industry, questions]);
-  
+
   // Missing blockers (Tier 1 only - actually gates completion)
   const missingBlockers = useMemo(() => {
     if (!blockerIds.length) return [];
@@ -278,40 +302,40 @@ export default function Step3ProfileV7Curated(props: Props) {
     }
     return missing;
   }, [blockerIds, answers]);
-  
+
   // Visible required count (for progress denominator)
   const visibleRequiredCount = useMemo(() => {
     return questions.filter(isRequired).filter(isQuestionVisible).length;
   }, [questions, isQuestionVisible]);
-  
+
   // Missing required (visible + required + unanswered - for UI display only)
   const missingRequired = useMemo(() => {
     return questions
       .filter(isRequired)
       .filter(isQuestionVisible)
-      .filter(q => !isAnswered(answers[q.id]))
-      .map(q => q.id);
+      .filter((q) => !isAnswered(answers[q.id]))
+      .map((q) => q.id);
   }, [questions, answers, isQuestionVisible]);
-  
+
   // Progress metrics (uses blockers if available, else all required)
   const effectiveRequired = blockerIds.length > 0 ? blockerIds.length : visibleRequiredCount;
   const effectiveMissing = blockerIds.length > 0 ? missingBlockers.length : missingRequired.length;
   const answeredRequired = effectiveRequired - effectiveMissing;
-  const progressPct = effectiveRequired === 0
-    ? 100
-    : Math.max(0, Math.min(100, Math.round((answeredRequired / effectiveRequired) * 100)));
-  
+  const progressPct =
+    effectiveRequired === 0
+      ? 100
+      : Math.max(0, Math.min(100, Math.round((answeredRequired / effectiveRequired) * 100)));
+
   // Completion status (uses blockers if available)
-  const isComplete = blockerIds.length > 0 
-    ? missingBlockers.length === 0 
-    : missingRequired.length === 0;
-  
+  const isComplete =
+    blockerIds.length > 0 ? missingBlockers.length === 0 : missingRequired.length === 0;
+
   // DEV invariants: catch schema corruption instantly
   if (import.meta.env.DEV) {
-    const ids = questions.map(q => q.id);
+    const ids = questions.map((q) => q.id);
     const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
     if (dupes.length) console.error("[Step3Curated] Duplicate question ids:", dupes);
-    
+
     for (const q of questions) {
       const t = normalizeFieldType(q.type);
       if (!t) console.error("[Step3Curated] Missing type:", q);
@@ -320,30 +344,30 @@ export default function Step3ProfileV7Curated(props: Props) {
       }
     }
   }
-  
+
   // Render a single question
   const renderQuestion = (q: CuratedField, index: number) => {
     if (!isQuestionVisible(q)) return null;
-    
+
     const value = answers[q.id];
     const label = q.title || q.label || q.id;
     const required = isRequired(q);
     const hasValue = isAnswered(value);
     const isDefaultFilled = defaultFilledIds.has(q.id) && hasValue;
-    
+
     // Get options (applies modifyOptions if present - enables dynamic option mutation)
     const options = getOptions(q);
-    
+
     // Determine input type (normalized to prevent legacy/variant type mis-rendering)
     const inputType = normalizeFieldType(q.type || (options.length ? "select" : "text"));
-    
+
     return (
-      <div 
-        key={q.id} 
+      <div
+        key={q.id}
         className={`rounded-xl border p-4 transition-all ${
           isDefaultFilled
-            ? 'border-cyan-500/30 bg-cyan-950/20 hover:border-cyan-400/40'
-            : 'border-slate-700/60 bg-slate-900/40 hover:border-violet-500/40'
+            ? "border-cyan-500/30 bg-cyan-950/20 hover:border-cyan-400/40"
+            : "border-slate-700/60 bg-slate-900/40 hover:border-violet-500/40"
         }`}
       >
         {/* Question Header */}
@@ -362,31 +386,28 @@ export default function Step3ProfileV7Curated(props: Props) {
                   Required
                 </span>
               )}
-              {hasValue && !isDefaultFilled && (
-                <span className="text-green-400 text-sm">✓</span>
-              )}
+              {hasValue && !isDefaultFilled && <span className="text-green-400 text-sm">✓</span>}
               {isDefaultFilled && (
                 <span className="px-2 py-0.5 bg-cyan-500/15 text-cyan-300 text-[10px] font-medium rounded-full border border-cyan-500/20 flex items-center gap-1">
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 0.5L6.09 3.26L9.09 3.64L6.95 5.64L7.55 8.59L5 7.15L2.45 8.59L3.05 5.64L0.91 3.64L3.91 3.26L5 0.5Z" fill="currentColor" /></svg>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path
+                      d="M5 0.5L6.09 3.26L9.09 3.64L6.95 5.64L7.55 8.59L5 7.15L2.45 8.59L3.05 5.64L0.91 3.64L3.91 3.26L5 0.5Z"
+                      fill="currentColor"
+                    />
+                  </svg>
                   Industry default
                 </span>
               )}
             </div>
-            
+
             {/* Title */}
-            <div className="text-sm font-semibold text-slate-100">
-              {label}
-            </div>
-            
+            <div className="text-sm font-semibold text-slate-100">{label}</div>
+
             {/* Subtitle */}
-            {q.subtitle && (
-              <div className="text-xs text-slate-400 mt-1">
-                {q.subtitle}
-              </div>
-            )}
+            {q.subtitle && <div className="text-xs text-slate-400 mt-1">{q.subtitle}</div>}
           </div>
         </div>
-        
+
         {/* Help Text */}
         {q.helpText && (
           <div className="flex items-start gap-2 p-2 bg-blue-950/40 border border-blue-500/20 rounded-lg mb-3">
@@ -394,7 +415,7 @@ export default function Step3ProfileV7Curated(props: Props) {
             <p className="text-xs text-blue-300/90">{q.helpText}</p>
           </div>
         )}
-        
+
         {/* Merlin's Tip */}
         {q.merlinTip && (
           <div className="flex items-start gap-2 p-2.5 bg-purple-950/40 border border-purple-500/20 rounded-lg mb-3">
@@ -407,13 +428,13 @@ export default function Step3ProfileV7Curated(props: Props) {
             </div>
           </div>
         )}
-        
+
         {/* Input Component */}
         <div className="mt-2">
-          {/* Buttons (for options with icons) - coerce values to string */}
-          {(inputType === 'buttons' || inputType === 'select') && options.length > 0 && options.length <= 6 && (
+          {/* Buttons for small option sets (≤6 options: 2-column grid) */}
+          {inputType === "buttons" && options.length > 0 && options.length <= 6 && (
             <div className="grid grid-cols-2 gap-2">
-              {options.map(opt => {
+              {options.map((opt) => {
                 const optVal = String(opt.value);
                 const selected = asString(value) === optVal;
                 return (
@@ -423,16 +444,19 @@ export default function Step3ProfileV7Curated(props: Props) {
                     onClick={() => setAnswer(q.id, optVal)}
                     className={`
                       p-3 rounded-lg border text-left transition-all relative
-                      ${selected
-                        ? 'border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500/40'
-                        : 'border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500'
+                      ${
+                        selected
+                          ? "border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500/40"
+                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500"
                       }
-                      ${opt.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                     `}
                     disabled={opt.disabled}
                   >
                     {selected && (
-                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">✓</span>
+                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">
+                        ✓
+                      </span>
                     )}
                     <div className="flex items-center gap-2">
                       {opt.icon && <span className="text-lg">{opt.icon}</span>}
@@ -446,47 +470,85 @@ export default function Step3ProfileV7Curated(props: Props) {
               })}
             </div>
           )}
-          
-          {/* Select dropdown (for many options) - coerce values to string */}
-          {inputType === 'select' && options.length > 6 && (
-            <select
-              className="w-full rounded-lg bg-slate-950/60 border border-slate-700/60 px-3 py-2.5 text-slate-100"
-              value={asString(value)}
-              onChange={e => setAnswer(q.id, e.target.value)}
-            >
-              <option value="">Select…</option>
-              {options.map(opt => {
+
+          {/* Buttons for medium option sets (7-18 options: compact grid for hours/ranges) */}
+          {inputType === "buttons" && options.length > 6 && options.length <= 18 && (
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-2">
+              {options.map((opt) => {
                 const optVal = String(opt.value);
+                const selected = asString(value) === optVal;
                 return (
-                  <option key={optVal} value={optVal}>
-                    {opt.icon ? `${opt.icon} ` : ''}{opt.label}
-                  </option>
+                  <button
+                    key={optVal}
+                    type="button"
+                    onClick={() => setAnswer(q.id, optVal)}
+                    className={`
+                      px-2 py-2.5 rounded-lg border text-center transition-all relative
+                      ${
+                        selected
+                          ? "border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500/40 font-bold"
+                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500"
+                      }
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                    `}
+                    disabled={opt.disabled}
+                  >
+                    <div className="text-sm font-medium">{opt.icon || opt.label}</div>
+                    {opt.description && (
+                      <div className="text-[10px] text-slate-500 mt-0.5">{opt.description}</div>
+                    )}
+                  </button>
                 );
               })}
-            </select>
+            </div>
           )}
-          
+
+          {/* Select dropdown (for very large option sets >18) */}
+          {(inputType === "select" || (inputType === "buttons" && options.length > 18)) &&
+            options.length > 0 && (
+              <select
+                className="w-full rounded-lg bg-slate-950/60 border border-slate-700/60 px-3 py-2.5 text-slate-100"
+                value={asString(value)}
+                onChange={(e) => setAnswer(q.id, e.target.value)}
+              >
+                <option value="">Select…</option>
+                {options.map((opt) => {
+                  const optVal = String(opt.value);
+                  return (
+                    <option key={optVal} value={optVal}>
+                      {opt.icon ? `${opt.icon} ` : ""}
+                      {opt.label}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
+
           {/* Number input — unit suffix inside field, smart placeholder, inline validation */}
-          {inputType === 'number' && (
+          {inputType === "number" && (
             <div className="relative">
               <input
                 type="number"
                 className={`w-full rounded-lg bg-slate-950/60 border px-3 py-2.5 text-slate-100 ${
-                  (q.suffix || q.unit) ? 'pr-14' : ''
+                  q.suffix || q.unit ? "pr-14" : ""
                 } ${
-                  value !== null && value !== undefined && value !== '' &&
+                  value !== null &&
+                  value !== undefined &&
+                  value !== "" &&
                   ((q.range?.min != null && Number(value) < q.range.min) ||
-                   (q.range?.max != null && Number(value) > q.range.max) ||
-                   (q.validation?.min != null && Number(value) < q.validation.min) ||
-                   (q.validation?.max != null && Number(value) > q.validation.max))
-                    ? 'border-amber-500/60 focus:ring-amber-500/40'
-                    : 'border-slate-700/60 focus:ring-violet-500/40'
+                    (q.range?.max != null && Number(value) > q.range.max) ||
+                    (q.validation?.min != null && Number(value) < q.validation.min) ||
+                    (q.validation?.max != null && Number(value) > q.validation.max))
+                    ? "border-amber-500/60 focus:ring-amber-500/40"
+                    : "border-slate-700/60 focus:ring-violet-500/40"
                 } focus:ring-1 focus:outline-none transition-colors`}
-                placeholder={q.placeholder || (q.smartDefault != null ? String(q.smartDefault) : '')}
-                value={value === null || value === undefined ? '' : String(value)}
-                onChange={e => {
+                placeholder={
+                  q.placeholder || (q.smartDefault != null ? String(q.smartDefault) : "")
+                }
+                value={value === null || value === undefined ? "" : String(value)}
+                onChange={(e) => {
                   const raw = e.target.value;
-                  if (raw === '') return setAnswer(q.id, '');
+                  if (raw === "") return setAnswer(q.id, "");
                   const n = Number(raw);
                   setAnswer(q.id, Number.isFinite(n) ? n : raw);
                 }}
@@ -499,97 +561,130 @@ export default function Step3ProfileV7Curated(props: Props) {
                 </span>
               )}
               {/* Inline validation hint */}
-              {value !== null && value !== undefined && value !== '' && (() => {
-                const n = Number(value);
-                const min = q.range?.min ?? q.validation?.min;
-                const max = q.range?.max ?? q.validation?.max;
-                if (min != null && n < min) return <p className="text-amber-400 text-xs mt-1">Minimum: {min}{q.unit ? ` ${q.unit}` : ''}</p>;
-                if (max != null && n > max) return <p className="text-amber-400 text-xs mt-1">Maximum: {max}{q.unit ? ` ${q.unit}` : ''}</p>;
-                return null;
-              })()}
+              {value !== null &&
+                value !== undefined &&
+                value !== "" &&
+                (() => {
+                  const n = Number(value);
+                  const min = q.range?.min ?? q.validation?.min;
+                  const max = q.range?.max ?? q.validation?.max;
+                  if (min != null && n < min)
+                    return (
+                      <p className="text-amber-400 text-xs mt-1">
+                        Minimum: {min}
+                        {q.unit ? ` ${q.unit}` : ""}
+                      </p>
+                    );
+                  if (max != null && n > max)
+                    return (
+                      <p className="text-amber-400 text-xs mt-1">
+                        Maximum: {max}
+                        {q.unit ? ` ${q.unit}` : ""}
+                      </p>
+                    );
+                  return null;
+                })()}
             </div>
           )}
-          
+
           {/* Slider */}
-          {inputType === 'slider' && q.range && (() => {
-            const sliderVal = typeof value === 'number' ? value : (typeof q.smartDefault === 'number' ? q.smartDefault : q.range.min);
-            const pct = q.range.max > q.range.min
-              ? ((sliderVal - q.range.min) / (q.range.max - q.range.min)) * 100
-              : 0;
-            return (
-              <div className="space-y-3">
-                {/* Current value badge */}
-                <div className="flex justify-center">
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/30 text-violet-200 font-bold text-base">
-                    {sliderVal}{q.unit || ''}
-                  </span>
-                </div>
-                {/* Track with filled portion */}
-                <div className="relative pt-1">
-                  <input
-                    type="range"
-                    className="w-full h-2 rounded-full appearance-none cursor-pointer
+          {inputType === "slider" &&
+            q.range &&
+            (() => {
+              const sliderVal =
+                typeof value === "number"
+                  ? value
+                  : typeof q.smartDefault === "number"
+                    ? q.smartDefault
+                    : q.range.min;
+              const pct =
+                q.range.max > q.range.min
+                  ? ((sliderVal - q.range.min) / (q.range.max - q.range.min)) * 100
+                  : 0;
+              return (
+                <div className="space-y-3">
+                  {/* Current value badge */}
+                  <div className="flex justify-center">
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/30 text-violet-200 font-bold text-base">
+                      {sliderVal}
+                      {q.unit || ""}
+                    </span>
+                  </div>
+                  {/* Track with filled portion */}
+                  <div className="relative pt-1">
+                    <input
+                      type="range"
+                      className="w-full h-2 rounded-full appearance-none cursor-pointer
                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-violet-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-violet-300 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-violet-500/40 [&::-webkit-slider-thumb]:cursor-pointer
                       [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-violet-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-violet-300 [&::-moz-range-thumb]:cursor-pointer"
-                    style={{
-                      background: `linear-gradient(to right, rgb(139 92 246) 0%, rgb(139 92 246) ${pct}%, rgb(51 65 85) ${pct}%, rgb(51 65 85) 100%)`,
-                    }}
-                    min={q.range.min}
-                    max={q.range.max}
-                    step={q.range.step}
-                    value={sliderVal}
-                    onChange={e => setAnswer(q.id, Number(e.target.value))}
-                  />
+                      style={{
+                        background: `linear-gradient(to right, rgb(139 92 246) 0%, rgb(139 92 246) ${pct}%, rgb(51 65 85) ${pct}%, rgb(51 65 85) 100%)`,
+                      }}
+                      min={q.range.min}
+                      max={q.range.max}
+                      step={q.range.step}
+                      value={sliderVal}
+                      onChange={(e) => setAnswer(q.id, Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>
+                      {q.range.min}
+                      {q.unit || ""}
+                    </span>
+                    <span>
+                      {q.range.max}
+                      {q.unit || ""}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>{q.range.min}{q.unit || ''}</span>
-                  <span>{q.range.max}{q.unit || ''}</span>
-                </div>
-              </div>
-            );
-          })()}
-          
+              );
+            })()}
+
           {/* Toggle (stores boolean) */}
-          {inputType === 'toggle' && (
+          {inputType === "toggle" && (
             <div className="flex gap-2">
-              {[true, false].map(opt => (
+              {[true, false].map((opt) => (
                 <button
                   key={String(opt)}
                   type="button"
                   onClick={() => setAnswer(q.id, opt)}
                   className={`
                     flex-1 p-3 rounded-lg border transition-all relative
-                    ${value === opt
-                      ? 'border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500/40'
-                      : 'border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500'
+                    ${
+                      value === opt
+                        ? "border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500/40"
+                        : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500"
                     }
                   `}
                 >
                   {value === opt && (
-                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">✓</span>
+                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">
+                      ✓
+                    </span>
                   )}
-                  <span className="text-lg mr-2">{opt ? '✅' : '❌'}</span>
-                  <span className="font-medium">{opt ? 'Yes' : 'No'}</span>
+                  <span className="text-lg mr-2">{opt ? "✅" : "❌"}</span>
+                  <span className="font-medium">{opt ? "Yes" : "No"}</span>
                 </button>
               ))}
             </div>
           )}
-          
+
           {/* Text input (fallback) */}
-          {inputType === 'text' && (
+          {inputType === "text" && (
             <input
               type="text"
               className="w-full rounded-lg bg-slate-950/60 border border-slate-700/60 px-3 py-2.5 text-slate-100"
-              placeholder={q.placeholder || ''}
+              placeholder={q.placeholder || ""}
               value={asString(value)}
-              onChange={e => setAnswer(q.id, e.target.value)}
+              onChange={(e) => setAnswer(q.id, e.target.value)}
             />
           )}
-          
+
           {/* Multiselect (values coerced to strings for consistent comparison) */}
-          {inputType === 'multiselect' && options.length > 0 && (
+          {inputType === "multiselect" && options.length > 0 && (
             <div className="space-y-2">
-              {options.map(opt => {
+              {options.map((opt) => {
                 const optVal = String(opt.value);
                 const selected = Array.isArray(value) && value.map(String).includes(optVal);
                 return (
@@ -597,9 +692,10 @@ export default function Step3ProfileV7Curated(props: Props) {
                     key={optVal}
                     className={`
                       flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all
-                      ${selected
-                        ? 'border-violet-500 bg-violet-500/20'
-                        : 'border-slate-700/60 bg-slate-900/60 hover:border-slate-500'
+                      ${
+                        selected
+                          ? "border-violet-500 bg-violet-500/20"
+                          : "border-slate-700/60 bg-slate-900/60 hover:border-slate-500"
                       }
                     `}
                   >
@@ -607,12 +703,15 @@ export default function Step3ProfileV7Curated(props: Props) {
                       type="checkbox"
                       className="accent-violet-500"
                       checked={selected}
-                      onChange={e => {
+                      onChange={(e) => {
                         const current = Array.isArray(value) ? value.map(String) : [];
                         if (e.target.checked) {
                           setAnswer(q.id, [...current, optVal]);
                         } else {
-                          setAnswer(q.id, current.filter(v => v !== optVal));
+                          setAnswer(
+                            q.id,
+                            current.filter((v) => v !== optVal)
+                          );
                         }
                       }}
                     />
@@ -630,13 +729,13 @@ export default function Step3ProfileV7Curated(props: Props) {
       </div>
     );
   };
-  
+
   // Filter visible questions (memoized to avoid render churn)
   const visibleQuestions = useMemo(
     () => questions.filter(isQuestionVisible),
     [questions, isQuestionVisible]
   );
-  
+
   // DEV invariants: catch broken schemas immediately
   if (import.meta.env.DEV) {
     // Check image map completeness
@@ -645,14 +744,14 @@ export default function Step3ProfileV7Curated(props: Props) {
         console.error("[Step3Curated] Missing hero image for industry:", k);
       }
     }
-    
-    const missingId = questions.find(q => !q.id);
+
+    const missingId = questions.find((q) => !q.id);
     if (missingId) console.warn("[Step3Curated] question missing id", missingId);
-    
-    const badDepends = questions.find(q => q.conditionalLogic && !q.conditionalLogic.dependsOn);
+
+    const badDepends = questions.find((q) => q.conditionalLogic && !q.conditionalLogic.dependsOn);
     if (badDepends) console.warn("[Step3Curated] conditionalLogic missing dependsOn", badDepends);
   }
-  
+
   return (
     <div className="w-full">
       {/* Hero Header */}
@@ -662,7 +761,9 @@ export default function Step3ProfileV7Curated(props: Props) {
             src={heroImg}
             alt={displayName}
             className="h-32 w-full object-cover opacity-60"
-            onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-transparent" />
           <div className="absolute left-5 top-5">
@@ -672,40 +773,59 @@ export default function Step3ProfileV7Curated(props: Props) {
             </div>
             <div className="text-sm text-slate-300 mt-1">{displayName}</div>
           </div>
-          
+
           {/* Schema source badge (DEV only) */}
           {import.meta.env.DEV && (
             <div className="absolute right-4 top-4">
-              <span className={`
+              <span
+                className={`
                 px-2 py-1 text-xs font-mono rounded
-                ${source === 'curated-complete' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
-                  source === 'curated-legacy' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                  'bg-amber-500/20 text-amber-300 border border-amber-500/30'}
-              `}>
+                ${
+                  source === "curated-complete"
+                    ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                    : source === "curated-legacy"
+                      ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                      : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                }
+              `}
+              >
                 {source}
               </span>
             </div>
           )}
         </div>
-        
+
         {/* Progress banner */}
         <div className="p-4 border-t border-slate-700/40">
           {/* Pre-filled hint (shows when defaults were applied) */}
           {defaultFilledIds.size > 0 && (
             <div className="flex items-center gap-2 mb-3 p-2.5 bg-cyan-950/30 border border-cyan-500/20 rounded-lg">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-cyan-400 flex-shrink-0">
-                <path d="M8 1L10.18 5.42L15 6.11L11.5 9.52L12.36 14.31L8 12.01L3.64 14.31L4.5 9.52L1 6.11L5.82 5.42L8 1Z" fill="currentColor" opacity="0.7" />
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                className="text-cyan-400 flex-shrink-0"
+              >
+                <path
+                  d="M8 1L10.18 5.42L15 6.11L11.5 9.52L12.36 14.31L8 12.01L3.64 14.31L4.5 9.52L1 6.11L5.82 5.42L8 1Z"
+                  fill="currentColor"
+                  opacity="0.7"
+                />
               </svg>
               <p className="text-xs text-cyan-300/90">
-                <span className="font-semibold text-cyan-200">Pre-filled with industry defaults.</span>{' '}
+                <span className="font-semibold text-cyan-200">
+                  Pre-filled with industry defaults.
+                </span>{" "}
                 Review and adjust any values that differ for your specific facility.
               </p>
             </div>
           )}
-          
+
           <div className="flex items-center justify-between">
             <div className="text-sm text-slate-300">
-              <span className="text-violet-300 font-semibold">{visibleQuestions.length}</span> questions
+              <span className="text-violet-300 font-semibold">{visibleQuestions.length}</span>{" "}
+              questions
               {missingRequired.length > 0 && (
                 <span className="text-amber-300 ml-2">
                   ({missingRequired.length} required remaining)
@@ -719,22 +839,20 @@ export default function Step3ProfileV7Curated(props: Props) {
               </div>
             )}
           </div>
-          
+
           {/* Progress bar (uses visible required count as denominator) */}
           <div className="mt-2 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-violet-500 to-purple-500 transition-all duration-300"
               style={{ width: `${progressPct}%` }}
             />
           </div>
         </div>
       </div>
-      
+
       {/* Questions */}
-      <div className="space-y-4">
-        {visibleQuestions.map((q, idx) => renderQuestion(q, idx))}
-      </div>
-      
+      <div className="space-y-4">{visibleQuestions.map((q, idx) => renderQuestion(q, idx))}</div>
+
       {/* Continue Button */}
       <div className="mt-6 flex justify-end">
         <button
@@ -748,16 +866,16 @@ export default function Step3ProfileV7Curated(props: Props) {
           disabled={!isComplete || state.pricingStatus === "pending"}
           className={`
             px-6 py-3 rounded-xl font-bold text-base transition-all
-            ${isComplete && state.pricingStatus !== "pending"
-              ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 cursor-pointer"
-              : "bg-slate-800 text-slate-500 cursor-not-allowed"
+            ${
+              isComplete && state.pricingStatus !== "pending"
+                ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 cursor-pointer"
+                : "bg-slate-800 text-slate-500 cursor-not-allowed"
             }
           `}
         >
           Continue →
         </button>
       </div>
-      
     </div>
   );
 }
