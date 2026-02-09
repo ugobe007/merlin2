@@ -553,11 +553,11 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "gridConnection",
         label: "Grid connection status?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "on-grid", label: "🔌 On-Grid (Utility connected)" },
-          { value: "off-grid", label: "🏝️ Off-Grid (Standalone)" },
-          { value: "hybrid", label: "🔄 Hybrid (Grid + Robust Backup)" },
+          { value: "on-grid", label: "On-Grid", icon: "🔌", description: "Utility connected" },
+          { value: "off-grid", label: "Off-Grid", icon: "🏝️", description: "Standalone" },
+          { value: "hybrid", label: "Hybrid", icon: "🔄", description: "Grid + Robust Backup" },
         ],
       },
       {
@@ -575,21 +575,31 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       {
         id: "backupPower",
         label: "Current backup power?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "generator-only", label: "⛽ Generator Only" },
-          { value: "ups-generator", label: "🔋 UPS + Generator" },
-          { value: "none", label: "❌ None/Inadequate" },
+          {
+            value: "generator-only",
+            label: "Generator Only",
+            icon: "⛽",
+            description: "Diesel/gas backup",
+          },
+          {
+            value: "ups-generator",
+            label: "UPS + Generator",
+            icon: "🔋",
+            description: "Battery + backup",
+          },
+          { value: "none", label: "None", icon: "❌", description: "Inadequate backup" },
         ],
       },
       {
         id: "backupDuration",
         label: "Required backup duration?",
-        type: "select",
+        type: "buttons",
         options: [
-          { value: "4hr", label: "⏰ 4 hours (Minimum)" },
-          { value: "8hr", label: "⏰ 8 hours (Standard)" },
-          { value: "24hr", label: "🕒 24+ hours (Extended)" },
+          { value: "4hr", label: "4 hours", icon: "⏰", description: "Minimum" },
+          { value: "8hr", label: "8 hours", icon: "⏰", description: "Standard" },
+          { value: "24hr", label: "24+ hours", icon: "🕒", description: "Extended" },
         ],
       },
     ],
