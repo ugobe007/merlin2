@@ -124,39 +124,76 @@ describe("sanityCheckQuote", () => {
 });
 
 describe("sanitizeQuoteForDisplay", () => {
-  it("should return empty object for null/undefined", () => {
-    expect(sanitizeQuoteForDisplay(null)).toEqual({});
-    expect(sanitizeQuoteForDisplay(undefined)).toEqual({});
+  it("should return typed empty DisplayQuote for null/undefined", () => {
+    const nullResult = sanitizeQuoteForDisplay(null);
+    expect(nullResult.pricingComplete).toBe(false);
+    expect(nullResult.peakLoadKW).toBeNull();
+    expect(nullResult._displayHints).toBeDefined();
+    expect(nullResult._displayHints.topContributors).toHaveLength(0);
+
+    const undefinedResult = sanitizeQuoteForDisplay(undefined);
+    expect(undefinedResult.pricingComplete).toBe(false);
+    expect(undefinedResult.capexUSD).toBeNull();
   });
 
   it("should return copy of valid quote unchanged", () => {
+    const validQuote = {
+      peakLoadKW: 500,
+      capexUSD: 150000,
+    };
+    const result = sanitizeQuoteForDisplay(validQuote);
+    expect(result.peakLoadKW).toBe(500);
+    expect(result.capexUSD).toBe(150000);
+  });
+
+  it("should collect non-known fields into _extra", () => {
     const validQuote = {
       totalCost: 150000,
       name: "Test Quote",
     };
     const result = sanitizeQuoteForDisplay(validQuote);
-    expect(result.totalCost).toBe(150000);
-    expect(result.name).toBe("Test Quote");
+    expect(result._extra?.totalCost).toBe(150000);
+    expect(result._extra?.name).toBe("Test Quote");
   });
 
-  it("should replace NaN with null for safe display", () => {
+  it("should replace NaN with null for safe display (known field)", () => {
+    const badQuote = {
+      capexUSD: NaN,
+      peakLoadKW: 200,
+    };
+    const result = sanitizeQuoteForDisplay(badQuote);
+    expect(result.capexUSD).toBe(null);
+    expect(result.peakLoadKW).toBe(200);
+  });
+
+  it("should replace NaN in _extra with null", () => {
     const badQuote = {
       totalCost: NaN,
       name: "Test",
     };
     const result = sanitizeQuoteForDisplay(badQuote);
-    expect(result.totalCost).toBe(null);
-    expect(result.name).toBe("Test");
+    expect(result._extra?.totalCost).toBe(null);
+    expect(result._extra?.name).toBe("Test");
   });
 
   it("should replace Infinity with null", () => {
+    const badQuote = {
+      annualSavingsUSD: Infinity,
+      roiYears: -Infinity,
+    };
+    const result = sanitizeQuoteForDisplay(badQuote);
+    expect(result.annualSavingsUSD).toBe(null);
+    expect(result.roiYears).toBe(null);
+  });
+
+  it("should replace Infinity in _extra with null", () => {
     const badQuote = {
       cost: Infinity,
       savings: -Infinity,
     };
     const result = sanitizeQuoteForDisplay(badQuote);
-    expect(result.cost).toBe(null);
-    expect(result.savings).toBe(null);
+    expect(result._extra?.cost).toBe(null);
+    expect(result._extra?.savings).toBe(null);
   });
 });
 

@@ -48,12 +48,12 @@ export default function V7AdvisorPanel(props: Props) {
     <div className="sticky top-6 rounded-2xl border border-slate-700/40 bg-slate-950/40 backdrop-blur p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-sm font-extrabold text-slate-50">{title}</div>
-          {subtitle ? <div className="text-xs text-slate-400 mt-1">{subtitle}</div> : null}
+          <div className="text-base font-extrabold text-slate-50">{title}</div>
+          {subtitle ? <div className="text-sm text-slate-400 mt-1">{subtitle}</div> : null}
         </div>
 
         {typeof pct === "number" ? (
-          <div className="text-xs font-mono text-slate-300">{pct}%</div>
+          <div className="text-sm font-mono text-slate-300">{pct}%</div>
         ) : null}
       </div>
 
@@ -71,7 +71,7 @@ export default function V7AdvisorPanel(props: Props) {
           {badges.map((b, i) => (
             <span
               key={`${b.label}-${i}`}
-              className={`px-2 py-1 text-[11px] font-mono rounded border ${toneClasses(b.tone)}`}
+              className={`px-2.5 py-1 text-xs font-mono rounded border ${toneClasses(b.tone)}`}
             >
               {b.label}
             </span>
@@ -82,7 +82,7 @@ export default function V7AdvisorPanel(props: Props) {
       {bullets.length > 0 ? (
         <div className="mt-4 space-y-2">
           {bullets.map((t, i) => (
-            <div key={`${i}-${t}`} className="flex gap-2 text-xs text-slate-300">
+            <div key={`${i}-${t}`} className="flex gap-2 text-sm text-slate-300">
               <span className="text-violet-300">›</span>
               <span>{t}</span>
             </div>

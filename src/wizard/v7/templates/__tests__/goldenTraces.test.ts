@@ -394,7 +394,7 @@ describe("Golden traces: manifest integrity", () => {
     }
   });
 
-  it("all 11 manifest entries present", () => {
+  it("all 12 manifest entries present", () => {
     const slugs = MANIFEST.map((m) => m.industrySlug).sort();
     expect(slugs).toEqual([
       "car_wash",
@@ -407,6 +407,7 @@ describe("Golden traces: manifest integrity", () => {
       "office",
       "restaurant",
       "retail",
+      "truck_stop",
       "warehouse",
     ]);
   });
@@ -1147,15 +1148,15 @@ describe("Golden traces: warehouse (adapter-direct)", () => {
 // ============================================================================
 
 describe("Golden traces: restaurant (adapter-direct)", () => {
-  it("typical: 100-seat full service → peakKW 30-60, kitchen dominant", () => {
+  it("typical: 100-seat full service → peakKW 35-60, kitchen dominant", () => {
     const calc = CALCULATORS_BY_ID["restaurant_load_v1"];
     expect(calc).toBeDefined();
 
     const result = calc!.compute({ seatingCapacity: 100 });
 
-    // 100 seats × 40 W/seat = 4000W = 4kW (but SSOT may floor it higher)
-    // Actually 100 × 40 = 4000W = 4kW → round to 4kW
-    expect(result.peakLoadKW).toBeGreaterThanOrEqual(30);
+    // 100 seats × 450 W/seat = 45kW (full-service intensity)
+    // Kitchen base 25kW, seating load 45kW → peak = 45kW
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(35);
     expect(result.peakLoadKW).toBeLessThanOrEqual(60);
 
     expect(result.validation).toBeDefined();
@@ -1171,13 +1172,13 @@ describe("Golden traces: restaurant (adapter-direct)", () => {
     expect(result.validation!.details!.restaurant.seats).toBe(100);
   });
 
-  it("small: 30-seat café → peakKW 30-40", () => {
+  it("small: 30-seat café → peakKW 12-20", () => {
     const calc = CALCULATORS_BY_ID["restaurant_load_v1"];
-    const result = calc!.compute({ seatingCapacity: 30 });
+    const result = calc!.compute({ seatingCapacity: 30, restaurantType: "cafe" });
 
-    // 30 × 40 = 1200W = 1.2kW, but floor is 30kW
-    expect(result.peakLoadKW).toBeGreaterThanOrEqual(30);
-    expect(result.peakLoadKW).toBeLessThanOrEqual(40);
+    // 30 × 120 W/seat = 3.6kW, kitchen base 15kW → peak 15kW
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(12);
+    expect(result.peakLoadKW).toBeLessThanOrEqual(20);
     expect(result.validation!.version).toBe("v1");
   });
 
@@ -1185,15 +1186,8 @@ describe("Golden traces: restaurant (adapter-direct)", () => {
     const calc = CALCULATORS_BY_ID["restaurant_load_v1"];
     const result = calc!.compute({ seatingCapacity: 400 });
 
-    // 400 × 40 = 16,000W = 16kW (this seems low; let's verify)
-    // Actually the adapter computes: max(30, 400*40/1000) = max(30, 16) = 30kW
-    // Wait — let me re-check the math. 400 seats × 40 W/seat = 16000W = 16kW
-    // Floor is 30kW, so result should be 30kW minimum
-    // But for a 400-seat restaurant this seems low... The adapter uses W not kW per seat
-    // 40 W/seat × 400 = 16,000 W = 16 kW → floored to 30
-    // Industry reality: a 400-seat banquet hall is more like 100-200kW
-    // The adapter math needs review, but for now test what it actually produces
-    expect(result.peakLoadKW).toBeGreaterThanOrEqual(30);
+    // 400 × 450 W/seat = 180kW, kitchen base 60kW → peak 180kW
+    expect(result.peakLoadKW).toBeGreaterThanOrEqual(150);
     expect(result.peakLoadKW).toBeLessThanOrEqual(200);
   });
 });

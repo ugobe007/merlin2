@@ -646,7 +646,7 @@ export default function BessQuoteBuilder() {
         className="min-h-screen"
         style={{
           background:
-            "linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 20%, #a78bfa 40%, #8b5cf6 60%, #7c3aed 80%, #6d28d9 100%)",
+            "linear-gradient(160deg, #080b14 0%, #0f1420 40%, #0a0d16 100%)",
         }}
       >
         <main>
@@ -690,84 +690,93 @@ export default function BessQuoteBuilder() {
             </div>
           )}
 
-          {/* Footer with Admin Access */}
-          <footer className="mt-12 border-t border-purple-300 pt-8 pb-6">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-4 mb-4 flex-wrap">
+          {/* Footer — Supabase-clean */}
+          <footer
+            className="mt-0 py-8 px-6"
+            style={{
+              borderTop: "1px solid rgba(255,255,255,0.06)",
+              background: "#070a12",
+            }}
+          >
+            <div className="max-w-5xl mx-auto">
+              {/* Primary links */}
+              <div className="flex items-center justify-center gap-6 mb-4 flex-wrap">
                 <button
                   onClick={() => setShowStatusPage(true)}
-                  className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors inline-flex items-center gap-1"
-                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
+                  className="text-sm transition-colors inline-flex items-center gap-1.5"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
-                  <span>🟢</span>
-                  <span>System Status</span>
+                  System Status
                 </button>
-                <span className="text-amber-400/50 font-bold">|</span>
                 <button
                   onClick={() => setShowPrivacyPolicy(true)}
-                  className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors"
-                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
+                  className="text-sm transition-colors"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
-                  Privacy Policy
+                  Privacy
                 </button>
-                <span className="text-amber-400/50 font-bold">|</span>
                 <button
                   onClick={() => setShowTermsOfService(true)}
-                  className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors"
-                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
+                  className="text-sm transition-colors"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
-                  Terms of Service
+                  Terms
                 </button>
-                <span className="text-amber-400/50 font-bold">|</span>
                 <button
                   onClick={() => setShowSecuritySettings(true)}
-                  className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors inline-flex items-center gap-1"
-                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
+                  className="text-sm transition-colors"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
-                  <span>🔒</span>
-                  <span>Security & Privacy</span>
+                  Security
                 </button>
-              </div>
-              <p
-                className="text-amber-300 text-lg font-bold mb-4"
-                style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
-              >
-                © 2025 Merlin Energy. All rights reserved.
-              </p>
-              {/* Always show admin tools for development */}
-              <div className="flex items-center justify-center gap-4 flex-wrap">
                 <button
                   onClick={() => setShowSystemHealth(true)}
-                  className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors inline-flex items-center gap-1"
-                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
+                  className="text-sm transition-colors"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
-                  <span>📊</span>
-                  <span>System Health</span>
+                  Health
                 </button>
-                <span className="text-amber-400/50 font-bold">|</span>
                 <button
                   onClick={() => setShowVendorManager(true)}
-                  className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors inline-flex items-center gap-1"
-                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
+                  className="text-sm transition-colors"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
-                  <span>🔧</span>
-                  <span>Admin Panel</span>
+                  Admin
                 </button>
-                <span className="text-amber-400/50 font-bold">|</span>
                 {isLoggedIn && (
                   <button
                     onClick={() => {
                       setIsLoggedIn(false);
                       alert("You have been logged out successfully");
                     }}
-                    className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors inline-flex items-center gap-1"
-                    style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
+                    className="text-sm transition-colors"
+                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                   >
-                    <span>🚪</span>
-                    <span>Sign Out</span>
+                    Sign Out
                   </button>
                 )}
               </div>
+              {/* Copyright */}
+              <p
+                className="text-center text-xs"
+                style={{ color: "rgba(255,255,255,0.25)" }}
+              >
+                © 2026 Merlin Energy. All rights reserved.
+              </p>
             </div>
           </footer>
         </main>

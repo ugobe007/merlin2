@@ -192,6 +192,27 @@ export const SSOT_ALIASES = {
       ssotDefault: true,
     },
   } satisfies IndustryAliasMap,
+
+  truck_stop: {
+    fuelPumps: {
+      adapterField: "fuelPumps",
+      ssotField: "fuelDispensers",
+      ssotAlternates: ["dieselLanes", "fuelingPositions", "numPumps"],
+      ssotDefault: 12,
+    },
+    cStoreSqFt: {
+      adapterField: "cStoreSqFt",
+      ssotField: "buildingSquareFootage",
+      ssotAlternates: ["convenienceStoreSqFt", "storeSqFt"],
+      ssotDefault: 4000,
+    },
+    truckParkingSpots: {
+      adapterField: "truckParkingSpots",
+      ssotField: "truckParkingSpots",
+      ssotAlternates: ["parkingSpots", "overnightSpots"],
+      ssotDefault: 50,
+    },
+  } satisfies IndustryAliasMap,
 } as const;
 
 // Type helper: valid industry slugs in this alias registry

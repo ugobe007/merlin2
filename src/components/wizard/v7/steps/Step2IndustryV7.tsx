@@ -255,10 +255,20 @@ export default function Step2IndustryV7({ state, actions }: Props) {
                   <div
                     style={{
                       height: 120,
-                      background: `url(${it.image}) center/cover no-repeat`,
+                      overflow: "hidden",
                       borderBottom: `1px solid ${DARK.cardBorder}`,
                     }}
-                  />
+                  >
+                    <img
+                      src={it.image}
+                      alt={it.label}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div
                     style={{

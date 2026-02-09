@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merlin V7 — Vertical → Wizard Workflow Wireframe</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #3b82f6;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #334155;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 40px 24px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      font-size: 28px;
+      text-align: center;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 48px;
+      font-size: 14px;
+    }
+
+    /* ── Flow Container ────────────────────────────────── */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 48px;
+      color: var(--accent);
+      font-size: 24px;
+      position: relative;
+    }
+
+    .flow-arrow::before {
+      content: '';
+      position: absolute;
+      width: 2px;
+      height: 100%;
+      background: var(--accent);
+      opacity: 0.3;
+    }
+
+    .flow-arrow span {
+      background: var(--bg);
+      z-index: 1;
+      padding: 2px 8px;
+      font-size: 20px;
+    }
+
+    /* ── Phase Card ─────────────────────────────────────── */
+    .phase {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      background: var(--card);
+      position: relative;
+    }
+
+    .phase-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .phase-badge {
+      background: var(--accent);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .phase-badge.config {
+      background: #8b5cf6;
+    }
+
+    .phase-badge.normalized {
+      background: var(--green);
+    }
+
+    .phase-badge.ssot {
+      background: var(--amber);
+      color: #000;
+    }
+
+    .phase-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .phase-desc {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    /* ── Inner Boxes ────────────────────────────────────── */
+    .inner-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .inner-box {
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    .inner-box h4 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .inner-box p, .inner-box li {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .inner-box ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .inner-box ul li::before {
+      content: '→ ';
+      color: var(--accent);
+    }
+
+    /* ── Step 3 Breakdown ───────────────────────────────── */
+    .step3-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .vertical-col {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .vertical-col h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .section-block {
+      background: rgba(59, 130, 246, 0.08);
+      border-left: 3px solid var(--accent);
+      padding: 8px 10px;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 8px;
+    }
+
+    .section-block h5 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .section-block .q-list {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .section-block .q-list .tier1 {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    /* ── Before/After ───────────────────────────────────── */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .comparison .before {
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      padding: 14px;
+      background: rgba(239, 68, 68, 0.06);
+    }
+
+    .comparison .after {
+      border: 1px solid var(--green);
+      border-radius: 8px;
+      padding: 14px;
+      background: rgba(34, 197, 94, 0.06);
+    }
+
+    .comparison h5 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .comparison .before h5 { color: var(--red); }
+    .comparison .after h5 { color: var(--green); }
+
+    .comparison code {
+      font-size: 11px;
+      background: rgba(0,0,0,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    .comparison p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    /* ── File Map ───────────────────────────────────────── */
+    .file-map {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      background: rgba(0,0,0,0.3);
+      padding: 16px;
+      border-radius: 8px;
+      line-height: 1.8;
+      color: var(--muted);
+      margin-top: 12px;
+      overflow-x: auto;
+    }
+
+    .file-map .new { color: var(--green); }
+    .file-map .existing { color: var(--text); }
+    .file-map .changed { color: var(--amber); }
+    .file-map .deprecated { color: var(--red); text-decoration: line-through; }
+
+    /* ── Legend ──────────────────────────────────────────── */
+    .legend {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin: 32px 0 16px;
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🧙‍♂️ Merlin V7 — Normalized Vertical → Wizard Workflow</h1>
+<p class="subtitle">Phase 3: Unified Step 3 Questionnaire Architecture • Car Wash / Hotel / EV Charging</p>
+
+<!-- ── Legend ──────────────────────────────────── -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background: var(--accent)"></div> Existing</div>
+  <div class="legend-item"><div class="legend-dot" style="background: var(--green)"></div> New / Normalized</div>
+  <div class="legend-item"><div class="legend-dot" style="background: var(--amber)"></div> Modified</div>
+  <div class="legend-item"><div class="legend-dot" style="background: #8b5cf6)"></div> Config-driven</div>
+</div>
+
+<div class="flow">
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- ENTRY: Vertical Landing Page                   -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <span class="phase-badge config">Config-Driven</span>
+      <span class="phase-title">🌐 Vertical Landing Page</span>
+    </div>
+    <p class="phase-desc">
+      User lands on <code>/car-wash</code>, <code>/hotel-energy</code>, or <code>/ev-charging</code>.
+      All 3 now render through <strong>VerticalLandingPage.tsx</strong> shell + config.
+    </p>
+    <div class="inner-grid">
+      <div class="inner-box">
+        <h4>🚗 Car Wash</h4>
+        <ul>
+          <li>VerticalHeroSection (config)</li>
+          <li>VerticalCalculatorSection</li>
+          <li>HowItWorksSection</li>
+          <li>SocialProofSection</li>
+          <li>FinalCTASection → "Get Your Free Quote"</li>
+        </ul>
+      </div>
+      <div class="inner-box">
+        <h4>🏨 Hotel</h4>
+        <ul>
+          <li>VerticalHeroSection (config)</li>
+          <li>VerticalCalculatorSection</li>
+          <li>HowItWorksSection</li>
+          <li>SocialProofSection</li>
+          <li>FinalCTASection → "Get Your Free Quote"</li>
+        </ul>
+      </div>
+      <div class="inner-box">
+        <h4>⚡ EV Charging</h4>
+        <ul>
+          <li>VerticalHeroSection (config)</li>
+          <li>VerticalCalculatorSection</li>
+          <li>HowItWorksSection</li>
+          <li>SocialProofSection</li>
+          <li>FinalCTASection → "Get Your Free Quote"</li>
+        </ul>
+      </div>
+    </div>
+    <p class="phase-desc" style="margin-top: 12px; margin-bottom: 0">
+      ✅ <strong>Phase 2 complete</strong> — All 3 landing pages: ~33 lines each via shared components + vertical config.
+    </p>
+  </div>
+
+  <div class="flow-arrow"><span>▼</span></div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- CTA clicks → Navigate to /v7?industry=xxx      -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="phase" style="background: transparent; border-style: dashed; padding: 12px 24px; text-align: center;">
+    <span style="font-size: 13px; color: var(--muted);">
+      CTA → <code>navigate('/v7?industry=car_wash')</code> or <code>hotel</code> or <code>ev_charging</code>
+    </span>
+  </div>
+
+  <div class="flow-arrow"><span>▼</span></div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- WIZARD V7: Step 1 — Location                   -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <span class="phase-badge">Step 1</span>
+      <span class="phase-title">📍 Location</span>
+    </div>
+    <p class="phase-desc">
+      Google Places address input → auto-detect state, zip, utility rates.
+      If <code>?industry=xxx</code> query param present, Step 2 is pre-selected.
+    </p>
+    <div class="inner-grid">
+      <div class="inner-box">
+        <h4>📍 Step1LocationV7.tsx</h4>
+        <p>Address autocomplete → LocationCard → LocationIntel</p>
+      </div>
+      <div class="inner-box">
+        <h4>🧠 Intelligence</h4>
+        <p>Utility rate lookup, energy community detection, Site Score™</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow"><span>▼</span></div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- WIZARD V7: Step 2 — Industry                   -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <span class="phase-badge">Step 2</span>
+      <span class="phase-title">🏭 Industry Selection</span>
+    </div>
+    <p class="phase-desc">
+      Card grid from <code>industryMeta.ts</code>. Pre-selected if coming from vertical landing page.
+      <code>selectIndustry()</code> → loads Step 3 template.
+    </p>
+    <div class="inner-grid">
+      <div class="inner-box">
+        <h4>🃏 Step2IndustryV7.tsx</h4>
+        <p>Industry cards with icons from <code>industryMeta.ts</code> SSOT</p>
+      </div>
+      <div class="inner-box">
+        <h4>⚡ selectIndustry()</h4>
+        <ul>
+          <li><code>api.loadStep3Template(industry)</code></li>
+          <li><code>api.computeSmartDefaults(template)</code></li>
+          <li><code>dispatch SET_STEP3_TEMPLATE</code></li>
+          <li>Navigate → Step 3</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow"><span>▼</span></div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- WIZARD V7: Step 3 — NORMALIZED Questionnaire    -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="phase" style="border-color: var(--green);">
+    <div class="phase-header">
+      <span class="phase-badge normalized">Normalized ✨</span>
+      <span class="phase-title">📋 Step 3 — Industry Profile Questionnaire</span>
+    </div>
+    <p class="phase-desc">
+      <strong>THE NORMALIZATION:</strong> All 3 verticals now use <strong>*-questions-complete.config.ts</strong> format.
+      <code>resolveStep3Schema(industry)</code> loads from a unified <code>COMPLETE_SCHEMAS</code> registry — NO special-case branches.
+    </p>
+
+    <!-- Before / After -->
+    <div class="comparison">
+      <div class="before">
+        <h5>❌ Before (Special Handler)</h5>
+        <p><code>if (normalized === 'car-wash')</code></p>
+        <p>→ <code>resolveCarWashSchema()</code> (rich format)</p>
+        <p><code>else</code></p>
+        <p>→ <code>resolveLegacySchema()</code> (simple format)</p>
+        <p style="margin-top: 8px; font-style: italic">Car wash: 27Q rich format</p>
+        <p style="font-style: italic">Hotel: 11Q legacy format</p>
+        <p style="font-style: italic">EV: 10Q legacy format</p>
+      </div>
+      <div class="after">
+        <h5>✅ After (Unified Registry)</h5>
+        <p><code>COMPLETE_SCHEMAS[normalized]</code></p>
+        <p>→ loads <code>*-questions-complete.config.ts</code></p>
+        <p>→ <code>convertCompleteQuestion()</code></p>
+        <p>→ uniform CuratedSchema output</p>
+        <p style="margin-top: 8px; font-style: italic">Car wash: 27Q complete format</p>
+        <p style="font-style: italic">Hotel: 16Q complete format ✨</p>
+        <p style="font-style: italic">EV: 16Q complete format ✨</p>
+      </div>
+    </div>
+
+    <!-- Per-Vertical Question Breakdown -->
+    <div style="margin-top: 20px;">
+      <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--green);">📋 Normalized 16Q Questionnaires</h4>
+    </div>
+
+    <div class="step3-grid">
+      <!-- Car Wash -->
+      <div class="vertical-col">
+        <h4>🚗 Car Wash (27Q)</h4>
+        <div class="section-block">
+          <h5>🏢 Facility (Q1-6)</h5>
+          <div class="q-list">
+            <span class="tier1">facilityType</span> ·
+            <span class="tier1">tunnelOrBayCount</span> ·
+            <span class="tier1">operatingHours</span> ·
+            <span class="tier1">daysPerWeek</span> ·
+            <span class="tier1">dailyVehicles</span> ·
+            naturalGasLine
+          </div>
+        </div>
+        <div class="section-block">
+          <h5>⚙️ Equipment (Q7-15)</h5>
+          <div class="q-list">
+            <span class="tier1">waterHeaterType</span> ·
+            <span class="tier1">pumpConfiguration</span> ·
+            <span class="tier1">dryerConfiguration</span> ·
+            vacuumSystems · lightingType · waterReclaim · chemicalDispensing · compressor · signage
+          </div>
+        </div>
+        <div class="section-block">
+          <h5>🔌 Operations (Q16-21)</h5>
+          <div class="q-list">
+            paymentSystem · securitySystem · gridConnection · gridReliability · existingGenerator · backupNeeds
+          </div>
+        </div>
+        <div class="section-block">
+          <h5>☀️ Solar (Q22-27)</h5>
+          <div class="q-list">
+            existingSolar · rooftopSpace · solarInterest · evChargingInterest · budgetRange · timeline
+          </div>
+        </div>
+      </div>
+
+      <!-- Hotel -->
+      <div class="vertical-col" style="border-color: var(--green);">
+        <h4>🏨 Hotel (16Q) <span style="color: var(--green); font-size: 11px">NEW</span></h4>
+        <div class="section-block">
+          <h5>🏢 Facility (Q1-5)</h5>
+          <div class="q-list">
+            <span class="tier1">hotelCategory</span> ·
+            <span class="tier1">numRooms</span> ·
+            <span class="tier1">squareFootage</span> ·
+            <span class="tier1">occupancyRate</span> ·
+            buildingAge
+          </div>
+        </div>
+        <div class="section-block">
+          <h5>🛎️ Amenities (Q6-10)</h5>
+          <div class="q-list">
+            <span class="tier1">poolOnSite</span> ·
+            <span class="tier1">restaurantOnSite</span> ·
+            <span class="tier1">spaOnSite</span> ·
+            laundryOnSite ·
+            evChargingForGuests
+          </div>
+        </div>
+        <div class="section-block">
+          <h5>⚡ Energy (Q11-13)</h5>
+          <div class="q-list">
+            <span class="tier1">gridConnection</span> ·
+            gridReliability ·
+            existingGenerator
+          </div>
+        </div>
+        <div class="section-block">
+          <h5>☀️ Solar & Goals (Q14-16)</h5>
+          <div class="q-list">
+            existingSolar ·
+            primaryGoal ·
+            budgetTimeline
+          </div>
+        </div>
+      </div>
+
+      <!-- EV Charging -->
+      <div class="vertical-col" style="border-color: var(--green);">
+        <h4>⚡ EV Charging (16Q) <span style="color: var(--green); font-size: 11px">NEW</span></h4>
+        <div class="section-block">
+          <h5>📍 Site (Q1-4)</h5>
+          <div class="q-list">
+            <span class="tier1">stationType</span> ·
+            <span class="tier1">operatingHours</span> ·
+            siteSize ·
+            parkingSpaces
+          </div>
+        </div>
+        <div class="section-block">
+          <h5>🔌 Chargers (Q5-10)</h5>
+          <div class="q-list">
+            <span class="tier1">level2Chargers</span> ·
+            <span class="tier1">level2Power</span> ·
+            <span class="tier1">dcFastChargers</span> ·
+            <span class="tier1">dcFastPower</span> ·
+            hpcChargers ·
+            utilizationProfile
+          </div>
+        </div>
+        <div class="section-block">
+          <h5>⚡ Grid & Demand (Q11-13)</h5>
+          <div class="q-list">
+            <span class="tier1">gridConnection</span> ·
+            peakConcurrency ·
+            siteDemandCap
+          </div>
+        </div>
+        <div class="section-block">
+          <h5>☀️ Solar & Goals (Q14-16)</h5>
+          <div class="q-list">
+            existingSolar ·
+            primaryGoal ·
+            budgetTimeline
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="phase-desc" style="margin-top: 16px; margin-bottom: 0; text-align: center;">
+      <span style="color: var(--green);">Green text = Tier 1 Blockers</span> — required before quote generation.
+      All rendered by <code>Step3ProfileV7Curated.tsx</code> via <code>resolveStep3Schema()</code> — zero special handlers.
+    </p>
+  </div>
+
+  <div class="flow-arrow"><span>▼</span></div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- CALCULATOR LAYER                                -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <span class="phase-badge ssot">SSOT</span>
+      <span class="phase-title">🔢 Calculator Pipeline</span>
+    </div>
+    <p class="phase-desc">
+      Answers flow through adapter → <code>buildSSOTInput()</code> → <code>calculateUseCasePower()</code> → TrueQuote™ envelope.
+      No changes needed — adapters already handle all 3 verticals.
+    </p>
+    <div class="inner-grid">
+      <div class="inner-box">
+        <h4>📋 Answer Mapping</h4>
+        <ul>
+          <li>Complete config question IDs</li>
+          <li><code>applyTemplateMapping()</code></li>
+          <li><code>buildSSOTInput(industry)</code></li>
+          <li>Field name translation</li>
+        </ul>
+      </div>
+      <div class="inner-box">
+        <h4>🧮 Calculator Adapters</h4>
+        <ul>
+          <li><code>hotel_load_v1</code> → SSOT</li>
+          <li><code>car_wash_load_v1</code> → SSOT</li>
+          <li><code>ev_charging_load_v1</code> → SSOT</li>
+          <li>Returns CalcValidation v1</li>
+        </ul>
+      </div>
+      <div class="inner-box">
+        <h4>✅ TrueQuote™ Envelope</h4>
+        <ul>
+          <li>kW contributors breakdown</li>
+          <li>Duty cycle calculation</li>
+          <li>Contributor shares (%)</li>
+          <li>Source assumptions audit</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow"><span>▼</span></div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- WIZARD V7: Step 4 — Results                     -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <span class="phase-badge">Step 4</span>
+      <span class="phase-title">📊 Quote Results</span>
+    </div>
+    <p class="phase-desc">
+      PricingFreeze + QuoteOutput displayed. PDF/Word export. Lead capture.
+    </p>
+    <div class="inner-grid">
+      <div class="inner-box">
+        <h4>💰 Step4ResultsV7.tsx</h4>
+        <ul>
+          <li>Equipment breakdown</li>
+          <li>Financial metrics (NPV, IRR, payback)</li>
+          <li>TrueQuote™ source audit trail</li>
+          <li>Margin policy (sell price)</li>
+        </ul>
+      </div>
+      <div class="inner-box">
+        <h4>📄 Export & Lead Capture</h4>
+        <ul>
+          <li>PDF/Word/Excel export</li>
+          <li>Lead capture → Supabase <code>leads</code></li>
+          <li>Email notification</li>
+          <li>Saved quotes portfolio</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow"><span>▼</span></div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- FILE MAP                                        -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <span class="phase-badge normalized">File Map</span>
+      <span class="phase-title">📁 Files Changed in This Normalization</span>
+    </div>
+    <div class="file-map">
+<span class="new">+ src/data/hotel-questions-complete.config.ts        # NEW — 16Q rich format</span>
+<span class="new">+ src/data/evcharging-questions-complete.config.ts    # NEW — 16Q rich format</span>
+<span class="changed">~ src/wizard/v7/schema/curatedFieldsResolver.ts      # CHANGED — unified COMPLETE_SCHEMAS registry</span>
+<span class="existing">  src/data/carwash-questions-complete.config.ts       # EXISTING — gold standard (27Q)</span>
+<span class="existing">  src/wizard/v7/calculators/registry.ts               # UNTOUCHED — adapters already work</span>
+<span class="existing">  src/wizard/v7/calculators/ssotInputAliases.ts       # UNTOUCHED — aliases already defined</span>
+<span class="existing">  src/components/wizard/v7/steps/Step3ProfileV7Curated.tsx  # UNTOUCHED — renders any CuratedSchema</span>
+<span class="deprecated">  src/data/industryQuestionnaires.ts (hotel, ev-charging)  # DEPRECATED for these 3 verticals</span>
+    </div>
+  </div>
+</div>
+
+<p style="text-align: center; margin-top: 32px; color: var(--muted); font-size: 12px;">
+  Merlin BESS Quote Builder — Phase 3 Wireframe — Feb 2026
+</p>
+
+</body>
+</html>

@@ -346,9 +346,9 @@ describe("SSOT_ALIASES structural integrity", () => {
     }
   });
 
-  test("all 11 industries have alias entries", () => {
+  test("all 12 industries have alias entries", () => {
     const industries = listAliasIndustries();
-    expect(industries.length).toBe(11);
+    expect(industries.length).toBe(12);
     expect(industries).toContain("office");
     expect(industries).toContain("retail");
     expect(industries).toContain("warehouse");
@@ -360,5 +360,6 @@ describe("SSOT_ALIASES structural integrity", () => {
     expect(industries).toContain("ev_charging");
     expect(industries).toContain("restaurant");
     expect(industries).toContain("gas_station");
+    expect(industries).toContain("truck_stop");
   });
 });

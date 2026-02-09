@@ -111,6 +111,7 @@ export const carWashQuestionsComplete: Question[] = [
         description: 'Customer wand wash',
       }
     ],
+    smartDefault: 'express_tunnel',
     validation: { required: true },
     impactsCalculations: ['peakDemand', 'equipmentLoad']
   },
@@ -216,6 +217,7 @@ export const carWashQuestionsComplete: Question[] = [
       { value: 'no', label: 'No', icon: '❌' },
       { value: 'unknown', label: 'Not Sure / Unknown', icon: '❓' }
     ],
+    smartDefault: 'unknown',
     validation: { required: true },
     impactsCalculations: ['heatingOptions', 'operatingCosts']
   },
@@ -271,6 +273,7 @@ export const carWashQuestionsComplete: Question[] = [
         }
       }
     },
+    smartDefault: 'natural_gas',
     validation: { required: true },
     impactsCalculations: ['peakDemand', 'heatingLoad']
   },
@@ -313,6 +316,7 @@ export const carWashQuestionsComplete: Question[] = [
       { value: '5-6', label: '5-6 Pumps', icon: '💦', description: '100-150 HP total' },
       { value: '7+', label: '7+ Pumps', icon: '🌊', description: '150+ HP total' }
     ],
+    smartDefault: 'standard',
     validation: { required: true },
     impactsCalculations: ['pumpLoad', 'peakDemand']
   },
@@ -348,6 +352,7 @@ export const carWashQuestionsComplete: Question[] = [
         description: '90%+ recycled'
       }
     ],
+    smartDefault: 'partial',
     validation: { required: true },
     impactsCalculations: ['waterUsage', 'pumpLoad']
   },
@@ -390,6 +395,7 @@ export const carWashQuestionsComplete: Question[] = [
       { value: 'heated', label: 'Heated', icon: '♨️', description: 'Heated dryers' },
       { value: 'none', label: 'None', icon: '❌', description: 'Air dry' }
     ],
+    smartDefault: 'blowers',
     validation: { required: true },
     impactsCalculations: ['dryerLoad', 'peakDemand']
   },
@@ -410,7 +416,7 @@ export const carWashQuestionsComplete: Question[] = [
     type: 'existing_then_planned',
     section: 'equipment',
     title: 'EV Charging Infrastructure?',
-    subtitle: 'Do you have EV chargers on site? (optional)',
+    subtitle: 'Tells us about your current setup. You can add EV charging to your quote in the results step.',
     existingOptions: [
       { value: 'none', label: 'No EV Chargers on site', icon: '❌' },
       {
@@ -689,6 +695,7 @@ export const carWashQuestionsComplete: Question[] = [
         description: 'Roof solar only'
       }
     ],
+    smartDefault: 'learn_more',
     validation: { required: true },
     impactsCalculations: ['carportSolar', 'solarCapacity']
   }

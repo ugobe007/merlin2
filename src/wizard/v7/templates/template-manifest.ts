@@ -379,10 +379,26 @@ export const MANIFEST: ManifestEntry[] = [
     validationVersion: "v1",
     requiredQuestionIds: [],
     requiredCalcFields: ["seatingCapacity"],
-    contributorKeysExpected: ["hvac", "lighting", "controls", "process", "other"],
+    contributorKeysExpected: ["hvac", "lighting", "controls", "process", "cooling", "other"],
     dutyCycleRange: [0.35, 0.55],
-    typicalPeakKWRange: [30, 500],
+    typicalPeakKWRange: [15, 1000],
     ssotInputAliases: SSOT_ALIASES.restaurant,
+  },
+
+  // ──────────────────────────────────────────────────────
+  // TRUCK STOP (adapter-only, no template JSON yet)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "truck_stop",
+    templateVersion: "adapter-only",
+    calculatorId: "truck_stop_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["fuelPumps"],
+    contributorKeysExpected: ["hvac", "lighting", "controls", "process", "other"],
+    dutyCycleRange: [0.55, 0.75],
+    typicalPeakKWRange: [80, 450],
+    ssotInputAliases: SSOT_ALIASES.truck_stop,
   },
 
   // ──────────────────────────────────────────────────────

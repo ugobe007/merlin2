@@ -10,6 +10,9 @@ import { validateTemplate, formatValidationResult } from "@/wizard/v7/validation
 import { sanityCheckQuote, type PricingSanity } from "@/wizard/v7/utils/pricingSanity";
 import { getTier1Blockers } from "@/wizard/v7/schema/curatedFieldsResolver";
 
+// Industry Context — SSOT resolver (Feb 7, 2026)
+import { resolveIndustryContext } from "@/wizard/v7/industry";
+
 // SSOT Pricing Bridge (Feb 3, 2026)
 import {
   runPricingQuote,
@@ -143,6 +146,32 @@ export type PricingFreeze = {
   windMW?: number;
   // derived
   createdAtISO: string;
+};
+
+/**
+ * Step 4 system add-ons — user-configurable enhancements to the BESS quote.
+ *
+ * These are PRESCRIPTIVE ("what to quote") vs Step 3's DIAGNOSTIC ("what you have").
+ * Values flow: Step 4 UI → recalculateWithAddOns → pricingBridge → calculateQuote()
+ */
+export type SystemAddOns = {
+  includeSolar: boolean;
+  solarKW: number;
+  includeGenerator: boolean;
+  generatorKW: number;
+  generatorFuelType: 'natural-gas' | 'diesel' | 'dual-fuel';
+  includeWind: boolean;
+  windKW: number;
+};
+
+export const DEFAULT_ADD_ONS: SystemAddOns = {
+  includeSolar: false,
+  solarKW: 0,
+  includeGenerator: false,
+  generatorKW: 0,
+  generatorFuelType: 'natural-gas',
+  includeWind: false,
+  windKW: 0,
 };
 
 // Options can be strings or {value, label} objects (server templates use the latter)
@@ -393,6 +422,9 @@ export type WizardState = {
   // Output / results
   quote: QuoteOutput | null;
 
+  // Step 4: System add-ons (solar, generator, wind — user-configurable)
+  step4AddOns: SystemAddOns;
+
   // statuses
   isHydrating: boolean;
   isBusy: boolean;
@@ -458,6 +490,8 @@ type Intent =
     }
   | { type: "PRICING_ERROR"; error: string; requestKey: string }
   | { type: "PRICING_RETRY" }
+  // Step 4 system add-ons
+  | { type: "SET_STEP4_ADDONS"; addOns: SystemAddOns }
   // Legacy (deprecated but kept for compatibility)
   | { type: "SET_PRICING_FREEZE"; freeze: PricingFreeze | null }
   | { type: "SET_QUOTE"; quote: QuoteOutput | null }
@@ -515,20 +549,23 @@ function runContractQuote(params: {
   let logger: ContractRunLogger | undefined;
 
   try {
-    // 1. Load template
-    const tpl = getTemplate(params.industry);
+    // 1. Resolve industry context (SSOT — replaces scattered alias maps)
+    const ctx = resolveIndustryContext(params.industry);
+
+    // 2. Load template using resolved templateKey
+    const tpl = getTemplate(ctx.templateKey);
     if (!tpl) {
-      throw { code: "STATE", message: `No template found for industry "${params.industry}"` };
+      throw { code: "STATE", message: `No template found for industry "${params.industry}" (templateKey: "${ctx.templateKey}")` };
     }
 
-    // 2. Get calculator contract
-    const calc = CALCULATORS_BY_ID[tpl.calculator.id];
+    // 3. Get calculator contract using resolved calculatorId
+    const calc = CALCULATORS_BY_ID[ctx.calculatorId];
     if (!calc) {
-      throw { code: "STATE", message: `No calculator registered for id "${tpl.calculator.id}"` };
+      throw { code: "STATE", message: `No calculator registered for id "${ctx.calculatorId}" (industry: "${params.industry}")` };
     }
 
     // Initialize logger with context
-    logger = new ContractRunLogger(tpl.industry, tpl.version, tpl.calculator.id);
+    logger = new ContractRunLogger(params.industry, tpl.version, ctx.calculatorId);
 
     // Log start event
     logger.logStart(tpl.questions.length);
@@ -803,7 +840,7 @@ const api = {
     }
 
     // Validate state field for US locations (SSOT requirement)
-    const location = response.location!;
+    let location = response.location!;
     if (location.countryCode === "US" && !location.state) {
       throw {
         code: "VALIDATION",
@@ -812,19 +849,22 @@ const api = {
       };
     }
 
+    // ✅ FIX Feb 7, 2026: Guarantee postalCode is populated when input is a ZIP.
+    // Many geocoders return lat/lng + formattedAddress but omit postalCode for ZIP lookups.
+    const zip5 = trimmed.replace(/\D/g, "").slice(0, 5);
+    if (zip5.length === 5 && /^\d{3,10}$/.test(trimmed) && !location.postalCode) {
+      location = { ...location, postalCode: zip5 };
+      if (import.meta.env.DEV) {
+        console.log(`[V7 SSOT] resolveLocation: injected postalCode=${zip5} (geocoder omitted it)`);
+      }
+    }
+
     return location;
   },
 
-  // Fetch location intelligence metrics
-  async fetchLocationIntel(_location: LocationCard, _signal?: AbortSignal): Promise<LocationIntel> {
-    // Replace with your real service
-    return {
-      peakSunHours: undefined,
-      utilityRate: undefined,
-      weatherRisk: undefined,
-      solarGrade: undefined,
-    };
-  },
+  // ❌ fetchLocationIntel REMOVED (Feb 7, 2026)
+  // SSOT: primeLocationIntel() is now the SINGLE enrichment path.
+  // Both typing (debounced) and submit use the same function.
 
   // Progressive hydration: fetch utility data by ZIP
   async fetchUtility(
@@ -938,8 +978,14 @@ const api = {
       return { industry: businessCard.inferredIndustry, confidence };
     }
 
-    // Fallback: try to infer from location name or address keywords
-    const searchText = [location.formattedAddress, location.city]
+    // Fallback: try to infer from location name, address, AND business card keywords
+    // ✅ FIX Feb 7, 2026: Include businessCard.name + address so "dash car wash" matches car_wash
+    const searchText = [
+      businessCard?.name,
+      businessCard?.address,
+      location.formattedAddress,
+      location.city,
+    ]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();
@@ -962,8 +1008,15 @@ const api = {
 
     for (const [industry, keywords] of Object.entries(industryKeywords)) {
       if (keywords.some((kw) => searchText.includes(kw))) {
-        console.log(`[V7 SSOT] Inferred industry from keywords: ${industry}`);
-        return { industry: industry as IndustrySlug, confidence: 0.75 };
+        // ✅ FIX Feb 7, 2026: Business name keyword match gets 0.92 confidence
+        // (clears the 0.85 threshold for auto-skip to Step 3).
+        // Location-only keyword match stays at 0.75 (user picks industry manually).
+        const fromBusiness = businessCard?.name && keywords.some((kw) =>
+          (businessCard.name ?? "").toLowerCase().includes(kw)
+        );
+        const conf = fromBusiness ? 0.92 : 0.75;
+        console.log(`[V7 SSOT] Inferred industry from keywords: ${industry} (conf=${conf}, fromBusiness=${fromBusiness})`);
+        return { industry: industry as IndustrySlug, confidence: conf };
       }
     }
 
@@ -1080,22 +1133,12 @@ const api = {
   // RESILIENCE: API is an enhancement, not a dependency.
   // If the backend is down (ECONNREFUSED / 500), fall back to local JSON templates.
   async loadStep3Template(industry: IndustrySlug, signal?: AbortSignal): Promise<Step3Template> {
-    // Map industry slugs that don't have dedicated templates to closest match
-    const templateMapping: Record<string, string> = {
-      // Industries with dedicated templates: resolve UI slug → template industry key
-      healthcare: "hospital", // IndustrySlug="healthcare" → hospital.v1.json
-      // Industries WITHOUT templates: map to closest match
-      warehouse: "data_center", // Similar industrial profile
-      retail: "hotel", // Commercial building profile
-      restaurant: "hotel", // Commercial building profile
-      other: "hotel", // Default fallback
-    };
-
-    // Keep both: what user selected vs what template we're actually loading
+    // Resolve industry context via SSOT catalog (replaces inline templateMapping)
+    const ctx = resolveIndustryContext(industry);
     const selected = industry;
-    const effective = (templateMapping[selected] || selected) as IndustrySlug;
+    const effective = ctx.templateKey as IndustrySlug;
 
-    console.log(`[V7 SSOT] Step3 template resolved: selected=${selected} effective=${effective}`);
+    console.log(`[V7 SSOT] Step3 template resolved: selected=${selected} effective=${effective} (via industryCatalog)`);
 
     // ============================================================
     // Phase 1: Try remote API (preferred — freshest data)
@@ -1287,24 +1330,14 @@ const api = {
     return finalTemplate;
   },
 
-  // Compute pricing freeze + quote (QuoteEngine)
-  async runQuoteEngine(
-    _args: {
-      location: LocationCard;
-      locationIntel: LocationIntel | null;
-      industry: IndustrySlug;
-      answers: Step3Answers;
-    },
-    _signal?: AbortSignal
-  ): Promise<{ freeze: PricingFreeze; quote: QuoteOutput }> {
-    // Replace with your QuoteEngine call.
-    const freeze: PricingFreeze = {
-      createdAtISO: nowISO(),
-    };
-    const quote: QuoteOutput = {
-      notes: ["QuoteEngine placeholder: wire me to your backend/engine."],
-    };
-    return { freeze, quote };
+  // Pricing API integration
+  async runPricingQuote(
+    contract: import("@/wizard/v7/pricing/pricingBridge").ContractQuoteResult,
+    config: PricingConfig
+  ): Promise<PricingQuoteResult> {
+    // Implementation delegated to pricingBridge.ts
+    const { runPricingQuote } = await import("@/wizard/v7/pricing/pricingBridge");
+    return runPricingQuote(contract, config);
   },
 };
 
@@ -1354,6 +1387,9 @@ function initialState(): WizardState {
     pricingRequestKey: null,
 
     quote: null,
+
+    // Step 4 system add-ons
+    step4AddOns: { ...DEFAULT_ADD_ONS },
 
     isHydrating: true,
     isBusy: false,
@@ -1421,8 +1457,28 @@ function reduce(state: WizardState, intent: Intent): WizardState {
         },
       };
 
-    case "SET_LOCATION_RAW":
-      return { ...state, locationRawInput: intent.value };
+    case "SET_LOCATION_RAW": {
+      const raw = intent.value;
+      const digits = raw.replace(/\D/g, "").slice(0, 5);
+      // ✅ FIX Feb 7, 2026: When user types a pure 5-digit ZIP, pre-populate a minimal
+      // location card with postalCode + state. This ensures state.location.postalCode is
+      // available immediately for gates, persistence, and downstream services.
+      // NOTE: This does NOT trigger the full downstream reset that SET_LOCATION does.
+      const isPureZipInput = /^\d{3,10}$/.test(raw.trim());
+      if (isPureZipInput && digits.length === 5) {
+        const stateCode = getStateFromZipPrefix(digits);
+        return {
+          ...state,
+          locationRawInput: raw,
+          location: {
+            ...(state.location ?? { formattedAddress: digits }),
+            postalCode: digits,
+            ...(stateCode && !state.location?.state ? { state: stateCode } : {}),
+          } as LocationCard,
+        };
+      }
+      return { ...state, locationRawInput: raw };
+    }
 
     case "SET_LOCATION":
       // ✅ FIX Jan 31: ALWAYS reset downstream when setting a location (prevents stale intel/template)
@@ -1868,6 +1924,13 @@ function reduce(state: WizardState, intent: Intent): WizardState {
         debug: { ...state.debug, notes: [...state.debug.notes, "Pricing retry requested"] },
       };
 
+    case "SET_STEP4_ADDONS":
+      return {
+        ...state,
+        step4AddOns: intent.addOns,
+        debug: { ...state.debug, notes: [...state.debug.notes, "Step 4 add-ons updated"] },
+      };
+
     // Legacy handlers (deprecated, use PRICING_* intents)
     case "SET_PRICING_FREEZE":
       return { ...state, pricingFreeze: intent.freeze };
@@ -1911,8 +1974,18 @@ function reduce(state: WizardState, intent: Intent): WizardState {
  */
 export function getNormalizedZip(state: WizardState): string {
   const raw =
-    state.location?.postalCode ?? state.location?.postalCode ?? state.locationRawInput ?? "";
+    state.location?.postalCode ?? state.locationRawInput ?? "";
   return raw.replace(/\D/g, "").slice(0, 5);
+}
+
+/** Strip to exactly 5 digits (or fewer if input is short). */
+function normalizeZip5(s: string): string {
+  return (s ?? "").replace(/\D/g, "").slice(0, 5);
+}
+
+/** True when the string contains a valid US 5-digit ZIP. */
+function isZip5(s: string): boolean {
+  return normalizeZip5(s).length === 5;
 }
 
 function hasState(location: LocationCard | null): boolean {
@@ -1931,24 +2004,82 @@ function hasValidLocation(state: WizardState): boolean {
 }
 
 /**
+ * Basic ZIP prefix → state code lookup (synchronous, no DB needed).
+ * Uses US Postal Service ZIP prefix assignment table.
+ * This ensures buildMinimalLocationFromZip always returns a state when possible.
+ */
+function getStateFromZipPrefix(zip: string): string | undefined {
+  const prefix = parseInt(zip.substring(0, 3), 10);
+  if (isNaN(prefix)) return undefined;
+
+  // US ZIP prefix ranges → state codes
+  if (prefix >= 995 && prefix <= 999) return "AK";
+  if (prefix >= 35 && prefix <= 36) return "AL";
+  if (prefix >= 716 && prefix <= 729) return "AR";
+  if (prefix >= 850 && prefix <= 865) return "AZ";
+  if (prefix >= 900 && prefix <= 961) return "CA";
+  if (prefix >= 800 && prefix <= 816) return "CO";
+  if (prefix >= 60 && prefix <= 69) return "CT";
+  if (prefix === 200 || prefix === 202 || (prefix >= 203 && prefix <= 205)) return "DC";
+  if (prefix === 197 || prefix === 198 || prefix === 199) return "DE";
+  if (prefix >= 320 && prefix <= 349) return "FL";
+  if (prefix >= 300 && prefix <= 319 || prefix === 398 || prefix === 399) return "GA";
+  if (prefix >= 967 && prefix <= 968) return "HI";
+  if (prefix >= 500 && prefix <= 528) return "IA";
+  if (prefix >= 832 && prefix <= 838) return "ID";
+  if (prefix >= 600 && prefix <= 629) return "IL";
+  if (prefix >= 460 && prefix <= 479) return "IN";
+  if (prefix >= 660 && prefix <= 679) return "KS";
+  if (prefix >= 400 && prefix <= 427) return "KY";
+  if (prefix >= 700 && prefix <= 714) return "LA";
+  if (prefix >= 10 && prefix <= 27) return "MA";
+  if (prefix >= 206 && prefix <= 219) return "MD";
+  if (prefix >= 39 && prefix <= 49) return "ME";
+  if (prefix >= 480 && prefix <= 499) return "MI";
+  if (prefix >= 550 && prefix <= 567) return "MN";
+  if (prefix >= 630 && prefix <= 658) return "MO";
+  if (prefix >= 386 && prefix <= 397) return "MS";
+  if (prefix >= 590 && prefix <= 599) return "MT";
+  if (prefix >= 270 && prefix <= 289) return "NC";
+  if (prefix >= 580 && prefix <= 588) return "ND";
+  if (prefix >= 680 && prefix <= 693) return "NE";
+  if (prefix >= 30 && prefix <= 38) return "NH";
+  if (prefix >= 70 && prefix <= 89) return "NJ";
+  if (prefix >= 870 && prefix <= 884) return "NM";
+  if (prefix >= 889 && prefix <= 898) return "NV";
+  if (prefix >= 100 && prefix <= 149) return "NY";
+  if (prefix >= 430 && prefix <= 459) return "OH";
+  if (prefix >= 730 && prefix <= 749) return "OK";
+  if (prefix >= 970 && prefix <= 979) return "OR";
+  if (prefix >= 150 && prefix <= 196) return "PA";
+  if (prefix >= 28 && prefix <= 29) return "RI";
+  if (prefix >= 290 && prefix <= 299) return "SC";
+  if (prefix >= 570 && prefix <= 577) return "SD";
+  if (prefix >= 370 && prefix <= 385) return "TN";
+  if (prefix >= 750 && prefix <= 799 || (prefix >= 885 && prefix <= 888)) return "TX";
+  if (prefix >= 840 && prefix <= 847) return "UT";
+  if (prefix >= 220 && prefix <= 246) return "VA";
+  if (prefix >= 50 && prefix <= 59) return "VT";
+  if (prefix >= 980 && prefix <= 994) return "WA";
+  if (prefix >= 530 && prefix <= 549) return "WI";
+  if (prefix >= 247 && prefix <= 268) return "WV";
+  if (prefix >= 820 && prefix <= 831) return "WY";
+
+  return undefined;
+}
+
+/**
  * Build a minimal LocationCard from ZIP when geocode hasn't resolved.
- * Downstream services accept this gracefully (city/state optional).
+ * ✅ FIX Feb 2026: Now includes state code from ZIP prefix lookup.
+ * Downstream services accept this gracefully (city optional, state preferred).
  */
 function buildMinimalLocationFromZip(state: WizardState): LocationCard | null {
   const zip = getNormalizedZip(state);
   if (zip.length < 5) return null;
 
-  // Try to get state from hardcoded ranges (synchronous, instant)
-  let stateCode: string | undefined;
-  let city: string | undefined;
-  try {
-    // Dynamic import would be async; use inline minimal lookup
-    // The real resolution happens async via primeLocationIntel
-    stateCode = undefined;
-    city = undefined;
-  } catch {
-    /* ignore */
-  }
+  // Synchronous state lookup from ZIP prefix (no DB, no async)
+  const stateCode = getStateFromZipPrefix(zip);
+  const city: string | undefined = undefined; // City requires geocoding
 
   return {
     formattedAddress: zip,
@@ -2238,6 +2369,86 @@ export function useWizardV7() {
     dispatch({ type: "SET_BUSINESS_DRAFT", patch });
   }, []);
 
+  /**
+   * primeLocationIntel - SINGLE SOURCE OF TRUTH for location enrichment
+   *
+   * ✅ UNIFIED (Feb 7, 2026): Both debounced typing AND submitLocation use this function.
+   * - Fires 3 parallel fetches (utility, solar, weather)
+   * - Dispatches PATCH_LOCATION_INTEL as each resolves (progressive UI hydration)
+   * - Returns the assembled Partial<LocationIntel> so callers can use it immediately
+   *   (without waiting for React state to propagate)
+   *
+   * @param zipOrInput - ZIP code or raw input string
+   * @returns Partial<LocationIntel> with whatever data was successfully fetched
+   */
+  const primeLocationIntel = useCallback(async (zipOrInput: string): Promise<Partial<LocationIntel>> => {
+    const input = zipOrInput.trim();
+    if (!input || input.length < 3) return {};
+
+    dispatch({ type: "DEBUG_TAG", lastAction: "primeLocationIntel" });
+
+    // Set all to fetching (progressive UI feedback)
+    dispatch({
+      type: "PATCH_LOCATION_INTEL",
+      patch: {
+        utilityStatus: "fetching",
+        solarStatus: "fetching",
+        weatherStatus: "fetching",
+        utilityError: undefined,
+        solarError: undefined,
+        weatherError: undefined,
+      },
+    });
+
+    // Fire all 3 in parallel with Promise.allSettled (fail-soft per service)
+    const [utilityRes, solarRes, weatherRes] = await Promise.allSettled([
+      api.fetchUtility(input),
+      api.fetchSolar(input),
+      api.fetchWeather(input),
+    ]);
+
+    // Assemble the intel object from settled results
+    const intel: Partial<LocationIntel> = { updatedAt: Date.now() };
+
+    if (utilityRes.status === "fulfilled") {
+      intel.utilityRate = utilityRes.value.rate;
+      intel.demandCharge = utilityRes.value.demandCharge;
+      intel.utilityProvider = utilityRes.value.provider;
+      intel.utilityStatus = "ready";
+    } else {
+      intel.utilityStatus = "error";
+      intel.utilityError = String(utilityRes.reason?.message ?? utilityRes.reason);
+    }
+
+    if (solarRes.status === "fulfilled") {
+      intel.peakSunHours = solarRes.value.peakSunHours;
+      intel.solarGrade = solarRes.value.grade;
+      intel.solarStatus = "ready";
+    } else {
+      intel.solarStatus = "error";
+      intel.solarError = String(solarRes.reason?.message ?? solarRes.reason);
+    }
+
+    if (weatherRes.status === "fulfilled") {
+      intel.weatherRisk = weatherRes.value.risk;
+      intel.weatherProfile = weatherRes.value.profile;
+      intel.weatherStatus = "ready";
+    } else {
+      intel.weatherStatus = "error";
+      intel.weatherError = String(weatherRes.reason?.message ?? weatherRes.reason);
+    }
+
+    // Dispatch final merged state (one atomic patch with all results)
+    dispatch({ type: "PATCH_LOCATION_INTEL", patch: intel });
+
+    if (import.meta.env.DEV) {
+      const ready = [intel.utilityStatus, intel.solarStatus, intel.weatherStatus].filter(s => s === "ready").length;
+      console.log(`[V7 SSOT] primeLocationIntel complete: ${ready}/3 services ready for "${input}"`);
+    }
+
+    return intel;
+  }, []);
+
   // Step 1: submit location (SSOT validates + populates intel)
   // ✅ FIX Jan 31: Accept businessInfo directly from Step1 (not stale state.businessDraft)
   const submitLocation = useCallback(
@@ -2246,6 +2457,9 @@ export function useWizardV7() {
       abortOngoing();
 
       const input = (rawInput ?? state.locationRawInput).trim();
+      if (import.meta.env.DEV) {
+        console.log("[V7] submitLocation called", { rawInput, stateRaw: state.locationRawInput, input });
+      }
       dispatch({ type: "DEBUG_TAG", lastAction: "submitLocation" });
 
       if (!input) {
@@ -2260,7 +2474,47 @@ export function useWizardV7() {
         setBusy(true, "Resolving location...");
         dispatch({ type: "DEBUG_TAG", lastApi: "resolveLocation" });
 
-        const location = await api.resolveLocation(input, controller.signal);
+        let location: LocationCard;
+
+        try {
+          location = await api.resolveLocation(input, controller.signal);
+        } catch (resolveErr) {
+          // ✅ FIX Feb 2026: Fallback when backend geocoding is unavailable
+          // Build a minimal location card from ZIP so the wizard can proceed
+          console.warn("[V7 SSOT] resolveLocation failed, using ZIP fallback:", resolveErr);
+          const minCard = buildMinimalLocationFromZip(state);
+          if (!minCard) {
+            throw resolveErr; // Can't even build minimal card — rethrow
+          }
+          location = minCard;
+          dispatch({
+            type: "DEBUG_NOTE",
+            note: `Geocode failed — using ZIP-only location (${minCard.postalCode})`,
+          });
+        }
+
+        // ✅ FIX Feb 7, 2026: Guarantee postalCode is populated when input is a ZIP.
+        // Many geocoders return lat/lng + formattedAddress but omit postalCode for ZIP lookups.
+        const zip5 = normalizeZip5(input);
+        if (isZip5(input) && !location.postalCode) {
+          location = { ...location, postalCode: zip5 };
+          dispatch({
+            type: "DEBUG_NOTE",
+            note: `Resolved location missing postalCode; injected ZIP ${zip5} from raw input`,
+          });
+        }
+
+        // Also inject state from ZIP prefix if geocoder didn't return it
+        if (!hasState(location) && isZip5(input)) {
+          const stateFromZip = getStateFromZipPrefix(zip5);
+          if (stateFromZip) {
+            location = { ...location, state: stateFromZip };
+            dispatch({
+              type: "DEBUG_NOTE",
+              note: `Resolved location missing state; injected ${stateFromZip} from ZIP prefix`,
+            });
+          }
+        }
 
         // SSOT: allow location but note missing state if expected
         if (!hasState(location)) {
@@ -2300,11 +2554,35 @@ export function useWizardV7() {
           });
         }
 
-        // Fetch intel (non-blocking to proceed; but we do it now)
+        // ✅ UNIFIED ENRICHMENT (Feb 7, 2026): Use primeLocationIntel — SINGLE path
+        // primeLocationIntel dispatches progressive PATCH_LOCATION_INTEL AND returns the intel.
+        // We await it so we have LOCAL intel for buildIntelPatch (no stale state reads).
         setBusy(true, "Fetching location intelligence...");
-        dispatch({ type: "DEBUG_TAG", lastApi: "fetchLocationIntel" });
-        const intel = await api.fetchLocationIntel(location, controller.signal);
-        dispatch({ type: "SET_LOCATION_INTEL", intel });
+        dispatch({ type: "DEBUG_TAG", lastApi: "primeLocationIntel" });
+        const zip = normalizeZip5(location.postalCode || input);
+        let intel: Partial<LocationIntel> = {};
+        try {
+          intel = await primeLocationIntel(zip || input);
+
+          // ✅ RUNTIME PROBE (Feb 7, 2026): Log exactly what came back so we can tell
+          // if the problem is in the enrichment pipeline vs upstream services
+          if (import.meta.env.DEV) {
+            const definedKeys = Object.keys(intel).filter(
+              (k) => (intel as Record<string, unknown>)[k] !== undefined
+            );
+            console.log(
+              `[V7 Step1] submitLocation intel keys: [${definedKeys.join(", ")}]`,
+              `| utilityRate=${intel.utilityRate} | peakSunHours=${intel.peakSunHours} | solarGrade=${intel.solarGrade} | weatherRisk=${intel.weatherRisk}`
+            );
+          }
+        } catch (enrichErr) {
+          // Enrichment failure is NEVER fatal — proceed with empty intel
+          console.warn("[V7 Step1] primeLocationIntel failed (non-blocking):", enrichErr);
+          dispatch({
+            type: "DEBUG_NOTE",
+            note: `Location intel failed (non-blocking): ${(enrichErr as { message?: string })?.message ?? enrichErr}`,
+          });
+        }
 
         // ✅ FIX Jan 31: Check LOCAL newBusinessCard variable (not stale state)
         // If we just created a business card, stay on Step 1 and show confirmation gate
@@ -2349,8 +2627,8 @@ export function useWizardV7() {
             source: "template_default",
           });
 
-          // ✅ PROVENANCE: Apply intel patches separately (won't stomp user edits later)
-          const intelPatch = api.buildIntelPatch(state.locationIntel);
+          // ✅ PROVENANCE: Apply intel patches using LOCAL intel (not stale state.locationIntel)
+          const intelPatch = api.buildIntelPatch(intel as LocationIntel);
           if (Object.keys(intelPatch).length > 0) {
             dispatch({ type: "PATCH_STEP3_ANSWERS", patch: intelPatch, source: "location_intel" });
           }
@@ -2372,107 +2650,9 @@ export function useWizardV7() {
         abortRef.current = null;
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- locationIntel intentionally excluded (causes re-render loops)
-    [abortOngoing, clearError, setError, setBusy, setStep, state.locationRawInput]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- primeLocationIntel is stable (empty deps)
+    [abortOngoing, clearError, setError, setBusy, setStep, state.locationRawInput, primeLocationIntel]
   );
-
-  /**
-   * primeLocationIntel - Progressive hydration for ZIP/location intel
-   *
-   * Called on ZIP input change (debounced from UI).
-   * Fires 3 parallel fetches, updates UI as each returns.
-   * Does NOT block on busy gate - each source updates independently.
-   */
-  const primeLocationIntel = useCallback(async (zipOrInput: string) => {
-    const input = zipOrInput.trim();
-    if (!input || input.length < 3) return;
-
-    dispatch({ type: "DEBUG_TAG", lastAction: "primeLocationIntel" });
-
-    // Set all to fetching
-    dispatch({
-      type: "PATCH_LOCATION_INTEL",
-      patch: {
-        utilityStatus: "fetching",
-        solarStatus: "fetching",
-        weatherStatus: "fetching",
-        utilityError: undefined,
-        solarError: undefined,
-        weatherError: undefined,
-      },
-    });
-
-    // Fire all 3 in parallel - each updates state as it returns
-    // Utility rate fetch
-    api
-      .fetchUtility(input)
-      .then((u) => {
-        dispatch({
-          type: "PATCH_LOCATION_INTEL",
-          patch: {
-            utilityRate: u.rate,
-            demandCharge: u.demandCharge,
-            utilityProvider: u.provider,
-            utilityStatus: "ready",
-          },
-        });
-      })
-      .catch((e) => {
-        dispatch({
-          type: "PATCH_LOCATION_INTEL",
-          patch: {
-            utilityStatus: "error",
-            utilityError: String(e?.message ?? e),
-          },
-        });
-      });
-
-    // Solar data fetch
-    api
-      .fetchSolar(input)
-      .then((s) => {
-        dispatch({
-          type: "PATCH_LOCATION_INTEL",
-          patch: {
-            peakSunHours: s.peakSunHours,
-            solarGrade: s.grade,
-            solarStatus: "ready",
-          },
-        });
-      })
-      .catch((e) => {
-        dispatch({
-          type: "PATCH_LOCATION_INTEL",
-          patch: {
-            solarStatus: "error",
-            solarError: String(e?.message ?? e),
-          },
-        });
-      });
-
-    // Weather data fetch
-    api
-      .fetchWeather(input)
-      .then((w) => {
-        dispatch({
-          type: "PATCH_LOCATION_INTEL",
-          patch: {
-            weatherRisk: w.risk,
-            weatherProfile: w.profile,
-            weatherStatus: "ready",
-          },
-        });
-      })
-      .catch((e) => {
-        dispatch({
-          type: "PATCH_LOCATION_INTEL",
-          patch: {
-            weatherStatus: "error",
-            weatherError: String(e?.message ?? e),
-          },
-        });
-      });
-  }, []);
 
   /**
    * skipBusiness - User skips/dismisses the detected business card
@@ -2972,6 +3152,7 @@ export function useWizardV7() {
       answers: Record<string, unknown>;
       location?: LocationCard;
       locationIntel?: LocationIntel;
+      addOns?: SystemAddOns;
     }) => {
       // Generate request key for stale-write protection
       const requestKey = generateRequestKey({
@@ -3041,6 +3222,8 @@ export function useWizardV7() {
 
         try {
           // Build ContractQuoteResult for Layer B
+          // Merge Step 4 add-ons into inputsUsed so they flow to pricingBridge → calculateQuote()
+          const addOns = args.addOns;
           const contractForPricing: import("@/wizard/v7/pricing/pricingBridge").ContractQuoteResult =
             {
               loadProfile,
@@ -3054,6 +3237,19 @@ export function useWizardV7() {
                 location: inputsUsed.location,
                 industry: inputsUsed.industry,
                 gridMode: inputsUsed.gridMode,
+                // System add-ons (Step 4 → pricingBridge → calculateQuote)
+                solarMW: addOns?.includeSolar && addOns.solarKW > 0
+                  ? addOns.solarKW / 1000
+                  : undefined,
+                generatorMW: addOns?.includeGenerator && addOns.generatorKW > 0
+                  ? addOns.generatorKW / 1000
+                  : undefined,
+                generatorFuelType: addOns?.includeGenerator
+                  ? addOns.generatorFuelType
+                  : undefined,
+                windMW: addOns?.includeWind && addOns.windKW > 0
+                  ? addOns.windKW / 1000
+                  : undefined,
               },
               assumptions: baseQuote.notes?.filter((n) => !n.startsWith("⚠️")),
               warnings: baseQuote.notes
@@ -3237,10 +3433,13 @@ export function useWizardV7() {
           );
         }
 
-        // Update freeze with sizing info from Layer A
+        // Update freeze with sizing info from Layer A + Layer B equipment
         const enrichedFreeze: PricingFreeze = {
           ...freeze,
           hours: sizingHints.durationHours,
+          // Populate solar/generator from pricing breakdown (Layer B)
+          solarMWp: mergedQuote.solarKW ? mergedQuote.solarKW / 1000 : undefined,
+          generatorMW: mergedQuote.generatorKW ? mergedQuote.generatorKW / 1000 : undefined,
         };
 
         // 6. Success! (with stale-write key for guard)
@@ -3282,6 +3481,7 @@ export function useWizardV7() {
    * retryPricing - Retry pricing from Results page
    *
    * Uses current state.step3Answers, state.industry, state.location, state.locationIntel.
+   * Passes current step4AddOns to include solar/generator/wind in the quote.
    */
   const retryPricing = useCallback(async () => {
     if (state.industry === "auto") {
@@ -3294,6 +3494,31 @@ export function useWizardV7() {
       answers: state.step3Answers,
       location: state.location ?? undefined,
       locationIntel: state.locationIntel ?? undefined,
+      addOns: state.step4AddOns,
+    });
+  }, [runPricingSafe, state.industry, state.step3Answers, state.location, state.locationIntel, state.step4AddOns]);
+
+  /**
+   * recalculateWithAddOns - Re-run pricing with new add-on configuration from Step 4.
+   *
+   * Flow: User toggles solar/generator/EV in Step 4 → saves add-ons → re-runs pricing.
+   * Layer A (load profile) is re-computed (no cache), Layer B (pricing) gets add-on values.
+   */
+  const recalculateWithAddOns = useCallback(async (addOns: SystemAddOns) => {
+    if (state.industry === "auto") {
+      console.warn("[V7] Cannot recalculate: industry not set");
+      return { ok: false as const, error: "Industry not set" };
+    }
+    // 1. Persist add-ons to state
+    dispatch({ type: "SET_STEP4_ADDONS", addOns });
+    // 2. Re-run pricing with new add-ons
+    dispatch({ type: "PRICING_RETRY" });
+    return runPricingSafe({
+      industry: state.industry,
+      answers: state.step3Answers,
+      location: state.location ?? undefined,
+      locationIntel: state.locationIntel ?? undefined,
+      addOns,
     });
   }, [runPricingSafe, state.industry, state.step3Answers, state.location, state.locationIntel]);
 
@@ -3870,6 +4095,7 @@ export function useWizardV7() {
     // step 4: pricing (Phase 6: non-blocking)
     retryPricing, // Retry pricing from Results page
     retryTemplate, // Retry industry template load (upgrade fallback → industry)
+    recalculateWithAddOns, // Re-run pricing with new add-on config (solar/gen/wind)
 
     // misc
     clearError,

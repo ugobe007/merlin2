@@ -7,7 +7,7 @@ const POWER_LEVELS = [
     minKWh: 0,
     maxKWh: 500,
     icon: "🪄",
-    gradient: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
+    gradient: "linear-gradient(135deg, #4a6fa5 0%, #1a3a6c 100%)",
     description: "Beginning your energy journey",
   },
   {
@@ -15,7 +15,7 @@ const POWER_LEVELS = [
     minKWh: 500,
     maxKWh: 1000,
     icon: "✨",
-    gradient: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
+    gradient: "linear-gradient(135deg, #2d5a8e 0%, #143052 100%)",
     description: "Mastering energy basics",
   },
   {
@@ -23,7 +23,7 @@ const POWER_LEVELS = [
     minKWh: 1000,
     maxKWh: 2000,
     icon: "🔮",
-    gradient: "linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)",
+    gradient: "linear-gradient(135deg, #1a3a6c 0%, #0c1631 100%)",
     description: "Commanding energy flows",
   },
   {
@@ -31,7 +31,7 @@ const POWER_LEVELS = [
     minKWh: 2000,
     maxKWh: 3500,
     icon: "⚡",
-    gradient: "linear-gradient(135deg, #6d28d9 0%, #4338ca 100%)",
+    gradient: "linear-gradient(135deg, #143052 0%, #0a1e3d 100%)",
     description: "Enchanting power systems",
   },
   {
@@ -39,7 +39,7 @@ const POWER_LEVELS = [
     minKWh: 3500,
     maxKWh: 5000,
     icon: "🌟",
-    gradient: "linear-gradient(135deg, #5b21b6 0%, #312e81 100%)",
+    gradient: "linear-gradient(135deg, #0c1631 0%, #060d1f 100%)",
     description: "Wielding significant power",
   },
   {
@@ -47,7 +47,7 @@ const POWER_LEVELS = [
     minKWh: 5000,
     maxKWh: 10000,
     icon: "👑",
-    gradient: "linear-gradient(135deg, #4338ca 0%, #1e1b4b 100%)",
+    gradient: "linear-gradient(135deg, #0a1e3d 0%, #040a14 100%)",
     description: "Master of energy realms",
   },
   {
@@ -55,7 +55,7 @@ const POWER_LEVELS = [
     minKWh: 10000,
     maxKWh: Infinity,
     icon: "🧙‍♂️",
-    gradient: "linear-gradient(135deg, #5b21b6 0%, #1e1b4b 100%)",
+    gradient: "linear-gradient(135deg, #0c1631 0%, #040a14 100%)",
     description: "Supreme energy sovereign",
   },
 ];
@@ -118,7 +118,7 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
         
         body {
           font-family: 'Georgia', 'Times New Roman', serif;
-          background: linear-gradient(135deg, #1e1b4b 0%, #312e81 30%, #5b21b6 70%, #7c3aed 100%);
+          background: linear-gradient(135deg, #040a14 0%, #060d1f 30%, #0c1631 70%, #1a3a6c 100%);
           min-height: 100vh;
           display: flex;
           align-items: center;
@@ -133,8 +133,8 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
           border-radius: 20px;
           padding: 50px;
           box-shadow: 
-            0 0 60px rgba(124, 58, 237, 0.4),
-            0 0 100px rgba(79, 70, 229, 0.2),
+            0 0 60px rgba(12, 22, 49, 0.4),
+            0 0 100px rgba(26, 58, 108, 0.2),
             inset 0 0 100px rgba(255, 255, 255, 0.5);
           position: relative;
           overflow: hidden;
@@ -146,7 +146,7 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
           content: '✦';
           position: absolute;
           font-size: 40px;
-          color: rgba(124, 58, 237, 0.3);
+          color: rgba(12, 22, 49, 0.3);
         }
         .certificate-container::before {
           top: 20px;
@@ -160,7 +160,7 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
         .corner-decoration {
           position: absolute;
           font-size: 40px;
-          color: rgba(124, 58, 237, 0.3);
+          color: rgba(12, 22, 49, 0.3);
         }
         .corner-tl { top: 20px; left: 25px; }
         .corner-tr { top: 20px; right: 25px; }
@@ -175,7 +175,7 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
           right: 15px;
           bottom: 15px;
           border: 3px solid;
-          border-image: linear-gradient(135deg, #7c3aed, #4f46e5, #7c3aed) 1;
+          border-image: linear-gradient(135deg, #0c1631, #1a3a6c, #0c1631) 1;
           border-radius: 15px;
           pointer-events: none;
         }
@@ -188,13 +188,13 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
         .merlin-badge {
           font-size: 60px;
           margin-bottom: 10px;
-          text-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+          text-shadow: 0 0 30px rgba(251, 191, 36, 0.5);
         }
         
         .title {
           font-size: 14px;
           letter-spacing: 8px;
-          color: #6d28d9;
+          color: #0c1631;
           text-transform: uppercase;
           margin-bottom: 10px;
         }
@@ -202,7 +202,7 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
         .certificate-title {
           font-size: 42px;
           font-weight: bold;
-          background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #4f46e5 100%);
+          background: linear-gradient(135deg, #060d1f 0%, #0c1631 50%, #1a3a6c 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -224,7 +224,7 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
           font-size: 100px;
           display: block;
           margin-bottom: 20px;
-          filter: drop-shadow(0 0 20px rgba(124, 58, 237, 0.5));
+          filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.5));
         }
         
         .level-name {
@@ -254,9 +254,9 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
         .stat-box {
           text-align: center;
           padding: 20px;
-          background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+          background: linear-gradient(135deg, #f0f3f8 0%, #e8edf5 100%);
           border-radius: 12px;
-          border: 2px solid #c4b5fd;
+          border: 2px solid #b8c5d9;
         }
         
         .stat-icon {
@@ -267,8 +267,7 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
         .stat-value {
           font-size: 24px;
           font-weight: bold;
-          color: #5b21b6;
-          margin-bottom: 4px;
+          color: #0c1631;
         }
         
         .stat-label {
@@ -295,14 +294,14 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          border: 2px solid #c4b5fd;
-          background: #f5f3ff;
+          border: 2px solid #b8c5d9;
+          background: #f0f3f8;
           position: relative;
         }
         
         .level-dot.achieved {
-          background: linear-gradient(135deg, #7c3aed, #5b21b6);
-          border-color: #5b21b6;
+          background: linear-gradient(135deg, #0c1631, #060d1f);
+          border-color: #060d1f;
         }
         
         .level-dot.current {
@@ -343,7 +342,7 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
           align-items: flex-end;
           margin-top: 40px;
           padding-top: 20px;
-          border-top: 2px dashed #c4b5fd;
+          border-top: 2px dashed #b8c5d9;
         }
         
         .date-section {
@@ -370,14 +369,14 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
         .signature-line {
           width: 200px;
           height: 2px;
-          background: #7c3aed;
+          background: #0c1631;
           margin-bottom: 5px;
         }
         
         .signature-name {
           font-size: 24px;
           font-family: 'Brush Script MT', cursive;
-          color: #5b21b6;
+          color: #0c1631;
         }
         
         .signature-title {
@@ -392,7 +391,7 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
         .logo-text {
           font-size: 24px;
           font-weight: bold;
-          color: #5b21b6;
+          color: #0c1631;
         }
         
         .logo-tagline {
@@ -677,7 +676,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           line-height: 1.6;
           color: #1f2937;
-          background: linear-gradient(135deg, #6B46C1 0%, #553C9A 100%);
+          background: linear-gradient(135deg, #060d1f 0%, #0c1631 100%);
           padding: 40px 20px;
         }
         
@@ -691,7 +690,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
         }
         
         .header {
-          background: linear-gradient(135deg, #6B46C1 0%, #553C9A 100%);
+          background: linear-gradient(135deg, #060d1f 0%, #0c1631 100%);
           color: white;
           padding: 60px 40px;
           text-align: center;
@@ -747,10 +746,10 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
         .section-title {
           font-size: 24px;
           font-weight: bold;
-          color: #6B46C1;
+          color: #0c1631;
           margin-bottom: 20px;
           padding-bottom: 10px;
-          border-bottom: 3px solid #6B46C1;
+          border-bottom: 3px solid #0c1631;
         }
         
         .info-grid {
@@ -764,7 +763,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
           background: linear-gradient(135deg, #F7FAFC 0%, #E2E8F0 100%);
           padding: 20px;
           border-radius: 12px;
-          border-left: 4px solid #6B46C1;
+          border-left: 4px solid #0c1631;
         }
         
         .info-card .label {
@@ -787,13 +786,13 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
         }
         
         .highlight-card {
-          background: linear-gradient(135deg, #6B46C1 0%, #553C9A 100%);
+          background: linear-gradient(135deg, #060d1f 0%, #0c1631 100%);
           color: white;
           padding: 30px;
           border-radius: 15px;
           text-align: center;
           margin: 30px 0;
-          box-shadow: 0 10px 30px rgba(107, 70, 193, 0.3);
+          box-shadow: 0 10px 30px rgba(6, 13, 31, 0.3);
         }
         
         .highlight-card .big-number {
@@ -826,7 +825,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
           font-weight: bold;
           font-size: 20px;
           padding-top: 20px;
-          border-top: 3px solid #6B46C1;
+          border-top: 3px solid #0c1631;
         }
         
         .cost-row.savings {
@@ -876,7 +875,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
         .footer .company {
           font-size: 18px;
           font-weight: bold;
-          color: #6B46C1;
+          color: #0c1631;
           margin-bottom: 10px;
         }
         
@@ -909,8 +908,8 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
         <!-- Content -->
         <div class="content">
           <!-- Custom Solution Explanation -->
-          <div style="background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%); padding: 25px; border-radius: 15px; margin-bottom: 30px; border-left: 5px solid #6B46C1;">
-            <h3 style="color: #6B46C1; font-size: 22px; margin-bottom: 15px; font-weight: bold;">🎯 Designed For Your ${industryName}</h3>
+          <div style="background: linear-gradient(135deg, #e8edf5 0%, #dce3ef 100%); padding: 25px; border-radius: 15px; margin-bottom: 30px; border-left: 5px solid #0c1631;">
+            <h3 style="color: #0c1631; font-size: 22px; margin-bottom: 15px; font-weight: bold;">🎯 Designed For Your ${industryName}</h3>
             <p style="font-size: 16px; line-height: 1.8; color: #374151; margin-bottom: 15px;">
               This battery energy storage system has been specifically configured to meet the unique operational requirements and energy patterns of ${industryName.toLowerCase()} facilities. 
               This ${q.durationHours}-hour system is optimized for peak demand reduction and time-of-use energy arbitrage, targeting the highest-cost periods when your facility experiences peak load. The system provides reliable energy storage to maintain critical operations during grid outages while ensuring business continuity and protecting sensitive equipment.
@@ -958,15 +957,15 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
             </div>
             
             <!-- System Configuration Summary -->
-            <div style="margin-top: 20px; padding: 25px; background: linear-gradient(135deg, #F7FAFC 0%, #EDE9FE 100%); border-radius: 12px; border-left: 5px solid #6B46C1;">
-              <div style="font-weight: bold; margin-bottom: 20px; color: #6B46C1; font-size: 22px;">⚙️ System Configuration Summary</div>
+            <div style="margin-top: 20px; padding: 25px; background: linear-gradient(135deg, #F7FAFC 0%, #e8edf5 100%); border-radius: 12px; border-left: 5px solid #0c1631;">
+              <div style="font-weight: bold; margin-bottom: 20px; color: #0c1631; font-size: 22px;">⚙️ System Configuration Summary</div>
               
               
               <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
                 <div style="font-weight: bold; color: #374151; margin-bottom: 12px; font-size: 18px;">How This Configuration Meets Your Needs</div>
                 
                 <div style="margin-bottom: 15px;">
-                  <div style="font-weight: bold; color: #6B46C1; margin-bottom: 8px;">🎯 Primary Objectives Addressed:</div>
+                  <div style="font-weight: bold; color: #0c1631; margin-bottom: 8px;">🎯 Primary Objectives Addressed:</div>
                   <ul style="margin-left: 20px; color: #4b5563; font-size: 14px; line-height: 1.8;">
                     <li><strong>Energy Storage & Management:</strong> ${totalEnergyMWh.toFixed(2)} MWh battery system provides ${(totalEnergyMWh / (q.storageSizeMW * 0.7)).toFixed(1)} hours of backup power and intelligent demand charge management</li>
                     <li><strong>Power Quality & Reliability:</strong> ${q.gridConnection === "off-grid" ? "Grid-forming inverters enable stable operation without external grid reference" : "Bi-directional inverters provide seamless grid integration with <50ms backup transition"}</li>
@@ -1020,7 +1019,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                 }
                 
                 <div>
-                  <div style="font-weight: bold; color: #7c3aed; margin-bottom: 8px;">📊 Performance Optimization:</div>
+                  <div style="font-weight: bold; color: #1a2744; margin-bottom: 8px;">📊 Performance Optimization:</div>
                   <div style="color: #4b5563; font-size: 14px; line-height: 1.6;">
                     The system is optimized for <strong>${(((totalEnergyMWh / q.storageSizeMW) * 100) / 4).toFixed(0)}% daily utilization</strong>, providing optimal balance between equipment cost and operational savings. Advanced energy management algorithms maximize financial returns through time-of-use arbitrage, demand charge reduction, and renewable energy integration while ensuring equipment longevity through intelligent cycling.
                   </div>
@@ -1028,7 +1027,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
               </div>
             </div>
               
-              <div style="background: #EDE9FE; padding: 15px; border-radius: 8px; font-size: 13px; color: #4c1d95; border: 1px solid #C4B5FD;">
+              <div style="background: #e8edf5; padding: 15px; border-radius: 8px; font-size: 13px; color: #0c1631; border: 1px solid #b8c5d9;">
                 <strong>✓ Implementation Includes:</strong> Comprehensive site preparation, professional system commissioning, operator training, remote monitoring setup, and complete documentation package for utility interconnection and regulatory compliance.
               </div>
             </div>
@@ -1235,9 +1234,9 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
             </div>
             
             <!-- How Your Quote Aligns -->
-            <div style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border-radius: 12px; border-left: 4px solid #7c3aed;">
-              <div style="font-weight: bold; color: #5b21b6; font-size: 18px; margin-bottom: 15px;">🎯 How Your Quote Aligns With These Metrics</div>
-              <ul style="margin-left: 20px; color: #4c1d95; font-size: 14px; line-height: 1.8;">
+            <div style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #e8edf5 0%, #dce3ef 100%); border-radius: 12px; border-left: 4px solid #0c1631;">
+              <div style="font-weight: bold; color: #0c1631; font-size: 18px; margin-bottom: 15px;">🎯 How Your Quote Aligns With These Metrics</div>
+              <ul style="margin-left: 20px; color: #1a2744; font-size: 14px; line-height: 1.8;">
                 ${
                   quoteData.powerGap?.status === "covered"
                     ? "<li><strong>✓ Full Coverage:</strong> Your system is sized to meet 100% of your peak demand, ensuring grid independence during peak periods.</li>"
@@ -1353,8 +1352,8 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
               hasDetailedBreakdown
                 ? `
             <!-- Commissioning & Certification Details -->
-            <div style="margin-top: 20px; padding: 20px; background: #ede9fe; border-radius: 12px; border-left: 4px solid #7c3aed;">
-              <div style="font-weight: bold; margin-bottom: 15px; color: #5b21b6; font-size: 18px;">🔧 Commissioning & Testing Costs</div>
+            <div style="margin-top: 20px; padding: 20px; background: #e8edf5; border-radius: 12px; border-left: 4px solid #0c1631;">
+              <div style="font-weight: bold; margin-bottom: 15px; color: #0c1631; font-size: 18px;">🔧 Commissioning & Testing Costs</div>
               <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 14px;">
                 <div><span style="color: #6b7280;">Factory Acceptance Test (FAT):</span> <strong>$${((equipmentBreakdown?.commissioning?.factoryAcceptanceTest || q.commissioningCost * 0.12) / 1000).toFixed(0)}K</strong></div>
                 <div><span style="color: #6b7280;">Site Acceptance Test (SAT):</span> <strong>$${((equipmentBreakdown?.commissioning?.siteAcceptanceTest || q.commissioningCost * 0.27) / 1000).toFixed(0)}K</strong></div>
@@ -1462,8 +1461,8 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-          <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #7C3AED;">
-            <h4 style="margin: 0 0 10px 0; color: #6B46C1;">Savings Methodology</h4>
+          <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #0c1631;">
+            <h4 style="margin: 0 0 10px 0; color: #0c1631;">Savings Methodology</h4>
             <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
               <li>Demand Charge Reduction: <strong>Peak shaving analysis</strong></li>
               <li>Time-of-Use Arbitrage: <strong>Peak/off-peak differential</strong></li>
@@ -1509,18 +1508,18 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
         </div>
         
         <div style="text-align: center; margin-top: 20px;">
-          <button onclick="hideCalculationDetails()" style="background: #6B46C1; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+          <button onclick="hideCalculationDetails()" style="background: #0c1631; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
             Hide Calculations
           </button>
         </div>
       </div>
       
       <!-- Contact Section -->
-      <div style="background: linear-gradient(135deg, #6B46C1 0%, #553C9A 100%); color: white; padding: 20px; border-radius: 8px; margin-top: 30px; text-align: center;">
+      <div style="background: linear-gradient(135deg, #060d1f 0%, #0c1631 100%); color: white; padding: 20px; border-radius: 8px; margin-top: 30px; text-align: center;">
         <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">📞 Questions About This Quote?</div>
         <div style="font-size: 14px; margin-bottom: 15px;">Contact Merlin Energy for personalized assistance and technical support</div>
         <div style="display: flex; gap: 15px; justify-content: center; align-items: center;">
-          <button onclick="contactMerlinEnergy()" style="background: white; color: #6B46C1; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <button onclick="contactMerlinEnergy()" style="background: #fbbf24; color: #000; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             Contact Merlin Energy
           </button>
           <button onclick="window.print()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer;">
@@ -1984,17 +1983,17 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     .header-container {
       width: 100%;
       margin-bottom: 15px;
-      border: 3px solid #6B46C1;
+      border: 3px solid #0c1631;
       border-radius: 8px;
-      background: linear-gradient(135deg, #E5E7EB 0%, #EDE9FE 100%);
+      background: linear-gradient(135deg, #E5E7EB 0%, #e8edf5 100%);
       padding: 25px;
       text-align: center;
-      box-shadow: 0 4px 6px rgba(107, 70, 193, 0.2);
+      box-shadow: 0 4px 6px rgba(12, 22, 49, 0.2);
     }
     .header-title {
       font-size: 28px;
       font-weight: bold;
-      color: #6B46C1;
+      color: #0c1631;
       line-height: 1.3;
       margin: 0 0 12px 0;
       text-transform: uppercase;
@@ -2017,38 +2016,38 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       text-align: center;
       margin-bottom: 20px;
       padding: 8px;
-      background: #EDE9FE;
+      background: #e8edf5;
       border-radius: 4px;
-      border: 1px solid #C4B5FD;
+      border: 1px solid #b8c5d9;
     }
     .company-name {
       font-size: 14px;
       font-weight: bold;
-      color: #6B46C1;
+      color: #0c1631;
       margin-bottom: 2px;
     }
     .company-website {
       font-size: 12px;
-      color: #553C9A;
+      color: #1a2744;
     }
     .section-header {
       background-color: #E5E7EB;
       padding: 10px 15px;
       margin: 25px 0 15px 0;
-      border-left: 4px solid #6B46C1;
+      border-left: 4px solid #0c1631;
       font-size: 16px;
       font-weight: bold;
       color: #1F2937;
     }
     h1 { 
-      color: #6B46C1; 
+      color: #0c1631; 
       font-size: 32px;
-      border-bottom: 4px solid #6B46C1;
+      border-bottom: 4px solid #0c1631;
       padding-bottom: 10px;
       margin-bottom: 30px;
     }
     h2 { 
-      color: #6B46C1; 
+      color: #0c1631; 
       font-size: 20px;
       margin-top: 25px;
       margin-bottom: 12px;
@@ -2056,7 +2055,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       padding-bottom: 6px;
     }
     h3 { 
-      color: #553C9A; 
+      color: #1a2744; 
       font-size: 16px;
       margin-top: 15px;
       margin-bottom: 8px;
@@ -2077,19 +2076,19 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       font-weight: bold;
     }
     .highlight { 
-      background-color: #EDE9FE; 
+      background-color: #e8edf5; 
       padding: 15px; 
-      border-left: 4px solid #6B46C1;
+      border-left: 4px solid #0c1631;
       margin: 15px 0;
       font-size: 16px;
       font-weight: bold;
     }
     .info-box { 
-      background-color: #EDE9FE; 
+      background-color: #e8edf5; 
       padding: 12px; 
       margin: 12px 0;
       border-radius: 4px;
-      border-left: 3px solid #6B46C1;
+      border-left: 3px solid #0c1631;
       font-size: 13px;
     }
     .success { 
@@ -2097,8 +2096,8 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       border-left: 4px solid #10b981;
     }
     .purple-box {
-      background-color: #EDE9FE;
-      border-left: 4px solid #6B46C1;
+      background-color: #e8edf5;
+      border-left: 4px solid #0c1631;
       padding: 15px;
       margin: 15px 0;
       border-radius: 4px;
@@ -2108,13 +2107,13 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     .footer {
       margin-top: 40px;
       padding-top: 20px;
-      border-top: 2px solid #6B46C1;
+      border-top: 2px solid #0c1631;
       font-size: 12px;
       color: #718096;
       text-align: center;
     }
     .footer strong {
-      color: #6B46C1;
+      color: #0c1631;
       font-size: 16px;
     }
   </style>
@@ -2139,7 +2138,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     <h2 style="margin: 0 0 20px 0; text-align: center; font-size: 22px; color: #1F2937; font-weight: bold;">📋 EXECUTIVE SUMMARY</h2>
     
     <table style="width: 100%; background: white; border-radius: 6px; margin-bottom: 15px; border: none; font-size: 13px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-      <tr style="background: #6B46C1; color: white;">
+      <tr style="background: #0c1631; color: white;">
         <td style="padding: 12px 15px; font-weight: bold; border-radius: 6px 0 0 0;">Key Metrics</td>
         <td style="padding: 12px 15px; font-weight: bold; text-align: right; border-radius: 0 6px 0 0;">Value</td>
       </tr>
@@ -2149,7 +2148,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       </tr>
       <tr>
         <td style="padding: 10px 15px; border-bottom: 1px solid #E5E7EB;"><strong>Total Investment:</strong></td>
-        <td style="padding: 10px 15px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #6B46C1; font-weight: bold;">$$${(q.totalProjectCost / 1000000).toFixed(2)}M</td>
+        <td style="padding: 10px 15px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #0c1631; font-weight: bold;">$$${(q.totalProjectCost / 1000000).toFixed(2)}M</td>
       </tr>
       <tr>
         <td style="padding: 10px 15px; border-bottom: 1px solid #E5E7EB;"><strong>Net Cost (After ITC):</strong></td>
@@ -2161,15 +2160,15 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       </tr>
       <tr>
         <td style="padding: 10px 15px; border-bottom: 1px solid #E5E7EB;"><strong>Simple Payback:</strong></td>
-        <td style="padding: 10px 15px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #7C3AED; font-weight: bold;">${q.paybackYears.toFixed(1)} years</td>
+        <td style="padding: 10px 15px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #0c1631; font-weight: bold;">${q.paybackYears.toFixed(1)} years</td>
       </tr>
       <tr>
         <td style="padding: 10px 15px;"><strong>25-Year ROI:</strong></td>
-        <td style="padding: 10px 15px; text-align: right; color: #7C3AED; font-weight: bold;">${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}%</td>
+        <td style="padding: 10px 15px; text-align: right; color: #0c1631; font-weight: bold;">${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}%</td>
       </tr>
     </table>
     
-    <div style="background: linear-gradient(135deg, #6B46C1 0%, #553C9A 100%); color: white; padding: 15px; border-radius: 6px; margin-top: 15px;">
+    <div style="background: linear-gradient(135deg, #060d1f 0%, #0c1631 100%); color: white; padding: 15px; border-radius: 6px; margin-top: 15px;">
       <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">🎯 Designed for ${getIndustryName(q.industryTemplate)} Operations:</div>
       <div style="font-size: 14px; line-height: 1.6;">
         ${
@@ -2203,7 +2202,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
   </div>
   
   <!-- QUOTE SUMMARY - Cost at a Glance -->
-  <div style="background: linear-gradient(135deg, #6B46C1 0%, #553C9A 100%); color: white; padding: 30px; border-radius: 8px; margin-top: 25px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <div style="background: linear-gradient(135deg, #060d1f 0%, #0c1631 100%); color: white; padding: 30px; border-radius: 8px; margin-top: 25px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
     <h2 style="margin: 0 0 20px 0; text-align: center; font-size: 26px; border: none; padding: 0; letter-spacing: 1px;">🎯 QUOTE SUMMARY</h2>
     
     <!-- Professional System Breakdown Table -->
@@ -2227,7 +2226,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
           : ""
       }
       <tr>
-        <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #8b5cf6;">BESS System</td>
+        <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #0c1631;">BESS System</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">LFP battery storage with PCS and fire-rated enclosure</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${totalEnergyMWh.toFixed(2)} MWh / ${q.storageSizeMW.toFixed(2)} MW</td>
         <td style="padding: 6px 10px; text-align: right; border: 1px solid #E5E7EB; font-weight: 600;">$$${(equipmentBreakdown.batteries.totalCost / 1000000).toFixed(2)}M</td>
@@ -2272,7 +2271,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       ${
         equipmentBreakdown.evChargers && equipmentBreakdown.evChargers.totalChargingCost > 0
           ? `<tr>
-        <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #8b5cf6;">EV Charging Infrastructure</td>
+        <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #0c1631;">EV Charging Infrastructure</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">Level 2 and DC fast charging stations with network connectivity</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${equipmentBreakdown.evChargers.level2Chargers.quantity} Level 2 + ${equipmentBreakdown.evChargers.dcFastChargers.quantity} DC Fast units</td>
         <td style="padding: 6px 10px; text-align: right; border: 1px solid #E5E7EB; font-weight: 600;">$$${(equipmentBreakdown.evChargers.totalChargingCost / 1000000).toFixed(2)}M</td>
@@ -2380,7 +2379,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
         </tr>
         <tr>
           <td style="padding: 5px 8px; font-size: 13px; border: none;"><strong>25-Year Return on Investment:</strong></td>
-          <td style="padding: 5px 8px; text-align: right; font-size: 13px; color: #7C3AED; font-weight: bold; border: none;">${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}%</td>
+          <td style="padding: 5px 8px; text-align: right; font-size: 13px; color: #0c1631; font-weight: bold; border: none;">${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}%</td>
         </tr>
       </table>
     </div>
@@ -2409,7 +2408,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
   </table>
   
   <div class="purple-box">
-    <h3 style="color: #6B46C1; margin-top: 0;">🎯 Designed For Your ${industryName}</h3>
+    <h3 style="color: #0c1631; margin-top: 0;">🎯 Designed For Your ${industryName}</h3>
     <p style="line-height: 1.8;">
       This battery energy storage system has been specifically configured to meet the unique operational requirements and energy patterns of ${industryName.toLowerCase()} facilities.
       This ${q.durationHours}-hour system is optimized for peak demand reduction and time-of-use energy arbitrage, targeting the highest-cost periods when your facility experiences peak load. The system provides reliable energy storage to maintain critical operations during grid outages while ensuring business continuity and protecting sensitive equipment.
@@ -2518,8 +2517,8 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     The system is optimized for <strong>${(((totalEnergyMWh / q.storageSizeMW) * 100) / 4).toFixed(0)}% daily utilization</strong>, providing optimal balance between equipment cost and operational savings. Advanced energy management algorithms maximize financial returns through time-of-use arbitrage, demand charge reduction, and renewable energy integration while ensuring equipment longevity through intelligent cycling.
   </p>
   
-  <div class="info-box" style="background-color: #EDE9FE; border-left: 4px solid #6B46C1;">
-    <strong style="color: #6B46C1;">✓ Implementation Includes:</strong> Comprehensive site preparation, professional system commissioning, operator training, remote monitoring setup, and complete documentation package for utility interconnection and regulatory compliance.
+  <div class="info-box" style="background-color: #e8edf5; border-left: 4px solid #0c1631;">
+    <strong style="color: #0c1631;">✓ Implementation Includes:</strong> Comprehensive site preparation, professional system commissioning, operator training, remote monitoring setup, and complete documentation package for utility interconnection and regulatory compliance.
   </div>
   
   ${
@@ -2591,7 +2590,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
         : ""
     }
     <tr>
-      <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #8b5cf6;">BESS System</td>
+      <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #0c1631;">BESS System</td>
       <td style="border: 1px solid #ddd; padding: 6px;">LFP battery storage with PCS and fire-rated enclosure</td>
       <td style="border: 1px solid #ddd; padding: 6px;">${totalEnergyMWh.toFixed(2)} MWh / ${q.storageSizeMW.toFixed(2)} MW</td>
       <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${(equipmentBreakdown.batteries.totalCost / 1000000).toFixed(2)}M</td>
@@ -2636,7 +2635,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     ${
       equipmentBreakdown.evChargers && equipmentBreakdown.evChargers.totalChargingCost > 0
         ? `<tr>
-      <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #8b5cf6;">EV Charging Infrastructure</td>
+      <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #0c1631;">EV Charging Infrastructure</td>
       <td style="border: 1px solid #ddd; padding: 6px;">Level 2 and DC fast charging stations with network connectivity</td>
       <td style="border: 1px solid #ddd; padding: 6px;">${equipmentBreakdown.evChargers.level2Chargers.quantity} Level 2 + ${equipmentBreakdown.evChargers.dcFastChargers.quantity} DC Fast units</td>
       <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${(equipmentBreakdown.evChargers.totalChargingCost / 1000000).toFixed(2)}M</td>
