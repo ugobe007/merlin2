@@ -659,46 +659,51 @@ export default function Step3ProfileV7Curated(props: Props) {
             />
           )}
 
-          {/* Multiselect (values coerced to strings for consistent comparison) */}
+          {/* Multiselect - CheckboxGrid (button cards with checkmarks) */}
           {renderer === "multiselect" && options.length > 0 && (
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {options.map((opt) => {
                 const optVal = String(opt.value);
                 const selected = Array.isArray(value) && value.map(String).includes(optVal);
                 return (
-                  <label
+                  <button
                     key={optVal}
+                    type="button"
+                    onClick={() => {
+                      const current = Array.isArray(value) ? value.map(String) : [];
+                      if (selected) {
+                        setAnswer(
+                          q.id,
+                          current.filter((v) => v !== optVal)
+                        );
+                      } else {
+                        setAnswer(q.id, [...current, optVal]);
+                      }
+                    }}
                     className={`
-                      flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all
+                      p-3 rounded-lg border text-left transition-all relative
                       ${
                         selected
-                          ? "border-violet-500 bg-violet-500/20"
-                          : "border-slate-700/60 bg-slate-900/60 hover:border-slate-500"
+                          ? "border-violet-500 bg-violet-500/15 text-white ring-1 ring-violet-500/40"
+                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-slate-500"
                       }
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                     `}
+                    disabled={opt.disabled}
                   >
-                    <input
-                      type="checkbox"
-                      className="accent-violet-500"
-                      checked={selected}
-                      onChange={(e) => {
-                        const current = Array.isArray(value) ? value.map(String) : [];
-                        if (e.target.checked) {
-                          setAnswer(q.id, [...current, optVal]);
-                        } else {
-                          setAnswer(
-                            q.id,
-                            current.filter((v) => v !== optVal)
-                          );
-                        }
-                      }}
-                    />
-                    {opt.icon && <span className="text-lg">{opt.icon}</span>}
-                    <span className="text-sm text-slate-200">{opt.label}</span>
-                    {opt.description && (
-                      <span className="text-xs text-slate-400">— {opt.description}</span>
+                    {selected && (
+                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center text-white text-xs font-bold">
+                        ✓
+                      </span>
                     )}
-                  </label>
+                    <div className="flex items-center gap-2">
+                      {opt.icon && <span className="text-lg">{opt.icon}</span>}
+                      <span className="font-medium text-sm">{opt.label}</span>
+                    </div>
+                    {opt.description && (
+                      <p className="text-xs text-slate-400 mt-1">{opt.description}</p>
+                    )}
+                  </button>
                 );
               })}
             </div>
