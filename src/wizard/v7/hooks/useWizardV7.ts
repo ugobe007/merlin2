@@ -1564,8 +1564,30 @@ function reduce(state: WizardState, intent: Intent): WizardState {
       return { ...state, goals: newGoals };
     }
 
-    case "SET_GOALS_CONFIRMED":
-      return { ...state, goalsConfirmed: intent.confirmed };
+    case "SET_GOALS_CONFIRMED": {
+      const goalsConfirmed = intent.confirmed;
+      
+      // ✅ FIX Feb 10: When goals are confirmed AND location is confirmed, advance to industry
+      // This is the SSOT gate: goals confirmation IS the trigger to proceed
+      const canAdvance = state.locationConfirmed === true && state.step === "location";
+      
+      return {
+        ...state,
+        goalsConfirmed,
+        step: canAdvance ? "industry" : state.step,
+        debug: {
+          ...state.debug,
+          notes: [
+            ...state.debug.notes,
+            goalsConfirmed
+              ? canAdvance
+                ? "Goals confirmed - advancing to industry step"
+                : "Goals confirmed - waiting for location"
+              : "Goals skipped",
+          ],
+        },
+      };
+    }
 
     case "TOGGLE_SOLAR":
       return { ...state, includeSolar: !state.includeSolar };
@@ -2574,6 +2596,19 @@ export function useWizardV7() {
       }
       dispatch({ type: "DEBUG_TAG", lastAction: "submitLocation" });
 
+      // ✅ GUARD: Prevent double-submit loop when already confirmed for same ZIP
+      const normalizedInput = normalizeZip5(input);
+      if (
+        state.locationConfirmed &&
+        state.location?.postalCode === normalizedInput &&
+        state.step !== "location"
+      ) {
+        if (import.meta.env.DEV) {
+          console.log("[V7] submitLocation: Already confirmed for this ZIP, skipping re-submit");
+        }
+        return;
+      }
+
       if (!input) {
         setError({ code: "VALIDATION", message: "Please enter an address or business name." });
         return;
@@ -2603,6 +2638,9 @@ export function useWizardV7() {
             type: "DEBUG_NOTE",
             note: `Geocode failed — using ZIP-only location (${minCard.postalCode})`,
           });
+
+          // ✅ FIX Feb 10: After fallback, SET location immediately so subsequent checks can use it
+          dispatch({ type: "SET_LOCATION", location: minCard });
         }
 
         // ✅ FIX Feb 7, 2026: Guarantee postalCode is populated when input is a ZIP.
@@ -2723,6 +2761,9 @@ export function useWizardV7() {
           abortRef.current = null;
           return;
         }
+
+        // ✅ FIX Feb 10: Goals already confirmed - proceed to industry inference
+        // NOTE: Step transition happens in SET_GOALS_CONFIRMED reducer, not here
 
         // Goals already confirmed - proceed to industry inference
         setBusy(true, "Inferring industry...");

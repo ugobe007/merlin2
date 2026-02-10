@@ -81,6 +81,11 @@ function WizardV7Page() {
     };
   }, []);
 
+  // ✅ DEBUG: Log step transitions to verify navigation (Feb 10, 2026)
+  useEffect(() => {
+    console.log('[WizardV7] step =', state.step, 'locationConfirmed =', state.locationConfirmed, 'goalsConfirmed =', state.goalsConfirmed, 'isBusy =', state.isBusy);
+  }, [state.step, state.locationConfirmed, state.goalsConfirmed, state.isBusy]);
+
   // Track gate validation issues for AI agent
   useEffect(() => {
     const sessionId = `v7-${Date.now()}`;
