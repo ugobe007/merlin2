@@ -697,10 +697,14 @@ export default function Step1LocationV7({ state, actions }: Props) {
         onContinue={() => {
           confirmGoals(true);
           setShowGoalsModal(false);
+          // Resume navigation flow after goals confirmed
+          submitLocation();
         }}
         onSkip={() => {
           confirmGoals(true); // Mark as confirmed even if skipped
           setShowGoalsModal(false);
+          // Resume navigation flow after skip
+          submitLocation();
         }}
       />
 
