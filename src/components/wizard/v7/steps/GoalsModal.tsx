@@ -124,7 +124,13 @@ export default function GoalsModal({
                 <button
                   key={option.id}
                   type="button"
-                  onClick={() => onToggleGoal(option.id)}
+                  onClick={() => {
+                    if (typeof onToggleGoal !== "function") {
+                      console.error("[GoalsModal] onToggleGoal missing", { onToggleGoal });
+                      return;
+                    }
+                    onToggleGoal(option.id);
+                  }}
                   className={`
                     w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer
                     ${
