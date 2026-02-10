@@ -28,6 +28,7 @@ import {
   normalizeFieldType as normalizeFieldTypeUtil,
   chooseRendererForQuestion,
 } from "./Step3RendererLogic";
+import SmartAddOnsModal from "./SmartAddOnsModal";
 
 // Industry images (same as original)
 import hotelImg from "@/assets/images/hotel_motel_holidayinn_1.jpg";
@@ -51,6 +52,10 @@ type Props = {
     setStep3Answer?: (id: string, value: unknown) => void;
     submitStep3?: (answersOverride?: Step3Answers) => Promise<void>;
     goBack?: () => void;
+    toggleSolar?: () => void;
+    toggleGenerator?: () => void;
+    toggleEV?: () => void;
+    confirmAddOns?: (value: boolean) => void;
   };
   updateState?: (patch: Partial<WizardV7State>) => void;
 };
@@ -137,6 +142,9 @@ export default function Step3ProfileV7Curated(props: Props) {
   // Track which fields were auto-filled (vs user-edited)
   const [defaultFilledIds, setDefaultFilledIds] = useState<Set<string>>(new Set());
   const appliedSchemaRef = useRef<string>("");
+
+  // Add-ons modal state (triggers after Continue click)
+  const [showAddOnsModal, setShowAddOnsModal] = useState(false);
 
   // On schema load, pre-fill any unanswered fields with their smartDefault
   useEffect(() => {
@@ -973,8 +981,14 @@ export default function Step3ProfileV7Curated(props: Props) {
           type="button"
           data-testid="step3-continue"
           onClick={() => {
-            if (actions?.submitStep3) {
-              void actions.submitStep3();
+            // Show add-ons modal first (user selects solar/gen/ev)
+            if (!state.addOnsConfirmed) {
+              setShowAddOnsModal(true);
+            } else {
+              // Already confirmed add-ons, proceed to step 4
+              if (actions?.submitStep3) {
+                void actions.submitStep3();
+              }
             }
           }}
           disabled={!isComplete || state.pricingStatus === "pending"}
@@ -990,6 +1004,38 @@ export default function Step3ProfileV7Curated(props: Props) {
           Continue →
         </button>
       </div>
+
+      {/* Smart Add-Ons Modal */}
+      {actions?.toggleSolar && actions?.toggleGenerator && actions?.toggleEV && actions?.confirmAddOns && (
+        <SmartAddOnsModal
+          isOpen={showAddOnsModal}
+          goals={state.goals}
+          industry={state.industry}
+          peakDemandKW={state.peakLoadKW}
+          includeSolar={state.includeSolar}
+          includeGenerator={state.includeGenerator}
+          includeEV={state.includeEV}
+          onToggleSolar={actions.toggleSolar}
+          onToggleGenerator={actions.toggleGenerator}
+          onToggleEV={actions.toggleEV}
+          onContinue={() => {
+            // User confirmed choices, close modal and proceed to step 4
+            actions.confirmAddOns?.(true);
+            setShowAddOnsModal(false);
+            if (actions?.submitStep3) {
+              void actions.submitStep3();
+            }
+          }}
+          onSkip={() => {
+            // User skipped add-ons, still proceed to step 4
+            actions.confirmAddOns?.(true);
+            setShowAddOnsModal(false);
+            if (actions?.submitStep3) {
+              void actions.submitStep3();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
