@@ -4,11 +4,12 @@
  * Appears after user confirms location in Step 1.
  * User selects their energy goals before proceeding to industry selection.
  * 
- * Design: Professional Merlin-guided modal with proper wizard icon
+ * Design: Clean, professional modal with actual Merlin wizard icon
  */
 
 import React from 'react';
-import { X, Sparkles, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
+import merlinIcon from '@/assets/images/wizard_icon1.png';
 
 export type EnergyGoal = 
   | 'lower_bills'
@@ -71,119 +72,94 @@ export default function GoalsModal({
 
   return (
     <>
-      {/* Backdrop - clickable to close */}
+      {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/70 backdrop-blur-md z-[9998] animate-in fade-in duration-300"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9998]"
         onClick={onSkip}
       />
 
-      {/* Modal Container */}
+      {/* Modal */}
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
         <div 
-          className="bg-gradient-to-br from-slate-900 via-purple-950/20 to-slate-900 border-2 border-purple-500/30 rounded-3xl shadow-2xl shadow-purple-500/20 max-w-3xl w-full max-h-[85vh] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 pointer-events-auto"
+          className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
           
-          {/* Header with Gradient Background */}
-          <div className="relative p-8 bg-gradient-to-r from-purple-600/10 via-pink-500/10 to-blue-600/10 border-b border-purple-500/20">
+          {/* Header */}
+          <div className="relative px-8 pt-8 pb-6 border-b border-slate-800">
             {/* Close button */}
             <button
               onClick={onSkip}
-              className="absolute top-4 right-4 p-2.5 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition-all hover:scale-110"
-              aria-label="Skip"
+              type="button"
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              aria-label="Skip goals"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
 
-            {/* Merlin Avatar - Proper Wizard Hat Icon */}
-            <div className="flex items-start gap-5">
-              <div className="relative flex-shrink-0">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-600 via-purple-500 to-blue-600 flex items-center justify-center shadow-xl shadow-purple-500/50 ring-4 ring-purple-500/20">
-                  {/* Custom Wizard Hat SVG */}
-                  <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    {/* Hat body */}
-                    <path d="M12 2L2 22h20L12 2z" fill="currentColor" opacity="0.3"/>
-                    <path d="M12 2L2 22h20L12 2z"/>
-                    {/* Stars on hat */}
-                    <circle cx="12" cy="10" r="1.5" fill="currentColor"/>
-                    <circle cx="9" cy="14" r="1" fill="currentColor" opacity="0.7"/>
-                    <circle cx="15" cy="13" r="0.8" fill="currentColor" opacity="0.7"/>
-                    <circle cx="12" cy="16" r="0.6" fill="currentColor" opacity="0.5"/>
-                  </svg>
-                </div>
-                {/* Sparkle effect */}
-                <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-yellow-400 animate-pulse" />
-              </div>
-              
-              <div className="flex-1 pt-1">
-                <h3 className="text-4xl font-black bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 bg-clip-text text-transparent mb-3 leading-tight">
+            {/* Merlin + Headline */}
+            <div className="flex items-center gap-4 mb-4">
+              <img 
+                src={merlinIcon} 
+                alt="Merlin" 
+                className="w-16 h-16 rounded-xl"
+              />
+              <div>
+                <h2 className="text-3xl font-bold text-white">
                   What are your energy goals?
-                </h3>
-                <p className="text-slate-300 text-lg leading-relaxed">
-                  Select all that apply. I'll use this to recommend the perfect system configuration for your needs.
+                </h2>
+                <p className="text-slate-400 text-sm mt-1">
+                  Select all that apply
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Goals Grid */}
-          <div className="p-8 space-y-3 overflow-y-auto max-h-[50vh]">
+          {/* Goals List */}
+          <div className="p-6 space-y-3 overflow-y-auto max-h-[50vh]">
             {GOAL_OPTIONS.map((option) => {
               const isSelected = selectedGoals.includes(option.id);
               
               return (
                 <button
                   key={option.id}
+                  type="button"
                   onClick={() => onToggleGoal(option.id)}
                   className={`
-                    group w-full text-left p-5 rounded-2xl border-2 transition-all duration-200
+                    w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer
                     ${
                       isSelected
-                        ? 'border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/20 scale-[1.02]'
-                        : 'border-slate-700 bg-slate-800/50 hover:border-purple-500/50 hover:bg-slate-800 hover:scale-[1.01]'
+                        ? 'border-blue-500 bg-blue-500/10'
+                        : 'border-slate-700 bg-slate-800/50 hover:border-slate-600 hover:bg-slate-800'
                     }
                   `}
                 >
-                  <div className="flex items-start gap-4">
-                    {/* Emoji Icon Circle */}
-                    <div
-                      className={`
-                        flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-all
-                        ${
-                          isSelected
-                            ? 'bg-purple-500 shadow-lg shadow-purple-500/30'
-                            : 'bg-slate-700/50 group-hover:bg-slate-700'
-                        }
-                      `}
-                    >
+                  <div className="flex items-center gap-4">
+                    {/* Emoji */}
+                    <div className={`
+                      flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-xl
+                      ${isSelected ? 'bg-blue-500' : 'bg-slate-700'}
+                    `}>
                       {option.emoji}
                     </div>
 
-                    {/* Content */}
+                    {/* Text */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xl font-bold ${isSelected ? 'text-white' : 'text-slate-200'}`}>
-                          {option.label}
-                        </span>
+                      <div className="font-semibold text-white mb-0.5">
+                        {option.label}
                       </div>
-                      <p className="text-slate-400 text-sm leading-relaxed">
+                      <div className="text-sm text-slate-400">
                         {option.description}
-                      </p>
+                      </div>
                     </div>
 
-                    {/* Checkmark */}
-                    <div
-                      className={`
-                        flex-shrink-0 w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all
-                        ${
-                          isSelected
-                            ? 'border-purple-400 bg-purple-500 shadow-lg shadow-purple-500/30'
-                            : 'border-slate-600 bg-slate-900/50 group-hover:border-slate-500'
-                        }
-                      `}
-                    >
+                    {/* Checkbox */}
+                    <div className={`
+                      flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center
+                      ${isSelected ? 'border-blue-500 bg-blue-500' : 'border-slate-600'}
+                    `}>
                       {isSelected && (
-                        <Check className="w-5 h-5 text-white" strokeWidth={3} />
+                        <Check className="w-4 h-4 text-white" strokeWidth={3} />
                       )}
                     </div>
                   </div>
@@ -192,31 +168,31 @@ export default function GoalsModal({
             })}
           </div>
 
-          {/* Footer Actions */}
-          <div className="p-6 border-t border-slate-700/50 bg-slate-900/50 flex items-center justify-between gap-4">
+          {/* Footer */}
+          <div className="p-6 border-t border-slate-800 flex items-center justify-between gap-4">
             <button
+              type="button"
               onClick={onSkip}
-              className="px-6 py-3 text-slate-400 hover:text-white transition-colors text-base font-medium"
+              className="px-5 py-2.5 text-slate-400 hover:text-white transition-colors"
             >
-              Skip for now
+              Skip
             </button>
             
             <button
+              type="button"
               onClick={onContinue}
               disabled={!canContinue}
               className={`
-                px-8 py-3.5 rounded-xl font-bold text-base transition-all shadow-lg
+                px-6 py-2.5 rounded-lg font-semibold transition-all
                 ${
                   canContinue
-                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 cursor-pointer'
-                    : 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
+                    ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                 }
               `}
             >
               {canContinue ? (
-                <>
-                  Continue with {selectedGoals.length} goal{selectedGoals.length !== 1 ? 's' : ''} →
-                </>
+                `Continue with ${selectedGoals.length} goal${selectedGoals.length !== 1 ? 's' : ''}`
               ) : (
                 'Select at least one goal'
               )}
