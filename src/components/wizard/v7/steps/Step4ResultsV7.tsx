@@ -186,6 +186,26 @@ function formatContributorKey(key: string): string {
 
 export default function Step4ResultsV7({ state, actions }: Props) {
   // ============================================================================
+  // PHASE 4A: ADD-ONS CONFIGURATION STATE
+  // ============================================================================
+  // Track whether user has configured add-ons (show options first, then quote)
+  const [addOnsConfigured, setAddOnsConfigured] = useState(false);
+
+  // Callback to handle when add-ons are confirmed
+  const handleAddOnsConfirmed = useCallback(async (addOns: SystemAddOns) => {
+    if (actions.recalculateWithAddOns) {
+      const result = await actions.recalculateWithAddOns(addOns);
+      if (result.ok) {
+        setAddOnsConfigured(true);
+      }
+      return result;
+    }
+    // If no recalculate action, just show the quote
+    setAddOnsConfigured(true);
+    return { ok: true };
+  }, [actions]);
+
+  // ============================================================================
   // PHASE 6: PRICING STATUS (non-blocking)
   // ============================================================================
   const pricingStatus: PricingStatus = state.pricingStatus ?? "idle";
