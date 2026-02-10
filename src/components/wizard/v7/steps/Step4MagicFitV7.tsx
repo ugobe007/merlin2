@@ -18,7 +18,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Check, Loader2, AlertTriangle, Zap } from 'lucide-react';
-import type { WizardState as WizardV7State } from '@/wizard/v7/hooks/useWizardV7';
+import type { WizardState as WizardV7State, EnergyGoal } from '@/wizard/v7/hooks/useWizardV7';
 
 // SSOT calculation engine
 import { calculateQuote } from '@/services/unifiedQuoteCalculator';
@@ -108,16 +108,91 @@ function formatNumber(value: number): string {
   return value.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
+/**
+ * Analyze user's energy goals and return sizing multipliers
+ * 
+ * Goals influence:
+ * - BESS capacity (backup_power, energy_independence → larger)
+ * - Duration (backup_power → longer)
+ * - Solar sizing (reduce_carbon, energy_independence → more solar)
+ * - Generator sizing (backup_power → larger backup)
+ */
+function getGoalBasedMultipliers(goals: EnergyGoal[]) {
+  const modifiers = {
+    bessMultiplier: 1.0,
+    durationMultiplier: 1.0,
+    solarMultiplier: 1.0,
+    generatorMultiplier: 1.0,
+    recommendedTier: 'perfectFit' as TierKey,
+    goalHints: [] as string[],
+  };
+
+  // No goals selected → return defaults
+  if (goals.length === 0) {
+    return modifiers;
+  }
+
+  // GOAL: Lower Bills → optimize for cost, smaller system
+  if (goals.includes('lower_bills')) {
+    modifiers.bessMultiplier *= 0.9; // Slightly smaller BESS
+    modifiers.solarMultiplier *= 1.1; // More solar = more savings
+    modifiers.recommendedTier = 'starter';
+    modifiers.goalHints.push('Optimized for fast payback with solar self-consumption');
+  }
+
+  // GOAL: Backup Power → larger capacity, longer duration
+  if (goals.includes('backup_power')) {
+    modifiers.bessMultiplier *= 1.15; // 15% larger BESS
+    modifiers.durationMultiplier *= 1.5; // 6 hours instead of 4
+    modifiers.generatorMultiplier *= 1.2; // Larger backup generator
+    modifiers.recommendedTier = 'perfectFit';
+    modifiers.goalHints.push('Extended duration for reliable backup power');
+  }
+
+  // GOAL: Reduce Carbon → maximize renewables
+  if (goals.includes('reduce_carbon')) {
+    modifiers.solarMultiplier *= 1.4; // Much more solar
+    modifiers.bessMultiplier *= 1.1; // Larger battery to store solar
+    modifiers.generatorMultiplier *= 0.7; // Smaller/no generator
+    modifiers.goalHints.push('Maximize solar + storage for zero-carbon operation');
+  }
+
+  // GOAL: Energy Independence → go big on everything
+  if (goals.includes('energy_independence')) {
+    modifiers.bessMultiplier *= 1.3; // Much larger BESS
+    modifiers.solarMultiplier *= 1.5; // Maximum solar
+    modifiers.generatorMultiplier *= 1.3; // Full backup capability
+    modifiers.durationMultiplier *= 1.25; // 5 hours
+    modifiers.recommendedTier = 'beastMode';
+    modifiers.goalHints.push('Oversized system for true grid independence');
+  }
+
+  // GOAL: Reduce Demand Charges → optimize for peak shaving
+  if (goals.includes('reduce_demand_charges')) {
+    modifiers.bessMultiplier *= 1.05; // Slightly larger for peaks
+    modifiers.solarMultiplier *= 0.9; // Less solar, more battery focus
+    modifiers.goalHints.push('Sized for aggressive peak demand reduction');
+  }
+
+  return modifiers;
+}
+
 export default function Step4MagicFitV7({ state, actions }: Props) {
   const [tiers, setTiers] = useState<TierQuote[]>([]);
   const [selectedTier, setSelectedTier] = useState<TierKey | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Get base sizing from Step 3 results (stored in state after profile calculation)
-  const baseBESSKW = state.peakLoadKW || 1000; // fallback to 1 MW
-  const baseBESSKWh = baseBESSKW * 4; // 4-hour duration default
-  const baseSolarKW = state.includeSolar ? baseBESSKW * 0.5 : 0; // 50% of BESS if solar selected
-  const baseGeneratorKW = state.includeGenerator ? baseBESSKW * 0.75 : 0; // 75% of BESS if gen selected
+  const rawBESSKW = state.peakLoadKW || 1000; // fallback to 1 MW
+  
+  // Apply goal-based intelligence to sizing
+  const goalModifiers = getGoalBasedMultipliers(state.goals);
+  
+  const baseBESSKW = rawBESSKW * goalModifiers.bessMultiplier;
+  const baseDuration = 4 * goalModifiers.durationMultiplier; // Goal-aware duration (4-6 hours)
+  const baseBESSKWh = baseBESSKW * baseDuration;
+  const baseSolarKW = state.includeSolar ? baseBESSKW * 0.5 * goalModifiers.solarMultiplier : 0;
+  const baseGeneratorKW = state.includeGenerator ? baseBESSKW * 0.75 * goalModifiers.generatorMultiplier : 0;
 
   useEffect(() => {
     async function generateTiers() {
@@ -224,6 +299,17 @@ export default function Step4MagicFitV7({ state, actions }: Props) {
             Based on your {state.industry} facility profile and {state.goals.length > 0 ? 'energy goals' : 'requirements'}, 
             here are 3 optimized system configurations. Pick the one that fits your budget and ambition.
           </p>
+          
+          {/* Goal-based sizing hints */}
+          {goalModifiers.goalHints.length > 0 && (
+            <div className="mt-6 inline-flex flex-col gap-2">
+              {goalModifiers.goalHints.map((hint, idx) => (
+                <div key={idx} className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-300 text-sm">
+                  ✨ {hint}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Tier Cards Grid */}
