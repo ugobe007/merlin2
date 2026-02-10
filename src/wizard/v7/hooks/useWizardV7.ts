@@ -2709,7 +2709,22 @@ export function useWizardV7() {
           return;
         }
 
-        // No business card - proceed to industry inference
+        // ✅ GOALS MODAL CHECK (Feb 10, 2026)
+        // Set locationConfirmed=true and check if goals modal should show
+        dispatch({ type: "SET_LOCATION_CONFIRMED", confirmed: true });
+        
+        // If goals not yet confirmed, stop here - UI will show goals modal via useEffect
+        if (!state.goalsConfirmed) {
+          dispatch({
+            type: "DEBUG_NOTE",
+            note: "Location confirmed - waiting for goals selection",
+          });
+          setBusy(false);
+          abortRef.current = null;
+          return;
+        }
+
+        // Goals already confirmed - proceed to industry inference
         setBusy(true, "Inferring industry...");
         dispatch({ type: "DEBUG_TAG", lastApi: "inferIndustry" });
         const inferred = await api.inferIndustry(location, controller.signal);
