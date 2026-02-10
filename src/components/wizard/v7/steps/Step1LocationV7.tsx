@@ -13,9 +13,10 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import type { WizardState as WizardV7State } from "@/wizard/v7/hooks/useWizardV7";
+import type { WizardState as WizardV7State, EnergyGoal } from "@/wizard/v7/hooks/useWizardV7";
 import IntelStrip from "../shared/IntelStrip";
 import BusinessProfileCard from "../shared/BusinessProfileCard";
+import GoalsModal from "./GoalsModal";
 
 type Country = "US" | "International";
 type BusinessInfo = { name?: string; address?: string };
@@ -29,6 +30,10 @@ type Actions = {
   // Progressive hydration for intel (ZIP change)
   // Returns intel for callers that need it; UI components can ignore the return value
   primeLocationIntel: (zipOrInput: string) => Promise<unknown> | void;
+
+  // Goals actions (Feb 10, 2026)
+  toggleGoal: (goal: EnergyGoal) => void;
+  confirmGoals: (value: boolean) => void;
 
   // Explicit business gate actions (SSOT)
   confirmBusiness: (value: boolean) => Promise<void>;
@@ -49,6 +54,8 @@ export default function Step1LocationV7({ state, actions }: Props) {
     updateLocationRaw,
     submitLocation,
     primeLocationIntel,
+    toggleGoal,
+    confirmGoals,
     confirmBusiness,
     skipBusiness,
     setBusinessDraft,
@@ -59,6 +66,9 @@ export default function Step1LocationV7({ state, actions }: Props) {
   // ZIP input is UI-local for better typing control, but always sync ZIP into SSOT.
   const [zipValue, setZipValue] = useState<string>(() => (state.locationRawInput ?? "").trim());
 
+  // Goals modal state (shown after location confirmed)
+  const [showGoalsModal, setShowGoalsModal] = useState(false);
+
   // Business inputs (UI-local for typing UX; SSOT draft is authoritative)
   const [businessValue, setBusinessValue] = useState<string>("");
   const [addressValue, setAddressValue] = useState<string>("");
@@ -66,6 +76,16 @@ export default function Step1LocationV7({ state, actions }: Props) {
 
   // Debounce ref for primeLocationIntel
   const zipDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // -----------------------------
+  // Trigger goals modal after location confirmed
+  // -----------------------------
+  useEffect(() => {
+    // Show goals modal if location confirmed but goals not yet confirmed
+    if (state.locationConfirmed && !state.goalsConfirmed && !showGoalsModal) {
+      setShowGoalsModal(true);
+    }
+  }, [state.locationConfirmed, state.goalsConfirmed, showGoalsModal]);
 
   // -----------------------------
   // Rehydrate business fields from SSOT draft (only if UI is empty)
@@ -668,6 +688,21 @@ export default function Step1LocationV7({ state, actions }: Props) {
           Industry detected with high confidence. Click Next to jump to your load profile.
         </div>
       )}
+
+      {/* Goals Modal - appears after location confirmed */}
+      <GoalsModal
+        isOpen={showGoalsModal}
+        selectedGoals={state.goals}
+        onToggleGoal={toggleGoal}
+        onContinue={() => {
+          confirmGoals(true);
+          setShowGoalsModal(false);
+        }}
+        onSkip={() => {
+          confirmGoals(true); // Mark as confirmed even if skipped
+          setShowGoalsModal(false);
+        }}
+      />
 
     </div>
   );
