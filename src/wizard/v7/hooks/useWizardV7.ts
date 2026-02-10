@@ -374,6 +374,13 @@ export type PricingStatus =
   | "error" // Pricing failed (retryable)
   | "timed_out"; // Pricing exceeded timeout threshold
 
+export type EnergyGoal = 
+  | 'lower_bills'
+  | 'backup_power'
+  | 'reduce_carbon'
+  | 'energy_independence'
+  | 'reduce_demand_charges';
+
 export type WizardState = {
   // meta
   schemaVersion: "7.0.0";
@@ -388,6 +395,10 @@ export type WizardState = {
   location: LocationCard | null;
   locationIntel: LocationIntel | null;
   locationConfirmed: boolean; // user has confirmed location (ZIP resolved)
+
+  // Step 1: goals (added Feb 10, 2026 - user's energy objectives)
+  goals: EnergyGoal[];
+  goalsConfirmed: boolean; // user has selected goals (or skipped)
 
   // Step 1: business (V6 parity)
   businessDraft: BusinessDraft; // typed draft fields (cleared on refresh unless confirmed)
@@ -457,6 +468,9 @@ type Intent =
   | { type: "SET_LOCATION_INTEL"; intel: LocationIntel | null }
   | { type: "PATCH_LOCATION_INTEL"; patch: Partial<LocationIntel> }
   | { type: "SET_LOCATION_CONFIRMED"; confirmed: boolean }
+  | { type: "SET_GOALS"; goals: EnergyGoal[] }
+  | { type: "TOGGLE_GOAL"; goal: EnergyGoal }
+  | { type: "SET_GOALS_CONFIRMED"; confirmed: boolean }
   | { type: "SET_BUSINESS_DRAFT"; patch: Partial<BusinessDraft> }
   | { type: "SET_BUSINESS"; business: BusinessCard | null }
   | { type: "SET_BUSINESS_CARD"; card: BusinessCard | null }
@@ -1358,6 +1372,10 @@ function initialState(): WizardState {
     locationIntel: null,
     locationConfirmed: false,
 
+    // Goals (added Feb 10, 2026)
+    goals: [],
+    goalsConfirmed: false,
+
     // V6 parity: business draft + resolved business
     businessDraft: { name: "", address: "" },
     business: null,
@@ -1517,6 +1535,20 @@ function reduce(state: WizardState, intent: Intent): WizardState {
 
     case "SET_LOCATION_CONFIRMED":
       return { ...state, locationConfirmed: intent.confirmed };
+
+    case "SET_GOALS":
+      return { ...state, goals: intent.goals };
+
+    case "TOGGLE_GOAL": {
+      const hasGoal = state.goals.includes(intent.goal);
+      const newGoals = hasGoal
+        ? state.goals.filter((g) => g !== intent.goal)
+        : [...state.goals, intent.goal];
+      return { ...state, goals: newGoals };
+    }
+
+    case "SET_GOALS_CONFIRMED":
+      return { ...state, goalsConfirmed: intent.confirmed };
 
     case "SET_BUSINESS_DRAFT":
       return {
@@ -2359,6 +2391,28 @@ export function useWizardV7() {
   const confirmLocation = useCallback((value: boolean) => {
     dispatch({ type: "SET_LOCATION_CONFIRMED", confirmed: value });
     dispatch({ type: "DEBUG_NOTE", note: `Location ${value ? "confirmed" : "reset"} by user` });
+  }, []);
+
+  /**
+   * setGoals - Set all goals at once
+   */
+  const setGoals = useCallback((goals: EnergyGoal[]) => {
+    dispatch({ type: "SET_GOALS", goals });
+  }, []);
+
+  /**
+   * toggleGoal - Toggle a single goal on/off
+   */
+  const toggleGoal = useCallback((goal: EnergyGoal) => {
+    dispatch({ type: "TOGGLE_GOAL", goal });
+  }, []);
+
+  /**
+   * confirmGoals - User confirms goals selection (or skips)
+   */
+  const confirmGoals = useCallback((value: boolean) => {
+    dispatch({ type: "SET_GOALS_CONFIRMED", confirmed: value });
+    dispatch({ type: "DEBUG_NOTE", note: `Goals ${value ? "confirmed" : "skipped"} by user` });
   }, []);
 
   /**
@@ -4062,6 +4116,11 @@ export function useWizardV7() {
     submitLocation,
     confirmLocation,
     primeLocationIntel,
+
+    // step 1: goals
+    setGoals,
+    toggleGoal,
+    confirmGoals,
 
     // step 1: business (V6 parity)
     setBusinessDraft,
