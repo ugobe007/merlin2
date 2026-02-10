@@ -613,6 +613,8 @@ function WizardV7Page() {
             updateLocationRaw: wizard.updateLocationRaw,
             submitLocation: wizard.submitLocation,
             primeLocationIntel: wizard.primeLocationIntel,
+            toggleGoal: wizard.toggleGoal,
+            confirmGoals: wizard.confirmGoals,
             confirmBusiness: wizard.confirmBusiness,
             skipBusiness: wizard.skipBusiness,
             setBusinessDraft: wizard.setBusinessDraft,
