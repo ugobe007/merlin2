@@ -49,7 +49,8 @@ export type WizardStep =
   | "location" // Step 1
   | "industry" // Step 2
   | "profile" // Step 3 (questions + template)
-  | "results"; // Step 4 (quote, outputs, next actions)
+  | "magicfit" // Step 4 (3-tier system recommendations)
+  | "results"; // Step 5 (final quote, outputs, export)
 
 export type IndustrySlug =
   | "auto" // unknown/unset
@@ -3735,11 +3736,11 @@ export function useWizardV7() {
       // ✅ Mark Step 3 complete FIRST (unlocks navigation)
       dispatch({ type: "SET_STEP3_COMPLETE", complete: true });
 
-      // ✅ Navigate to Results IMMEDIATELY (non-blocking)
-      setStep("results", "step3_complete");
+      // ✅ Navigate to MagicFit IMMEDIATELY (Step 4 - tier selection)
+      setStep("magicfit", "step3_complete");
 
       // ✅ Run pricing in background (non-blocking)
-      // Results page will show spinner or error banner based on pricingStatus
+      // MagicFit will use these results to generate 3 tiers
       runPricingSafe({
         industry: state.industry,
         answers,
@@ -4227,7 +4228,8 @@ export function useWizardV7() {
     nextStep: useCallback(() => {
       if (state.step === "location") return "industry";
       if (state.step === "industry") return "profile";
-      if (state.step === "profile") return "results";
+      if (state.step === "profile") return "magicfit";
+      if (state.step === "magicfit") return "results";
       return null;
     }, [state.step]),
   };
