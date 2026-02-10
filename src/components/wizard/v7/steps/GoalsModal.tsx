@@ -70,26 +70,26 @@ export default function GoalsModal({
 
   const canContinue = selectedGoals.length > 0;
 
+  // Trace wrapper to debug who is calling onSkip
+  const handleSkip = () => {
+    console.trace('[GoalsModal] onSkip fired');
+    onSkip();
+  };
+
   return (
     <>
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9998]"
-        onClick={onSkip}
-      />
+      {/* Backdrop (visual only, never clickable) */}
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9998] pointer-events-none" />
 
       {/* Modal */}
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-        <div 
-          className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden">
           
           {/* Header */}
           <div className="relative px-8 pt-8 pb-6 border-b border-slate-800">
             {/* Close button */}
             <button
-              onClick={onSkip}
+              onClick={handleSkip}
               type="button"
               className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
               aria-label="Skip goals"
@@ -172,7 +172,7 @@ export default function GoalsModal({
           <div className="p-6 border-t border-slate-800 flex items-center justify-between gap-4">
             <button
               type="button"
-              onClick={onSkip}
+              onClick={handleSkip}
               className="px-5 py-2.5 text-slate-400 hover:text-white transition-colors"
             >
               Skip
