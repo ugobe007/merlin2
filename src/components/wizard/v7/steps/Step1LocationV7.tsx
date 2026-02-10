@@ -689,6 +689,52 @@ export default function Step1LocationV7({ state, actions }: Props) {
         </div>
       )}
 
+      {/* ✅ Goals hint (appears before modal for no-surprise UX) */}
+      {state.locationConfirmed && !state.goalsConfirmed && (
+        <div
+          style={{
+            padding: "12px 16px",
+            borderRadius: 12,
+            background: "rgba(79, 140, 255, 0.06)",
+            border: "1px solid rgba(79, 140, 255, 0.12)",
+            display: "flex",
+            gap: 12,
+            alignItems: "center",
+          }}
+        >
+          <div style={{ fontSize: 18 }}>🔥</div>
+          <div style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.9)" }}>
+            Tell Merlin what you want to achieve (reduce bills, backup power, EV charge).{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setShowGoalsModal(true);
+                // Scroll modal anchor into view
+                setTimeout(() => {
+                  const el = document.getElementById("goals-modal-anchor");
+                  if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 100);
+              }}
+              style={{
+                marginLeft: 8,
+                textDecoration: "underline",
+                background: "none",
+                border: "none",
+                color: "#4F8CFF",
+                cursor: "pointer",
+                fontWeight: 700,
+                fontSize: 13,
+              }}
+            >
+              Choose goals
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Scroll anchor for goals modal */}
+      <div id="goals-modal-anchor" style={{ height: 1, width: 1, opacity: 0 }} />
+
       {/* Goals Modal - appears after location confirmed */}
       <GoalsModal
         isOpen={showGoalsModal}
@@ -697,14 +743,10 @@ export default function Step1LocationV7({ state, actions }: Props) {
         onContinue={() => {
           confirmGoals(true);
           setShowGoalsModal(false);
-          // Resume navigation flow after goals confirmed
-          submitLocation();
         }}
         onSkip={() => {
           confirmGoals(true); // Mark as confirmed even if skipped
           setShowGoalsModal(false);
-          // Resume navigation flow after skip
-          submitLocation();
         }}
       />
 

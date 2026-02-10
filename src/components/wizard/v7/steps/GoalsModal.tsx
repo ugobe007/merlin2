@@ -7,7 +7,7 @@
  * Design: Clean, professional modal with actual Merlin wizard icon
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 import merlinIcon from '@/assets/images/new_small_profile_.png';
 
@@ -66,6 +66,16 @@ export default function GoalsModal({
   onContinue,
   onSkip,
 }: GoalsModalProps) {
+  // ✅ Focus primary button when modal opens (accessibility + mobile UX)
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        const primary = document.getElementById("goals-primary");
+        if (primary) primary.focus();
+      }, 100);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const canContinue = selectedGoals.length > 0;
@@ -185,6 +195,7 @@ export default function GoalsModal({
             </button>
             
             <button
+              id="goals-primary"
               type="button"
               onClick={onContinue}
               disabled={!canContinue}
@@ -196,9 +207,10 @@ export default function GoalsModal({
                     : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                 }
               `}
+              aria-label={canContinue ? "Continue to industry selection" : "Select at least one goal"}
             >
               {canContinue ? (
-                `Continue with ${selectedGoals.length} goal${selectedGoals.length !== 1 ? 's' : ''}`
+                'Continue → Industry'
               ) : (
                 'Select at least one goal'
               )}
