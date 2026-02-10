@@ -400,6 +400,12 @@ export type WizardState = {
   goals: EnergyGoal[];
   goalsConfirmed: boolean; // user has selected goals (or skipped)
 
+  // Step 3.5: add-ons (smart recommendations after profile)
+  includeSolar: boolean;
+  includeGenerator: boolean;
+  includeEV: boolean;
+  addOnsConfirmed: boolean; // user has chosen add-ons (or skipped)
+
   // Step 1: business (V6 parity)
   businessDraft: BusinessDraft; // typed draft fields (cleared on refresh unless confirmed)
   business: BusinessCard | null; // resolved business from Places API
@@ -471,6 +477,10 @@ type Intent =
   | { type: "SET_GOALS"; goals: EnergyGoal[] }
   | { type: "TOGGLE_GOAL"; goal: EnergyGoal }
   | { type: "SET_GOALS_CONFIRMED"; confirmed: boolean }
+  | { type: "TOGGLE_SOLAR" }
+  | { type: "TOGGLE_GENERATOR" }
+  | { type: "TOGGLE_EV" }
+  | { type: "SET_ADDONS_CONFIRMED"; confirmed: boolean }
   | { type: "SET_BUSINESS_DRAFT"; patch: Partial<BusinessDraft> }
   | { type: "SET_BUSINESS"; business: BusinessCard | null }
   | { type: "SET_BUSINESS_CARD"; card: BusinessCard | null }
@@ -1376,6 +1386,12 @@ function initialState(): WizardState {
     goals: [],
     goalsConfirmed: false,
 
+    // Add-ons (smart recommendations after Step 3 profile)
+    includeSolar: false,
+    includeGenerator: false,
+    includeEV: false,
+    addOnsConfirmed: false,
+
     // V6 parity: business draft + resolved business
     businessDraft: { name: "", address: "" },
     business: null,
@@ -1549,6 +1565,18 @@ function reduce(state: WizardState, intent: Intent): WizardState {
 
     case "SET_GOALS_CONFIRMED":
       return { ...state, goalsConfirmed: intent.confirmed };
+
+    case "TOGGLE_SOLAR":
+      return { ...state, includeSolar: !state.includeSolar };
+
+    case "TOGGLE_GENERATOR":
+      return { ...state, includeGenerator: !state.includeGenerator };
+
+    case "TOGGLE_EV":
+      return { ...state, includeEV: !state.includeEV };
+
+    case "SET_ADDONS_CONFIRMED":
+      return { ...state, addOnsConfirmed: intent.confirmed };
 
     case "SET_BUSINESS_DRAFT":
       return {
@@ -2413,6 +2441,35 @@ export function useWizardV7() {
   const confirmGoals = useCallback((value: boolean) => {
     dispatch({ type: "SET_GOALS_CONFIRMED", confirmed: value });
     dispatch({ type: "DEBUG_NOTE", note: `Goals ${value ? "confirmed" : "skipped"} by user` });
+  }, []);
+
+  /**
+   * toggleSolar - Toggle solar add-on
+   */
+  const toggleSolar = useCallback(() => {
+    dispatch({ type: "TOGGLE_SOLAR" });
+  }, []);
+
+  /**
+   * toggleGenerator - Toggle generator add-on
+   */
+  const toggleGenerator = useCallback(() => {
+    dispatch({ type: "TOGGLE_GENERATOR" });
+  }, []);
+
+  /**
+   * toggleEV - Toggle EV charging add-on
+   */
+  const toggleEV = useCallback(() => {
+    dispatch({ type: "TOGGLE_EV" });
+  }, []);
+
+  /**
+   * confirmAddOns - User confirms add-ons selection (or skips)
+   */
+  const confirmAddOns = useCallback((value: boolean) => {
+    dispatch({ type: "SET_ADDONS_CONFIRMED", confirmed: value });
+    dispatch({ type: "DEBUG_NOTE", note: `Add-ons ${value ? "confirmed" : "skipped"} by user` });
   }, []);
 
   /**
@@ -4121,6 +4178,12 @@ export function useWizardV7() {
     setGoals,
     toggleGoal,
     confirmGoals,
+
+    // step 3.5: add-ons
+    toggleSolar,
+    toggleGenerator,
+    toggleEV,
+    confirmAddOns,
 
     // step 1: business (V6 parity)
     setBusinessDraft,
