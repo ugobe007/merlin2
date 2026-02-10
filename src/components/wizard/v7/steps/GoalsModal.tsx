@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { X, Check } from 'lucide-react';
-import merlinIcon from '@/assets/images/wizard_icon1.png';
+import merlinIcon from '@/assets/images/new_small_profile_.png';
 
 export type EnergyGoal = 
   | 'lower_bills'
@@ -76,13 +76,15 @@ export default function GoalsModal({
       <div 
         className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9998]"
         onClick={onSkip}
+        style={{ pointerEvents: 'auto' }}
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ pointerEvents: 'none' }}>
         <div 
-          className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden pointer-events-auto"
+          className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
+          style={{ pointerEvents: 'auto' }}
         >
           
           {/* Header */}
@@ -93,6 +95,7 @@ export default function GoalsModal({
               type="button"
               className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
               aria-label="Skip goals"
+              style={{ pointerEvents: 'auto' }}
             >
               <X className="w-5 h-5" />
             </button>
@@ -124,7 +127,11 @@ export default function GoalsModal({
                 <button
                   key={option.id}
                   type="button"
-                  onClick={() => onToggleGoal(option.id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onToggleGoal(option.id);
+                  }}
                   className={`
                     w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer
                     ${
@@ -133,8 +140,9 @@ export default function GoalsModal({
                         : 'border-slate-700 bg-slate-800/50 hover:border-slate-600 hover:bg-slate-800'
                     }
                   `}
+                  style={{ pointerEvents: 'auto' }}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4" style={{ pointerEvents: 'none' }}>
                     {/* Emoji */}
                     <div className={`
                       flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-xl
@@ -174,6 +182,7 @@ export default function GoalsModal({
               type="button"
               onClick={onSkip}
               className="px-5 py-2.5 text-slate-400 hover:text-white transition-colors"
+              style={{ pointerEvents: 'auto' }}
             >
               Skip
             </button>
@@ -190,6 +199,7 @@ export default function GoalsModal({
                     : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                 }
               `}
+              style={{ pointerEvents: 'auto' }}
             >
               {canContinue ? (
                 `Continue with ${selectedGoals.length} goal${selectedGoals.length !== 1 ? 's' : ''}`
