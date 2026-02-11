@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
   Battery,
   Sun,
@@ -19,7 +19,7 @@ import type {
   PricingStatus,
   SystemAddOns,
 } from "@/wizard/v7/hooks/useWizardV7";
-import { sanitizeQuoteForDisplay, type DisplayQuote, type DisplayHints } from "@/wizard/v7/utils/pricingSanity";
+import { sanitizeQuoteForDisplay, type DisplayQuote } from "@/wizard/v7/utils/pricingSanity";
 import { buildV7ExportData } from "@/utils/buildV7ExportData";
 import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
@@ -182,7 +182,7 @@ function formatContributorKey(key: string): string {
   return CONTRIBUTOR_LABELS[key] ?? key.replace(/([A-Z])/g, " $1").trim();
 }
 
-export default function Step4ResultsV7({ state, actions }: Props) {
+export default function Step6ResultsV7({ state, actions }: Props) {
   // ============================================================================
   // PHASE 6: PRICING STATUS (non-blocking)
   // Step 6 is now a PURE QUOTE DISPLAY — add-ons configured in Step 4 Options
@@ -220,7 +220,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
         <div>
           <div className="flex items-center gap-2 text-slate-400 mb-2">
             <Building2 className="w-4 h-4" />
-            <span className="text-sm font-medium">{getIndustryMeta(state.industry).label}</span>
+            <span className="text-sm font-medium">{getIndustryMeta(state.industry).label as string}</span>
             <span className="text-slate-600">•</span>
             <MapPin className="w-4 h-4" />
             <span className="text-sm">{locLine}</span>
@@ -255,7 +255,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
       {/* ================================================================
           PARTIAL RESULTS / FALLBACK / STATUS BANNERS
       ================================================================ */}
-      {quote?.isProvisional && (
+      {!!(quote?._extra as Record<string,unknown>)?.isProvisional && (
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
           <div className="flex items-start gap-2.5">
             <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
@@ -282,9 +282,9 @@ export default function Step4ResultsV7({ state, actions }: Props) {
             Using a general facility model. Numbers are directionally correct but won't carry TrueQuote™ attribution.
           </p>
           {actions.retryTemplate && (
-            <button onClick={() => void actions.retryTemplate?.()} disabled={state.busy}
+            <button onClick={() => void actions.retryTemplate?.()} disabled={state.isBusy}
               className="mt-2.5 px-3 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-300 font-bold text-xs hover:bg-blue-500/[0.15] disabled:opacity-40 transition-colors">
-              {state.busy ? "Retrying…" : "Retry industry profile →"}
+              {state.isBusy ? "Retrying\u2026" : "Retry industry profile \u2192"}
             </button>
           )}
         </div>
@@ -652,12 +652,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
           state={state}
           quote={quote}
           pricingStatus={pricingStatus}
-          onRecalculate={async (addOns) => {
-            if (actions.recalculateWithAddOns) {
-              return await actions.recalculateWithAddOns(addOns);
-            }
-            return { ok: true };
-          }}
+          actions={{ goToStep: actions.goToStep }}
         />
       )}
 
@@ -734,7 +729,7 @@ function getAdvisorRecommendations(
   }
 
   // 3. EV charging revenue — if not already an EV industry
-  const isEVIndustry = state.industry === "ev_charging" || state.industry === "ev-charging";
+  const isEVIndustry = state.industry === "ev_charging" || (state.industry as string) === "ev-charging";
   if (!isEVIndustry) {
     const hasCustomerTraffic = ["hotel", "retail", "shopping-center", "car_wash", "car-wash", "restaurant", "gas_station", "gas-station", "casino"].includes(state.industry ?? "");
     if (hasCustomerTraffic) {
@@ -788,13 +783,13 @@ const ACCENT_STYLES: Record<string, { border: string; bg: string; text: string; 
 function AdvisorRecommendations({
   state,
   quote,
-  pricingStatus,
-  onRecalculate,
+  actions,
 }: {
   state: WizardV7State;
   quote: DisplayQuote;
   pricingStatus: PricingStatus;
-  onRecalculate: (addOns: SystemAddOns) => Promise<{ ok: boolean; error?: string }>;
+  actions: { goToStep?: (step: WizardStep) => Promise<void> };
+  onRecalculate?: (addOns: SystemAddOns) => Promise<{ ok: boolean; error?: string }>;
 }) {
   const recommendations = useMemo(
     () => getAdvisorRecommendations(state, quote),
@@ -804,15 +799,21 @@ function AdvisorRecommendations({
   const [expanded, setExpanded] = useState(true);
 
   if (recommendations.length === 0) {
-    // No recommendations — just show the add-ons panel for manual config
+    // No recommendations — show a positive message
     return (
-      <SystemAddOnsCards
-        state={state}
-        currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
-        onRecalculate={onRecalculate}
-        pricingStatus={pricingStatus}
-        showGenerateButton={false}
-      />
+      <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.06] p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-lg">
+            ✅
+          </div>
+          <div>
+            <div className="font-black text-sm text-emerald-200">System Looks Great</div>
+            <div className="text-xs text-slate-400 mt-0.5">
+              Your configuration is well-optimized for your facility's needs.
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -863,15 +864,15 @@ function AdvisorRecommendations({
             );
           })}
 
-          {/* Configure add-ons CTA */}
-          <div className="pt-1">
-            <SystemAddOnsCards
-              state={state}
-              currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
-              onRecalculate={onRecalculate}
-              pricingStatus={pricingStatus}
-              showGenerateButton={false}
-            />
+          {/* Tip: Go back to Options step to reconfigure */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => actions.goToStep?.("options")}
+              className="text-xs text-purple-400 hover:text-purple-300 underline underline-offset-2 transition-colors font-medium"
+            >
+              ← Configure add-ons in Options step
+            </button>
           </div>
         </div>
       )}

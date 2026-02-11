@@ -505,10 +505,10 @@ describe("Tier E — RLS + Step 4 Graceful Degradation", () => {
     });
   });
 
-  describe("Step 4 _displayHints graceful degradation", () => {
+  describe("Step 6 _displayHints graceful degradation", () => {
     const step4Path = path.resolve(
       __dirname,
-      "../../../components/wizard/v7/steps/Step4ResultsV7.tsx"
+      "../../../components/wizard/v7/steps/Step6ResultsV7.tsx"
     );
     let step4Source: string;
 

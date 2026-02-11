@@ -32,7 +32,6 @@ import V7DebugPanel from "@/components/wizard/v7/debug/V7DebugPanel";
 // ✅ SSOT Gates (Feb 1, 2026)
 import { 
   getGateForStep,
-  WIZARD_STEP_ORDER,
   getStepIndex,
   type WizardStepId,
   type WizardGateState,
@@ -46,8 +45,8 @@ import {
   Step3ProfileV7Curated,
   Step3GatedV7,
   Step4OptionsV7,
-  Step4MagicFitV7,
-  Step4ResultsV7,
+  Step5MagicFitV7,
+  Step6ResultsV7,
 } from "@/components/wizard/v7/steps";
 
 // ⚠️ STEP_ORDER removed — import WIZARD_STEP_ORDER from wizardStepGates.ts (SSOT)
@@ -618,7 +617,7 @@ function WizardV7Page() {
 
     // Options step: guide add-on configuration
     if (state.step === "options") {
-      const peakKW = state.peakLoadKW ?? state.quote?.peakLoadKW;
+      const peakKW = state.quote?.peakLoadKW;
       const bullets: string[] = [];
       
       if (peakKW) {
@@ -820,17 +819,18 @@ function WizardV7Page() {
       )}
 
       {state.step === "magicfit" && (
-        <Step4MagicFitV7
+        <Step5MagicFitV7
           state={state}
           actions={{
             goBack: wizard.goBack,
             goToStep: wizard.goToStep,
+            updateQuote: wizard.updateQuote,
           }}
         />
       )}
 
       {state.step === "results" && (
-        <Step4ResultsV7
+        <Step6ResultsV7
           state={state}
           actions={{
             goBack: wizard.goBack,

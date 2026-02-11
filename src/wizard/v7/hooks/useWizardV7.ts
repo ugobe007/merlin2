@@ -1885,6 +1885,11 @@ function reduce(state: WizardState, intent: Intent): WizardState {
         isBusy: false,
         step3Complete: true,
         step: "options", // Step 3 → Step 4 Options (add-ons)
+        // FIX (Feb 11, 2026): Push 'profile' to stepHistory so goBack from Options
+        // correctly returns to profile instead of skipping over it
+        stepHistory: state.stepHistory[state.stepHistory.length - 1] === "profile"
+          ? state.stepHistory
+          : [...state.stepHistory, "profile"],
         debug: {
           ...state.debug,
           lastAction: "SUBMIT_STEP3_SUCCESS",
@@ -4175,11 +4180,10 @@ export function useWizardV7() {
           );
         }
 
-        // ✅ Dispatch SUCCESS to transition to results step
+        // ✅ Dispatch SUCCESS to transition to options step (6-step flow)
         dispatch({ type: "SUBMIT_STEP3_SUCCESS" });
-        console.log("[V7] submitStep3 SUCCESS dispatched → reducer should set step='results'");
-        // Diagnostic log (Step3→Step4 root cause analysis)
-        console.log("[submitStep3] end -> setting step", { nextStep: "results" });
+        console.log("[V7] submitStep3 SUCCESS dispatched → reducer sets step='options'");
+        console.log("[submitStep3] end -> setting step", { nextStep: "options" });
 
         // ✅ Run pricing in background (non-blocking)
         // MagicFit will use these results to generate 3 tiers
@@ -4199,10 +4203,10 @@ export function useWizardV7() {
           error: { message: errorMessage, retries: 3 } 
         });
 
-        // ✅ Still transition to results even if backend submission failed
-        // (Local calculation can proceed without backend)
+        // ✅ Still transition to options even if backend submission failed
+        // (Local calculation can proceed without backend — user still sees Options + MagicFit)
         dispatch({ type: "SET_STEP3_COMPLETE", complete: true });
-        setStep("results", "step3_complete_fallback");
+        setStep("options", "step3_complete_fallback");
 
         // ✅ Run pricing in background regardless
         runPricingSafe({
@@ -4746,6 +4750,12 @@ export function useWizardV7() {
     retryPricing, // Retry pricing from Results page
     retryTemplate, // Retry industry template load (upgrade fallback → industry)
     recalculateWithAddOns, // Re-run pricing with new add-on config (solar/gen/wind)
+
+    // step 5: MagicFit tier selection → update wizard quote
+    updateQuote: useCallback((partial: Partial<QuoteOutput>) => {
+      const merged: QuoteOutput = { ...state.quote, ...partial };
+      dispatch({ type: "SET_QUOTE", quote: merged });
+    }, [state.quote]),
 
     // misc
     clearError,
