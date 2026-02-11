@@ -31,6 +31,7 @@
     "cleanup:dead-code": "./scripts/cleanup.sh dead-code",
     "cleanup:duplicates": "./scripts/cleanup.sh duplicates",
     "test:wizard": "node scripts/test-wizard-validation.mjs",
+    "check:wizard-entry": "bash scripts/check-wizard-entry-point.sh",
     "cleanup:deps": "./scripts/cleanup.sh deps",
     "cleanup:clean": "./scripts/cleanup.sh clean",
     "cleanup:full": "./scripts/cleanup.sh full",

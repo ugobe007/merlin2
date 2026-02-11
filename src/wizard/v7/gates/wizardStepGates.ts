@@ -2,13 +2,13 @@
  * ============================================================================
  * WIZARD STEP GATES — SINGLE SOURCE OF TRUTH (Feb 1, 2026)
  * ============================================================================
- * 
+ *
  * DOCTRINE:
  * - Each step owns exactly ONE question: "Is this step complete?"
  * - Nothing else can block navigation
  * - No pricing, no DB, no defaults, no global invariants
  * - Navigation must NEVER depend on future steps
- * 
+ *
  * ALLOWED GATES:
  * | Step          | Allowed to block on           |
  * |---------------|-------------------------------|
@@ -16,7 +16,7 @@
  * | industry      | industry selection only       |
  * | profile       | profile answers only          |
  * | results       | nothing (read-only)           |
- * 
+ *
  * FORBIDDEN:
  * - Pricing readiness
  * - DB lookups
@@ -34,6 +34,7 @@ export type WizardGateResult = {
 
 export type WizardGateReason =
   | "zip-incomplete"
+  | "zip-unconfirmed"
   | "address-incomplete"
   | "industry-missing"
   | "profile-incomplete"
@@ -70,53 +71,64 @@ export interface WizardGateState {
 // ============================================================================
 /**
  * Location step is complete if we have:
- * - A valid 5-digit ZIP (primary requirement - ALWAYS sufficient)
- * - Business name and address are OPTIONAL and do NOT block navigation
- * 
- * NOTHING ELSE blocks this step.
+ * - A valid ZIP OR a resolved formatted address
+ * - PLUS explicit user confirmation (prevents auto-advance)
+ *
+ * Business is OPTIONAL and does not block navigation.
  */
 export function gateLocation(state: WizardGateState): WizardGateResult {
-  // Check for valid ZIP (5+ digits for US, 3+ for international)
-  // CRITICAL: locationRawInput is where typed ZIP lives (highest priority!)
-  const zip = state.locationRawInput || state.location?.postalCode || state.location?.zip || "";
-  const normalizedZip = zip.replace(/\D/g, "");
-  
-  // Debug logging (DEV only — prevents console spam in production)
+  const raw =
+    state.locationRawInput ||
+    state.location?.postalCode ||
+    state.location?.zip ||
+    "";
+
+  const normalizedZip = (raw || "").replace(/\D/g, "");
+
+  // DEV logging only, but avoid WARN spam for "normal typing"
   if (import.meta.env.DEV) {
-    console.log('[gateLocation] Checking:', {
-      'locationRawInput': state.locationRawInput,
-      'location.postalCode': state.location?.postalCode,
-      'location.zip': state.location?.zip,
-      'combined zip': zip,
-      'normalized': normalizedZip,
-      'length': normalizedZip.length,
-      'locationConfirmed': state.locationConfirmed
+    console.log("[gateLocation] Checking:", {
+      locationRawInput: state.locationRawInput,
+      postalCode: state.location?.postalCode,
+      zip: state.location?.zip,
+      normalizedZip,
+      length: normalizedZip.length,
+      locationConfirmed: Boolean(state.locationConfirmed),
+      hasFormattedAddress: Boolean(state.location?.formattedAddress),
     });
   }
-  
-  // Valid ZIP is ALWAYS sufficient - business name/address are optional
+
+  // Valid ZIP path (US): require confirm
   if (normalizedZip.length >= 5) {
-    if (import.meta.env.DEV) console.log('[gateLocation] ✅ ZIP valid, allowing continue');
+    if (!state.locationConfirmed) {
+      if (import.meta.env.DEV) {
+        console.log("[gateLocation] ZIP valid but not confirmed");
+      }
+      return { canContinue: false, reason: "zip-unconfirmed" };
+    }
     return { canContinue: true };
   }
 
-  // Also allow if location resolved (from address lookup) even without ZIP
+  // Address path: allow if address resolved (also requires confirm if you want strict symmetry)
   if (state.location?.formattedAddress) {
-    if (import.meta.env.DEV) console.log('[gateLocation] ✅ Address resolved, allowing continue');
+    if (!state.locationConfirmed) {
+      return { canContinue: false, reason: "address-incomplete" };
+    }
     return { canContinue: true };
   }
 
-  // AI Agent auto-fix: Check if gates are temporarily relaxed
-  if (typeof window !== 'undefined') {
-    const relaxed = localStorage.getItem('wizardRelaxedGates');
-    const expiry = Number(localStorage.getItem('wizardRelaxedGatesExpiry'));
-    if (relaxed === 'true' && expiry > Date.now()) {
-      if (import.meta.env.DEV) console.warn('[gateLocation] ⚠️ Auto-fix: Relaxing gate validation (AI Agent intervention)');
+  // Optional "relaxed gates" override (AI Agent)
+  if (typeof window !== "undefined") {
+    const relaxed = localStorage.getItem("wizardRelaxedGates");
+    const expiry = Number(localStorage.getItem("wizardRelaxedGatesExpiry"));
+    if (relaxed === "true" && expiry > Date.now()) {
+      if (import.meta.env.DEV) {
+        console.warn("[gateLocation] ⚠️ Relaxed gates override active");
+      }
       return { canContinue: true };
     }
   }
 
-  if (import.meta.env.DEV) console.warn('[gateLocation] ❌ Blocking: ZIP incomplete');
   return { canContinue: false, reason: "zip-incomplete" };
 }
 
@@ -202,10 +214,11 @@ export function getGateForStep(
       return gateProfile(state);
     case "results":
       return gateResults();
-    default:
+    default: {
       // Exhaustive check - TypeScript will catch missing cases
       const _exhaustive: never = step;
-      return { canContinue: false, reason: null };
+      return { canContinue: false };
+    }
   }
 }
 
@@ -223,12 +236,13 @@ export function canProceedFromStep(
 // HELPER: Get human-readable gate reason
 // ============================================================================
 export function getGateReasonMessage(reason: WizardGateReason | undefined): string {
-  if (!reason) return "";
   switch (reason) {
     case "zip-incomplete":
       return "Please enter a valid ZIP code";
+    case "zip-unconfirmed":
+      return "Click Continue to confirm your ZIP";
     case "address-incomplete":
-      return "Please enter a valid address";
+      return "Please confirm your address";
     case "industry-missing":
       return "Please select an industry";
     case "profile-incomplete":
@@ -236,7 +250,7 @@ export function getGateReasonMessage(reason: WizardGateReason | undefined): stri
     case "profile-required-missing":
       return "Please answer all required questions";
     default:
-      return "Please complete this step";
+      return "";
   }
 }
 

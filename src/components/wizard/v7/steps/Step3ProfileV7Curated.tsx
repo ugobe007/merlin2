@@ -118,8 +118,17 @@ function normalizeFieldType(t?: string): string {
 export default function Step3ProfileV7Curated(props: Props) {
   const { state, actions, updateState } = props;
 
-  // Get industry from state (fix operator precedence)
-  const industry = ((state as Record<string, unknown>).industry as string | undefined) ?? "other";
+  // ✅ CRITICAL FIX (Feb 10, 2026): Use effectiveIndustry from template (retail → hotel mapping)
+  const effectiveIndustry =
+    (state.step3Template as any)?.effectiveIndustry ||
+    (state.step3Template as any)?.selectedIndustry ||
+    ((state as Record<string, unknown>).industry as string | undefined) ||
+    "other";
+
+  // ✅ Alias for backward compatibility with existing code (Feb 10, 2026)
+  const industry = String(effectiveIndustry);
+
+  console.log("[Step3Curated] Using effectiveIndustry:", effectiveIndustry, "(selected:", state.industry, ")");
 
   // Get answers from state (wrapped in useMemo to prevent dep warnings)
   const answers: Step3Answers = useMemo(
@@ -127,13 +136,67 @@ export default function Step3ProfileV7Curated(props: Props) {
     [state]
   );
 
-  // ✅ RESOLVE CURATED SCHEMA (NOT from backend template)
-  const schema: CuratedSchema = useMemo(() => {
-    return resolveStep3Schema(industry);
-  }, [industry]);
+  // ✅ SSOT FIX (Feb 10, 2026): Use CURATED SCHEMA as single source of truth
+  // Normalize questions to guarantee stable IDs and consistent structure
+  const curatedSchema: CuratedSchema = useMemo(() => {
+    return resolveStep3Schema(String(effectiveIndustry));
+  }, [effectiveIndustry]);
 
-  const { questions, displayName, icon, source } = schema;
-  // Note: sections available via schema.sections when needed for grouped rendering
+  const { displayName, icon, source } = curatedSchema;
+  
+  // ✅ Normalize schema questions into a single, safe shape
+  // This guarantees: stable IDs (fixes React keys), normalized options (fixes blank cards), consistent types
+  const questions: CuratedField[] = useMemo(() => {
+    const raw: any[] =
+      (curatedSchema as any)?.questions ??
+      (curatedSchema as any)?.fields ??
+      [];
+
+    return (raw ?? []).map((q: any, idx: number) => {
+      // Guarantee stable id (fixes React key + answer wiring)
+      // ✅ Filter out literal string "undefined" (common schema corruption)
+      const rawId = q?.id ?? q?.key ?? q?.fieldId ?? q?.name;
+      const id =
+        rawId && String(rawId) !== "undefined"
+          ? rawId
+          : `${String(effectiveIndustry)}_${idx}`;
+
+      // Normalize label/title
+      const title = q?.title ?? q?.label ?? q?.prompt ?? q?.question ?? undefined;
+
+      // Normalize options (common break: choices/values/items vs options)
+      const optionsRaw =
+        q?.options ??
+        q?.choices ??
+        q?.values ??
+        q?.items ??
+        undefined;
+
+      return {
+        ...q,
+        id: String(id),
+        title,
+        label: q?.label ?? title,
+        // keep existing type if present; fallback so renderer doesn't choke
+        type: q?.type ?? q?.inputType ?? q?.kind ?? "text",
+        required: Boolean(q?.required ?? q?.isRequired ?? false),
+        // stash raw options into `options` so your getOptions(q) sees them
+        options: optionsRaw,
+      } as CuratedField;
+    });
+  }, [curatedSchema, effectiveIndustry]);
+  
+  const questionCount = questions.length;
+  
+  // DEV logging to confirm single source of truth
+  if (import.meta.env.DEV) {
+    console.log("[Step3Curated] Render source (CURATED SSOT)", {
+      effectiveIndustry,
+      curatedQuestions: questions.length,
+      templateQuestions: (state.step3Template as any)?.questions?.length,
+      undefinedIds: questions.filter(q => !q?.id).length,
+    });
+  }
 
   // ============================================================================
   // AUTO-APPLY SMART DEFAULTS (Pre-fill with industry-typical values)
@@ -146,10 +209,10 @@ export default function Step3ProfileV7Curated(props: Props) {
   // Add-ons modal state (triggers after Continue click)
   const [showAddOnsModal, setShowAddOnsModal] = useState(false);
 
-  // On schema load, pre-fill any unanswered fields with their smartDefault
+  // On template load, pre-fill any unanswered fields with their smartDefault
   useEffect(() => {
-    const schemaKey = `${schema.industry}-${schema.questionCount}`;
-    if (appliedSchemaRef.current === schemaKey) return; // Already applied for this schema
+    const templateKey = `${effectiveIndustry}-${questionCount}`;
+    if (appliedSchemaRef.current === templateKey) return; // Already applied for this template
 
     const toApply: Record<string, unknown> = {};
     const newDefaultIds = new Set<string>();
@@ -178,7 +241,7 @@ export default function Step3ProfileV7Curated(props: Props) {
       }
 
       setDefaultFilledIds(newDefaultIds);
-      appliedSchemaRef.current = schemaKey;
+      appliedSchemaRef.current = templateKey;
 
       if (import.meta.env.DEV) {
         console.log(
@@ -187,9 +250,11 @@ export default function Step3ProfileV7Curated(props: Props) {
         );
       }
     } else {
-      appliedSchemaRef.current = schemaKey;
+      appliedSchemaRef.current = templateKey;
     }
-  }, [schema.industry, schema.questionCount, questions]); // eslint-disable-line react-hooks/exhaustive-deps
+    // ✅ FIX (Feb 10, 2026): Include answers/actions/updateState in deps to prevent stale answer bugs
+    // This ensures submitStep3 uses current answers, not stale closure values
+  }, [effectiveIndustry, questionCount, questions, answers, actions, updateState]);
 
   // When user edits a field, remove it from "default-filled" tracking
   const setAnswerWithTracking = useCallback(
@@ -214,8 +279,8 @@ export default function Step3ProfileV7Curated(props: Props) {
     [actions, updateState, answers]
   );
 
-  // Get hero image (keyed off normalized schema.industry - type-enforced)
-  const heroKey = schema.industry as CanonicalIndustryKey;
+  // Get hero image (keyed off effectiveIndustry - type-enforced)
+  const heroKey = effectiveIndustry as CanonicalIndustryKey;
   const heroImg = INDUSTRY_IMAGES[heroKey] ?? INDUSTRY_IMAGES.other;
 
   // Check conditional visibility (fail-open to avoid deadlocks)
@@ -269,53 +334,51 @@ export default function Step3ProfileV7Curated(props: Props) {
   // Answer setter uses tracking wrapper (keeps default-filled state accurate)
   const setAnswer = setAnswerWithTracking;
 
-  // Required fields (ALL required - stable count for debugging)
-  const _requiredIds = useMemo(() => {
+  // Required fields (from curated schema - SSOT)
+  const requiredIds = useMemo(() => {
     return questions.filter(isRequired).map((q) => q.id);
   }, [questions]);
 
-  // Tier 1 blockers (gates completion)
-  const blockerIds = useMemo(() => {
-    const tier1 = getTier1Blockers(industry);
-    return tier1.filter((id) => questions.some((q) => q.id === id));
-  }, [industry, questions]);
-
-  // Missing blockers (Tier 1 only - actually gates completion)
-  const missingBlockers = useMemo(() => {
-    if (!blockerIds.length) return [];
-    const missing: string[] = [];
-    for (const id of blockerIds) {
-      if (!isAnswered(answers[id])) missing.push(id);
-    }
-    return missing;
-  }, [blockerIds, answers]);
+  // Missing required (for completion calculation)
+  // ✅ FIX (Feb 10, 2026): Pre-filled defaults (cyan badges) count as answered
+  // isAnswered() already checks for value existence, not click events
+  const missingRequired = useMemo(() => {
+    return questions
+      .filter(isRequired)
+      .filter(isQuestionVisible)
+      .filter((q) => {
+        const value = answers[q.id];
+        // ✅ Value exists (either user-entered OR auto-filled) = answered
+        return !isAnswered(value);
+      })
+      .map((q) => q.id);
+  }, [questions, answers, isQuestionVisible]);
 
   // Visible required count (for progress denominator)
   const visibleRequiredCount = useMemo(() => {
     return questions.filter(isRequired).filter(isQuestionVisible).length;
   }, [questions, isQuestionVisible]);
 
-  // Missing required (visible + required + unanswered - for UI display only)
-  const missingRequired = useMemo(() => {
-    return questions
-      .filter(isRequired)
-      .filter(isQuestionVisible)
-      .filter((q) => !isAnswered(answers[q.id]))
-      .map((q) => q.id);
-  }, [questions, answers, isQuestionVisible]);
-
-  // Progress metrics (uses blockers if available, else all required)
-  const effectiveRequired = blockerIds.length > 0 ? blockerIds.length : visibleRequiredCount;
-  const effectiveMissing = blockerIds.length > 0 ? missingBlockers.length : missingRequired.length;
-  const answeredRequired = effectiveRequired - effectiveMissing;
+  // Progress metrics (uses template questions)
+  const answeredRequired = visibleRequiredCount - missingRequired.length;
   const progressPct =
-    effectiveRequired === 0
+    visibleRequiredCount === 0
       ? 100
-      : Math.max(0, Math.min(100, Math.round((answeredRequired / effectiveRequired) * 100)));
+      : Math.max(0, Math.min(100, Math.round((answeredRequired / visibleRequiredCount) * 100)));
 
-  // Completion status (uses blockers if available)
-  const isComplete =
-    blockerIds.length > 0 ? missingBlockers.length === 0 : missingRequired.length === 0;
+  // Completion status (all required fields answered)
+  const isComplete = missingRequired.length === 0;
+  
+  console.log("[Step3Curated] Completion check (CURATED SSOT)", {
+    totalQuestions: questionCount,
+    requiredCount: requiredIds.length,
+    visibleRequiredCount,
+    missingCount: missingRequired.length,
+    missingQuestions: missingRequired, // Show which questions are missing
+    isComplete,
+    progressPct,
+    autoFilledCount: defaultFilledIds.size, // How many were auto-filled
+  });
 
   // DEV invariants: catch schema corruption instantly
   if (import.meta.env.DEV) {
@@ -344,9 +407,23 @@ export default function Step3ProfileV7Curated(props: Props) {
 
     // Get options (applies modifyOptions if present - enables dynamic option mutation)
     const options = getOptions(q);
+    
+    // ✅ Normalize options to prevent blank cards (with Array guard to prevent crash)
+    const normalizedOptions = Array.isArray(options)
+      ? options.map((o: any, i: number) => {
+          if (typeof o === "string" || typeof o === "number") {
+            return { label: String(o), value: o };
+          }
+          const label = o?.label ?? o?.text ?? o?.name ?? String(o?.value ?? i);
+          const value = o?.value ?? o?.id ?? o?.key ?? label ?? i;
+          return { label: String(label), value };
+        })
+      : [];
 
     // Choose renderer based on type and option count (extracted for testability)
-    const renderer = chooseRendererForQuestion(q);
+    // ✅ Pass normalized question so renderer sees correct option count
+    const qForRender = { ...q, options: normalizedOptions };
+    const renderer = chooseRendererForQuestion(qForRender);
 
     return (
       <div
@@ -421,7 +498,7 @@ export default function Step3ProfileV7Curated(props: Props) {
           {/* Buttons for small option sets (≤6 options: 2-column grid) */}
           {renderer === "grid" && (
             <div className="grid grid-cols-2 gap-2">
-              {options.map((opt) => {
+              {normalizedOptions.map((opt) => {
                 const optVal = String(opt.value);
                 const selected = asString(value) === optVal;
                 return (
@@ -461,7 +538,7 @@ export default function Step3ProfileV7Curated(props: Props) {
           {/* Buttons for medium option sets (7-18 options: compact grid for hours/ranges) */}
           {renderer === "compact_grid" && (
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-2">
-              {options.map((opt) => {
+              {normalizedOptions.map((opt) => {
                 const optVal = String(opt.value);
                 const selected = asString(value) === optVal;
                 return (
@@ -491,14 +568,14 @@ export default function Step3ProfileV7Curated(props: Props) {
           )}
 
           {/* Select dropdown (for very large option sets >18) */}
-          {renderer === "select" && options.length > 0 && (
+          {renderer === "select" && normalizedOptions.length > 0 && (
             <select
               className="w-full rounded-lg bg-slate-950/60 border border-slate-700/60 px-3 py-2.5 text-slate-100"
               value={asString(value)}
               onChange={(e) => setAnswer(q.id, e.target.value)}
             >
               <option value="">Select…</option>
-              {options.map((opt) => {
+              {normalizedOptions.map((opt) => {
                 const optVal = String(opt.value);
                 return (
                   <option key={optVal} value={optVal}>
@@ -667,9 +744,9 @@ export default function Step3ProfileV7Curated(props: Props) {
           )}
 
           {/* Range Buttons — Button card selection for range values (e.g., "100-250 rooms") */}
-          {renderer === "range_buttons" && options.length > 0 && (
+          {renderer === "range_buttons" && normalizedOptions.length > 0 && (
             <div className="grid grid-cols-2 gap-2">
-              {options.map((opt) => {
+              {normalizedOptions.map((opt) => {
                 const optVal = String(opt.value);
                 const selected = asString(value) === optVal;
                 return (
@@ -799,9 +876,9 @@ export default function Step3ProfileV7Curated(props: Props) {
           )}
 
           {/* Multiselect - CheckboxGrid (button cards with checkmarks) */}
-          {renderer === "multiselect" && options.length > 0 && (
+          {renderer === "multiselect" && normalizedOptions.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {options.map((opt) => {
+              {normalizedOptions.map((opt) => {
                 const optVal = String(opt.value);
                 const selected = Array.isArray(value) && value.map(String).includes(optVal);
                 return (
@@ -853,13 +930,20 @@ export default function Step3ProfileV7Curated(props: Props) {
   };
 
   // Filter visible questions (memoized to avoid render churn)
+  // ✅ Also filter out questions with missing IDs (prevents React key errors)
   const visibleQuestions = useMemo(
-    () => questions.filter(isQuestionVisible),
+    () => questions.filter(q => q.id && q.id !== "undefined").filter(isQuestionVisible),
     [questions, isQuestionVisible]
   );
 
   // DEV invariants: catch broken schemas immediately
   if (import.meta.env.DEV) {
+    // Check for undefined IDs that would cause React key errors
+    const undefinedIdQuestions = visibleQuestions.filter(q => !q.id || q.id === "undefined");
+    if (undefinedIdQuestions.length > 0) {
+      console.error("[Step3Curated] ❌ Questions with undefined IDs:", undefinedIdQuestions.map(q => ({ id: q.id, label: q.label, title: q.title })));
+    }
+    
     // Check image map completeness
     for (const k of CANONICAL_INDUSTRY_KEYS) {
       if (!INDUSTRY_IMAGES[k]) {
@@ -976,11 +1060,40 @@ export default function Step3ProfileV7Curated(props: Props) {
       <div className="space-y-4">{visibleQuestions.map((q, idx) => renderQuestion(q, idx))}</div>
 
       {/* Continue Button */}
-      <div className="mt-6 flex justify-end">
+      <div className="mt-6 flex flex-col items-end gap-2">
         <button
           type="button"
           data-testid="step3-continue"
           onClick={() => {
+            // Diagnostic log (Step3→Step4 root cause analysis)
+            console.log("[Step3] Continue clicked", {
+              isComplete,
+              locationConfirmed: state.locationConfirmed,
+              goalsConfirmed: state.goalsConfirmed,
+              pricingStatus: state.pricingStatus,
+              addOnsConfirmed: state.addOnsConfirmed,
+            });
+            
+            // ✅ FIX (Feb 10, 2026): Check prerequisites BEFORE showing add-ons modal
+            // This prevents "Continue clicked but nothing happens" bug
+            if (!state.locationConfirmed) {
+              console.warn("[Step3] ❌ Location not confirmed, redirecting to Step 1");
+              alert("⚠️ Please confirm your location first.\n\nClick 'Yes, this is correct' on Step 1.");
+              if (actions?.goBack) {
+                actions.goBack();
+              }
+              return;
+            }
+            
+            if (!state.goalsConfirmed) {
+              console.warn("[Step3] ❌ Goals not confirmed, redirecting to Step 1");
+              alert("⚠️ Please confirm your energy goals first.\n\nComplete the goals section on Step 1.");
+              if (actions?.goBack) {
+                actions.goBack();
+              }
+              return;
+            }
+            
             // Show add-ons modal first (user selects solar/gen/ev)
             if (!state.addOnsConfirmed) {
               setShowAddOnsModal(true);
@@ -1003,6 +1116,18 @@ export default function Step3ProfileV7Curated(props: Props) {
         >
           Continue →
         </button>
+        
+        {/* Show warning if prerequisites missing (helpful user feedback) */}
+        {isComplete && !state.locationConfirmed && (
+          <p className="text-amber-400 text-xs">
+            ⚠️ Complete Step 1 first (location confirmation)
+          </p>
+        )}
+        {isComplete && state.locationConfirmed && !state.goalsConfirmed && (
+          <p className="text-amber-400 text-xs">
+            ⚠️ Complete Step 1 first (goals confirmation)
+          </p>
+        )}
       </div>
 
       {/* Smart Add-Ons Modal */}
