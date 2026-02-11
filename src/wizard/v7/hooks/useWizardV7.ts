@@ -1878,17 +1878,17 @@ function reduce(state: WizardState, intent: Intent): WizardState {
       };
 
     case "SUBMIT_STEP3_SUCCESS":
-      console.log("[V7 Reducer] SUBMIT_STEP3_SUCCESS → transitioning step='profile' to step='magicfit'");
+      console.log("[V7 Reducer] SUBMIT_STEP3_SUCCESS → transitioning step='profile' to step='results'");
       return {
         ...state,
         isBusy: false,
         step3Complete: true,
-        step: "magicfit", // Preserve existing flow: profile → magicfit → results
+        step: "results", // ✅ FIX Feb 11: magicfit has no renderer — go straight to results
         debug: {
           ...state.debug,
           lastAction: "SUBMIT_STEP3_SUCCESS",
-          lastTransition: "profile → magicfit (step3_complete)",
-          notes: "Step 3 submission successful, advanced to magicfit step"
+          lastTransition: "profile → results (step3_complete)",
+          notes: "Step 3 submission successful, advanced to results step"
         }
       };
 
@@ -4148,7 +4148,7 @@ export function useWizardV7() {
       console.log("[V7] submitStep3 validation PASSED ✅", {
         effectiveIndustry,
         answersCount: Object.keys(answers ?? {}).length,
-        willAdvanceTo: "magicfit",
+        willAdvanceTo: "results",
       });
 
       // ✅ Dispatch SUBMIT_STEP3_STARTED to signal retry attempt
@@ -4164,11 +4164,11 @@ export function useWizardV7() {
           );
         }
 
-        // ✅ Dispatch SUCCESS to transition to magicfit step
+        // ✅ Dispatch SUCCESS to transition to results step
         dispatch({ type: "SUBMIT_STEP3_SUCCESS" });
-        console.log("[V7] submitStep3 SUCCESS dispatched → reducer should set step='magicfit'");
+        console.log("[V7] submitStep3 SUCCESS dispatched → reducer should set step='results'");
         // Diagnostic log (Step3→Step4 root cause analysis)
-        console.log("[submitStep3] end -> setting step", { nextStep: "magicfit" });
+        console.log("[submitStep3] end -> setting step", { nextStep: "results" });
 
         // ✅ Run pricing in background (non-blocking)
         // MagicFit will use these results to generate 3 tiers
@@ -4188,10 +4188,10 @@ export function useWizardV7() {
           error: { message: errorMessage, retries: 3 } 
         });
 
-        // ✅ Still transition to magicfit even if backend submission failed
+        // ✅ Still transition to results even if backend submission failed
         // (Local calculation can proceed without backend)
         dispatch({ type: "SET_STEP3_COMPLETE", complete: true });
-        setStep("magicfit", "step3_complete_fallback");
+        setStep("results", "step3_complete_fallback");
 
         // ✅ Run pricing in background regardless
         runPricingSafe({
@@ -4732,8 +4732,7 @@ export function useWizardV7() {
         return "industry";
       }
       if (state.step === "industry") return "profile";
-      if (state.step === "profile") return "magicfit";
-      if (state.step === "magicfit") return "results";
+      if (state.step === "profile") return "results";
       return null;
     }, [state.step, state.industryLocked, state.industry]),
   };
