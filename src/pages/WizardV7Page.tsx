@@ -23,6 +23,9 @@ import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 import { wizardAIAgent } from "@/services/wizardAIAgentV2";
 import { wizardHealthMonitor } from "@/services/wizardHealthMonitor";
 
+// 📇 Persistent business card (follows user through steps 2-4)
+import { PersistentBusinessCard } from "@/components/wizard/v7/shared/PersistentBusinessCard";
+
 // 🔧 Debug Panel (dev-only: Ctrl+Shift+D)
 import V7DebugPanel from "@/components/wizard/v7/debug/V7DebugPanel";
 
@@ -661,6 +664,9 @@ function WizardV7Page() {
           </button>
         </div>
       )}
+
+      {/* 📇 Persistent Business Card — visible on steps 2-4 */}
+      {state.step !== "location" && <PersistentBusinessCard state={state} />}
 
       {/* Step Router */}
       {state.step === "location" && (

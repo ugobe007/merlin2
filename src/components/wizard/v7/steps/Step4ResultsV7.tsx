@@ -186,6 +186,25 @@ function formatContributorKey(key: string): string {
 
 export default function Step4ResultsV7({ state, actions }: Props) {
   // ============================================================================
+  // PHASE 4A: OPTIONS → QUOTE TWO-PART FLOW
+  // Part 1: User configures add-ons (solar/generator/wind) or skips
+  // Part 2: Quote results shown after options are completed
+  // ============================================================================
+  const [addOnsConfigured, setAddOnsConfigured] = useState(false);
+
+  const handleAddOnsConfirmed = useCallback(async (addOns: SystemAddOns) => {
+    if (actions.recalculateWithAddOns) {
+      const result = await actions.recalculateWithAddOns(addOns);
+      if (result.ok) {
+        setAddOnsConfigured(true);
+      }
+      return result;
+    }
+    setAddOnsConfigured(true);
+    return { ok: true };
+  }, [actions]);
+
+  // ============================================================================
   // PHASE 6: PRICING STATUS (non-blocking)
   // ============================================================================
   const pricingStatus: PricingStatus = state.pricingStatus ?? "idle";
@@ -228,7 +247,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
           </div>
           <h1 className="text-2xl font-black text-white flex items-center gap-2.5">
             <Sparkles className="w-6 h-6 text-purple-400" />
-            Your Energy Quote
+            {!addOnsConfigured ? "System Options" : "Your Energy Quote"}
           </h1>
         </div>
         <div className="flex gap-2.5">
@@ -250,11 +269,52 @@ export default function Step4ResultsV7({ state, actions }: Props) {
       </div>
 
       {/* ================================================================
-          QUOTE RESULTS — Show immediately (no add-ons gate)
+          PART 1: SYSTEM OPTIONS — Configure add-ons before seeing quote
+          User can configure solar/generator/wind OR skip to quote
       ================================================================ */}
+      {!addOnsConfigured && quote && quote.peakLoadKW != null && (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-purple-500/25 bg-purple-500/[0.06] p-4">
+            <div className="flex items-start gap-2.5">
+              <Sparkles className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="font-bold text-purple-300 text-sm">Enhance Your System</div>
+                <p className="text-purple-200/70 text-xs mt-1">
+                  Add solar panels, backup generators, or wind turbines to maximize savings and resilience.
+                  Configure your options below, or skip to see your base quote.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <SystemAddOnsCards
+            state={state}
+            currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
+            onRecalculate={handleAddOnsConfirmed}
+            pricingStatus={pricingStatus}
+            showGenerateButton={true}
+          />
+
+          {/* Skip options — still produces a quote */}
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => setAddOnsConfigured(true)}
+              className="text-sm text-slate-400 hover:text-slate-300 underline underline-offset-2 transition-colors"
+            >
+              Skip options — show my quote →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ================================================================
-          PARTIAL RESULTS / FALLBACK / STATUS BANNERS — Kept from original
+          PART 2: QUOTE RESULTS — Shown after options are configured (or skipped)
+      ================================================================ */}
+      {addOnsConfigured && (<>
+
+      {/* ================================================================
+          PARTIAL RESULTS / FALLBACK / STATUS BANNERS
       ================================================================ */}
       {quote?.isProvisional && (
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
@@ -667,6 +727,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
           Available whenever we have at least a load profile (Layer A)
       ================================================================ */}
       {quote && quote.peakLoadKW != null && <ExportBar state={state} />}
+      </>)}{/* End addOnsConfigured Part 2 */}
     </div>
   );
 }

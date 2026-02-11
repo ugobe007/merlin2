@@ -205,7 +205,9 @@ export default function Step3ProfileV7Curated(props: Props) {
   const [defaultFilledIds, setDefaultFilledIds] = useState<Set<string>>(new Set());
   const appliedSchemaRef = useRef<string>("");
 
-  // Add-ons modal state (triggers after Continue click)
+  // Wizard confirmation state: user must acknowledge pre-filled defaults before proceeding
+  const [defaultsReviewed, setDefaultsReviewed] = useState(false);
+
   // On template load, pre-fill any unanswered fields with their smartDefault
   useEffect(() => {
     const templateKey = `${effectiveIndustry}-${questionCount}`;
@@ -1058,6 +1060,52 @@ export default function Step3ProfileV7Curated(props: Props) {
 
       {/* Continue Button */}
       <div className="mt-6 flex flex-col items-end gap-3">
+        {/* Confirmation banner — wizard checks with user before proceeding */}
+        {isComplete && defaultFilledIds.size > 0 && !defaultsReviewed && (
+          <div
+            className="w-full rounded-xl border border-cyan-500/30 p-4"
+            style={{ background: "rgba(6, 182, 212, 0.08)" }}
+          >
+            <div className="flex items-start gap-3">
+              <span className="text-lg flex-shrink-0">🧙‍♂️</span>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-cyan-200">
+                  Merlin pre-filled {defaultFilledIds.size} answers using industry defaults
+                </p>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  These are typical values for your industry. You can scroll up to review and adjust
+                  anything that doesn't match your facility, or continue with these defaults for a fast estimate.
+                </p>
+                <div className="flex gap-3 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDefaultsReviewed(true);
+                      // Immediately proceed to Step 4
+                      if (actions?.submitStep3) {
+                        void actions.submitStep3();
+                      }
+                    }}
+                    className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all"
+                  >
+                    Looks good — Continue →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDefaultsReviewed(true);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="px-4 py-2.5 rounded-xl font-bold text-sm border border-slate-600 text-slate-300 hover:bg-slate-700/50 transition-all"
+                  >
+                    Let me review first
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
           data-testid="step3-continue"
@@ -1067,6 +1115,7 @@ export default function Step3ProfileV7Curated(props: Props) {
               locationConfirmed: state.locationConfirmed,
               goalsConfirmed: state.goalsConfirmed,
               pricingStatus: state.pricingStatus,
+              defaultsReviewed,
               autoFilledCount: defaultFilledIds.size,
             });
             
@@ -1084,7 +1133,13 @@ export default function Step3ProfileV7Curated(props: Props) {
               return;
             }
             
-            // ✅ FIX Feb 11: ONE CLICK — no gates, no modals, no confirmation banners
+            // If answers were auto-filled and user hasn't reviewed yet,
+            // show the confirmation banner for the wizard to check with them
+            if (defaultFilledIds.size > 0 && !defaultsReviewed) {
+              return; // Banner is visible above — user must click "Looks good" or "Let me review"
+            }
+            
+            // User reviewed or no defaults — proceed to Step 4
             if (actions?.submitStep3) {
               void actions.submitStep3();
             }
@@ -1099,7 +1154,7 @@ export default function Step3ProfileV7Curated(props: Props) {
             }
           `}
         >
-          {isComplete ? "Continue to Quote →" : "Continue →"}
+          {defaultFilledIds.size > 0 && !defaultsReviewed ? "Review & Continue →" : "Continue to Options →"}
         </button>
         
         {isComplete && !state.locationConfirmed && (
