@@ -18,7 +18,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Check, Loader2, AlertTriangle, Zap } from 'lucide-react';
-import type { WizardState as WizardV7State, EnergyGoal } from '@/wizard/v7/hooks/useWizardV7';
+import type { WizardState as WizardV7State, EnergyGoal, WizardStep } from '@/wizard/v7/hooks/useWizardV7';
+import { getIndustryMeta } from '@/wizard/v7/industryMeta';
 
 // SSOT calculation engine
 import { calculateQuote } from '@/services/unifiedQuoteCalculator';
@@ -28,7 +29,7 @@ interface Props {
   state: WizardV7State;
   actions?: {
     goBack?: () => void;
-    goToStep?: (step: 'location' | 'industry' | 'profile' | 'results') => void;
+    goToStep?: (step: WizardStep) => void;
   };
 }
 
@@ -106,6 +107,10 @@ function formatCurrency(value: number): string {
 
 function formatNumber(value: number): string {
   return value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+}
+
+function getIndustryLabel(slug: string): string {
+  return getIndustryMeta(slug).label || slug.replace(/_/g, ' ');
 }
 
 /**
@@ -204,7 +209,6 @@ export default function Step4MagicFitV7({ state, actions }: Props) {
         try {
           // Apply tier multipliers to base sizing
           const bessKW = baseBESSKW * config.multiplier;
-          const bessKWh = baseBESSKWh * config.multiplier;
           const solarKW = baseSolarKW * config.solarMultiplier;
           const generatorKW = baseGeneratorKW * config.genMultiplier;
 
@@ -240,7 +244,7 @@ export default function Step4MagicFitV7({ state, actions }: Props) {
           return {
             tierKey,
             config,
-            quote: null as any,
+            quote: null as unknown as QuoteResult,
             loading: false,
             error: err instanceof Error ? err.message : 'Failed to generate quote',
           };
@@ -296,8 +300,8 @@ export default function Step4MagicFitV7({ state, actions }: Props) {
           </h1>
           
           <p className="text-xl text-slate-400 max-w-3xl mx-auto">
-            Based on your {state.industry} facility profile and {state.goals.length > 0 ? 'energy goals' : 'requirements'}, 
-            here are 3 optimized system configurations. Pick the one that fits your budget and ambition.
+            Because your {getIndustryLabel(state.industry)} facility has unique demands, 
+            Merlin sized three options. Pick the one that fits your budget.
           </p>
           
           {/* Goal-based sizing hints */}

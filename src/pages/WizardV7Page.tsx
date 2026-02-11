@@ -45,19 +45,23 @@ import {
   Step3ProfileV7,
   Step3ProfileV7Curated,
   Step3GatedV7,
+  Step4OptionsV7,
+  Step4MagicFitV7,
   Step4ResultsV7,
 } from "@/components/wizard/v7/steps";
 
 // ⚠️ STEP_ORDER removed — import WIZARD_STEP_ORDER from wizardStepGates.ts (SSOT)
 
 // ✅ Single source of truth: labels (used by shell)
-const STEP_LABELS = ["Location", "Industry", "Profile", "Quote"] as const;
+const STEP_LABELS = ["Location", "Industry", "Profile", "Options", "MagicFit", "Quote"] as const;
 
 // Next hints (base — overridden dynamically for location step)
 const NEXT_HINTS: Record<WizardStepId, string> = {
   location: "industry + load profile → savings estimate",
   industry: "load profile → savings estimate",
-  profile: "savings estimate → MagicFit",
+  profile: "options → MagicFit → quote",
+  options: "MagicFit recommendations → quote",
+  magicfit: "your final quote",
   results: "finalize your quote",
 };
 
@@ -65,7 +69,9 @@ const NEXT_HINTS: Record<WizardStepId, string> = {
 const NEXT_LABELS: Record<WizardStepId, string> = {
   location: "Choose Industry →",
   industry: "Build Profile →",
-  profile: "See Results →",
+  profile: "See Options →",
+  options: "Continue to MagicFit →",
+  magicfit: "See My Quote →",
   results: "Done",
 };
 
@@ -199,6 +205,11 @@ function WizardV7Page() {
       return false;
     }
     
+    // MagicFit uses internal tier selection, no shell Next
+    if (state.step === "magicfit") {
+      return false;
+    }
+    
     // Results step has no Next
     if (state.step === "results") {
       return false;
@@ -254,6 +265,11 @@ function WizardV7Page() {
       wizard.submitStep3();
       return;
     }
+
+    if (state.step === "options") {
+      wizard.goToStep("magicfit");
+      return;
+    }
   };
 
   const handleBack = () => {
@@ -262,9 +278,6 @@ function WizardV7Page() {
 
   // TrueQuote verified status - true once we have results
   const isVerified = state.step === "results" && !state.isBusy;
-
-  // Gate reason for debug display
-  const gateReason = gate.reason;
 
   // ============================================================================
   // STEP 3 ADVISOR — Real-time progress from curated resolver (Feb 2, 2026)
@@ -441,7 +454,7 @@ function WizardV7Page() {
             { label: "quote-ready", tone: "green" },
           ]}
           bullets={[
-            "Review your savings breakdown below.",
+            "Because every number is sourced, you can share this with stakeholders.",
             "Download PDF or request a consultation.",
           ]}
         />
@@ -455,13 +468,13 @@ function WizardV7Page() {
 
       const bullets: string[] = [];
       if (pct === 0) {
-        bullets.push("Answer the questions below so Merlin can size your system accurately.");
+        bullets.push("Because each industry has different peak loads, your answers shape the system size.");
       } else if (remaining > 0) {
         bullets.push(`${remaining} field${remaining === 1 ? "" : "s"} remaining — almost there.`);
       } else {
-        bullets.push("✅ All required fields complete. You're ready for your quote.");
+        bullets.push("✅ All required fields complete. Ready for your options.");
       }
-      bullets.push("Merlin uses your answers to calculate peak demand, equipment sizing, and savings.");
+      bullets.push("Because accuracy matters, Merlin uses your inputs — not averages.");
 
       return (
         <V7AdvisorPanel
@@ -504,7 +517,7 @@ function WizardV7Page() {
       );
 
       if (!hasZip) {
-        bullets.push("Enter your ZIP code and I'll pull your local utility rates, solar potential, and available incentives.");
+        bullets.push("Because utility rates vary by region, your ZIP code unlocks local pricing and solar data.");
         bullets.push("This takes about 10 seconds — then we'll size your system.");
       } else if (!hasLocation && !hasIntel && !intelAttempted) {
         // Only show 'analyzing' when BOTH location and intel are still loading (not yet attempted)
@@ -536,11 +549,11 @@ function WizardV7Page() {
         }
         bullets.push("Hit Next to choose your industry.");
       } else if (needsConfirm) {
-        subtitle = "I found your business";
+        subtitle = "Business detected";
         badgeLabel = "business found";
         badgeTone = "green";
-        bullets.push("If this is correct, confirming helps me auto-detect your industry and tailor the analysis.");
-        bullets.push("Not your business? Skip it and choose your industry on the next step.");
+        bullets.push("Because confirming your business helps auto-detect your industry and tailor the analysis.");
+        bullets.push("Not your business? Skip it and choose your industry next.");
       } else {
         subtitle = "Location locked in ✓";
         badgeLabel = "ready";
@@ -553,9 +566,9 @@ function WizardV7Page() {
           intelBits.push(`${state.locationIntel.peakSunHours.toFixed(1)} peak sun hrs`);
         }
         if (intelBits.length) {
-          bullets.push(`I found ${intelBits.join(", ")} for your area — looking good for savings.`);
+          bullets.push(`Because your area shows ${intelBits.join(", ")}, energy storage makes strong financial sense.`);
         }
-        bullets.push("Add your business name for a more accurate quote, or hit Next to choose your industry.");
+        bullets.push("Add your business name for better accuracy, or continue to choose your industry.");
       }
 
       return (
@@ -586,9 +599,9 @@ function WizardV7Page() {
       const industryLabel = hasIndustry ? getIndustryMeta(state.industry).label : null;
 
       if (state.industryLocked && hasIndustry) {
-        bullets.push(`I detected your industry as ${industryLabel} — hit Next to continue, or pick a different one.`);
+        bullets.push(`Because your business looks like ${industryLabel}, Merlin pre-selected it. Change it if needed.`);
       } else {
-        bullets.push("Choose the industry that best describes your facility. This shapes your load profile and savings model.");
+        bullets.push("Because load profiles differ by industry, this choice shapes your system sizing.");
       }
 
       return (
@@ -597,6 +610,53 @@ function WizardV7Page() {
           subtitle={hasIndustry ? `${industryLabel}` : "What's your industry?"}
           badges={[
             { label: hasIndustry ? "industry set" : "pick one below", tone: hasIndustry ? "green" : "amber" },
+          ]}
+          bullets={bullets}
+        />
+      );
+    }
+
+    // Options step: guide add-on configuration
+    if (state.step === "options") {
+      const peakKW = state.peakLoadKW ?? state.quote?.peakLoadKW;
+      const bullets: string[] = [];
+      
+      if (peakKW) {
+        bullets.push(`Because your facility draws ~${Math.round(peakKW as number)} kW peak, solar and storage can offset demand charges.`);
+      }
+      bullets.push("Adding solar cuts daytime energy costs. A generator provides outage protection.");
+      bullets.push("Skip this step to keep your base BESS system.");
+
+      return (
+        <V7AdvisorPanel
+          title="Merlin Advisor"
+          subtitle="Enhance Your System"
+          badges={[
+            { label: "optional add-ons", tone: "blue" },
+          ]}
+          bullets={bullets}
+        />
+      );
+    }
+
+    // MagicFit step: explain the 3-tier approach
+    if (state.step === "magicfit") {
+      const bullets: string[] = [];
+      
+      if (state.goals.length > 0) {
+        const goalNames = state.goals.map(g => g.replace(/_/g, " ")).join(", ");
+        bullets.push(`Because you prioritize ${goalNames}, Merlin sized three options to match.`);
+      } else {
+        bullets.push("Merlin sized three system options based on your facility profile.");
+      }
+      bullets.push("Starter = fast payback. Perfect Fit = balanced. Beast Mode = maximum savings.");
+
+      return (
+        <V7AdvisorPanel
+          title="Merlin Advisor"
+          subtitle="MagicFit™ Recommendations"
+          badges={[
+            { label: "3 options ready", tone: "violet" },
           ]}
           bullets={bullets}
         />
@@ -665,7 +725,7 @@ function WizardV7Page() {
         </div>
       )}
 
-      {/* 📇 Persistent Business Card — visible on steps 2-4 */}
+      {/* 📇 Persistent Business Card — visible on steps 2-6 */}
       {state.step !== "location" && <PersistentBusinessCard state={state} />}
 
       {/* Step Router */}
@@ -745,6 +805,27 @@ function WizardV7Page() {
           selectedIndustrySlug={state.industry}
           industryDisplayName={state.step3Template?.selectedIndustry || state.industry}
           isBusy={state.isBusy}
+        />
+      )}
+
+      {state.step === "options" && (
+        <Step4OptionsV7
+          state={state}
+          actions={{
+            goBack: wizard.goBack,
+            goToStep: wizard.goToStep,
+            recalculateWithAddOns: wizard.recalculateWithAddOns,
+          }}
+        />
+      )}
+
+      {state.step === "magicfit" && (
+        <Step4MagicFitV7
+          state={state}
+          actions={{
+            goBack: wizard.goBack,
+            goToStep: wizard.goToStep,
+          }}
         />
       )}
 

@@ -49,8 +49,9 @@ export type WizardStep =
   | "location" // Step 1
   | "industry" // Step 2
   | "profile" // Step 3 (questions + template)
-  | "magicfit" // Step 4 (3-tier system recommendations)
-  | "results"; // Step 5 (final quote, outputs, export)
+  | "options" // Step 4 (system add-ons: solar/EV/generator)
+  | "magicfit" // Step 5 (3-tier system recommendations)
+  | "results"; // Step 6 (final quote, outputs, export)
 
 export type IndustrySlug =
   | "auto" // unknown/unset
@@ -1878,17 +1879,17 @@ function reduce(state: WizardState, intent: Intent): WizardState {
       };
 
     case "SUBMIT_STEP3_SUCCESS":
-      console.log("[V7 Reducer] SUBMIT_STEP3_SUCCESS → transitioning step='profile' to step='results'");
+      console.log("[V7 Reducer] SUBMIT_STEP3_SUCCESS → transitioning step='profile' to step='options'");
       return {
         ...state,
         isBusy: false,
         step3Complete: true,
-        step: "results", // ✅ FIX Feb 11: magicfit has no renderer — go straight to results
+        step: "options", // Step 3 → Step 4 Options (add-ons)
         debug: {
           ...state.debug,
           lastAction: "SUBMIT_STEP3_SUCCESS",
-          lastTransition: "profile → results (step3_complete)",
-          notes: "Step 3 submission successful, advanced to results step"
+          lastTransition: "profile → options (step3_complete)",
+          notes: "Step 3 submission successful, advanced to options step"
         }
       };
 
@@ -2298,6 +2299,16 @@ function stepCanProceed(state: WizardState, step: WizardStep): { ok: boolean; re
   if (step === "results") {
     // Phase 6: Only require step3Complete. Pricing is non-blocking.
     // Results page will show spinner/banner based on pricingStatus.
+    if (!state.step3Complete) return { ok: false, reason: "Step 3 incomplete." };
+    return { ok: true };
+  }
+  if (step === "options") {
+    // Options step requires profile to be complete
+    if (!state.step3Complete) return { ok: false, reason: "Step 3 incomplete." };
+    return { ok: true };
+  }
+  if (step === "magicfit") {
+    // MagicFit requires options step visited (step3Complete is sufficient)
     if (!state.step3Complete) return { ok: false, reason: "Step 3 incomplete." };
     return { ok: true };
   }
@@ -4408,6 +4419,24 @@ export function useWizardV7() {
         setStep("results", "nav");
         return;
       }
+
+      if (target === "options") {
+        if (!state.step3Complete) {
+          setError({ code: "STATE", message: "Please complete Step 3 first." });
+          return;
+        }
+        setStep("options", "nav");
+        return;
+      }
+
+      if (target === "magicfit") {
+        if (!state.step3Complete) {
+          setError({ code: "STATE", message: "Please complete Step 3 first." });
+          return;
+        }
+        setStep("magicfit", "nav");
+        return;
+      }
     },
     [clearError, setBusy, setError, setStep, state]
   );
@@ -4417,12 +4446,13 @@ export function useWizardV7() {
   ============================================================ */
 
   const progress = useMemo(() => {
-    const idx = ["location", "industry", "profile", "results"].indexOf(state.step);
+    const STEPS = ["location", "industry", "profile", "options", "magicfit", "results"];
+    const idx = STEPS.indexOf(state.step);
     const stepIndex = Math.max(0, idx);
     return {
       stepIndex,
-      stepCount: 4,
-      percent: Math.round(((stepIndex + 1) / 4) * 100),
+      stepCount: STEPS.length,
+      percent: Math.round(((stepIndex + 1) / STEPS.length) * 100),
     };
   }, [state.step]);
 
@@ -4445,7 +4475,7 @@ export function useWizardV7() {
     
     // Only check results gate if we're TRYING to enter results
     const canGoResults = 
-      currentStep === "profile" || currentStep === "results"
+      currentStep === "profile" || currentStep === "options" || currentStep === "magicfit" || currentStep === "results"
         ? stepCanProceed(state, "results").ok
         : true;
     
@@ -4722,7 +4752,7 @@ export function useWizardV7() {
     abortOngoing,
 
     // Computed helpers for next step
-    // ✅ FIX Feb 11: Skip industry step when already locked
+    // 6-step flow: location → industry → profile → options → magicfit → results
     nextStep: useCallback(() => {
       if (state.step === "location") {
         // Skip industry if already locked
@@ -4732,7 +4762,9 @@ export function useWizardV7() {
         return "industry";
       }
       if (state.step === "industry") return "profile";
-      if (state.step === "profile") return "results";
+      if (state.step === "profile") return "options";
+      if (state.step === "options") return "magicfit";
+      if (state.step === "magicfit") return "results";
       return null;
     }, [state.step, state.industryLocked, state.industry]),
   };
