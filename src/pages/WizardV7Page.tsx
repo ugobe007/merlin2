@@ -50,7 +50,7 @@ import {
 // ✅ Single source of truth: labels (used by shell)
 const STEP_LABELS = ["Location", "Industry", "Profile", "Quote"] as const;
 
-// Next hints
+// Next hints (base — overridden dynamically for location step)
 const NEXT_HINTS: Record<WizardStepId, string> = {
   location: "industry + load profile → savings estimate",
   industry: "load profile → savings estimate",
@@ -58,7 +58,7 @@ const NEXT_HINTS: Record<WizardStepId, string> = {
   results: "finalize your quote",
 };
 
-// Contextual Next button labels
+// Contextual Next button labels (base — overridden dynamically for location step)
 const NEXT_LABELS: Record<WizardStepId, string> = {
   location: "Choose Industry →",
   industry: "Build Profile →",
@@ -103,8 +103,36 @@ function WizardV7Page() {
     return idx >= 0 ? idx : 0;
   }, [state.step]);
 
-  const nextHint = (NEXT_HINTS[state.step as WizardStepId] ?? "") as string;
-  const nextLabel = (NEXT_LABELS[state.step as WizardStepId] ?? "Next Step") as string;
+  // ✅ Dynamic hint for location step (Feb 11, 2026)
+  const nextHint = useMemo(() => {
+    if (state.step === "location") {
+      const industryDetected = state.industryLocked && state.industry && state.industry !== "auto";
+      if (state.locationConfirmed && state.goalsConfirmed && industryDetected) {
+        return "load profile → savings estimate";
+      }
+      if (state.locationConfirmed && !state.goalsConfirmed) {
+        return "set your goals → load profile → savings estimate";
+      }
+    }
+    return (NEXT_HINTS[state.step as WizardStepId] ?? "") as string;
+  }, [state.step, state.locationConfirmed, state.goalsConfirmed, state.industryLocked, state.industry]);
+
+  // ✅ Dynamic label for location step (Feb 11, 2026)
+  const nextLabel = useMemo(() => {
+    if (state.step === "location") {
+      const industryDetected = state.industryLocked && state.industry && state.industry !== "auto";
+      if (state.locationConfirmed && state.goalsConfirmed && industryDetected) {
+        return "Continue to Profile →";
+      }
+      if (state.locationConfirmed && !state.goalsConfirmed) {
+        return "Set Goals & Continue →";
+      }
+      if (state.locationConfirmed && state.goalsConfirmed) {
+        return "Choose Industry →";
+      }
+    }
+    return (NEXT_LABELS[state.step as WizardStepId] ?? "Next Step") as string;
+  }, [state.step, state.locationConfirmed, state.goalsConfirmed, state.industryLocked, state.industry]);
 
   // ============================================================================
   // GATE CHECK — SSOT (Feb 1, 2026)

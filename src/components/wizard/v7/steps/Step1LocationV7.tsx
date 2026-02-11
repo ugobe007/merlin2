@@ -757,58 +757,136 @@ export default function Step1LocationV7({ state, actions }: Props) {
         </div>
       )}
 
-      {canSkipIndustry && (
+      {/* ✅ Action card: Industry detected + Goals CTA — must be visually prominent */}
+      {(canSkipIndustry || (state.locationConfirmed && !state.goalsConfirmed)) && (
         <div
           style={{
-            padding: "12px 16px",
-            borderRadius: 12,
-            background: "rgba(74, 222, 128, 0.1)",
-            boxShadow: "0 2px 8px rgba(74, 222, 128, 0.15)",
-            fontSize: 13,
-            color: "rgba(74, 222, 128, 0.9)",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
+            padding: 0,
+            borderRadius: 16,
+            background: "linear-gradient(135deg, rgba(79, 140, 255, 0.12) 0%, rgba(74, 222, 128, 0.10) 100%)",
+            border: "1.5px solid rgba(79, 140, 255, 0.30)",
+            boxShadow: "0 4px 24px rgba(79, 140, 255, 0.18), 0 1px 4px rgba(0,0,0,0.15)",
+            overflow: "hidden",
           }}
         >
-          <span style={{ fontSize: 16 }}>✓</span>
-          Industry detected with high confidence. Click Next to jump to your load profile.
-        </div>
-      )}
-
-      {/* Goals hint */}
-      {state.locationConfirmed && !state.goalsConfirmed && (
-        <div
-          style={{
-            padding: "12px 16px",
-            borderRadius: 12,
-            background: "rgba(79, 140, 255, 0.06)",
-            border: "1px solid rgba(79, 140, 255, 0.12)",
-            display: "flex",
-            gap: 12,
-            alignItems: "center",
-          }}
-        >
-          <div style={{ fontSize: 18 }}>🔥</div>
-          <div style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.9)" }}>
-            Tell Merlin what you want to achieve (reduce bills, backup power, EV charge).{" "}
-            <button
-              type="button"
-              onClick={() => setShowGoalsModal(true)}
+          {/* Industry detected badge */}
+          {canSkipIndustry && (
+            <div
               style={{
-                marginLeft: 8,
-                textDecoration: "underline",
-                background: "none",
-                border: "none",
-                color: "#4F8CFF",
-                cursor: "pointer",
-                fontWeight: 900,
-                fontSize: 13,
+                padding: "14px 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                borderBottom: !state.goalsConfirmed ? "1px solid rgba(255,255,255,0.08)" : "none",
               }}
             >
-              Choose goals
-            </button>
-          </div>
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 10,
+                  background: "rgba(74, 222, 128, 0.18)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  flexShrink: 0,
+                }}
+              >
+                ✓
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "rgba(74, 222, 128, 1)" }}>
+                  Industry detected: {state.industry ? state.industry.replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : ""}
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(232, 235, 243, 0.6)", marginTop: 2 }}>
+                  We'll skip straight to your load profile
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Goals CTA — big, prominent button */}
+          {state.locationConfirmed && !state.goalsConfirmed && (
+            <div
+              style={{
+                padding: "16px 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "rgba(232, 235, 243, 0.95)" }}>
+                  🔥 What are your energy goals?
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(232, 235, 243, 0.55)", marginTop: 3, lineHeight: 1.4 }}>
+                  Reduce bills, backup power, EV charging — helps Merlin size your system
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGoalsModal(true)}
+                style={{
+                  padding: "12px 24px",
+                  borderRadius: 12,
+                  border: "none",
+                  background: "linear-gradient(135deg, #4F8CFF 0%, #6C5CE7 100%)",
+                  color: "#fff",
+                  fontWeight: 900,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 2px 12px rgba(79, 140, 255, 0.4)",
+                  transition: "transform 0.15s, box-shadow 0.15s",
+                  flexShrink: 0,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = "scale(1.04)";
+                  e.currentTarget.style.boxShadow = "0 4px 20px rgba(79, 140, 255, 0.55)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = "scale(1)";
+                  e.currentTarget.style.boxShadow = "0 2px 12px rgba(79, 140, 255, 0.4)";
+                }}
+              >
+                Set Goals
+              </button>
+            </div>
+          )}
+
+          {/* Goals confirmed — show check */}
+          {state.locationConfirmed && state.goalsConfirmed && (
+            <div
+              style={{
+                padding: "12px 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <span style={{ color: "#4ade80", fontWeight: 900, fontSize: 14 }}>✓</span>
+              <span style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.7)" }}>
+                Goals set — hit Continue below
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowGoalsModal(true)}
+                style={{
+                  marginLeft: "auto",
+                  background: "none",
+                  border: "none",
+                  color: "rgba(79, 140, 255, 0.8)",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                }}
+              >
+                Edit
+              </button>
+            </div>
+          )}
         </div>
       )}
 
