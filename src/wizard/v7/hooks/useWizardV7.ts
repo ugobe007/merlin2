@@ -400,6 +400,7 @@ export type WizardState = {
   // Step 1: goals (added Feb 10, 2026 - user's energy objectives)
   goals: EnergyGoal[];
   goalsConfirmed: boolean; // user has selected goals (or skipped)
+  goalsModalRequested: boolean; // bridge: WizardV7Page handleNext → Step1 goals modal
 
   // Step 3.5: add-ons (smart recommendations after profile)
   includeSolar: boolean;
@@ -478,6 +479,7 @@ type Intent =
   | { type: "SET_GOALS"; goals: EnergyGoal[] }
   | { type: "TOGGLE_GOAL"; goal: EnergyGoal }
   | { type: "SET_GOALS_CONFIRMED"; confirmed: boolean }
+  | { type: "REQUEST_GOALS_MODAL" }
   | { type: "TOGGLE_SOLAR" }
   | { type: "TOGGLE_GENERATOR" }
   | { type: "TOGGLE_EV" }
@@ -494,6 +496,9 @@ type Intent =
   | { type: "PATCH_STEP3_ANSWERS"; patch: Step3Answers; source: AnswerSource } // Intel/detection patches
   | { type: "RESET_STEP3_TO_DEFAULTS"; scope: "all" | { partId: string } } // Explicit reset with provenance rewrite
   | { type: "SET_STEP3_COMPLETE"; complete: boolean }
+  | { type: "SUBMIT_STEP3_STARTED" }
+  | { type: "SUBMIT_STEP3_SUCCESS" }
+  | { type: "SUBMIT_STEP3_FAILED"; error: { message: string; retries?: number } }
   // Step 3 FSM events
   | { type: "STEP3_TEMPLATE_REQUESTED" }
   | { type: "STEP3_TEMPLATE_READY"; templateId: string }
@@ -1386,6 +1391,7 @@ function initialState(): WizardState {
     // Goals (added Feb 10, 2026)
     goals: [],
     goalsConfirmed: false,
+    goalsModalRequested: false,
 
     // Add-ons (smart recommendations after Step 3 profile)
     includeSolar: false,
@@ -1466,12 +1472,20 @@ function reduce(state: WizardState, intent: Intent): WizardState {
     case "SET_ERROR":
       return { ...state, error: intent.error };
 
-    case "SET_STEP":
+    case "SET_STEP": {
+      const prev = state.step;
+      const next = intent.step;
+      const reason = intent.reason || "unknown";
+      
+      // Diagnostic log (Step3→Step4 root cause analysis)
+      console.log("[Wizard] step transition", { from: prev, to: next, reason });
+      
       return {
         ...state,
         step: intent.step,
-        debug: { ...state.debug, lastTransition: intent.reason ?? `to:${intent.step}` },
+        debug: { ...state.debug, lastTransition: `${prev} → ${next} (${reason})` },
       };
+    }
 
     case "PUSH_HISTORY": {
       const prev = state.stepHistory[state.stepHistory.length - 1];
@@ -1502,6 +1516,10 @@ function reduce(state: WizardState, intent: Intent): WizardState {
       const isPureZipInput = /^\d{3,10}$/.test(raw.trim());
       if (isPureZipInput && digits.length === 5) {
         const stateCode = getStateFromZipPrefix(digits);
+        // ✅ FIX Feb 11: Edit-clears-confirmation behavior
+        // When user types a NEW ZIP that differs from confirmed ZIP, clear confirmation
+        const confirmedZip = state.location?.postalCode || "";
+        const zipChanged = digits !== confirmedZip;
         return {
           ...state,
           locationRawInput: raw,
@@ -1510,8 +1528,11 @@ function reduce(state: WizardState, intent: Intent): WizardState {
             postalCode: digits,
             ...(stateCode && !state.location?.state ? { state: stateCode } : {}),
           } as LocationCard,
+          // Clear confirmation ONLY if ZIP changed
+          locationConfirmed: zipChanged ? false : state.locationConfirmed,
         };
       }
+      // For incomplete ZIPs or text input, just update raw input (don't change confirmation)
       return { ...state, locationRawInput: raw };
     }
 
@@ -1564,25 +1585,51 @@ function reduce(state: WizardState, intent: Intent): WizardState {
       return { ...state, goals: newGoals };
     }
 
+    case "REQUEST_GOALS_MODAL":
+      return { ...state, goalsModalRequested: true };
+
     case "SET_GOALS_CONFIRMED": {
       const goalsConfirmed = intent.confirmed;
       
-      // ✅ FIX Feb 10: When goals are confirmed AND location is confirmed, advance to industry
-      // This is the SSOT gate: goals confirmation IS the trigger to proceed
-      const canAdvance = state.locationConfirmed === true && state.step === "location";
+      // ✅ FIX Feb 11: Step 1 sub-gates — do NOT auto-advance away from location
+      // while internal sub-gates are pending
+      const onLocationStep = state.step === "location";
+      const locationReady = state.locationConfirmed === true;
+      
+      // Sub-gate 1: If business card exists but hasn't been confirmed/skipped, wait
+      const businessPending = !!(state.businessCard && !state.businessConfirmed);
+      
+      // Only advance if all Step 1 sub-gates pass
+      const canAdvance = goalsConfirmed && onLocationStep && locationReady && !businessPending;
+      
+      // ✅ FIX Feb 11: Skip industry step when already locked AND template is loaded
+      // Goals inform the wizard, they don't instruct it — routing is based on industry detection
+      const skipIndustry = canAdvance
+        && state.industryLocked
+        && !!state.industry && state.industry !== "auto"
+        && !!state.step3Template; // Safety: template must be loaded before skipping to profile
+      
+      const nextStep = canAdvance
+        ? (skipIndustry ? "profile" : "industry")
+        : state.step;
       
       return {
         ...state,
         goalsConfirmed,
-        step: canAdvance ? "industry" : state.step,
+        goalsModalRequested: false, // clear the request
+        step: nextStep,
         debug: {
           ...state.debug,
           notes: [
             ...state.debug.notes,
             goalsConfirmed
-              ? canAdvance
-                ? "Goals confirmed - advancing to industry step"
-                : "Goals confirmed - waiting for location"
+              ? businessPending
+                ? "Goals confirmed - waiting for business confirmation"
+                : canAdvance
+                  ? skipIndustry
+                    ? "Goals confirmed - skipping industry (locked) → profile"
+                    : "Goals confirmed - advancing to industry step"
+                  : "Goals confirmed - waiting for location"
               : "Goals skipped",
           ],
         },
@@ -1817,6 +1864,49 @@ function reduce(state: WizardState, intent: Intent): WizardState {
 
     case "SET_STEP3_COMPLETE":
       return { ...state, step3Complete: intent.complete };
+
+    case "SUBMIT_STEP3_STARTED":
+      return {
+        ...state,
+        isBusy: true,
+        error: null,
+        debug: {
+          ...state.debug,
+          lastAction: "SUBMIT_STEP3_STARTED",
+          notes: "Submitting Step 3 answers with retry logic"
+        }
+      };
+
+    case "SUBMIT_STEP3_SUCCESS":
+      console.log("[V7 Reducer] SUBMIT_STEP3_SUCCESS → transitioning step='profile' to step='magicfit'");
+      return {
+        ...state,
+        isBusy: false,
+        step3Complete: true,
+        step: "magicfit", // Preserve existing flow: profile → magicfit → results
+        debug: {
+          ...state.debug,
+          lastAction: "SUBMIT_STEP3_SUCCESS",
+          lastTransition: "profile → magicfit (step3_complete)",
+          notes: "Step 3 submission successful, advanced to magicfit step"
+        }
+      };
+
+    case "SUBMIT_STEP3_FAILED":
+      return {
+        ...state,
+        isBusy: false,
+        error: {
+          message: intent.error.message,
+          timestamp: new Date().toISOString(),
+          retries: intent.error.retries
+        },
+        debug: {
+          ...state.debug,
+          lastAction: "SUBMIT_STEP3_FAILED",
+          notes: `Step 3 submission failed after ${intent.error.retries || 0} retries: ${intent.error.message}`
+        }
+      };
 
     // ============================================================
     // Step 3 FSM Events
@@ -2258,11 +2348,27 @@ export function useWizardV7() {
     const allowResume = params.get("resume") === "1";
 
     if (!allowResume) {
-      // Fresh start: clear storage and start at step 1
-      localStorage.removeItem(STORAGE_KEY);
-      if (import.meta.env.DEV) {
-        console.log("[V7 SSOT] Fresh start - no ?resume=1, cleared storage, starting at location");
+      // ✅ IMPORTANT: In dev, Vite HMR remounts this component.
+      // We must only clear storage ONCE per tab session, or confirmations will keep resetting.
+      // But we NEVER hydrate from LS without ?resume=1 (fresh start contract).
+      const didFreshStartKey = "v7_fresh_start_done";
+      const alreadyFreshStarted = sessionStorage.getItem(didFreshStartKey) === "1";
+
+      if (!alreadyFreshStarted) {
+        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.setItem(didFreshStartKey, "1");
+        if (import.meta.env.DEV) {
+          console.log("[V7 SSOT] Fresh start (once per tab) — cleared storage, starting at location");
+        }
+      } else {
+        if (import.meta.env.DEV) {
+          console.log("[V7 SSOT] Fresh start skipped (HMR remount) — keeping current storage, NOT hydrating");
+        }
+        // ✅ CONTRACT: Do NOT read from LS here. The persist effect writes to LS
+        // on every state change, so in-memory state is already correct.
+        // We just skip the destructive removeItem to preserve it across HMR.
       }
+
       dispatch({ type: "HYDRATE_SUCCESS", payload: {} });
       return;
     }
@@ -2406,6 +2512,46 @@ export function useWizardV7() {
     state.debug,
   ]);
 
+  /* ----------------------------
+     ZIP divergence → auto-unconfirm
+     Covers programmatic / rehydration ZIP changes that bypass onChange.
+
+     Two-phase design prevents flicker loops:
+       Phase 1: Snapshot ONLY on the false→true transition of locationConfirmed
+       Phase 2: Unconfirm if locationRawInput diverges from snapshot
+     The snapshot must NOT update on every rawInput change while confirmed,
+     otherwise it would chase the user's keystrokes and never detect divergence.
+  ---------------------------- */
+  const confirmedZipRef = useRef<string>("");
+  const wasConfirmedRef = useRef<boolean>(false);
+
+  // Phase 1: Snapshot ZIP on the exact moment confirmation transitions false→true
+  useEffect(() => {
+    if (state.locationConfirmed && !wasConfirmedRef.current) {
+      // false→true transition: lock in the confirmed ZIP
+      confirmedZipRef.current = normalizeZip5(state.locationRawInput ?? "");
+      if (import.meta.env.DEV) {
+        console.log(`[V7 SSOT] ZIP confirmed — snapshot locked: "${confirmedZipRef.current}"`);
+      }
+    }
+    wasConfirmedRef.current = state.locationConfirmed;
+  }, [state.locationConfirmed, state.locationRawInput]);
+
+  // Phase 2: If the raw ZIP diverges from the locked snapshot, unconfirm
+  useEffect(() => {
+    if (!state.locationConfirmed) return;
+    if (!confirmedZipRef.current) return; // no snapshot yet (shouldn't happen)
+    const currentZip = normalizeZip5(state.locationRawInput ?? "");
+    if (currentZip !== confirmedZipRef.current) {
+      dispatch({ type: "SET_LOCATION_CONFIRMED", confirmed: false });
+      if (import.meta.env.DEV) {
+        console.log(
+          `[V7 SSOT] ZIP diverged ("${confirmedZipRef.current}" → "${currentZip}") — auto-unconfirmed`
+        );
+      }
+    }
+  }, [state.locationRawInput]); // ← intentionally ONLY watches rawInput, not locationConfirmed
+
   /* ============================================================
      Public Actions (UI calls these)
   ============================================================ */
@@ -2414,6 +2560,8 @@ export function useWizardV7() {
     abortOngoing();
     const newId = createSessionId();
     localStorage.removeItem(STORAGE_KEY);
+    // Also clear the fresh-start latch so next visit starts clean
+    sessionStorage.removeItem("v7_fresh_start_done");
     dispatch({ type: "RESET_SESSION", sessionId: newId });
   }, [abortOngoing]);
 
@@ -2596,11 +2744,13 @@ export function useWizardV7() {
       }
       dispatch({ type: "DEBUG_TAG", lastAction: "submitLocation" });
 
+      const normalizedZip = normalizeZip5(input);
+
       // ✅ GUARD: Prevent double-submit loop when already confirmed for same ZIP
-      const normalizedInput = normalizeZip5(input);
       if (
         state.locationConfirmed &&
-        state.location?.postalCode === normalizedInput &&
+        normalizedZip &&
+        state.location?.postalCode === normalizedZip &&
         state.step !== "location"
       ) {
         if (import.meta.env.DEV) {
@@ -2612,6 +2762,17 @@ export function useWizardV7() {
       if (!input) {
         setError({ code: "VALIDATION", message: "Please enter an address or business name." });
         return;
+      }
+
+      // ✅ CONFIRMATION DOCTRINE (Feb 10): confirmation is a USER intent state
+      // - If user clicked Continue and we can derive a ZIP5, confirm immediately
+      // - Resolve/prime are best-effort and MUST NOT clear confirmation
+      const canConfirm = normalizedZip.length === 5;
+      if (canConfirm) {
+        dispatch({ type: "SET_LOCATION_CONFIRMED", confirmed: true });
+        if (import.meta.env.DEV) {
+          console.log("[V7 SSOT] Location confirmed by user (Continue clicked)", { zip: normalizedZip });
+        }
       }
 
       const controller = new AbortController();
@@ -2626,20 +2787,18 @@ export function useWizardV7() {
         try {
           location = await api.resolveLocation(input, controller.signal);
         } catch (resolveErr) {
-          // ✅ FIX Feb 2026: Fallback when backend geocoding is unavailable
-          // Build a minimal location card from ZIP so the wizard can proceed
+          // ✅ Non-blocking fallback: proceed with ZIP-only location card
           console.warn("[V7 SSOT] resolveLocation failed, using ZIP fallback:", resolveErr);
           const minCard = buildMinimalLocationFromZip(state);
-          if (!minCard) {
-            throw resolveErr; // Can't even build minimal card — rethrow
-          }
+          if (!minCard) throw resolveErr;
+
           location = minCard;
           dispatch({
             type: "DEBUG_NOTE",
             note: `Geocode failed — using ZIP-only location (${minCard.postalCode})`,
           });
 
-          // ✅ FIX Feb 10: After fallback, SET location immediately so subsequent checks can use it
+          // ✅ IMPORTANT: do NOT clear confirmation here (keep user intent)
           dispatch({ type: "SET_LOCATION", location: minCard });
         }
 
@@ -2734,6 +2893,9 @@ export function useWizardV7() {
           });
         }
 
+        // ✅ NOTE: locationConfirmed was already set to true at the start of submitLocation
+        // Intel failures (if any) are shown as status banners, not blockers
+
         // ✅ FIX Jan 31: Check LOCAL newBusinessCard variable (not stale state)
         // If we just created a business card, stay on Step 1 and show confirmation gate
         if (newBusinessCard) {
@@ -2748,9 +2910,7 @@ export function useWizardV7() {
         }
 
         // ✅ GOALS MODAL CHECK (Feb 10, 2026)
-        // Set locationConfirmed=true and check if goals modal should show
-        dispatch({ type: "SET_LOCATION_CONFIRMED", confirmed: true });
-        
+        // Location is now confirmed - check if goals modal should show
         // If goals not yet confirmed, stop here - UI will show goals modal via useEffect
         if (!state.goalsConfirmed) {
           dispatch({
@@ -2776,6 +2936,10 @@ export function useWizardV7() {
             type: "DEBUG_NOTE",
             note: `Industry inferred: ${inferred.industry} (locked)`,
           });
+          
+          // ❌ REMOVED (Feb 10, 2026): Do NOT auto-confirm goals
+          // Goals modal MUST show to user even when business inference succeeds
+          // User expects to see and confirm their energy goals before proceeding to Step 3
 
           // Preload step 3 template immediately
           setBusy(true, "Loading profile template...");
@@ -2801,8 +2965,9 @@ export function useWizardV7() {
             dispatch({ type: "PATCH_STEP3_ANSWERS", patch: intelPatch, source: "location_intel" });
           }
 
-          // Jump directly to Step 3
-          setStep("profile", "inferred_industry_skip");
+          // ✅ FIX Feb 11: Goals already confirmed — advance to profile (skip industry, it's locked)
+          console.log("[V7 SSOT] Business + industry inferred + goals confirmed → profile");
+          setStep("profile", "industry_locked_goals_confirmed");
         } else {
           dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
           setStep("industry", "needs_industry");
@@ -2824,7 +2989,7 @@ export function useWizardV7() {
 
   /**
    * skipBusiness - User skips/dismisses the detected business card
-   * Clears the business card AND draft, then goes to Step 2 for manual industry selection
+   * Clears the business card AND draft, then proceeds based on remaining sub-gates
    */
   const skipBusiness = useCallback(() => {
     // ✅ FIX Jan 31: Clear businessDraft to prevent stale draft persisting
@@ -2833,8 +2998,16 @@ export function useWizardV7() {
     dispatch({ type: "SET_BUSINESS_CONFIRMED", confirmed: true }); // Mark as "handled" even if skipped
     dispatch({ type: "DEBUG_NOTE", note: "Business skipped by user - draft cleared" });
     dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
+    
+    // ✅ FIX Feb 11: Don't jump to industry if goals aren't confirmed yet
+    // Stay on location so the goals modal can render
+    if (!state.goalsConfirmed) {
+      dispatch({ type: "DEBUG_NOTE", note: "Business skipped - staying on location for goals modal" });
+      // Goals modal useEffect will fire now that businessPending is cleared
+      return;
+    }
     setStep("industry", "business_skipped");
-  }, [setStep]);
+  }, [setStep, state.goalsConfirmed]);
 
   /**
    * confirmBusiness - User confirms or skips the detected business card
@@ -2910,11 +3083,18 @@ export function useWizardV7() {
             });
           }
 
-          // Jump directly to Step 3
-          setStep("profile", "inferred_industry_skip");
+          // ✅ FIX (Feb 10, 2026): Do NOT auto-skip to Step 3
+          // Stay on location step so goals modal can render
+          // User will proceed to Step 3 after confirming goals
+          console.log("[V7 SSOT] Business confirmed, staying on location for goals modal");
         } else {
           dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
-          setStep("industry", "needs_industry");
+          // ✅ FIX Feb 11: Don't jump to industry if goals aren't confirmed yet
+          if (!state.goalsConfirmed) {
+            dispatch({ type: "DEBUG_NOTE", note: "Industry not inferred - staying on location for goals modal" });
+          } else {
+            setStep("industry", "needs_industry");
+          }
         }
       } catch (err: unknown) {
         if (isAbort(err)) {
@@ -2961,31 +3141,67 @@ export function useWizardV7() {
         dispatch({ type: "SET_STEP3_TEMPLATE", template });
         dispatch({ type: "SET_TEMPLATE_MODE", mode: "industry" });
 
-        // ✅ PROVENANCE: Apply baseline defaults (template + question defaults)
+        // ✅ SSOT FIX (Feb 10, 2026): Seed defaults from BOTH template AND schema
+        // Template provides industry-specific defaults (e.g., 18 questions)
+        // Schema provides ALL curated fields (e.g., 27 questions)
+        // Merge ensures no question ID is left undefined
+        
+        const effectiveIndustry =
+          template.effectiveIndustry ||
+          template.selectedIndustry ||
+          industry;
+        
+        const schema = resolveStep3Schema(String(effectiveIndustry));
+        
+        // 1) Schema defaults (all questions get some value)
+        const schemaDefaults: Record<string, unknown> = {};
+        schema.questions.forEach((q) => {
+          if (q.default !== undefined) {
+            schemaDefaults[q.id] = q.default;
+          } else if (q.type === "select" || q.type === "button_cards") {
+            // Default to first option if no explicit default
+            if (q.options && q.options.length > 0) {
+              schemaDefaults[q.id] = q.options[0].value;
+            }
+          } else if (q.type === "number" || q.type === "number_stepper") {
+            // Default to min or 0
+            schemaDefaults[q.id] = q.validation?.min ?? 0;
+          } else if (q.type === "toggle") {
+            schemaDefaults[q.id] = false;
+          }
+        });
+        
+        // 2) Template baseline defaults (industry-specific, may be subset)
         const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
+        
+        // 3) Intelligent defaults from location/business intel
+        const intelPatch = api.buildIntelPatch(state.locationIntel);
+        const businessPatch = api.buildBusinessPatch(state.businessCard);
+        
+        // 4) Merge: schema → template → intel → business (later wins)
+        const mergedAnswers = {
+          ...schemaDefaults,
+          ...baselineAnswers,
+          ...intelPatch,
+          ...businessPatch,
+        };
+        
+        console.log("[V7 SSOT] selectIndustry: applied baseline + intel + business patches (SCHEMA-aligned)", {
+          industry,
+          effectiveIndustry,
+          schemaQ: schema.questions.length,
+          schemaDefaultsCount: Object.keys(schemaDefaults).length,
+          baselineCount: Object.keys(baselineAnswers).length,
+          intelCount: Object.keys(intelPatch).length,
+          businessCount: Object.keys(businessPatch).length,
+          mergedCount: Object.keys(mergedAnswers).length,
+        });
+        
         dispatch({
           type: "SET_STEP3_ANSWERS",
-          answers: baselineAnswers,
+          answers: mergedAnswers,
           source: "template_default",
         });
-
-        // ✅ PROVENANCE: Apply intel patches separately (won't stomp user edits later)
-        const intelPatch = api.buildIntelPatch(state.locationIntel);
-        if (Object.keys(intelPatch).length > 0) {
-          dispatch({ type: "PATCH_STEP3_ANSWERS", patch: intelPatch, source: "location_intel" });
-        }
-
-        // ✅ PROVENANCE: Apply business detection patches separately
-        const businessPatch = api.buildBusinessPatch(state.businessCard);
-        if (Object.keys(businessPatch).length > 0) {
-          dispatch({
-            type: "PATCH_STEP3_ANSWERS",
-            patch: businessPatch,
-            source: "business_detection",
-          });
-        }
-
-        console.log("[V7 SSOT] selectIndustry: applied baseline + patches with provenance");
 
         setStep("profile", "industry_selected");
         console.log("[V7 SSOT] selectIndustry: transitioned to profile step");
@@ -3747,18 +3963,115 @@ export function useWizardV7() {
   // - Validation failures BLOCK (user must fix)
   // - Pricing failures DO NOT BLOCK (shown as banner in Results)
   // - Navigation proceeds regardless of pricing outcome
+  
+  /* ============================================================
+     Helper Functions: Retry Logic with Exponential Backoff
+  ============================================================ */
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+      ),
+    ]);
+  };
+
+  const retry = async <T,>(
+    fn: () => Promise<T>,
+    options: { attempts?: number; baseDelayMs?: number; timeoutMs?: number } = {}
+  ): Promise<T> => {
+    const { attempts = 3, baseDelayMs = 250, timeoutMs = 9000 } = options;
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < attempts; i++) {
+      try {
+        console.log(`[V7 SSOT] Attempt ${i + 1}/${attempts}`);
+        return await withTimeout(fn(), timeoutMs);
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.warn(`[V7 SSOT] Attempt ${i + 1} failed:`, lastError.message);
+
+        if (i < attempts - 1) {
+          const delay = baseDelayMs * Math.pow(2, i); // Exponential backoff: 250ms, 500ms, 1000ms
+          console.log(`[V7 SSOT] Retrying in ${delay}ms...`);
+          await sleep(delay);
+        }
+      }
+    }
+
+    throw lastError || new Error("All retry attempts failed");
+  };
+
   const submitStep3 = useCallback(
     async (answersOverride?: Step3Answers) => {
+      // Diagnostic log (Step3→Step4 root cause analysis)
+      console.log("[submitStep3] start", {
+        step: state.step,
+        locationConfirmed: state.locationConfirmed,
+        goalsConfirmed: state.goalsConfirmed,
+        step3Complete: state.step3Complete,
+      });
+      
+      // ✅ FIX (Feb 10, 2026): Check prerequisites and guide user to fix missing steps
+      if (!state.locationConfirmed) {
+        console.error("[submitStep3] ❌ Blocked: Location not confirmed");
+        setError({
+          code: "PREREQUISITE",
+          message: "Please confirm your location on Step 1 first.",
+        });
+        setStep("location", "prerequisite_missing");
+        return;
+      }
+      
+      if (!state.goalsConfirmed) {
+        console.error("[submitStep3] ❌ Blocked: Goals not confirmed");
+        setError({
+          code: "PREREQUISITE",
+          message: "Please complete the goals section on Step 1 first.",
+        });
+        setStep("location", "prerequisite_missing");
+        return;
+      }
+      
       clearError();
       abortOngoing();
       dispatch({ type: "DEBUG_TAG", lastAction: "submitStep3" });
 
+      // ✅ SSOT FIX (Feb 10, 2026): Use TEMPLATE as SSOT for validation
+      // Template questions are what we rendered + seeded defaults for
+      const effectiveIndustry =
+        (state.step3Template as any)?.effectiveIndustry ||
+        (state.step3Template as any)?.selectedIndustry ||
+        state.industry;
+      
+      // ✅ SSOT: Get template questions (what was actually rendered)
+      const templateQuestions = (state.step3Template as any)?.questions ?? [];
+      const templateQuestionCount = templateQuestions.length;
+      
+      // Required IDs from template (use template.required flag, or treat all as required)
+      const templateRequiredIds = templateQuestions
+        .filter((q: { required?: boolean }) => q.required !== false) // Default to required unless explicitly false
+        .map((q: { id: string }) => q.id);
+      
+      console.log("[V7] submitStep3 called (TEMPLATE SSOT)", {
+        step: state.step,
+        industry: state.industry,
+        effectiveIndustry,
+        answersCount: Object.keys(state.step3Answers ?? {}).length,
+        templateQ: templateQuestionCount,
+        templateRequiredCount: templateRequiredIds.length,
+        step3Complete: state.step3Complete,
+        pricingStatus: state.pricingStatus,
+      });
+      
       // Guard: prevent double-submission while pricing is in flight
       if (state.pricingStatus === "pending") {
         console.warn("[V7] submitStep3 blocked: pricing already pending");
         return;
       }
-
+      
       // ✅ FIX (Feb 5, 2026): Accept ZIP-only minimal location
       let location = state.location;
       if (!location) {
@@ -3774,35 +4087,120 @@ export function useWizardV7() {
         setError({ code: "STATE", message: "Industry missing. Go back to Step 2." });
         return;
       }
-      if (!state.step3Template) {
+      if (!state.step3Template || templateQuestionCount === 0) {
         setError({ code: "STATE", message: "Profile template missing. Reload Step 3." });
         return;
       }
-
+      
+      // ✅ SSOT: Validate against TEMPLATE (what we actually rendered)
       const answers = answersOverride ?? state.step3Answers;
-      const validation = validateStep3(state.step3Template, answers);
-      if (!validation.ok) {
-        setError({
-          code: "VALIDATION",
-          message: validation.reason ?? "Please complete required questions.",
+      const missingIds = templateRequiredIds.filter((id: string) => {
+        const val = answers?.[id];
+        // Empty answer check
+        return val == null || val === "" || (Array.isArray(val) && val.length === 0);
+      });
+      
+      if (missingIds.length > 0) {
+        // ✅ ENHANCED DEBUG: Log complete validation context
+        console.warn("[V7] submitStep3 blocked (TEMPLATE validation)", {
+          effectiveIndustry,
+          reason: "Missing required fields",
+          missingIds,
+          answersCount: Object.keys(answers ?? {}).length,
+          templateQ: templateQuestionCount,
+          templateRequiredCount: templateRequiredIds.length,
+          step: state.step,
+          step3Complete: state.step3Complete,
         });
+        
+        const fieldNames = missingIds.map((id: string) => {
+          const q = templateQuestions.find((tq: { id: string }) => tq.id === id);
+          return q?.label || id;
+        }).join(", ");
+        
+        setError({ code: "VALIDATION", message: `Please complete required fields: ${fieldNames}` });
+        return;
+      }
+      
+      if (missingIds.length > 0) {
+        // ✅ ENHANCED DEBUG: Log complete validation context
+        console.warn("[V7] submitStep3 blocked (SCHEMA validation)", {
+          effectiveIndustry,
+          reason: "Missing required fields",
+          missingIds,
+          answersCount: Object.keys(answers ?? {}).length,
+          templateQ: (state.step3Template as any)?.questions?.length,
+          schemaQ: schemaQuestionCount,
+          schemaRequiredCount: schemaRequiredIds.length,
+          step: state.step,
+          step3Complete: state.step3Complete,
+        });
+        
+        const fieldNames = missingIds.map((id) => {
+          const q = schema.questions.find((sq) => sq.id === id);
+          return q?.label || id;
+        }).join(", ");
+        
+        setError({ code: "VALIDATION", message: `Please complete required fields: ${fieldNames}` });
         return;
       }
 
-      // ✅ Mark Step 3 complete FIRST (unlocks navigation)
-      dispatch({ type: "SET_STEP3_COMPLETE", complete: true });
-
-      // ✅ Navigate to MagicFit IMMEDIATELY (Step 4 - tier selection)
-      setStep("magicfit", "step3_complete");
-
-      // ✅ Run pricing in background (non-blocking)
-      // MagicFit will use these results to generate 3 tiers
-      runPricingSafe({
-        industry: state.industry,
-        answers,
-        location: state.location ?? undefined,
-        locationIntel: state.locationIntel ?? undefined,
+      console.log("[V7] submitStep3 validation PASSED ✅", {
+        effectiveIndustry,
+        answersCount: Object.keys(answers ?? {}).length,
+        willAdvanceTo: "magicfit",
       });
+
+      // ✅ Dispatch SUBMIT_STEP3_STARTED to signal retry attempt
+      dispatch({ type: "SUBMIT_STEP3_STARTED" });
+
+      try {
+        // Optional: Submit answers to backend with retry logic
+        // If api.submitStep3Answers exists, use it; otherwise skip
+        if (typeof api?.submitStep3Answers === "function") {
+          await retry(
+            () => api.submitStep3Answers({ industry: state.industry, answers }),
+            { attempts: 3, baseDelayMs: 250, timeoutMs: 9000 }
+          );
+        }
+
+        // ✅ Dispatch SUCCESS to transition to magicfit step
+        dispatch({ type: "SUBMIT_STEP3_SUCCESS" });
+        console.log("[V7] submitStep3 SUCCESS dispatched → reducer should set step='magicfit'");
+        // Diagnostic log (Step3→Step4 root cause analysis)
+        console.log("[submitStep3] end -> setting step", { nextStep: "magicfit" });
+
+        // ✅ Run pricing in background (non-blocking)
+        // MagicFit will use these results to generate 3 tiers
+        runPricingSafe({
+          industry: state.industry,
+          answers,
+          location: state.location ?? undefined,
+          locationIntel: state.locationIntel ?? undefined,
+        });
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error("[V7 SSOT] submitStep3 failed after retries:", errorMessage);
+        
+        // ✅ Dispatch FAILED but still allow progression (non-blocking)
+        dispatch({ 
+          type: "SUBMIT_STEP3_FAILED", 
+          error: { message: errorMessage, retries: 3 } 
+        });
+
+        // ✅ Still transition to magicfit even if backend submission failed
+        // (Local calculation can proceed without backend)
+        dispatch({ type: "SET_STEP3_COMPLETE", complete: true });
+        setStep("magicfit", "step3_complete_fallback");
+
+        // ✅ Run pricing in background regardless
+        runPricingSafe({
+          industry: state.industry,
+          answers,
+          location: state.location ?? undefined,
+          locationIntel: state.locationIntel ?? undefined,
+        });
+      }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- individual state fields listed for performance
     [
@@ -3984,6 +4382,24 @@ export function useWizardV7() {
       }
 
       if (target === "results") {
+        // ✅ FIX (Feb 10, 2026): Check prerequisites before allowing Results step
+        // This prevents Step3→Step4 with invalid state (locationConfirmed=false, etc.)
+        if (!state.locationConfirmed) {
+          setError({ code: "STATE", message: "Location not confirmed. Please complete Step 1." });
+          setStep("location", "prereq_missing");
+          return;
+        }
+        if (!state.goalsConfirmed) {
+          setError({ code: "STATE", message: "Goals not confirmed. Please complete Step 1." });
+          setStep("location", "prereq_missing");
+          return;
+        }
+        if (!state.step3Complete) {
+          setError({ code: "STATE", message: "Step 3 incomplete. Please answer all required questions." });
+          setStep("profile", "prereq_missing");
+          return;
+        }
+        
         const ok = stepCanProceed(state, "results");
         if (!ok.ok) {
           setError({ code: "STATE", message: ok.reason ?? "Cannot proceed to Results." });
@@ -4011,10 +4427,32 @@ export function useWizardV7() {
   }, [state.step]);
 
   const gates = useMemo(() => {
+    // ✅ FIX (Feb 10, 2026): Only evaluate gates for current step or forward transitions
+    // This prevents "Step 3 with locationConfirmed=false" gate spam that fights UI state
+    const currentStep = state.step;
+    
+    // Only check location gate if we're ON location step or ABOUT TO leave it
+    const canGoIndustry = 
+      currentStep === "location" || currentStep === "industry"
+        ? stepCanProceed(state, "location").ok
+        : true; // Don't block if we're past it
+    
+    // Only check industry gate if we're ON industry step or ABOUT TO leave it
+    const canGoProfile = 
+      currentStep === "industry" || currentStep === "profile"
+        ? stepCanProceed(state, "industry").ok
+        : true; // Don't block if we're past it
+    
+    // Only check results gate if we're TRYING to enter results
+    const canGoResults = 
+      currentStep === "profile" || currentStep === "results"
+        ? stepCanProceed(state, "results").ok
+        : true;
+    
     return {
-      canGoIndustry: stepCanProceed(state, "location").ok,
-      canGoProfile: stepCanProceed(state, "industry").ok,
-      canGoResults: stepCanProceed(state, "results").ok,
+      canGoIndustry,
+      canGoProfile,
+      canGoResults,
     };
   }, [state]);
 
@@ -4235,6 +4673,9 @@ export function useWizardV7() {
     setGoals,
     toggleGoal,
     confirmGoals,
+    requestGoalsModal: useCallback(() => {
+      dispatch({ type: "REQUEST_GOALS_MODAL" });
+    }, []),
 
     // step 3.5: add-ons
     toggleSolar,
@@ -4281,13 +4722,20 @@ export function useWizardV7() {
     abortOngoing,
 
     // Computed helpers for next step
+    // ✅ FIX Feb 11: Skip industry step when already locked
     nextStep: useCallback(() => {
-      if (state.step === "location") return "industry";
+      if (state.step === "location") {
+        // Skip industry if already locked
+        if (state.industryLocked && state.industry && state.industry !== "auto") {
+          return "profile";
+        }
+        return "industry";
+      }
       if (state.step === "industry") return "profile";
       if (state.step === "profile") return "magicfit";
       if (state.step === "magicfit") return "results";
       return null;
-    }, [state.step]),
+    }, [state.step, state.industryLocked, state.industry]),
   };
 }
 

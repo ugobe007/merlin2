@@ -28,7 +28,9 @@ import V7DebugPanel from "@/components/wizard/v7/debug/V7DebugPanel";
 
 // ✅ SSOT Gates (Feb 1, 2026)
 import { 
-  getGateForStep, 
+  getGateForStep,
+  WIZARD_STEP_ORDER,
+  getStepIndex,
   type WizardStepId,
   type WizardGateState,
 } from "@/wizard/v7/gates";
@@ -43,15 +45,13 @@ import {
   Step4ResultsV7,
 } from "@/components/wizard/v7/steps";
 
-// ✅ SINGLE SOURCE OF TRUTH: step order
-const STEP_ORDER = ["location", "industry", "profile", "results"] as const;
-type StepKey = (typeof STEP_ORDER)[number];
+// ⚠️ STEP_ORDER removed — import WIZARD_STEP_ORDER from wizardStepGates.ts (SSOT)
 
 // ✅ Single source of truth: labels (used by shell)
 const STEP_LABELS = ["Location", "Industry", "Profile", "Quote"] as const;
 
 // Next hints
-const NEXT_HINTS: Record<StepKey, string> = {
+const NEXT_HINTS: Record<WizardStepId, string> = {
   location: "industry + load profile → savings estimate",
   industry: "load profile → savings estimate",
   profile: "savings estimate → MagicFit",
@@ -59,7 +59,7 @@ const NEXT_HINTS: Record<StepKey, string> = {
 };
 
 // Contextual Next button labels
-const NEXT_LABELS: Record<StepKey, string> = {
+const NEXT_LABELS: Record<WizardStepId, string> = {
   location: "Choose Industry →",
   industry: "Build Profile →",
   profile: "See Results →",
@@ -97,14 +97,14 @@ function WizardV7Page() {
     }, sessionId);
   }, [state.step, state.location, state.locationRawInput, state.industry]);
 
-  // ✅ Robust 0-index mapping (no magic fallbacks to industry)
+  // ✅ Robust 0-index mapping — uses WIZARD_STEP_ORDER from gates SSOT
   const currentStep = useMemo(() => {
-    const idx = STEP_ORDER.indexOf(state.step as StepKey);
+    const idx = getStepIndex(state.step as WizardStepId);
     return idx >= 0 ? idx : 0;
   }, [state.step]);
 
-  const nextHint = (NEXT_HINTS[state.step as StepKey] ?? "") as string;
-  const nextLabel = (NEXT_LABELS[state.step as StepKey] ?? "Next Step") as string;
+  const nextHint = (NEXT_HINTS[state.step as WizardStepId] ?? "") as string;
+  const nextLabel = (NEXT_LABELS[state.step as WizardStepId] ?? "Next Step") as string;
 
   // ============================================================================
   // GATE CHECK — SSOT (Feb 1, 2026)
@@ -189,9 +189,26 @@ function WizardV7Page() {
     if (state.step === "location") {
       if (state.businessCard && !state.businessConfirmed) return;
 
+      // ✅ FIX Feb 11: If location already confirmed (business path), don't re-submit.
+      // Just request the goals modal if goals aren't confirmed yet.
+      if (state.locationConfirmed && !state.goalsConfirmed) {
+        wizard.requestGoalsModal();
+        return;
+      }
+
+      // ✅ FIX Feb 11: Everything confirmed — advance without re-submitting
+      if (state.locationConfirmed && state.goalsConfirmed) {
+        // Skip industry when already locked
+        if (state.industryLocked && state.industry && state.industry !== "auto") {
+          wizard.goToStep("profile");
+        } else {
+          wizard.goToStep("industry");
+        }
+        return;
+      }
+
       // ✅ FIX Feb 2026: Call submitLocation to properly resolve city/state + intel
       // submitLocation handles: resolveLocation → primeLocationIntel → inferIndustry → navigation
-      // If location already fully resolved (from business lookup), submitLocation will skip redundant work
       await wizard.submitLocation(state.locationRawInput ?? "");
       return;
     }
@@ -202,6 +219,7 @@ function WizardV7Page() {
     }
 
     if (state.step === "profile") {
+      console.log("[WizardV7Page] handleNext: Calling wizard.submitStep3()");
       wizard.submitStep3();
       return;
     }
@@ -223,10 +241,16 @@ function WizardV7Page() {
   const step3Advisor = useMemo(() => {
     if (state.step !== "profile") return null;
 
-    const industry = (state.industry ?? "other") as string;
+    // ✅ CRITICAL FIX (Feb 10, 2026): Use effectiveIndustry from template (retail → hotel mapping)
+    const effectiveIndustry =
+      (state.step3Template as any)?.effectiveIndustry ||
+      (state.step3Template as any)?.selectedIndustry ||
+      state.industry ||
+      "other";
+
     const answers = (state.step3Answers ?? {}) as Record<string, unknown>;
 
-    const schema = resolveStep3Schema(industry);
+    const schema = resolveStep3Schema(String(effectiveIndustry));
 
     // isAnswered: same logic as Step3ProfileV7Curated (SSOT)
     const isAnswered = (v: unknown) => {
@@ -623,6 +647,7 @@ function WizardV7Page() {
             confirmBusiness: wizard.confirmBusiness,
             skipBusiness: wizard.skipBusiness,
             setBusinessDraft: wizard.setBusinessDraft,
+            setLocationConfirmed: wizard.confirmLocation,
           }}
         />
       )}
