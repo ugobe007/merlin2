@@ -15,6 +15,8 @@
  * | location      | ZIP OR address only           |
  * | industry      | industry selection only       |
  * | profile       | profile answers only          |
+ * | options       | nothing (can skip)            |
+ * | magicfit      | tier selection only           |
  * | results       | nothing (read-only)           |
  *
  * FORBIDDEN:
@@ -25,7 +27,7 @@
  * - Any cross-step dependencies
  */
 
-export type WizardStepId = "location" | "industry" | "profile" | "results";
+export type WizardStepId = "location" | "industry" | "profile" | "options" | "magicfit" | "results";
 
 export type WizardGateResult = {
   canContinue: boolean;
@@ -38,7 +40,9 @@ export type WizardGateReason =
   | "address-incomplete"
   | "industry-missing"
   | "profile-incomplete"
-  | "profile-required-missing";
+  | "profile-required-missing"
+  | "options-pending"
+  | "magicfit-pending";
 
 
 /**
@@ -188,7 +192,28 @@ export function gateProfile(state: WizardGateState): WizardGateResult {
 }
 
 // ============================================================================
-// STEP 4: RESULTS GATE
+// STEP 4: OPTIONS GATE
+// ============================================================================
+/**
+ * Options step (add-ons) NEVER blocks. User can skip or configure.
+ */
+export function gateOptions(): WizardGateResult {
+  return { canContinue: true };
+}
+
+// ============================================================================
+// STEP 5: MAGICFIT GATE
+// ============================================================================
+/**
+ * MagicFit step NEVER blocks. Tier selection happens inline.
+ * User picks a tier and clicks Continue.
+ */
+export function gateMagicFit(): WizardGateResult {
+  return { canContinue: true };
+}
+
+// ============================================================================
+// STEP 6: RESULTS GATE
 // ============================================================================
 /**
  * Results step NEVER blocks. It's read-only.
@@ -212,6 +237,10 @@ export function getGateForStep(
       return gateIndustry(state);
     case "profile":
       return gateProfile(state);
+    case "options":
+      return gateOptions();
+    case "magicfit":
+      return gateMagicFit();
     case "results":
       return gateResults();
     default: {
@@ -249,6 +278,10 @@ export function getGateReasonMessage(reason: WizardGateReason | undefined): stri
       return "Please complete the profile questions";
     case "profile-required-missing":
       return "Please answer all required questions";
+    case "options-pending":
+      return "Configure your system options";
+    case "magicfit-pending":
+      return "Select a system tier";
     default:
       return "";
   }
@@ -261,6 +294,8 @@ export const WIZARD_STEP_ORDER: WizardStepId[] = [
   "location",
   "industry",
   "profile",
+  "options",
+  "magicfit",
   "results",
 ];
 

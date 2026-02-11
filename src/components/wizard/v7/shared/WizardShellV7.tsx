@@ -47,7 +47,6 @@ export default function WizardShellV7({
   isNextLoading = false,
   onBack,
   onNext,
-  isVerified = true,
   advisorContent,
   children,
 }: WizardShellV7Props) {
@@ -79,6 +78,7 @@ export default function WizardShellV7({
       >
         {/* Main Layout */}
         <div
+          className="merlin-shell-grid"
           style={{
             flex: 1,
             display: "grid",
@@ -92,14 +92,15 @@ export default function WizardShellV7({
         >
           {/* LEFT RAIL */}
           <div
+            className="merlin-shell-rail"
             style={{
               background: "rgba(16, 20, 36, 0.85)",
               borderRadius: 20,
               padding: 24,
               boxShadow: `
                 0 8px 40px rgba(0, 0, 0, 0.5),
-                0 0 60px rgba(79, 140, 255, 0.12),
-                0 0 80px rgba(139, 92, 246, 0.08),
+                0 0 60px rgba(104, 191, 250, 0.12),
+                0 0 80px rgba(91, 33, 182, 0.08),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05)
               `,
               display: "flex",
@@ -153,9 +154,9 @@ export default function WizardShellV7({
                 padding: 20,
                 borderRadius: 16,
                 background:
-                  "linear-gradient(135deg, rgba(79, 140, 255, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%)",
+                  "linear-gradient(135deg, rgba(104, 191, 250, 0.12) 0%, rgba(91, 33, 182, 0.08) 100%)",
                 boxShadow:
-                  "inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 40px rgba(79, 140, 255, 0.12)",
+                  "inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 40px rgba(104, 191, 250, 0.12)",
                 transition: "all 0.25s ease",
               }}
             >
@@ -219,12 +220,12 @@ export default function WizardShellV7({
                         fontSize: 13,
                         fontWeight: 700,
                         background: isActive
-                          ? "linear-gradient(135deg, rgba(79, 140, 255, 0.4), rgba(139, 92, 246, 0.35))"
+                          ? "linear-gradient(135deg, rgba(104, 191, 250, 0.4), rgba(91, 33, 182, 0.35))"
                           : isComplete
                             ? "rgba(74, 222, 128, 0.2)"
                             : "rgba(255, 255, 255, 0.06)",
                         color: isComplete ? "#4ade80" : "#e8ebf3",
-                        boxShadow: isActive ? "0 4px 12px rgba(79, 140, 255, 0.3)" : "none",
+                        boxShadow: isActive ? "0 4px 12px rgba(104, 191, 250, 0.3)" : "none",
                       }}
                     >
                       {isComplete ? "✓" : idx + 1}
@@ -259,8 +260,8 @@ export default function WizardShellV7({
               padding: 36,
               boxShadow: `
                 0 8px 40px rgba(0, 0, 0, 0.5),
-                0 0 60px rgba(79, 140, 255, 0.12),
-                0 0 80px rgba(139, 92, 246, 0.08),
+                0 0 60px rgba(104, 191, 250, 0.12),
+                0 0 80px rgba(91, 33, 182, 0.08),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05)
               `,
               minHeight: 500,
@@ -270,17 +271,42 @@ export default function WizardShellV7({
             {children}
           </div>
 
-          {/* Step transition animation */}
+          {/* Step transition animation + responsive */}
           <style>{`
             @keyframes merlin-step-fadein {
               from { opacity: 0; transform: translateY(12px); }
               to   { opacity: 1; transform: translateY(0); }
+            }
+            
+            /* Mobile: collapse to single column, hide rail */
+            @media (max-width: 900px) {
+              .merlin-shell-grid {
+                grid-template-columns: 1fr !important;
+                padding: 12px 16px !important;
+                gap: 16px !important;
+              }
+              .merlin-shell-rail {
+                display: none !important;
+              }
+              .merlin-shell-bottomnav {
+                padding: 12px 16px 20px !important;
+              }
+            }
+            
+            /* Tablet: narrower rail */
+            @media (min-width: 901px) and (max-width: 1200px) {
+              .merlin-shell-grid {
+                grid-template-columns: 280px 1fr !important;
+                gap: 20px !important;
+                padding: 20px 24px !important;
+              }
             }
           `}</style>
         </div>
 
         {/* BOTTOM NAV */}
         <div
+          className="merlin-shell-bottomnav"
           style={{
             padding: "16px 28px 24px",
             maxWidth: 1400,
@@ -331,7 +357,7 @@ export default function WizardShellV7({
               borderRadius: 12,
               background:
                 canGoNext && !isNextLoading
-                  ? "linear-gradient(135deg, rgba(79, 140, 255, 0.5), rgba(139, 92, 246, 0.45))"
+                  ? "linear-gradient(135deg, #3B5BDB, #5B21B6)"
                   : "rgba(255, 255, 255, 0.04)",
               border: "none",
               color: canGoNext && !isNextLoading ? "#fff" : "rgba(232, 235, 243, 0.25)",
@@ -340,7 +366,7 @@ export default function WizardShellV7({
               fontWeight: 700,
               boxShadow:
                 canGoNext && !isNextLoading
-                  ? "0 4px 20px rgba(79, 140, 255, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2)"
+                  ? "0 4px 20px rgba(59, 91, 219, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2)"
                   : "none",
               transition: "all 0.15s ease",
             }}

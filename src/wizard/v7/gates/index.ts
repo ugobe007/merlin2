@@ -12,6 +12,8 @@ export {
   gateLocation,
   gateIndustry,
   gateProfile,
+  gateOptions,
+  gateMagicFit,
   gateResults,
   
   // Dispatcher
