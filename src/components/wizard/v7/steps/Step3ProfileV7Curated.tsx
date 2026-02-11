@@ -208,6 +208,10 @@ export default function Step3ProfileV7Curated(props: Props) {
 
   // Add-ons modal state (triggers after Continue click)
   const [showAddOnsModal, setShowAddOnsModal] = useState(false);
+  
+  // ✅ FIX Feb 11: Confirmation state for auto-filled defaults
+  // When all answers are pre-filled, user needs an explicit "proceed" confirmation
+  const [defaultsReviewed, setDefaultsReviewed] = useState(false);
 
   // On template load, pre-fill any unanswered fields with their smartDefault
   useEffect(() => {
@@ -1060,7 +1064,55 @@ export default function Step3ProfileV7Curated(props: Props) {
       <div className="space-y-4">{visibleQuestions.map((q, idx) => renderQuestion(q, idx))}</div>
 
       {/* Continue Button */}
-      <div className="mt-6 flex flex-col items-end gap-2">
+      <div className="mt-6 flex flex-col items-end gap-3">
+        {/* ✅ FIX Feb 11: Auto-filled defaults confirmation banner */}
+        {isComplete && defaultFilledIds.size > 0 && !defaultsReviewed && (
+          <div
+            className="w-full rounded-xl border border-cyan-500/30 bg-cyan-500/8 p-4"
+            style={{ background: "rgba(6, 182, 212, 0.08)" }}
+          >
+            <div className="flex items-start gap-3">
+              <span className="text-lg flex-shrink-0">✨</span>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-cyan-200">
+                  {defaultFilledIds.size} answers pre-filled with industry defaults
+                </p>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Merlin used standard values for your industry. 
+                  Scroll up to review and adjust anything that doesn't match your facility, 
+                  or continue with defaults for an instant estimate.
+                </p>
+                <div className="flex gap-3 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDefaultsReviewed(true);
+                      // Proceed directly to Step 4
+                      if (actions?.submitStep3) {
+                        void actions.submitStep3();
+                      }
+                    }}
+                    className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all"
+                  >
+                    Looks good — Continue →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDefaultsReviewed(true);
+                      // Scroll to top to review
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="px-4 py-2.5 rounded-xl font-bold text-sm border border-slate-600 text-slate-300 hover:bg-slate-700/50 transition-all"
+                  >
+                    Let me review first
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
           data-testid="step3-continue"
@@ -1071,11 +1123,11 @@ export default function Step3ProfileV7Curated(props: Props) {
               locationConfirmed: state.locationConfirmed,
               goalsConfirmed: state.goalsConfirmed,
               pricingStatus: state.pricingStatus,
-              addOnsConfirmed: state.addOnsConfirmed,
+              defaultsReviewed,
+              autoFilledCount: defaultFilledIds.size,
             });
             
-            // ✅ FIX (Feb 10, 2026): Check prerequisites BEFORE showing add-ons modal
-            // This prevents "Continue clicked but nothing happens" bug
+            // ✅ FIX (Feb 10, 2026): Check prerequisites BEFORE proceeding
             if (!state.locationConfirmed) {
               console.warn("[Step3] ❌ Location not confirmed, redirecting to Step 1");
               alert("⚠️ Please confirm your location first.\n\nClick 'Yes, this is correct' on Step 1.");
@@ -1094,14 +1146,17 @@ export default function Step3ProfileV7Curated(props: Props) {
               return;
             }
             
-            // Show add-ons modal first (user selects solar/gen/ev)
-            if (!state.addOnsConfirmed) {
-              setShowAddOnsModal(true);
-            } else {
-              // Already confirmed add-ons, proceed to step 4
-              if (actions?.submitStep3) {
-                void actions.submitStep3();
-              }
+            // ✅ FIX Feb 11: If all answers were auto-filled and user hasn't reviewed,
+            // show the confirmation banner (don't block, just inform)
+            if (defaultFilledIds.size > 0 && !defaultsReviewed) {
+              // The banner is already visible above — scroll to it
+              setDefaultsReviewed(false); // Keep banner visible
+              return; // Let user click "Looks good" or "Let me review"
+            }
+            
+            // ✅ Proceed directly to Step 4 (no add-ons gate)
+            if (actions?.submitStep3) {
+              void actions.submitStep3();
             }
           }}
           disabled={!isComplete || state.pricingStatus === "pending"}
@@ -1114,7 +1169,7 @@ export default function Step3ProfileV7Curated(props: Props) {
             }
           `}
         >
-          Continue →
+          {defaultFilledIds.size > 0 && !defaultsReviewed ? "Review & Continue →" : "Continue →"}
         </button>
         
         {/* Show warning if prerequisites missing (helpful user feedback) */}
