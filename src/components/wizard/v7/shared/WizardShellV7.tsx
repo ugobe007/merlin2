@@ -246,8 +246,62 @@ export default function WizardShellV7({
               })}
             </div>
 
-            {/* Spacer to push content up — TrueQuote badge lives in content panel now */}
+            {/* Spacer to push TrueQuote badge to bottom */}
             <div style={{ marginTop: "auto" }} />
+
+            {/* TrueQuote Badge — Always visible, clickable to open modal */}
+            <div
+              style={{
+                padding: "12px 0",
+                borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowTrueQuoteModal(true)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  height: 28,
+                  padding: "0 12px",
+                  borderRadius: 14,
+                  background: "rgba(30, 32, 48, 0.6)",
+                  border: "1px solid rgba(99, 102, 241, 0.4)",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  fontSize: 12,
+                  letterSpacing: "0.04em",
+                  WebkitFontSmoothing: "antialiased",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.6)";
+                  e.currentTarget.style.background = "rgba(30, 32, 48, 0.8)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.4)";
+                  e.currentTarget.style.background = "rgba(30, 32, 48, 0.6)";
+                }}
+                aria-label="Learn about TrueQuote verification"
+              >
+                <span style={{ color: "#F1F5F9", fontWeight: 700, letterSpacing: "0.02em" }}>
+                  TrueQuote™
+                </span>
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
+                    boxShadow: "0 0 6px rgba(242, 193, 79, 0.45), inset 0 0 2px rgba(255, 255, 255, 0.35)",
+                    flexShrink: 0,
+                  }}
+                />
+                <span style={{ color: "#94A3B8", fontWeight: 600 }}>Verified</span>
+              </button>
+            </div>
           </div>
 
           {/* ── RIGHT: CONTENT AREA (full width) ─────────────── */}

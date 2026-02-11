@@ -12,8 +12,8 @@
  *   Prevents accidental null rendering / badge flip-flopping.
  *
  * TIER B — No Business Logic Drift (Covenant Scanner)
- *   Scans Step4ResultsV7.tsx for forbidden imports and function calls.
- *   Step 4 renders, it doesn't decide. Any decision logic belongs upstream.
+ *   Scans Step6ResultsV7.tsx for forbidden imports and function calls.
+ *   Step 6 renders, it doesn't decide. Any decision logic belongs upstream.
  *
  *   Forbidden:
  *     - Imports from calculators/ (CALCULATORS_BY_ID, registry)
@@ -32,7 +32,7 @@ import * as path from "path";
 // TIER A: DISPLAY CONTRACT — Badge determinism
 // ============================================================================
 
-// We test the pure functions extracted into Step4ResultsV7.tsx.
+// We test the pure functions extracted into Step6ResultsV7.tsx.
 // Since they're module-scoped (not exported), we test them by re-implementing
 // the EXACT same logic here as a specification. If the implementation drifts,
 // the covenant scanner (Tier B) catches the forbidden patterns.
@@ -269,7 +269,7 @@ describe("Tier B — Step 4 No Business Logic Drift", () => {
   const STEP4_PATH = path.resolve(
     __dirname,
     "..",
-    "Step4ResultsV7.tsx"
+    "Step6ResultsV7.tsx"
   );
 
   let step4Source: string;
@@ -350,7 +350,7 @@ describe("Tier B — Step 4 No Business Logic Drift", () => {
 
   it("does NOT contain hardcoded $/kWh pricing math", () => {
     // Look for patterns like: * 300 * (pricing constants, NOT generic 100 for %)
-    const matches = findMatches(/\*\s*(300000|300|250|125|110|0\.85|0\.65|2\.50)\s*[\/*;]/);
+    const matches = findMatches(/\*\s*(300000|300|250|125|110|0\.85|0\.65|2\.50)\s*[/*;]/);
     // Exclude comments
     const nonComments = matches.filter((m) => !m.text.startsWith("//") && !m.text.startsWith("*"));
     expect(nonComments).toEqual([]);

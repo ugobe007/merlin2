@@ -4,5 +4,5 @@ export { default as Step3ProfileV7 } from "./Step3ProfileV7";
 export { default as Step3ProfileV7Curated } from "./Step3ProfileV7Curated";
 export { default as Step3GatedV7 } from "./Step3GatedV7";
 export { default as Step4OptionsV7 } from "./Step4OptionsV7";
-export { default as Step4MagicFitV7 } from "./Step4MagicFitV7";
-export { default as Step4ResultsV7 } from "./Step4ResultsV7";
+export { default as Step5MagicFitV7 } from "./Step5MagicFitV7";
+export { default as Step6ResultsV7 } from "./Step6ResultsV7";
