@@ -28,7 +28,6 @@ import {
   normalizeFieldType as normalizeFieldTypeUtil,
   chooseRendererForQuestion,
 } from "./Step3RendererLogic";
-import SmartAddOnsModal from "./SmartAddOnsModal";
 
 // Industry images (same as original)
 import hotelImg from "@/assets/images/hotel_motel_holidayinn_1.jpg";
@@ -207,12 +206,6 @@ export default function Step3ProfileV7Curated(props: Props) {
   const appliedSchemaRef = useRef<string>("");
 
   // Add-ons modal state (triggers after Continue click)
-  const [showAddOnsModal, setShowAddOnsModal] = useState(false);
-  
-  // ✅ FIX Feb 11: Confirmation state for auto-filled defaults
-  // When all answers are pre-filled, user needs an explicit "proceed" confirmation
-  const [defaultsReviewed, setDefaultsReviewed] = useState(false);
-
   // On template load, pre-fill any unanswered fields with their smartDefault
   useEffect(() => {
     const templateKey = `${effectiveIndustry}-${questionCount}`;
@@ -1065,96 +1058,33 @@ export default function Step3ProfileV7Curated(props: Props) {
 
       {/* Continue Button */}
       <div className="mt-6 flex flex-col items-end gap-3">
-        {/* ✅ FIX Feb 11: Auto-filled defaults confirmation banner */}
-        {isComplete && defaultFilledIds.size > 0 && !defaultsReviewed && (
-          <div
-            className="w-full rounded-xl border border-cyan-500/30 bg-cyan-500/8 p-4"
-            style={{ background: "rgba(6, 182, 212, 0.08)" }}
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-lg flex-shrink-0">✨</span>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-cyan-200">
-                  {defaultFilledIds.size} answers pre-filled with industry defaults
-                </p>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Merlin used standard values for your industry. 
-                  Scroll up to review and adjust anything that doesn't match your facility, 
-                  or continue with defaults for an instant estimate.
-                </p>
-                <div className="flex gap-3 mt-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDefaultsReviewed(true);
-                      // Proceed directly to Step 4
-                      if (actions?.submitStep3) {
-                        void actions.submitStep3();
-                      }
-                    }}
-                    className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all"
-                  >
-                    Looks good — Continue →
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDefaultsReviewed(true);
-                      // Scroll to top to review
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className="px-4 py-2.5 rounded-xl font-bold text-sm border border-slate-600 text-slate-300 hover:bg-slate-700/50 transition-all"
-                  >
-                    Let me review first
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         <button
           type="button"
           data-testid="step3-continue"
           onClick={() => {
-            // Diagnostic log (Step3→Step4 root cause analysis)
             console.log("[Step3] Continue clicked", {
               isComplete,
               locationConfirmed: state.locationConfirmed,
               goalsConfirmed: state.goalsConfirmed,
               pricingStatus: state.pricingStatus,
-              defaultsReviewed,
               autoFilledCount: defaultFilledIds.size,
             });
             
-            // ✅ FIX (Feb 10, 2026): Check prerequisites BEFORE proceeding
             if (!state.locationConfirmed) {
-              console.warn("[Step3] ❌ Location not confirmed, redirecting to Step 1");
+              console.warn("[Step3] ❌ Location not confirmed");
               alert("⚠️ Please confirm your location first.\n\nClick 'Yes, this is correct' on Step 1.");
-              if (actions?.goBack) {
-                actions.goBack();
-              }
+              if (actions?.goBack) actions.goBack();
               return;
             }
             
             if (!state.goalsConfirmed) {
-              console.warn("[Step3] ❌ Goals not confirmed, redirecting to Step 1");
+              console.warn("[Step3] ❌ Goals not confirmed");
               alert("⚠️ Please confirm your energy goals first.\n\nComplete the goals section on Step 1.");
-              if (actions?.goBack) {
-                actions.goBack();
-              }
+              if (actions?.goBack) actions.goBack();
               return;
             }
             
-            // ✅ FIX Feb 11: If all answers were auto-filled and user hasn't reviewed,
-            // show the confirmation banner (don't block, just inform)
-            if (defaultFilledIds.size > 0 && !defaultsReviewed) {
-              // The banner is already visible above — scroll to it
-              setDefaultsReviewed(false); // Keep banner visible
-              return; // Let user click "Looks good" or "Let me review"
-            }
-            
-            // ✅ Proceed directly to Step 4 (no add-ons gate)
+            // ✅ FIX Feb 11: ONE CLICK — no gates, no modals, no confirmation banners
             if (actions?.submitStep3) {
               void actions.submitStep3();
             }
@@ -1169,10 +1099,9 @@ export default function Step3ProfileV7Curated(props: Props) {
             }
           `}
         >
-          {defaultFilledIds.size > 0 && !defaultsReviewed ? "Review & Continue →" : "Continue →"}
+          {isComplete ? "Continue to Quote →" : "Continue →"}
         </button>
         
-        {/* Show warning if prerequisites missing (helpful user feedback) */}
         {isComplete && !state.locationConfirmed && (
           <p className="text-amber-400 text-xs">
             ⚠️ Complete Step 1 first (location confirmation)
@@ -1184,38 +1113,6 @@ export default function Step3ProfileV7Curated(props: Props) {
           </p>
         )}
       </div>
-
-      {/* Smart Add-Ons Modal */}
-      {actions?.toggleSolar && actions?.toggleGenerator && actions?.toggleEV && actions?.confirmAddOns && (
-        <SmartAddOnsModal
-          isOpen={showAddOnsModal}
-          goals={state.goals}
-          industry={state.industry}
-          peakDemandKW={state.peakLoadKW}
-          includeSolar={state.includeSolar}
-          includeGenerator={state.includeGenerator}
-          includeEV={state.includeEV}
-          onToggleSolar={actions.toggleSolar}
-          onToggleGenerator={actions.toggleGenerator}
-          onToggleEV={actions.toggleEV}
-          onContinue={() => {
-            // User confirmed choices, close modal and proceed to step 4
-            actions.confirmAddOns?.(true);
-            setShowAddOnsModal(false);
-            if (actions?.submitStep3) {
-              void actions.submitStep3();
-            }
-          }}
-          onSkip={() => {
-            // User skipped add-ons, still proceed to step 4
-            actions.confirmAddOns?.(true);
-            setShowAddOnsModal(false);
-            if (actions?.submitStep3) {
-              void actions.submitStep3();
-            }
-          }}
-        />
-      )}
     </div>
   );
 }
