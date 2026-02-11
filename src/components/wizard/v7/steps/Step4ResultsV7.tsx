@@ -186,26 +186,6 @@ function formatContributorKey(key: string): string {
 
 export default function Step4ResultsV7({ state, actions }: Props) {
   // ============================================================================
-  // PHASE 4A: ADD-ONS CONFIGURATION STATE
-  // ============================================================================
-  // Track whether user has configured add-ons (show options first, then quote)
-  const [addOnsConfigured, setAddOnsConfigured] = useState(false);
-
-  // Callback to handle when add-ons are confirmed
-  const handleAddOnsConfirmed = useCallback(async (addOns: SystemAddOns) => {
-    if (actions.recalculateWithAddOns) {
-      const result = await actions.recalculateWithAddOns(addOns);
-      if (result.ok) {
-        setAddOnsConfigured(true);
-      }
-      return result;
-    }
-    // If no recalculate action, just show the quote
-    setAddOnsConfigured(true);
-    return { ok: true };
-  }, [actions]);
-
-  // ============================================================================
   // PHASE 6: PRICING STATUS (non-blocking)
   // ============================================================================
   const pricingStatus: PricingStatus = state.pricingStatus ?? "idle";
@@ -248,7 +228,7 @@ export default function Step4ResultsV7({ state, actions }: Props) {
           </div>
           <h1 className="text-2xl font-black text-white flex items-center gap-2.5">
             <Sparkles className="w-6 h-6 text-purple-400" />
-            {!addOnsConfigured ? "Configure Your System" : "Your Energy Quote"}
+            Your Energy Quote
           </h1>
         </div>
         <div className="flex gap-2.5">
@@ -270,37 +250,8 @@ export default function Step4ResultsV7({ state, actions }: Props) {
       </div>
 
       {/* ================================================================
-          SYSTEM ADD-ONS CONFIGURATION — SHOW FIRST
-          User configures solar/generator/wind before seeing quote
+          QUOTE RESULTS — Show immediately (no add-ons gate)
       ================================================================ */}
-      {!addOnsConfigured && quote && quote.peakLoadKW != null && (
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-purple-500/25 bg-purple-500/[0.06] p-4">
-            <div className="flex items-start gap-2.5">
-              <Sparkles className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="font-bold text-purple-300 text-sm">Enhance Your System</div>
-                <p className="text-purple-200/70 text-xs mt-1">
-                  Add solar panels, backup generators, or wind turbines to maximize savings and resilience. Configure your options below and click "Generate Quote" to see your results.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <SystemAddOnsCards
-            state={state}
-            currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
-            onRecalculate={handleAddOnsConfirmed}
-            pricingStatus={pricingStatus}
-            showGenerateButton={true}
-          />
-        </div>
-      )}
-
-      {/* ================================================================
-          QUOTE RESULTS — SHOW AFTER ADD-ONS CONFIGURED
-      ================================================================ */}
-      {addOnsConfigured && (<>
 
       {/* ================================================================
           PARTIAL RESULTS / FALLBACK / STATUS BANNERS — Kept from original
@@ -693,20 +644,21 @@ export default function Step4ResultsV7({ state, actions }: Props) {
       )}
 
       {/* ================================================================
-          EDIT SYSTEM ADD-ONS — Allow modification after initial quote
+          MERLIN ADVISOR — Contextual recommendations based on quote
+          Shows AFTER the quote so user sees their numbers first,
+          then gets intelligent suggestions to improve their project.
       ================================================================ */}
-      {quote && quote.peakLoadKW != null && (
-        <SystemAddOnsCards
+      {quoteReady && quote.peakLoadKW != null && (
+        <AdvisorRecommendations
           state={state}
-          currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
+          quote={quote}
+          pricingStatus={pricingStatus}
           onRecalculate={async (addOns) => {
             if (actions.recalculateWithAddOns) {
               return await actions.recalculateWithAddOns(addOns);
             }
             return { ok: true };
           }}
-          pricingStatus={pricingStatus}
-          showGenerateButton={false}
         />
       )}
 
@@ -715,313 +667,216 @@ export default function Step4ResultsV7({ state, actions }: Props) {
           Available whenever we have at least a load profile (Layer A)
       ================================================================ */}
       {quote && quote.peakLoadKW != null && <ExportBar state={state} />}
-      </>) /* End addOnsConfigured */}
     </div>
   );
 }
 
 // ============================================================================
-// SYSTEM ADD-ONS PANEL — Solar / Generator / Wind toggles + sizing
+// ADVISOR RECOMMENDATIONS — Contextual intelligence BELOW the quote
+//
+// Analyzes the quote and provides smart suggestions:
+// 1. Power gap → suggest generators or solar
+// 2. Revenue opportunity → suggest EV charging
+// 3. Location advantage → suggest solar based on irradiance
+// 4. Resilience → suggest backup generation
+//
+// Each recommendation includes a reason and an action to configure it.
 // ============================================================================
 
-const FUEL_OPTS: { value: SystemAddOns["generatorFuelType"]; label: string }[] = [
-  { value: "natural-gas", label: "Natural Gas" },
-  { value: "diesel", label: "Diesel" },
-  { value: "dual-fuel", label: "Dual Fuel" },
-];
+type RecommendationType = "power-gap" | "solar-opportunity" | "ev-revenue" | "resilience" | "cost-savings";
 
-function SystemAddOnsPanel({
-  currentAddOns,
-  onRecalculate,
+interface Recommendation {
+  type: RecommendationType;
+  icon: string;
+  title: string;
+  description: string;
+  accent: string; // Tailwind border/bg color class
+}
+
+function getAdvisorRecommendations(
+  state: WizardV7State,
+  quote: DisplayQuote,
+): Recommendation[] {
+  const recs: Recommendation[] = [];
+  const peakKW = quote.peakLoadKW ?? 0;
+  const bessKW = quote.bessKW ?? 0;
+  const hasSolar = (quote.solarKW as number) > 0;
+  const hasGenerator = (quote.generatorKW as number) > 0;
+  const goals = state.goals ?? [];
+
+  // 1. Power gap — BESS doesn't cover full peak load
+  if (peakKW > 0 && bessKW > 0 && bessKW < peakKW * 0.9 && !hasGenerator && !hasSolar) {
+    recs.push({
+      type: "power-gap",
+      icon: "⚡",
+      title: "Close your power gap",
+      description: `Your facility peaks at ${Math.round(peakKW)} kW but your BESS covers ${Math.round(bessKW)} kW. Adding solar panels or a backup generator would help meet your full power needs and improve resilience.`,
+      accent: "amber",
+    });
+  }
+
+  // 2. Solar opportunity — no solar configured yet
+  if (!hasSolar) {
+    const stateAbbr = state.location?.state ?? "";
+    const highSolarStates = ["CA", "AZ", "NV", "NM", "TX", "FL", "CO", "UT", "HI"];
+    const isHighSolar = highSolarStates.includes(stateAbbr);
+    
+    recs.push({
+      type: "solar-opportunity",
+      icon: "☀️",
+      title: isHighSolar 
+        ? `Your area in ${stateAbbr} is great for solar`
+        : "Add solar to offset daytime load",
+      description: isHighSolar
+        ? `${stateAbbr} receives excellent solar irradiance. Adding a solar array could offset significant daytime energy consumption and pair perfectly with your battery storage for 24/7 savings.`
+        : "A solar array paired with your battery storage can offset daytime energy costs and increase your return on investment through energy arbitrage.",
+      accent: "yellow",
+    });
+  }
+
+  // 3. EV charging revenue — if not already an EV industry
+  const isEVIndustry = state.industry === "ev_charging" || state.industry === "ev-charging";
+  if (!isEVIndustry) {
+    const hasCustomerTraffic = ["hotel", "retail", "shopping-center", "car_wash", "car-wash", "restaurant", "gas_station", "gas-station", "casino"].includes(state.industry ?? "");
+    if (hasCustomerTraffic) {
+      recs.push({
+        type: "ev-revenue",
+        icon: "🔌",
+        title: "Add EV charging as a revenue source",
+        description: "Your facility type sees regular customer traffic. Adding EV chargers creates a new revenue stream while your BESS handles peak demand from charging sessions — keeping your demand charges low.",
+        accent: "cyan",
+      });
+    }
+  }
+
+  // 4. Resilience — if goals mention backup/resilience and no generator
+  const wantsResilience = goals.some(g => 
+    typeof g === "string" && (g.toLowerCase().includes("backup") || g.toLowerCase().includes("resilien") || g.toLowerCase().includes("outage"))
+  );
+  if (wantsResilience && !hasGenerator) {
+    recs.push({
+      type: "resilience",
+      icon: "🛡️",
+      title: "Strengthen your backup power",
+      description: "You mentioned power resilience as a goal. Adding a backup generator alongside your BESS ensures uninterrupted operations during extended outages beyond your battery duration.",
+      accent: "red",
+    });
+  }
+
+  // 5. Cost savings — if payback seems high, suggest improvements
+  const payback = Number(quote.roiYears);
+  if (Number.isFinite(payback) && payback > 8 && !hasSolar) {
+    recs.push({
+      type: "cost-savings",
+      icon: "📉",
+      title: "Improve your payback period",
+      description: `Your current payback is ~${Math.round(payback)} years. Adding solar generation can significantly reduce grid electricity costs and accelerate your return on investment.`,
+      accent: "emerald",
+    });
+  }
+
+  return recs;
+}
+
+const ACCENT_STYLES: Record<string, { border: string; bg: string; text: string; glow: string }> = {
+  amber:   { border: "border-amber-500/25",   bg: "bg-amber-500/[0.06]",   text: "text-amber-300",   glow: "shadow-amber-500/10" },
+  yellow:  { border: "border-yellow-500/25",  bg: "bg-yellow-500/[0.06]",  text: "text-yellow-300",  glow: "shadow-yellow-500/10" },
+  cyan:    { border: "border-cyan-500/25",    bg: "bg-cyan-500/[0.06]",    text: "text-cyan-300",    glow: "shadow-cyan-500/10" },
+  red:     { border: "border-red-500/25",     bg: "bg-red-500/[0.06]",     text: "text-red-300",     glow: "shadow-red-500/10" },
+  emerald: { border: "border-emerald-500/25", bg: "bg-emerald-500/[0.06]", text: "text-emerald-300", glow: "shadow-emerald-500/10" },
+};
+
+function AdvisorRecommendations({
+  state,
+  quote,
   pricingStatus,
+  onRecalculate,
 }: {
-  currentAddOns: SystemAddOns;
-  onRecalculate?: (addOns: SystemAddOns) => Promise<{ ok: boolean; error?: string }>;
+  state: WizardV7State;
+  quote: DisplayQuote;
   pricingStatus: PricingStatus;
+  onRecalculate: (addOns: SystemAddOns) => Promise<{ ok: boolean; error?: string }>;
 }) {
-  const [local, setLocal] = useState<SystemAddOns>({ ...currentAddOns });
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [collapsed, setCollapsed] = useState(true);
-
-  // Detect if local differs from last-applied
-  const isDirty =
-    local.includeSolar !== currentAddOns.includeSolar ||
-    local.solarKW !== currentAddOns.solarKW ||
-    local.includeGenerator !== currentAddOns.includeGenerator ||
-    local.generatorKW !== currentAddOns.generatorKW ||
-    local.generatorFuelType !== currentAddOns.generatorFuelType ||
-    local.includeWind !== currentAddOns.includeWind ||
-    local.windKW !== currentAddOns.windKW;
-
-  const handleApply = useCallback(async () => {
-    if (!onRecalculate || busy) return;
-    setBusy(true);
-    setError(null);
-    const result = await onRecalculate(local);
-    setBusy(false);
-    if (!result.ok) setError(result.error ?? "Recalculation failed");
-  }, [onRecalculate, local, busy]);
-
-  const sectionLabel = (icon: string, label: string) => (
-    <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: "rgba(232,235,243,0.9)" }}>
-      {icon} {label}
-    </span>
+  const recommendations = useMemo(
+    () => getAdvisorRecommendations(state, quote),
+    [state, quote]
   );
 
-  const toggle = (checked: boolean, onChange: (v: boolean) => void) => (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      style={{
-        width: 40,
-        height: 22,
-        borderRadius: 12,
-        border: "none",
-        background: checked ? "rgba(139,92,246,0.6)" : "rgba(255,255,255,0.1)",
-        cursor: "pointer",
-        position: "relative",
-        transition: "background 0.2s",
-        flexShrink: 0,
-      }}
-    >
-      <div
-        style={{
-          width: 16,
-          height: 16,
-          borderRadius: 8,
-          background: checked ? "#fff" : "rgba(255,255,255,0.3)",
-          position: "absolute",
-          top: 3,
-          left: checked ? 21 : 3,
-          transition: "left 0.2s",
-        }}
+  const [expanded, setExpanded] = useState(true);
+
+  if (recommendations.length === 0) {
+    // No recommendations — just show the add-ons panel for manual config
+    return (
+      <SystemAddOnsCards
+        state={state}
+        currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
+        onRecalculate={onRecalculate}
+        pricingStatus={pricingStatus}
+        showGenerateButton={false}
       />
-    </button>
-  );
-
-  const slider = (
-    value: number,
-    onChange: (v: number) => void,
-    min: number,
-    max: number,
-    step: number,
-    unit: string,
-    disabled: boolean
-  ) => (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6 }}>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(Number(e.target.value))}
-        style={{
-          flex: 1,
-          accentColor: "rgb(139,92,246)",
-          opacity: disabled ? 0.3 : 1,
-          cursor: disabled ? "not-allowed" : "pointer",
-        }}
-      />
-      <span
-        style={{
-          minWidth: 72,
-          textAlign: "right",
-          fontSize: 13,
-          fontWeight: 600,
-          color: disabled ? "rgba(232,235,243,0.3)" : "rgba(232,235,243,0.85)",
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {disabled ? "—" : `${fmtNum(value)} ${unit}`}
-      </span>
-    </div>
-  );
-
-  const hasAnyAddOn = local.includeSolar || local.includeGenerator || local.includeWind;
-  const headerColor = hasAnyAddOn ? "rgba(139,92,246,0.8)" : "rgba(232,235,243,0.5)";
+    );
+  }
 
   return (
-    <Card>
-      {/* Collapsible header */}
+    <div className="space-y-4">
+      {/* Advisor header */}
       <button
         type="button"
-        onClick={() => setCollapsed(!collapsed)}
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: 0,
-        }}
+        onClick={() => setExpanded(!expanded)}
+        className="w-full"
       >
-        <div>
-          <div
-            style={{
-              fontSize: 14,
-              fontWeight: 900,
-              color: headerColor,
-              letterSpacing: "-0.1px",
-            }}
-          >
-            ⚡ Enhance Your System
+        <div className="rounded-2xl border border-purple-500/25 bg-gradient-to-r from-purple-500/[0.08] to-blue-500/[0.06] p-4 flex items-center justify-between hover:from-purple-500/[0.12] hover:to-blue-500/[0.08] transition-all cursor-pointer">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-lg">
+              🧙‍♂️
+            </div>
+            <div className="text-left">
+              <div className="font-black text-sm text-purple-200">
+                Merlin's Recommendations
+              </div>
+              <div className="text-xs text-slate-400 mt-0.5">
+                {recommendations.length} suggestion{recommendations.length !== 1 ? "s" : ""} to optimize your project
+              </div>
+            </div>
           </div>
-          <div style={{ fontSize: 12, color: "rgba(232,235,243,0.45)", marginTop: 2 }}>
-            {hasAnyAddOn
-              ? [
-                  local.includeSolar && `Solar ${local.solarKW} kW`,
-                  local.includeGenerator && `Generator ${local.generatorKW} kW`,
-                  local.includeWind && `Wind ${local.windKW} kW`,
-                ]
-                  .filter(Boolean)
-                  .join(" • ")
-              : "Add solar, backup generation, or wind to your project"}
-          </div>
+          <ChevronDown className={`w-4 h-4 text-purple-400 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </div>
-        <span
-          style={{
-            fontSize: 16,
-            color: "rgba(232,235,243,0.4)",
-            transform: collapsed ? "rotate(0deg)" : "rotate(180deg)",
-            transition: "transform 0.2s",
-          }}
-        >
-          ▼
-        </span>
       </button>
 
-      {/* Expandable body */}
-      {!collapsed && (
-        <div style={{ marginTop: 14, display: "grid", gap: 14 }}>
-          {/* ── Solar ── */}
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 10,
-              background: local.includeSolar
-                ? "rgba(250,204,21,0.06)"
-                : "rgba(255,255,255,0.02)",
-              border: `1px solid ${local.includeSolar ? "rgba(250,204,21,0.2)" : "rgba(255,255,255,0.06)"}`,
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              {sectionLabel("☀️", "Solar Array")}
-              {toggle(local.includeSolar, (v) =>
-                setLocal((p) => ({ ...p, includeSolar: v, solarKW: v && p.solarKW === 0 ? 200 : p.solarKW }))
-              )}
-            </div>
-            {slider(local.solarKW, (v) => setLocal((p) => ({ ...p, solarKW: v })), 25, 2000, 25, "kW", !local.includeSolar)}
-          </div>
-
-          {/* ── Generator ── */}
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 10,
-              background: local.includeGenerator
-                ? "rgba(239,68,68,0.06)"
-                : "rgba(255,255,255,0.02)",
-              border: `1px solid ${local.includeGenerator ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.06)"}`,
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              {sectionLabel("🔥", "Backup Generator")}
-              {toggle(local.includeGenerator, (v) =>
-                setLocal((p) => ({ ...p, includeGenerator: v, generatorKW: v && p.generatorKW === 0 ? 500 : p.generatorKW }))
-              )}
-            </div>
-            {slider(local.generatorKW, (v) => setLocal((p) => ({ ...p, generatorKW: v })), 50, 3000, 50, "kW", !local.includeGenerator)}
-
-            {/* Fuel type selector */}
-            {local.includeGenerator && (
-              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                {FUEL_OPTS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setLocal((p) => ({ ...p, generatorFuelType: opt.value }))}
-                    style={{
-                      flex: 1,
-                      padding: "5px 0",
-                      borderRadius: 8,
-                      border: `1px solid ${local.generatorFuelType === opt.value ? "rgba(139,92,246,0.5)" : "rgba(255,255,255,0.1)"}`,
-                      background:
-                        local.generatorFuelType === opt.value
-                          ? "rgba(139,92,246,0.15)"
-                          : "rgba(255,255,255,0.03)",
-                      color:
-                        local.generatorFuelType === opt.value
-                          ? "rgba(232,235,243,0.95)"
-                          : "rgba(232,235,243,0.5)",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+      {/* Recommendation cards */}
+      {expanded && (
+        <div className="space-y-3 pl-2">
+          {recommendations.map((rec) => {
+            const style = ACCENT_STYLES[rec.accent] ?? ACCENT_STYLES.amber;
+            return (
+              <div
+                key={rec.type}
+                className={`rounded-xl border ${style.border} ${style.bg} p-4 shadow-[0_0_15px] ${style.glow} transition-all hover:shadow-[0_0_20px]`}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-xl flex-shrink-0 mt-0.5">{rec.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className={`font-bold text-sm ${style.text}`}>{rec.title}</div>
+                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">{rec.description}</p>
+                  </div>
+                </div>
               </div>
-            )}
+            );
+          })}
+
+          {/* Configure add-ons CTA */}
+          <div className="pt-1">
+            <SystemAddOnsCards
+              state={state}
+              currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
+              onRecalculate={onRecalculate}
+              pricingStatus={pricingStatus}
+              showGenerateButton={false}
+            />
           </div>
-
-          {/* ── Wind ── */}
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 10,
-              background: local.includeWind
-                ? "rgba(56,189,248,0.06)"
-                : "rgba(255,255,255,0.02)",
-              border: `1px solid ${local.includeWind ? "rgba(56,189,248,0.2)" : "rgba(255,255,255,0.06)"}`,
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              {sectionLabel("🌀", "Wind Turbine")}
-              {toggle(local.includeWind, (v) =>
-                setLocal((p) => ({ ...p, includeWind: v, windKW: v && p.windKW === 0 ? 100 : p.windKW }))
-              )}
-            </div>
-            {slider(local.windKW, (v) => setLocal((p) => ({ ...p, windKW: v })), 25, 1000, 25, "kW", !local.includeWind)}
-          </div>
-
-          {/* ── Apply Button ── */}
-          {isDirty && (
-            <button
-              type="button"
-              disabled={busy || pricingStatus === "running"}
-              onClick={handleApply}
-              style={{
-                width: "100%",
-                padding: "10px 0",
-                borderRadius: 12,
-                border: "none",
-                background: busy
-                  ? "rgba(139,92,246,0.25)"
-                  : "linear-gradient(135deg, rgba(139,92,246,0.8), rgba(59,130,246,0.8))",
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 14,
-                cursor: busy ? "wait" : "pointer",
-                transition: "opacity 0.2s",
-                opacity: busy ? 0.6 : 1,
-              }}
-            >
-              {busy ? "Recalculating…" : "Update Quote"}
-            </button>
-          )}
-
-          {error && (
-            <div style={{ fontSize: 12, color: "#ef4444", textAlign: "center" }}>{error}</div>
-          )}
         </div>
       )}
-    </Card>
+    </div>
   );
 }
 
