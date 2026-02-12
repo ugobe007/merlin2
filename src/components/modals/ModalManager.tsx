@@ -204,6 +204,44 @@ interface ModalManagerProps {
   setSkipWizardIntro?: (value: boolean) => void;
 }
 
+/**
+ * WizardModalOverlay — Isolated full-screen wizard container.
+ *
+ * KEY FIXES (Feb 12, 2026):
+ * 1. Locks body scroll so hero page can't scroll behind the wizard
+ * 2. Uses data-wizard-scroll on the scroll container so WizardShellV7
+ *    can find and scroll it to top on step transitions
+ * 3. Fully opaque background — no bleed-through
+ */
+function WizardModalOverlay({ onClose }: { onClose: () => void }) {
+  // Lock body scroll while wizard is mounted
+  React.useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-[9999]" style={{ isolation: 'isolate' }}>
+      {/* Backdrop — fully opaque, prevents hero bleed-through */}
+      <div
+        className="absolute inset-0"
+        style={{ background: '#080b14' }}
+        onClick={onClose}
+      />
+      {/* Wizard scroll container */}
+      <div className="absolute inset-0 pointer-events-none flex">
+        <div
+          data-wizard-scroll
+          className="pointer-events-auto w-full h-full overflow-y-auto"
+        >
+          <WizardV7Page />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ModalManager(props: ModalManagerProps) {
   if (import.meta.env.DEV) {
     console.log("🔧 ModalManager received showBESSAnalytics:", props.showBESSAnalytics);
@@ -423,20 +461,7 @@ export default function ModalManager(props: ModalManagerProps) {
 
       {/* V7 Wizard (Feb 2026 - V7 is now default) */}
       {showSmartWizard && (
-        <div className="fixed inset-0 z-[9999]">
-          {/* Backdrop - fully opaque to prevent home page bleed-through */}
-          <div
-            className="absolute inset-0 bg-[#080b14]"
-            onClick={() => setShowSmartWizard(false)}
-          />
-          {/* Modal frame - doesn't steal events */}
-          <div className="absolute inset-0 pointer-events-none flex">
-            {/* Wizard container - takes events + scroll */}
-            <div className="pointer-events-auto w-full h-full overflow-y-auto">
-              <WizardV7Page />
-            </div>
-          </div>
-        </div>
+        <WizardModalOverlay onClose={() => setShowSmartWizard(false)} />
       )}
 
       {/* Calculation Modal */}
