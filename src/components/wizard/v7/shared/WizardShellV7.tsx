@@ -97,7 +97,7 @@ export default function WizardShellV7({
           <div
             className="merlin-shell-rail"
             style={{
-              background: "rgba(16, 20, 36, 0.85)",
+              background: "#101424",
               borderRadius: 20,
               padding: 24,
               boxShadow: `
@@ -243,8 +243,10 @@ export default function WizardShellV7({
                     width: 6,
                     height: 6,
                     borderRadius: "50%",
-                    background: "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
-                    boxShadow: "0 0 6px rgba(242, 193, 79, 0.45), inset 0 0 2px rgba(255, 255, 255, 0.35)",
+                    background:
+                      "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
+                    boxShadow:
+                      "0 0 6px rgba(242, 193, 79, 0.45), inset 0 0 2px rgba(255, 255, 255, 0.35)",
                     flexShrink: 0,
                   }}
                 />
@@ -350,7 +352,11 @@ export default function WizardShellV7({
                         style={{
                           fontSize: 12,
                           fontWeight: isActive ? 700 : 500,
-                          color: isActive ? "#fff" : isComplete ? "rgba(74, 222, 128, 0.9)" : "rgba(232, 235, 243, 0.5)",
+                          color: isActive
+                            ? "#fff"
+                            : isComplete
+                              ? "rgba(74, 222, 128, 0.9)"
+                              : "rgba(232, 235, 243, 0.5)",
                           letterSpacing: "0.01em",
                         }}
                       >
@@ -367,7 +373,7 @@ export default function WizardShellV7({
               key={`step-${safeStep}`}
               className="merlin-step merlin-step-enter"
               style={{
-                background: "rgba(16, 20, 36, 0.75)",
+                background: "#101424",
                 borderRadius: "0 0 20px 20px",
                 padding: 36,
                 boxShadow: `
@@ -494,7 +500,7 @@ export default function WizardShellV7({
               transition: "all 0.15s ease",
             }}
           >
-            {isNextLoading ? "Working..." : (nextLabel || "Next Step")} <span>›</span>
+            {isNextLoading ? "Working..." : nextLabel || "Next Step"} <span>›</span>
           </button>
         </div>
       </div>
