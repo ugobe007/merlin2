@@ -71,16 +71,24 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
   // Goals modal opens when locationConfirmed && !goalsConfirmed (single path).
 
   // Auto-open goals modal when location is confirmed and goals aren't set
+  // ✅ FIX Feb 12b: Delay modal so user sees their business card first
+  const goalsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
+    if (goalsTimerRef.current) { clearTimeout(goalsTimerRef.current); goalsTimerRef.current = null; }
+
     if (
       state.locationConfirmed &&
       !state.goalsConfirmed &&
       !showGoalsModal &&
       !state.isBusy
     ) {
-      setShowGoalsModal(true);
+      // Give the user time to see their business card before goals modal covers it
+      const delay = state.businessConfirmed ? 1800 : 400;
+      goalsTimerRef.current = setTimeout(() => setShowGoalsModal(true), delay);
     }
-  }, [state.locationConfirmed, state.goalsConfirmed, showGoalsModal, state.isBusy]);
+
+    return () => { if (goalsTimerRef.current) clearTimeout(goalsTimerRef.current); };
+  }, [state.locationConfirmed, state.goalsConfirmed, showGoalsModal, state.isBusy, state.businessConfirmed]);
 
   // Rehydrate business fields from SSOT draft (only if UI empty)
   useEffect(() => {
