@@ -322,7 +322,7 @@ export function SystemAddOnsCards({
         } else {
           next.add(id);
           // Auto-expand when first selected
-          setExpandedCard(id);
+          setExpandedCards(prev => new Set(prev).add(id));
         }
         return next;
       });
