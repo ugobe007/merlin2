@@ -26,7 +26,9 @@ import { TrueQuoteBadgeCanonical } from '@/components/shared/TrueQuoteBadgeCanon
 import TrueQuoteModal from '@/components/shared/TrueQuoteModal';
 
 // SSOT calculation engine
-import { calculateQuote } from '@/services/unifiedQuoteCalculator';import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { calculateQuote } from '@/services/unifiedQuoteCalculator';
+import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
+import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 
 interface Props {
   state: WizardV7State;
@@ -99,7 +101,8 @@ interface TierQuote {
   error: string | null;
 }
 
-function formatCurrency(value: number): string {
+function formatCurrency(value: number | undefined | null): string {
+  if (value == null || !Number.isFinite(value)) return '$0';
   if (value >= 1000000) {
     return `$${(value / 1000000).toFixed(2)}M`;
   }
@@ -109,8 +112,14 @@ function formatCurrency(value: number): string {
   return `$${value.toFixed(0)}`;
 }
 
-function formatNumber(value: number): string {
+function formatNumber(value: number | undefined | null): string {
+  if (value == null || !Number.isFinite(value)) return '0';
   return value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+}
+
+function safeFixed(value: number | undefined | null, digits: number): string {
+  if (value == null || !Number.isFinite(value)) return '—';
+  return value.toFixed(digits);
 }
 
 function getIndustryLabel(slug: string): string {
@@ -190,6 +199,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   const [tiers, setTiers] = useState<TierQuote[]>([]);
   const [selectedTier, setSelectedTier] = useState<TierKey | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
 
   // ✅ MERLIN MEMORY: Read cross-step data from Memory first, fall back to state
@@ -208,63 +218,118 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   const baseGeneratorKW = data.addOns.includeGenerator ? baseBESSKW * 0.75 * goalModifiers.generatorMultiplier : 0;
 
   useEffect(() => {
+    let cancelled = false;
+
     async function generateTiers() {
       setIsLoading(true);
-      
-      const tierPromises = (['starter', 'perfectFit', 'beastMode'] as const).map(async (tierKey) => {
-        const config = TIER_CONFIG[tierKey];
-        
-        try {
-          // Apply tier multipliers to base sizing
-          const bessKW = baseBESSKW * config.multiplier;
-          const solarKW = baseSolarKW * config.solarMultiplier;
-          const generatorKW = baseGeneratorKW * config.genMultiplier;
+      setLoadError(null);
 
-          // Call SSOT calculateQuote with tier-specific sizing
-          const quote = await calculateQuote({
-            storageSizeMW: bessKW / 1000,
-            durationHours: baseDuration,
-            location: data.location.state || 'CA',
-            zipCode: data.location.zip || '',
-            electricityRate: data.utilityRate || 0.12,
-            useCase: data.industry,
-            solarMW: solarKW / 1000,
-            generatorMW: generatorKW / 1000,
-            generatorFuelType: 'natural-gas',
-            gridConnection: 'on-grid',
-            batteryChemistry: 'lfp',
-            itcConfig: {
-              prevailingWage: false,
-              apprenticeship: false,
-              energyCommunity: false,
-              domesticContent: false,
-            },
-          });
-
-          return {
-            tierKey,
-            config,
-            quote,
-            loading: false,
-            error: null,
-          };
-        } catch (err) {
-          return {
-            tierKey,
-            config,
-            quote: null as unknown as QuoteResult,
-            loading: false,
-            error: err instanceof Error ? err.message : 'Failed to generate quote',
-          };
-        }
+      console.log('[Step5 MagicFit] generateTiers starting', {
+        rawBESSKW,
+        baseBESSKW,
+        baseDuration,
+        baseSolarKW,
+        baseGeneratorKW,
+        location: data.location.state,
+        utilityRate: data.utilityRate,
+        industry: data.industry,
+        goals: data.goals,
       });
+      
+      // Timeout safety: if calculateQuote hangs, fail after 15s
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Quote calculation timed out after 15s')), 15000)
+      );
 
-      const results = await Promise.all(tierPromises);
-      setTiers(results);
-      setIsLoading(false);
+      try {
+        const tierPromises = (['starter', 'perfectFit', 'beastMode'] as const).map(async (tierKey) => {
+          const config = TIER_CONFIG[tierKey];
+          
+          try {
+            // Apply tier multipliers to base sizing
+            const bessKW = baseBESSKW * config.multiplier;
+            const solarKW = baseSolarKW * config.solarMultiplier;
+            const generatorKW = baseGeneratorKW * config.genMultiplier;
+
+            console.log(`[Step5 MagicFit] Calling calculateQuote for ${tierKey}`, {
+              storageSizeMW: bessKW / 1000,
+              durationHours: baseDuration,
+              solarMW: solarKW / 1000,
+              generatorMW: generatorKW / 1000,
+            });
+
+            // Call SSOT calculateQuote with tier-specific sizing
+            const quote = await calculateQuote({
+              storageSizeMW: bessKW / 1000,
+              durationHours: baseDuration,
+              location: data.location.state || 'CA',
+              zipCode: data.location.zip || '',
+              electricityRate: data.utilityRate || 0.12,
+              useCase: data.industry,
+              solarMW: solarKW / 1000,
+              generatorMW: generatorKW / 1000,
+              generatorFuelType: 'natural-gas',
+              gridConnection: 'on-grid',
+              batteryChemistry: 'lfp',
+              itcConfig: {
+                prevailingWage: false,
+                apprenticeship: false,
+                energyCommunity: false,
+                domesticContent: false,
+              },
+            });
+
+            console.log(`[Step5 MagicFit] ${tierKey} quote result:`, {
+              annualSavings: quote?.financials?.annualSavings,
+              totalCost: quote?.costs?.totalProjectCost,
+              payback: quote?.financials?.paybackYears,
+            });
+
+            return {
+              tierKey,
+              config,
+              quote,
+              loading: false,
+              error: null,
+            };
+          } catch (err) {
+            console.error(`[Step5 MagicFit] ${tierKey} failed:`, err);
+            return {
+              tierKey,
+              config,
+              quote: null as unknown as QuoteResult,
+              loading: false,
+              error: err instanceof Error ? err.message : 'Failed to generate quote',
+            };
+          }
+        });
+
+        const results = await Promise.race([
+          Promise.all(tierPromises),
+          timeoutPromise,
+        ]) as TierQuote[];
+
+        if (!cancelled) {
+          console.log('[Step5 MagicFit] All tiers generated:', results.map(r => ({
+            tier: r.tierKey,
+            hasQuote: !!r.quote,
+            error: r.error,
+          })));
+          setTiers(results);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : 'Unknown error';
+          console.error('[Step5 MagicFit] generateTiers failed:', msg);
+          setLoadError(msg);
+          setIsLoading(false);
+        }
+      }
     }
 
     generateTiers();
+    return () => { cancelled = true; };
   }, [baseBESSKW, baseBESSKWh, baseSolarKW, baseGeneratorKW, baseDuration, data.location.state, data.utilityRate, data.industry]);
 
   const handleSelectTier = (tierKey: TierKey) => {
@@ -274,21 +339,22 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     const tierData = tiers.find(t => t.tierKey === tierKey);
     if (tierData?.quote && actions?.updateQuote) {
       const eq = tierData.quote.equipment;
-      const bessKWh = eq.batteries.unitEnergyMWh * eq.batteries.quantity * 1000;
-      const bessKW = eq.batteries.unitPowerMW * eq.batteries.quantity * 1000;
-      const solarKW = eq.solar ? eq.solar.totalMW * 1000 : 0;
-      const genKW = eq.generators ? eq.generators.unitPowerMW * eq.generators.quantity * 1000 : 0;
+      const batt = eq?.batteries;
+      const bessKWh = batt ? (batt.unitEnergyMWh ?? 0) * (batt.quantity ?? 0) * 1000 : 0;
+      const bessKW = batt ? (batt.unitPowerMW ?? 0) * (batt.quantity ?? 0) * 1000 : 0;
+      const solarKW = eq?.solar ? (eq.solar.totalMW ?? 0) * 1000 : 0;
+      const genKW = eq?.generators ? (eq.generators.unitPowerMW ?? 0) * (eq.generators.quantity ?? 0) * 1000 : 0;
       actions.updateQuote({
         bessKWh,
         bessKW,
         solarKW,
         generatorKW: genKW,
-        capexUSD: tierData.quote.costs.totalProjectCost,
-        annualSavingsUSD: tierData.quote.financials.annualSavings,
-        roiYears: tierData.quote.financials.paybackYears,
-        npv: tierData.quote.financials.npv ?? undefined,
-        irr: tierData.quote.financials.irr ?? undefined,
-        paybackYears: tierData.quote.financials.paybackYears,
+        capexUSD: tierData.quote.costs?.totalProjectCost ?? 0,
+        annualSavingsUSD: tierData.quote.financials?.annualSavings ?? 0,
+        roiYears: tierData.quote.financials?.paybackYears ?? 0,
+        npv: tierData.quote.financials?.npv ?? undefined,
+        irr: tierData.quote.financials?.irr ?? undefined,
+        paybackYears: tierData.quote.financials?.paybackYears ?? 0,
         durationHours: baseDuration,
         pricingComplete: true,
         notes: [`MagicFit tier: ${TIER_CONFIG[tierKey].name} (${TIER_CONFIG[tierKey].multiplier}x)`],
@@ -307,9 +373,25 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     return (
       <div className="flex items-center justify-center py-24">
         <div className="text-center">
-          <Loader2 className="w-10 h-10 text-purple-500 animate-spin mx-auto mb-4" />
-          <p className="text-slate-400 text-base font-semibold">Generating your custom system options...</p>
-          <p className="text-slate-500 text-sm mt-2">Analyzing facility profile + goals</p>
+          {loadError ? (
+            <>
+              <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto mb-4" />
+              <p className="text-slate-300 text-base font-semibold mb-2">Couldn't generate options</p>
+              <p className="text-slate-500 text-sm mb-4">{loadError}</p>
+              <button
+                onClick={actions?.goBack}
+                className="px-5 py-2.5 text-sm font-medium text-slate-400 hover:text-white transition-colors"
+              >
+                ← Back to Options
+              </button>
+            </>
+          ) : (
+            <>
+              <Loader2 className="w-10 h-10 text-purple-500 animate-spin mx-auto mb-4" />
+              <p className="text-slate-400 text-base font-semibold">Generating your custom system options...</p>
+              <p className="text-slate-500 text-sm mt-2">Analyzing facility profile + goals</p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -368,10 +450,11 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
           if (!tier.quote) return null;
 
           const quote = tier.quote;
-          const bessKWh = quote.equipment.batteries.unitEnergyMWh * quote.equipment.batteries.quantity * 1000;
-          const bessKW = quote.equipment.batteries.unitPowerMW * quote.equipment.batteries.quantity * 1000;
-          const solarKW = quote.equipment.solar ? quote.equipment.solar.totalMW * 1000 : 0;
-          const genKW = quote.equipment.generators ? quote.equipment.generators.unitPowerMW * quote.equipment.generators.quantity * 1000 : 0;
+          const batteries = quote.equipment?.batteries;
+          const bessKWh = batteries ? (batteries.unitEnergyMWh ?? 0) * (batteries.quantity ?? 0) * 1000 : 0;
+          const bessKW = batteries ? (batteries.unitPowerMW ?? 0) * (batteries.quantity ?? 0) * 1000 : 0;
+          const solarKW = quote.equipment?.solar ? (quote.equipment.solar.totalMW ?? 0) * 1000 : 0;
+          const genKW = quote.equipment?.generators ? (quote.equipment.generators.unitPowerMW ?? 0) * (quote.equipment.generators.quantity ?? 0) * 1000 : 0;
           
           return (
             <div
@@ -414,7 +497,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                 <div className="mb-4 p-3 bg-white/[0.04] rounded-xl border border-white/[0.06]">
                   <div className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider mb-1">Annual Savings</div>
                   <div className={`text-2xl lg:text-3xl font-black ${tier.config.accentColor} leading-none`}>
-                    {formatCurrency(quote.financials.annualSavings)}
+                    {formatCurrency(quote.financials?.annualSavings)}
                     <span className="text-sm text-slate-600 font-semibold ml-1">/yr</span>
                   </div>
                 </div>
@@ -432,13 +515,13 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                     </span>
                   </div>
                   
-                  {quote.equipment.batteries.quantity > 0 && (
+                  {(batteries?.quantity ?? 0) > 0 && (
                     <div className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-1.5 text-slate-400">
                         <Clock className="w-3 h-3" /> Duration
                       </span>
                       <span className="text-white font-semibold tabular-nums">
-                        {baseDuration.toFixed(1)} hours
+                      {safeFixed(baseDuration, 1)} hours
                       </span>
                     </div>
                   )}
@@ -472,15 +555,15 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                   
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-400">Investment</span>
-                    <span className="text-white font-semibold tabular-nums">{formatCurrency(quote.costs.totalProjectCost)}</span>
+                    <span className="text-white font-semibold tabular-nums">{formatCurrency(quote.costs?.totalProjectCost)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-400">Federal ITC</span>
-                    <span className="text-green-400 font-semibold tabular-nums">−{formatCurrency(quote.costs.taxCredit)}</span>
+                    <span className="text-green-400 font-semibold tabular-nums">−{formatCurrency(quote.costs?.taxCredit)}</span>
                   </div>
                   <div className="flex justify-between text-xs font-bold">
                     <span className="text-white">Net Cost</span>
-                    <span className="text-white tabular-nums">{formatCurrency(quote.costs.netCost)}</span>
+                    <span className="text-white tabular-nums">{formatCurrency(quote.costs?.netCost)}</span>
                   </div>
                 </div>
 
@@ -489,19 +572,19 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                   <div className="text-center p-2 bg-white/[0.03] rounded-lg">
                     <div className="text-[10px] text-slate-500 font-medium">Payback</div>
                     <div className={`text-sm font-black ${tier.config.accentColor}`}>
-                      {quote.financials.paybackYears.toFixed(1)}y
+                      {safeFixed(quote.financials?.paybackYears, 1)}y
                     </div>
                   </div>
                   <div className="text-center p-2 bg-white/[0.03] rounded-lg">
                     <div className="text-[10px] text-slate-500 font-medium">10yr ROI</div>
                     <div className={`text-sm font-black ${tier.config.accentColor}`}>
-                      {quote.financials.roi10Year.toFixed(0)}%
+                      {safeFixed(quote.financials?.roi10Year, 0)}%
                     </div>
                   </div>
                   <div className="text-center p-2 bg-white/[0.03] rounded-lg">
                     <div className="text-[10px] text-slate-500 font-medium">25yr ROI</div>
                     <div className={`text-sm font-black ${tier.config.accentColor}`}>
-                      {quote.financials.roi25Year?.toFixed(0) ?? Math.round(((quote.financials.annualSavings * 25) / quote.costs.netCost - 1) * 100)}%
+                      {safeFixed(quote.financials?.roi25Year, 0)}%
                     </div>
                   </div>
                 </div>
