@@ -2588,6 +2588,34 @@ export function useWizardV7() {
   const setStep = useCallback((step: WizardStep, reason?: string) => {
     dispatch({ type: "SET_STEP", step, reason });
     dispatch({ type: "PUSH_HISTORY", step });
+
+    // ✅ MERLIN MEMORY (Feb 11, 2026): Track step transitions
+    const now = Date.now();
+    const session = merlinMemory.get("session");
+    if (session) {
+      // Close previous step's exit time
+      const history = [...session.stepHistory];
+      if (history.length > 0 && !history[history.length - 1].exitedAt) {
+        history[history.length - 1] = { ...history[history.length - 1], exitedAt: now };
+      }
+      // Add new step entry
+      history.push({ step, enteredAt: now });
+      merlinMemory.patch("session", {
+        stepHistory: history,
+        totalStepsCompleted: Math.max(session.totalStepsCompleted, history.filter(h => h.exitedAt).length),
+        lastActiveAt: now,
+      });
+    } else {
+      // First step — initialize session
+      merlinMemory.set("session", {
+        startedAt: now,
+        stepHistory: [{ step, enteredAt: now }],
+        totalStepsCompleted: 0,
+        quoteGenerations: 0,
+        addOnChanges: 0,
+        lastActiveAt: now,
+      });
+    }
   }, []);
 
   const goBack = useCallback(() => {
@@ -2750,6 +2778,38 @@ export function useWizardV7() {
 
     // Dispatch final merged state (one atomic patch with all results)
     dispatch({ type: "PATCH_LOCATION_INTEL", patch: intel });
+
+    // ✅ MERLIN MEMORY (Feb 11, 2026): Persist weather data
+    if (weatherRes.status === "fulfilled" && (weatherRes.value.risk || weatherRes.value.profile)) {
+      // Lazy-import the full weather data to get HDD/CDD if available
+      merlinMemory.set("weather", {
+        profile: weatherRes.value.profile,
+        extremes: weatherRes.value.risk,
+        source: "cache",
+        fetchedAt: Date.now(),
+      });
+    }
+
+    // ✅ MERLIN MEMORY (Feb 11, 2026): Persist solar resource data
+    if (solarRes.status === "fulfilled" && solarRes.value.peakSunHours) {
+      merlinMemory.set("solar", {
+        peakSunHours: solarRes.value.peakSunHours,
+        grade: solarRes.value.grade,
+        // Derive capacity factor from peak sun hours (PSH / 24)
+        capacityFactor: solarRes.value.peakSunHours ? solarRes.value.peakSunHours / 24 : undefined,
+        source: "regional-estimate",
+        fetchedAt: Date.now(),
+      });
+    }
+
+    // ✅ MERLIN MEMORY: Also patch location with utility rates
+    if (intel.utilityRate != null || intel.demandCharge != null) {
+      merlinMemory.patch("location", {
+        utilityRate: intel.utilityRate,
+        demandCharge: intel.demandCharge,
+        peakSunHours: intel.peakSunHours,
+      });
+    }
 
     if (import.meta.env.DEV) {
       const ready = [intel.utilityStatus, intel.solarStatus, intel.weatherStatus].filter(s => s === "ready").length;
@@ -3908,6 +3968,44 @@ export function useWizardV7() {
           note: `Pricing ok: sessionId=${sessionId}, pricingComplete=${mergedQuote.pricingComplete}, key=${requestKey.slice(0, 8)}`,
         });
 
+        // ✅ MERLIN MEMORY (Feb 11, 2026): Persist full financial model
+        if (pricingResult?.ok && pricingResult.data) {
+          const pd = pricingResult.data;
+          const fin = pd.financials;
+          merlinMemory.set("financials", {
+            equipmentCost: pd.breakdown?.batteries
+              ? Object.values(pd.breakdown).reduce(
+                  (sum, eq) => sum + ((eq as { totalCost?: number })?.totalCost ?? 0),
+                  0
+                )
+              : pd.capexUSD,
+            installationCost: 0, // included in capexUSD
+            totalProjectCost: pd.capexUSD / (1 - 0.30), // gross before ITC
+            taxCredit: pd.capexUSD / (1 - 0.30) * 0.30, // estimated ITC
+            netCost: pd.capexUSD,
+            annualSavings: pd.annualSavingsUSD,
+            demandChargeSavings: mergedQuote.demandChargeSavings,
+            paybackYears: pd.roiYears,
+            roi10Year: fin?.roi10Year ?? 0,
+            roi25Year: fin?.roi25Year ?? 0,
+            npv: fin?.npv ?? 0,
+            irr: fin?.irr ?? 0,
+            itcRate: 0.30, // TODO: pull from metadata.itcDetails when available
+            itcAmount: pd.capexUSD / (1 - 0.30) * 0.30,
+            pricingSnapshotId: pd.pricingSnapshotId,
+            calculatedAt: Date.now(),
+          });
+
+          // Also update session telemetry
+          const session = merlinMemory.get("session");
+          if (session) {
+            merlinMemory.patch("session", {
+              quoteGenerations: (session.quoteGenerations ?? 0) + 1,
+              lastActiveAt: Date.now(),
+            });
+          }
+        }
+
         return {
           ok: true as const,
           freeze: enrichedFreeze,
@@ -3965,6 +4063,14 @@ export function useWizardV7() {
     dispatch({ type: "SET_STEP4_ADDONS", addOns });
 
     // ✅ MERLIN MEMORY (Feb 11, 2026): Persist add-ons configuration
+    // ✅ MERLIN MEMORY: Bump add-on change counter for session telemetry
+    const sessionForAddOns = merlinMemory.get("session");
+    if (sessionForAddOns) {
+      merlinMemory.patch("session", {
+        addOnChanges: (sessionForAddOns.addOnChanges ?? 0) + 1,
+        lastActiveAt: Date.now(),
+      });
+    }
     merlinMemory.set("addOns", {
       includeSolar: addOns.includeSolar,
       solarKW: addOns.solarKW,

@@ -15,6 +15,10 @@
  *   ✅ Sizing (peak kW, BESS kWh, duration, etc.)
  *   ✅ Add-ons (solar, generator, EV config)
  *   ✅ Quote (final pricing output)
+ *   ✅ Weather (climate profile, HDD/CDD, extremes)
+ *   ✅ Solar (irradiance, capacity factor, production)
+ *   ✅ Financials (full calculator output: savings, ROI, NPV, IRR, degradation)
+ *   ✅ Session (step history, timing, interaction counts)
  * 
  * WHAT DOES NOT GO IN MEMORY:
  *   ❌ UI state (which step is active, modal open/closed)
@@ -135,6 +139,94 @@ export interface MemoryQuote {
   generatedAt: number;
 }
 
+// ============================================================================
+// NEW MEMORY SLOTS (Feb 11, 2026 — Phase 2)
+// ============================================================================
+
+/** Weather & climate profile for the project site */
+export interface MemoryWeather {
+  profile?: string;             // "Hot & Humid", "Cold & Dry", "Temperate"
+  extremes?: string;            // "Frequent heatwaves", "Harsh winters"
+  avgTempF?: number;            // Annual average temperature (°F)
+  avgHighF?: number;            // Average daily high (°F)
+  avgLowF?: number;             // Average daily low (°F)
+  heatingDegreeDays?: number;   // HDD (affects heating load sizing)
+  coolingDegreeDays?: number;   // CDD (affects cooling load sizing)
+  source?: "visual-crossing" | "nws" | "cache";
+  fetchedAt: number;            // timestamp
+}
+
+/** Solar resource data for the project site */
+export interface MemorySolar {
+  peakSunHours?: number;        // PSH (hours/day)
+  capacityFactor?: number;      // 0-1 (e.g., 0.21 for AZ)
+  annualIrradiance?: number;    // kWh/m²/day
+  grade?: string;               // "A", "A-", "B+", "B", "C"
+  source?: "pvwatts" | "regional-estimate";
+  // Production estimates (when solar is configured)
+  annualProductionKWh?: number;
+  monthlyProductionKWh?: number[];
+  fetchedAt: number;
+}
+
+/** Full financial model output from SSOT calculator */
+export interface MemoryFinancials {
+  // Cost breakdown
+  equipmentCost: number;
+  installationCost: number;
+  totalProjectCost: number;
+  taxCredit: number;
+  netCost: number;
+
+  // Savings breakdown
+  annualSavings: number;
+  peakShavingSavings?: number;
+  demandChargeSavings?: number;
+  touArbitrageSavings?: number;
+  solarSelfConsumptionSavings?: number;
+
+  // Return metrics
+  paybackYears: number;
+  roi10Year: number;
+  roi25Year: number;
+  npv: number;
+  irr: number;
+
+  // ITC details (IRA 2022)
+  itcRate?: number;             // 0.06 - 0.70
+  itcAmount?: number;           // dollar amount
+
+  // Degradation impact
+  chemistry?: string;           // lfp, nmc, nca, etc.
+  year10CapacityPct?: number;   // % capacity at year 10
+  year25CapacityPct?: number;   // % capacity at year 25
+  degradationImpactPct?: number; // NPV reduction %
+
+  // Monte Carlo risk (if computed)
+  npvP10?: number;
+  npvP50?: number;
+  npvP90?: number;
+  probabilityPositiveNPV?: number;
+
+  // Provenance
+  pricingSnapshotId?: string;
+  calculatedAt: number;
+}
+
+/** Session telemetry — analytics & user journey tracking */
+export interface MemorySession {
+  startedAt: number;            // session start timestamp
+  stepHistory: Array<{
+    step: string;
+    enteredAt: number;
+    exitedAt?: number;
+  }>;
+  totalStepsCompleted: number;
+  quoteGenerations: number;     // how many times quote was recalculated
+  addOnChanges: number;         // how many times add-ons were toggled
+  lastActiveAt: number;         // last interaction timestamp
+}
+
 /** All memory slots — the complete "brain" of the wizard */
 export interface MerlinMemorySlots {
   location: MemoryLocation;
@@ -145,6 +237,10 @@ export interface MerlinMemorySlots {
   sizing: MemorySizing;
   addOns: MemoryAddOns;
   quote: MemoryQuote;
+  weather: MemoryWeather;
+  solar: MemorySolar;
+  financials: MemoryFinancials;
+  session: MemorySession;
 }
 
 export type MemorySlotKey = keyof MerlinMemorySlots;
