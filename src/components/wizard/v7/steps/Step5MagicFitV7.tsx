@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Check, Loader2, AlertTriangle, Zap, Battery, Sun, Fuel, Clock, TrendingUp, DollarSign, Shield } from 'lucide-react';
+import { Check, Loader2, AlertTriangle, Battery, Sun, Fuel, Clock, TrendingUp, DollarSign, Shield } from 'lucide-react';
 import type { WizardState as WizardV7State, EnergyGoal, WizardStep, QuoteOutput } from '@/wizard/v7/hooks/useWizardV7';
 import { getIndustryMeta } from '@/wizard/v7/industryMeta';
 import { TrueQuoteBadgeCanonical } from '@/components/shared/TrueQuoteBadgeCanonical';
@@ -327,29 +327,21 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         mode="about"
       />
 
-      {/* Header */}
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 rounded-full mb-4">
-          <Zap className="w-4 h-4 text-purple-400" />
-          <span className="text-purple-300 font-semibold text-sm">MagicFit™ Recommendations</span>
-        </div>
-        
-        <h1 className="text-3xl md:text-4xl font-black text-white mb-3">
-          Choose Your Power Level
-        </h1>
-        
-        <p className="text-base text-slate-400 max-w-2xl mx-auto">
-          Your {getIndustryLabel(data.industry)} facility needs are unique —
-          Merlin sized three options. Pick the one that fits your budget.
+      {/* Inline guidance */}
+      <div className="space-y-2.5">
+        <p className="text-sm leading-relaxed text-slate-400">
+          Three system options for your{" "}
+          <span className="text-slate-200 font-medium">{getIndustryLabel(data.industry)}</span> facility
+          <span className="text-slate-500">{" "}· sized by Merlin based on your profile and goals</span>
         </p>
-        
+
         {/* Goal-based sizing hints */}
         {goalModifiers.goalHints.length > 0 && (
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap gap-2">
             {goalModifiers.goalHints.map((hint, idx) => (
-              <div key={idx} className="px-3 py-1.5 bg-purple-500/10 border border-purple-500/25 rounded-lg text-purple-300 text-xs">
+              <span key={idx} className="text-xs text-purple-400/80">
                 ✨ {hint}
-              </div>
+              </span>
             ))}
           </div>
         )}

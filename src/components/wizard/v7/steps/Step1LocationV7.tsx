@@ -302,18 +302,17 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
 
         <p
           style={{
-            fontSize: 15,
-            color: "rgba(232, 235, 243, 0.55)",
+            fontSize: 13,
+            color: "rgba(232, 235, 243, 0.38)",
             margin: 0,
-            lineHeight: 1.75,
+            lineHeight: 1.6,
             maxWidth: 600,
             fontWeight: 400,
             position: "relative",
             zIndex: 1,
           }}
         >
-          Your location helps us estimate savings using utility rates, demand charges, solar potential,
-          weather profile, and incentives.
+          Utility rates · solar potential · demand charges · incentives
         </p>
 
         {/* Resolved City/State */}
