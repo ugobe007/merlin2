@@ -674,6 +674,14 @@ function WizardV7Page() {
             setBusinessDraft: wizard.setBusinessDraft,
             setLocationConfirmed: wizard.confirmLocation,
           }}
+          onGoalsConfirmedAdvance={() => {
+            // ✅ FIX: Auto-advance after goals confirmed in modal
+            if (state.industryLocked && state.industry && state.industry !== "auto") {
+              wizard.goToStep("profile");
+            } else {
+              wizard.goToStep("industry");
+            }
+          }}
         />
       )}
 
