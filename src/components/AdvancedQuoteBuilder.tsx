@@ -919,13 +919,13 @@ export default function AdvancedQuoteBuilder({
   };
 
   return (
-    <div className="fixed inset-0 z-[70] overflow-y-auto" style={{ background: 'linear-gradient(135deg, #060d1f 0%, #0c1631 40%, #091228 70%, #060d1f 100%)' }}>
+    <div className="fixed inset-0 z-[70] overflow-y-auto" style={{ background: '#0f1117' }}>
       <div className="min-h-screen text-gray-100">
         {/* LANDING PAGE VIEW */}
         {viewMode === "landing" && (
           <>
             {/* Premium header - sleek dark with amber accent line */}
-            <div className="sticky top-0 z-10 shadow-2xl backdrop-blur-xl" style={{ background: 'rgba(8, 14, 32, 0.95)', borderBottom: '2px solid rgba(251, 191, 36, 0.3)' }}>
+            <div className="sticky top-0 z-10 backdrop-blur-xl" style={{ background: 'rgba(15, 17, 23, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <div className="max-w-7xl mx-auto px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -1061,9 +1061,7 @@ export default function AdvancedQuoteBuilder({
 
             {/* System Configuration Hero Panel - START HERE */}
             <div className="max-w-7xl mx-auto px-6 pb-6">
-              <div className="group w-full relative rounded-3xl p-10 md:p-14 text-left transition-all duration-300 hover:-translate-y-1 overflow-hidden" style={{ background: 'linear-gradient(135deg, #0e1a3a 0%, #132044 50%, #0e1a3a 100%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 25px 60px rgba(0,0,0,0.4)' }}>
-                {/* Subtle glow */}
-                <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.15) 0%, transparent 70%)' }} />
+              <div className="group w-full relative rounded-xl p-10 md:p-14 text-left transition-all duration-300 overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
 
                 <div className="relative flex flex-col md:flex-row items-center gap-10 md:gap-12">
                   {/* Merlin on the left */}
@@ -1080,7 +1078,7 @@ export default function AdvancedQuoteBuilder({
                   {/* Content on the right */}
                   <div className="flex-1">
                     {/* START HERE badge */}
-                    <span className="inline-block px-4 py-1.5 text-xs font-bold rounded-full mb-5" style={{ background: '#fbbf24', color: '#1a0a2e' }}>
+                    <span className="inline-block px-3 py-1 text-xs font-semibold rounded-md mb-5" style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.2)' }}>
                       START HERE
                     </span>
 
@@ -1124,14 +1122,14 @@ export default function AdvancedQuoteBuilder({
                           loadWizardConfig();
                         }
                       }}
-                      className="group/btn w-full md:w-auto px-10 py-4 font-bold text-lg md:text-xl rounded-full flex items-center justify-center gap-3 transition-all duration-200 hover:scale-105"
-                      style={{ background: '#fbbf24', color: '#1a0a2e', boxShadow: '0 4px 24px rgba(251,191,36,0.3)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 8px 32px rgba(251,191,36,0.45)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 4px 24px rgba(251,191,36,0.3)'; }}
+                      className="group/btn w-full md:w-auto px-8 py-3.5 font-semibold text-base rounded-lg flex items-center justify-center gap-3 transition-all duration-200"
+                      style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.25)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.15)'; }}
                     >
-                      <Sliders className="w-6 h-6" />
+                      <Sliders className="w-5 h-5" />
                       <span>Launch Configuration Tool</span>
-                      <ArrowRight className="w-6 h-6 group-hover/btn:translate-x-2 transition-transform" />
+                      <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                     </button>
                   </div>
                 </div>
@@ -1140,7 +1138,7 @@ export default function AdvancedQuoteBuilder({
 
             {/* Document Upload Section - Path A */}
             <div className="max-w-7xl mx-auto px-6 pb-8">
-              <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div
                   className="flex items-center justify-between cursor-pointer p-6"
                   onClick={() => setShowUploadSection(!showUploadSection)}
@@ -1229,7 +1227,7 @@ export default function AdvancedQuoteBuilder({
             {/* Welcome Popup Modal */}
             {showWelcomePopup && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(4, 8, 20, 0.8)', backdropFilter: 'blur(8px)' }}>
-                <div className="rounded-2xl max-w-lg w-full overflow-hidden animate-fadeIn" style={{ background: 'linear-gradient(165deg, #0e1a3a 0%, #132044 50%, #0e1a3a 100%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 25px 80px rgba(0,0,0,0.6)' }}>
+                <div className="rounded-xl max-w-lg w-full overflow-hidden animate-fadeIn" style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.08)' }}>
                   {/* Header with Merlin */}
                   <div className="p-8 pb-6 text-center relative">
                     <img
@@ -1288,8 +1286,8 @@ export default function AdvancedQuoteBuilder({
                   <div className="p-6">
                     <button
                       onClick={() => setShowWelcomePopup(false)}
-                      className="w-full font-bold py-3.5 px-6 rounded-full transition-all hover:scale-[1.02] active:scale-[0.98]"
-                      style={{ background: '#fbbf24', color: '#1a0a2e', boxShadow: '0 4px 24px rgba(251,191,36,0.3)' }}
+                      className="w-full font-semibold py-3 px-6 rounded-lg transition-all"
+                      style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
                     >
                       Let's Build a Quote →
                     </button>
@@ -1402,10 +1400,10 @@ export default function AdvancedQuoteBuilder({
 
               {/* Section: Premium Tools */}
               <div>
-                <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
-                  <Sparkles className="w-6 h-6 text-purple-400" />
+                <h3 className="text-xl font-semibold mb-6 text-white flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-amber-400" />
                   Premium Features
-                  <span className="text-sm font-normal text-purple-300/70 ml-2">
+                  <span className="text-xs font-normal text-slate-500 ml-2">
                     Upgrade to unlock
                   </span>
                 </h3>
@@ -1418,15 +1416,20 @@ export default function AdvancedQuoteBuilder({
                         onClick={"locked" in tool && tool.locked ? undefined : tool.action}
                         disabled={"locked" in tool && tool.locked}
                         style={{ animationDelay: `${(index + 6) * 100}ms` }}
-                        className={`group relative bg-gradient-to-br from-purple-900/40 via-indigo-900/40 to-blue-900/40 rounded-2xl p-6 text-left transition-all duration-300 animate-fadeIn overflow-hidden shadow-xl border border-purple-500/20 ${"locked" in tool && tool.locked ? "opacity-75 cursor-not-allowed" : "hover:scale-105 hover:-translate-y-2 hover:shadow-2xl hover:border-purple-400/50"}`}
+                        className={`group relative rounded-xl p-6 text-left transition-all duration-300 animate-fadeIn overflow-hidden ${
+                          "locked" in tool && tool.locked ? "opacity-75 cursor-not-allowed" : "hover:-translate-y-1"
+                        }`}
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+                        onMouseEnter={(e) => { if (!("locked" in tool) || !tool.locked) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; } }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
                       >
                         {/* Lock overlay for locked tools */}
                         {"locked" in tool && tool.locked && (
-                          <div className="absolute inset-0 bg-slate-900/50 rounded-2xl z-10 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-black/50 rounded-xl z-10 flex items-center justify-center">
                             <div className="text-center">
-                              <Lock className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                              <Lock className="w-6 h-6 text-slate-400 mx-auto mb-2" />
                               {"comingSoon" in tool && tool.comingSoon && (
-                                <span className="text-xs text-purple-300 font-medium">
+                                <span className="text-xs text-slate-400 font-medium">
                                   Coming Soon
                                 </span>
                               )}
@@ -1434,8 +1437,6 @@ export default function AdvancedQuoteBuilder({
                           </div>
                         )}
 
-                        {/* Glow effect */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 rounded-2xl transition-all duration-300" />
 
                         {/* Icon */}
                         <div className="relative mb-4 inline-flex">
@@ -1447,17 +1448,17 @@ export default function AdvancedQuoteBuilder({
                         </div>
 
                         {/* Content */}
-                        <h4 className="relative text-xl font-bold mb-2 text-white group-hover:text-purple-300 transition-colors">
+                        <h4 className="relative text-lg font-semibold mb-2 text-white transition-colors">
                           {tool.title}
                         </h4>
-                        <p className="relative text-purple-200/70 text-sm leading-relaxed group-hover:text-purple-100 transition-colors">
+                        <p className="relative text-sm leading-relaxed transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }}>
                           {tool.description}
                         </p>
 
                         {/* Arrow or Lock indicator */}
-                        <div className="relative mt-4 flex items-center text-purple-400 group-hover:text-purple-300 transition-all">
+                        <div className="relative mt-4 flex items-center transition-all" style={{ color: 'rgba(255,255,255,0.3)' }}>
                           {"locked" in tool && tool.locked ? (
-                            <span className="text-xs font-semibold text-purple-400">
+                            <span className="text-xs font-semibold text-slate-500">
                               Premium Feature
                             </span>
                           ) : (
@@ -1484,15 +1485,10 @@ export default function AdvancedQuoteBuilder({
             CUSTOM CONFIGURATION VIEW - REDESIGNED WITH TAB NAVIGATION & LIVE FINANCIALS
             ════════════════════════════════════════════════════════════════════════════ */}
         {viewMode === "custom-config" && (
-          <div className="min-h-screen relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #060d1f 0%, #0c1631 40%, #091228 70%, #060d1f 100%)' }}>
-            {/* Subtle animated background */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-              <div className="absolute top-20 left-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%)' }}></div>
-              <div className="absolute bottom-20 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)' }}></div>
-            </div>
+          <div className="min-h-screen relative overflow-hidden" style={{ background: '#0f1117' }}>
 
             {/* ═══ STICKY HEADER WITH TAB NAVIGATION ═══ */}
-            <div className="sticky top-0 z-20 backdrop-blur-xl" style={{ background: 'rgba(8, 14, 32, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="sticky top-0 z-20 backdrop-blur-xl" style={{ background: 'rgba(15, 17, 23, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               {/* Top Bar - Title & Actions */}
               <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -1507,7 +1503,7 @@ export default function AdvancedQuoteBuilder({
                     <img src={merlinImage} alt="Merlin" className="w-8 h-8" />
                     <div>
                       <h1 className="text-xl font-bold text-white">System Configuration</h1>
-                      <p className="text-xs text-purple-300">Pro Mode • Direct Input</p>
+                      <p className="text-xs text-slate-500">Pro Mode • Direct Input</p>
                     </div>
                   </div>
                 </div>
@@ -1577,7 +1573,7 @@ export default function AdvancedQuoteBuilder({
             </div>
 
             {/* ═══ LIVE FINANCIAL DASHBOARD BAR - Always Visible ═══ */}
-            <div className="sticky top-[100px] z-10 backdrop-blur-md shadow-lg" style={{ background: 'rgba(6,13,31,0.95)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="sticky top-[100px] z-10 backdrop-blur-md" style={{ background: 'rgba(15,17,23,0.95)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="max-w-7xl mx-auto px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   {/* Left: System Size */}
@@ -1636,9 +1632,10 @@ export default function AdvancedQuoteBuilder({
                   {/* Right: Generate Quote Button */}
                   <button
                     onClick={() => setShowQuotePreview(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50"
+                    className="flex items-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold transition-all"
+                    style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)' }}
                   >
-                    <Sparkles className="w-4 h-4" />
+                    <Sparkles className="w-4 h-4 text-amber-400" />
                     Generate Quote
                   </button>
                 </div>
@@ -1672,7 +1669,7 @@ export default function AdvancedQuoteBuilder({
                     ──────────────────────────────────────────────── */}
                 <div
                   data-section="system"
-                  className="scroll-mt-48 rounded-2xl overflow-hidden"
+                  className="scroll-mt-48 rounded-xl overflow-hidden"
                   style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
                 >
                   {/* Section Header */}
@@ -1833,7 +1830,7 @@ export default function AdvancedQuoteBuilder({
                     ──────────────────────────────────────────────── */}
                 <div
                   data-section="application"
-                  className="scroll-mt-48 rounded-2xl overflow-hidden"
+                  className="scroll-mt-48 rounded-xl overflow-hidden"
                   style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
                 >
                   <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
@@ -1922,7 +1919,7 @@ export default function AdvancedQuoteBuilder({
                     ──────────────────────────────────────────────── */}
                 <div
                   data-section="financial"
-                  className="scroll-mt-48 rounded-2xl overflow-hidden"
+                  className="scroll-mt-48 rounded-xl overflow-hidden"
                   style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
                 >
                   <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
@@ -2025,7 +2022,7 @@ export default function AdvancedQuoteBuilder({
                     ──────────────────────────────────────────────── */}
                 <div
                   data-section="electrical"
-                  className="scroll-mt-48 rounded-2xl overflow-hidden"
+                  className="scroll-mt-48 rounded-xl overflow-hidden"
                   style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
                 >
                   <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
@@ -2347,7 +2344,7 @@ export default function AdvancedQuoteBuilder({
                   {/* Renewables & Alternative Power Section */}
                   <div
                     data-section="renewables"
-                    className="rounded-2xl p-8 scroll-mt-24"
+                    className="rounded-xl p-8 scroll-mt-24"
                     style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
                   >
                     <div className="flex items-center justify-between mb-6">
@@ -2839,7 +2836,7 @@ export default function AdvancedQuoteBuilder({
                   </div>
 
                   {/* System Summary */}
-                  <div className="rounded-2xl p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="rounded-xl p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <h3 className="text-lg font-semibold mb-6 text-white flex items-center gap-2">
                       📊 System Summary
                     </h3>
@@ -2906,7 +2903,8 @@ export default function AdvancedQuoteBuilder({
                         onGenerateQuote?.();
                         onClose();
                       }}
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black rounded-lg font-semibold transition-all hover:scale-105"
+                      className="flex-1 px-6 py-3 rounded-lg font-semibold transition-all"
+                      style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
                     >
                       Generate Detailed Quote →
                     </button>
@@ -2945,9 +2943,9 @@ export default function AdvancedQuoteBuilder({
         {/* Quote Preview Modal */}
         {showQuotePreview && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden" style={{ background: '#0c1631', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden" style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.08)' }}>
               {/* Modal Header */}
-              <div className="text-white p-6 flex items-center justify-between" style={{ background: '#060d1f', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="text-white p-6 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 <div>
                   <h2 className="text-2xl font-bold flex items-center gap-3">
                     <Eye className="w-7 h-7 text-blue-400" />
@@ -3838,35 +3836,35 @@ export default function AdvancedQuoteBuilder({
 
         {/* Professional Financial Model View */}
         {viewMode === "professional-model" && (
-          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-amber-900/20 to-slate-900">
+          <div className="min-h-screen" style={{ background: '#0f1117' }}>
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-900 via-orange-800 to-yellow-900 border-b-4 border-amber-500 shadow-2xl">
+            <div className="sticky top-0 z-10" style={{ background: 'rgba(15,17,23,0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <div className="max-w-7xl mx-auto px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => setViewMode("landing")}
-                      className="flex items-center gap-2 text-amber-200 hover:text-white transition-colors"
+                      className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
                     >
                       <ArrowLeft className="w-5 h-5" />
                       <span className="text-sm font-medium">Back</span>
                     </button>
-                    <div className="h-8 w-px bg-amber-600/50" />
-                    <div className="p-2 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-2xl">
-                      <Landmark className="w-6 h-6 text-white" />
+                    <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
+                    <div className="p-2 rounded-lg" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                      <Landmark className="w-5 h-5 text-amber-400" />
                     </div>
                     <div>
-                      <h1 className="text-2xl font-bold text-amber-100">
+                      <h1 className="text-xl font-semibold text-white">
                         Bank-Ready Financial Model
                       </h1>
-                      <p className="text-amber-300 text-xs">
+                      <p className="text-slate-500 text-xs">
                         Professional 3-Statement Pro-Forma for Investors
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={onClose}
-                    className="text-amber-200 hover:text-white transition-colors p-2 hover:bg-amber-800/50 rounded-lg"
+                    className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
                   >
                     <X className="w-6 h-6" />
                   </button>
@@ -3876,19 +3874,19 @@ export default function AdvancedQuoteBuilder({
 
             <div className="max-w-7xl mx-auto px-6 py-8">
               {/* Configuration Panel */}
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-amber-500/30 shadow-xl mb-8">
-                <h2 className="text-xl font-bold text-amber-100 mb-6 flex items-center gap-2">
-                  <Sliders className="w-5 h-5" />
+              <div className="rounded-xl p-6 mb-8" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                  <Sliders className="w-5 h-5 text-amber-400" />
                   Model Configuration
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {/* System Size (from parent) */}
                   <div>
-                    <label className="block text-sm font-medium text-amber-200 mb-2">
+                    <label className="block text-sm font-semibold text-slate-400 mb-2">
                       System Size (MW)
                     </label>
-                    <div className="bg-slate-700/50 rounded-lg px-4 py-3 text-white font-mono text-lg">
+                    <div className="rounded-lg px-4 py-3 text-white font-mono text-lg" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
                       {storageSizeMW.toFixed(2)} MW / {durationHours}h
                     </div>
                     <p className="text-xs text-slate-400 mt-1">
@@ -3899,7 +3897,7 @@ export default function AdvancedQuoteBuilder({
 
                   {/* ISO Region */}
                   <div>
-                    <label className="block text-sm font-medium text-amber-200 mb-2">
+                    <label className="block text-sm font-semibold text-slate-400 mb-2">
                       ISO Region
                     </label>
                     <select
@@ -3907,7 +3905,8 @@ export default function AdvancedQuoteBuilder({
                       onChange={(e) =>
                         setSelectedISORegion(e.target.value as typeof selectedISORegion)
                       }
-                      className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500"
+                      className="w-full rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                     >
                       <option value="CAISO">CAISO (California)</option>
                       <option value="ERCOT">ERCOT (Texas)</option>
@@ -3921,7 +3920,7 @@ export default function AdvancedQuoteBuilder({
 
                   {/* Leverage */}
                   <div>
-                    <label className="block text-sm font-medium text-amber-200 mb-2">
+                    <label className="block text-sm font-semibold text-slate-400 mb-2">
                       Debt Ratio: {projectLeverage}%
                     </label>
                     <input
@@ -3930,7 +3929,8 @@ export default function AdvancedQuoteBuilder({
                       max="80"
                       value={projectLeverage}
                       onChange={(e) => setProjectLeverage(Number(e.target.value))}
-                      className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                      className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                      style={{ background: 'rgba(255,255,255,0.1)' }}
                     />
                     <div className="flex justify-between text-xs text-slate-400 mt-1">
                       <span>0% (All Equity)</span>
@@ -3940,7 +3940,7 @@ export default function AdvancedQuoteBuilder({
 
                   {/* Interest Rate */}
                   <div>
-                    <label className="block text-sm font-medium text-amber-200 mb-2">
+                    <label className="block text-sm font-semibold text-slate-400 mb-2">
                       Interest Rate
                     </label>
                     <div className="flex items-center gap-2">
@@ -3951,7 +3951,8 @@ export default function AdvancedQuoteBuilder({
                         max="15"
                         value={interestRate}
                         onChange={(e) => setInterestRate(Number(e.target.value))}
-                        className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500"
+                        className="w-full rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                       />
                       <span className="text-slate-400">%</span>
                     </div>
@@ -3960,9 +3961,9 @@ export default function AdvancedQuoteBuilder({
 
                 {/* Example Output Preview - Shows users what to expect */}
                 {!professionalModel && (
-                  <div className="mt-6 bg-slate-800/30 rounded-xl p-6 border border-amber-500/20">
-                    <h3 className="text-lg font-semibold text-amber-200 mb-4 flex items-center gap-2">
-                      <Eye className="w-5 h-5" />
+                  <div className="mt-6 rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-slate-500" />
                       Example Output Preview
                     </h3>
                     <p className="text-sm text-slate-400 mb-4">
@@ -3970,16 +3971,16 @@ export default function AdvancedQuoteBuilder({
                       an estimate of what your Bank-Ready Model will include:
                     </p>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                      <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-                        <p className="text-xs text-slate-400">Est. CapEx</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-xs text-slate-500">Est. CapEx</p>
                         {/* SSOT: Using BESS_MARKET_RATE_2025 = $125/kWh from market data */}
                         <p className="text-lg font-bold text-white">
                           ${((storageSizeMW * durationHours * 1000 * 125) / 1000000).toFixed(1)}M
                         </p>
                       </div>
-                      <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-                        <p className="text-xs text-slate-400">Est. Equity</p>
+                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-xs text-slate-500">Est. Equity</p>
                         {/* SSOT: Equity = CapEx × (1 - leverage) */}
                         <p className="text-lg font-bold text-emerald-400">
                           $
@@ -3994,44 +3995,44 @@ export default function AdvancedQuoteBuilder({
                           M
                         </p>
                       </div>
-                      <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-                        <p className="text-xs text-slate-400">Target IRR</p>
-                        <p className="text-lg font-bold text-amber-300">12-18%</p>
+                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-xs text-slate-500">Target IRR</p>
+                        <p className="text-lg font-bold text-amber-400">12-18%</p>
                       </div>
-                      <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-                        <p className="text-xs text-slate-400">DSCR Target</p>
-                        <p className="text-lg font-bold text-blue-300">≥1.25x</p>
+                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-xs text-slate-500">DSCR Target</p>
+                        <p className="text-lg font-bold text-blue-400">≥1.25x</p>
                       </div>
-                      <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-                        <p className="text-xs text-slate-400">Payback</p>
-                        <p className="text-lg font-bold text-purple-300">6-10 yrs</p>
+                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-xs text-slate-500">Payback</p>
+                        <p className="text-lg font-bold text-slate-300">6-10 yrs</p>
                       </div>
-                      <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-                        <p className="text-xs text-slate-400">Project Life</p>
-                        <p className="text-lg font-bold text-cyan-300">25 yrs</p>
+                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-xs text-slate-500">Project Life</p>
+                        <p className="text-lg font-bold text-slate-300">25 yrs</p>
                       </div>
                     </div>
 
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div className="bg-slate-700/30 rounded-lg p-3">
-                        <p className="text-amber-200 font-semibold mb-2">📊 3-Statement Model</p>
-                        <ul className="text-slate-400 text-xs space-y-1">
+                      <div className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-white font-semibold text-sm mb-2">📊 3-Statement Model</p>
+                        <ul className="text-slate-500 text-xs space-y-1">
                           <li>• Income Statement (25 years)</li>
                           <li>• Balance Sheet</li>
                           <li>• Cash Flow Statement</li>
                         </ul>
                       </div>
-                      <div className="bg-slate-700/30 rounded-lg p-3">
-                        <p className="text-amber-200 font-semibold mb-2">💰 Revenue Stacking</p>
-                        <ul className="text-slate-400 text-xs space-y-1">
+                      <div className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-white font-semibold text-sm mb-2">💰 Revenue Stacking</p>
+                        <ul className="text-slate-500 text-xs space-y-1">
                           <li>• Energy Arbitrage</li>
                           <li>• Frequency Regulation</li>
                           <li>• Capacity Payments</li>
                         </ul>
                       </div>
-                      <div className="bg-slate-700/30 rounded-lg p-3">
-                        <p className="text-amber-200 font-semibold mb-2">🏦 Bank Metrics</p>
-                        <ul className="text-slate-400 text-xs space-y-1">
+                      <div className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-white font-semibold text-sm mb-2">🏦 Bank Metrics</p>
+                        <ul className="text-slate-500 text-xs space-y-1">
                           <li>• DSCR Analysis</li>
                           <li>• Levered/Unlevered IRR</li>
                           <li>• MACRS Depreciation</li>
@@ -4074,7 +4075,8 @@ export default function AdvancedQuoteBuilder({
                       }
                     }}
                     disabled={isGeneratingModel}
-                    className="flex items-center gap-3 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 hover:from-amber-400 hover:via-orange-400 hover:to-yellow-400 text-slate-900 font-bold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
+                    className="flex items-center gap-3 font-semibold px-8 py-3.5 rounded-lg transition-all disabled:opacity-50"
+                    style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
                   >
                     {isGeneratingModel ? (
                       <>
@@ -4095,9 +4097,9 @@ export default function AdvancedQuoteBuilder({
               {professionalModel && (
                 <div className="space-y-8">
                   {/* Executive Summary */}
-                  <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 border border-amber-500/50 shadow-xl">
-                    <h2 className="text-2xl font-bold text-amber-100 mb-6 flex items-center gap-2">
-                      <FileSpreadsheet className="w-6 h-6" />
+                  <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                      <FileSpreadsheet className="w-5 h-5 text-amber-400" />
                       Executive Summary
                     </h2>
 
@@ -4166,23 +4168,23 @@ export default function AdvancedQuoteBuilder({
                         </p>
                         <p className="text-xs text-slate-500">Target: ≥1.25x</p>
                       </div>
-                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-                        <p className="text-xs text-slate-400 uppercase tracking-wide">Avg DSCR</p>
-                        <p className="text-2xl font-bold text-blue-300">
+                      <div className="rounded-lg p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-xs text-slate-500 uppercase tracking-wide">Avg DSCR</p>
+                        <p className="text-2xl font-bold text-blue-400">
                           {professionalModel.summary.averageDSCR.toFixed(2)}x
                         </p>
                       </div>
-                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-                        <p className="text-xs text-slate-400 uppercase tracking-wide">
+                      <div className="rounded-lg p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-xs text-slate-500 uppercase tracking-wide">
                           Simple Payback
                         </p>
-                        <p className="text-2xl font-bold text-amber-200">
+                        <p className="text-2xl font-bold text-amber-400">
                           {professionalModel.summary.simplePayback.toFixed(1)} yrs
                         </p>
                       </div>
-                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-                        <p className="text-xs text-slate-400 uppercase tracking-wide">Y1 Revenue</p>
-                        <p className="text-2xl font-bold text-emerald-200">
+                      <div className="rounded-lg p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-xs text-slate-500 uppercase tracking-wide">Y1 Revenue</p>
+                        <p className="text-2xl font-bold text-emerald-400">
                           ${(professionalModel.summary.totalAnnualRevenue / 1000000).toFixed(2)}M
                         </p>
                       </div>
@@ -4190,8 +4192,8 @@ export default function AdvancedQuoteBuilder({
                   </div>
 
                   {/* Revenue Streams */}
-                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
-                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-emerald-400" />
                       Year 1 Revenue Breakdown ({selectedISORegion})
                     </h3>
@@ -4201,8 +4203,8 @@ export default function AdvancedQuoteBuilder({
                         Object.entries(professionalModel.revenueProjection[0])
                           .filter(([key]) => key !== "year" && key !== "totalRevenue")
                           .map(([stream, value]) => (
-                            <div key={stream} className="bg-slate-700/50 rounded-lg p-4">
-                              <p className="text-xs text-slate-400 capitalize">
+                            <div key={stream} className="rounded-lg p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                              <p className="text-xs text-slate-500 capitalize">
                                 {stream.replace(/([A-Z])/g, " $1").trim()}
                               </p>
                               <p className="text-lg font-bold text-emerald-300">
@@ -4216,9 +4218,9 @@ export default function AdvancedQuoteBuilder({
                   {/* 3-Statement Preview */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Income Statement */}
-                    <div className="bg-gradient-to-br from-blue-900/40 to-indigo-900/40 rounded-2xl p-6 border border-blue-500/30">
-                      <h3 className="text-lg font-bold text-blue-200 mb-4 flex items-center gap-2">
-                        <FileText className="w-5 h-5" />
+                    <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-blue-400" />
                         Income Statement (Y1)
                       </h3>
                       <div className="space-y-2 text-sm">
@@ -4287,9 +4289,9 @@ export default function AdvancedQuoteBuilder({
                     </div>
 
                     {/* Balance Sheet */}
-                    <div className="bg-gradient-to-br from-emerald-900/40 to-teal-900/40 rounded-2xl p-6 border border-emerald-500/30">
-                      <h3 className="text-lg font-bold text-emerald-200 mb-4 flex items-center gap-2">
-                        <Building2 className="w-5 h-5" />
+                    <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-emerald-400" />
                         Balance Sheet (Y1)
                       </h3>
                       <div className="space-y-2 text-sm">
@@ -4337,9 +4339,9 @@ export default function AdvancedQuoteBuilder({
                     </div>
 
                     {/* Cash Flow */}
-                    <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 border border-amber-500/30">
-                      <h3 className="text-lg font-bold text-amber-200 mb-4 flex items-center gap-2">
-                        <DollarSign className="w-5 h-5" />
+                    <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-amber-400" />
                         Cash Flow (Y1)
                       </h3>
                       <div className="space-y-2 text-sm">
@@ -4389,8 +4391,8 @@ export default function AdvancedQuoteBuilder({
                   </div>
 
                   {/* DSCR & Debt Schedule Chart (simplified table) */}
-                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700">
-                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
                       <Banknote className="w-5 h-5 text-amber-400" />
                       Debt Service Coverage Ratio (DSCR) by Year
                     </h3>
@@ -4443,7 +4445,8 @@ export default function AdvancedQuoteBuilder({
                           "Excel export coming soon! This will generate a full 25-year financial model workbook."
                         );
                       }}
-                      className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                      className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors"
+                      style={{ background: 'rgba(16,185,129,0.15)', color: 'rgb(52,211,153)', border: '1px solid rgba(16,185,129,0.3)' }}
                     >
                       <FileSpreadsheet className="w-5 h-5" />
                       Export to Excel
@@ -4455,7 +4458,8 @@ export default function AdvancedQuoteBuilder({
                           "PDF export coming soon! This will generate a bank-ready investment memo."
                         );
                       }}
-                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                      className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors"
+                      style={{ background: 'rgba(59,130,246,0.15)', color: 'rgb(96,165,250)', border: '1px solid rgba(59,130,246,0.3)' }}
                     >
                       <FileText className="w-5 h-5" />
                       Export to PDF
