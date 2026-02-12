@@ -368,43 +368,6 @@ export function SystemAddOnsCards({
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
-      {/* Stats Bar — compact data strip (intro is rendered by Step4OptionsV7) */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: 0,
-          padding: "14px 20px",
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 16,
-        }}
-      >
-        <StatCell
-          label="Annual Usage"
-          value={`${(annualUsageKwh / 1e6).toFixed(2)}M kWh`}
-          color="rgba(232,235,243,0.95)"
-        />
-        <Divider />
-        <StatCell
-          label="Sun Hours/Day"
-          value={`☀️ ${sunHours}`}
-          color="#fbbf24"
-        />
-        <Divider />
-        <StatCell
-          label="Peak Load"
-          value={`⚡ ${Math.round(peakLoadKW)} kW`}
-          color="rgba(232,235,243,0.95)"
-        />
-        <Divider />
-        <StatCell
-          label="Potential Savings"
-          value={fmtK(maxSolarSavings + maxEvRevenue) + "+/yr"}
-          color="#34d399"
-        />
-      </div>
-
       {/* Option Cards */}
       <div style={{ display: "grid", gap: 12 }}>
         {/* ── SOLAR ── */}

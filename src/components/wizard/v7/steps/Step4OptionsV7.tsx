@@ -13,12 +13,7 @@
  */
 
 import React, { useCallback } from "react";
-import {
-  Loader2,
-  Sun,
-  Zap,
-  Shield,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import type {
   WizardState as WizardV7State,
   WizardStep,
@@ -60,25 +55,21 @@ export default function Step4OptionsV7({ state, actions }: Props) {
   return (
     <div className="max-w-5xl mx-auto space-y-5">
 
-      {/* ── Supabase-style inline intro ── */}
-      <div className="space-y-3">
-        <p className="text-[15px] leading-relaxed text-slate-300">
-          Based on your <span className="text-purple-400 font-semibold">{industryLabel}</span> profile
+      {/* ── Inline guidance ── */}
+      <div className="space-y-2.5">
+        <p className="text-sm leading-relaxed text-slate-400">
+          Optional add-ons for your{" "}
+          <span className="text-slate-200 font-medium">{industryLabel}</span> site
           {peakKW > 0 && (
-            <> with <span className="text-white font-semibold">~{Math.round(peakKW)} kW</span> peak demand</>
-          )}, Merlin has pre-configured three optional add-ons below.
-          Each one shows tiered options — pick a tier that fits your budget, or skip entirely.
+            <span className="text-slate-500">{" "}· {Math.round(peakKW)} kW peak</span>
+          )}
+          {data.peakSunHours > 0 && (
+            <span className="text-slate-500">{" "}· {data.peakSunHours} sun hrs/day</span>
+          )}
         </p>
-
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-          <span className="inline-flex items-center gap-1"><Sun className="w-3 h-3 text-amber-400" /> Solar offsets energy costs</span>
-          <span className="text-slate-700">·</span>
-          <span className="inline-flex items-center gap-1"><Zap className="w-3 h-3 text-cyan-400" /> EV chargers generate revenue</span>
-          <span className="text-slate-700">·</span>
-          <span className="inline-flex items-center gap-1"><Shield className="w-3 h-3 text-red-400" /> Generators protect uptime</span>
-          <span className="text-slate-700">·</span>
-          <span className="text-slate-500">All optional — skip to continue</span>
-        </div>
+        <p className="text-xs text-slate-500">
+          Toggle any card to include it, choose a tier, or skip to continue.
+        </p>
       </div>
 
       {/* Pricing status indicator */}
