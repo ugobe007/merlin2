@@ -105,27 +105,6 @@ function Button({
   );
 }
 
-function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "6px 12px",
-        borderRadius: 999,
-        background: "rgba(34,197,94,0.15)",
-        border: "1px solid rgba(34,197,94,0.3)",
-        fontSize: 12,
-        color: DARK.successGreen,
-        fontWeight: 500,
-      }}
-    >
-      {children}
-    </span>
-  );
-}
-
 /**
  * Build the display list from INDUSTRY_META (SSOT).
  * Order is explicit — we control the grid position here, not in the registry.
@@ -180,26 +159,22 @@ export default function Step2IndustryV7({ state, actions }: Props) {
       }}
     >
       <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 20 }}>
-        {/* Header Card */}
-        <Card>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-0.5px", color: DARK.textPrimary }}>
-                Choose Your Industry
-              </div>
-              <div style={{ marginTop: 8, fontSize: 16, color: DARK.textSecondary }}>
-                Select the industry that best describes your facility so we can customize your energy recommendations.
-              </div>
+        {/* Inline guidance */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 14, color: DARK.textSecondary, lineHeight: 1.6 }}>
+              Select your industry
+              <span style={{ color: "rgba(232,235,243,0.25)", margin: "0 8px" }}>·</span>
+              <span style={{ fontSize: 13, color: "rgba(232,235,243,0.35)" }}>📍 {locationLine}</span>
             </div>
-            <Pill>📍 {locationLine}</Pill>
+            <div style={{ fontSize: 12, color: "rgba(232,235,243,0.35)", marginTop: 4 }}>
+              This determines your facility's energy profile and custom questions.
+            </div>
           </div>
-
-          <div style={{ marginTop: 16 }}>
-            <Button onClick={actions.goBack} subtle>
-              ← Back to location
-            </Button>
-          </div>
-        </Card>
+          <Button onClick={actions.goBack} subtle>
+            ← Back
+          </Button>
+        </div>
 
         {/* Industries Grid */}
         <Card>
