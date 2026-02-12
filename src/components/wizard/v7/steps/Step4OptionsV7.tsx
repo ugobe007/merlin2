@@ -6,18 +6,18 @@
  *
  * Flow: Step 3 (Profile) → Step 4 (Options) → Step 5 (MagicFit)
  *
- * SSOT: SystemAddOnsCards handles all calculation via step4PreviewService.
- * This component only handles layout and navigation.
- *
- * Updated Feb 11, 2026: Always render cards (no peakKW gate) — pricing runs
- * async after step3 submit, so peakKW may not be available immediately.
- * SystemAddOnsCards has its own fallback (300 kW default).
+ * Updated Feb 11, 2026:
+ * - Pulls all data from Merlin Memory (not state.quote file paths)
+ * - Supabase-style inline intro text at top
+ * - Cards render in full expanded display by default
  */
 
 import React, { useCallback } from "react";
 import {
-  Sparkles,
   Loader2,
+  Sun,
+  Zap,
+  Shield,
 } from "lucide-react";
 import type {
   WizardState as WizardV7State,
@@ -28,6 +28,7 @@ import type {
 import { DEFAULT_ADD_ONS } from "@/wizard/v7/hooks/useWizardV7";
 import { SystemAddOnsCards } from "./SystemAddOnsCards";
 import { useMerlinData } from "@/wizard/v7/memory";
+import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 
 type Props = {
   state: WizardV7State;
@@ -39,7 +40,7 @@ type Props = {
 };
 
 export default function Step4OptionsV7({ state, actions }: Props) {
-  // ✅ MERLIN MEMORY: Read cross-step data from Memory first, fall back to state
+  // ✅ MERLIN MEMORY: All data from Memory — no direct state.quote reads
   const data = useMerlinData(state);
   const pricingStatus: PricingStatus = state.pricingStatus ?? "idle";
 
@@ -51,25 +52,33 @@ export default function Step4OptionsV7({ state, actions }: Props) {
     return { ok: true };
   }, [actions]);
 
-  const peakKW = data.peakLoadKW || state.quote?.peakLoadKW || 0;
+  const peakKW = data.peakLoadKW;
+  const industryMeta = getIndustryMeta(data.industry);
+  const industryLabel = (industryMeta.label as string) || "Commercial";
   const isPricingPending = pricingStatus === "pending" || pricingStatus === "idle";
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-black text-white flex items-center gap-2.5">
-          <Sparkles className="w-6 h-6 text-purple-400" />
-          Enhance Your System
-        </h1>
-        <p className="text-slate-400 text-sm mt-1.5">
-          {peakKW > 0
-            ? `Your facility uses ~${Math.round(peakKW)} kW peak. Adding solar or backup generation can improve savings and resilience.`
-            : "Add solar panels, backup generators, or EV chargers to maximize your investment."}
+
+      {/* ── Supabase-style inline intro ── */}
+      <div className="space-y-3">
+        <p className="text-[15px] leading-relaxed text-slate-300">
+          Based on your <span className="text-purple-400 font-semibold">{industryLabel}</span> profile
+          {peakKW > 0 && (
+            <> with <span className="text-white font-semibold">~{Math.round(peakKW)} kW</span> peak demand</>
+          )}, Merlin has pre-configured three optional add-ons below.
+          Each one shows tiered options — pick a tier that fits your budget, or skip entirely.
         </p>
-        <p className="text-slate-500 text-xs mt-1">
-          These are <strong className="text-slate-400">optional</strong> — you can skip to see Merlin's recommendations.
-        </p>
+
+        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+          <span className="inline-flex items-center gap-1"><Sun className="w-3 h-3 text-amber-400" /> Solar offsets energy costs</span>
+          <span className="text-slate-700">·</span>
+          <span className="inline-flex items-center gap-1"><Zap className="w-3 h-3 text-cyan-400" /> EV chargers generate revenue</span>
+          <span className="text-slate-700">·</span>
+          <span className="inline-flex items-center gap-1"><Shield className="w-3 h-3 text-red-400" /> Generators protect uptime</span>
+          <span className="text-slate-700">·</span>
+          <span className="text-slate-500">All optional — skip to continue</span>
+        </div>
       </div>
 
       {/* Pricing status indicator */}
@@ -80,13 +89,14 @@ export default function Step4OptionsV7({ state, actions }: Props) {
         </div>
       )}
 
-      {/* System Add-Ons Cards — always render (SystemAddOnsCards has its own fallbacks) */}
+      {/* System Add-Ons Cards — pulls from Merlin Memory via merlinData prop */}
       <SystemAddOnsCards
         state={state}
         currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
         onRecalculate={handleAddOnsConfirmed}
         pricingStatus={pricingStatus}
         showGenerateButton={false}
+        merlinData={data}
       />
 
       {/* Navigation handled by shell bottom nav — "See MagicFit →" */}
