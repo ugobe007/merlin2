@@ -4,7 +4,9 @@
  * Conversion flow:
  * - ZIP/postal typed → progressive intel hydration (primeLocationIntel)
  * - Optional business name/address → submitLocation(rawInput, businessInfo)
- * - If businessCard produced → explicit confirm/skip gate (SSOT)
+ * - Business auto-confirmed on search (no confirm/skip gate)
+ * - Industry inferred inline during submitLocation when business provided
+ * - Goals modal opens after location confirmed
  *
  * IMPORTANT:
  * - No step indexing assumptions (0 vs 1).
@@ -50,8 +52,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
     primeLocationIntel,
     toggleGoal,
     confirmGoals,
-    confirmBusiness,
-    skipBusiness,
+    // skipBusiness removed Feb 12 (auto-confirm on search)
     setBusinessDraft,
     setLocationConfirmed,
   } = actions;
@@ -66,50 +67,20 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
 
   const zipDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Scroll business confirm into view when a card appears
-  useEffect(() => {
-    if (state.businessCard && !state.businessConfirmed) {
-      requestAnimationFrame(() => {
-        document.getElementById("business-confirm-anchor")?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      });
-    }
-  }, [state.businessCard, state.businessConfirmed]);
+  // ✅ FIX Feb 12: Business auto-confirms on search. No confirm gate needed.
+  // Goals modal opens when locationConfirmed && !goalsConfirmed (single path).
 
-  // ✅ FIX Feb 11: Goals modal is triggered via TWO paths:
-  //
-  // PATH 1 (ZIP-only): User clicks Continue → submitLocation → returns early → auto-open
-  //   locationConfirmed=true, no business card, goalsConfirmed=false → open
-  //
-  // PATH 2 (business): User confirms business → sees card → clicks Continue → handleNext
-  //   dispatches REQUEST_GOALS_MODAL → goalsModalRequested=true → open
-  //
-  // Auto-open ONLY fires for non-business path. Business path requires explicit Continue.
-  const businessPending = !!(state.businessCard && !state.businessConfirmed);
-  const hasOrHadBusiness = !!(state.businessCard || state.businessConfirmed);
-
-  // PATH 1: Auto-open for ZIP-only flow (no business card ever existed)
+  // Auto-open goals modal when location is confirmed and goals aren't set
   useEffect(() => {
     if (
       state.locationConfirmed &&
       !state.goalsConfirmed &&
       !showGoalsModal &&
-      !businessPending &&
-      !state.isBusy &&
-      !hasOrHadBusiness // Only auto-open if no business flow
+      !state.isBusy
     ) {
       setShowGoalsModal(true);
     }
-  }, [state.locationConfirmed, state.goalsConfirmed, showGoalsModal, businessPending, state.isBusy, hasOrHadBusiness]);
-
-  // PATH 2: Explicit Continue click triggers goals modal (business flow)
-  useEffect(() => {
-    if (state.goalsModalRequested && !showGoalsModal && !state.goalsConfirmed) {
-      setShowGoalsModal(true);
-    }
-  }, [state.goalsModalRequested, showGoalsModal, state.goalsConfirmed]);
+  }, [state.locationConfirmed, state.goalsConfirmed, showGoalsModal, state.isBusy]);
 
   // Rehydrate business fields from SSOT draft (only if UI empty)
   useEffect(() => {
@@ -190,6 +161,8 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
             data={state.businessCard}
             showIndustryInference={true}
             onEdit={() => {
+              // Pre-fill search fields and un-confirm to re-open search form
+              // SET_BUSINESS_DRAFT resets businessConfirmed: false in the reducer
               const n = state.businessCard?.name ?? "";
               const a = state.businessCard?.address ?? "";
               setBusinessValue(n);
@@ -677,108 +650,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
         </div>
       )}
 
-      <div id="business-confirm-anchor" style={{ height: 1, width: 1, opacity: 0 }} />
-
-      {/* Business card + confirmation gate — ONLY when not yet confirmed */}
-      {state.businessCard && !state.businessConfirmed && (
-        <BusinessProfileCard
-          data={state.businessCard}
-          showIndustryInference={true}
-          onEdit={() => {
-            const n = state.businessCard?.name ?? "";
-            const a = state.businessCard?.address ?? "";
-            setBusinessValue(n);
-            setAddressValue(a);
-            setBusinessDraft({ name: n, address: a });
-          }}
-        />
-      )}
-
-      {/* Business confirmation gate — ONLY when not yet confirmed */}
-      {state.businessCard && !state.businessConfirmed && (
-        <div
-          style={{
-            padding: 20,
-            borderRadius: 16,
-            background: "rgba(139, 92, 246, 0.08)",
-            border: "1px solid rgba(139, 92, 246, 0.25)",
-            boxShadow: "0 4px 20px rgba(139, 92, 246, 0.15)",
-          }}
-        >
-          <div style={{ fontSize: 15, fontWeight: 800, color: "rgba(232, 235, 243, 0.95)", marginBottom: 8 }}>
-            Is this your business?
-          </div>
-
-          <div style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.6)", marginBottom: 16, lineHeight: 1.5 }}>
-            Confirming helps us personalize your savings analysis with industry-specific defaults.
-          </div>
-
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={() => confirmBusiness(true)}
-              disabled={state.isBusy}
-              style={{
-                flex: 1,
-                minWidth: 140,
-                padding: "12px 20px",
-                borderRadius: 12,
-                border: "none",
-                background: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
-                boxShadow: "0 4px 16px rgba(139, 92, 246, 0.4)",
-                color: "#fff",
-                fontSize: 14,
-                fontWeight: 900,
-                cursor: state.isBusy ? "not-allowed" : "pointer",
-                opacity: state.isBusy ? 0.6 : 1,
-              }}
-            >
-              ✓ Yes, this is correct
-            </button>
-
-            <button
-              type="button"
-              onClick={() => skipBusiness()}
-              disabled={state.isBusy}
-              style={{
-                flex: 1,
-                minWidth: 140,
-                padding: "12px 20px",
-                borderRadius: 12,
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                background: "rgba(255, 255, 255, 0.05)",
-                color: "rgba(232, 235, 243, 0.85)",
-                fontSize: 14,
-                fontWeight: 800,
-                cursor: state.isBusy ? "not-allowed" : "pointer",
-                opacity: state.isBusy ? 0.6 : 1,
-              }}
-            >
-              Skip — I&apos;ll choose manually
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ✅ Business confirmed: compact inline indicator (full card is at top) */}
-      {state.businessConfirmed && state.businessCard && (
-        <div
-          style={{
-            padding: "10px 16px",
-            borderRadius: 12,
-            background: "rgba(74, 222, 128, 0.06)",
-            border: "1px solid rgba(74, 222, 128, 0.18)",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <span style={{ color: "#4ade80", fontWeight: 900, fontSize: 13 }}>✓</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(232,235,243,0.7)" }}>
-            {state.businessCard.name} — confirmed
-          </span>
-        </div>
-      )}
+      {/* Business card shown at top when confirmed — search form collapses */}
 
       {/* ✅ Action card: Industry detected + Goals CTA — must be visually prominent */}
       {(canSkipIndustry || (state.locationConfirmed && !state.goalsConfirmed)) && (

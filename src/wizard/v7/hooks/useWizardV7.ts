@@ -1596,16 +1596,12 @@ function reduce(state: WizardState, intent: Intent): WizardState {
     case "SET_GOALS_CONFIRMED": {
       const goalsConfirmed = intent.confirmed;
       
-      // ✅ FIX Feb 11: Step 1 sub-gates — do NOT auto-advance away from location
-      // while internal sub-gates are pending
+      // ✅ FIX Feb 12: Business is auto-confirmed on search, so no businessPending gate needed
       const onLocationStep = state.step === "location";
       const locationReady = state.locationConfirmed === true;
       
-      // Sub-gate 1: If business card exists but hasn't been confirmed/skipped, wait
-      const businessPending = !!(state.businessCard && !state.businessConfirmed);
-      
-      // Only advance if all Step 1 sub-gates pass
-      const canAdvance = goalsConfirmed && onLocationStep && locationReady && !businessPending;
+      // Advance when goals confirmed + location ready
+      const canAdvance = goalsConfirmed && onLocationStep && locationReady;
       
       // ✅ FIX Feb 11: Skip industry step when already locked AND template is loaded
       // Goals inform the wizard, they don't instruct it — routing is based on industry detection
@@ -1628,13 +1624,11 @@ function reduce(state: WizardState, intent: Intent): WizardState {
           notes: [
             ...state.debug.notes,
             goalsConfirmed
-              ? businessPending
-                ? "Goals confirmed - waiting for business confirmation"
-                : canAdvance
-                  ? skipIndustry
-                    ? "Goals confirmed - skipping industry (locked) → profile"
-                    : "Goals confirmed - advancing to industry step"
-                  : "Goals confirmed - waiting for location"
+              ? canAdvance
+                ? skipIndustry
+                  ? "Goals confirmed - skipping industry (locked) → profile"
+                  : "Goals confirmed - advancing to industry step"
+                : "Goals confirmed - waiting for location"
               : "Goals skipped",
           ],
         },
@@ -2944,10 +2938,10 @@ export function useWizardV7() {
             resolvedAt: Date.now(),
           };
           dispatch({ type: "SET_BUSINESS_CARD", card: newBusinessCard });
-          dispatch({ type: "SET_BUSINESS_CONFIRMED", confirmed: false }); // Reset confirmation
+          dispatch({ type: "SET_BUSINESS_CONFIRMED", confirmed: true }); // ✅ Auto-confirm (Feb 12): no friction gate
           dispatch({
             type: "DEBUG_NOTE",
-            note: `Business card created: ${newBusinessCard.name || newBusinessCard.address}`,
+            note: `Business card created + auto-confirmed: ${newBusinessCard.name || newBusinessCard.address}`,
           });
         }
 
@@ -3004,17 +2998,60 @@ export function useWizardV7() {
           });
         }
 
-        // ✅ FIX Jan 31: Check LOCAL newBusinessCard variable (not stale state)
-        // If we just created a business card, stay on Step 1 and show confirmation gate
+        // ✅ FIX Feb 12: Business is auto-confirmed on creation (no confirm gate).
+        // If we created a business card, run industry inference before stopping for goals.
         if (newBusinessCard) {
-          dispatch({
-            type: "DEBUG_NOTE",
-            note: "Business card detected - waiting for user confirmation before Step 2",
-          });
-          // Stay on Step 1 - UI should show confirmation modal/buttons
-          setBusy(false);
-          abortRef.current = null;
-          return;
+          try {
+            setBusy(true, "Inferring industry...");
+            dispatch({ type: "DEBUG_TAG", lastApi: "inferIndustry" });
+            const inferred = await api.inferIndustry(location, controller.signal, newBusinessCard);
+
+            if (inferred.industry !== "auto" && inferred.confidence >= 0.85) {
+              dispatch({ type: "SET_INDUSTRY", industry: inferred.industry, locked: true });
+              dispatch({
+                type: "DEBUG_NOTE",
+                note: `Industry inferred from business: ${inferred.industry} (locked)`,
+              });
+
+              merlinMemory.set("industry", {
+                slug: inferred.industry,
+                inferred: true,
+                confidence: inferred.confidence,
+              });
+
+              // Preload step 3 template immediately
+              setBusy(true, "Loading profile template...");
+              dispatch({ type: "DEBUG_TAG", lastApi: "loadStep3Template" });
+              const template = await api.loadStep3Template(inferred.industry, controller.signal);
+              dispatch({ type: "SET_STEP3_TEMPLATE", template });
+              dispatch({
+                type: "SET_TEMPLATE_MODE",
+                mode: template.industry === "generic" ? "fallback" : "industry",
+              });
+
+              const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
+              dispatch({
+                type: "SET_STEP3_ANSWERS",
+                answers: baselineAnswers,
+                source: "template_default",
+              });
+
+              const intelPatch = api.buildIntelPatch(intel as LocationIntel);
+              if (Object.keys(intelPatch).length > 0) {
+                dispatch({ type: "PATCH_STEP3_ANSWERS", patch: intelPatch, source: "location_intel" });
+              }
+
+              const businessPatch = api.buildBusinessPatch(newBusinessCard);
+              if (Object.keys(businessPatch).length > 0) {
+                dispatch({ type: "PATCH_STEP3_ANSWERS", patch: businessPatch, source: "business_detection" });
+              }
+            } else {
+              dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
+            }
+          } catch (inferErr) {
+            console.warn("[V7] Industry inference failed (non-blocking):", inferErr);
+            dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
+          }
         }
 
         // ✅ GOALS MODAL CHECK (Feb 10, 2026)
