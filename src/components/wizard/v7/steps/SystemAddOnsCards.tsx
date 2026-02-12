@@ -409,8 +409,11 @@ export function SystemAddOnsCards({
                   <TierCard
                     key={k}
                     tier={o}
-                    isSelected={solarTier === k}
-                    onClick={() => setSolarTier(k)}
+                    isSelected={solarTier === k && selectedOptions.has("solar")}
+                    onClick={() => {
+                      setSolarTier(k);
+                      if (!selectedOptions.has("solar")) toggleOption("solar");
+                    }}
                     accent="amber"
                     metrics={[
                       { label: "Coverage", value: `${Math.round(o.coveragePercent * 100)}%` },
@@ -469,8 +472,11 @@ export function SystemAddOnsCards({
                   <TierCard
                     key={k}
                     tier={o}
-                    isSelected={evTier === k}
-                    onClick={() => setEvTier(k)}
+                    isSelected={evTier === k && selectedOptions.has("ev")}
+                    onClick={() => {
+                      setEvTier(k);
+                      if (!selectedOptions.has("ev")) toggleOption("ev");
+                    }}
                     accent="cyan"
                     sizeLabel={o.chargersLabel}
                     metrics={[
@@ -553,8 +559,11 @@ export function SystemAddOnsCards({
                   <TierCard
                     key={k}
                     tier={o}
-                    isSelected={generatorTier === k}
-                    onClick={() => setGeneratorTier(k)}
+                    isSelected={generatorTier === k && selectedOptions.has("generator")}
+                    onClick={() => {
+                      setGeneratorTier(k);
+                      if (!selectedOptions.has("generator")) toggleOption("generator");
+                    }}
                     accent="red"
                     metrics={[
                       { label: "Coverage", value: o.coverage },
