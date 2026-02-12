@@ -23,6 +23,10 @@ import {
   type PricingConfig,
 } from "@/wizard/v7/pricing/pricingBridge";
 
+// ✅ MERLIN MEMORY (Feb 11, 2026): Persistent store for cross-step data
+// Steps are momentary — memory is persistent. No more cross-step flag dependencies.
+import { merlinMemory } from "@/wizard/v7/memory";
+
 /**
  * ============================================================
  * Wizard V7 — SSOT Orchestrator (useWizardV7.ts)
@@ -2628,7 +2632,15 @@ export function useWizardV7() {
   const confirmGoals = useCallback((value: boolean) => {
     dispatch({ type: "SET_GOALS_CONFIRMED", confirmed: value });
     dispatch({ type: "DEBUG_NOTE", note: `Goals ${value ? "confirmed" : "skipped"} by user` });
-  }, []);
+
+    // ✅ MERLIN MEMORY (Feb 11, 2026): Persist goals
+    if (value) {
+      merlinMemory.set("goals", {
+        selected: state.goals,
+        confirmedAt: Date.now(),
+      });
+    }
+  }, [state.goals]);
 
   /**
    * toggleSolar - Toggle solar add-on
@@ -2912,6 +2924,26 @@ export function useWizardV7() {
         // ✅ NOTE: locationConfirmed was already set to true at the start of submitLocation
         // Intel failures (if any) are shown as status banners, not blockers
 
+        // ✅ MERLIN MEMORY (Feb 11, 2026): Persist location for downstream steps
+        merlinMemory.set("location", {
+          zip: location.postalCode || normalizedZip,
+          state: location.state,
+          city: location.city,
+          lat: location.lat,
+          lng: location.lng,
+          formattedAddress: location.formattedAddress,
+          utilityRate: (intel as Record<string, unknown>).utilityRate as number | undefined,
+          demandCharge: (intel as Record<string, unknown>).demandCharge as number | undefined,
+          peakSunHours: (intel as Record<string, unknown>).peakSunHours as number | undefined,
+        });
+        if (newBusinessCard) {
+          merlinMemory.set("business", {
+            name: newBusinessCard.name,
+            address: newBusinessCard.address,
+            placeId: newBusinessCard.placeId,
+          });
+        }
+
         // ✅ FIX Jan 31: Check LOCAL newBusinessCard variable (not stale state)
         // If we just created a business card, stay on Step 1 and show confirmation gate
         if (newBusinessCard) {
@@ -2951,6 +2983,13 @@ export function useWizardV7() {
           dispatch({
             type: "DEBUG_NOTE",
             note: `Industry inferred: ${inferred.industry} (locked)`,
+          });
+
+          // ✅ MERLIN MEMORY (Feb 11, 2026): Persist auto-inferred industry
+          merlinMemory.set("industry", {
+            slug: inferred.industry,
+            inferred: true,
+            confidence: inferred.confidence,
           });
           
           // ❌ REMOVED (Feb 10, 2026): Do NOT auto-confirm goals
@@ -3065,6 +3104,13 @@ export function useWizardV7() {
             note: `Industry inferred: ${inferred.industry} (locked)`,
           });
 
+          // ✅ MERLIN MEMORY (Feb 11, 2026): Persist business-inferred industry
+          merlinMemory.set("industry", {
+            slug: inferred.industry,
+            inferred: true,
+            confidence: inferred.confidence,
+          });
+
           // Preload step 3 template immediately
           setBusy(true, "Loading profile template...");
           dispatch({ type: "DEBUG_TAG", lastApi: "loadStep3Template" });
@@ -3150,6 +3196,12 @@ export function useWizardV7() {
         setBusy(true, "Loading profile template...");
         dispatch({ type: "SET_INDUSTRY", industry, locked: false });
         dispatch({ type: "DEBUG_TAG", lastApi: "loadStep3Template" });
+
+        // ✅ MERLIN MEMORY (Feb 11, 2026): Persist industry selection
+        merlinMemory.set("industry", {
+          slug: industry,
+          inferred: false,
+        });
 
         console.log("[V7 SSOT] selectIndustry: calling loadStep3Template for", industry);
         const template = await api.loadStep3Template(industry, controller.signal);
@@ -3911,6 +3963,19 @@ export function useWizardV7() {
     }
     // 1. Persist add-ons to state
     dispatch({ type: "SET_STEP4_ADDONS", addOns });
+
+    // ✅ MERLIN MEMORY (Feb 11, 2026): Persist add-ons configuration
+    merlinMemory.set("addOns", {
+      includeSolar: addOns.includeSolar,
+      solarKW: addOns.solarKW,
+      includeGenerator: addOns.includeGenerator,
+      generatorKW: addOns.generatorKW,
+      generatorFuelType: addOns.generatorFuelType,
+      includeWind: addOns.includeWind,
+      windKW: addOns.windKW,
+      updatedAt: Date.now(),
+    });
+
     // 2. Re-run pricing with new add-ons
     dispatch({ type: "PRICING_RETRY" });
     return runPricingSafe({
@@ -4184,6 +4249,24 @@ export function useWizardV7() {
         dispatch({ type: "SUBMIT_STEP3_SUCCESS" });
         console.log("[V7] submitStep3 SUCCESS dispatched → reducer sets step='options'");
         console.log("[submitStep3] end -> setting step", { nextStep: "options" });
+
+        // ✅ MERLIN MEMORY (Feb 11, 2026): Persist profile + sizing for Steps 4-6
+        const quoteOutput = state.quote;
+        merlinMemory.set("profile", {
+          answers: answers as Record<string, unknown>,
+          peakLoadKW: quoteOutput?.peakLoadKW ?? 0,
+          avgLoadKW: quoteOutput?.baseLoadKW,
+          energyKWhPerDay: quoteOutput?.energyKWhPerDay,
+        });
+        if (quoteOutput?.bessKWh) {
+          merlinMemory.set("sizing", {
+            bessKWh: quoteOutput.bessKWh,
+            bessKW: quoteOutput.bessKW ?? 0,
+            durationHours: quoteOutput.durationHours ?? 4,
+            solarKW: quoteOutput.solarKW,
+            generatorKW: quoteOutput.generatorKW,
+          });
+        }
 
         // ✅ Run pricing in background (non-blocking)
         // MagicFit will use these results to generate 3 tiers
@@ -4755,6 +4838,22 @@ export function useWizardV7() {
     updateQuote: useCallback((partial: Partial<QuoteOutput>) => {
       const merged: QuoteOutput = { ...state.quote, ...partial };
       dispatch({ type: "SET_QUOTE", quote: merged });
+
+      // ✅ MERLIN MEMORY (Feb 11, 2026): Persist quote snapshot
+      merlinMemory.set("quote", {
+        peakLoadKW: merged.peakLoadKW,
+        bessKWh: merged.bessKWh,
+        bessMW: merged.bessKW ? merged.bessKW / 1000 : undefined,
+        capexUSD: merged.capexUSD,
+        totalCost: merged.capexUSD,
+        netCost: merged.capexUSD,
+        annualSavingsUSD: merged.annualSavingsUSD,
+        annualSavings: merged.annualSavingsUSD,
+        paybackYears: merged.paybackYears ?? merged.roiYears,
+        npv: merged.npv,
+        irr: merged.irr,
+        generatedAt: Date.now(),
+      });
     }, [state.quote]),
 
     // misc
