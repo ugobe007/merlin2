@@ -61,6 +61,8 @@ import merlinImage from "../assets/images/new_profile_merlin.png";
 import { DocumentUploadZone } from "./upload/DocumentUploadZone";
 import type { ExtractedSpecsData } from "@/services/openAIExtractionService";
 import type { ParsedDocument } from "@/services/documentParserService";
+import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
+import ProQuoteFinancialModal, { type ProQuoteFinancialData } from "@/components/shared/ProQuoteFinancialModal";
 import { ProjectInfoForm } from "./ProjectInfoForm";
 import { supabase } from "../services/supabaseClient";
 import {
@@ -138,6 +140,8 @@ export default function AdvancedQuoteBuilder({
   const [showQuotePreview, setShowQuotePreview] = useState(false);
   const [previewFormat, setPreviewFormat] = useState<"word" | "excel">("word");
   const [showWelcomePopup, setShowWelcomePopup] = useState(true); // Welcome popup for first-time users
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showFinancialSummary, setShowFinancialSummary] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [projectInfo, setProjectInfo] = useState<{
@@ -950,6 +954,17 @@ export default function AdvancedQuoteBuilder({
                   {/* Quick Access Buttons */}
                   <div className="hidden lg:flex items-center gap-3">
                     <button
+                      onClick={() => setShowHowItWorks(true)}
+                      className="group flex items-center gap-2 rounded-full px-4 py-2 transition-all duration-200 hover:scale-105"
+                      style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.2)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.1)'; }}
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs font-semibold text-amber-300">How It Works</span>
+                    </button>
+
+                    <button
                       onClick={() => {
                         setViewMode("custom-config");
                         setTimeout(() => {
@@ -1510,6 +1525,22 @@ export default function AdvancedQuoteBuilder({
 
                 {/* Quick Actions */}
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowHowItWorks(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span className="hidden sm:inline">How It Works</span>
+                  </button>
+                  <button
+                    onClick={() => setShowFinancialSummary(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                    style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#34d399' }}
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    <span className="hidden sm:inline">Financial Summary</span>
+                  </button>
                   <button
                     onClick={() => setViewMode("professional-model")}
                     className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-sm font-medium transition-all border border-amber-500/40"
@@ -4470,6 +4501,62 @@ export default function AdvancedQuoteBuilder({
             </div>
           </div>
         )}
+
+        {/* ═══ PROQUOTE MODALS ═══ */}
+        <ProQuoteHowItWorksModal
+          isOpen={showHowItWorks}
+          onClose={() => setShowHowItWorks(false)}
+          onOpenProQuote={() => {
+            setShowHowItWorks(false);
+            setViewMode("custom-config");
+          }}
+        />
+
+        <ProQuoteFinancialModal
+          isOpen={showFinancialSummary}
+          onClose={() => setShowFinancialSummary(false)}
+          systemLabel={`${storageSizeMW.toFixed(1)} MW / ${durationHours}h BESS${solarMW > 0 ? ` + ${(solarMW * 1000).toFixed(0)} kW Solar` : ""}${generatorMW > 0 ? ` + ${(generatorMW * 1000).toFixed(0)} kW Gen` : ""}`}
+          data={{
+            totalEquipmentCost: financialMetrics?.equipmentCost,
+            installationCost: financialMetrics?.installationCost,
+            totalProjectCost: financialMetrics?.totalProjectCost ?? localSystemCost,
+            netCost: financialMetrics?.netCost,
+            itcCredit: financialMetrics?.taxCredit,
+            itcRate: financialMetrics?.taxCredit && financialMetrics?.totalProjectCost
+              ? financialMetrics.taxCredit / financialMetrics.totalProjectCost
+              : 0.30,
+            annualSavings: estimatedAnnualSavings,
+            paybackYears,
+            npv: financialMetrics?.npv,
+            irr: financialMetrics?.irr,
+            roi25Year: financialMetrics?.roi25Year,
+            lcoe: financialMetrics?.levelizedCostOfStorage,
+            equipmentBreakdown: financialMetrics ? [
+              { label: "Battery Storage", cost: (financialMetrics.equipmentCost ?? 0) * 0.55, notes: `${storageSizeMW.toFixed(1)} MW × ${durationHours}h LFP` },
+              { label: "Power Conversion (PCS)", cost: (financialMetrics.equipmentCost ?? 0) * 0.18, notes: `Inverters, switchgear` },
+              { label: "Balance of System", cost: (financialMetrics.equipmentCost ?? 0) * 0.12, notes: `BMS, enclosure, cabling` },
+              { label: "EMS / Controls", cost: (financialMetrics.equipmentCost ?? 0) * 0.08, notes: `Energy management software` },
+              { label: "Transformer / Interconnect", cost: (financialMetrics.equipmentCost ?? 0) * 0.07, notes: `Grid connection` },
+            ] : undefined,
+            cashFlowProjection: estimatedAnnualSavings > 0 ? Array.from({ length: 10 }, (_, i) => {
+              const yr = i + 1;
+              const annualEsc = estimatedAnnualSavings * Math.pow(1.025, i);
+              return {
+                year: yr,
+                savings: Math.round(annualEsc),
+                cumulative: Math.round(
+                  Array.from({ length: yr }, (__, j) => estimatedAnnualSavings * Math.pow(1.025, j))
+                    .reduce((a, b) => a + b, 0) - (financialMetrics?.netCost ?? localSystemCost)
+                ),
+              };
+            }) : undefined,
+            sensitivity: [
+              { variable: "Electricity Rate", low: paybackYears * 1.25, base: paybackYears, high: paybackYears * 0.8, unit: "yrs" },
+              { variable: "Equipment Cost", low: paybackYears * 0.85, base: paybackYears, high: paybackYears * 1.15, unit: "yrs" },
+              { variable: "Battery Degradation", low: paybackYears * 0.95, base: paybackYears, high: paybackYears * 1.12, unit: "yrs" },
+            ],
+          } satisfies ProQuoteFinancialData}
+        />
       </div>
     </div>
   );
