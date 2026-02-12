@@ -1058,9 +1058,9 @@ export default function Step3ProfileV7Curated(props: Props) {
       {/* Questions */}
       <div className="space-y-4">{visibleQuestions.map((q, idx) => renderQuestion(q, idx))}</div>
 
-      {/* Continue Button */}
+      {/* Continue — single clean flow (Feb 11, 2026) */}
       <div className="mt-6 flex flex-col items-end gap-3">
-        {/* Confirmation banner — wizard checks with user before proceeding */}
+        {/* Confirmation banner — only when defaults were auto-filled and not yet reviewed */}
         {isComplete && defaultFilledIds.size > 0 && !defaultsReviewed && (
           <div
             className="w-full rounded-xl border border-cyan-500/30 p-4"
@@ -1081,7 +1081,6 @@ export default function Step3ProfileV7Curated(props: Props) {
                     type="button"
                     onClick={() => {
                       setDefaultsReviewed(true);
-                      // Immediately proceed to Step 4
                       if (actions?.submitStep3) {
                         void actions.submitStep3();
                       }
@@ -1106,66 +1105,28 @@ export default function Step3ProfileV7Curated(props: Props) {
           </div>
         )}
 
-        <button
-          type="button"
-          data-testid="step3-continue"
-          onClick={() => {
-            console.log("[Step3] Continue clicked", {
-              isComplete,
-              locationConfirmed: state.locationConfirmed,
-              goalsConfirmed: state.goalsConfirmed,
-              pricingStatus: state.pricingStatus,
-              defaultsReviewed,
-              autoFilledCount: defaultFilledIds.size,
-            });
-            
-            if (!state.locationConfirmed) {
-              console.warn("[Step3] ❌ Location not confirmed");
-              alert("⚠️ Please confirm your location first.\n\nClick 'Yes, this is correct' on Step 1.");
-              if (actions?.goBack) actions.goBack();
-              return;
-            }
-            
-            if (!state.goalsConfirmed) {
-              console.warn("[Step3] ❌ Goals not confirmed");
-              alert("⚠️ Please confirm your energy goals first.\n\nComplete the goals section on Step 1.");
-              if (actions?.goBack) actions.goBack();
-              return;
-            }
-            
-            // If answers were auto-filled and user hasn't reviewed yet,
-            // show the confirmation banner for the wizard to check with them
-            if (defaultFilledIds.size > 0 && !defaultsReviewed) {
-              return; // Banner is visible above — user must click "Looks good" or "Let me review"
-            }
-            
-            // User reviewed or no defaults — proceed to Step 4
-            if (actions?.submitStep3) {
-              void actions.submitStep3();
-            }
-          }}
-          disabled={!isComplete || state.pricingStatus === "pending"}
-          className={`
-            px-6 py-3 rounded-xl font-bold text-base transition-all
-            ${
-              isComplete && state.pricingStatus !== "pending"
-                ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 cursor-pointer"
-                : "bg-slate-800 text-slate-500 cursor-not-allowed"
-            }
-          `}
-        >
-          {defaultFilledIds.size > 0 && !defaultsReviewed ? "Review & Continue →" : "Continue to Options →"}
-        </button>
-        
-        {isComplete && !state.locationConfirmed && (
-          <p className="text-amber-400 text-xs">
-            ⚠️ Complete Step 1 first (location confirmation)
-          </p>
-        )}
-        {isComplete && state.locationConfirmed && !state.goalsConfirmed && (
-          <p className="text-amber-400 text-xs">
-            ⚠️ Complete Step 1 first (goals confirmation)
-          </p>
+        {/* Single Continue button — only shown when defaults reviewed (or no defaults) */}
+        {(defaultFilledIds.size === 0 || defaultsReviewed) && (
+          <button
+            type="button"
+            data-testid="step3-continue"
+            onClick={() => {
+              if (actions?.submitStep3) {
+                void actions.submitStep3();
+              }
+            }}
+            disabled={!isComplete || state.pricingStatus === "pending"}
+            className={`
+              px-6 py-3 rounded-xl font-bold text-base transition-all
+              ${
+                isComplete && state.pricingStatus !== "pending"
+                  ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 cursor-pointer"
+                  : "bg-slate-800 text-slate-500 cursor-not-allowed"
+              }
+            `}
+          >
+            Continue to Options →
+          </button>
         )}
       </div>
     </div>

@@ -4308,29 +4308,6 @@ export function useWizardV7() {
         setError({ code: "VALIDATION", message: `Please complete required fields: ${fieldNames}` });
         return;
       }
-      
-      if (missingIds.length > 0) {
-        // ✅ ENHANCED DEBUG: Log complete validation context
-        console.warn("[V7] submitStep3 blocked (SCHEMA validation)", {
-          effectiveIndustry,
-          reason: "Missing required fields",
-          missingIds,
-          answersCount: Object.keys(answers ?? {}).length,
-          templateQ: (state.step3Template as any)?.questions?.length,
-          schemaQ: schemaQuestionCount,
-          schemaRequiredCount: schemaRequiredIds.length,
-          step: state.step,
-          step3Complete: state.step3Complete,
-        });
-        
-        const fieldNames = missingIds.map((id) => {
-          const q = schema.questions.find((sq) => sq.id === id);
-          return q?.label || id;
-        }).join(", ");
-        
-        setError({ code: "VALIDATION", message: `Please complete required fields: ${fieldNames}` });
-        return;
-      }
 
       console.log("[V7] submitStep3 validation PASSED ✅", {
         effectiveIndustry,

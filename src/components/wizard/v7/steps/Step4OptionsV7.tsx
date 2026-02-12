@@ -15,8 +15,6 @@
 import React, { useCallback } from "react";
 import {
   Sparkles,
-  ArrowRight,
-  SkipForward,
 } from "lucide-react";
 import type {
   WizardState as WizardV7State,
@@ -50,10 +48,6 @@ export default function Step4OptionsV7({ state, actions }: Props) {
     return { ok: true };
   }, [actions]);
 
-  const handleContinue = useCallback(() => {
-    actions.goToStep("magicfit");
-  }, [actions]);
-
   const peakKW = data.peakLoadKW || state.quote?.peakLoadKW;
 
   return (
@@ -85,27 +79,7 @@ export default function Step4OptionsV7({ state, actions }: Props) {
         />
       )}
 
-      {/* Navigation — Sticky at bottom for visibility */}
-      <div className="sticky bottom-0 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent pt-6 pb-2 -mx-4 px-4">
-        <div className="flex items-center justify-between p-4 rounded-2xl border border-white/[0.06] bg-slate-900/80 backdrop-blur-sm">
-          <button
-            type="button"
-            onClick={handleContinue}
-            className="text-sm text-slate-400 hover:text-slate-300 flex items-center gap-1.5 transition-colors"
-          >
-            <SkipForward className="w-3.5 h-3.5" />
-            Skip — keep base system
-          </button>
-          <button
-            type="button"
-            onClick={handleContinue}
-            className="h-11 px-6 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30"
-          >
-            Continue to MagicFit
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+      {/* Navigation handled by shell bottom nav — "See MagicFit →" */}
     </div>
   );
 }

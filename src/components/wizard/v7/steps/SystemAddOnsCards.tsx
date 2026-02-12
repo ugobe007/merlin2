@@ -10,7 +10,7 @@
  * Feb 2026 — Restored from V6 OptionCard + TierCard design.
  */
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import type { SystemAddOns, PricingStatus, WizardState } from "@/wizard/v7/hooks/useWizardV7";
 import {
   calculateSolarPreview,
@@ -191,6 +191,46 @@ export function SystemAddOnsCards({
   const [generatorTier, setGeneratorTier] = useState<string>("standard");
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // ── Auto-apply add-on changes (Feb 11, 2026) ──
+  // When user toggles an option or changes a tier, auto-recalculate after a brief debounce
+  const autoApplyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstRenderRef = useRef(true);
+
+  useEffect(() => {
+    // Skip auto-apply on first render (initial state matches currentAddOns)
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+    if (!onRecalculate || busy || pricingStatus === "pending") return;
+
+    // Clear previous timer
+    if (autoApplyTimerRef.current) clearTimeout(autoApplyTimerRef.current);
+
+    autoApplyTimerRef.current = setTimeout(async () => {
+      const addOns: SystemAddOns = {
+        includeSolar: selectedOptions.has("solar"),
+        solarKW: selectedOptions.has("solar") ? (curSolar?.sizeKw ?? 0) : 0,
+        includeGenerator: selectedOptions.has("generator"),
+        generatorKW: selectedOptions.has("generator") ? (curGen?.sizeKw ?? 0) : 0,
+        generatorFuelType: curGen?.fuelType === "Diesel" ? "diesel" : "natural-gas",
+        includeWind: false,
+        windKW: 0,
+      };
+      if (selectedOptions.has("ev") && curEv) {
+        addOns.solarKW = Math.max(addOns.solarKW, curEv.totalPowerKw);
+      }
+      setBusy(true);
+      await onRecalculate(addOns);
+      setBusy(false);
+    }, 600);
+
+    return () => {
+      if (autoApplyTimerRef.current) clearTimeout(autoApplyTimerRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedOptions, solarTier, evTier, generatorTier]);
 
   // Derive inputs from V7 state
   const peakLoadKW = state.quote?.peakLoadKW ?? 300;
@@ -622,111 +662,7 @@ export function SystemAddOnsCards({
         </OptionCard>
       </div>
 
-      {/* ── Your Selections Summary ── */}
-      {(curSolar || curEv || curGen) && (
-        <div
-          style={{
-            padding: "18px 20px",
-            background: "linear-gradient(135deg, rgba(52,211,153,0.06), rgba(255,255,255,0.02), rgba(52,211,153,0.06))",
-            border: "1px solid rgba(52,211,153,0.2)",
-            borderRadius: 16,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              color: "#34d399",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              marginBottom: 14,
-            }}
-          >
-            📋 Your Selections
-          </div>
-          <div style={{ display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
-            {curSolar && (
-              <SelectionItem
-                label="Solar Array"
-                title={`${curSolar.sizeLabel} — ${curSolar.name}`}
-                value={`${fmtUSD(curSolar.annualSavings)}/year`}
-                valueColor="#34d399"
-              />
-            )}
-            {curEv && (
-              <SelectionItem
-                label="EV Charging"
-                title={`${curEv.chargersLabel} — ${curEv.name}`}
-                value={`${fmtUSD(curEv.monthlyRevenue)}/month`}
-                valueColor="#06b6d4"
-              />
-            )}
-            {curGen && (
-              <SelectionItem
-                label="Generator"
-                title={`${curGen.sizeLabel} — ${curGen.name}`}
-                value={curGen.coverage}
-                valueColor="#f87171"
-              />
-            )}
-            {tenYearValue > 0 && (
-              <div
-                style={{
-                  borderLeft: "2px solid rgba(52,211,153,0.3)",
-                  paddingLeft: 24,
-                  textAlign: "right",
-                  marginLeft: "auto",
-                }}
-              >
-                <div style={{ fontSize: 11, color: "rgba(232,235,243,0.5)" }}>
-                  Combined 10-Year Value
-                </div>
-                <div
-                  style={{
-                    fontSize: 28,
-                    fontWeight: 900,
-                    color: "#34d399",
-                    fontFamily: "Outfit, sans-serif",
-                  }}
-                >
-                  {fmtK(tenYearValue)}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Apply Button */}
-          {needsApply && (
-            <button
-              type="button"
-              onClick={handleApply}
-              disabled={busy || pricingStatus === "pending"}
-              style={{
-                width: "100%",
-                marginTop: 16,
-                padding: "12px 0",
-                borderRadius: 12,
-                border: "none",
-                background: busy
-                  ? "rgba(52,211,153,0.2)"
-                  : "linear-gradient(135deg, rgba(52,211,153,0.8), rgba(6,182,212,0.8))",
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 14,
-                cursor: busy ? "wait" : "pointer",
-                transition: "opacity 0.2s",
-                opacity: busy ? 0.6 : 1,
-                letterSpacing: "-0.2px",
-              }}
-            >
-              {busy 
-                ? (showGenerateButton ? "Generating Quote…" : "Updating Quote…")
-                : (showGenerateButton ? "Generate Quote →" : "Update Quote with Add-Ons →")
-              }
-            </button>
-          )}
-        </div>
-      )}
+      {/* ── Selections are confirmed via shell bottom nav — no re-confirmation needed ── */}
     </div>
   );
 }

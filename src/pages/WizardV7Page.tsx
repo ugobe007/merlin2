@@ -61,7 +61,7 @@ const NEXT_HINTS: Record<WizardStepId, string> = {
   location: "industry + load profile → savings estimate",
   industry: "load profile → savings estimate",
   profile: "options → MagicFit → quote",
-  options: "MagicFit recommendations → quote",
+  options: "MagicFit → quote",
   magicfit: "your final quote",
   results: "finalize your quote",
 };
@@ -71,7 +71,7 @@ const NEXT_LABELS: Record<WizardStepId, string> = {
   location: "Choose Industry →",
   industry: "Build Profile →",
   profile: "See Options →",
-  options: "Continue to MagicFit →",
+  options: "See MagicFit →",
   magicfit: "See My Quote →",
   results: "Done",
 };
