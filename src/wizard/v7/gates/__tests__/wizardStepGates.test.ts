@@ -12,6 +12,8 @@ import {
   gateLocation,
   gateIndustry,
   gateProfile,
+  gateOptions,
+  gateMagicFit,
   gateResults,
   getGateForStep,
   canProceedFromStep,
@@ -40,32 +42,42 @@ describe("gateLocation", () => {
     });
   });
 
-  it("should allow when ZIP is 5 digits", () => {
+  it("should allow when ZIP is 5 digits and confirmed", () => {
+    const state: WizardGateState = { locationRawInput: "90210", locationConfirmed: true };
+    expect(gateLocation(state)).toEqual({
+      canContinue: true,
+    });
+  });
+
+  it("should block when ZIP is 5 digits but NOT confirmed", () => {
     const state: WizardGateState = { locationRawInput: "90210" };
     expect(gateLocation(state)).toEqual({
-      canContinue: true,
+      canContinue: false,
+      reason: "zip-unconfirmed",
     });
   });
 
-  it("should allow when ZIP has non-digits but 5+ digits total", () => {
-    const state: WizardGateState = { locationRawInput: "90210-1234" };
+  it("should allow when ZIP has non-digits but 5+ digits total and confirmed", () => {
+    const state: WizardGateState = { locationRawInput: "90210-1234", locationConfirmed: true };
     expect(gateLocation(state)).toEqual({
       canContinue: true,
     });
   });
 
-  it("should allow when location.zip is set", () => {
+  it("should allow when location.zip is set and confirmed", () => {
     const state: WizardGateState = {
       location: { zip: "89052" },
+      locationConfirmed: true,
     };
     expect(gateLocation(state)).toEqual({
       canContinue: true,
     });
   });
 
-  it("should allow when location.postalCode is set", () => {
+  it("should allow when location.postalCode is set and confirmed", () => {
     const state: WizardGateState = {
       location: { postalCode: "89052" },
+      locationConfirmed: true,
     };
     expect(gateLocation(state)).toEqual({
       canContinue: true,
@@ -85,6 +97,7 @@ describe("gateLocation", () => {
   it("should NOT gate on industry (cross-step isolation)", () => {
     const state: WizardGateState = {
       locationRawInput: "90210",
+      locationConfirmed: true,
       industry: undefined, // industry missing should NOT affect location gate
     };
     expect(gateLocation(state)).toEqual({
@@ -95,6 +108,7 @@ describe("gateLocation", () => {
   it("should NOT gate on profile (cross-step isolation)", () => {
     const state: WizardGateState = {
       locationRawInput: "90210",
+      locationConfirmed: true,
       step3Complete: false, // profile incomplete should NOT affect location gate
     };
     expect(gateLocation(state)).toEqual({
@@ -256,6 +270,7 @@ describe("getGateForStep", () => {
   it("should dispatch to correct gate function", () => {
     const state: WizardGateState = {
       locationRawInput: "90210",
+      locationConfirmed: true,
       industry: "hotel",
       step3Complete: true,
     };
@@ -263,6 +278,8 @@ describe("getGateForStep", () => {
     expect(getGateForStep("location", state).canContinue).toBe(true);
     expect(getGateForStep("industry", state).canContinue).toBe(true);
     expect(getGateForStep("profile", state).canContinue).toBe(true);
+    expect(getGateForStep("options", state).canContinue).toBe(true);
+    expect(getGateForStep("magicfit", state).canContinue).toBe(true);
     expect(getGateForStep("results", state).canContinue).toBe(true);
   });
 
@@ -273,6 +290,9 @@ describe("getGateForStep", () => {
     expect(getGateForStep("industry", state).reason).toBe("industry-missing");
     // profile allows empty state
     expect(getGateForStep("profile", state).reason).toBeUndefined();
+    // options, magicfit, results never block
+    expect(getGateForStep("options", state).reason).toBeUndefined();
+    expect(getGateForStep("magicfit", state).reason).toBeUndefined();
     expect(getGateForStep("results", state).reason).toBeUndefined();
   });
 });
@@ -282,8 +302,19 @@ describe("getGateForStep", () => {
 // ============================================================================
 describe("canProceedFromStep", () => {
   it("should return boolean for gate result", () => {
-    const state: WizardGateState = { locationRawInput: "90210" };
+    const state: WizardGateState = { locationRawInput: "90210", locationConfirmed: true };
     expect(canProceedFromStep("location", state)).toBe(true);
+  });
+
+  it("should return false when locationConfirmed is missing", () => {
+    const state: WizardGateState = { locationRawInput: "90210" };
+    expect(canProceedFromStep("location", state)).toBe(false);
+  });
+
+  it("should work for options and magicfit steps", () => {
+    const state: WizardGateState = {};
+    expect(canProceedFromStep("options", state)).toBe(true);
+    expect(canProceedFromStep("magicfit", state)).toBe(true);
   });
 });
 
@@ -291,7 +322,9 @@ describe("getNextStep", () => {
   it("should return next step in order", () => {
     expect(getNextStep("location")).toBe("industry");
     expect(getNextStep("industry")).toBe("profile");
-    expect(getNextStep("profile")).toBe("results");
+    expect(getNextStep("profile")).toBe("options");
+    expect(getNextStep("options")).toBe("magicfit");
+    expect(getNextStep("magicfit")).toBe("results");
     expect(getNextStep("results")).toBe(null);
   });
 });
@@ -301,7 +334,9 @@ describe("getPreviousStep", () => {
     expect(getPreviousStep("location")).toBe(null);
     expect(getPreviousStep("industry")).toBe("location");
     expect(getPreviousStep("profile")).toBe("industry");
-    expect(getPreviousStep("results")).toBe("profile");
+    expect(getPreviousStep("options")).toBe("profile");
+    expect(getPreviousStep("magicfit")).toBe("options");
+    expect(getPreviousStep("results")).toBe("magicfit");
   });
 });
 
@@ -310,12 +345,21 @@ describe("getPreviousStep", () => {
 // ============================================================================
 describe("Gate Contract Enforcement", () => {
   it("location gate should NEVER check industry", () => {
-    // Even with invalid industry, location should pass if ZIP is valid
+    // Even with invalid industry, location should pass if ZIP is valid + confirmed
     const state: WizardGateState = {
       locationRawInput: "90210",
+      locationConfirmed: true,
       industry: undefined,
     };
     expect(gateLocation(state).canContinue).toBe(true);
+  });
+
+  it("options gate should NEVER block", () => {
+    expect(gateOptions().canContinue).toBe(true);
+  });
+
+  it("magicfit gate should NEVER block", () => {
+    expect(gateMagicFit().canContinue).toBe(true);
   });
 
   it("industry gate should NEVER check profile", () => {
