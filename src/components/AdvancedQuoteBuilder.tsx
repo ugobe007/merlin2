@@ -63,6 +63,7 @@ import type { ExtractedSpecsData } from "@/services/openAIExtractionService";
 import type { ParsedDocument } from "@/services/documentParserService";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
 import ProQuoteFinancialModal, { type ProQuoteFinancialData } from "@/components/shared/ProQuoteFinancialModal";
+import ProQuoteRunningCalculator from "@/components/ProQuoteRunningCalculator";
 import { ProjectInfoForm } from "./ProjectInfoForm";
 import { supabase } from "../services/supabaseClient";
 import {
@@ -142,6 +143,7 @@ export default function AdvancedQuoteBuilder({
   const [showWelcomePopup, setShowWelcomePopup] = useState(true); // Welcome popup for first-time users
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showFinancialSummary, setShowFinancialSummary] = useState(false);
+  const [showMobileCalc, setShowMobileCalc] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [projectInfo, setProjectInfo] = useState<{
@@ -1430,11 +1432,10 @@ export default function AdvancedQuoteBuilder({
                         key={tool.id}
                         onClick={"locked" in tool && tool.locked ? undefined : tool.action}
                         disabled={"locked" in tool && tool.locked}
-                        style={{ animationDelay: `${(index + 6) * 100}ms` }}
                         className={`group relative rounded-xl p-6 text-left transition-all duration-300 animate-fadeIn overflow-hidden ${
                           "locked" in tool && tool.locked ? "opacity-75 cursor-not-allowed" : "hover:-translate-y-1"
                         }`}
-                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+                        style={{ animationDelay: `${(index + 6) * 100}ms`, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
                         onMouseEnter={(e) => { if (!("locked" in tool) || !tool.locked) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; } }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
                       >
@@ -1603,75 +1604,7 @@ export default function AdvancedQuoteBuilder({
               </div>
             </div>
 
-            {/* ═══ LIVE FINANCIAL DASHBOARD BAR - Always Visible ═══ */}
-            <div className="sticky top-[100px] z-10 backdrop-blur-md" style={{ background: 'rgba(15,17,23,0.95)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="max-w-7xl mx-auto px-4 py-3">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  {/* Left: System Size */}
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <Battery className="w-5 h-5 text-purple-400" />
-                      <div>
-                        <p className="text-xs text-gray-500">Power</p>
-                        <p className="text-lg font-bold text-white">
-                          {storageSizeMW.toFixed(1)}{" "}
-                          <span className="text-sm text-purple-300">MW</span>
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-gray-600">×</div>
-                    <div>
-                      <p className="text-xs text-gray-500">Duration</p>
-                      <p className="text-lg font-bold text-white">
-                        {durationHours} <span className="text-sm text-indigo-300">hrs</span>
-                      </p>
-                    </div>
-                    <div className="text-gray-600">=</div>
-                    <div>
-                      <p className="text-xs text-gray-500">Capacity</p>
-                      <p className="text-lg font-bold text-emerald-400">
-                        {storageSizeMWh.toFixed(1)}{" "}
-                        <span className="text-sm text-emerald-300">MWh</span>
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Center: Key Metrics - ALL from SSOT */}
-                  <div className="flex items-center gap-4">
-                    <div className="px-4 py-2 bg-amber-500/10 rounded-lg border border-amber-500/30">
-                      <p className="text-xs text-amber-300">Est. Cost</p>
-                      <p className="text-lg font-bold text-amber-400">
-                        {isCalculating ? "..." : `$${(localSystemCost / 1000000).toFixed(2)}M`}
-                      </p>
-                    </div>
-                    <div className="px-4 py-2 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
-                      <p className="text-xs text-emerald-300">Payback</p>
-                      <p className="text-lg font-bold text-emerald-400">
-                        {isCalculating ? "..." : `${paybackYears.toFixed(1)} yrs`}
-                      </p>
-                    </div>
-                    <div className="px-4 py-2 bg-cyan-500/10 rounded-lg border border-cyan-500/30">
-                      <p className="text-xs text-cyan-300">$/kWh</p>
-                      <p className="text-lg font-bold text-cyan-400">
-                        {isCalculating
-                          ? "..."
-                          : `$${(localSystemCost / (storageSizeMWh * 1000)).toFixed(0)}`}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Right: Generate Quote Button */}
-                  <button
-                    onClick={() => setShowQuotePreview(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold transition-all"
-                    style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)' }}
-                  >
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    Generate Quote
-                  </button>
-                </div>
-              </div>
-            </div>
 
             {/* ═══ PROJECT INFO FORM - Account Creation ═══ */}
             <div className="max-w-7xl mx-auto px-4 py-6 relative z-0">
@@ -1692,9 +1625,11 @@ export default function AdvancedQuoteBuilder({
               />
             </div>
 
-            {/* ═══ MAIN CONFIGURATION FORM ═══ */}
-            <div className="max-w-7xl mx-auto px-4 py-6 relative z-0">
-              <div className="space-y-6">
+            {/* ═══ MAIN CONFIGURATION — 2-COLUMN: FORM + RUNNING CALCULATOR ═══ */}
+            <div className="max-w-[1440px] mx-auto px-4 py-6 relative z-0">
+              <div className="flex gap-6">
+                {/* LEFT COLUMN: Configuration Form */}
+                <div className="flex-1 min-w-0 space-y-6">
                 {/* ────────────────────────────────────────────────
                     SECTION: SYSTEM CONFIGURATION
                     ──────────────────────────────────────────────── */}
@@ -1721,10 +1656,15 @@ export default function AdvancedQuoteBuilder({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Power Capacity - Full Width Slider */}
                       <div className="lg:col-span-2 rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                          Power Capacity (MW)
-                        </label>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <label className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                            Power Capacity
+                          </label>
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-md" style={{ background: 'rgba(59,130,246,0.12)', color: '#60a5fa' }}>
+                            {(storageSizeMW * 1000).toFixed(0)} kW
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
                           <input
                             type="range"
                             min="0.1"
@@ -1732,32 +1672,36 @@ export default function AdvancedQuoteBuilder({
                             step="0.1"
                             value={storageSizeMW}
                             onChange={(e) => onStorageSizeChange(parseFloat(e.target.value))}
-                            className="flex-1 h-2 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                            style={{ background: 'rgba(255,255,255,0.1)' }}
+                            className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-blue-500"
+                            style={{ background: `linear-gradient(to right, #3b82f6 ${((storageSizeMW - 0.1) / 9.9) * 100}%, rgba(255,255,255,0.08) ${((storageSizeMW - 0.1) / 9.9) * 100}%)` }}
                           />
-                          <input
-                            type="number"
-                            value={storageSizeMW}
-                            onChange={(e) => onStorageSizeChange(parseFloat(e.target.value) || 0.1)}
-                            step="0.1"
-                            min="0.1"
-                            max="50"
-                            className="w-24 px-3 py-2 text-white rounded-lg text-center font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                          />
-                          <span style={{ color: 'rgba(255,255,255,0.35)' }} className="w-10">MW</span>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={storageSizeMW}
+                              onChange={(e) => onStorageSizeChange(parseFloat(e.target.value) || 0.1)}
+                              step="0.1"
+                              min="0.1"
+                              max="50"
+                              className="w-28 pl-3 pr-10 py-2.5 text-white rounded-lg text-right font-bold text-sm focus:ring-2 focus:ring-blue-500/50 focus:outline-none"
+                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.35)' }}>MW</span>
+                          </div>
                         </div>
-                        <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                          Max discharge power • {(storageSizeMW * 1000).toFixed(0)} kW
-                        </p>
                       </div>
 
                       {/* Duration - Full Width Slider */}
                       <div className="lg:col-span-2 rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                          Duration (Hours)
-                        </label>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <label className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                            Duration
+                          </label>
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-md" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}>
+                            {(storageSizeMW * durationHours).toFixed(1)} MWh total
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
                           <input
                             type="range"
                             min="0.5"
@@ -1765,22 +1709,23 @@ export default function AdvancedQuoteBuilder({
                             step="0.5"
                             value={durationHours}
                             onChange={(e) => onDurationChange(parseFloat(e.target.value))}
-                            className="flex-1 h-2 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                            style={{ background: 'rgba(255,255,255,0.1)' }}
+                            className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-indigo-500"
+                            style={{ background: `linear-gradient(to right, #6366f1 ${((durationHours - 0.5) / 11.5) * 100}%, rgba(255,255,255,0.08) ${((durationHours - 0.5) / 11.5) * 100}%)` }}
                           />
-                          <input
-                            type="number"
-                            value={durationHours}
-                            onChange={(e) => onDurationChange(parseFloat(e.target.value) || 0.5)}
-                            step="0.5"
-                            min="0.5"
-                            max="24"
-                            className="w-24 px-3 py-2 text-white rounded-lg text-center font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                          />
-                          <span style={{ color: 'rgba(255,255,255,0.35)' }} className="w-10">hrs</span>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={durationHours}
+                              onChange={(e) => onDurationChange(parseFloat(e.target.value) || 0.5)}
+                              step="0.5"
+                              min="0.5"
+                              max="24"
+                              className="w-28 pl-3 pr-10 py-2.5 text-white rounded-lg text-right font-bold text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.35)' }}>hrs</span>
+                          </div>
                         </div>
-                        <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>Discharge time at full power</p>
                       </div>
 
                       {/* Battery Chemistry */}
@@ -1966,58 +1911,72 @@ export default function AdvancedQuoteBuilder({
                   </div>
 
                   <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Utility Rate ($/kWh)
+                        <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                          Utility Rate
                         </label>
-                        <input
-                          type="number"
-                          value={utilityRate}
-                          onChange={(e) => setUtilityRate(parseFloat(e.target.value) || 0)}
-                          step="0.01"
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'rgba(251,191,36,0.6)' }}>$</span>
+                          <input
+                            type="number"
+                            value={utilityRate}
+                            onChange={(e) => setUtilityRate(parseFloat(e.target.value) || 0)}
+                            step="0.01"
+                            className="w-full pl-7 pr-14 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-amber-500/50 focus:outline-none"
+                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>/kWh</span>
+                        </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Demand Charge ($/kW)
+                        <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                          Demand Charge
                         </label>
-                        <input
-                          type="number"
-                          value={demandCharge}
-                          onChange={(e) => setDemandCharge(parseFloat(e.target.value) || 0)}
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'rgba(251,191,36,0.6)' }}>$</span>
+                          <input
+                            type="number"
+                            value={demandCharge}
+                            onChange={(e) => setDemandCharge(parseFloat(e.target.value) || 0)}
+                            className="w-full pl-7 pr-12 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-amber-500/50 focus:outline-none"
+                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>/kW</span>
+                        </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Cycles/Year
+                        <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                          Cycles / Year
                         </label>
-                        <input
-                          type="number"
-                          value={cyclesPerYear}
-                          onChange={(e) => setCyclesPerYear(parseFloat(e.target.value) || 1)}
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        />
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={cyclesPerYear}
+                            onChange={(e) => setCyclesPerYear(parseFloat(e.target.value) || 1)}
+                            className="w-full px-3 pr-14 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-amber-500/50 focus:outline-none"
+                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>cyc/yr</span>
+                        </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Warranty (Years)
+                        <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                          Warranty
                         </label>
-                        <input
-                          type="number"
-                          value={warrantyYears}
-                          onChange={(e) => setWarrantyYears(parseFloat(e.target.value) || 10)}
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        />
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={warrantyYears}
+                            onChange={(e) => setWarrantyYears(parseFloat(e.target.value) || 10)}
+                            className="w-full px-3 pr-12 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-amber-500/50 focus:outline-none"
+                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>years</span>
+                        </div>
                       </div>
                     </div>
 
@@ -2966,8 +2925,112 @@ export default function AdvancedQuoteBuilder({
                     </div>
                   </div>
                 </div>
+                </div>
+                {/* END LEFT COLUMN */}
+
+                {/* RIGHT COLUMN: Running Calculator (sticky) */}
+                <div className="hidden xl:block w-[320px] flex-shrink-0">
+                  <div className="sticky top-[120px]" style={{ maxHeight: 'calc(100vh - 140px)' }}>
+                    <div
+                      className="rounded-xl overflow-hidden flex flex-col"
+                      style={{
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        maxHeight: 'calc(100vh - 160px)',
+                      }}
+                    >
+                      <ProQuoteRunningCalculator
+                        storageSizeMW={storageSizeMW}
+                        durationHours={durationHours}
+                        solarIncluded={solarPVIncluded}
+                        solarCapacityKW={solarCapacityKW}
+                        windIncluded={windTurbineIncluded}
+                        windCapacityKW={windCapacityKW}
+                        fuelCellIncluded={fuelCellIncluded}
+                        fuelCellCapacityKW={fuelCellCapacityKW}
+                        dieselGenIncluded={dieselGenIncluded}
+                        dieselGenCapacityKW={dieselGenCapacityKW}
+                        naturalGasGenIncluded={naturalGasGenIncluded}
+                        naturalGasCapacityKW={naturalGasCapacityKW}
+                        utilityRate={utilityRate}
+                        demandCharge={demandCharge}
+                        chemistry={chemistry}
+                        useCase={useCase}
+                        totalKW={totalKW}
+                        maxAmpsAC={maxAmpsAC}
+                        maxAmpsDC={maxAmpsDC}
+                        systemVoltage={systemVoltage}
+                        dcVoltage={dcVoltage}
+                        numberOfInverters={numberOfInverters}
+                        inverterRating={inverterRating}
+                        financialMetrics={financialMetrics}
+                        isCalculating={isCalculating}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* ═══ MOBILE CALCULATOR TOGGLE (below xl breakpoint) ═══ */}
+            <button
+              onClick={() => setShowMobileCalc(true)}
+              className="xl:hidden fixed bottom-6 right-6 z-30 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl font-bold text-sm transition-all hover:scale-105"
+              style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', backdropFilter: 'blur(12px)' }}
+            >
+              <Calculator className="w-4 h-4" />
+              Calculator
+              {financialMetrics && (
+                <span className="ml-1 px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399' }}>
+                  ${((financialMetrics.totalProjectCost ?? 0) / 1_000_000).toFixed(1)}M
+                </span>
+              )}
+            </button>
+
+            {/* ═══ MOBILE CALCULATOR DRAWER ═══ */}
+            {showMobileCalc && (
+              <div className="xl:hidden fixed inset-0 z-50">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMobileCalc(false)} />
+                <div className="absolute right-0 top-0 bottom-0 w-[340px] max-w-[90vw] overflow-y-auto" style={{ background: '#0f1117', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span className="text-sm font-bold text-white">Running Calculator</span>
+                    <button
+                      onClick={() => setShowMobileCalc(false)}
+                      className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      <X className="w-4 h-4 text-white/50" />
+                    </button>
+                  </div>
+                  <ProQuoteRunningCalculator
+                    storageSizeMW={storageSizeMW}
+                    durationHours={durationHours}
+                    solarIncluded={solarPVIncluded}
+                    solarCapacityKW={solarCapacityKW}
+                    windIncluded={windTurbineIncluded}
+                    windCapacityKW={windCapacityKW}
+                    fuelCellIncluded={fuelCellIncluded}
+                    fuelCellCapacityKW={fuelCellCapacityKW}
+                    dieselGenIncluded={dieselGenIncluded}
+                    dieselGenCapacityKW={dieselGenCapacityKW}
+                    naturalGasGenIncluded={naturalGasGenIncluded}
+                    naturalGasCapacityKW={naturalGasCapacityKW}
+                    utilityRate={utilityRate}
+                    demandCharge={demandCharge}
+                    chemistry={chemistry}
+                    useCase={useCase}
+                    totalKW={totalKW}
+                    maxAmpsAC={maxAmpsAC}
+                    maxAmpsDC={maxAmpsDC}
+                    systemVoltage={systemVoltage}
+                    dcVoltage={dcVoltage}
+                    numberOfInverters={numberOfInverters}
+                    inverterRating={inverterRating}
+                    financialMetrics={financialMetrics}
+                    isCalculating={isCalculating}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
