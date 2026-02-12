@@ -94,6 +94,27 @@ function WizardV7Page() {
     console.log('[WizardV7] step =', state.step, 'locationConfirmed =', state.locationConfirmed, 'goalsConfirmed =', state.goalsConfirmed, 'isBusy =', state.isBusy);
   }, [state.step, state.locationConfirmed, state.goalsConfirmed, state.isBusy]);
 
+  // ✅ FIX Feb 11: Auto-advance from location when goals + location are both confirmed
+  // The SET_GOALS_CONFIRMED reducer should handle this, but it can fail if businessPending
+  // is unexpectedly true or other sub-gate conditions aren't met. This useEffect is the
+  // safety net that ensures the user ALWAYS advances after confirming goals.
+  useEffect(() => {
+    if (
+      state.step === "location" &&
+      state.locationConfirmed &&
+      state.goalsConfirmed &&
+      !state.isBusy
+    ) {
+      console.log("[WizardV7] Auto-advance: location + goals confirmed, navigating forward");
+      // If industry already inferred and locked, skip to profile
+      if (state.industryLocked && state.industry && state.industry !== "auto") {
+        wizard.goToStep("profile");
+      } else {
+        wizard.goToStep("industry");
+      }
+    }
+  }, [state.step, state.locationConfirmed, state.goalsConfirmed, state.isBusy, state.industryLocked, state.industry]);
+
   // Track gate validation issues for AI agent
   useEffect(() => {
     const sessionId = `v7-${Date.now()}`;
