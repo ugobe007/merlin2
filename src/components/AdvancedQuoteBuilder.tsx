@@ -1313,184 +1313,115 @@ export default function AdvancedQuoteBuilder({
               </div>
             )}
 
-            {/* Tool cards grid - Merlin themed */}
-            <div className="max-w-7xl mx-auto px-6 py-12">
-              {/* Section: Other Core Tools */}
-              <div className="mb-12">
-                <h3 className="text-xl font-semibold mb-6 text-white flex items-center gap-3">
-                  <Wrench className="w-5 h-5" style={{ color: '#fbbf24' }} />
-                  Configuration Tools
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Tool cards grid — Supabase dark design */}
+            <div className="max-w-7xl mx-auto px-6 pt-8 pb-16">
+
+              {/* ── Analysis & Reporting ── */}
+              <div className="mb-10">
+                <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                  Analysis &amp; Reporting
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {tools
                     .filter((t) => t.tier === "core" && t.id !== "custom-config")
-                    .map((tool, index) => (
+                    .map((tool) => (
                       <button
                         key={tool.id}
                         onClick={tool.action}
-                        style={{ animationDelay: `${index * 100}ms`, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
-                        className="group relative rounded-xl p-6 text-left transition-all duration-200 hover:-translate-y-1 animate-fadeIn overflow-hidden hover:border-white/15"
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                        className="group flex items-start gap-4 rounded-lg p-4 text-left transition-colors duration-150"
+                        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
                       >
-                        {/* Icon */}
-                        <div className="relative mb-4 inline-flex">
-                          <div className="p-3 rounded-lg" style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
-                            <div className="text-blue-400">{tool.icon}</div>
-                          </div>
+                        <div className="p-2 rounded-md flex-shrink-0" style={{ background: 'rgba(59,130,246,0.08)' }}>
+                          <div className="text-blue-400 [&>svg]:w-5 [&>svg]:h-5">{tool.icon}</div>
                         </div>
-
-                        {/* Content */}
-                        <h4 className="relative text-lg font-semibold mb-2 text-white">
-                          {tool.title}
-                        </h4>
-                        <p className="relative text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          {tool.description}
-                        </p>
-
-                        {/* Arrow */}
-                        <div className="relative mt-4 flex items-center transition-all" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                          <span className="text-xs font-semibold">Open Tool</span>
-                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-semibold text-white mb-0.5">{tool.title}</h4>
+                          <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{tool.description}</p>
                         </div>
+                        <ArrowRight className="w-4 h-4 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all" style={{ color: 'rgba(255,255,255,0.4)' }} />
                       </button>
                     ))}
                 </div>
               </div>
 
-              {/* Section: Professional Tools */}
-              <div className="mb-12">
-                <h3 className="text-xl font-semibold mb-6 text-white flex items-center gap-3">
-                  <Crown className="w-5 h-5" style={{ color: '#fbbf24' }} />
+              {/* ── Professional Tools ── */}
+              <div className="mb-10">
+                <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
                   Professional Tools
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {tools
                     .filter((t) => t.tier === "professional")
-                    .map((tool, index) => (
+                    .map((tool) => (
                       <button
                         key={tool.id}
                         onClick={tool.action}
-                        style={{ animationDelay: `${(index + 3) * 100}ms`, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
-                        className="group relative rounded-xl p-6 text-left transition-all duration-200 hover:-translate-y-1 animate-fadeIn overflow-hidden"
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                        className="group flex items-start gap-4 rounded-lg p-4 text-left transition-colors duration-150 relative"
+                        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(251,191,36,0.15)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
                       >
-                        {/* Badge */}
                         {"badge" in tool && tool.badge && (
-                          <div className="absolute top-3 right-3 z-10">
-                            <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fbbf24', color: '#1a0a2e' }}>
-                              {tool.badge}
-                            </span>
-                          </div>
+                          <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
+                            {tool.badge}
+                          </span>
                         )}
-
-                        {/* Icon */}
-                        <div className="relative mb-4 inline-flex">
-                          <div className="p-3 rounded-lg" style={{ background: 'rgba(251, 191, 36, 0.08)' }}>
-                            <div style={{ color: '#fbbf24' }}>{tool.icon}</div>
-                          </div>
+                        <div className="p-2 rounded-md flex-shrink-0" style={{ background: 'rgba(251,191,36,0.08)' }}>
+                          <div style={{ color: '#fbbf24' }} className="[&>svg]:w-5 [&>svg]:h-5">{tool.icon}</div>
                         </div>
-
-                        {/* Content */}
-                        <h4 className="relative text-lg font-semibold mb-2 text-white">
-                          {tool.title}
-                        </h4>
-                        <p className="relative text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          {tool.description}
-                        </p>
-
-                        {/* Arrow */}
-                        <div className="relative mt-4 flex items-center transition-all" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                          <span className="text-xs font-semibold">Open Tool</span>
-                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-semibold text-white mb-0.5">{tool.title}</h4>
+                          <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{tool.description}</p>
                         </div>
-
-                        {/* Bottom accent */}
-                        <div
-                          className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${tool.color} opacity-50 group-hover:opacity-100 transition-opacity`}
-                        />
+                        <ArrowRight className="w-4 h-4 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all" style={{ color: '#fbbf24' }} />
                       </button>
                     ))}
                 </div>
               </div>
 
-              {/* Section: Premium Tools */}
+              {/* ── Premium ── */}
               <div>
-                <h3 className="text-xl font-semibold mb-6 text-white flex items-center gap-3">
-                  <Sparkles className="w-5 h-5 text-amber-400" />
-                  Premium Features
-                  <span className="text-xs font-normal text-slate-500 ml-2">
-                    Upgrade to unlock
-                  </span>
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                  Premium
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {tools
                     .filter((t) => t.tier === "premium")
-                    .map((tool, index) => (
-                      <button
-                        key={tool.id}
-                        onClick={"locked" in tool && tool.locked ? undefined : tool.action}
-                        disabled={"locked" in tool && tool.locked}
-                        className={`group relative rounded-xl p-6 text-left transition-all duration-300 animate-fadeIn overflow-hidden ${
-                          "locked" in tool && tool.locked ? "opacity-75 cursor-not-allowed" : "hover:-translate-y-1"
-                        }`}
-                        style={{ animationDelay: `${(index + 6) * 100}ms`, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
-                        onMouseEnter={(e) => { if (!("locked" in tool) || !tool.locked) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; } }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-                      >
-                        {/* Lock overlay for locked tools */}
-                        {"locked" in tool && tool.locked && (
-                          <div className="absolute inset-0 bg-black/50 rounded-xl z-10 flex items-center justify-center">
-                            <div className="text-center">
-                              <Lock className="w-6 h-6 text-slate-400 mx-auto mb-2" />
+                    .map((tool) => {
+                      const isLocked = "locked" in tool && tool.locked;
+                      return (
+                        <button
+                          key={tool.id}
+                          onClick={isLocked ? undefined : tool.action}
+                          disabled={isLocked}
+                          className={`group flex items-start gap-4 rounded-lg p-4 text-left transition-colors duration-150 relative ${isLocked ? 'cursor-not-allowed' : ''}`}
+                          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', opacity: isLocked ? 0.55 : 1 }}
+                          onMouseEnter={(e) => { if (!isLocked) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; } }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                        >
+                          <div className="p-2 rounded-md flex-shrink-0" style={{ background: isLocked ? 'rgba(255,255,255,0.04)' : 'rgba(168,85,247,0.08)' }}>
+                            {isLocked
+                              ? <Lock className="w-5 h-5" style={{ color: 'rgba(255,255,255,0.25)' }} />
+                              : <div style={{ color: '#a855f7' }} className="[&>svg]:w-5 [&>svg]:h-5">{tool.icon}</div>
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-semibold text-white mb-0.5 flex items-center gap-2">
+                              {tool.title}
                               {"comingSoon" in tool && tool.comingSoon && (
-                                <span className="text-xs text-slate-400 font-medium">
-                                  Coming Soon
-                                </span>
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.3)' }}>Soon</span>
                               )}
-                            </div>
+                            </h4>
+                            <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>{tool.description}</p>
                           </div>
-                        )}
-
-
-                        {/* Icon */}
-                        <div className="relative mb-4 inline-flex">
-                          <div
-                            className={`bg-gradient-to-br ${tool.color} p-4 rounded-xl shadow-lg group-hover:scale-110 transition-all duration-300`}
-                          >
-                            <div className="text-white">{tool.icon}</div>
-                          </div>
-                        </div>
-
-                        {/* Content */}
-                        <h4 className="relative text-lg font-semibold mb-2 text-white transition-colors">
-                          {tool.title}
-                        </h4>
-                        <p className="relative text-sm leading-relaxed transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          {tool.description}
-                        </p>
-
-                        {/* Arrow or Lock indicator */}
-                        <div className="relative mt-4 flex items-center transition-all" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                          {"locked" in tool && tool.locked ? (
-                            <span className="text-xs font-semibold text-slate-500">
-                              Premium Feature
-                            </span>
-                          ) : (
-                            <>
-                              <span className="text-xs font-semibold">Open Tool</span>
-                              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform" />
-                            </>
+                          {!isLocked && (
+                            <ArrowRight className="w-4 h-4 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all" style={{ color: 'rgba(255,255,255,0.4)' }} />
                           )}
-                        </div>
-
-                        {/* Bottom accent */}
-                        <div
-                          className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${tool.color} opacity-50 group-hover:opacity-100 transition-opacity`}
-                        />
-                      </button>
-                    ))}
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
             </div>
