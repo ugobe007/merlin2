@@ -11,7 +11,7 @@
  * at the top of the content panel. Left rail is now 100% Merlin's advisor space.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
 
 interface WizardShellV7Props {
@@ -54,6 +54,18 @@ export default function WizardShellV7({
   children,
 }: WizardShellV7Props) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
+  const shellRef = useRef<HTMLDivElement>(null);
+
+  // ✅ SCROLL-TO-TOP on every step transition
+  useEffect(() => {
+    // 1) Try scrolling the wizard's own scroll container (modal path)
+    const scrollContainer = shellRef.current?.closest('[data-wizard-scroll]') as HTMLElement | null;
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+    }
+    // 2) Always also scroll window (direct /v7 route path)
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentStep]);
 
   const totalSteps = stepLabels?.length ?? 0;
   const safeStep = Number.isFinite(currentStep)
@@ -69,6 +81,7 @@ export default function WizardShellV7({
       />
 
       <div
+        ref={shellRef}
         data-merlin="hud"
         style={{
           minHeight: "100vh",
