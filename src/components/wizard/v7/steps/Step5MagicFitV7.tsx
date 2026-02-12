@@ -26,8 +26,7 @@ import { TrueQuoteBadgeCanonical } from '@/components/shared/TrueQuoteBadgeCanon
 import TrueQuoteModal from '@/components/shared/TrueQuoteModal';
 
 // SSOT calculation engine
-import { calculateQuote } from '@/services/unifiedQuoteCalculator';
-import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { calculateQuote } from '@/services/unifiedQuoteCalculator';import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 
 interface Props {
   state: WizardV7State;
@@ -193,17 +192,20 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
 
-  // Get base sizing from Step 3 results (stored in state after profile calculation)
-  const rawBESSKW = state.quote?.peakLoadKW || 1000; // fallback to 1 MW
+  // ✅ MERLIN MEMORY: Read cross-step data from Memory first, fall back to state
+  const data = useMerlinData(state);
+
+  // Get base sizing from Memory (profile.peakLoadKW) or state.quote
+  const rawBESSKW = data.peakLoadKW || 1000; // fallback to 1 MW
   
   // Apply goal-based intelligence to sizing
-  const goalModifiers = getGoalBasedMultipliers(state.goals);
+  const goalModifiers = getGoalBasedMultipliers(data.goals as EnergyGoal[]);
   
   const baseBESSKW = rawBESSKW * goalModifiers.bessMultiplier;
-  const baseDuration = 4 * goalModifiers.durationMultiplier; // Goal-aware duration (4-6 hours)
+  const baseDuration = 4 * goalModifiers.durationMultiplier;
   const baseBESSKWh = baseBESSKW * baseDuration;
-  const baseSolarKW = state.includeSolar ? baseBESSKW * 0.5 * goalModifiers.solarMultiplier : 0;
-  const baseGeneratorKW = state.includeGenerator ? baseBESSKW * 0.75 * goalModifiers.generatorMultiplier : 0;
+  const baseSolarKW = data.addOns.includeSolar ? baseBESSKW * 0.5 * goalModifiers.solarMultiplier : 0;
+  const baseGeneratorKW = data.addOns.includeGenerator ? baseBESSKW * 0.75 * goalModifiers.generatorMultiplier : 0;
 
   useEffect(() => {
     async function generateTiers() {
@@ -222,10 +224,10 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
           const quote = await calculateQuote({
             storageSizeMW: bessKW / 1000,
             durationHours: baseDuration,
-            location: state.location?.state || 'CA',
-            zipCode: state.location?.postalCode || '',
-            electricityRate: state.locationIntel?.utilityRate || 0.12,
-            useCase: state.industry,
+            location: data.location.state || 'CA',
+            zipCode: data.location.zip || '',
+            electricityRate: data.utilityRate || 0.12,
+            useCase: data.industry,
             solarMW: solarKW / 1000,
             generatorMW: generatorKW / 1000,
             generatorFuelType: 'natural-gas',
@@ -263,7 +265,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     }
 
     generateTiers();
-  }, [baseBESSKW, baseBESSKWh, baseSolarKW, baseGeneratorKW, baseDuration, state.location, state.locationIntel, state.industry]);
+  }, [baseBESSKW, baseBESSKWh, baseSolarKW, baseGeneratorKW, baseDuration, data.location.state, data.utilityRate, data.industry]);
 
   const handleSelectTier = (tierKey: TierKey) => {
     setSelectedTier(tierKey);
@@ -337,7 +339,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         </h1>
         
         <p className="text-base text-slate-400 max-w-2xl mx-auto">
-          Your {getIndustryLabel(state.industry)} facility needs are unique —
+          Your {getIndustryLabel(data.industry)} facility needs are unique —
           Merlin sized three options. Pick the one that fits your budget.
         </p>
         
@@ -547,8 +549,8 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       <div className="flex justify-center">
         <div className="flex flex-wrap justify-center gap-4 text-[11px] text-slate-500">
           <span className="flex items-center gap-1.5"><Battery className="w-3 h-3" /> BESS</span>
-          {state.includeSolar && <span className="flex items-center gap-1.5"><Sun className="w-3 h-3" /> Solar</span>}
-          {state.includeGenerator && <span className="flex items-center gap-1.5"><Fuel className="w-3 h-3" /> Generator</span>}
+          {data.addOns.includeSolar && <span className="flex items-center gap-1.5"><Sun className="w-3 h-3" /> Solar</span>}
+          {data.addOns.includeGenerator && <span className="flex items-center gap-1.5"><Fuel className="w-3 h-3" /> Generator</span>}
         </div>
       </div>
 

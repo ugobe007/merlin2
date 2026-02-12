@@ -24,6 +24,7 @@ import { buildV7ExportData } from "@/utils/buildV7ExportData";
 import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
+import { useMerlinData } from "@/wizard/v7/memory";
 
 type Props = {
   state: WizardV7State;
@@ -184,7 +185,12 @@ function formatContributorKey(key: string): string {
 
 export default function Step6ResultsV7({ state, actions }: Props) {
   // ============================================================================
-  // PHASE 6: PRICING STATUS (non-blocking)
+  // MERLIN MEMORY — canonical cross-step data reads
+  // ============================================================================
+  const data = useMerlinData(state);
+
+  // ============================================================================
+  // PHASE 6: PRICING STATUS (non-blocking — UI-ephemeral, stays on reducer)
   // Step 6 is now a PURE QUOTE DISPLAY — add-ons configured in Step 4 Options
   // ============================================================================
   const pricingStatus: PricingStatus = state.pricingStatus ?? "idle";
@@ -202,12 +208,12 @@ export default function Step6ResultsV7({ state, actions }: Props) {
   );
 
   const locLine = useMemo(() => {
-    if (!state.location) return "—";
-    const parts = [state.location.city, state.location.state, state.location.postalCode].filter(
+    if (!data.location.city && !data.location.state && !data.location.zip) return "—";
+    const parts = [data.location.city, data.location.state, data.location.zip].filter(
       Boolean
     );
-    return parts.length ? parts.join(", ") : state.location.formattedAddress;
-  }, [state.location]);
+    return parts.length ? parts.join(", ") : (state.location?.formattedAddress ?? "—");
+  }, [data.location, state.location?.formattedAddress]);
 
   const quoteReady = pricingStatus === "ok" && !!quoteRaw;
 
@@ -220,7 +226,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
         <div>
           <div className="flex items-center gap-2 text-slate-400 mb-2">
             <Building2 className="w-4 h-4" />
-            <span className="text-sm font-medium">{getIndustryMeta(state.industry).label as string}</span>
+            <span className="text-sm font-medium">{getIndustryMeta(data.industry).label as string}</span>
             <span className="text-slate-600">•</span>
             <MapPin className="w-4 h-4" />
             <span className="text-sm">{locLine}</span>
@@ -696,7 +702,7 @@ function getAdvisorRecommendations(
   const bessKW = quote.bessKW ?? 0;
   const hasSolar = (quote.solarKW as number) > 0;
   const hasGenerator = (quote.generatorKW as number) > 0;
-  const goals = state.goals ?? [];
+  const goals = state.goals ?? []; // Note: state.goals used here since getAdvisorRecommendations is standalone fn
 
   // 1. Power gap — BESS doesn't cover full peak load
   if (peakKW > 0 && bessKW > 0 && bessKW < peakKW * 0.9 && !hasGenerator && !hasSolar) {
@@ -711,7 +717,7 @@ function getAdvisorRecommendations(
 
   // 2. Solar opportunity — no solar configured yet
   if (!hasSolar) {
-    const stateAbbr = state.location?.state ?? "";
+    const stateAbbr = state.location?.state ?? ""; // state.location used in standalone fn (accepts WizardV7State)
     const highSolarStates = ["CA", "AZ", "NV", "NM", "TX", "FL", "CO", "UT", "HI"];
     const isHighSolar = highSolarStates.includes(stateAbbr);
     
@@ -729,6 +735,7 @@ function getAdvisorRecommendations(
   }
 
   // 3. EV charging revenue — if not already an EV industry
+  // Note: state.industry used here since getAdvisorRecommendations is a standalone function accepting WizardV7State
   const isEVIndustry = state.industry === "ev_charging" || (state.industry as string) === "ev-charging";
   if (!isEVIndustry) {
     const hasCustomerTraffic = ["hotel", "retail", "shopping-center", "car_wash", "car-wash", "restaurant", "gas_station", "gas-station", "casino"].includes(state.industry ?? "");
