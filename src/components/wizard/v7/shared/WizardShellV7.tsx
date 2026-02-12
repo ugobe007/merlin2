@@ -6,6 +6,9 @@
  *
  * ✅ FIX Jan 31+: Shell no longer owns step ordering.
  * Parent supplies stepLabels to eliminate drift / off-by-one issues.
+ *
+ * ✅ FEB 11, 2026: Progress steps moved from left rail to horizontal bar
+ * at the top of the content panel. Left rail is now 100% Merlin's advisor space.
  */
 
 import React, { useState } from "react";
@@ -29,13 +32,13 @@ interface WizardShellV7Props {
 }
 
 /**
- * WizardShellV7 — 2-Column Layout (Feb 6, 2026)
+ * WizardShellV7 — 2-Column Layout (Feb 11, 2026)
  *
- * LEFT RAIL (360px): Merlin avatar + progress + advisor narration (single voice)
- * RIGHT PANEL (flex): Input fields + step content (full width)
+ * LEFT RAIL (360px): Merlin avatar + advisor narration (full height for insights)
+ * RIGHT PANEL (flex): Horizontal progress bar + step content
  *
- * REMOVED: 3rd column (rightPanel). Advisor is now unified in the left rail.
- * This gives input fields more space and creates a single Merlin voice.
+ * CHANGE Feb 11, 2026: Progress steps moved from left rail to horizontal bar
+ * at the top of the content panel. Freed ~280px for Merlin's cross-slot insights.
  */
 export default function WizardShellV7({
   currentStep,
@@ -90,7 +93,7 @@ export default function WizardShellV7({
             padding: "24px 32px",
           }}
         >
-          {/* LEFT RAIL */}
+          {/* LEFT RAIL — Merlin's advisor space (Feb 11, 2026) */}
           <div
             className="merlin-shell-rail"
             style={{
@@ -147,10 +150,10 @@ export default function WizardShellV7({
               </div>
             </div>
 
-            {/* Unified Merlin Advisor — single voice (Feb 6, 2026) */}
+            {/* Unified Merlin Advisor — full rail height (Feb 11, 2026) */}
             <div
               style={{
-                marginBottom: 28,
+                flex: 1,
                 padding: 20,
                 borderRadius: 16,
                 background:
@@ -158,6 +161,8 @@ export default function WizardShellV7({
                 boxShadow:
                   "inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 40px rgba(104, 191, 250, 0.12)",
                 transition: "all 0.25s ease",
+                display: "flex",
+                flexDirection: "column",
               }}
             >
               {advisorContent ? (
@@ -188,62 +193,6 @@ export default function WizardShellV7({
                   </div>
                 </>
               )}
-            </div>
-
-            {/* Progress Steps */}
-            <div style={{ marginBottom: 24 }}>
-              {stepLabels.map((label, idx) => {
-                const isActive = idx === safeStep;
-                const isComplete = idx < safeStep;
-                const isFuture = idx > safeStep;
-
-                return (
-                  <div
-                    key={`${label}-${idx}`}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 14,
-                      padding: "14px 0",
-                      opacity: isFuture ? 0.4 : 1,
-                    }}
-                  >
-                    {/* Step Number */}
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 10,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 13,
-                        fontWeight: 700,
-                        background: isActive
-                          ? "linear-gradient(135deg, rgba(104, 191, 250, 0.4), rgba(91, 33, 182, 0.35))"
-                          : isComplete
-                            ? "rgba(74, 222, 128, 0.2)"
-                            : "rgba(255, 255, 255, 0.06)",
-                        color: isComplete ? "#4ade80" : "#e8ebf3",
-                        boxShadow: isActive ? "0 4px 12px rgba(104, 191, 250, 0.3)" : "none",
-                      }}
-                    >
-                      {isComplete ? "✓" : idx + 1}
-                    </div>
-
-                    {/* Step Label */}
-                    <span
-                      style={{
-                        fontSize: 15,
-                        fontWeight: isActive ? 600 : 500,
-                        color: isActive ? "#fff" : "rgba(232, 235, 243, 0.7)",
-                      }}
-                    >
-                      {label}
-                    </span>
-                  </div>
-                );
-              })}
             </div>
 
             {/* Spacer to push TrueQuote badge to bottom */}
@@ -306,23 +255,132 @@ export default function WizardShellV7({
 
           {/* ── RIGHT: CONTENT AREA (full width) ─────────────── */}
           <div
-            key={`step-${safeStep}`}
-            className="merlin-step merlin-step-enter"
             style={{
-              background: "rgba(16, 20, 36, 0.75)",
-              borderRadius: 20,
-              padding: 36,
-              boxShadow: `
-                0 8px 40px rgba(0, 0, 0, 0.5),
-                0 0 60px rgba(104, 191, 250, 0.12),
-                0 0 80px rgba(91, 33, 182, 0.08),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05)
-              `,
-              minHeight: 500,
-              animation: "merlin-step-fadein 0.3s ease-out",
+              display: "flex",
+              flexDirection: "column",
+              gap: 0,
             }}
           >
-            {children}
+            {/* Horizontal Progress Bar (Feb 11, 2026) */}
+            <div
+              className="merlin-progress-bar"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 4,
+                padding: "14px 24px",
+                background: "rgba(16, 20, 36, 0.75)",
+                borderRadius: "20px 20px 0 0",
+                boxShadow: `
+                  0 -2px 20px rgba(0, 0, 0, 0.3),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.05)
+                `,
+              }}
+            >
+              {stepLabels.map((label, idx) => {
+                const isActive = idx === safeStep;
+                const isComplete = idx < safeStep;
+                const isFuture = idx > safeStep;
+
+                return (
+                  <React.Fragment key={`${label}-${idx}`}>
+                    {/* Connector line between steps */}
+                    {idx > 0 && (
+                      <div
+                        style={{
+                          width: 24,
+                          height: 2,
+                          borderRadius: 1,
+                          background: isComplete
+                            ? "rgba(74, 222, 128, 0.4)"
+                            : isActive
+                              ? "linear-gradient(90deg, rgba(74, 222, 128, 0.4), rgba(104, 191, 250, 0.3))"
+                              : "rgba(255, 255, 255, 0.08)",
+                          flexShrink: 0,
+                        }}
+                      />
+                    )}
+
+                    {/* Step pill */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "6px 14px",
+                        borderRadius: 999,
+                        background: isActive
+                          ? "linear-gradient(135deg, rgba(104, 191, 250, 0.25), rgba(91, 33, 182, 0.2))"
+                          : isComplete
+                            ? "rgba(74, 222, 128, 0.1)"
+                            : "transparent",
+                        boxShadow: isActive ? "0 2px 12px rgba(104, 191, 250, 0.2)" : "none",
+                        opacity: isFuture ? 0.4 : 1,
+                        transition: "all 0.2s ease",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {/* Step number/check */}
+                      <div
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          background: isActive
+                            ? "linear-gradient(135deg, rgba(104, 191, 250, 0.5), rgba(91, 33, 182, 0.4))"
+                            : isComplete
+                              ? "rgba(74, 222, 128, 0.25)"
+                              : "rgba(255, 255, 255, 0.08)",
+                          color: isComplete ? "#4ade80" : "#e8ebf3",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {isComplete ? "✓" : idx + 1}
+                      </div>
+
+                      {/* Label — shown on active + completed, hidden on future for compactness */}
+                      <span
+                        className="merlin-progress-label"
+                        style={{
+                          fontSize: 12,
+                          fontWeight: isActive ? 700 : 500,
+                          color: isActive ? "#fff" : isComplete ? "rgba(74, 222, 128, 0.9)" : "rgba(232, 235, 243, 0.5)",
+                          letterSpacing: "0.01em",
+                        }}
+                      >
+                        {label}
+                      </span>
+                    </div>
+                  </React.Fragment>
+                );
+              })}
+            </div>
+
+            {/* Step Content */}
+            <div
+              key={`step-${safeStep}`}
+              className="merlin-step merlin-step-enter"
+              style={{
+                background: "rgba(16, 20, 36, 0.75)",
+                borderRadius: "0 0 20px 20px",
+                padding: 36,
+                boxShadow: `
+                  0 8px 40px rgba(0, 0, 0, 0.5),
+                  0 0 60px rgba(104, 191, 250, 0.12),
+                  0 0 80px rgba(91, 33, 182, 0.08)
+                `,
+                minHeight: 500,
+                animation: "merlin-step-fadein 0.3s ease-out",
+              }}
+            >
+              {children}
+            </div>
           </div>
 
           {/* Step transition animation + responsive */}
@@ -332,7 +390,7 @@ export default function WizardShellV7({
               to   { opacity: 1; transform: translateY(0); }
             }
             
-            /* Mobile: collapse to single column, hide rail */
+            /* Mobile: collapse to single column, hide rail, compact progress */
             @media (max-width: 900px) {
               .merlin-shell-grid {
                 grid-template-columns: 1fr !important;
@@ -345,14 +403,25 @@ export default function WizardShellV7({
               .merlin-shell-bottomnav {
                 padding: 12px 16px 20px !important;
               }
+              .merlin-progress-bar {
+                gap: 2px !important;
+                padding: 10px 12px !important;
+              }
+              .merlin-progress-label {
+                display: none !important;
+              }
             }
             
-            /* Tablet: narrower rail */
+            /* Tablet: narrower rail, compact progress labels */
             @media (min-width: 901px) and (max-width: 1200px) {
               .merlin-shell-grid {
                 grid-template-columns: 280px 1fr !important;
                 gap: 20px !important;
                 padding: 20px 24px !important;
+              }
+              .merlin-progress-bar {
+                gap: 2px !important;
+                padding: 12px 16px !important;
               }
             }
           `}</style>
