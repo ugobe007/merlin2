@@ -702,9 +702,9 @@ export default function AdvancedQuoteBuilder({
         const solarCost = quoteResult.equipment.solar?.totalCost || 0;
         const windCost = quoteResult.equipment.wind?.totalCost || 0;
         const totalProjectCost = quoteResult.costs.totalProjectCost;
-        const annualSavings = quoteResult.financials.annualSavings;
-        const paybackYears = quoteResult.financials.paybackYears;
-        const roi25Year = quoteResult.financials.roi25Year;
+        const annualSavings = quoteResult.financials.annualSavings ?? 0;
+        const paybackYears = quoteResult.financials.paybackYears ?? 0;
+        const roi25Year = quoteResult.financials.roi25Year ?? 0;
 
         const doc = new Document({
           sections: [

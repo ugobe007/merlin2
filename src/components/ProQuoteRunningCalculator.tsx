@@ -57,13 +57,17 @@ interface RunningCalculatorProps {
 const fmt = (n: number, decimals = 0) =>
   n.toLocaleString(undefined, { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
 
-const fmtDollar = (n: number) => {
+const fmtDollar = (n: number | undefined | null) => {
+  if (n == null || isNaN(n)) return "—";
   if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
   if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
   return `$${n.toFixed(0)}`;
 };
 
-const fmtPct = (n: number) => `${n.toFixed(1)}%`;
+const fmtPct = (n: number | undefined | null) => {
+  if (n == null || isNaN(n)) return "—";
+  return `${n.toFixed(1)}%`;
+};
 
 /* ─── metric row ─── */
 function MetricRow({
@@ -295,7 +299,7 @@ export default function ProQuoteRunningCalculator({
       {/* ─── QUICK STATS ROW ─── */}
       <div className="mx-3 grid grid-cols-3 gap-1.5">
         {[
-          { label: "Payback", value: fm ? `${fm.paybackYears.toFixed(1)}` : "—", unit: "yrs", color: "#34d399" },
+          { label: "Payback", value: fm?.paybackYears != null ? `${fm.paybackYears.toFixed(1)}` : "—", unit: "yrs", color: "#34d399" },
           { label: "$/kWh", value: costPerKWh > 0 ? `$${costPerKWh.toFixed(0)}` : "—", unit: "", color: "#38bdf8" },
           { label: "Savings/yr", value: annualSavings > 0 ? fmtDollar(annualSavings) : "—", unit: "", color: "#a78bfa" },
         ].map((s) => (
@@ -328,9 +332,9 @@ export default function ProQuoteRunningCalculator({
           icon={<Battery className="w-3.5 h-3.5" />}
           accent="#60a5fa"
         >
-          <MetricRow label="BESS Power" value={`${storageSizeMW.toFixed(1)}`} unit="MW" accent="#60a5fa" sub={`${fmt(totalKW)} kW`} />
-          <MetricRow label="Duration" value={`${durationHours}`} unit="hrs" accent="#818cf8" />
-          <MetricRow label="Capacity" value={`${storageMWh.toFixed(1)}`} unit="MWh" accent="#34d399" sub={`${fmt(storageMWh * 1000)} kWh`} />
+          <MetricRow label="BESS Power" value={`${(storageSizeMW ?? 0).toFixed(1)}`} unit="MW" accent="#60a5fa" sub={`${fmt(totalKW)} kW`} />
+          <MetricRow label="Duration" value={`${durationHours ?? 0}`} unit="hrs" accent="#818cf8" />
+          <MetricRow label="Capacity" value={`${(storageMWh ?? 0).toFixed(1)}`} unit="MWh" accent="#34d399" sub={`${fmt((storageMWh ?? 0) * 1000)} kWh`} />
           <MetricRow label="Chemistry" value={chemLabel[chemistry] || chemistry} accent="#c4b5fd" />
           <MetricRow label="Use Case" value={useCaseLabel[useCase] || useCase} accent="#c4b5fd" />
           <div className="mt-1 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
@@ -367,13 +371,13 @@ export default function ProQuoteRunningCalculator({
         >
           <MetricRow
             label="Equipment"
-            value={fm ? fmtDollar(fm.equipmentCost) : "—"}
+            value={fmtDollar(fm?.equipmentCost)}
             accent="#fbbf24"
             sub={equipPct > 0 ? `${equipPct.toFixed(0)}% of total` : undefined}
           />
           <MetricRow
             label="Installation"
-            value={fm ? fmtDollar(fm.installationCost) : "—"}
+            value={fmtDollar(fm?.installationCost)}
             accent="#fb923c"
             sub={installPct > 0 ? `${installPct.toFixed(0)}% of total` : undefined}
           />
@@ -387,7 +391,7 @@ export default function ProQuoteRunningCalculator({
           <div className="mt-1 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
             <MetricRow
               label="Project Total"
-              value={fm ? fmtDollar(projectCost) : "—"}
+              value={fmtDollar(projectCost)}
               accent="#e2e8f0"
             />
             {taxCredit > 0 && (
@@ -417,13 +421,13 @@ export default function ProQuoteRunningCalculator({
         >
           <MetricRow
             label="Peak Shaving"
-            value={fm ? fmtDollar(fm.peakShavingSavings) : "—"}
+            value={fmtDollar(fm?.peakShavingSavings)}
             unit="/yr"
             accent="#34d399"
           />
           <MetricRow
             label="Demand Charge"
-            value={fm ? fmtDollar(fm.demandChargeSavings) : "—"}
+            value={fmtDollar(fm?.demandChargeSavings)}
             unit="/yr"
             accent="#34d399"
           />
@@ -474,18 +478,18 @@ export default function ProQuoteRunningCalculator({
         >
           <MetricRow
             label="Simple Payback"
-            value={fm ? `${fm.paybackYears.toFixed(1)}` : "—"}
+            value={fm?.paybackYears != null ? `${fm.paybackYears.toFixed(1)}` : "—"}
             unit="years"
             accent="#34d399"
           />
           <MetricRow
             label="10-Year ROI"
-            value={fm ? fmtPct(fm.roi10Year) : "—"}
+            value={fmtPct(fm?.roi10Year)}
             accent="#a78bfa"
           />
           <MetricRow
             label="25-Year ROI"
-            value={fm ? fmtPct(fm.roi25Year) : "—"}
+            value={fmtPct(fm?.roi25Year)}
             accent="#a78bfa"
           />
           {fm?.npv != null && (
@@ -546,8 +550,8 @@ export default function ProQuoteRunningCalculator({
           accent="#94a3b8"
           defaultOpen={false}
         >
-          <MetricRow label="Utility Rate" value={`$${utilityRate.toFixed(2)}`} unit="/kWh" accent="#fbbf24" />
-          <MetricRow label="Demand Charge" value={`$${demandCharge.toFixed(0)}`} unit="/kW" accent="#fb923c" />
+          <MetricRow label="Utility Rate" value={`$${(utilityRate ?? 0).toFixed(2)}`} unit="/kWh" accent="#fbbf24" />
+          <MetricRow label="Demand Charge" value={`$${(demandCharge ?? 0).toFixed(0)}`} unit="/kW" accent="#fb923c" />
           <MetricRow label="Chemistry" value={chemLabel[chemistry] || chemistry} accent="#c4b5fd" />
           <MetricRow label="Use Case" value={useCaseLabel[useCase] || useCase} accent="#94a3b8" />
         </CalcSection>
