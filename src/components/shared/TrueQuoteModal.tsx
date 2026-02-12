@@ -1,13 +1,10 @@
 /**
  * TrueQuoteModal.tsx
  *
- * Compact header with TrueQuote badge integrated into purple area.
+ * Supabase-style dark modal — clean, typographic, minimal.
+ * Three tabs: Why It Matters / How It Works / See The Proof
  *
- * Adds (Jan 23, 2026):
- * - mode: 'about' | 'proof' (so WizardV7 can open directly to proof)
- * - payload: proof data (optional; used by future proof UI)
- *
- * @version 1.4.0
+ * @version 2.0.0 — Supabase redesign (Feb 2026)
  */
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -19,15 +16,11 @@ import {
   FileCheck,
   Search,
   Award,
-  Sparkles,
   ArrowRight,
-  Building2,
-  Landmark,
   BadgeCheck,
   AlertTriangle,
   Eye,
   EyeOff,
-  Zap,
 } from "lucide-react";
 import { TrueQuoteBadgeCanonical } from "./TrueQuoteBadgeCanonical";
 import { AUTHORITY_SOURCES } from "./IndustryComplianceBadges";
@@ -66,18 +59,7 @@ interface TrueQuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGetQuote?: () => void;
-
-  /**
-   * Optional: allow WizardV7 global event bus to open directly into proof.
-   * - 'about' -> normal experience (tabs start at Why)
-   * - 'proof' -> starts on Proof tab
-   */
   mode?: TrueQuoteModalMode;
-
-  /**
-   * Optional proof payload (used later to show facility-specific proof).
-   * Safe to pass now even if UI doesn't render it yet.
-   */
   payload?: TrueQuoteProofPayload;
 }
 
@@ -92,31 +74,23 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
   const [showComparison, setShowComparison] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
 
-  // Optional: derive a tiny bit of "context" text for Proof header later
   const proofContext = useMemo(() => {
-    const industryName =
-      payload?.industry ||
-      payload?.business?.category ||
-      null;
-
+    const industryName = payload?.industry || payload?.business?.category || null;
     const loc =
       payload?.location?.city || payload?.location?.state || payload?.location?.zipCode
         ? [payload?.location?.city, payload?.location?.state, payload?.location?.zipCode]
             .filter(Boolean)
             .join(", ")
         : null;
-
     if (!industryName && !loc) return null;
-    return `${industryName ? industryName : "Your site"}${loc ? ` • ${loc}` : ""}`;
+    return `${industryName ? industryName : "Your site"}${loc ? ` · ${loc}` : ""}`;
   }, [payload]);
 
   useEffect(() => {
     if (isOpen) {
-      // When opening, honor mode
       setActiveTab(mode === "proof" ? "proof" : "why");
-
       setTimeout(() => setAnimateIn(true), 50);
-      setTimeout(() => setShowComparison(true), 500);
+      setTimeout(() => setShowComparison(true), 400);
     } else {
       setAnimateIn(false);
       setShowComparison(false);
@@ -125,11 +99,17 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
 
   if (!isOpen) return null;
 
+  const tabs = [
+    { id: "why" as const, label: "Why It Matters", icon: AlertTriangle },
+    { id: "how" as const, label: "How It Works", icon: Eye },
+    { id: "proof" as const, label: "See The Proof", icon: Award },
+  ];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300 ${
           animateIn ? "opacity-100" : "opacity-0"
         }`}
         onClick={onClose}
@@ -137,128 +117,105 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
 
       {/* Modal */}
       <div
-        className={`relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl transition-all duration-500 overflow-hidden ${
+        className={`relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-xl overflow-hidden transition-all duration-500 ${
           animateIn ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-8"
         }`}
+        style={{
+          background: "#0f1117",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
       >
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-        >
-          <X className="w-5 h-5 text-white" />
-        </button>
+        {/* ── HEADER ── */}
+        <div className="relative px-6 pt-5 pb-4 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-1.5 rounded-md hover:bg-white/10 transition-colors"
+          >
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
 
-        {/* ============================================================ */}
-        {/* COMPACT HEADER - Badge + Tagline in one purple section */}
-        {/* ============================================================ */}
-        <div className="relative bg-gradient-to-br from-purple-900 via-purple-700 to-indigo-800 px-8 pt-6 pb-8 text-center overflow-hidden flex-shrink-0">
-          {/* Animated shine */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
-
-          {/* Background decorative elements - subtle */}
-          <div className="absolute top-2 left-6 opacity-5">
-            <Shield className="w-16 h-16 text-white" />
-          </div>
-          <div className="absolute bottom-2 right-6 opacity-5">
-            <BadgeCheck className="w-14 h-14 text-white" />
-          </div>
-
-          {/* Content */}
-          <div className="relative flex flex-col items-center gap-3">
-            {/* TrueQuote Badge - at top of purple section */}
+          <div className="flex items-center gap-3">
             <TrueQuoteBadgeCanonical showTooltip={false} />
-
-            {/* Tagline */}
-            <p className="text-purple-200 text-lg font-medium mt-1">
-              The Quote That Shows Its Work™
-            </p>
-
-            {/* Optional context line (only if payload provided) */}
-            {proofContext && (
-              <p className="text-purple-100/80 text-sm font-semibold tracking-wide">
-                {proofContext}
+            <div>
+              <h2 className="text-lg font-semibold text-white">TrueQuote™</h2>
+              <p className="text-sm text-slate-500">
+                The Quote That Shows Its Work
+                {proofContext && <span className="text-slate-600"> · {proofContext}</span>}
               </p>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200 flex-shrink-0 bg-white">
-          {[
-            { id: "why", label: "Why It Matters", icon: AlertTriangle },
-            { id: "how", label: "How It Works", icon: Eye },
-            { id: "proof", label: "See The Proof", icon: Award },
-          ].map((tab) => (
+        {/* ── TABS ── */}
+        <div className="flex px-6 gap-1 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+          {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as "why" | "how" | "proof")}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 font-semibold transition-all ${
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
                 activeTab === tab.id
-                  ? "text-amber-600 border-b-2 border-amber-500 bg-amber-50"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  ? "text-emerald-400 border-emerald-400"
+                  : "text-slate-500 border-transparent hover:text-slate-300"
               }`}
             >
-              <tab.icon className="w-4 h-4" />
+              <tab.icon className="w-3.5 h-3.5" />
               {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Content Area - Scrollable */}
-        <div className="overflow-y-auto flex-1 min-h-0 p-8 bg-white">
+        {/* ── CONTENT ── */}
+        <div className="overflow-y-auto flex-1 min-h-0 p-6">
+
           {/* TAB: Why It Matters */}
           {activeTab === "why" && (
-            <div className="space-y-8">
+            <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <AlertTriangle className="w-6 h-6 text-red-500" />
-                  The Industry&apos;s Dirty Secret
-                </h2>
-                <p className="text-gray-700 text-lg leading-relaxed mb-6">
-                  When you get a BESS quote from most vendors, you&apos;re trusting a black box.
+                <h3 className="text-base font-semibold text-white mb-2 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                  The Industry's Dirty Secret
+                </h3>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  When you get a BESS quote from most vendors, you're trusting a black box.
                   They give you numbers, but{" "}
-                  <strong className="text-gray-900">can&apos;t tell you where they came from</strong>.
-                  Banks know this. Investors know this. That&apos;s why projects stall.
+                  <span className="text-slate-200 font-medium">can't tell you where they came from</span>.
+                  Banks know this. Investors know this. That's why projects stall.
                 </p>
               </div>
 
               {/* Side-by-Side Comparison */}
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Competitor Quote */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Competitor */}
                 <div
-                  className={`bg-gray-100 rounded-2xl p-6 border-2 border-gray-300 transition-all duration-700 ${
-                    showComparison ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"
+                  className={`rounded-lg p-5 transition-all duration-500 ${
+                    showComparison ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
                   }`}
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <EyeOff className="w-5 h-5 text-gray-500" />
-                    <h3 className="font-bold text-gray-800 text-lg">Typical Competitor Quote</h3>
+                    <EyeOff className="w-4 h-4 text-slate-500" />
+                    <span className="text-sm font-medium text-slate-300">Typical Competitor</span>
                   </div>
 
-                  <div className="space-y-3 font-mono text-sm">
-                    <div className="flex justify-between p-3 bg-white rounded-lg border border-gray-200">
-                      <span className="text-gray-700">Battery System:</span>
-                      <span className="font-bold text-gray-900">$2,400,000</span>
-                    </div>
-                    <div className="flex justify-between p-3 bg-white rounded-lg border border-gray-200">
-                      <span className="text-gray-700">Annual Savings:</span>
-                      <span className="font-bold text-gray-900">$450,000</span>
-                    </div>
-                    <div className="flex justify-between p-3 bg-white rounded-lg border border-gray-200">
-                      <span className="text-gray-700">Payback Period:</span>
-                      <span className="font-bold text-gray-900">5.3 years</span>
-                    </div>
+                  <div className="space-y-2 text-sm font-mono">
+                    {[
+                      ["Battery System", "$2,400,000"],
+                      ["Annual Savings", "$450,000"],
+                      ["Payback Period", "5.3 years"],
+                    ].map(([label, value]) => (
+                      <div key={label} className="flex justify-between py-2 px-3 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
+                        <span className="text-slate-500">{label}</span>
+                        <span className="text-slate-300 font-semibold">{value}</span>
+                      </div>
+                    ))}
                   </div>
 
-                  <div className="mt-4 p-4 bg-red-100 rounded-lg border-2 border-red-300">
+                  <div className="mt-4 p-3 rounded-md" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}>
                     <div className="flex items-start gap-2">
-                      <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm">
-                        <strong className="text-red-800">Where do these numbers come from?</strong>
-                        <p className="text-red-700 mt-1 font-medium">
-                          &quot;Trust us, we&apos;re experts.&quot;
-                        </p>
+                      <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-xs">
+                        <span className="text-red-300 font-medium">Where do these numbers come from?</span>
+                        <p className="text-red-400/70 mt-0.5">&quot;Trust us, we&apos;re experts.&quot;</p>
                       </div>
                     </div>
                   </div>
@@ -266,64 +223,49 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
 
                 {/* TrueQuote */}
                 <div
-                  className={`bg-gradient-to-br from-amber-50 to-white rounded-2xl p-6 border-2 border-amber-400 shadow-lg transition-all duration-700 delay-200 ${
-                    showComparison ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"
+                  className={`rounded-lg p-5 transition-all duration-500 delay-150 ${
+                    showComparison ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
                   }`}
+                  style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.12)" }}
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <TrueQuoteBadgeCanonical showTooltip={false} />
-                    <h3 className="font-bold text-amber-900 text-lg">Merlin TrueQuote™</h3>
+                    <Shield className="w-4 h-4 text-emerald-400" />
+                    <span className="text-sm font-medium text-emerald-300">Merlin TrueQuote™</span>
                   </div>
 
-                  <div className="space-y-3 font-mono text-sm">
-                    <div className="p-3 bg-white rounded-lg border-2 border-amber-200">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-gray-700">Battery System:</span>
-                        <span className="font-bold text-gray-900">$2,400,000</span>
+                  <div className="space-y-2 text-sm font-mono">
+                    {[
+                      { label: "Battery System", value: "$2,400,000", source: "NREL ATB 2024, LFP 4-hr, $150/kWh" },
+                      { label: "Annual Savings", value: "$450,000", source: "StoreFAST methodology, EIA rates" },
+                      { label: "Payback Period", value: "5.3 years", source: "8% discount, 2% degradation, 30% ITC" },
+                    ].map((row) => (
+                      <div key={row.label} className="py-2 px-3 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">{row.label}</span>
+                          <span className="text-slate-200 font-semibold">{row.value}</span>
+                        </div>
+                        <div className="text-[11px] text-emerald-500/80 flex items-center gap-1 mt-1">
+                          <FileCheck className="w-3 h-3" />
+                          {row.source}
+                        </div>
                       </div>
-                      <div className="text-xs text-amber-800 flex items-center gap-1 font-semibold">
-                        <FileCheck className="w-3 h-3" />
-                        NREL ATB 2024, LFP 4-hr, $150/kWh
-                      </div>
-                    </div>
-                    <div className="p-3 bg-white rounded-lg border-2 border-amber-200">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-gray-700">Annual Savings:</span>
-                        <span className="font-bold text-gray-900">$450,000</span>
-                      </div>
-                      <div className="text-xs text-amber-800 flex items-center gap-1 font-semibold">
-                        <FileCheck className="w-3 h-3" />
-                        StoreFAST methodology, EIA rates
-                      </div>
-                    </div>
-                    <div className="p-3 bg-white rounded-lg border-2 border-amber-200">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-gray-700">Payback Period:</span>
-                        <span className="font-bold text-gray-900">5.3 years</span>
-                      </div>
-                      <div className="text-xs text-amber-800 flex items-center gap-1 font-semibold">
-                        <FileCheck className="w-3 h-3" />
-                        8% discount, 2% degradation, 30% ITC
-                      </div>
-                    </div>
+                    ))}
                   </div>
 
-                  <div className="mt-4 p-4 bg-emerald-100 rounded-lg border-2 border-emerald-300">
+                  <div className="mt-4 p-3 rounded-md" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.15)" }}>
                     <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm">
-                        <strong className="text-emerald-800">Every number is verifiable.</strong>
-                        <p className="text-emerald-700 mt-1 font-medium">
-                          Export JSON audit trail for bank due diligence.
-                        </p>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-xs">
+                        <span className="text-emerald-300 font-medium">Every number is verifiable.</span>
+                        <p className="text-emerald-400/60 mt-0.5">Export JSON audit trail for bank due diligence.</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="text-center py-6 bg-gray-50 rounded-xl">
-                <p className="text-2xl font-bold text-gray-800 italic">
+              <div className="text-center py-4">
+                <p className="text-sm text-slate-500 italic">
                   &quot;Ask competitors where their numbers come from.&quot;
                 </p>
               </div>
@@ -332,167 +274,140 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
 
           {/* TAB: How It Works */}
           {activeTab === "how" && (
-            <div className="space-y-8">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <div className="space-y-6">
+              <div className="mb-2">
+                <h3 className="text-base font-semibold text-white mb-1">
                   The Three Pillars of TrueQuote™
-                </h2>
-                <p className="text-gray-700 text-lg">
+                </h3>
+                <p className="text-sm text-slate-500">
                   Every Merlin quote meets these standards. No exceptions.
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="group bg-gradient-to-br from-sky-100 via-blue-50 to-white rounded-2xl p-6 border-2 border-blue-300 hover:border-blue-500 hover:shadow-xl transition-all">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-200 to-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Search className="w-8 h-8 text-blue-600" />
+              <div className="grid md:grid-cols-3 gap-4">
+                {[
+                  {
+                    icon: Search,
+                    title: "Traceable",
+                    desc: "Every number links to a specific, documented source.",
+                    items: ["Line-item citations", "Direct benchmark links"],
+                    accent: "59,130,246",
+                  },
+                  {
+                    icon: FileCheck,
+                    title: "Auditable",
+                    desc: "Complete methodology documented and exportable.",
+                    items: ["JSON/Excel export", "All assumptions shown"],
+                    accent: "16,185,129",
+                  },
+                  {
+                    icon: BadgeCheck,
+                    title: "Verifiable",
+                    desc: "Third parties can check independently.",
+                    items: ["Public benchmarks", "Deviation flagging"],
+                    accent: "139,92,246",
+                  },
+                ].map((pillar) => (
+                  <div
+                    key={pillar.title}
+                    className="rounded-lg p-5"
+                    style={{
+                      background: `rgba(${pillar.accent}, 0.04)`,
+                      border: `1px solid rgba(${pillar.accent}, 0.12)`,
+                    }}
+                  >
+                    <div
+                      className="w-9 h-9 rounded-lg flex items-center justify-center mb-3"
+                      style={{ background: `rgba(${pillar.accent}, 0.1)` }}
+                    >
+                      <pillar.icon className="w-4 h-4" style={{ color: `rgba(${pillar.accent}, 0.8)` }} />
+                    </div>
+                    <h4 className="text-sm font-semibold text-white mb-1">{pillar.title}</h4>
+                    <p className="text-xs text-slate-500 mb-3">{pillar.desc}</p>
+                    <ul className="space-y-1.5">
+                      {pillar.items.map((item) => (
+                        <li key={item} className="flex items-center gap-2 text-xs text-slate-400">
+                          <CheckCircle2 className="w-3 h-3" style={{ color: `rgba(${pillar.accent}, 0.6)` }} />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Traceable</h3>
-                  <p className="text-gray-700 mb-4">
-                    Every number links to a specific, documented source.
-                  </p>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2 text-blue-800 font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-blue-600" />
-                      Line-item citations
-                    </li>
-                    <li className="flex items-center gap-2 text-blue-800 font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-blue-600" />
-                      Direct benchmark links
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="group bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-300 hover:border-emerald-500 hover:shadow-xl transition-all">
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <FileCheck className="w-8 h-8 text-emerald-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Auditable</h3>
-                  <p className="text-gray-700 mb-4">
-                    Complete methodology documented and exportable.
-                  </p>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2 text-emerald-800 font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      JSON/Excel export
-                    </li>
-                    <li className="flex items-center gap-2 text-emerald-800 font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      All assumptions shown
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="group bg-gradient-to-br from-purple-50 to-white rounded-2xl p-6 border-2 border-purple-300 hover:border-purple-500 hover:shadow-xl transition-all">
-                  <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <BadgeCheck className="w-8 h-8 text-purple-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Verifiable</h3>
-                  <p className="text-gray-700 mb-4">Third parties can check independently.</p>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2 text-purple-800 font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-purple-600" />
-                      Public benchmarks
-                    </li>
-                    <li className="flex items-center gap-2 text-purple-800 font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-purple-600" />
-                      Deviation flagging
-                    </li>
-                  </ul>
-                </div>
+                ))}
               </div>
             </div>
           )}
 
           {/* TAB: See The Proof */}
           {activeTab === "proof" && (
-            <div className="space-y-8">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <div className="space-y-6">
+              <div className="mb-2">
+                <h3 className="text-base font-semibold text-white mb-1">
                   Backed by Industry Authorities
-                </h2>
-                <p className="text-gray-700 text-lg">Sources banks and investors trust.</p>
-
-                {/* Optional: show one-liner hint from payload */}
-                {payload?.locationIntel && (
-                  <div className="mt-3 text-sm text-gray-600">
-                    {payload.locationIntel.utilityRate != null && (
-                      <span className="inline-flex items-center gap-2 mx-2">
-                        <Zap className="w-4 h-4 text-amber-600" />
-                        Utility Rate: <strong className="text-gray-900">{payload.locationIntel.utilityRate}</strong>
-                      </span>
-                    )}
-                    {payload.locationIntel.peakSunHours != null && (
-                      <span className="inline-flex items-center gap-2 mx-2">
-                        <Sparkles className="w-4 h-4 text-purple-600" />
-                        Peak Sun Hours:{" "}
-                        <strong className="text-gray-900">{payload.locationIntel.peakSunHours}</strong>
-                      </span>
-                    )}
-                  </div>
-                )}
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Sources banks and investors trust.
+                  {payload?.locationIntel && (
+                    <>
+                      {payload.locationIntel.utilityRate != null && (
+                        <span className="ml-2">Rate: <span className="text-emerald-400 font-medium">${payload.locationIntel.utilityRate}/kWh</span></span>
+                      )}
+                      {payload.locationIntel.peakSunHours != null && (
+                        <span className="ml-2">Sun: <span className="text-amber-400 font-medium">{payload.locationIntel.peakSunHours} hrs</span></span>
+                      )}
+                    </>
+                  )}
+                </p>
               </div>
 
-              {/* Facility Proof Card (only when payload exists) */}
+              {/* Facility Proof Card */}
               {payload && (
-                <div className="bg-white rounded-2xl border-2 border-amber-200 shadow-sm p-6">
+                <div className="rounded-lg p-5" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.12)" }}>
                   <div className="flex items-center justify-between gap-4 mb-4">
                     <div>
-                      <div className="text-sm text-gray-500 font-semibold">Facility Proof</div>
-                      <div className="text-xl font-bold text-gray-900">
+                      <p className="text-xs text-slate-500 font-medium">Facility Data</p>
+                      <p className="text-sm font-semibold text-white">
                         {payload.business?.name || "Your Facility"}
-                      </div>
-                      <div className="text-sm text-gray-600">
+                      </p>
+                      <p className="text-xs text-slate-500">
                         {[payload.location?.city, payload.location?.state, payload.location?.zipCode].filter(Boolean).join(", ")}
-                      </div>
+                      </p>
                     </div>
-
-                    <div className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-bold">
-                      TrueQuote™ Payload
-                    </div>
+                    <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold text-emerald-400" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                      TrueQuote™
+                    </span>
                   </div>
 
-                  {/* Key inputs */}
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                      <div className="text-xs text-gray-500 font-semibold mb-1">Utility Rate</div>
-                      <div className="text-lg font-bold text-gray-900">
-                        {payload.locationIntel?.utilityRate != null ? `$${payload.locationIntel.utilityRate}/kWh` : "—"}
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Utility Rate", value: payload.locationIntel?.utilityRate != null ? `$${payload.locationIntel.utilityRate}/kWh` : "—" },
+                      { label: "Peak Sun Hours", value: payload.locationIntel?.peakSunHours != null ? `${payload.locationIntel.peakSunHours}` : "—" },
+                      { label: "Weather Risk", value: payload.locationIntel?.weatherRisk ?? "—" },
+                    ].map((d) => (
+                      <div key={d.label} className="p-3 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
+                        <p className="text-[11px] text-slate-500 font-medium mb-1">{d.label}</p>
+                        <p className="text-sm font-semibold text-white">{d.value}</p>
                       </div>
-                    </div>
-                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                      <div className="text-xs text-gray-500 font-semibold mb-1">Peak Sun Hours</div>
-                      <div className="text-lg font-bold text-gray-900">
-                        {payload.locationIntel?.peakSunHours != null ? `${payload.locationIntel.peakSunHours}` : "—"}
-                      </div>
-                    </div>
-                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                      <div className="text-xs text-gray-500 font-semibold mb-1">Weather Risk</div>
-                      <div className="text-lg font-bold text-gray-900">
-                        {payload.locationIntel?.weatherRisk ?? "—"}
-                      </div>
-                    </div>
+                    ))}
                   </div>
 
-                  {/* Outputs (if present) */}
                   {payload.outputs && (
-                    <div className="mt-5">
-                      <div className="text-sm font-semibold text-gray-700 mb-2">Outputs</div>
-                      <div className="rounded-xl border border-gray-200 bg-white p-4 font-mono text-xs text-gray-700 overflow-x-auto">
-                        <pre>{JSON.stringify(payload.outputs, null, 2)}</pre>
-                      </div>
+                    <div className="mt-4">
+                      <p className="text-xs text-slate-500 font-medium mb-2">Outputs</p>
+                      <pre className="rounded-md p-3 text-[11px] text-slate-400 font-mono overflow-x-auto" style={{ background: "rgba(255,255,255,0.03)" }}>
+                        {JSON.stringify(payload.outputs, null, 2)}
+                      </pre>
                     </div>
                   )}
 
-                  {/* Assumptions */}
                   {payload.assumptions?.length ? (
-                    <div className="mt-5">
-                      <div className="text-sm font-semibold text-gray-700 mb-2">Assumptions</div>
-                      <div className="grid md:grid-cols-2 gap-3">
+                    <div className="mt-4">
+                      <p className="text-xs text-slate-500 font-medium mb-2">Assumptions</p>
+                      <div className="grid grid-cols-2 gap-2">
                         {payload.assumptions.map((a, idx) => (
-                          <div key={idx} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                            <div className="text-xs text-gray-500 font-semibold">{a.label}</div>
-                            <div className="text-sm font-bold text-gray-900 mt-1">{a.value}</div>
+                          <div key={idx} className="p-3 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
+                            <p className="text-[11px] text-slate-500">{a.label}</p>
+                            <p className="text-xs font-medium text-white mt-0.5">{a.value}</p>
                           </div>
                         ))}
                       </div>
@@ -501,73 +416,71 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                 </div>
               )}
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Authority Sources Grid */}
+              <div className="grid grid-cols-4 gap-2">
                 {AUTHORITY_SOURCES.slice(0, 8).map((source) => (
                   <a
                     key={source.id}
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`group p-4 rounded-xl border-2 ${source.bgColor} hover:shadow-xl transition-all`}
+                    className="group p-3 rounded-lg text-center transition-all hover:scale-[1.02]"
+                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
                   >
-                    <div className="text-center">
-                      <div className="text-4xl mb-2">{source.logo}</div>
-                      <div className="font-bold text-gray-900">{source.name}</div>
-                      <div className="text-xs text-gray-600 truncate">{source.fullName}</div>
-                    </div>
+                    <div className="text-2xl mb-1">{source.logo}</div>
+                    <p className="text-xs font-semibold text-slate-300">{source.name}</p>
+                    <p className="text-[10px] text-slate-600 truncate">{source.fullName}</p>
                   </a>
                 ))}
               </div>
 
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="bg-blue-100 rounded-xl p-6 border-2 border-blue-300">
-                  <Building2 className="w-8 h-8 text-blue-700 mb-3" />
-                  <h3 className="font-bold text-gray-900 mb-2 text-lg">For Businesses</h3>
-                  <p className="text-gray-700">Present quotes to your CFO with confidence.</p>
-                </div>
-                <div className="bg-emerald-100 rounded-xl p-6 border-2 border-emerald-300">
-                  <Landmark className="w-8 h-8 text-emerald-700 mb-3" />
-                  <h3 className="font-bold text-gray-900 mb-2 text-lg">For Banks</h3>
-                  <p className="text-gray-700">Due diligence without calling us.</p>
-                </div>
-                <div className="bg-purple-100 rounded-xl p-6 border-2 border-purple-300">
-                  <Sparkles className="w-8 h-8 text-purple-700 mb-3" />
-                  <h3 className="font-bold text-gray-900 mb-2 text-lg">For Developers</h3>
-                  <p className="text-gray-700">Close deals faster with NREL alignment.</p>
-                </div>
+              {/* Audience cards */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { icon: "🏢", title: "For Businesses", desc: "Present quotes to your CFO with confidence.", accent: "59,130,246" },
+                  { icon: "🏛️", title: "For Banks", desc: "Due diligence without calling us.", accent: "16,185,129" },
+                  { icon: "⚡", title: "For Developers", desc: "Close deals faster with NREL alignment.", accent: "139,92,246" },
+                ].map((card) => (
+                  <div
+                    key={card.title}
+                    className="p-4 rounded-lg"
+                    style={{ background: `rgba(${card.accent}, 0.04)`, border: `1px solid rgba(${card.accent}, 0.12)` }}
+                  >
+                    <span className="text-xl">{card.icon}</span>
+                    <h4 className="text-sm font-semibold text-white mt-2">{card.title}</h4>
+                    <p className="text-xs text-slate-500 mt-1">{card.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
         </div>
 
-        {/* Footer CTA */}
-        <div className="border-t border-gray-200 bg-gray-50 px-8 py-5 flex-shrink-0">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <TrueQuoteBadgeCanonical showTooltip={false} />
-              <span className="text-gray-600">Ready to see the difference?</span>
-            </div>
+        {/* ── FOOTER ── */}
+        <div className="px-6 py-4 flex items-center justify-between flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+          <span className="text-xs text-slate-600">
+            TrueQuote™ Verified · Source-attributed pricing
+          </span>
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => {
-                onClose();
-                onGetQuote?.();
-              }}
-              className="group flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all"
+              onClick={onClose}
+              className="px-4 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors"
             >
-              <Zap className="w-5 h-5" />
+              Close
+            </button>
+            <button
+              onClick={() => { onClose(); onGetQuote?.(); }}
+              className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold text-white transition-all"
+              style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(16,185,129,0.25)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(16,185,129,0.15)"; }}
+            >
               Get Your TrueQuote™
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
     </div>
   );
 };
