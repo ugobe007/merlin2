@@ -424,9 +424,9 @@ export default function ModalManager(props: ModalManagerProps) {
       {/* V7 Wizard (Feb 2026 - V7 is now default) */}
       {showSmartWizard && (
         <div className="fixed inset-0 z-[9999]">
-          {/* Backdrop - click to close */}
+          {/* Backdrop - fully opaque to prevent home page bleed-through */}
           <div
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-[#080b14]"
             onClick={() => setShowSmartWizard(false)}
           />
           {/* Modal frame - doesn't steal events */}
