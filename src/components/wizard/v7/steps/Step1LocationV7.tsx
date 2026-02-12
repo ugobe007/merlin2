@@ -14,7 +14,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { WizardState as WizardV7State, EnergyGoal } from "@/wizard/v7/hooks/useWizardV7";
-import IntelStrip from "../shared/IntelStrip";
+import IntelStripInline from "../shared/IntelStripInline";
 import BusinessProfileCard from "../shared/BusinessProfileCard";
 import GoalsModal from "./GoalsModal";
 
@@ -339,11 +339,9 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
         )}
       </div>
 
-      {/* ✅ Location Intelligence — shown ABOVE zip input */}
+      {/* ✅ Location Intelligence — inline data row */}
       {showIntel && (
-        <div style={{ marginTop: -4 }}>
-          <IntelStrip intel={state.locationIntel} />
-        </div>
+        <IntelStripInline intel={state.locationIntel} />
       )}
 
       {/* ✅ Primary input block MUST be immediately after headline */}
