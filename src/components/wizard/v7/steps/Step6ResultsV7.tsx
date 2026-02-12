@@ -25,6 +25,7 @@ import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 import { useMerlinData } from "@/wizard/v7/memory";
+import TrueQuoteFinancialModal from "../shared/TrueQuoteFinancialModal";
 
 type Props = {
   state: WizardV7State;
@@ -216,6 +217,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
   }, [data.location, state.location?.formattedAddress]);
 
   const quoteReady = pricingStatus === "ok" && !!quoteRaw;
+
+  // TrueQuote™ Financial Projection modal state
+  const [showFinancialModal, setShowFinancialModal] = useState(false);
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -544,6 +548,18 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                 </div>
               )}
             </div>
+
+            {/* ✅ TrueQuote™ Financial Projection button */}
+            {quote.capexUSD != null && Number(quote.capexUSD) > 0 && quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
+              <button
+                onClick={() => setShowFinancialModal(true)}
+                className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/20 to-indigo-600/20 border border-purple-500/25 hover:border-purple-400/40 hover:from-purple-600/30 hover:to-indigo-600/30 transition-all group"
+              >
+                <TrendingUp className="w-4 h-4 text-purple-400 group-hover:text-purple-300" />
+                <span className="text-xs font-bold text-purple-300 group-hover:text-purple-200">View 10-Year Financial Projection</span>
+                <Sparkles className="w-3 h-3 text-amber-400 opacity-60" />
+              </button>
+            )}
           </Card>
         </div>
       )}
@@ -883,6 +899,22 @@ function AdvisorRecommendations({
           </div>
         </div>
       )}
+
+      {/* ================================================================
+          TRUEQUOTE™ FINANCIAL PROJECTION MODAL
+      ================================================================ */}
+      <TrueQuoteFinancialModal
+        isOpen={showFinancialModal}
+        onClose={() => setShowFinancialModal(false)}
+        totalInvestment={Number(quote.capexUSD ?? 0)}
+        federalITC={Number(quote.capexUSD ?? 0) * 0.30}
+        netInvestment={Number(quote.capexUSD ?? 0) * 0.70}
+        annualSavings={Number(quote.annualSavingsUSD ?? 0)}
+        bessKWh={Number(quote.bessKWh ?? 0) || undefined}
+        solarKW={Number(quote.solarKW ?? 0) || undefined}
+        industry={data.industry || undefined}
+        location={locLine !== "—" ? locLine : undefined}
+      />
     </div>
   );
 }
