@@ -39,9 +39,11 @@ type Actions = {
 interface Props {
   state: WizardV7State;
   actions: Actions;
+  /** Called when goals are confirmed — auto-advance to next step */
+  onGoalsConfirmedAdvance?: () => void;
 }
 
-export default function Step1LocationV7({ state, actions }: Props) {
+export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvance }: Props) {
   const {
     updateLocationRaw,
     submitLocation,
@@ -180,40 +182,89 @@ export default function Step1LocationV7({ state, actions }: Props) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, position: "relative" }}>
-      {/* Headline */}
+
+      {/* ✅ Confirmed business profile card — prominent at TOP */}
+      {state.businessConfirmed && state.businessCard && (
+        <div style={{ marginBottom: 4 }}>
+          <BusinessProfileCard
+            data={state.businessCard}
+            showIndustryInference={true}
+            onEdit={() => {
+              const n = state.businessCard?.name ?? "";
+              const a = state.businessCard?.address ?? "";
+              setBusinessValue(n);
+              setAddressValue(a);
+              setBusinessDraft({ name: n, address: a });
+            }}
+          />
+        </div>
+      )}
+
+      {/* Hero Section — with depth, glow, and visual weight */}
       <div style={{ position: "relative", zIndex: 1 }}>
-        {/* TrueQuote badge */}
+        {/* Ambient glow behind hero text */}
         <div
           style={{
             position: "absolute",
-            top: 110,
-            right: 24,
+            top: -40,
+            left: -60,
+            width: 400,
+            height: 260,
+            borderRadius: "50%",
+            background: "radial-gradient(ellipse, rgba(79, 140, 255, 0.08) 0%, transparent 70%)",
+            filter: "blur(40px)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 20,
+            right: -30,
+            width: 300,
+            height: 200,
+            borderRadius: "50%",
+            background: "radial-gradient(ellipse, rgba(34, 211, 238, 0.06) 0%, transparent 70%)",
+            filter: "blur(50px)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+
+        {/* TrueQuote badge */}
+        <div
+          style={{
             display: "inline-flex",
             alignItems: "center",
             gap: 10,
-            padding: "10px 18px",
-            borderRadius: 12,
+            padding: "8px 16px",
+            borderRadius: 10,
             background: "rgba(249, 168, 37, 0.06)",
             border: "1px solid rgba(249, 168, 37, 0.18)",
+            marginBottom: 18,
+            position: "relative",
             zIndex: 2,
           }}
         >
-          <span style={{ fontSize: 16, color: "#f9a825" }}>◎</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#f9a825", letterSpacing: "0.3px" }}>TrueQuote™</span>
-          <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.10)" }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#4ade80" }}>Verified</span>
+          <span style={{ fontSize: 14, color: "#f9a825" }}>◎</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#f9a825", letterSpacing: "0.3px" }}>TrueQuote™</span>
+          <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.10)" }} />
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#4ade80" }}>Verified</span>
         </div>
 
         <h1
           style={{
-            fontSize: 64,
-            fontWeight: 700,
-            letterSpacing: "-1.5px",
+            fontSize: 56,
+            fontWeight: 800,
+            letterSpacing: "-1.8px",
             color: "rgba(255, 255, 255, 0.98)",
             margin: 0,
             marginBottom: 6,
-            lineHeight: 1.1,
+            lineHeight: 1.08,
             textTransform: "lowercase",
+            position: "relative",
+            zIndex: 1,
           }}
         >
           unlock your{" "}
@@ -224,7 +275,7 @@ export default function Step1LocationV7({ state, actions }: Props) {
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
-              filter: "drop-shadow(0 0 24px rgba(34, 211, 238, 0.4))",
+              filter: "drop-shadow(0 0 30px rgba(34, 211, 238, 0.5))",
             }}
           >
             energy savings
@@ -234,14 +285,16 @@ export default function Step1LocationV7({ state, actions }: Props) {
 
         <h2
           style={{
-            fontSize: 44,
+            fontSize: 36,
             fontWeight: 600,
-            letterSpacing: "-0.8px",
-            color: "rgba(255, 255, 255, 0.70)",
+            letterSpacing: "-0.6px",
+            color: "rgba(255, 255, 255, 0.55)",
             margin: 0,
-            marginBottom: 14,
+            marginBottom: 16,
             lineHeight: 1.2,
             textTransform: "lowercase",
+            position: "relative",
+            zIndex: 1,
           }}
         >
           starting with location.
@@ -250,11 +303,13 @@ export default function Step1LocationV7({ state, actions }: Props) {
         <p
           style={{
             fontSize: 15,
-            color: "rgba(232, 235, 243, 0.6)",
+            color: "rgba(232, 235, 243, 0.55)",
             margin: 0,
             lineHeight: 1.75,
-            maxWidth: 680,
+            maxWidth: 600,
             fontWeight: 400,
+            position: "relative",
+            zIndex: 1,
           }}
         >
           Your location helps us estimate savings using utility rates, demand charges, solar potential,
@@ -263,14 +318,14 @@ export default function Step1LocationV7({ state, actions }: Props) {
 
         {/* Resolved City/State */}
         {state.location && (
-          <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 12, position: "relative", zIndex: 1 }}>
             <div
               style={{
                 width: 8,
                 height: 8,
                 borderRadius: "50%",
                 background: "#4ade80",
-                boxShadow: "0 0 8px rgba(74, 222, 128, 0.5)",
+                boxShadow: "0 0 12px rgba(74, 222, 128, 0.6)",
                 flexShrink: 0,
               }}
             />
@@ -284,6 +339,13 @@ export default function Step1LocationV7({ state, actions }: Props) {
           </div>
         )}
       </div>
+
+      {/* ✅ Location Intelligence — shown ABOVE zip input */}
+      {showIntel && (
+        <div style={{ marginTop: -4 }}>
+          <IntelStrip intel={state.locationIntel} />
+        </div>
+      )}
 
       {/* ✅ Primary input block MUST be immediately after headline */}
       <div style={{ position: "relative", zIndex: 1 }}>
@@ -465,12 +527,7 @@ export default function Step1LocationV7({ state, actions }: Props) {
           )}
         </div>
 
-        {/* ✅ Intel comes AFTER input (feedback), not before (clutter) */}
-        {showIntel && (
-          <div style={{ marginTop: 14 }}>
-            <IntelStrip intel={state.locationIntel} />
-          </div>
-        )}
+        {/* ✅ Intel moved to above ZIP input — see above */}
 
       </div>
 
@@ -509,7 +566,7 @@ export default function Step1LocationV7({ state, actions }: Props) {
             </div>
             <div>
               <div style={{ fontSize: 15, fontWeight: 800, color: "rgba(232, 235, 243, 0.92)" }}>
-                Find Your Business
+                Find My Business
               </div>
               <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(232, 235, 243, 0.4)", textTransform: "uppercase", letterSpacing: "0.4px" }}>
                 Optional — improves accuracy
@@ -706,54 +763,23 @@ export default function Step1LocationV7({ state, actions }: Props) {
         </div>
       )}
 
-      {/* ✅ Business confirmed: hard visual confirmation */}
+      {/* ✅ Business confirmed: compact inline indicator (full card is at top) */}
       {state.businessConfirmed && state.businessCard && (
         <div
           style={{
-            padding: 16,
-            borderRadius: 14,
-            background: "rgba(74, 222, 128, 0.08)",
-            border: "1px solid rgba(74, 222, 128, 0.22)",
+            padding: "10px 16px",
+            borderRadius: 12,
+            background: "rgba(74, 222, 128, 0.06)",
+            border: "1px solid rgba(74, 222, 128, 0.18)",
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
+            gap: 8,
           }}
         >
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <span style={{ color: "#4ade80", fontWeight: 900 }}>✓</span>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 900, color: "rgba(232,235,243,0.92)" }}>
-                Business confirmed
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(232,235,243,0.65)" }}>
-                {state.businessCard.name}
-                {state.businessCard.address ? ` • ${state.businessCard.address}` : ""}
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              const n = state.businessCard?.name ?? "";
-              const a = state.businessCard?.address ?? "";
-              setBusinessValue(n);
-              setAddressValue(a);
-              setBusinessDraft({ name: n, address: a });
-            }}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.14)",
-              background: "rgba(255,255,255,0.05)",
-              color: "rgba(232,235,243,0.85)",
-              fontSize: 12,
-              fontWeight: 800,
-              cursor: "pointer",
-            }}
-          >
-            Edit
-          </button>
+          <span style={{ color: "#4ade80", fontWeight: 900, fontSize: 13 }}>✓</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(232,235,243,0.7)" }}>
+            {state.businessCard.name} — confirmed
+          </span>
         </div>
       )}
 
@@ -867,7 +893,7 @@ export default function Step1LocationV7({ state, actions }: Props) {
             >
               <span style={{ color: "#4ade80", fontWeight: 900, fontSize: 14 }}>✓</span>
               <span style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.7)" }}>
-                Goals set — hit Continue below
+                Goals set — ready to continue
               </span>
               <button
                 type="button"
@@ -897,10 +923,19 @@ export default function Step1LocationV7({ state, actions }: Props) {
         onContinue={() => {
           confirmGoals(true);
           setShowGoalsModal(false);
+          // ✅ FIX: Auto-advance after goals confirmed — don't strand user on Step 1
+          if (onGoalsConfirmedAdvance) {
+            // Small delay to let state settle before navigation
+            setTimeout(() => onGoalsConfirmedAdvance(), 80);
+          }
         }}
         onSkip={() => {
           confirmGoals(true);
           setShowGoalsModal(false);
+          // ✅ FIX: Also auto-advance on skip
+          if (onGoalsConfirmedAdvance) {
+            setTimeout(() => onGoalsConfirmedAdvance(), 80);
+          }
         }}
       />
     </div>
