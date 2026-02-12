@@ -39,9 +39,15 @@ import { getTemplate, getFallbackTemplate, hasTemplate } from "../../templates/t
 describe("Contract 1: Step 1 — ZIP unlocks continue", () => {
   const validZips = ["90210", "10001", "33101", "60601", "98101", "89052-1234"];
 
-  it.each(validZips)("ZIP '%s' allows continue", (zip) => {
-    const state: WizardGateState = { locationRawInput: zip };
+  it.each(validZips)("ZIP '%s' allows continue when confirmed", (zip) => {
+    const state: WizardGateState = { locationRawInput: zip, locationConfirmed: true };
     expect(gateLocation(state).canContinue).toBe(true);
+  });
+
+  it.each(validZips)("ZIP '%s' blocks without confirmation", (zip) => {
+    const state: WizardGateState = { locationRawInput: zip };
+    expect(gateLocation(state).canContinue).toBe(false);
+    expect(gateLocation(state).reason).toBe("zip-unconfirmed");
   });
 
   it("empty state blocks (does NOT dead-end — shows prompt)", () => {
@@ -56,11 +62,19 @@ describe("Contract 1: Step 1 — ZIP unlocks continue", () => {
     expect(result.reason).toBeDefined();
   });
 
-  it("formattedAddress alone is sufficient (Google Places flow)", () => {
+  it("formattedAddress alone is sufficient (Google Places flow) when confirmed", () => {
     const state: WizardGateState = {
+      locationConfirmed: true,
       location: { formattedAddress: "123 Main St, Beverly Hills, CA 90210" },
     };
     expect(gateLocation(state).canContinue).toBe(true);
+  });
+
+  it("formattedAddress without confirmation blocks", () => {
+    const state: WizardGateState = {
+      location: { formattedAddress: "123 Main St, Beverly Hills, CA 90210" },
+    };
+    expect(gateLocation(state).canContinue).toBe(false);
   });
 });
 
