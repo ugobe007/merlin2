@@ -33,6 +33,10 @@ export {
   useMerlinSessionId,
 } from "./useMerlinMemory";
 
+// ── Memory-First Data Access (Steps 4/5/6 consume this) ────────────────
+export { useMerlinData, getProQuoteSeed } from "./useMerlinData";
+export type { MerlinData } from "./useMerlinData";
+
 // ── TrueQuote™ Validator ──────────────────────────────────────────────────
 export {
   validateMemory,

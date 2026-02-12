@@ -26,6 +26,7 @@ import type {
 } from "@/wizard/v7/hooks/useWizardV7";
 import { DEFAULT_ADD_ONS } from "@/wizard/v7/hooks/useWizardV7";
 import { SystemAddOnsCards } from "./SystemAddOnsCards";
+import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
 
 type Props = {
   state: WizardV7State;
@@ -37,6 +38,8 @@ type Props = {
 };
 
 export default function Step4OptionsV7({ state, actions }: Props) {
+  // ✅ MERLIN MEMORY: Read cross-step data from Memory first, fall back to state
+  const data = useMerlinData(state);
   const pricingStatus: PricingStatus = state.pricingStatus ?? "idle";
 
   const handleAddOnsConfirmed = useCallback(async (addOns: SystemAddOns) => {
@@ -51,7 +54,7 @@ export default function Step4OptionsV7({ state, actions }: Props) {
     actions.goToStep("magicfit");
   }, [actions]);
 
-  const peakKW = state.quote?.peakLoadKW;
+  const peakKW = data.peakLoadKW || state.quote?.peakLoadKW;
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
