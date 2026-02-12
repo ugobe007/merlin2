@@ -169,7 +169,14 @@ interface SystemAddOnsCardsProps {
   currentAddOns: SystemAddOns;
   onRecalculate?: (addOns: SystemAddOns) => Promise<{ ok: boolean; error?: string }>;
   pricingStatus: PricingStatus;
-  showGenerateButton?: boolean; // If true, show "Generate Quote" button; if false, show "Update Quote"
+  showGenerateButton?: boolean;
+  /** Merlin Memory data — preferred over state.quote for cross-step reads */
+  merlinData?: {
+    peakLoadKW: number;
+    energyKWhPerDay: number;
+    peakSunHours: number;
+    industry: string;
+  };
 }
 
 export function SystemAddOnsCards({
@@ -178,6 +185,7 @@ export function SystemAddOnsCards({
   onRecalculate,
   pricingStatus,
   showGenerateButton = false,
+  merlinData,
 }: SystemAddOnsCardsProps) {
   // Selections
   const [selectedOptions, setSelectedOptions] = useState<Set<string>>(() => {
@@ -189,7 +197,8 @@ export function SystemAddOnsCards({
   const [solarTier, setSolarTier] = useState<string>("recommended");
   const [evTier, setEvTier] = useState<string>("standard");
   const [generatorTier, setGeneratorTier] = useState<string>("standard");
-  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  // ✅ All cards start expanded by default
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(() => new Set(["solar", "ev", "generator"]));
   const [busy, setBusy] = useState(false);
 
   // ── Auto-apply add-on changes (Feb 11, 2026) ──
@@ -232,15 +241,15 @@ export function SystemAddOnsCards({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOptions, solarTier, evTier, generatorTier]);
 
-  // Derive inputs from V7 state
-  const peakLoadKW = state.quote?.peakLoadKW ?? 300;
-  const energyKWhDay = state.quote?.energyKWhPerDay ?? peakLoadKW * 10;
+  // ✅ MERLIN MEMORY: Pull from Memory first, fall back to state
+  const peakLoadKW = merlinData?.peakLoadKW || state.quote?.peakLoadKW || 300;
+  const energyKWhDay = merlinData?.energyKWhPerDay || state.quote?.energyKWhPerDay || peakLoadKW * 10;
   const annualUsageKwh = energyKWhDay * 365;
-  const sunHours = state.locationIntel?.peakSunHours ?? 5.5;
+  const sunHours = merlinData?.peakSunHours || state.locationIntel?.peakSunHours || 5.5;
   const industryLabel =
-    state.industry
-      ? state.industry.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-      : "Commercial";
+    (merlinData?.industry || state.industry || "")
+      .replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    || "Commercial";
 
   // ── Compute tiers ──
   const solarOpts = useMemo(
@@ -359,51 +368,7 @@ export function SystemAddOnsCards({
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
-      {/* Header */}
-      <div style={{ textAlign: "center" }}>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "6px 16px",
-            background: "rgba(139,92,246,0.15)",
-            border: "1px solid rgba(139,92,246,0.25)",
-            borderRadius: 999,
-            fontSize: 13,
-            fontWeight: 700,
-            color: "rgba(139,92,246,0.9)",
-            marginBottom: 12,
-          }}
-        >
-          ⭐ Personalized Recommendations
-        </div>
-        <h2
-          style={{
-            fontSize: 26,
-            fontWeight: 900,
-            color: "rgba(232,235,243,0.95)",
-            margin: "0 0 6px",
-            fontFamily: "Outfit, sans-serif",
-            letterSpacing: "-0.5px",
-          }}
-        >
-          Boost Your Energy ROI
-        </h2>
-        <p style={{ fontSize: 14, color: "rgba(232,235,243,0.5)", margin: 0 }}>
-          Based on your{" "}
-          <span style={{ color: "#06b6d4", fontWeight: 600 }}>
-            {state.location?.state ?? "US"}
-          </span>{" "}
-          location and{" "}
-          <span style={{ color: "rgba(139,92,246,0.9)", fontWeight: 600 }}>
-            {industryLabel}
-          </span>{" "}
-          profile
-        </p>
-      </div>
-
-      {/* Stats Bar */}
+      {/* Stats Bar — compact data strip (intro is rendered by Step4OptionsV7) */}
       <div
         style={{
           display: "flex",
@@ -457,9 +422,9 @@ export function SystemAddOnsCards({
           valueSuffix="/yr"
           accent="amber"
           isSelected={selectedOptions.has("solar")}
-          isExpanded={expandedCard === "solar"}
+          isExpanded={expandedCards.has("solar")}
           onToggle={() => toggleOption("solar")}
-          onExpand={() => setExpandedCard(expandedCard === "solar" ? null : "solar")}
+          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); n.has("solar") ? n.delete("solar") : n.add("solar"); return n; })}
         >
           <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
             <div
@@ -517,9 +482,9 @@ export function SystemAddOnsCards({
           valueLabel={curEv ? "10yr Revenue" : "Up to 10yr"}
           accent="cyan"
           isSelected={selectedOptions.has("ev")}
-          isExpanded={expandedCard === "ev"}
+          isExpanded={expandedCards.has("ev")}
           onToggle={() => toggleOption("ev")}
-          onExpand={() => setExpandedCard(expandedCard === "ev" ? null : "ev")}
+          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); n.has("ev") ? n.delete("ev") : n.add("ev"); return n; })}
         >
           <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
             <div
@@ -601,9 +566,9 @@ export function SystemAddOnsCards({
           valueLabel={curGen ? "Selected" : "From"}
           accent="red"
           isSelected={selectedOptions.has("generator")}
-          isExpanded={expandedCard === "generator"}
+          isExpanded={expandedCards.has("generator")}
           onToggle={() => toggleOption("generator")}
-          onExpand={() => setExpandedCard(expandedCard === "generator" ? null : "generator")}
+          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); n.has("generator") ? n.delete("generator") : n.add("generator"); return n; })}
         >
           <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
             <div
@@ -910,8 +875,8 @@ function OptionCard({
         </div>
       </div>
 
-      {/* Expanded Content — shown when selected AND expanded */}
-      {isExpanded && isSelected && children}
+      {/* Expanded Content — always shown when expanded (tiers visible for browsing) */}
+      {isExpanded && children}
     </div>
   );
 }
