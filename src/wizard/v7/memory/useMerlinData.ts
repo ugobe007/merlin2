@@ -97,6 +97,64 @@ export interface MerlinData {
     pricingComplete: boolean;
   } | null;
 
+  // ── Weather & Climate (NEW Feb 11, 2026) ────────────────────────────────
+  weather: {
+    profile: string;           // "Hot & Humid", "Temperate", etc.
+    extremes: string;          // "Frequent heatwaves", etc.
+    avgTempF?: number;
+    heatingDegreeDays?: number;
+    coolingDegreeDays?: number;
+  } | null;
+
+  // ── Solar Resource (NEW Feb 11, 2026) ───────────────────────────────────
+  solar: {
+    peakSunHours: number;
+    capacityFactor: number;    // 0-1
+    grade: string;             // "A", "A-", "B+", etc.
+    annualProductionKWh?: number;
+    monthlyProductionKWh?: number[];
+    annualIrradiance?: number;
+  } | null;
+
+  // ── Financial Model (NEW Feb 11, 2026) ──────────────────────────────────
+  financials: {
+    // Cost breakdown
+    equipmentCost: number;
+    totalProjectCost: number;
+    taxCredit: number;
+    netCost: number;
+    // Savings breakdown
+    annualSavings: number;
+    demandChargeSavings?: number;
+    touArbitrageSavings?: number;
+    // Return metrics
+    paybackYears: number;
+    roi10Year: number;
+    roi25Year: number;
+    npv: number;
+    irr: number;
+    // ITC
+    itcRate?: number;
+    itcAmount?: number;
+    // Degradation
+    year10CapacityPct?: number;
+    year25CapacityPct?: number;
+    // Risk
+    npvP10?: number;
+    npvP90?: number;
+    probabilityPositiveNPV?: number;
+  } | null;
+
+  // ── Session Telemetry (NEW Feb 11, 2026) ────────────────────────────────
+  session: {
+    startedAt: number;
+    totalStepsCompleted: number;
+    quoteGenerations: number;
+    addOnChanges: number;
+    lastActiveAt: number;
+    durationSec: number;       // computed: lastActiveAt - startedAt
+  } | null;
+
   // ── Meta ─────────────────────────────────────────────────────────────────
   isMemoryBacked: boolean;     // true = Memory has data (not falling back)
   filledSlots: string[];       // which Memory slots are populated
@@ -163,6 +221,10 @@ export function useMerlinData(state?: any): MerlinData {
   const memSizing = useMerlinMemory("sizing");
   const memAddOns = useMerlinMemory("addOns");
   const memQuote = useMerlinMemory("quote");
+  const memWeather = useMerlinMemory("weather");
+  const memSolar = useMerlinMemory("solar");
+  const memFinancials = useMerlinMemory("financials");
+  const memSession = useMerlinMemory("session");
 
   return useMemo(() => {
     const hasMemory = memLocation != null || memProfile != null;
@@ -247,6 +309,70 @@ export function useMerlinData(state?: any): MerlinData {
     if (memSizing) filledSlots.push("sizing");
     if (memAddOns) filledSlots.push("addOns");
     if (memQuote) filledSlots.push("quote");
+    if (memWeather) filledSlots.push("weather");
+    if (memSolar) filledSlots.push("solar");
+    if (memFinancials) filledSlots.push("financials");
+    if (memSession) filledSlots.push("session");
+
+    // ── Weather (Memory only — no state fallback) ───────────────────────
+    const weather = memWeather
+      ? {
+          profile: memWeather.profile ?? "",
+          extremes: memWeather.extremes ?? "",
+          avgTempF: memWeather.avgTempF,
+          heatingDegreeDays: memWeather.heatingDegreeDays,
+          coolingDegreeDays: memWeather.coolingDegreeDays,
+        }
+      : null;
+
+    // ── Solar (Memory only — no state fallback) ─────────────────────────
+    const solar = memSolar
+      ? {
+          peakSunHours: memSolar.peakSunHours ?? peakSunHours,
+          capacityFactor: memSolar.capacityFactor ?? (memSolar.peakSunHours ? memSolar.peakSunHours / 24 : 0.17),
+          grade: memSolar.grade ?? "B",
+          annualProductionKWh: memSolar.annualProductionKWh,
+          monthlyProductionKWh: memSolar.monthlyProductionKWh,
+          annualIrradiance: memSolar.annualIrradiance,
+        }
+      : null;
+
+    // ── Financials (Memory only — no state fallback) ────────────────────
+    const financials = memFinancials
+      ? {
+          equipmentCost: memFinancials.equipmentCost,
+          totalProjectCost: memFinancials.totalProjectCost,
+          taxCredit: memFinancials.taxCredit,
+          netCost: memFinancials.netCost,
+          annualSavings: memFinancials.annualSavings,
+          demandChargeSavings: memFinancials.demandChargeSavings,
+          touArbitrageSavings: memFinancials.touArbitrageSavings,
+          paybackYears: memFinancials.paybackYears,
+          roi10Year: memFinancials.roi10Year,
+          roi25Year: memFinancials.roi25Year,
+          npv: memFinancials.npv,
+          irr: memFinancials.irr,
+          itcRate: memFinancials.itcRate,
+          itcAmount: memFinancials.itcAmount,
+          year10CapacityPct: memFinancials.year10CapacityPct,
+          year25CapacityPct: memFinancials.year25CapacityPct,
+          npvP10: memFinancials.npvP10,
+          npvP90: memFinancials.npvP90,
+          probabilityPositiveNPV: memFinancials.probabilityPositiveNPV,
+        }
+      : null;
+
+    // ── Session (Memory only — computed fields) ─────────────────────────
+    const session = memSession
+      ? {
+          startedAt: memSession.startedAt,
+          totalStepsCompleted: memSession.totalStepsCompleted,
+          quoteGenerations: memSession.quoteGenerations,
+          addOnChanges: memSession.addOnChanges,
+          lastActiveAt: memSession.lastActiveAt,
+          durationSec: Math.round((memSession.lastActiveAt - memSession.startedAt) / 1000),
+        }
+      : null;
 
     return {
       location,
@@ -268,12 +394,16 @@ export function useMerlinData(state?: any): MerlinData {
       durationHours,
       addOns,
       quote,
+      weather,
+      solar,
+      financials,
+      session,
       isMemoryBacked: hasMemory,
       filledSlots,
       report: merlinMemory.lastReport,
       checksum: merlinMemory.checksum,
     };
-  }, [memLocation, memGoals, memIndustry, memProfile, memSizing, memAddOns, memQuote, state]);
+  }, [memLocation, memGoals, memIndustry, memProfile, memSizing, memAddOns, memQuote, memWeather, memSolar, memFinancials, memSession, state]);
 }
 
 // ============================================================================

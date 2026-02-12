@@ -38,6 +38,10 @@ import type {
   MemorySizing,
   MemoryAddOns,
   MemoryQuote,
+  MemoryWeather,
+  MemorySolar,
+  MemoryFinancials,
+  MemorySession,
 } from "./merlinMemory";
 
 // ============================================================================
@@ -635,6 +639,209 @@ function validateQuote(quote: MemoryQuote, profile: MemoryProfile | null, sizing
 }
 
 // ============================================================================
+// WEATHER VALIDATION (Feb 11, 2026)
+// ============================================================================
+
+function validateWeather(weather: MemoryWeather, v: TrueQuoteViolation[]): void {
+  // Temperature sanity (US climate range)
+  if (weather.avgTempF != null) {
+    if (weather.avgTempF < 10 || weather.avgTempF > 95) {
+      v.push({
+        id: "WX-001", slot: "weather", field: "avgTempF",
+        severity: "warning", category: "range",
+        message: `Average temp ${weather.avgTempF}°F outside US climate range`,
+        expected: "10°F to 95°F (NOAA US climate normals)",
+        actual: `${weather.avgTempF}°F`,
+        source: "NOAA Climate Normals 2020",
+      });
+    }
+  }
+
+  // HDD/CDD should be non-negative
+  if (weather.heatingDegreeDays != null && weather.heatingDegreeDays < 0) {
+    v.push({
+      id: "WX-002", slot: "weather", field: "heatingDegreeDays",
+      severity: "error", category: "integrity",
+      message: "Heating degree days cannot be negative",
+      actual: String(weather.heatingDegreeDays),
+    });
+  }
+  if (weather.coolingDegreeDays != null && weather.coolingDegreeDays < 0) {
+    v.push({
+      id: "WX-003", slot: "weather", field: "coolingDegreeDays",
+      severity: "error", category: "integrity",
+      message: "Cooling degree days cannot be negative",
+      actual: String(weather.coolingDegreeDays),
+    });
+  }
+}
+
+// ============================================================================
+// SOLAR RESOURCE VALIDATION (Feb 11, 2026)
+// ============================================================================
+
+function validateSolar(solar: MemorySolar, v: TrueQuoteViolation[]): void {
+  // Peak sun hours: realistic US range is ~3 to ~7 hours
+  if (solar.peakSunHours != null) {
+    if (solar.peakSunHours < 2.0 || solar.peakSunHours > 8.0) {
+      v.push({
+        id: "SOL-001", slot: "solar", field: "peakSunHours",
+        severity: "warning", category: "range",
+        message: `Peak sun hours ${solar.peakSunHours} outside expected range`,
+        expected: "2.0 to 8.0 hours/day (NREL TMY data, US)",
+        actual: `${solar.peakSunHours} hours`,
+        source: "NREL PVWatts / TMY3",
+      });
+    }
+  }
+
+  // Capacity factor: 0.10 to 0.35 for US solar
+  if (solar.capacityFactor != null) {
+    if (solar.capacityFactor < 0.08 || solar.capacityFactor > 0.40) {
+      v.push({
+        id: "SOL-002", slot: "solar", field: "capacityFactor",
+        severity: "warning", category: "range",
+        message: `Capacity factor ${(solar.capacityFactor * 100).toFixed(1)}% outside US solar range`,
+        expected: "8% to 40% (NREL ATB 2024)",
+        actual: `${(solar.capacityFactor * 100).toFixed(1)}%`,
+        source: "NREL ATB 2024",
+      });
+    }
+  }
+
+  // Annual production should be positive if reported
+  if (solar.annualProductionKWh != null && solar.annualProductionKWh <= 0) {
+    v.push({
+      id: "SOL-003", slot: "solar", field: "annualProductionKWh",
+      severity: "error", category: "integrity",
+      message: "Annual solar production must be positive",
+      actual: `${solar.annualProductionKWh} kWh`,
+    });
+  }
+
+  // Monthly production array should have 12 entries
+  if (solar.monthlyProductionKWh != null && solar.monthlyProductionKWh.length !== 12) {
+    v.push({
+      id: "SOL-004", slot: "solar", field: "monthlyProductionKWh",
+      severity: "error", category: "integrity",
+      message: `Monthly production has ${solar.monthlyProductionKWh.length} entries (expected 12)`,
+      expected: "12 months",
+      actual: String(solar.monthlyProductionKWh.length),
+    });
+  }
+}
+
+// ============================================================================
+// FINANCIALS VALIDATION (Feb 11, 2026)
+// ============================================================================
+
+function validateFinancials(fin: MemoryFinancials, v: TrueQuoteViolation[]): void {
+  // Net cost should be less than total project cost (ITC reduces it)
+  if (fin.netCost > fin.totalProjectCost * 1.05) {
+    v.push({
+      id: "FIN-001", slot: "financials", field: "netCost",
+      severity: "warning", category: "consistency",
+      message: "Net cost exceeds total project cost — ITC should reduce net cost",
+      expected: `≤ $${fin.totalProjectCost.toLocaleString()}`,
+      actual: `$${fin.netCost.toLocaleString()}`,
+    });
+  }
+
+  // ITC rate should be within IRA 2022 bounds (6% to 70%)
+  if (fin.itcRate != null && (fin.itcRate < 0.04 || fin.itcRate > 0.72)) {
+    v.push({
+      id: "FIN-002", slot: "financials", field: "itcRate",
+      severity: "warning", category: "range",
+      message: `ITC rate ${(fin.itcRate * 100).toFixed(0)}% outside IRA 2022 range`,
+      expected: "6% to 70% (IRA 2022)",
+      actual: `${(fin.itcRate * 100).toFixed(0)}%`,
+      source: "IRA 2022 (Inflation Reduction Act)",
+    });
+  }
+
+  // Payback years should be reasonable (0.5 to 25 years)
+  if (fin.paybackYears < 0.5 || fin.paybackYears > 25) {
+    v.push({
+      id: "FIN-003", slot: "financials", field: "paybackYears",
+      severity: "warning", category: "range",
+      message: `Payback ${fin.paybackYears.toFixed(1)}y outside typical range`,
+      expected: "0.5 to 25 years",
+      actual: `${fin.paybackYears.toFixed(1)} years`,
+    });
+  }
+
+  // Degradation capacity at year 10 should be 50-100%
+  if (fin.year10CapacityPct != null && (fin.year10CapacityPct < 50 || fin.year10CapacityPct > 100)) {
+    v.push({
+      id: "FIN-004", slot: "financials", field: "year10CapacityPct",
+      severity: "warning", category: "range",
+      message: `Year 10 capacity ${fin.year10CapacityPct}% outside expected range`,
+      expected: "50% to 100% (NREL/PNNL battery degradation models)",
+      actual: `${fin.year10CapacityPct}%`,
+      source: "NREL BESS degradation research",
+    });
+  }
+
+  // Monte Carlo: P10 should be < P90
+  if (fin.npvP10 != null && fin.npvP90 != null && fin.npvP10 > fin.npvP90) {
+    v.push({
+      id: "FIN-005", slot: "financials", field: "npvP10",
+      severity: "error", category: "integrity",
+      message: "P10 NPV exceeds P90 NPV — inverted percentiles",
+      expected: "P10 ≤ P90",
+      actual: `P10=$${fin.npvP10.toLocaleString()}, P90=$${fin.npvP90.toLocaleString()}`,
+    });
+  }
+
+  // NaN guard on all numeric fields
+  const finNumericFields: [string, unknown][] = [
+    ["equipmentCost", fin.equipmentCost],
+    ["totalProjectCost", fin.totalProjectCost],
+    ["netCost", fin.netCost],
+    ["annualSavings", fin.annualSavings],
+    ["npv", fin.npv],
+    ["irr", fin.irr],
+  ];
+  for (const [field, val] of finNumericFields) {
+    if (val != null && typeof val === "number" && (isNaN(val) || !isFinite(val))) {
+      v.push({
+        id: `FIN-NAN-${field}`, slot: "financials", field,
+        severity: "error", category: "integrity",
+        message: `${field} is NaN or Infinity`,
+        actual: String(val),
+      });
+    }
+  }
+}
+
+// ============================================================================
+// SESSION VALIDATION (Feb 11, 2026)
+// ============================================================================
+
+function validateSession(session: MemorySession, v: TrueQuoteViolation[]): void {
+  // startedAt should be in the past
+  if (session.startedAt > Date.now() + 60_000) {
+    v.push({
+      id: "SES-001", slot: "session", field: "startedAt",
+      severity: "warning", category: "integrity",
+      message: "Session start is in the future — possible clock skew",
+      actual: new Date(session.startedAt).toISOString(),
+    });
+  }
+
+  // totalStepsCompleted should not exceed step count (6 steps)
+  if (session.totalStepsCompleted > 6) {
+    v.push({
+      id: "SES-002", slot: "session", field: "totalStepsCompleted",
+      severity: "info", category: "range",
+      message: `${session.totalStepsCompleted} steps completed — exceeds wizard step count`,
+      expected: "0 to 6",
+      actual: String(session.totalStepsCompleted),
+    });
+  }
+}
+
+// ============================================================================
 // MAIN VALIDATION ENTRY POINT
 // ============================================================================
 
@@ -648,18 +855,22 @@ export function validateMemory(
 ): TrueQuoteReport {
   const violations: TrueQuoteViolation[] = [];
 
-  const ALL_KEYS: MemorySlotKey[] = ["location", "goals", "industry", "business", "profile", "sizing", "addOns", "quote"];
+  const ALL_KEYS: MemorySlotKey[] = ["location", "goals", "industry", "business", "profile", "sizing", "addOns", "quote", "weather", "solar", "financials", "session"];
   const filled = ALL_KEYS.filter(k => slots[k] != null);
   const empty = ALL_KEYS.filter(k => slots[k] == null);
 
   // Run per-slot validators
-  if (slots.location)  validateLocation(slots.location, violations);
-  if (slots.goals)     validateGoals(slots.goals, violations);
-  if (slots.industry)  validateIndustry(slots.industry, violations);
-  if (slots.profile)   validateProfile(slots.profile, slots.industry ?? null, violations);
-  if (slots.sizing)    validateSizing(slots.sizing, slots.profile ?? null, violations);
-  if (slots.addOns)    validateAddOns(slots.addOns, violations);
-  if (slots.quote)     validateQuote(slots.quote, slots.profile ?? null, slots.sizing ?? null, violations);
+  if (slots.location)   validateLocation(slots.location, violations);
+  if (slots.goals)      validateGoals(slots.goals, violations);
+  if (slots.industry)   validateIndustry(slots.industry, violations);
+  if (slots.profile)    validateProfile(slots.profile, slots.industry ?? null, violations);
+  if (slots.sizing)     validateSizing(slots.sizing, slots.profile ?? null, violations);
+  if (slots.addOns)     validateAddOns(slots.addOns, violations);
+  if (slots.quote)      validateQuote(slots.quote, slots.profile ?? null, slots.sizing ?? null, violations);
+  if (slots.weather)    validateWeather(slots.weather, violations);
+  if (slots.solar)      validateSolar(slots.solar, violations);
+  if (slots.financials) validateFinancials(slots.financials, violations);
+  if (slots.session)    validateSession(slots.session, violations);
 
   const errorCount = violations.filter(v => v.severity === "error").length;
   const warningCount = violations.filter(v => v.severity === "warning").length;
@@ -715,6 +926,18 @@ export function validateSlot<K extends MemorySlotKey>(
         (allSlots.sizing as MemorySizing) ?? null,
         violations,
       );
+      break;
+    case "weather":
+      validateWeather(value as MemoryWeather, violations);
+      break;
+    case "solar":
+      validateSolar(value as MemorySolar, violations);
+      break;
+    case "financials":
+      validateFinancials(value as MemoryFinancials, violations);
+      break;
+    case "session":
+      validateSession(value as MemorySession, violations);
       break;
   }
 
