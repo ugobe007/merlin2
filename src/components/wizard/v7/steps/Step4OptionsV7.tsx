@@ -9,12 +9,15 @@
  * SSOT: SystemAddOnsCards handles all calculation via step4PreviewService.
  * This component only handles layout and navigation.
  *
- * Updated Feb 11, 2026: Clearer header, better navigation visibility
+ * Updated Feb 11, 2026: Always render cards (no peakKW gate) — pricing runs
+ * async after step3 submit, so peakKW may not be available immediately.
+ * SystemAddOnsCards has its own fallback (300 kW default).
  */
 
 import React, { useCallback } from "react";
 import {
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import type {
   WizardState as WizardV7State,
@@ -24,7 +27,7 @@ import type {
 } from "@/wizard/v7/hooks/useWizardV7";
 import { DEFAULT_ADD_ONS } from "@/wizard/v7/hooks/useWizardV7";
 import { SystemAddOnsCards } from "./SystemAddOnsCards";
-import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
+import { useMerlinData } from "@/wizard/v7/memory";
 
 type Props = {
   state: WizardV7State;
@@ -48,7 +51,8 @@ export default function Step4OptionsV7({ state, actions }: Props) {
     return { ok: true };
   }, [actions]);
 
-  const peakKW = data.peakLoadKW || state.quote?.peakLoadKW;
+  const peakKW = data.peakLoadKW || state.quote?.peakLoadKW || 0;
+  const isPricingPending = pricingStatus === "pending" || pricingStatus === "idle";
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -59,7 +63,7 @@ export default function Step4OptionsV7({ state, actions }: Props) {
           Enhance Your System
         </h1>
         <p className="text-slate-400 text-sm mt-1.5">
-          {peakKW
+          {peakKW > 0
             ? `Your facility uses ~${Math.round(peakKW)} kW peak. Adding solar or backup generation can improve savings and resilience.`
             : "Add solar panels, backup generators, or EV chargers to maximize your investment."}
         </p>
@@ -68,16 +72,22 @@ export default function Step4OptionsV7({ state, actions }: Props) {
         </p>
       </div>
 
-      {/* System Add-Ons Cards */}
-      {peakKW != null && (
-        <SystemAddOnsCards
-          state={state}
-          currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
-          onRecalculate={handleAddOnsConfirmed}
-          pricingStatus={pricingStatus}
-          showGenerateButton={false}
-        />
+      {/* Pricing status indicator */}
+      {isPricingPending && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
+          <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
+          <span className="text-sm text-purple-300 font-medium">Calculating your system sizing…</span>
+        </div>
       )}
+
+      {/* System Add-Ons Cards — always render (SystemAddOnsCards has its own fallbacks) */}
+      <SystemAddOnsCards
+        state={state}
+        currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
+        onRecalculate={handleAddOnsConfirmed}
+        pricingStatus={pricingStatus}
+        showGenerateButton={false}
+      />
 
       {/* Navigation handled by shell bottom nav — "See MagicFit →" */}
     </div>
