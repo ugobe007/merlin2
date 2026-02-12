@@ -2,11 +2,13 @@
  * TrueQuoteFinancialModal.tsx
  * ===========================
  * 
- * TrueQuote™ Financial Summary popup — reuses the proven financialProjections.ts
- * service from V6's TrueQuoteVerifyBadge Financials tab.
+ * TrueQuote™ 10-Year Financial Projection modal for V7 wizard.
  * 
- * Shows: 10-year financial projection with summary cards, year-by-year cash flow,
- * key assumptions, and sensitivity analysis.
+ * Uses the shared SSOT service: src/services/financialProjections.ts
+ * (calculateFinancialProjection, formatProjectionForDisplay, runSensitivityAnalysis)
+ * 
+ * Shows: summary cards (payback, NPV, IRR, ROI, lifetime savings, SIR),
+ * year-by-year cash flow table, key assumptions, and 5-scenario sensitivity analysis.
  * 
  * @version 1.0.0
  * @date February 2026
