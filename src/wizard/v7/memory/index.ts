@@ -1,5 +1,6 @@
 /**
  * Merlin Memory — barrel export
+ * + TrueQuote™ Validator (Feb 11, 2026)
  */
 export {
   merlinMemory,
@@ -31,3 +32,19 @@ export {
   useMerlinMemorySet,
   useMerlinSessionId,
 } from "./useMerlinMemory";
+
+// ── TrueQuote™ Validator ──────────────────────────────────────────────────
+export {
+  validateMemory,
+  validateSlot,
+  generateChecksum,
+  formatViolations,
+  getComplianceBadge,
+} from "./truequoteValidator";
+
+export type {
+  TrueQuoteReport,
+  TrueQuoteViolation,
+  ViolationSeverity,
+  ViolationCategory,
+} from "./truequoteValidator";

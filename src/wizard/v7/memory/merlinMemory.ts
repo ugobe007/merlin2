@@ -158,16 +158,34 @@ type AnyListener = (key: MemorySlotKey) => void;
 
 const SESSION_STORAGE_KEY = "merlin_memory_v7";
 
+// Lazy-loaded validator (avoids circular dependency at module init)
+let _validatorMod: typeof import("./truequoteValidator") | null = null;
+let _validatorLoading = false;
+
+function getValidator() {
+  if (!_validatorMod && !_validatorLoading) {
+    _validatorLoading = true;
+    import("./truequoteValidator").then(mod => {
+      _validatorMod = mod;
+    }).catch(() => { /* non-fatal */ });
+  }
+  return _validatorMod;
+}
+
 class MerlinMemoryStore {
   private slots: Partial<MerlinMemorySlots> = {};
   private listeners: { [K in MemorySlotKey]?: Set<Listener<K>> } = {};
   private globalListeners = new Set<AnyListener>();
   private sessionId: string;
+  private _lastReport: import("./truequoteValidator").TrueQuoteReport | null = null;
 
   constructor() {
     this.sessionId = `mem_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     this.hydrate();
   }
+
+  /** Get the last TrueQuote validation report */
+  get lastReport() { return this._lastReport; }
 
   // ── READ ──────────────────────────────────────────────────────────────────
 
@@ -188,14 +206,44 @@ class MerlinMemoryStore {
 
   // ── WRITE ─────────────────────────────────────────────────────────────────
 
-  /** Write a value to a memory slot. Notifies subscribers. */
+  /** Write a value to a memory slot. Notifies subscribers. Runs TrueQuote™ validation. */
   set<K extends MemorySlotKey>(key: K, value: MerlinMemorySlots[K]): void {
     this.slots[key] = value;
     this.persist();
     this.notify(key);
 
+    // ── TrueQuote™ Continuous Validation ────────────────────────────────
+    this.runValidation(key, value);
+
     if (import.meta.env.DEV) {
       console.log(`[MerlinMemory] 💾 ${key} =`, value);
+    }
+  }
+
+  /** Run TrueQuote™ validation on a slot write */
+  private runValidation<K extends MemorySlotKey>(key: K, value: MerlinMemorySlots[K]): void {
+    try {
+      const mod = getValidator();
+      if (!mod) return; // Validator not loaded yet (first write)
+
+      // Quick per-slot validation
+      const violations = mod.validateSlot(key, value, this.slots);
+
+      // Full report (for checksum + compliance badge)
+      this._lastReport = mod.validateMemory(this.slots, this.sessionId);
+
+      // Log violations in dev mode
+      if (import.meta.env.DEV && violations.length > 0) {
+        const errors = violations.filter(v => v.severity === "error");
+        const warnings = violations.filter(v => v.severity === "warning");
+        if (errors.length > 0) {
+          console.warn(`[TrueQuote™] 🔴 ${errors.length} error(s) on ${key}:\n${mod.formatViolations(violations)}`);
+        } else if (warnings.length > 0) {
+          console.info(`[TrueQuote™] 🟡 ${warnings.length} warning(s) on ${key}:\n${mod.formatViolations(violations)}`);
+        }
+      }
+    } catch {
+      // Validation should never crash the wizard
     }
   }
 
@@ -268,6 +316,23 @@ class MerlinMemoryStore {
 
   getSessionId(): string {
     return this.sessionId;
+  }
+
+  /** Run full TrueQuote™ validation on all slots. Returns report. */
+  validate(): import("./truequoteValidator").TrueQuoteReport | null {
+    try {
+      const mod = getValidator();
+      if (!mod) return null;
+      this._lastReport = mod.validateMemory(this.slots, this.sessionId);
+      return this._lastReport;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Get the current memory checksum (null if never validated) */
+  get checksum(): string | null {
+    return this._lastReport?.checksum ?? null;
   }
 
   // ── INTERNAL ──────────────────────────────────────────────────────────────
