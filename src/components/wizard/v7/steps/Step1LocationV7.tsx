@@ -73,25 +73,37 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
   // ✅ FIX Feb 12: Business auto-confirms on search. No confirm gate needed.
   // Goals modal opens when locationConfirmed && !goalsConfirmed (single path).
 
-  // Auto-open goals modal when location is confirmed and goals aren't set
-  // ✅ FIX Feb 12b: Delay modal so user sees their business card first
+  // ✅ FIX Feb 13: NO auto-open goals modal.
+  // User reviews their business card first, then clicks "Continue" in bottom nav.
+  // handleNext in WizardV7Page calls requestGoalsModal() when locationConfirmed && !goalsConfirmed.
+  // Auto-open ONLY for the non-business path (ZIP-only → no business card to review).
   const goalsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (goalsTimerRef.current) { clearTimeout(goalsTimerRef.current); goalsTimerRef.current = null; }
 
+    // Only auto-open when there's NO business card to review
     if (
       state.locationConfirmed &&
       !state.goalsConfirmed &&
       !showGoalsModal &&
-      !state.isBusy
+      !state.isBusy &&
+      !state.businessCard  // ← Don't auto-open when business card is present
     ) {
-      // Give the user time to see their business card before goals modal covers it
-      const delay = state.businessConfirmed ? 1800 : 400;
-      goalsTimerRef.current = setTimeout(() => setShowGoalsModal(true), delay);
+      goalsTimerRef.current = setTimeout(() => setShowGoalsModal(true), 400);
     }
 
     return () => { if (goalsTimerRef.current) clearTimeout(goalsTimerRef.current); };
-  }, [state.locationConfirmed, state.goalsConfirmed, showGoalsModal, state.isBusy, state.businessConfirmed]);
+  }, [state.locationConfirmed, state.goalsConfirmed, showGoalsModal, state.isBusy, state.businessCard]);
+
+  // ✅ FIX Feb 13: Scroll to top when business card appears so user can see & review it
+  useEffect(() => {
+    if (state.businessConfirmed && state.businessCard) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Also try the wizard scroll container (modal path)
+      const scrollContainer = document.querySelector('[data-wizard-scroll]') as HTMLElement | null;
+      if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [state.businessConfirmed, state.businessCard]);
 
   // Rehydrate business fields from SSOT draft (only if UI empty)
   useEffect(() => {
