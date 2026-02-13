@@ -624,24 +624,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         </div>
       </div>
 
-      {/* Footer Actions */}
-      <div className="flex items-center justify-between pt-2">
-        <button
-          onClick={actions?.goBack}
-          className="px-5 py-2.5 text-slate-400 hover:text-white transition-colors text-sm font-medium"
-        >
-          ← Back to Options
-        </button>
-        
-        {selectedTier && (
-          <button
-            onClick={() => handleSelectTier(selectedTier)}
-            className="px-6 py-2.5 rounded-xl font-bold text-sm tracking-wide bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_0_16px_rgba(139,92,246,0.25)] hover:shadow-[0_0_24px_rgba(139,92,246,0.35)] transition-all"
-          >
-            Continue with {TIER_CONFIG[selectedTier].name} →
-          </button>
-        )}
-      </div>
+      {/* ✅ No in-page footer buttons — the shell's bottom nav handles Back/Continue */}
     </div>
   );
 }

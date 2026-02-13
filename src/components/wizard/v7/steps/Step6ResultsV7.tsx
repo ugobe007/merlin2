@@ -397,6 +397,25 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       )}
 
       {/* ================================================================
+          TRUEQUOTE™ BADGE — Prominent, right after savings hero
+          Using official TrueQuoteBadgeCanonical component
+      ================================================================ */}
+      {quoteReady && (() => {
+        const badge = resolveBadge(pricingStatus, state.templateMode, quote);
+        if (badge.tier === "truequote") {
+          return (
+            <div className="flex justify-center">
+              <TrueQuoteBadgeCanonical
+                onClick={() => setShowTrueQuoteModal(true)}
+                showTooltip={true}
+              />
+            </div>
+          );
+        }
+        return null;
+      })()}
+
+      {/* ================================================================
           STATS BAR — Key metrics at a glance
       ================================================================ */}
       {quoteReady && (
@@ -568,26 +587,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
         </div>
       )}
 
-      {/* ================================================================
-          TRUEQUOTE™ STATUS BADGE — Deterministic from envelope fields
-          Rule: Step 4 renders, it doesn't decide.
-          Badge = f(pricingStatus, templateMode, confidence, trueQuoteValidation)
-      ================================================================ */}
-      {(() => {
-        const badge = resolveBadge(pricingStatus, state.templateMode, quote);
-        const badgeStyles: Record<string, string> = {
-          truequote: "bg-emerald-500/10 border-emerald-500/25 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.12)]",
-          estimate: "bg-blue-500/10 border-blue-500/25 text-blue-400",
-          "load-only": "bg-amber-500/10 border-amber-500/25 text-amber-400",
-        };
-        return (
-          <div className="flex items-center gap-3">
-            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold ${badgeStyles[badge.tier]}`}>
-              {badge.label}
-            </div>
-          </div>
-        );
-      })()}
+      {/* TrueQuote badge moved to top (after savings hero) — see above */}
 
       {/* ================================================================
           WHY THIS SIZE? — Trust accelerator
@@ -1027,7 +1027,7 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
           <div style={{ fontSize: 14, fontWeight: 900, color: "rgba(232,235,243,0.95)" }}>Download Quote</div>
           <div style={{ fontSize: 12, color: "rgba(232,235,243,0.5)", marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
             {isTrueQuote
-              ? <><TrueQuoteBadgeCanonical showTooltip={false} onClick={onTrueQuoteClick} /><span>includes kW breakdown, confidence score & methodology</span></>
+              ? <><TrueQuoteBadgeCanonical showTooltip={false} onClick={onTrueQuoteClick} /><span>kW breakdown, confidence score &amp; methodology included</span></>
               : hasPricing
                 ? <span style={{ color: "rgba(232,235,243,0.6)" }}>📊 Estimate — includes financial projections</span>
                 : <span style={{ color: "rgba(232,235,243,0.5)" }}>📋 Load profile only — pricing pending</span>}

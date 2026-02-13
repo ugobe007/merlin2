@@ -881,17 +881,37 @@ function TierCard({
       onClick={onClick}
       style={{
         position: "relative",
-        padding: "14px 12px",
+        padding: isSelected ? "13px 11px" : "14px 12px",
         borderRadius: 10,
         cursor: "pointer",
         transition: "all 0.2s",
-        background: "transparent",
+        background: isSelected
+          ? `${a.bg}` : "transparent",
         border: isSelected
           ? `2px solid ${a.border}`
           : "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "none",
+        boxShadow: isSelected ? `0 0 12px ${a.border}40` : "none",
       }}
     >
+      {/* Selected indicator */}
+      {isSelected && (
+        <div style={{
+          position: "absolute",
+          top: 6,
+          left: 6,
+          width: 18,
+          height: 18,
+          borderRadius: "50%",
+          background: a.border,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 10,
+          color: "#fff",
+          fontWeight: 900,
+        }}>✓</div>
+      )}
+
       {/* Tag */}
       {tier.tag && (
         <div
