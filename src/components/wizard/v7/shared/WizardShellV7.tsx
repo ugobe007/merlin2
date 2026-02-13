@@ -110,11 +110,10 @@ export default function WizardShellV7({
           <div
             className="merlin-shell-rail"
             style={{
-              background: "#101424",
-              borderRadius: 20,
+              background: "rgba(255, 255, 255, 0.02)",
+              borderRadius: 12,
               padding: 24,
-              border: "1px solid rgba(255, 255, 255, 0.06)",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+              border: "1px solid rgba(255, 255, 255, 0.05)",
               display: "flex",
               flexDirection: "column",
             }}
@@ -128,7 +127,7 @@ export default function WizardShellV7({
                     height: 72,
                     borderRadius: "50%",
                     overflow: "hidden",
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
                   }}
                 >
                   <img
@@ -145,15 +144,15 @@ export default function WizardShellV7({
                     width: 16,
                     height: 16,
                     borderRadius: "50%",
-                    background: "#4ade80",
+                    background: "#3ECF8E",
                   }}
                 />
               </div>
 
               <div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>Merlin AI</div>
-                <div style={{ fontSize: 13, color: "rgba(74, 222, 128, 0.9)", fontWeight: 500 }}>
-                  ● Live Analysis — Step {safeStep + 1} of {totalSteps}
+                <div style={{ fontSize: 16, fontWeight: 600, color: "#fff" }}>Merlin AI</div>
+                <div style={{ fontSize: 12, color: "rgba(62, 207, 142, 0.8)", fontWeight: 500 }}>
+                  ● Active — Step {safeStep + 1} of {totalSteps}
                 </div>
               </div>
             </div>
@@ -163,12 +162,10 @@ export default function WizardShellV7({
               style={{
                 flex: 1,
                 padding: 20,
-                borderRadius: 16,
-                background:
-                  "linear-gradient(135deg, rgba(104, 191, 250, 0.12) 0%, rgba(91, 33, 182, 0.08) 100%)",
-                boxShadow:
-                  "inset 0 1px 0 rgba(255, 255, 255, 0.06)",
-                transition: "all 0.25s ease",
+                borderRadius: 12,
+                background: "rgba(255, 255, 255, 0.02)",
+                border: "1px solid rgba(255, 255, 255, 0.04)",
+                transition: "all 0.2s ease",
                 display: "flex",
                 flexDirection: "column",
               }}
@@ -187,7 +184,7 @@ export default function WizardShellV7({
                       marginBottom: 12,
                     }}
                   >
-                    Hi, I'm <span style={{ color: "#22D3EE" }}>Merlin</span> — your energy savings
+                    Hi, I'm <span style={{ color: "#3ECF8E" }}>Merlin</span> — your energy savings
                     advisor.
                   </div>
                   <div
@@ -278,10 +275,10 @@ export default function WizardShellV7({
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 4,
-                padding: "14px 24px",
-                background: "rgba(16, 20, 36, 0.75)",
-                borderRadius: "20px 20px 0 0",
-                boxShadow: "0 -1px 12px rgba(0, 0, 0, 0.2)",
+                padding: "12px 24px",
+                background: "rgba(255, 255, 255, 0.02)",
+                borderRadius: "12px 12px 0 0",
+                borderBottom: "1px solid rgba(255, 255, 255, 0.04)",
               }}
             >
               {stepLabels.map((label, idx) => {
@@ -299,10 +296,10 @@ export default function WizardShellV7({
                           height: 2,
                           borderRadius: 1,
                           background: isComplete
-                            ? "rgba(74, 222, 128, 0.4)"
+                            ? "rgba(62, 207, 142, 0.3)"
                             : isActive
-                              ? "linear-gradient(90deg, rgba(74, 222, 128, 0.4), rgba(104, 191, 250, 0.3))"
-                              : "rgba(255, 255, 255, 0.08)",
+                              ? "rgba(62, 207, 142, 0.2)"
+                              : "rgba(255, 255, 255, 0.06)",
                           flexShrink: 0,
                         }}
                       />
@@ -317,9 +314,9 @@ export default function WizardShellV7({
                         padding: "6px 14px",
                         borderRadius: 999,
                         background: isActive
-                          ? "linear-gradient(135deg, rgba(104, 191, 250, 0.25), rgba(91, 33, 182, 0.2))"
+                          ? "rgba(62, 207, 142, 0.10)"
                           : isComplete
-                            ? "rgba(74, 222, 128, 0.1)"
+                            ? "rgba(62, 207, 142, 0.06)"
                             : "transparent",
                         boxShadow: "none",
                         opacity: isFuture ? 0.4 : 1,
@@ -339,11 +336,11 @@ export default function WizardShellV7({
                           fontSize: 11,
                           fontWeight: 700,
                           background: isActive
-                            ? "linear-gradient(135deg, rgba(104, 191, 250, 0.5), rgba(91, 33, 182, 0.4))"
+                            ? "rgba(62, 207, 142, 0.25)"
                             : isComplete
-                              ? "rgba(74, 222, 128, 0.25)"
-                              : "rgba(255, 255, 255, 0.08)",
-                          color: isComplete ? "#4ade80" : "#e8ebf3",
+                              ? "rgba(62, 207, 142, 0.15)"
+                              : "rgba(255, 255, 255, 0.06)",
+                          color: isComplete ? "#3ECF8E" : isActive ? "#fff" : "#e8ebf3",
                           flexShrink: 0,
                         }}
                       >
@@ -355,12 +352,12 @@ export default function WizardShellV7({
                         className="merlin-progress-label"
                         style={{
                           fontSize: 12,
-                          fontWeight: isActive ? 700 : 500,
+                          fontWeight: isActive ? 600 : 500,
                           color: isActive
                             ? "#fff"
                             : isComplete
-                              ? "rgba(74, 222, 128, 0.9)"
-                              : "rgba(232, 235, 243, 0.5)",
+                              ? "rgba(62, 207, 142, 0.8)"
+                              : "rgba(232, 235, 243, 0.35)",
                           letterSpacing: "0.01em",
                         }}
                       >
@@ -377,11 +374,11 @@ export default function WizardShellV7({
               key={`step-${safeStep}`}
               className="merlin-step merlin-step-enter"
               style={{
-                background: "#101424",
-                borderRadius: "0 0 20px 20px",
+                background: "rgba(255, 255, 255, 0.02)",
+                borderRadius: "0 0 12px 12px",
                 padding: 36,
-                border: "1px solid rgba(255, 255, 255, 0.06)",
-                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+                border: "1px solid rgba(255, 255, 255, 0.05)",
+                borderTop: "none",
                 minHeight: 500,
                 animation: "merlin-step-fadein 0.3s ease-out",
               }}
@@ -455,15 +452,15 @@ export default function WizardShellV7({
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "12px 20px",
-              borderRadius: 12,
-              background: canGoBack ? "rgba(255, 255, 255, 0.06)" : "rgba(255, 255, 255, 0.02)",
-              border: "none",
-              color: canGoBack ? "rgba(232, 235, 243, 0.8)" : "rgba(232, 235, 243, 0.25)",
+              padding: "10px 18px",
+              borderRadius: 8,
+              background: canGoBack ? "rgba(255, 255, 255, 0.04)" : "transparent",
+              border: canGoBack ? "1px solid rgba(255, 255, 255, 0.06)" : "1px solid transparent",
+              color: canGoBack ? "rgba(232, 235, 243, 0.6)" : "rgba(232, 235, 243, 0.20)",
               cursor: canGoBack ? "pointer" : "not-allowed",
               fontSize: 14,
-              fontWeight: 600,
-              boxShadow: canGoBack ? "0 2px 8px rgba(0, 0, 0, 0.2)" : "none",
+              fontWeight: 500,
+              boxShadow: "none",
               transition: "all 0.15s ease",
             }}
           >
@@ -483,21 +480,18 @@ export default function WizardShellV7({
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "12px 24px",
-              borderRadius: 12,
+              padding: "10px 20px",
+              borderRadius: 8,
               background:
                 canGoNext && !isNextLoading
-                  ? "linear-gradient(135deg, #3B5BDB, #5B21B6)"
+                  ? "#3ECF8E"
                   : "rgba(255, 255, 255, 0.04)",
               border: "none",
-              color: canGoNext && !isNextLoading ? "#fff" : "rgba(232, 235, 243, 0.25)",
+              color: canGoNext && !isNextLoading ? "#000" : "rgba(232, 235, 243, 0.20)",
               cursor: canGoNext && !isNextLoading ? "pointer" : "not-allowed",
               fontSize: 14,
-              fontWeight: 700,
-              boxShadow:
-                canGoNext && !isNextLoading
-                  ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-                  : "none",
+              fontWeight: 600,
+              boxShadow: "none",
               transition: "all 0.15s ease",
             }}
           >

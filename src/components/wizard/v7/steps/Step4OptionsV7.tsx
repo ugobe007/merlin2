@@ -76,9 +76,9 @@ export default function Step4OptionsV7({ state, actions }: Props) {
 
       {/* Pricing status indicator */}
       {isPricingPending && (
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
-          <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
-          <span className="text-sm text-purple-300 font-medium">Calculating your system sizing…</span>
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#3ECF8E]/[0.08] border border-[#3ECF8E]/15">
+          <Loader2 className="w-4 h-4 text-[#3ECF8E] animate-spin" />
+          <span className="text-sm text-[#3ECF8E] font-medium">Calculating your system sizing…</span>
         </div>
       )}
 
@@ -96,10 +96,10 @@ export default function Step4OptionsV7({ state, actions }: Props) {
       <button
         type="button"
         onClick={() => setShowProQuoteModal(true)}
-        className="group w-full flex items-center justify-between gap-3 px-5 py-4 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-purple-500/25 hover:bg-purple-500/[0.04] transition-all"
+        className="group w-full flex items-center justify-between gap-3 px-5 py-4 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-[#3ECF8E]/20 hover:bg-[#3ECF8E]/[0.03] transition-all"
       >
         <div className="flex items-center gap-3">
-          <Sparkles className="w-4 h-4 text-purple-400 opacity-70 group-hover:opacity-100 transition-opacity" />
+          <Sparkles className="w-4 h-4 text-[#3ECF8E] opacity-70 group-hover:opacity-100 transition-opacity" />
           <div className="text-left">
             <span className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">
               Need full control?
@@ -109,7 +109,7 @@ export default function Step4OptionsV7({ state, actions }: Props) {
             </span>
           </div>
         </div>
-        <span className="text-xs font-bold text-purple-400/60 group-hover:text-purple-300 tracking-wide uppercase transition-colors">
+        <span className="text-xs font-semibold text-[#3ECF8E]/60 group-hover:text-[#3ECF8E] tracking-wide uppercase transition-colors">
           Learn more →
         </span>
       </button>

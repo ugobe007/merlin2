@@ -264,36 +264,35 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
           …
         </h1>
 
-        <h2
+        <p
           style={{
-            fontSize: 36,
-            fontWeight: 600,
-            letterSpacing: "-0.6px",
-            color: "rgba(255, 255, 255, 0.55)",
+            fontSize: 16,
+            fontWeight: 400,
+            color: "rgba(255, 255, 255, 0.50)",
             margin: 0,
             marginBottom: 16,
-            lineHeight: 1.2,
-            textTransform: "lowercase",
+            lineHeight: 1.6,
             position: "relative",
             zIndex: 1,
           }}
         >
-          starting with location.
-        </h2>
+          Enter your location to get utility rates, solar potential, and incentive data.
+        </p>
 
         <p
           style={{
-            fontSize: 13,
-            color: "rgba(232, 235, 243, 0.38)",
+            fontSize: 12,
+            color: "rgba(255, 255, 255, 0.30)",
             margin: 0,
             lineHeight: 1.6,
             maxWidth: 600,
-            fontWeight: 400,
+            fontWeight: 500,
             position: "relative",
             zIndex: 1,
+            letterSpacing: "0.04em",
           }}
         >
-          Utility rates · solar potential · demand charges · incentives
+          Utility rates · Solar potential · Demand charges · Incentives
         </p>
 
         {/* Resolved City/State */}
@@ -313,7 +312,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
               {state.location.state && state.location.city && (
                 <span style={{ color: "rgba(232, 235, 243, 0.35)", margin: "0 4px" }}>,</span>
               )}
-              {state.location.state && <span style={{ color: "#22D3EE" }}>{state.location.state}</span>}
+              {state.location.state && <span style={{ color: "#3ECF8E" }}>{state.location.state}</span>}
             </span>
           </div>
         )}
@@ -335,15 +334,16 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
               style={{
                 height: 44,
                 padding: "0 14px",
-                borderRadius: 12,
-                border: country === "US" ? "1px solid rgba(79,140,255,0.55)" : "1px solid rgba(255,255,255,0.12)",
-                background: country === "US" ? "rgba(79,140,255,0.14)" : "rgba(255,255,255,0.04)",
-                color: "rgba(232,235,243,0.92)",
-                fontWeight: 800,
+                borderRadius: 8,
+                border: country === "US" ? "1px solid rgba(62,207,142,0.45)" : "1px solid rgba(255,255,255,0.08)",
+                background: country === "US" ? "rgba(62,207,142,0.10)" : "rgba(255,255,255,0.03)",
+                color: country === "US" ? "#3ECF8E" : "rgba(232,235,243,0.70)",
+                fontWeight: 600,
                 cursor: "pointer",
+                fontSize: 14,
               }}
             >
-              🇺🇸 US
+              US
             </button>
             <button
               type="button"
@@ -351,15 +351,16 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
               style={{
                 height: 44,
                 padding: "0 14px",
-                borderRadius: 12,
-                border: country === "International" ? "1px solid rgba(79,140,255,0.55)" : "1px solid rgba(255,255,255,0.12)",
-                background: country === "International" ? "rgba(79,140,255,0.14)" : "rgba(255,255,255,0.04)",
-                color: "rgba(232,235,243,0.92)",
-                fontWeight: 800,
+                borderRadius: 8,
+                border: country === "International" ? "1px solid rgba(62,207,142,0.45)" : "1px solid rgba(255,255,255,0.08)",
+                background: country === "International" ? "rgba(62,207,142,0.10)" : "rgba(255,255,255,0.03)",
+                color: country === "International" ? "#3ECF8E" : "rgba(232,235,243,0.70)",
+                fontWeight: 600,
                 cursor: "pointer",
+                fontSize: 14,
               }}
             >
-              🌐 Intl
+              Intl
             </button>
           </div>
 
@@ -374,7 +375,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                     top: "50%",
                     transform: "translateY(-50%)",
                     fontSize: 18,
-                    color: "rgba(34, 211, 238, 0.5)",
+                    color: "rgba(62, 207, 142, 0.4)",
                   }}
                 >
                   ◎
@@ -406,14 +407,13 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                   name="merlin-zip-nofill"
                   style={{
                     width: "100%",
-                    height: 56,
-                    paddingLeft: 48,
+                    height: 44,
+                    paddingLeft: 44,
                     paddingRight: 16,
-                    borderRadius: 14,
-                    border: "none",
-                    background: "rgba(15, 18, 35, 0.6)",
-                    boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 1px 0 rgba(255, 255, 255, 0.03)",
-                    fontSize: 16,
+                    borderRadius: 8,
+                    border: "1px solid rgba(255, 255, 255, 0.06)",
+                    background: "rgba(255, 255, 255, 0.04)",
+                    fontSize: 14,
                     color: "rgba(232, 235, 243, 0.95)",
                     outline: "none",
                   }}
@@ -426,26 +426,21 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 onClick={() => submitLocation(normalizedZip)}
                 disabled={!isValidZip || state.isBusy}
                 style={{
-                  height: 56,
-                  padding: "0 24px",
-                  borderRadius: 14,
+                  height: 44,
+                  padding: "0 20px",
+                  borderRadius: 8,
                   border: "none",
                   background:
                     !isValidZip || state.isBusy
-                      ? "rgba(79, 140, 255, 0.12)"
-                      : "linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #3b82f6 100%)",
-                  boxShadow:
-                    !isValidZip || state.isBusy
-                      ? "none"
-                      : "0 4px 16px rgba(37, 99, 235, 0.4)",
-                  color: !isValidZip || state.isBusy ? "rgba(232, 235, 243, 0.3)" : "#fff",
-                  fontSize: 15,
-                  fontWeight: 900,
-                  letterSpacing: "0.3px",
+                      ? "rgba(255, 255, 255, 0.04)"
+                      : "#3ECF8E",
+                  color: !isValidZip || state.isBusy ? "rgba(232, 235, 243, 0.25)" : "#000",
+                  fontSize: 14,
+                  fontWeight: 600,
                   cursor: !isValidZip || state.isBusy ? "not-allowed" : "pointer",
                   whiteSpace: "nowrap",
                   flexShrink: 0,
-                  transition: "all 0.2s ease",
+                  transition: "all 0.15s ease",
                 }}
               >
                 {state.isBusy ? "Analyzing…" : "Continue →"}
@@ -455,10 +450,10 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
             <div
               style={{
                 flex: 1,
-                borderRadius: 14,
-                padding: "14px 16px",
-                background: "rgba(74, 222, 128, 0.08)",
-                border: "1px solid rgba(74, 222, 128, 0.22)",
+                borderRadius: 8,
+                padding: "12px 16px",
+                background: "rgba(62, 207, 142, 0.06)",
+                border: "1px solid rgba(62, 207, 142, 0.20)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -466,9 +461,9 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ color: "#4ade80", fontWeight: 900 }}>✓</span>
+                <span style={{ color: "#3ECF8E", fontWeight: 600 }}>✓</span>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "rgba(232,235,243,0.92)" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(232,235,243,0.92)" }}>
                     Location confirmed
                   </div>
                   <div style={{ fontSize: 12, color: "rgba(232,235,243,0.65)" }}>
@@ -488,13 +483,13 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                   });
                 }}
                 style={{
-                  padding: "8px 12px",
-                  borderRadius: 10,
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  background: "rgba(255,255,255,0.05)",
-                  color: "rgba(232,235,243,0.85)",
+                  padding: "6px 12px",
+                  borderRadius: 8,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.03)",
+                  color: "rgba(232,235,243,0.60)",
                   fontSize: 12,
-                  fontWeight: 800,
+                  fontWeight: 500,
                   cursor: "pointer",
                 }}
               >
@@ -513,11 +508,9 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
         <div
           style={{
             padding: 24,
-            borderRadius: 18,
-            background: "linear-gradient(135deg, rgba(18, 22, 40, 0.55) 0%, rgba(79, 140, 255, 0.04) 100%)",
-            border: "1px solid rgba(79, 140, 255, 0.15)",
-            boxShadow:
-              "0 4px 16px rgba(0, 0, 0, 0.2)",
+            borderRadius: 12,
+            background: "rgba(255, 255, 255, 0.03)",
+            border: "1px solid rgba(255, 255, 255, 0.06)",
             position: "relative",
             zIndex: 1,
           }}
@@ -528,29 +521,29 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                background: "linear-gradient(135deg, rgba(79, 140, 255, 0.25) 0%, rgba(139, 92, 246, 0.15) 100%)",
+                background: "rgba(62, 207, 142, 0.10)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4F8CFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3ECF8E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
             </div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "rgba(232, 235, 243, 0.92)" }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "rgba(232, 235, 243, 0.92)" }}>
                 Find My Business
               </div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(232, 235, 243, 0.4)", textTransform: "uppercase", letterSpacing: "0.4px" }}>
+              <div style={{ fontSize: 11, fontWeight: 500, color: "rgba(232, 235, 243, 0.35)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 Optional — improves accuracy
               </div>
             </div>
           </div>
 
-          <div style={{ fontSize: 13, color: "rgba(34, 211, 238, 0.7)", marginBottom: 18, lineHeight: 1.6, paddingLeft: 48 }}>
+          <div style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.40)", marginBottom: 18, lineHeight: 1.6, paddingLeft: 48 }}>
             Adding your business helps Merlin tailor equipment sizing, load profiles, and incentive eligibility to your exact facility.
           </div>
 
@@ -575,7 +568,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
           )}
 
           <div style={{ marginBottom: 12 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "rgba(232, 235, 243, 0.5)", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.3px" }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 500, color: "rgba(255, 255, 255, 0.35)", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.04em" }}>
               Business Name
             </label>
             <input
@@ -590,12 +583,11 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
               placeholder="e.g. Dash Car Wash"
               style={{
                 width: "100%",
-                height: 46,
+                height: 44,
                 padding: "0 14px",
-                borderRadius: 10,
-                border: "none",
-                background: "rgba(10, 14, 28, 0.5)",
-                boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.2)",
+                borderRadius: 8,
+                border: "1px solid rgba(255, 255, 255, 0.06)",
+                background: "rgba(255, 255, 255, 0.04)",
                 fontSize: 14,
                 color: "rgba(232, 235, 243, 0.95)",
                 outline: "none",
@@ -604,8 +596,8 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
           </div>
 
           <div style={{ marginBottom: 14 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "rgba(232, 235, 243, 0.5)", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.3px" }}>
-              Street Address or City <span style={{ opacity: 0.6, fontWeight: 500, textTransform: "none" }}>(optional)</span>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 500, color: "rgba(255, 255, 255, 0.35)", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Street Address or City <span style={{ opacity: 0.6, fontWeight: 400, textTransform: "none" }}>(optional)</span>
             </label>
             <input
               type="text"
@@ -619,12 +611,11 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
               placeholder="e.g. Eastern Blvd, Henderson"
               style={{
                 width: "100%",
-                height: 46,
+                height: 44,
                 padding: "0 14px",
-                borderRadius: 10,
-                border: "none",
-                background: "rgba(10, 14, 28, 0.5)",
-                boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.2)",
+                borderRadius: 8,
+                border: "1px solid rgba(255, 255, 255, 0.06)",
+                background: "rgba(255, 255, 255, 0.04)",
                 fontSize: 14,
                 color: "rgba(232, 235, 243, 0.95)",
                 outline: "none",
@@ -641,26 +632,22 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
             disabled={isResolvingBusiness || !businessValue.trim()}
             style={{
               width: "100%",
-              padding: "14px 20px",
-              borderRadius: 12,
+              padding: "12px 20px",
+              borderRadius: 8,
               border: "none",
               background:
                 isResolvingBusiness || !businessValue.trim()
-                  ? "rgba(79, 140, 255, 0.12)"
-                  : "linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #3b82f6 100%)",
-              boxShadow:
-                isResolvingBusiness || !businessValue.trim()
-                  ? "none"
-                  : "0 2px 8px rgba(0, 0, 0, 0.3)",
-              color: isResolvingBusiness || !businessValue.trim() ? "rgba(232, 235, 243, 0.35)" : "#fff",
-              fontSize: 15,
-              fontWeight: 800,
-              letterSpacing: "0.3px",
+                  ? "rgba(255, 255, 255, 0.04)"
+                  : "#3ECF8E",
+              color: isResolvingBusiness || !businessValue.trim() ? "rgba(232, 235, 243, 0.25)" : "#000",
+              fontSize: 14,
+              fontWeight: 600,
               cursor: isResolvingBusiness || !businessValue.trim() ? "not-allowed" : "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 8,
+              transition: "all 0.15s ease",
             }}
           >
             {isResolvingBusiness ? (
@@ -669,10 +656,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 Locating…
               </>
             ) : (
-              <>
-                <span style={{ fontSize: 16 }}>🔎</span>
-                Search Business
-              </>
+              "Search Business"
             )}
           </button>
         </div>
@@ -685,10 +669,9 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
         <div
           style={{
             padding: 0,
-            borderRadius: 16,
-            background: "linear-gradient(135deg, rgba(79, 140, 255, 0.12) 0%, rgba(74, 222, 128, 0.10) 100%)",
-            border: "1.5px solid rgba(79, 140, 255, 0.30)",
-            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+            borderRadius: 12,
+            background: "rgba(255, 255, 255, 0.03)",
+            border: "1px solid rgba(255, 255, 255, 0.06)",
             overflow: "hidden",
           }}
         >
@@ -708,7 +691,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                   width: 32,
                   height: 32,
                   borderRadius: 10,
-                  background: "rgba(74, 222, 128, 0.18)",
+                  background: "rgba(62, 207, 142, 0.12)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -719,7 +702,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 ✓
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "rgba(74, 222, 128, 1)" }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#3ECF8E" }}>
                   Industry detected: {state.industry ? state.industry.replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : ""}
                 </div>
                 <div style={{ fontSize: 12, color: "rgba(232, 235, 243, 0.6)", marginTop: 2 }}>
@@ -740,8 +723,8 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
               }}
             >
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "rgba(232, 235, 243, 0.95)" }}>
-                  🔥 What are your energy goals?
+                <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(232, 235, 243, 0.92)" }}>
+                  What are your energy goals?
                 </div>
                 <div style={{ fontSize: 12, color: "rgba(232, 235, 243, 0.55)", marginTop: 3, lineHeight: 1.4 }}>
                   Reduce bills, backup power, EV charging — helps Merlin size your system
@@ -751,16 +734,15 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 type="button"
                 onClick={() => setShowGoalsModal(true)}
                 style={{
-                  padding: "12px 24px",
-                  borderRadius: 12,
+                  padding: "10px 20px",
+                  borderRadius: 8,
                   border: "none",
-                  background: "linear-gradient(135deg, #4F8CFF 0%, #6C5CE7 100%)",
-                  color: "#fff",
-                  fontWeight: 900,
+                  background: "#3ECF8E",
+                  color: "#000",
+                  fontWeight: 600,
                   fontSize: 14,
                   cursor: "pointer",
                   whiteSpace: "nowrap",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
                   transition: "opacity 0.15s",
                   flexShrink: 0,
                 }}
@@ -786,7 +768,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 gap: 10,
               }}
             >
-              <span style={{ color: "#4ade80", fontWeight: 900, fontSize: 14 }}>✓</span>
+              <span style={{ color: "#3ECF8E", fontWeight: 600, fontSize: 14 }}>✓</span>
               <span style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.7)" }}>
                 Goals set — ready to continue
               </span>
@@ -797,7 +779,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                   marginLeft: "auto",
                   background: "none",
                   border: "none",
-                  color: "rgba(79, 140, 255, 0.8)",
+                  color: "rgba(62, 207, 142, 0.7)",
                   fontSize: 12,
                   fontWeight: 700,
                   cursor: "pointer",
