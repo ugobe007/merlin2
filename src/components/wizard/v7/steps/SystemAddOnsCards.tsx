@@ -184,7 +184,7 @@ export function SystemAddOnsCards({
   currentAddOns,
   onRecalculate,
   pricingStatus,
-  showGenerateButton: _showGenerateButton = false,
+  showGenerateButton: _showGenerateButton = false, // eslint-disable-line @typescript-eslint/no-unused-vars
   merlinData,
 }: SystemAddOnsCardsProps) {
   // Selections
@@ -304,13 +304,13 @@ export function SystemAddOnsCards({
     : null;
 
   // 10-year combined value
-  const _tenYearValue =
+  const tenYearValue = // eslint-disable-line @typescript-eslint/no-unused-vars
     (curSolar ? curSolar.annualSavings * 10 : 0) +
     (curEv ? curEv.tenYearRevenue : 0);
 
   // Max potential for stats
-  const _maxSolarSavings = solarOpts.maximum.annualSavings;
-  const _maxEvRevenue = evOpts.premium.monthlyRevenue * 12;
+  const maxSolarSavings = solarOpts.maximum.annualSavings;
+  const maxEvRevenue = evOpts.premium.monthlyRevenue * 12; // eslint-disable-line @typescript-eslint/no-unused-vars
 
   // ── Toggle handler ──
   const toggleOption = useCallback(
@@ -331,7 +331,7 @@ export function SystemAddOnsCards({
   );
 
   // ── Apply selections → recalculateWithAddOns ──
-  const _handleApply = useCallback(async () => {
+  const handleApply = useCallback(async () => { // eslint-disable-line @typescript-eslint/no-unused-vars
     if (!onRecalculate || busy) return;
     setBusy(true);
 
@@ -356,7 +356,7 @@ export function SystemAddOnsCards({
   }, [onRecalculate, busy, selectedOptions, curSolar, curGen, curEv]);
 
   // Has changes that need applying?
-  const _needsApply =
+  const needsApply = // eslint-disable-line @typescript-eslint/no-unused-vars
     selectedOptions.has("solar") !== currentAddOns.includeSolar ||
     (curSolar?.sizeKw ?? 0) !== currentAddOns.solarKW ||
     selectedOptions.has("generator") !== currentAddOns.includeGenerator ||
