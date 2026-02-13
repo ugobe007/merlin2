@@ -57,7 +57,7 @@ const ACCENTS: Record<string, AccentTheme> = {
       </svg>
     ),
     gradient: "linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(245, 158, 11, 0.10) 100%)",
-    glow: "0 0 16px rgba(251, 191, 36, 0.35), 0 0 4px rgba(251, 191, 36, 0.2)",
+    glow: "none",
     text: "rgba(251, 191, 36, 0.95)",
     bg: "rgba(251, 191, 36, 0.06)",
     readyBg: "rgba(251, 191, 36, 0.08)",
@@ -70,7 +70,7 @@ const ACCENTS: Record<string, AccentTheme> = {
       </svg>
     ),
     gradient: "linear-gradient(135deg, rgba(52, 211, 153, 0.25) 0%, rgba(16, 185, 129, 0.10) 100%)",
-    glow: "0 0 16px rgba(52, 211, 153, 0.35), 0 0 4px rgba(52, 211, 153, 0.2)",
+    glow: "none",
     text: "rgba(52, 211, 153, 0.95)",
     bg: "rgba(52, 211, 153, 0.06)",
     readyBg: "rgba(52, 211, 153, 0.08)",
@@ -91,7 +91,7 @@ const ACCENTS: Record<string, AccentTheme> = {
       </svg>
     ),
     gradient: "linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(234, 88, 12, 0.10) 100%)",
-    glow: "0 0 16px rgba(245, 158, 11, 0.35), 0 0 4px rgba(245, 158, 11, 0.2)",
+    glow: "none",
     text: "rgba(245, 158, 11, 0.95)",
     bg: "rgba(245, 158, 11, 0.06)",
     readyBg: "rgba(245, 158, 11, 0.08)",
@@ -104,7 +104,7 @@ const ACCENTS: Record<string, AccentTheme> = {
       </svg>
     ),
     gradient: "linear-gradient(135deg, rgba(167, 139, 250, 0.25) 0%, rgba(139, 92, 246, 0.10) 100%)",
-    glow: "0 0 16px rgba(167, 139, 250, 0.35), 0 0 4px rgba(167, 139, 250, 0.2)",
+    glow: "none",
     text: "rgba(167, 139, 250, 0.95)",
     bg: "rgba(167, 139, 250, 0.06)",
     readyBg: "rgba(167, 139, 250, 0.08)",
@@ -118,7 +118,7 @@ const ACCENTS: Record<string, AccentTheme> = {
       </svg>
     ),
     gradient: "linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.10) 100%)",
-    glow: "0 0 16px rgba(56, 189, 248, 0.35), 0 0 4px rgba(56, 189, 248, 0.2)",
+    glow: "none",
     text: "rgba(56, 189, 248, 0.95)",
     bg: "rgba(56, 189, 248, 0.06)",
     readyBg: "rgba(56, 189, 248, 0.08)",
@@ -183,7 +183,7 @@ function IntelChip({ label, value, unit, status, error, accent }: ChipProps) {
           height: 34,
           borderRadius: 10,
           background: accent.gradient,
-          boxShadow: isReady ? accent.glow : "none",
+          boxShadow: "none",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -291,7 +291,7 @@ export default function IntelStrip({ intel, compact = false }: IntelStripProps) 
             letterSpacing: "0.3px",
           }}
         >
-          <span style={{ fontSize: 14, filter: "drop-shadow(0 0 4px rgba(79, 140, 255, 0.5))" }}>◎</span>
+          <span style={{ fontSize: 14 }}>◎</span>
           Location Intelligence
         </div>
         <div
@@ -302,7 +302,6 @@ export default function IntelStrip({ intel, compact = false }: IntelStripProps) 
             padding: "3px 8px",
             borderRadius: 999,
             background: "rgba(74, 222, 128, 0.12)",
-            boxShadow: "0 0 8px rgba(74, 222, 128, 0.15)",
             color: "rgba(74, 222, 128, 0.9)",
             textTransform: "uppercase",
           }}

@@ -37,7 +37,6 @@ export default function AdvisorAvatar({
         rounded-full 
         bg-gradient-to-br from-blue-500 to-purple-600
         flex items-center justify-center
-        shadow-lg
         ${animate ? 'animate-pulse' : ''}
       `}
     >

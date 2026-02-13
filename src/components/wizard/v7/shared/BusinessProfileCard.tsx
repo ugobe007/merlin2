@@ -44,6 +44,8 @@ interface BusinessProfileCardProps {
   showIndustryInference?: boolean;
   /** Edit callback (V7 feature) */
   onEdit?: () => void;
+  /** TrueQuote badge click handler — opens TrueQuote explainer modal */
+  onTrueQuoteClick?: () => void;
 }
 
 export default function BusinessProfileCard({
@@ -53,6 +55,7 @@ export default function BusinessProfileCard({
   rightTag,
   showIndustryInference = false,
   onEdit,
+  onTrueQuoteClick,
 }: BusinessProfileCardProps) {
   // Support both `business` and `data` props
   const biz = business ?? data;
@@ -64,7 +67,7 @@ export default function BusinessProfileCard({
   const confidencePct = biz.industryConfidence ? Math.round(biz.industryConfidence * 100) : 0;
 
   return (
-    <div className="rounded-2xl bg-[rgba(22,27,48,0.6)] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.04)]">
+    <div className="rounded-xl bg-[rgba(22,27,48,0.6)] p-5 border border-white/[0.06]">
       {/* Header row */}
       <div className="flex items-start justify-between gap-3">
         <div className="text-xs text-slate-300/80 tracking-wide uppercase">
@@ -74,17 +77,17 @@ export default function BusinessProfileCard({
         <div className="flex items-center gap-2">
           {biz.isVerified && (
             rightTag ? (
-              <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-200 shadow-[0_2px_6px_rgba(16,185,129,0.12)]">
+              <span className="text-[11px] px-2.5 py-1 rounded-full border border-emerald-500/20 text-emerald-300">
                 ✓ {rightTag}
               </span>
             ) : (
-              <TrueQuoteBadgeCanonical showTooltip={false} />
+              <TrueQuoteBadgeCanonical showTooltip={false} onClick={onTrueQuoteClick} />
             )
           )}
           {onEdit && (
             <button
               onClick={onEdit}
-              className="text-[11px] px-2 py-1 rounded-full bg-white/5 text-slate-300 hover:bg-white/10 transition shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
+              className="text-[11px] px-2 py-1 rounded-full bg-white/5 text-slate-300 hover:bg-white/10 transition"
             >
               Edit
             </button>
@@ -95,7 +98,7 @@ export default function BusinessProfileCard({
       {/* Profile */}
       <div className="mt-4 flex items-start gap-4">
         {/* Avatar / Photo */}
-        <div className="h-14 w-14 rounded-xl overflow-hidden bg-slate-900/40 shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.2)]">
+        <div className="h-14 w-14 rounded-xl overflow-hidden bg-slate-900/40 shrink-0">
           {photo ? (
             <img
               src={photo}

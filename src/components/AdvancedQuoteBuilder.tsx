@@ -538,7 +538,7 @@ export default function AdvancedQuoteBuilder({
       title: "System Configuration",
       description:
         "Design your complete BESS system with electrical specs, renewables, and detailed parameters",
-      color: "from-blue-500 via-indigo-500 to-purple-600",
+      color: "from-blue-500 via-teal-500 to-emerald-600",
       action: () => setViewMode("custom-config"),
       tier: "core",
     },
@@ -579,7 +579,7 @@ export default function AdvancedQuoteBuilder({
       icon: <FileSpreadsheet className="w-8 h-8" />,
       title: "Quote Export",
       description: "Generate professional quotes in Word and Excel formats",
-      color: "from-blue-400 via-indigo-500 to-purple-600",
+      color: "from-blue-400 via-teal-500 to-emerald-600",
       action: () => setShowQuotePreview(true),
       tier: "professional",
     },
@@ -614,7 +614,7 @@ export default function AdvancedQuoteBuilder({
       icon: <Box className="w-8 h-8" />,
       title: "Vendor Library",
       description: "Browse batteries, inverters, solar panels, and BOS equipment",
-      color: "from-indigo-400 via-purple-500 to-violet-600",
+      color: "from-teal-400 via-emerald-500 to-green-600",
       action: () => {
         alert(
           "🔧 Vendor Library\n\nBrowse and compare equipment from leading manufacturers.\n\n✨ Coming Q1 2026"
@@ -629,7 +629,7 @@ export default function AdvancedQuoteBuilder({
       icon: <Wand2 className="w-8 h-8" />,
       title: "AI Optimizer",
       description: "Let AI analyze your facility and recommend optimal configurations",
-      color: "from-purple-400 via-indigo-500 to-violet-600",
+      color: "from-emerald-400 via-teal-500 to-cyan-600",
       action: () => {
         alert("🤖 AI Optimizer\n\nAdvanced AI-powered system optimization.\n\n✨ Coming Q1 2026");
       },
@@ -1027,11 +1027,11 @@ export default function AdvancedQuoteBuilder({
                         }, 300);
                       }}
                       className="group flex items-center gap-2 rounded-full px-4 py-2 transition-all duration-200 hover:scale-105"
-                      style={{ background: 'rgba(168, 85, 247, 0.15)', border: '1px solid rgba(168, 85, 247, 0.3)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168, 85, 247, 0.25)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168, 85, 247, 0.15)'; }}
+                      style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(16, 185, 129, 0.25)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'; }}
                     >
-                      <Calculator className="w-4 h-4 text-purple-400" />
+                      <Calculator className="w-4 h-4 text-emerald-400" />
                       <span className="text-xs font-semibold text-white">Financial</span>
                     </button>
                   </div>
@@ -1060,8 +1060,8 @@ export default function AdvancedQuoteBuilder({
                   <span className="text-sm font-bold text-white">$200/kWh</span>
                   <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>≤2 MWh</span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2" style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: 20 }}>
-                  <Battery className="w-4 h-4 text-violet-400" />
+                <div className="flex items-center gap-2 px-4 py-2" style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.2)', borderRadius: 20 }}>
+                  <Battery className="w-4 h-4 text-teal-400" />
                   <span className="text-sm font-bold text-white">$155/kWh</span>
                   <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>2–15 MWh</span>
                 </div>
@@ -1161,8 +1161,8 @@ export default function AdvancedQuoteBuilder({
                   onClick={() => setShowUploadSection(!showUploadSection)}
                 >
                   <h3 className="text-lg font-semibold text-white flex items-center gap-3">
-                    <div className="p-2 rounded-lg" style={{ background: 'rgba(139, 92, 246, 0.1)' }}>
-                      <FileText className="w-5 h-5 text-violet-400" />
+                    <div className="p-2 rounded-lg" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+                      <FileText className="w-5 h-5 text-emerald-400" />
                     </div>
                     Upload Existing Specs
                     {extractedData && (
@@ -1199,8 +1199,8 @@ export default function AdvancedQuoteBuilder({
 
                 {extractedData && !showUploadSection && (
                   <div className="px-6 pb-6">
-                    <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
-                      <p className="text-sm text-purple-300 mb-3">
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                      <p className="text-sm text-emerald-300 mb-3">
                         Pre-filled from uploaded documents:
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -1948,8 +1948,8 @@ export default function AdvancedQuoteBuilder({
                 >
                   <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                     <h3 className="text-lg font-semibold text-white flex items-center gap-3">
-                      <div className="p-2 rounded-lg" style={{ background: 'rgba(139,92,246,0.1)' }}>
-                        <Zap className="w-5 h-5 text-violet-400" />
+                      <div className="p-2 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)' }}>
+                        <Zap className="w-5 h-5 text-emerald-400" />
                       </div>
                       Electrical Specifications
                       <span className="text-xs font-normal ml-auto" style={{ color: 'rgba(255,255,255,0.35)' }}>
@@ -1962,7 +1962,7 @@ export default function AdvancedQuoteBuilder({
                     {/* Power Conversion System (PCS) Configuration */}
                     <div className="rounded-xl p-6 mb-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                       <h4 className="text-lg font-semibold mb-6 text-white flex items-center gap-2">
-                        <Zap className="w-5 h-5 text-violet-400" />
+                        <Zap className="w-5 h-5 text-emerald-400" />
                         Power Conversion System (PCS)
                       </h4>
 
@@ -1973,29 +1973,29 @@ export default function AdvancedQuoteBuilder({
                             PCS Quoting Method
                           </label>
                           <div className="flex gap-4">
-                            <label className="flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all flex-1" style={{ background: !pcsQuoteSeparately ? 'rgba(139,92,246,0.1)' : 'rgba(255,255,255,0.03)', border: !pcsQuoteSeparately ? '1px solid rgba(139,92,246,0.3)' : '1px solid rgba(255,255,255,0.08)' }}>
+                            <label className="flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all flex-1" style={{ background: !pcsQuoteSeparately ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)', border: !pcsQuoteSeparately ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(255,255,255,0.08)' }}>
                               <input
                                 type="radio"
                                 checked={!pcsQuoteSeparately}
                                 onChange={() => setPcsQuoteSeparately(false)}
-                                className="w-5 h-5 text-violet-500"
+                                className="w-5 h-5 text-emerald-500"
                               />
                               <span className="text-sm font-semibold text-white">
                                 Included with BESS System
                               </span>
                             </label>
-                            <label className="flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all flex-1" style={{ background: pcsQuoteSeparately ? 'rgba(139,92,246,0.1)' : 'rgba(255,255,255,0.03)', border: pcsQuoteSeparately ? '1px solid rgba(139,92,246,0.3)' : '1px solid rgba(255,255,255,0.08)' }}>
+                            <label className="flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all flex-1" style={{ background: pcsQuoteSeparately ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)', border: pcsQuoteSeparately ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(255,255,255,0.08)' }}>
                               <input
                                 type="radio"
                                 checked={pcsQuoteSeparately}
                                 onChange={() => setPcsQuoteSeparately(true)}
-                                className="w-5 h-5 text-violet-500"
+                                className="w-5 h-5 text-emerald-500"
                               />
                               <span className="text-sm font-semibold text-white">Quote PCS Separately</span>
                             </label>
                           </div>
                           {pcsQuoteSeparately && (
-                            <p className="text-sm mt-3 rounded-lg p-3" style={{ color: 'rgba(139,92,246,0.9)', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)' }}>
+                            <p className="text-sm mt-3 rounded-lg p-3" style={{ color: 'rgba(16,185,129,0.9)', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
                               💡 PCS will be itemized separately in the quote with detailed
                               specifications
                             </p>
@@ -2010,7 +2010,7 @@ export default function AdvancedQuoteBuilder({
                           <select
                             value={inverterType}
                             onChange={(e) => setInverterType(e.target.value)}
-                            className="w-full px-4 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-violet-500 focus:outline-none transition-colors"
+                            className="w-full px-4 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-colors"
                             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                           >
                             <option value="bidirectional">Bidirectional Inverter</option>
@@ -2036,7 +2036,7 @@ export default function AdvancedQuoteBuilder({
                                 setNumberOfInvertersInput(parseInt(e.target.value) || 1)
                               }
                               min="1"
-                              className="flex-1 px-4 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                              className="flex-1 px-4 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                               placeholder="Auto-calculated"
                             />
@@ -2044,7 +2044,7 @@ export default function AdvancedQuoteBuilder({
                               onClick={() =>
                                 setNumberOfInvertersInput(Math.ceil(totalKW / inverterRating))
                               }
-                              className="px-5 py-3 bg-purple-600 hover:bg-purple-700 border-2 border-purple-700 rounded-lg text-sm font-bold text-white transition-all shadow-sm"
+                              className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 border-2 border-emerald-700 rounded-lg text-sm font-bold text-white transition-all shadow-sm"
                               title="Auto-calculate based on system size"
                             >
                               Auto
@@ -2105,10 +2105,10 @@ export default function AdvancedQuoteBuilder({
                             )
                           }
                           placeholder={calculatedWatts.toLocaleString()}
-                          className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-2 focus:ring-violet-500/40 focus:outline-none"
+                          className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                         />
-                        <p className="text-xs text-violet-400 mt-2 font-bold">
+                        <p className="text-xs text-emerald-400 mt-2 font-bold">
                           {totalKW.toLocaleString()} kW / {(totalKW / 1000).toFixed(2)} MW
                         </p>
                         <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
@@ -2206,8 +2206,8 @@ export default function AdvancedQuoteBuilder({
 
                     {/* Summary Card */}
                     <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <h4 className="text-sm font-bold text-violet-400 mb-4 flex items-center gap-2">
-                        <Cpu className="w-5 h-5 text-violet-400" />
+                      <h4 className="text-sm font-bold text-emerald-400 mb-4 flex items-center gap-2">
+                        <Cpu className="w-5 h-5 text-emerald-400" />
                         System Summary
                       </h4>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -2722,11 +2722,11 @@ export default function AdvancedQuoteBuilder({
                                 kW
                               </p>
                             </div>
-                            <div className="rounded p-3" style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)' }}>
+                            <div className="rounded p-3" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
                               <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
                                 Total Capacity
                               </p>
-                              <p className="text-2xl font-bold text-violet-400">
+                              <p className="text-2xl font-bold text-emerald-400">
                                 {(
                                   totalKW +
                                   (solarPVIncluded ? solarCapacityKW : 0) +
@@ -2780,9 +2780,9 @@ export default function AdvancedQuoteBuilder({
                           ${(localSystemCost / (storageSizeMW * 1000)).toFixed(0)}/kW
                         </p>
                       </div>
-                      <div className="rounded-xl p-4" style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)' }}>
+                      <div className="rounded-xl p-4" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
                         <p className="text-sm mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Application</p>
-                        <p className="text-xl font-bold text-violet-400 capitalize">
+                        <p className="text-xl font-bold text-emerald-400 capitalize">
                           {applicationType}
                         </p>
                         <p className="text-sm font-bold capitalize" style={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -3358,7 +3358,7 @@ export default function AdvancedQuoteBuilder({
                                 </tr>
                               )}
                               {naturalGasGenIncluded && (
-                                <tr className="border-b border-gray-200 bg-purple-50">
+                                <tr className="border-b border-gray-200 bg-emerald-50">
                                   <td className="py-2 font-semibold text-gray-700">
                                     🔥 Natural Gas Generator:
                                   </td>
@@ -4170,7 +4170,7 @@ export default function AdvancedQuoteBuilder({
                       </div>
                       <div className="bg-slate-800/50 rounded-xl p-4 text-center">
                         <p className="text-xs text-slate-400 uppercase tracking-wide">MOIC</p>
-                        <p className="text-2xl font-bold text-purple-300">
+                        <p className="text-2xl font-bold text-emerald-300">
                           {professionalModel.summary.moic.toFixed(2)}x
                         </p>
                       </div>

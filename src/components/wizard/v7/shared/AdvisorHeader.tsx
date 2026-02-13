@@ -19,7 +19,7 @@ export default function AdvisorHeader({ size = 'large', subtitle }: AdvisorHeade
         <div 
           className={`
             ${size === 'large' ? 'w-20 h-20' : 'w-12 h-12'} 
-            rounded-full overflow-hidden border-2 border-purple-500/30 shadow-lg
+            rounded-full overflow-hidden border-2 border-purple-500/30
           `}
         >
           <img src="/images/new_profile_merlin.png" alt="Merlin AI" className="w-full h-full object-cover" />

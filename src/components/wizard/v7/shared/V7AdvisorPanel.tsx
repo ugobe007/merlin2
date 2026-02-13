@@ -45,7 +45,7 @@ export default function V7AdvisorPanel(props: Props) {
       : undefined;
 
   return (
-    <div className="sticky top-6 rounded-2xl border border-slate-700/40 bg-slate-950/40 backdrop-blur p-4 shadow-sm">
+    <div className="sticky top-6 rounded-xl border border-slate-700/40 bg-slate-950/60 p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-base font-extrabold text-slate-50">{title}</div>

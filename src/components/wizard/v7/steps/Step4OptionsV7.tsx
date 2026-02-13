@@ -12,8 +12,8 @@
  * - Cards render in full expanded display by default
  */
 
-import React, { useCallback } from "react";
-import { Loader2 } from "lucide-react";
+import React, { useCallback, useState } from "react";
+import { Loader2, Sparkles } from "lucide-react";
 import type {
   WizardState as WizardV7State,
   WizardStep,
@@ -24,6 +24,7 @@ import { DEFAULT_ADD_ONS } from "@/wizard/v7/hooks/useWizardV7";
 import { SystemAddOnsCards } from "./SystemAddOnsCards";
 import { useMerlinData } from "@/wizard/v7/memory";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
+import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
 
 type Props = {
   state: WizardV7State;
@@ -38,6 +39,7 @@ export default function Step4OptionsV7({ state, actions }: Props) {
   // ✅ MERLIN MEMORY: All data from Memory — no direct state.quote reads
   const data = useMerlinData(state);
   const pricingStatus: PricingStatus = state.pricingStatus ?? "idle";
+  const [showProQuoteModal, setShowProQuoteModal] = useState(false);
 
   const handleAddOnsConfirmed = useCallback(async (addOns: SystemAddOns) => {
     if (actions.recalculateWithAddOns) {
@@ -88,6 +90,38 @@ export default function Step4OptionsV7({ state, actions }: Props) {
         pricingStatus={pricingStatus}
         showGenerateButton={false}
         merlinData={data}
+      />
+
+      {/* ── ProQuote™ upsell — Merlin as salesman ── */}
+      <button
+        type="button"
+        onClick={() => setShowProQuoteModal(true)}
+        className="group w-full flex items-center justify-between gap-3 px-5 py-4 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-purple-500/25 hover:bg-purple-500/[0.04] transition-all"
+      >
+        <div className="flex items-center gap-3">
+          <Sparkles className="w-4 h-4 text-purple-400 opacity-70 group-hover:opacity-100 transition-opacity" />
+          <div className="text-left">
+            <span className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">
+              Need full control?
+            </span>
+            <span className="text-sm text-slate-500 ml-1.5">
+              Open in ProQuote™ for advanced configuration
+            </span>
+          </div>
+        </div>
+        <span className="text-xs font-bold text-purple-400/60 group-hover:text-purple-300 tracking-wide uppercase transition-colors">
+          Learn more →
+        </span>
+      </button>
+
+      {/* ProQuote™ explainer modal */}
+      <ProQuoteHowItWorksModal
+        isOpen={showProQuoteModal}
+        onClose={() => setShowProQuoteModal(false)}
+        onOpenProQuote={() => {
+          setShowProQuoteModal(false);
+          window.location.href = "/quote-builder";
+        }}
       />
 
       {/* Navigation handled by shell bottom nav — "See MagicFit →" */}

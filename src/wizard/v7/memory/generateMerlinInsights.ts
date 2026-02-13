@@ -17,7 +17,7 @@ import type { MerlinData } from "./useMerlinData";
 // TYPES
 // ============================================================================
 
-type BadgeTone = "violet" | "green" | "amber" | "red" | "blue";
+type BadgeTone = "emerald" | "green" | "amber" | "red" | "blue";
 
 export interface MerlinInsight {
   /** Unique key for dedup */
@@ -397,7 +397,7 @@ function getBadges(data: MerlinData, step: WizardStep): Array<{ label: string; t
       if (data.industry && data.industry !== "auto") {
         return [
           { label: "industry set", tone: "green" },
-          ...(data.industryInferred ? [{ label: "auto-detected", tone: "violet" as BadgeTone }] : []),
+          ...(data.industryInferred ? [{ label: "auto-detected", tone: "emerald" as BadgeTone }] : []),
         ];
       }
       return [{ label: "pick one below", tone: "amber" }];
@@ -407,7 +407,7 @@ function getBadges(data: MerlinData, step: WizardStep): Array<{ label: string; t
     case "options":
       return [{ label: "optional add-ons", tone: "blue" }];
     case "magicfit":
-      return [{ label: "3 options ready", tone: "violet" }];
+      return [{ label: "3 options ready", tone: "emerald" }];
     case "results": {
       if (data.quote?.pricingComplete) {
         return [{ label: "TrueQuote™ Verified", tone: "green" }];

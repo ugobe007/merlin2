@@ -40,7 +40,7 @@ const DARK = {
   textSecondary: "rgba(255,255,255,0.7)",
   textMuted: "rgba(255,255,255,0.5)",
   accent: "#a855f7",
-  accentGlow: "rgba(168,85,247,0.4)",
+  accentGlow: "rgba(0,0,0,0.3)",
   buttonBg: "rgba(168,85,247,0.2)",
   buttonBorder: "rgba(168,85,247,0.3)",
   buttonHoverBg: "rgba(168,85,247,0.3)",
@@ -63,7 +63,6 @@ function Card({ children }: { children: React.ReactNode }) {
         border: `1px solid ${DARK.cardBorder}`,
         background: DARK.cardBg,
         padding: 20,
-        backdropFilter: "blur(12px)",
       }}
     >
       {children}
@@ -214,14 +213,12 @@ export default function Step2IndustryV7({ state, actions }: Props) {
                   if (!disabled) {
                     e.currentTarget.style.background = DARK.cardHoverBg;
                     e.currentTarget.style.borderColor = DARK.accent;
-                    e.currentTarget.style.transform = "translateY(-4px)";
-                    e.currentTarget.style.boxShadow = `0 8px 30px ${DARK.accentGlow}`;
+                    e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.3)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = DARK.cardBg;
                   e.currentTarget.style.borderColor = DARK.cardBorder;
-                  e.currentTarget.style.transform = "translateY(0)";
                   e.currentTarget.style.boxShadow = "none";
                 }}
               >

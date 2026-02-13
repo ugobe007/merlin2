@@ -301,7 +301,10 @@ export type QuoteOutput = {
   durationHours?: number;
 
   // Financial outputs (from Layer B - pricing bridge)
-  capexUSD?: number;
+  capexUSD?: number;           // Net cost (after ITC)
+  grossCost?: number;          // Total project cost BEFORE ITC
+  itcAmount?: number;          // ITC credit dollar amount
+  itcRate?: number;            // ITC rate applied (e.g. 0.30)
   annualSavingsUSD?: number;
   roiYears?: number;
   npv?: number;
@@ -3875,6 +3878,9 @@ export function useWizardV7() {
           ...(pricingResult?.ok && pricingResult.data
             ? {
                 capexUSD: pricingResult.data.capexUSD,
+                grossCost: pricingResult.data.grossCost,
+                itcAmount: pricingResult.data.itcAmount,
+                itcRate: pricingResult.data.itcRate,
                 annualSavingsUSD: pricingResult.data.annualSavingsUSD,
                 roiYears: pricingResult.data.roiYears,
                 npv: pricingResult.data.financials?.npv,

@@ -348,9 +348,9 @@ function WizardV7Page() {
   }, [state.step, state.industry, state.step3Answers]);
 
   // ============================================================================
-  // STEP 4 ADVISOR — Real-time financial summary (Feb 3, 2026)
+  // STEP 6 ADVISOR — Real-time financial summary (Feb 3, 2026)
   // ============================================================================
-  const step4Advisor = useMemo(() => {
+  const step6Advisor = useMemo(() => {
     if (state.step !== "results") return null;
     
     const quote = state.quote;
@@ -409,8 +409,8 @@ function WizardV7Page() {
     const insights = generateMerlinInsights(merlinData, state.step);
 
     // Results: verified TrueQuote with financial summary
-    if (state.step === "results" && step4Advisor) {
-      const { pricingStatus, pricingComplete, capexUSD, annualSavingsUSD, roiYears, bessKWh, peakLoadKW } = step4Advisor;
+    if (state.step === "results" && step6Advisor) {
+      const { pricingStatus, pricingComplete, capexUSD, annualSavingsUSD, roiYears, bessKWh, peakLoadKW } = step6Advisor;
       
       const bullets: string[] = [];
       
@@ -607,7 +607,7 @@ function WizardV7Page() {
         bullets={fallbackBullets.slice(0, 5)}
       />
     );
-  }, [state.step, step3Advisor, step4Advisor, gate.canContinue, gate.reason, merlinData, state.locationRawInput, state.location, state.businessCard, state.businessConfirmed, state.locationIntel, state.industry, state.industryLocked, state.goals]);
+  }, [state.step, step3Advisor, step6Advisor, gate.canContinue, gate.reason, merlinData, state.locationRawInput, state.location, state.businessCard, state.businessConfirmed, state.locationIntel, state.industry, state.industryLocked, state.goals]);
 
   return (
     <div data-wizard-version="v7" className="w-full h-full">
