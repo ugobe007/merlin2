@@ -1,5 +1,4 @@
 import React from "react";
-import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 
 // Original Places API shape
 type BusinessProfile = {
@@ -33,6 +32,18 @@ function initials(name?: string) {
   return parts.map((p) => p[0]?.toUpperCase()).join("");
 }
 
+/** Title-case a business name — "dash car wash" → "Dash Car Wash" */
+function titleCase(str?: string) {
+  if (!str) return "";
+  return str.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Format industry slug for display — "car_wash" → "Car Wash" */
+function formatIndustry(slug?: string) {
+  if (!slug) return "";
+  return slug.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 interface BusinessProfileCardProps {
   /** Business data - supports both Places API shape and V7 BusinessCard shape */
   business?: BusinessProfile | null;
@@ -51,161 +62,228 @@ interface BusinessProfileCardProps {
 export default function BusinessProfileCard({
   business,
   data,
-  subtitle = "Business Profile",
-  rightTag,
+  subtitle: _subtitle,
+  rightTag: _rightTag,
   showIndustryInference = false,
   onEdit,
-  onTrueQuoteClick,
+  onTrueQuoteClick: _onTrueQuoteClick,
 }: BusinessProfileCardProps) {
   // Support both `business` and `data` props
   const biz = business ?? data;
   if (!biz?.name) return null;
 
   const photo = biz.photoUrl || biz.logoUrl || null;
+  const displayName = titleCase(biz.name);
   const displayAddress = biz.formattedAddress || biz.address;
   const hasIndustryInference = showIndustryInference && biz.inferredIndustry;
   const confidencePct = biz.industryConfidence ? Math.round(biz.industryConfidence * 100) : 0;
+  const confidenceLabel = confidencePct >= 85 ? "High" : confidencePct >= 60 ? "Medium" : "Low";
+  const confidenceColor = confidencePct >= 85 ? "#4ade80" : confidencePct >= 60 ? "#fbbf24" : "#f87171";
 
   return (
-    <div className="rounded-xl bg-[rgba(22,27,48,0.6)] p-5 border border-white/[0.06]">
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="text-xs text-slate-300/80 tracking-wide uppercase">
-          {subtitle}
-        </div>
+    <div
+      style={{
+        borderRadius: 16,
+        border: "1px solid rgba(74, 222, 128, 0.20)",
+        background: "linear-gradient(135deg, rgba(14, 18, 32, 0.85) 0%, rgba(20, 30, 48, 0.75) 100%)",
+        overflow: "hidden",
+      }}
+    >
+      {/* ── Top bar: green accent line ── */}
+      <div style={{ height: 3, background: "linear-gradient(90deg, #4ade80 0%, #22d3ee 100%)" }} />
 
-        <div className="flex items-center gap-2">
-          {biz.isVerified && (
-            rightTag ? (
-              <span className="text-[11px] px-2.5 py-1 rounded-full border border-emerald-500/20 text-emerald-300">
-                ✓ {rightTag}
-              </span>
-            ) : (
-              <TrueQuoteBadgeCanonical showTooltip={false} onClick={onTrueQuoteClick} />
-            )
-          )}
+      <div style={{ padding: "20px 24px 16px" }}>
+        {/* ── Header: Verified + Edit ── */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{
+              width: 8, height: 8, borderRadius: "50%",
+              background: "#4ade80",
+              boxShadow: "0 0 6px rgba(74, 222, 128, 0.5)",
+              flexShrink: 0,
+            }} />
+            <span style={{
+              fontSize: 11, fontWeight: 800, letterSpacing: "0.6px",
+              textTransform: "uppercase",
+              color: "rgba(74, 222, 128, 0.9)",
+            }}>
+              Verified Business
+            </span>
+          </div>
           {onEdit && (
             <button
               onClick={onEdit}
-              className="text-[11px] px-2 py-1 rounded-full bg-white/5 text-slate-300 hover:bg-white/10 transition"
+              style={{
+                padding: "5px 14px",
+                borderRadius: 8,
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.04)",
+                color: "rgba(232, 235, 243, 0.6)",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                e.currentTarget.style.color = "rgba(232, 235, 243, 0.9)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                e.currentTarget.style.color = "rgba(232, 235, 243, 0.6)";
+              }}
             >
               Edit
             </button>
           )}
         </div>
-      </div>
 
-      {/* Profile */}
-      <div className="mt-4 flex items-start gap-4">
-        {/* Avatar / Photo */}
-        <div className="h-14 w-14 rounded-xl overflow-hidden bg-slate-900/40 shrink-0">
-          {photo ? (
-            <img
-              src={photo}
-              alt={`${biz.name} photo`}
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
-          ) : (
-            <div className="h-full w-full grid place-items-center text-white font-bold">
-              {initials(biz.name)}
+        {/* ── Profile row ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {/* Avatar */}
+          <div style={{
+            width: 52, height: 52, borderRadius: 14,
+            overflow: "hidden", flexShrink: 0,
+            background: photo ? "transparent" : "linear-gradient(135deg, rgba(79, 140, 255, 0.25) 0%, rgba(139, 92, 246, 0.20) 100%)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            {photo ? (
+              <img
+                src={photo}
+                alt={displayName}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+              />
+            ) : (
+              <span style={{ fontSize: 18, fontWeight: 900, color: "rgba(255,255,255,0.7)", letterSpacing: "1px" }}>
+                {initials(biz.name)}
+              </span>
+            )}
+          </div>
+
+          {/* Name + address */}
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{
+              fontSize: 18, fontWeight: 800, color: "#fff",
+              letterSpacing: "-0.3px", lineHeight: 1.2,
+              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            }}>
+              {displayName}
             </div>
-          )}
+            {displayAddress && (
+              <div style={{
+                fontSize: 13, color: "rgba(232, 235, 243, 0.55)",
+                marginTop: 4, lineHeight: 1.4,
+                display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+              }}>
+                📍 {displayAddress}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="text-white font-semibold text-lg leading-tight truncate">
-            {biz.name}
-          </div>
-          {displayAddress && (
-            <div className="text-slate-300 text-sm mt-1 line-clamp-2">
-              {displayAddress}
-            </div>
-          )}
-
-          {/* Meta row */}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+        {/* ── Meta pills: category, rating, website ── */}
+        {(biz.categoryLabel || typeof biz.rating === "number" || biz.website || biz.phone) && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
             {biz.categoryLabel && (
-              <span className="text-[11px] px-2 py-1 rounded-full bg-white/5 text-slate-200 shadow-[0_2px_6px_rgba(0,0,0,0.15)]">
+              <span style={{
+                fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 8,
+                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.06)",
+                color: "rgba(232, 235, 243, 0.7)",
+              }}>
                 {biz.categoryLabel}
               </span>
             )}
-
             {typeof biz.rating === "number" && (
-              <span className="text-[11px] px-2 py-1 rounded-full bg-white/5 text-slate-200 shadow-[0_2px_6px_rgba(0,0,0,0.15)]">
-                ⭐ {biz.rating.toFixed(1)}
-                {biz.userRatingsTotal
-                  ? ` (${biz.userRatingsTotal})`
-                  : ""}
+              <span style={{
+                fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 8,
+                background: "rgba(251, 191, 36, 0.08)", border: "1px solid rgba(251, 191, 36, 0.12)",
+                color: "rgba(251, 191, 36, 0.9)",
+              }}>
+                ⭐ {biz.rating.toFixed(1)}{biz.userRatingsTotal ? ` (${biz.userRatingsTotal.toLocaleString()})` : ""}
               </span>
             )}
-
             {biz.website && (
               <a
-                className="text-[11px] px-2 py-1 rounded-full bg-purple-500/10 text-purple-200 hover:bg-purple-500/15 transition shadow-[0_2px_6px_rgba(139,92,246,0.12)]"
                 href={biz.website}
                 target="_blank"
                 rel="noreferrer"
+                style={{
+                  fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 8,
+                  background: "rgba(79, 140, 255, 0.08)", border: "1px solid rgba(79, 140, 255, 0.12)",
+                  color: "rgba(79, 140, 255, 0.9)", textDecoration: "none",
+                }}
               >
-                Website
+                🔗 Website
               </a>
             )}
-
             {biz.phone && (
-              <span className="text-[11px] px-2 py-1 rounded-full bg-white/5 text-slate-200 shadow-[0_2px_6px_rgba(0,0,0,0.15)]">
-                {biz.phone}
+              <span style={{
+                fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 8,
+                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.06)",
+                color: "rgba(232, 235, 243, 0.7)",
+              }}>
+                📞 {biz.phone}
               </span>
             )}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Industry Inference Section (V7 feature) */}
+      {/* ── Industry Inference Section ── */}
       {hasIndustryInference && (
-        <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-slate-400 uppercase tracking-wide">
-              Detected Industry
-            </div>
-            <div className="flex items-center gap-2">
-              <div 
-                className="h-1.5 w-16 rounded-full bg-white/10 overflow-hidden"
-                title={`${confidencePct}% confidence`}
-              >
-                <div 
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${confidencePct}%`,
-                    background: confidencePct >= 85 
-                      ? "linear-gradient(90deg, rgba(74,222,128,0.8), rgba(74,222,128,1))"
-                      : confidencePct >= 60 
-                        ? "linear-gradient(90deg, rgba(251,191,36,0.8), rgba(251,191,36,1))"
-                        : "linear-gradient(90deg, rgba(239,68,68,0.8), rgba(239,68,68,1))",
-                  }}
-                />
+        <div style={{
+          padding: "14px 24px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 14 }}>🏭</span>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(232, 235, 243, 0.4)", textTransform: "uppercase", letterSpacing: "0.4px" }}>
+                Industry
               </div>
-              <span className="text-[11px] text-slate-400">{confidencePct}%</span>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginTop: 1 }}>
+                {formatIndustry(biz.inferredIndustry)}
+              </div>
             </div>
           </div>
-          <div className="mt-2 text-sm text-white font-medium capitalize">
-            {biz.inferredIndustry?.replace(/-/g, " ")}
-          </div>
-          {biz.industryEvidence && biz.industryEvidence.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {biz.industryEvidence.slice(0, 3).map((ev, i) => (
-                <span 
-                  key={i}
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-200 shadow-[0_2px_4px_rgba(139,92,246,0.1)]"
-                >
-                  {ev}
-                </span>
-              ))}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{
+              width: 48, height: 5, borderRadius: 3,
+              background: "rgba(255,255,255,0.08)", overflow: "hidden",
+            }}>
+              <div style={{
+                height: "100%", borderRadius: 3,
+                width: `${confidencePct}%`,
+                background: confidenceColor,
+                transition: "width 0.5s ease",
+              }} />
             </div>
-          )}
+            <span style={{ fontSize: 11, fontWeight: 700, color: confidenceColor }}>
+              {confidenceLabel}
+            </span>
+          </div>
         </div>
       )}
+
+      {/* ── Continue nudge ── */}
+      <div style={{
+        padding: "12px 24px",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+        background: "rgba(79, 140, 255, 0.04)",
+      }}>
+        <span style={{ fontSize: 13 }}>👇</span>
+        <span style={{
+          fontSize: 12, fontWeight: 700,
+          color: "rgba(79, 140, 255, 0.8)",
+          letterSpacing: "0.2px",
+        }}>
+          Looks right? Click <strong style={{ color: "rgba(79, 140, 255, 1)" }}>Continue</strong> below to set your energy goals
+        </span>
+      </div>
     </div>
   );
 }
