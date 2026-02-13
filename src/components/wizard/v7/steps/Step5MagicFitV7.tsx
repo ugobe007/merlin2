@@ -61,23 +61,23 @@ const TIER_CONFIG: Record<TierKey, TierConfig> = {
     multiplier: 0.75,
     solarMultiplier: 0.5,
     genMultiplier: 0.8,
-    headlineClass: 'text-2xl lg:text-3xl font-black tracking-tight bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent',
-    cardBorder: 'border-slate-700/80',
-    cardBg: 'bg-gradient-to-b from-slate-900 to-slate-950',
+    headlineClass: 'text-2xl lg:text-3xl font-bold tracking-tight text-white',
+    cardBorder: 'border-white/[0.06]',
+    cardBg: 'bg-white/[0.02]',
     accentColor: 'text-emerald-400',
-    buttonClass: 'text-emerald-400 bg-transparent border-2 border-emerald-500/30 hover:border-emerald-400/60',
+    buttonClass: 'text-slate-300 bg-transparent border border-white/[0.1] hover:border-white/[0.2] hover:bg-white/[0.04]',
   },
   perfectFit: {
     name: 'PERFECT FIT',
-    tagline: 'Best Value ⭐',
+    tagline: 'Best Value',
     multiplier: 1.0,
     solarMultiplier: 1.0,
     genMultiplier: 1.0,
-    headlineClass: 'text-2xl lg:text-3xl font-black tracking-tight bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent',
-    cardBorder: 'border-purple-500/60',
-    cardBg: 'bg-gradient-to-b from-purple-950/40 via-slate-900 to-slate-950',
-    accentColor: 'text-purple-400',
-    buttonClass: 'text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-[0_0_12px_rgba(139,92,246,0.25)]',
+    headlineClass: 'text-2xl lg:text-3xl font-bold tracking-tight text-white',
+    cardBorder: 'border-[#3ECF8E]/30',
+    cardBg: 'bg-white/[0.03]',
+    accentColor: 'text-[#3ECF8E]',
+    buttonClass: 'text-[#0D0D0D] bg-[#3ECF8E] hover:bg-[#3ECF8E]/90',
   },
   beastMode: {
     name: 'BEAST MODE',
@@ -85,11 +85,11 @@ const TIER_CONFIG: Record<TierKey, TierConfig> = {
     multiplier: 1.4,
     solarMultiplier: 1.5,
     genMultiplier: 1.25,
-    headlineClass: 'text-2xl lg:text-3xl font-black tracking-tight bg-gradient-to-r from-amber-400 via-orange-400 to-red-500 bg-clip-text text-transparent',
-    cardBorder: 'border-slate-700/80',
-    cardBg: 'bg-gradient-to-b from-slate-900 to-slate-950',
-    accentColor: 'text-orange-400',
-    buttonClass: 'text-orange-400 bg-transparent border-2 border-orange-500/30 hover:border-orange-400/60',
+    headlineClass: 'text-2xl lg:text-3xl font-bold tracking-tight text-white',
+    cardBorder: 'border-white/[0.06]',
+    cardBg: 'bg-white/[0.02]',
+    accentColor: 'text-amber-400',
+    buttonClass: 'text-slate-300 bg-transparent border border-white/[0.1] hover:border-white/[0.2] hover:bg-white/[0.04]',
   },
 };
 
@@ -382,9 +382,9 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
             </>
           ) : (
             <>
-              <Loader2 className="w-10 h-10 text-purple-500 animate-spin mx-auto mb-4" />
-              <p className="text-slate-400 text-base font-semibold">Generating your custom system options...</p>
-              <p className="text-slate-500 text-sm mt-2">Analyzing facility profile + goals</p>
+              <Loader2 className="w-10 h-10 text-slate-400 animate-spin mx-auto mb-4" />
+              <p className="text-slate-300 text-base font-medium">Generating your custom system options...</p>
+              <p className="text-slate-500 text-sm mt-2">Analyzing facility profile and goals</p>
             </>
           )}
         </div>
@@ -416,8 +416,8 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         {goalModifiers.goalHints.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {goalModifiers.goalHints.map((hint, idx) => (
-              <span key={idx} className="text-xs text-purple-400/80">
-                ✨ {hint}
+              <span key={idx} className="text-xs text-[#3ECF8E]/80">
+                {hint}
               </span>
             ))}
           </div>
@@ -457,28 +457,28 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
               className={`
                 relative rounded-xl border-2 transition-all duration-300 cursor-pointer overflow-hidden
                 ${tier.config.cardBorder} ${tier.config.cardBg}
-                ${isSelected ? 'ring-2 ring-purple-400/60 shadow-[0_0_20px_rgba(139,92,246,0.15)]' : ''}
-                ${isRecommended && !isSelected ? 'ring-1 ring-purple-500/30 shadow-[0_0_16px_rgba(139,92,246,0.1)]' : ''}
+                ${isSelected ? 'ring-2 ring-[#3ECF8E]/50' : ''}
+                ${isRecommended && !isSelected ? 'ring-1 ring-[#3ECF8E]/20' : ''}
               `}
               onClick={() => handleSelectTier(tier.tierKey)}
             >
               {/* Recommended Badge */}
               {isRecommended && (
-                <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500" />
+                <div className="absolute -top-px left-0 right-0 h-1 bg-[#3ECF8E]" />
               )}
 
               <div className="p-5">
                 {/* Recommended tag */}
                 {isRecommended && (
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-500/15 border border-purple-500/30 rounded-full text-purple-300 text-[11px] font-bold mb-3">
-                    ⭐ Recommended
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#3ECF8E]/10 border border-[#3ECF8E]/25 rounded-full text-[#3ECF8E] text-[11px] font-semibold mb-3">
+                    Recommended
                   </div>
                 )}
 
                 {/* Selected Checkmark */}
                 {isSelected && (
-                  <div className="absolute top-4 right-4 w-7 h-7 border-2 border-purple-400 rounded-full flex items-center justify-center">
-                    <Check className="w-4 h-4 text-purple-400" />
+                  <div className="absolute top-4 right-4 w-7 h-7 border-2 border-[#3ECF8E] rounded-full flex items-center justify-center">
+                    <Check className="w-4 h-4 text-[#3ECF8E]" />
                   </div>
                 )}
 
@@ -491,7 +491,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                 {/* Annual Savings - HERO */}
                 <div className="mb-4 p-3 bg-white/[0.04] rounded-xl border border-white/[0.06]">
                   <div className="text-slate-500 text-[11px] font-semibold uppercase tracking-widest mb-1">Annual Savings</div>
-                  <div className={`text-2xl lg:text-3xl font-black ${tier.config.accentColor} leading-none`}>
+                  <div className={`text-2xl lg:text-3xl font-bold ${tier.config.accentColor} leading-none`}>
                     {formatCurrency(quote.financials?.annualSavings)}
                     <span className="text-sm text-slate-600 font-semibold ml-1">/yr</span>
                   </div>
@@ -566,19 +566,19 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <div className="text-center p-2 bg-white/[0.03] rounded-lg">
                     <div className="text-[10px] text-slate-500 font-medium">Payback</div>
-                    <div className={`text-sm font-black ${tier.config.accentColor}`}>
+                    <div className={`text-sm font-bold ${tier.config.accentColor}`}>
                       {safeFixed(quote.financials?.paybackYears, 1)}y
                     </div>
                   </div>
                   <div className="text-center p-2 bg-white/[0.03] rounded-lg">
                     <div className="text-[10px] text-slate-500 font-medium">10yr ROI</div>
-                    <div className={`text-sm font-black ${tier.config.accentColor}`}>
+                    <div className={`text-sm font-bold ${tier.config.accentColor}`}>
                       {safeFixed(quote.financials?.roi10Year, 0)}%
                     </div>
                   </div>
                   <div className="text-center p-2 bg-white/[0.03] rounded-lg">
                     <div className="text-[10px] text-slate-500 font-medium">25yr ROI</div>
-                    <div className={`text-sm font-black ${tier.config.accentColor}`}>
+                    <div className={`text-sm font-bold ${tier.config.accentColor}`}>
                       {safeFixed(quote.financials?.roi25Year, 0)}%
                     </div>
                   </div>
@@ -587,7 +587,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                 {/* Select Button */}
                 <button
                   className={`
-                    w-full py-2.5 px-4 rounded-xl font-bold text-sm transition-all
+                    w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all
                     ${tier.config.buttonClass}
                     ${isSelected ? 'opacity-100' : 'opacity-90 hover:opacity-100'}
                   `}

@@ -12,6 +12,7 @@ import {
   RefreshCw,
   AlertTriangle,
   ChevronDown,
+  Check,
 } from "lucide-react";
 import type {
   WizardState as WizardV7State,
@@ -46,30 +47,19 @@ type Props = {
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] p-5 ${className ?? ""}`}>
+    <div className={`rounded-xl border border-white/[0.06] bg-white/[0.03] p-5 ${className ?? ""}`}>
       {children}
     </div>
   );
 }
 
-/** Stat pill — instrument readout (illuminated stroke + glow) */
+/** Stat pill — clean instrument readout */
 function StatPill({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent?: string }) {
-  // Map accent class to a glow color for the border
-  const glowMap: Record<string, string> = {
-    "text-amber-400": "shadow-amber-500/20 border-amber-500/20",
-    "text-violet-400": "shadow-violet-500/20 border-violet-500/20",
-    "text-blue-400": "shadow-blue-500/20 border-blue-500/20",
-    "text-yellow-400": "shadow-yellow-500/20 border-yellow-500/20",
-    "text-red-400": "shadow-red-500/20 border-red-500/20",
-    "text-emerald-400": "shadow-emerald-500/20 border-emerald-500/20",
-  };
-  const glow = glowMap[accent ?? ""] ?? "shadow-slate-500/10 border-white/[0.06]";
-
   return (
-    <div className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl bg-white/[0.03] border min-w-[120px] transition-colors ${glow}`}>
+    <div className="flex flex-col items-center gap-1.5 px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.06] min-w-[120px] transition-colors">
       <div className={accent || "text-slate-400"}>{icon}</div>
       <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-[0.08em]">{label}</div>
-      <div className="text-base font-black text-slate-100 tabular-nums tracking-tight">{value}</div>
+      <div className="text-base font-bold text-slate-100 tabular-nums tracking-tight">{value}</div>
     </div>
   );
 }
@@ -124,16 +114,16 @@ function resolveBadge(
 ): BadgeResult {
   // Gate 1: Pricing not ready → Load Profile Only
   if (pricingStatus !== "ok" || !quote?.pricingComplete) {
-    return { tier: "load-only", label: "⚠️ Load Profile Only — Financial calculations pending" };
+    return { tier: "load-only", label: "Load Profile Only — Financial calculations pending" };
   }
 
   // Gate 2: Fallback template or confidence → Estimate
   if (templateMode === "fallback") {
-    return { tier: "estimate", label: "📊 Estimate — General facility model" };
+    return { tier: "estimate", label: "Estimate — General facility model" };
   }
   const confidence = quote.confidence as Record<string, unknown> | undefined;
   if (confidence?.industry === "fallback") {
-    return { tier: "estimate", label: "📊 Estimate — General facility model" };
+    return { tier: "estimate", label: "Estimate — General facility model" };
   }
 
   // Gate 3: TrueQuote validation present and meaningful
@@ -149,7 +139,7 @@ function resolveBadge(
   }
 
   // Default: Estimate (safe — prefer under-claiming)
-  return { tier: "estimate", label: "📊 Estimate — Partial validation" };
+  return { tier: "estimate", label: "Estimate — Partial validation" };
 }
 
 // ============================================================================
@@ -241,22 +231,22 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             <MapPin className="w-4 h-4" />
             <span className="text-sm">{locLine}</span>
           </div>
-          <h1 className="text-2xl font-black text-white flex items-center gap-2.5">
-            <Sparkles className="w-6 h-6 text-purple-400" />
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
+            <Zap className="w-5 h-5 text-[#3ECF8E]" />
             Your Energy Quote
           </h1>
         </div>
         <div className="flex gap-2.5">
           <button
             onClick={actions.goBack}
-            className="h-9 px-3.5 rounded-xl border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08] font-bold text-sm flex items-center gap-1.5 transition-colors"
+            className="h-9 px-3.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-300 hover:bg-white/[0.06] font-medium text-sm flex items-center gap-1.5 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
           </button>
           <button
             onClick={actions.resetSession}
-            className="h-9 px-3.5 rounded-xl border border-red-500/20 bg-red-500/[0.08] text-red-400 hover:bg-red-500/[0.12] font-bold text-sm flex items-center gap-1.5 transition-colors"
+            className="h-9 px-3.5 rounded-lg border border-red-500/20 bg-red-500/[0.08] text-red-400 hover:bg-red-500/[0.12] font-medium text-sm flex items-center gap-1.5 transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Reset
@@ -272,7 +262,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           PARTIAL RESULTS / FALLBACK / STATUS BANNERS
       ================================================================ */}
       {!!(quote?._extra as Record<string,unknown>)?.isProvisional && (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
           <div className="flex items-start gap-2.5">
             <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
             <div>
@@ -292,8 +282,8 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       )}
 
       {state.templateMode === "fallback" && (
-        <div className="rounded-2xl border border-blue-500/25 bg-blue-500/[0.05] p-4">
-          <div className="font-bold text-blue-300 text-sm">📋 Estimate Mode</div>
+        <div className="rounded-xl border border-blue-500/25 bg-blue-500/[0.05] p-4">
+          <div className="font-semibold text-blue-300 text-sm">Estimate Mode</div>
           <p className="text-blue-200/70 text-xs mt-1.5">
             Using a general facility model. Numbers are directionally correct but won't carry TrueQuote™ attribution.
           </p>
@@ -308,42 +298,42 @@ export default function Step6ResultsV7({ state, actions }: Props) {
 
       {/* Pricing status banners */}
       {pricingStatus === "pending" && (
-        <div className="rounded-2xl border border-blue-500/25 bg-blue-500/[0.04] p-4 flex items-center gap-3">
+        <div className="rounded-xl border border-blue-500/25 bg-blue-500/[0.04] p-4 flex items-center gap-3">
           <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
           <div>
-            <span className="font-bold text-blue-300 text-sm">Calculating quote…</span>
+            <span className="font-semibold text-blue-300 text-sm">Calculating quote…</span>
             <span className="text-blue-200/60 text-xs ml-2">This won't block navigation</span>
           </div>
         </div>
       )}
 
       {pricingStatus === "error" && (
-        <div className="rounded-2xl border border-red-500/25 bg-red-500/[0.06] p-4">
-          <div className="font-bold text-red-300 text-sm mb-1.5">🚨 Pricing engine error</div>
+        <div className="rounded-xl border border-red-500/25 bg-red-500/[0.06] p-4">
+          <div className="font-semibold text-red-300 text-sm mb-1.5">Pricing engine error</div>
           <pre className="text-red-300/70 text-xs font-mono whitespace-pre-wrap">{pricingError || "Unknown error"}</pre>
           {actions.retryPricing && (
             <button onClick={() => actions.retryPricing?.()} className="mt-2.5 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 font-bold text-xs hover:bg-red-500/[0.15] transition-colors">
-              🔄 Retry pricing
+              Retry pricing
             </button>
           )}
         </div>
       )}
 
       {pricingStatus === "timed_out" && (
-        <div className="rounded-2xl border border-orange-500/25 bg-orange-500/[0.06] p-4">
-          <div className="font-bold text-orange-300 text-sm">⏱️ Pricing timed out</div>
+        <div className="rounded-xl border border-orange-500/25 bg-orange-500/[0.06] p-4">
+          <div className="font-semibold text-orange-300 text-sm">Pricing timed out</div>
           <p className="text-orange-200/70 text-xs mt-1.5">Your load profile is still available below.</p>
           {actions.retryPricing && (
             <button onClick={() => actions.retryPricing?.()} className="mt-2.5 px-3 py-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 text-orange-300 font-bold text-xs hover:bg-orange-500/[0.15] transition-colors">
-              🔄 Retry pricing
+              Retry pricing
             </button>
           )}
         </div>
       )}
 
       {pricingStatus === "ok" && pricingWarnings.length > 0 && (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
-          <div className="font-bold text-amber-300 text-sm">⚠️ Warnings detected</div>
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
+          <div className="font-semibold text-amber-300 text-sm">Warnings detected</div>
           <ul className="mt-1.5 pl-4 text-amber-200/70 text-xs list-disc space-y-0.5">
             {pricingWarnings.slice(0, 5).map(w => <li key={w}>{w}</li>)}
           </ul>
@@ -354,26 +344,26 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           HERO SAVINGS — Big number, compelling
       ================================================================ */}
       {quoteReady && quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
-        <div className="relative rounded-3xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 via-cyan-600/10 to-purple-600/10" />
+        <div className="relative rounded-xl overflow-hidden">
+          <div className="absolute inset-0 bg-white/[0.02]" />
 
-          <div className="relative p-8 border border-emerald-500/25 rounded-3xl">
+          <div className="relative p-8 border border-[#3ECF8E]/20 rounded-xl">
             <div className="text-center">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 mb-4">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                <span className="text-emerald-400 font-semibold text-xs uppercase tracking-wider">Projected Annual Savings</span>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 mb-4">
+                <div className="w-2 h-2 bg-[#3ECF8E] rounded-full animate-pulse" />
+                <span className="text-[#3ECF8E] font-semibold text-xs uppercase tracking-wider">Projected Annual Savings</span>
               </div>
-              <div className="text-6xl md:text-7xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent leading-none">
+              <div className="text-5xl md:text-6xl font-bold text-[#3ECF8E] leading-none">
                 {fmtUSD(quote.annualSavingsUSD as number | null)}
               </div>
               <div className="text-lg text-slate-400 mt-1.5">per year</div>
 
               {/* ROI snapshot below hero */}
               {quote.roiYears != null && Number(quote.roiYears) > 0 && (
-                <div className="mt-5 inline-flex items-center gap-4 px-5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <div className="mt-5 inline-flex items-center gap-4 px-5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                  <TrendingUp className="w-4 h-4 text-[#3ECF8E]" />
                   <span className="text-sm text-slate-300">
-                    Payback in <strong className="text-emerald-300">{parseFloat(Number(quote.roiYears).toFixed(1))} years</strong>
+                    Payback in <strong className="text-[#3ECF8E]">{parseFloat(Number(quote.roiYears).toFixed(1))} years</strong>
                   </span>
                   {quote.irr != null && (() => {
                     const raw = Number(quote.irr);
@@ -384,7 +374,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                       <>
                         <span className="text-slate-600">|</span>
                         <span className="text-sm text-slate-300">
-                          IRR <strong className="text-purple-300">{pct.toFixed(1)}%</strong>
+                          IRR <strong className="text-[#3ECF8E]">{pct.toFixed(1)}%</strong>
                         </span>
                       </>
                     );
@@ -465,14 +455,14 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           {/* Equipment Card */}
           <Card className="space-y-3">
             <div className="flex items-center gap-2 mb-1">
-              <Battery className="w-4 h-4 text-violet-400" />
-              <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wide">Equipment Summary</h3>
+              <Battery className="w-4 h-4 text-[#3ECF8E]" />
+              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Equipment Summary</h3>
             </div>
             <div className="space-y-2.5">
               {quote.bessKWh != null && (
                 <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">🔋</span>
+                    <Battery className="w-4 h-4 text-slate-500" />
                     <span className="text-sm text-slate-300">Battery Storage</span>
                   </div>
                   <div className="text-right">
@@ -484,7 +474,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               {quote.durationHours != null && (
                 <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">⏱️</span>
+                    <Zap className="w-4 h-4 text-slate-500" />
                     <span className="text-sm text-slate-300">Duration</span>
                   </div>
                   <div className="text-sm font-bold text-white">{fmtNum(quote.durationHours)} hours</div>
@@ -493,7 +483,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               {(quote.solarKW as number) > 0 && (
                 <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">☀️</span>
+                    <Sun className="w-4 h-4 text-slate-500" />
                     <span className="text-sm text-slate-300">Solar Array</span>
                   </div>
                   <div className="text-sm font-bold text-white">{fmtNum(Math.round(quote.solarKW as number))} kW</div>
@@ -502,7 +492,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               {(quote.generatorKW as number) > 0 && (
                 <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">🔥</span>
+                    <Fuel className="w-4 h-4 text-slate-500" />
                     <span className="text-sm text-slate-300">Backup Generator</span>
                   </div>
                   <div className="text-sm font-bold text-white">{fmtNum(Math.round(quote.generatorKW as number))} kW</div>
@@ -511,7 +501,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               {/* Load profile */}
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">⚡</span>
+                  <Zap className="w-4 h-4 text-slate-500" />
                   <span className="text-sm text-slate-300">Peak Demand</span>
                 </div>
                 <div className="text-sm font-bold text-white">{quote.peakLoadKW ? `${fmtNum(Math.round(quote.peakLoadKW))} kW` : "—"}</div>
@@ -523,7 +513,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           <Card className="space-y-3">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wide">Financial Summary</h3>
+              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Financial Summary</h3>
             </div>
             <div className="space-y-2.5">
               <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
@@ -549,13 +539,13 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               {quote.npv != null && (
                 <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
                   <span className="text-sm text-slate-300">NPV (25yr)</span>
-                  <span className="text-sm font-bold text-purple-300">{fmtUSD(quote.npv as number | null)}</span>
+                  <span className="text-sm font-bold text-[#3ECF8E]">{fmtUSD(quote.npv as number | null)}</span>
                 </div>
               )}
               {quote.irr != null && (
                 <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
                   <span className="text-sm text-slate-300">IRR</span>
-                  <span className="text-sm font-bold text-purple-300">{(() => {
+                  <span className="text-sm font-bold text-[#3ECF8E]">{(() => {
                     const raw = Number(quote.irr);
                     if (!Number.isFinite(raw)) return "—";
                     const pct = raw > 1 ? raw : raw * 100;
@@ -576,11 +566,10 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             {quote.capexUSD != null && Number(quote.capexUSD) > 0 && quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
               <button
                 onClick={() => setShowFinancialModal(true)}
-                className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/20 to-indigo-600/20 border border-purple-500/25 hover:border-purple-400/40 hover:from-purple-600/30 hover:to-indigo-600/30 transition-all group"
+                className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#3ECF8E]/[0.08] border border-[#3ECF8E]/20 hover:border-[#3ECF8E]/40 hover:bg-[#3ECF8E]/[0.12] transition-all group"
               >
-                <TrendingUp className="w-4 h-4 text-purple-400 group-hover:text-purple-300" />
-                <span className="text-xs font-bold text-purple-300 group-hover:text-purple-200">View 10-Year Financial Projection</span>
-                <Sparkles className="w-3 h-3 text-amber-400 opacity-60" />
+                <TrendingUp className="w-4 h-4 text-[#3ECF8E] group-hover:text-[#3ECF8E]" />
+                <span className="text-xs font-semibold text-[#3ECF8E] group-hover:text-[#3ECF8E]">View 10-Year Financial Projection</span>
               </button>
             )}
           </Card>
@@ -625,7 +614,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                         {/* Proportion bar */}
                         <div className="mt-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-violet-500/60 to-blue-500/60"
+                            className="h-full rounded-full bg-[#3ECF8E]/40"
                             style={{ width: `${Math.min(c.pct * 100, 100)}%` }}
                           />
                         </div>
@@ -698,10 +687,10 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           <button
             type="button"
             onClick={() => setShowProQuoteModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-purple-500/25 bg-purple-500/[0.06] hover:border-purple-400/40 hover:bg-purple-500/[0.12] transition-all shrink-0 group"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/40 hover:bg-[#3ECF8E]/[0.12] transition-all shrink-0 group"
           >
-            <Sparkles className="w-3.5 h-3.5 text-purple-400 group-hover:text-purple-300" />
-            <span className="text-xs font-bold text-purple-300 group-hover:text-purple-200 tracking-wide">
+            <Sparkles className="w-3.5 h-3.5 text-[#3ECF8E] group-hover:text-[#3ECF8E]" />
+            <span className="text-xs font-semibold text-[#3ECF8E] group-hover:text-[#3ECF8E] tracking-wide">
               Open ProQuote™
             </span>
           </button>
@@ -890,13 +879,13 @@ function AdvisorRecommendations({
   if (recommendations.length === 0) {
     // No recommendations — show a positive message
     return (
-      <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.06] p-4">
+      <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-lg">
-            ✅
+          <div className="w-10 h-10 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
+            <Check className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <div className="font-black text-sm text-emerald-200">System Looks Great</div>
+            <div className="font-semibold text-sm text-emerald-200">System Looks Great</div>
             <div className="text-xs text-slate-400 mt-0.5">
               Your configuration is well-optimized for your facility's needs.
             </div>
@@ -914,13 +903,13 @@ function AdvisorRecommendations({
         onClick={() => setExpanded(!expanded)}
         className="w-full"
       >
-        <div className="rounded-2xl border border-purple-500/25 bg-gradient-to-r from-purple-500/[0.08] to-blue-500/[0.06] p-4 flex items-center justify-between hover:from-purple-500/[0.12] hover:to-blue-500/[0.08] transition-all cursor-pointer">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-center justify-between hover:bg-white/[0.05] transition-all cursor-pointer">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-lg">
-              🧙‍♂️
+            <div className="w-10 h-10 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-[#3ECF8E]" />
             </div>
             <div className="text-left">
-              <div className="font-black text-sm text-purple-200">
+              <div className="font-semibold text-sm text-slate-200">
                 Merlin's Recommendations
               </div>
               <div className="text-xs text-slate-400 mt-0.5">
@@ -928,7 +917,7 @@ function AdvisorRecommendations({
               </div>
             </div>
           </div>
-          <ChevronDown className={`w-4 h-4 text-purple-400 transition-transform ${expanded ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </div>
       </button>
 
@@ -958,7 +947,7 @@ function AdvisorRecommendations({
             <button
               type="button"
               onClick={() => actions.goToStep?.("options")}
-              className="text-xs text-purple-400 hover:text-purple-300 underline underline-offset-2 transition-colors font-medium"
+              className="text-xs text-[#3ECF8E] hover:text-[#3ECF8E]/80 underline underline-offset-2 transition-colors font-medium"
             >
               ← Configure add-ons in Options step
             </button>
@@ -1015,22 +1004,22 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
     state.quote?.confidence?.industry !== "fallback";
 
   const buttons: { format: ExportFormat; icon: string; label: string }[] = [
-    { format: "pdf", icon: "📄", label: "PDF" },
-    { format: "word", icon: "📝", label: "Word" },
-    { format: "excel", icon: "📊", label: "Excel" },
+    { format: "pdf", icon: "↓", label: "PDF" },
+    { format: "word", icon: "↓", label: "Word" },
+    { format: "excel", icon: "↓", label: "Excel" },
   ];
 
   return (
     <Card>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 900, color: "rgba(232,235,243,0.95)" }}>Download Quote</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "rgba(232,235,243,0.95)" }}>Download Quote</div>
           <div style={{ fontSize: 12, color: "rgba(232,235,243,0.5)", marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
             {isTrueQuote
               ? <><TrueQuoteBadgeCanonical showTooltip={false} onClick={onTrueQuoteClick} /><span>kW breakdown, confidence score &amp; methodology included</span></>
               : hasPricing
-                ? <span style={{ color: "rgba(232,235,243,0.6)" }}>📊 Estimate — includes financial projections</span>
-                : <span style={{ color: "rgba(232,235,243,0.5)" }}>📋 Load profile only — pricing pending</span>}
+                ? <span style={{ color: "rgba(232,235,243,0.6)" }}>Estimate — includes financial projections</span>
+                : <span style={{ color: "rgba(232,235,243,0.5)" }}>Load profile only — pricing pending</span>}
           </div>
         </div>
 
@@ -1047,13 +1036,13 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
                 gap: 6,
                 height: 36,
                 padding: "0 14px",
-                borderRadius: 10,
-                border: "1px solid rgba(79,140,255,0.3)",
+                borderRadius: 8,
+                border: "1px solid rgba(62,207,142,0.25)",
                 background:
-                  exporting === format ? "rgba(79,140,255,0.2)" : "rgba(79,140,255,0.08)",
-                color: exporting !== null && exporting !== format ? "rgba(232,235,243,0.3)" : "rgba(79,140,255,0.9)",
+                  exporting === format ? "rgba(62,207,142,0.15)" : "rgba(62,207,142,0.06)",
+                color: exporting !== null && exporting !== format ? "rgba(232,235,243,0.3)" : "rgba(62,207,142,0.9)",
                 cursor: exporting !== null ? "not-allowed" : "pointer",
-                fontWeight: 700,
+                fontWeight: 600,
                 fontSize: 13,
                 transition: "all 0.15s",
               }}

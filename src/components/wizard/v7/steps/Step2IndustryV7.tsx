@@ -32,19 +32,19 @@ const IMAGE_MAP: Record<string, string> = {
 // Merlin Dark Theme Tokens (matching Step 1)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const DARK = {
-  bgGradient: "linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%)",
-  cardBg: "rgba(255,255,255,0.04)",
-  cardBorder: "rgba(255,255,255,0.08)",
-  cardHoverBg: "rgba(255,255,255,0.08)",
+  bgGradient: "transparent",
+  cardBg: "rgba(255,255,255,0.03)",
+  cardBorder: "rgba(255,255,255,0.05)",
+  cardHoverBg: "rgba(255,255,255,0.05)",
   textPrimary: "#ffffff",
-  textSecondary: "rgba(255,255,255,0.7)",
-  textMuted: "rgba(255,255,255,0.5)",
-  accent: "#a855f7",
-  accentGlow: "rgba(0,0,0,0.3)",
-  buttonBg: "rgba(168,85,247,0.2)",
-  buttonBorder: "rgba(168,85,247,0.3)",
-  buttonHoverBg: "rgba(168,85,247,0.3)",
-  successGreen: "#22c55e",
+  textSecondary: "rgba(255,255,255,0.60)",
+  textMuted: "rgba(255,255,255,0.35)",
+  accent: "#3ECF8E",
+  accentGlow: "none",
+  buttonBg: "rgba(62,207,142,0.10)",
+  buttonBorder: "rgba(62,207,142,0.25)",
+  buttonHoverBg: "rgba(62,207,142,0.15)",
+  successGreen: "#3ECF8E",
 };
 
 type Props = {
@@ -59,10 +59,7 @@ function Card({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
-        borderRadius: 16,
-        border: `1px solid ${DARK.cardBorder}`,
-        background: DARK.cardBg,
-        padding: 20,
+        borderRadius: 12,
       }}
     >
       {children}
@@ -89,7 +86,7 @@ function Button({
         width: "100%",
         textAlign: "left",
         padding: "12px 16px",
-        borderRadius: 14,
+        borderRadius: 8,
         border: subtle ? `1px solid ${DARK.cardBorder}` : `1px solid ${DARK.buttonBorder}`,
         background: subtle ? DARK.cardBg : DARK.buttonBg,
         color: DARK.textPrimary,
@@ -199,27 +196,25 @@ export default function Step2IndustryV7({ state, actions }: Props) {
                   }
                 }}
                 style={{
-                  borderRadius: 16,
+                  borderRadius: 12,
                   border: `1px solid ${DARK.cardBorder}`,
                   padding: 0,
                   background: DARK.cardBg,
                   cursor: disabled ? "not-allowed" : "pointer",
                   opacity: disabled ? 0.5 : 1,
                   textAlign: "left",
-                  transition: "all 0.2s ease",
+                  transition: "all 0.15s ease",
                   overflow: "hidden",
                 }}
                 onMouseEnter={(e) => {
                   if (!disabled) {
                     e.currentTarget.style.background = DARK.cardHoverBg;
                     e.currentTarget.style.borderColor = DARK.accent;
-                    e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.3)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = DARK.cardBg;
                   e.currentTarget.style.borderColor = DARK.cardBorder;
-                  e.currentTarget.style.boxShadow = "none";
                 }}
               >
                 {/* Image Section */}
@@ -258,7 +253,7 @@ export default function Step2IndustryV7({ state, actions }: Props) {
                 )}
                 {/* Text Section */}
                 <div style={{ padding: 16 }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: DARK.textPrimary, display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: DARK.textPrimary, display: "flex", alignItems: "center", gap: 8 }}>
                     <span>{it.emoji}</span> {it.label}
                   </div>
                   <div style={{ marginTop: 6, fontSize: 13, color: DARK.textMuted }}>{it.desc}</div>

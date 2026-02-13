@@ -15,6 +15,7 @@
  */
 
 import React, { useMemo, useCallback, useEffect, useRef, useState } from "react";
+import { Sparkles } from "lucide-react";
 import {
   resolveStep3Schema,
   CANONICAL_INDUSTRY_KEYS,
@@ -430,7 +431,7 @@ export default function Step3ProfileV7Curated(props: Props) {
         className={`rounded-lg border p-4 transition-colors ${
           isDefaultFilled
             ? "border-cyan-500/40 bg-slate-900/60 hover:border-cyan-400/50"
-            : "border-slate-700/50 bg-slate-900/60 hover:border-violet-500/40"
+            : "border-slate-700/50 bg-slate-900/60 hover:border-white/[0.15]"
         }`}
       >
         {/* Question Header */}
@@ -438,10 +439,10 @@ export default function Step3ProfileV7Curated(props: Props) {
           <div className="flex-1">
             {/* Question number + Section badge */}
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+              <div className="w-6 h-6 rounded-full bg-[#3ECF8E]/15 flex items-center justify-center text-[#3ECF8E] text-xs font-semibold">
                 {index + 1}
               </div>
-              <span className="px-2 py-0.5 text-violet-400 text-xs font-semibold tracking-wide rounded capitalize border border-violet-500/30">
+              <span className="px-2 py-0.5 text-slate-400 text-xs font-semibold tracking-wide rounded capitalize border border-white/[0.08]">
                 {q.section}
               </span>
               {required && !hasValue && (
@@ -481,13 +482,13 @@ export default function Step3ProfileV7Curated(props: Props) {
 
         {/* Merlin's Tip */}
         {q.merlinTip && (
-          <div className="flex items-start gap-2 p-2.5 bg-purple-950/40 border border-purple-500/20 rounded-lg mb-3">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
-              <span className="text-sm">🧙‍♂️</span>
+          <div className="flex items-start gap-2 p-2.5 bg-white/[0.03] border border-white/[0.06] rounded-lg mb-3">
+            <div className="w-6 h-6 rounded-full bg-[#3ECF8E]/10 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-3.5 h-3.5 text-[#3ECF8E]" />
             </div>
             <div>
-              <div className="font-semibold text-purple-200 text-xs mb-0.5">Merlin's Tip</div>
-              <p className="text-xs text-purple-300/90 leading-relaxed">{q.merlinTip}</p>
+              <div className="font-semibold text-slate-300 text-xs mb-0.5">Merlin's Tip</div>
+              <p className="text-xs text-slate-400 leading-relaxed">{q.merlinTip}</p>
             </div>
           </div>
         )}
@@ -798,7 +799,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                 <div className="space-y-3">
                   {/* Current value badge */}
                   <div className="flex justify-center">
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg border border-violet-400/40 text-violet-300 font-bold text-base">
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg border border-[#3ECF8E]/30 text-[#3ECF8E] font-semibold text-base">
                       {sliderVal}
                       {q.unit || ""}
                     </span>
@@ -808,10 +809,10 @@ export default function Step3ProfileV7Curated(props: Props) {
                     <input
                       type="range"
                       className="w-full h-2 rounded-full appearance-none cursor-pointer
-                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-violet-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-violet-300 [&::-webkit-slider-thumb]:cursor-pointer
-                      [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-violet-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-violet-300 [&::-moz-range-thumb]:cursor-pointer"
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#3ECF8E] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#3ECF8E]/80 [&::-webkit-slider-thumb]:cursor-pointer
+                      [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#3ECF8E] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#3ECF8E]/80 [&::-moz-range-thumb]:cursor-pointer"
                       style={{
-                        background: `linear-gradient(to right, rgb(139 92 246) 0%, rgb(139 92 246) ${pct}%, rgb(51 65 85) ${pct}%, rgb(51 65 85) 100%)`,
+                        background: `linear-gradient(to right, rgb(62 207 142) 0%, rgb(62 207 142) ${pct}%, rgb(51 65 85) ${pct}%, rgb(51 65 85) 100%)`,
                       }}
                       min={q.range.min}
                       max={q.range.max}
@@ -1048,7 +1049,7 @@ export default function Step3ProfileV7Curated(props: Props) {
           {/* Progress bar (uses visible required count as denominator) */}
           <div className="mt-2 h-1.5 bg-slate-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-violet-500 to-purple-500 transition-all duration-300"
+              className="h-full bg-[#3ECF8E] transition-all duration-300"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -1085,7 +1086,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                         void actions.submitStep3();
                       }
                     }}
-                    className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-purple-600 to-blue-600 text-white transition-all"
+                    className="px-5 py-2.5 rounded-lg font-semibold text-sm bg-[#3ECF8E] text-[#0D0D0D] transition-all hover:bg-[#3ECF8E]/90"
                   >
                     Looks good — Continue →
                   </button>
@@ -1095,7 +1096,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                       setDefaultsReviewed(true);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
-                    className="px-4 py-2.5 rounded-xl font-bold text-sm border border-slate-600 text-slate-300 hover:bg-slate-700/50 transition-all"
+                    className="px-4 py-2.5 rounded-lg font-medium text-sm border border-white/[0.1] text-slate-300 hover:bg-white/[0.04] transition-all"
                   >
                     Let me review first
                   </button>
@@ -1117,10 +1118,10 @@ export default function Step3ProfileV7Curated(props: Props) {
             }}
             disabled={!isComplete || state.pricingStatus === "pending"}
             className={`
-              px-6 py-3 rounded-xl font-bold text-base transition-all
+              px-6 py-3 rounded-lg font-semibold text-base transition-all
               ${
                 isComplete && state.pricingStatus !== "pending"
-                  ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white cursor-pointer"
+                  ? "bg-[#3ECF8E] text-[#0D0D0D] cursor-pointer hover:bg-[#3ECF8E]/90"
                   : "bg-slate-800 text-slate-500 cursor-not-allowed"
               }
             `}
