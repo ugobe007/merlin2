@@ -216,9 +216,9 @@ function WizardV7Page() {
       return false;
     }
     
-    // MagicFit uses internal tier selection, no shell Next
+    // MagicFit: enable Continue once user has selected a tier
     if (state.step === "magicfit") {
-      return false;
+      return !!state.quote?.pricingComplete;
     }
     
     // Results step has no Next
@@ -233,6 +233,7 @@ function WizardV7Page() {
     state.step,
     state.businessCard,
     state.businessConfirmed,
+    state.quote,
     gate.canContinue,
   ]);
 
@@ -279,6 +280,11 @@ function WizardV7Page() {
 
     if (state.step === "options") {
       wizard.goToStep("magicfit");
+      return;
+    }
+
+    if (state.step === "magicfit") {
+      wizard.goToStep("results");
       return;
     }
   };
