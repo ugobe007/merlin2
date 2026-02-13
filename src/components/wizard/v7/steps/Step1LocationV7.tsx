@@ -19,6 +19,8 @@ import type { WizardState as WizardV7State, EnergyGoal } from "@/wizard/v7/hooks
 import IntelStripInline from "../shared/IntelStripInline";
 import BusinessProfileCard from "../shared/BusinessProfileCard";
 import GoalsModal from "./GoalsModal";
+import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
+import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
 
 type Country = "US" | "International";
 type BusinessInfo = { name?: string; address?: string };
@@ -60,6 +62,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
   const [country, setCountry] = useState<Country>("US");
   const [zipValue, setZipValue] = useState<string>(() => (state.locationRawInput ?? "").trim());
   const [showGoalsModal, setShowGoalsModal] = useState(false);
+  const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
 
   const [businessValue, setBusinessValue] = useState<string>("");
   const [addressValue, setAddressValue] = useState<string>("");
@@ -168,6 +171,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
           <BusinessProfileCard
             data={state.businessCard}
             showIndustryInference={true}
+            onTrueQuoteClick={() => setShowTrueQuoteModal(true)}
             onEdit={() => {
               // Pre-fill search fields and un-confirm to re-open search form
               // SET_BUSINESS_DRAFT resets businessConfirmed: false in the reducer
@@ -181,57 +185,15 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
         </div>
       )}
 
-      {/* Hero Section — with depth, glow, and visual weight */}
+      {/* Hero Section */}
       <div style={{ position: "relative", zIndex: 1 }}>
-        {/* Ambient glow behind hero text */}
-        <div
-          style={{
-            position: "absolute",
-            top: -40,
-            left: -60,
-            width: 400,
-            height: 260,
-            borderRadius: "50%",
-            background: "radial-gradient(ellipse, rgba(79, 140, 255, 0.08) 0%, transparent 70%)",
-            filter: "blur(40px)",
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: 20,
-            right: -30,
-            width: 300,
-            height: 200,
-            borderRadius: "50%",
-            background: "radial-gradient(ellipse, rgba(34, 211, 238, 0.06) 0%, transparent 70%)",
-            filter: "blur(50px)",
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        />
 
-        {/* TrueQuote badge */}
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "8px 16px",
-            borderRadius: 10,
-            background: "rgba(249, 168, 37, 0.06)",
-            border: "1px solid rgba(249, 168, 37, 0.18)",
-            marginBottom: 18,
-            position: "relative",
-            zIndex: 2,
-          }}
-        >
-          <span style={{ fontSize: 14, color: "#f9a825" }}>◎</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#f9a825", letterSpacing: "0.3px" }}>TrueQuote™</span>
-          <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.10)" }} />
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#4ade80" }}>Verified</span>
+        {/* TrueQuote badge — clickable */}
+        <div style={{ marginBottom: 18, position: "relative", zIndex: 2 }}>
+          <TrueQuoteBadgeCanonical
+            onClick={() => setShowTrueQuoteModal(true)}
+            showTooltip={true}
+          />
         </div>
 
         <h1
@@ -256,7 +218,6 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
-              filter: "drop-shadow(0 0 30px rgba(34, 211, 238, 0.5))",
             }}
           >
             energy savings
@@ -305,7 +266,6 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 height: 8,
                 borderRadius: "50%",
                 background: "#4ade80",
-                boxShadow: "0 0 12px rgba(74, 222, 128, 0.6)",
                 flexShrink: 0,
               }}
             />
@@ -518,7 +478,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
             background: "linear-gradient(135deg, rgba(18, 22, 40, 0.55) 0%, rgba(79, 140, 255, 0.04) 100%)",
             border: "1px solid rgba(79, 140, 255, 0.15)",
             boxShadow:
-              "0 4px 24px rgba(0, 0, 0, 0.2), 0 0 40px rgba(79, 140, 255, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+              "0 4px 16px rgba(0, 0, 0, 0.2)",
             position: "relative",
             zIndex: 1,
           }}
@@ -530,7 +490,6 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 height: 36,
                 borderRadius: 10,
                 background: "linear-gradient(135deg, rgba(79, 140, 255, 0.25) 0%, rgba(139, 92, 246, 0.15) 100%)",
-                boxShadow: "0 0 16px rgba(79, 140, 255, 0.25)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -631,7 +590,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
               boxShadow:
                 isResolvingBusiness || !businessValue.trim()
                   ? "none"
-                  : "0 6px 28px rgba(37, 99, 235, 0.5), 0 0 40px rgba(59, 130, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                  : "0 2px 8px rgba(0, 0, 0, 0.3)",
               color: isResolvingBusiness || !businessValue.trim() ? "rgba(232, 235, 243, 0.35)" : "#fff",
               fontSize: 15,
               fontWeight: 800,
@@ -668,7 +627,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
             borderRadius: 16,
             background: "linear-gradient(135deg, rgba(79, 140, 255, 0.12) 0%, rgba(74, 222, 128, 0.10) 100%)",
             border: "1.5px solid rgba(79, 140, 255, 0.30)",
-            boxShadow: "0 4px 24px rgba(79, 140, 255, 0.18), 0 1px 4px rgba(0,0,0,0.15)",
+            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
             overflow: "hidden",
           }}
         >
@@ -740,17 +699,15 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                   fontSize: 14,
                   cursor: "pointer",
                   whiteSpace: "nowrap",
-                  boxShadow: "0 2px 12px rgba(79, 140, 255, 0.4)",
-                  transition: "transform 0.15s, box-shadow 0.15s",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
+                  transition: "opacity 0.15s",
                   flexShrink: 0,
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.transform = "scale(1.04)";
-                  e.currentTarget.style.boxShadow = "0 4px 20px rgba(79, 140, 255, 0.55)";
+                  e.currentTarget.style.opacity = "0.9";
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.transform = "scale(1)";
-                  e.currentTarget.style.boxShadow = "0 2px 12px rgba(79, 140, 255, 0.4)";
+                  e.currentTarget.style.opacity = "1";
                 }}
               >
                 Set Goals
@@ -814,6 +771,12 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
             setTimeout(() => onGoalsConfirmedAdvance(), 80);
           }
         }}
+      />
+
+      {/* TrueQuote™ explainer modal */}
+      <TrueQuoteModal
+        isOpen={showTrueQuoteModal}
+        onClose={() => setShowTrueQuoteModal(false)}
       />
     </div>
   );

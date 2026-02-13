@@ -184,7 +184,7 @@ export function SystemAddOnsCards({
   currentAddOns,
   onRecalculate,
   pricingStatus,
-  showGenerateButton = false,
+  showGenerateButton: _showGenerateButton = false,
   merlinData,
 }: SystemAddOnsCardsProps) {
   // Selections
@@ -304,13 +304,13 @@ export function SystemAddOnsCards({
     : null;
 
   // 10-year combined value
-  const tenYearValue =
+  const _tenYearValue =
     (curSolar ? curSolar.annualSavings * 10 : 0) +
     (curEv ? curEv.tenYearRevenue : 0);
 
   // Max potential for stats
-  const maxSolarSavings = solarOpts.maximum.annualSavings;
-  const maxEvRevenue = evOpts.premium.monthlyRevenue * 12;
+  const _maxSolarSavings = solarOpts.maximum.annualSavings;
+  const _maxEvRevenue = evOpts.premium.monthlyRevenue * 12;
 
   // ── Toggle handler ──
   const toggleOption = useCallback(
@@ -331,7 +331,7 @@ export function SystemAddOnsCards({
   );
 
   // ── Apply selections → recalculateWithAddOns ──
-  const handleApply = useCallback(async () => {
+  const _handleApply = useCallback(async () => {
     if (!onRecalculate || busy) return;
     setBusy(true);
 
@@ -356,7 +356,7 @@ export function SystemAddOnsCards({
   }, [onRecalculate, busy, selectedOptions, curSolar, curGen, curEv]);
 
   // Has changes that need applying?
-  const needsApply =
+  const _needsApply =
     selectedOptions.has("solar") !== currentAddOns.includeSolar ||
     (curSolar?.sizeKw ?? 0) !== currentAddOns.solarKW ||
     selectedOptions.has("generator") !== currentAddOns.includeGenerator ||
@@ -387,7 +387,7 @@ export function SystemAddOnsCards({
           isSelected={selectedOptions.has("solar")}
           isExpanded={expandedCards.has("solar")}
           onToggle={() => toggleOption("solar")}
-          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); n.has("solar") ? n.delete("solar") : n.add("solar"); return n; })}
+          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); if (n.has("solar")) { n.delete("solar"); } else { n.add("solar"); } return n; })}
         >
           <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
             <div
@@ -450,7 +450,7 @@ export function SystemAddOnsCards({
           isSelected={selectedOptions.has("ev")}
           isExpanded={expandedCards.has("ev")}
           onToggle={() => toggleOption("ev")}
-          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); n.has("ev") ? n.delete("ev") : n.add("ev"); return n; })}
+          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); if (n.has("ev")) { n.delete("ev"); } else { n.add("ev"); } return n; })}
         >
           <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
             <div
@@ -537,7 +537,7 @@ export function SystemAddOnsCards({
           isSelected={selectedOptions.has("generator")}
           isExpanded={expandedCards.has("generator")}
           onToggle={() => toggleOption("generator")}
-          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); n.has("generator") ? n.delete("generator") : n.add("generator"); return n; })}
+          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); if (n.has("generator")) { n.delete("generator"); } else { n.add("generator"); } return n; })}
         >
           <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
             <div
@@ -608,7 +608,7 @@ export function SystemAddOnsCards({
 // SUB-COMPONENTS
 // ============================================================================
 
-function StatCell({
+function _StatCell({
   label,
   value,
   color,
@@ -637,13 +637,13 @@ function StatCell({
   );
 }
 
-function Divider() {
+function _Divider() {
   return (
     <div style={{ width: 1, background: "rgba(255,255,255,0.06)", alignSelf: "stretch" }} />
   );
 }
 
-function SelectionItem({
+function _SelectionItem({
   label,
   title,
   value,
@@ -714,15 +714,14 @@ function OptionCard({
   return (
     <div
       style={{
-        borderRadius: 16,
+        borderRadius: 12,
         overflow: "hidden",
-        transition: "all 0.3s",
+        transition: "all 0.2s",
         border: `1px solid ${isSelected ? a.border : "rgba(255,255,255,0.08)"}`,
         boxShadow: isSelected
-          ? `0 0 0 2px ${a.ring}, 0 10px 30px rgba(0,0,0,0.3)`
-          : "0 10px 30px rgba(0,0,0,0.2)",
-        background: "rgba(255,255,255,0.04)",
-        backdropFilter: "blur(12px)",
+          ? `0 0 0 1px ${a.ring}`
+          : "none",
+        background: "rgba(255,255,255,0.03)",
       }}
     >
       {/* Header */}
@@ -750,7 +749,7 @@ function OptionCard({
               alignItems: "center",
               justifyContent: "center",
               fontSize: 22,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+              boxShadow: "none",
             }}
           >
             {icon}
@@ -817,17 +816,18 @@ function OptionCard({
             }}
             style={{
               padding: "8px 18px",
-              borderRadius: 12,
-              border: "none",
+              borderRadius: 10,
+              border: isSelected ? "1px solid #34d399" : "1px solid rgba(255,255,255,0.1)",
               fontWeight: 700,
               fontSize: 13,
+              letterSpacing: "0.01em",
               cursor: "pointer",
               transition: "all 0.2s",
               background: isSelected
-                ? "linear-gradient(135deg, #10b981, #059669)"
-                : "rgba(255,255,255,0.06)",
-              color: isSelected ? "#fff" : "rgba(232,235,243,0.6)",
-              boxShadow: isSelected ? "0 4px 12px rgba(16,185,129,0.3)" : "none",
+                ? "transparent"
+                : "transparent",
+              color: isSelected ? "#34d399" : "rgba(232,235,243,0.5)",
+              boxShadow: "none",
             }}
           >
             {isSelected ? "✓ Added" : "+ Add"}
@@ -882,14 +882,14 @@ function TierCard({
       style={{
         position: "relative",
         padding: "14px 12px",
-        borderRadius: 12,
+        borderRadius: 10,
         cursor: "pointer",
         transition: "all 0.2s",
-        background: isSelected ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)",
+        background: "transparent",
         border: isSelected
           ? `2px solid ${a.border}`
           : "1px solid rgba(255,255,255,0.08)",
-        boxShadow: isSelected ? `0 4px 16px rgba(0,0,0,0.3)` : "none",
+        boxShadow: "none",
       }}
     >
       {/* Tag */}

@@ -105,7 +105,7 @@ export function buildV7ExportData(state: WizardV7State): QuoteExportData {
     windTurbineIncluded: false,
 
     // ─── Financial ────────────────────────────────────────────────
-    systemCost: quote.capexUSD ?? 0,
+    systemCost: quote.grossCost ?? quote.capexUSD ?? 0,
 
     // ─── V7 TrueQuote™ Extensions ─────────────────────────────────
 

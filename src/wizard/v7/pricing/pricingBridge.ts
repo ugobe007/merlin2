@@ -113,6 +113,15 @@ export interface PricingQuoteData {
   /** Total CapEx (net of ITC) */
   capexUSD: number;
 
+  /** Total project cost BEFORE ITC (gross) — use for financial modal */
+  grossCost: number;
+
+  /** ITC credit dollar amount */
+  itcAmount: number;
+
+  /** ITC rate applied (e.g. 0.30 = 30%) from IRA 2022 calculator */
+  itcRate: number;
+
   /** Annual savings estimate */
   annualSavingsUSD: number;
 
@@ -331,6 +340,9 @@ export async function runPricingQuote(
       ok: true as const,
       data: {
         capexUSD: quoteResult.costs.netCost,
+        grossCost: quoteResult.costs.totalProjectCost,
+        itcAmount: quoteResult.costs.taxCredit,
+        itcRate: quoteResult.benchmarkAudit?.assumptions?.itcRate ?? 0.30,
         annualSavingsUSD: quoteResult.financials.annualSavings,
         roiYears: quoteResult.financials.paybackYears,
         breakdown: quoteResult.equipment,

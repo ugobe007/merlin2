@@ -32,10 +32,6 @@ function fmtUSD(n?: number | null): string {
 
 export function PersistentBusinessCard({ state }: Props) {
   const business = state.businessCard ?? state.business;
-
-  // Don't show if no business was detected
-  if (!business?.name) return null;
-
   const industryMeta = getIndustryMeta(state.industry);
 
   const location = useMemo(() => {
@@ -49,6 +45,9 @@ export function PersistentBusinessCard({ state }: Props) {
     return "—";
   }, [business, state.location]);
 
+  // Don't show if no business was detected
+  if (!business?.name) return null;
+
   // Live financial estimates from quote (updates as steps progress)
   const quote = state.quote;
   const hasPricing = quote?.pricingComplete;
@@ -57,7 +56,7 @@ export function PersistentBusinessCard({ state }: Props) {
   const peakLoadKW = quote?.peakLoadKW as number | null;
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-3 mb-4 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 mb-4">
       <div className="flex items-center gap-3">
         {/* Business icon */}
         <div className="w-10 h-10 rounded-lg bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-lg flex-shrink-0">

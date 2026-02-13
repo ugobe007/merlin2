@@ -119,13 +119,13 @@ export default function Step3ProfileV7Curated(props: Props) {
 
   // ✅ CRITICAL FIX (Feb 10, 2026): Use effectiveIndustry from template (retail → hotel mapping)
   const effectiveIndustry =
-    (state.step3Template as any)?.effectiveIndustry ||
-    (state.step3Template as any)?.selectedIndustry ||
+    (state.step3Template as Record<string, unknown>)?.effectiveIndustry ||
+    (state.step3Template as Record<string, unknown>)?.selectedIndustry ||
     ((state as Record<string, unknown>).industry as string | undefined) ||
     "other";
 
   // ✅ Alias for backward compatibility with existing code (Feb 10, 2026)
-  const industry = String(effectiveIndustry);
+  const _industry = String(effectiveIndustry);
 
   console.log("[Step3Curated] Using effectiveIndustry:", effectiveIndustry, "(selected:", state.industry, ")");
 
@@ -146,12 +146,12 @@ export default function Step3ProfileV7Curated(props: Props) {
   // ✅ Normalize schema questions into a single, safe shape
   // This guarantees: stable IDs (fixes React keys), normalized options (fixes blank cards), consistent types
   const questions: CuratedField[] = useMemo(() => {
-    const raw: any[] =
-      (curatedSchema as any)?.questions ??
-      (curatedSchema as any)?.fields ??
+    const raw: Record<string, unknown>[] =
+      (curatedSchema as Record<string, unknown>)?.questions as Record<string, unknown>[] ??
+      (curatedSchema as Record<string, unknown>)?.fields as Record<string, unknown>[] ??
       [];
 
-    return (raw ?? []).map((q: any, idx: number) => {
+    return (raw ?? []).map((q: Record<string, unknown>, idx: number) => {
       // Guarantee stable id (fixes React key + answer wiring)
       // ✅ Filter out literal string "undefined" (common schema corruption)
       const rawId = q?.id ?? q?.key ?? q?.fieldId ?? q?.name;
@@ -192,7 +192,7 @@ export default function Step3ProfileV7Curated(props: Props) {
     console.log("[Step3Curated] Render source (CURATED SSOT)", {
       effectiveIndustry,
       curatedQuestions: questions.length,
-      templateQuestions: (state.step3Template as any)?.questions?.length,
+      templateQuestions: ((state.step3Template as Record<string, unknown>)?.questions as unknown[] | undefined)?.length,
       undefinedIds: questions.filter(q => !q?.id).length,
     });
   }
@@ -409,7 +409,7 @@ export default function Step3ProfileV7Curated(props: Props) {
     
     // ✅ Normalize options to prevent blank cards (with Array guard to prevent crash)
     const normalizedOptions = Array.isArray(options)
-      ? options.map((o: any, i: number) => {
+      ? options.map((o: Record<string, unknown> | string | number, i: number) => {
           if (typeof o === "string" || typeof o === "number") {
             return { label: String(o), value: o };
           }
@@ -427,10 +427,10 @@ export default function Step3ProfileV7Curated(props: Props) {
     return (
       <div
         key={q.id}
-        className={`rounded-xl border p-4 transition-all ${
+        className={`rounded-lg border p-4 transition-colors ${
           isDefaultFilled
-            ? "border-cyan-500/30 bg-cyan-950/20 hover:border-cyan-400/40"
-            : "border-slate-700/60 bg-slate-900/40 hover:border-violet-500/40"
+            ? "border-cyan-500/40 bg-slate-900/60 hover:border-cyan-400/50"
+            : "border-slate-700/50 bg-slate-900/60 hover:border-violet-500/40"
         }`}
       >
         {/* Question Header */}
@@ -438,10 +438,10 @@ export default function Step3ProfileV7Curated(props: Props) {
           <div className="flex-1">
             {/* Question number + Section badge */}
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
                 {index + 1}
               </div>
-              <span className="px-2 py-0.5 bg-violet-500/15 text-violet-300 text-xs font-medium rounded-full capitalize border border-violet-500/20">
+              <span className="px-2 py-0.5 text-violet-400 text-xs font-semibold tracking-wide rounded capitalize border border-violet-500/30">
                 {q.section}
               </span>
               {required && !hasValue && (
@@ -464,7 +464,7 @@ export default function Step3ProfileV7Curated(props: Props) {
             </div>
 
             {/* Title */}
-            <div className="text-sm font-semibold text-slate-100">{label}</div>
+            <div className="text-sm font-bold text-slate-100 tracking-tight">{label}</div>
 
             {/* Subtitle */}
             {q.subtitle && <div className="text-xs text-slate-400 mt-1">{q.subtitle}</div>}
@@ -506,18 +506,18 @@ export default function Step3ProfileV7Curated(props: Props) {
                     type="button"
                     onClick={() => setAnswer(q.id, optVal)}
                     className={`
-                      p-3 rounded-lg border text-left transition-all relative
+                      p-3 rounded-lg border text-left transition-colors relative
                       ${
                         selected
-                          ? "border-emerald-500 bg-emerald-500/20 text-white ring-2 ring-emerald-500/50 shadow-lg shadow-emerald-500/20 scale-[1.02]"
-                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-emerald-400/40 hover:bg-slate-800/80 hover:scale-[1.01]"
+                          ? "border-emerald-400 text-emerald-300 font-semibold bg-transparent"
+                          : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
                       }
-                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-[0.98]"}
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                     `}
                     disabled={opt.disabled}
                   >
                     {selected && (
-                      <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm font-bold shadow-md animate-in fade-in zoom-in duration-200">
+                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-emerald-400 flex items-center justify-center text-emerald-400 text-xs font-bold">
                         ✓
                       </span>
                     )}
@@ -546,13 +546,13 @@ export default function Step3ProfileV7Curated(props: Props) {
                     type="button"
                     onClick={() => setAnswer(q.id, optVal)}
                     className={`
-                      px-2 py-2.5 rounded-lg border text-center transition-all relative
+                      px-2 py-2.5 rounded-lg border text-center transition-colors relative
                       ${
                         selected
-                          ? "border-emerald-500 bg-emerald-500/20 text-white ring-2 ring-emerald-500/50 font-bold shadow-lg shadow-emerald-500/20"
-                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-emerald-400/40 hover:bg-slate-800/80"
+                          ? "border-emerald-400 text-emerald-300 font-bold bg-transparent"
+                          : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
                       }
-                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-95"}
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                     `}
                     disabled={opt.disabled}
                   >
@@ -663,7 +663,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                     const next = Math.max(min, current - step);
                     setAnswer(q.id, next);
                   }}
-                  className="w-12 h-12 rounded-lg border border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-violet-500 hover:bg-violet-500/20 hover:text-violet-200 hover:shadow-lg hover:shadow-violet-500/20 transition-all flex items-center justify-center text-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 active:bg-violet-500/30"
+                  className="w-12 h-12 rounded-lg border border-slate-700/50 bg-transparent text-slate-400 hover:border-violet-400 hover:text-violet-300 transition-colors flex items-center justify-center text-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed"
                   disabled={
                     value !== null &&
                     value !== undefined &&
@@ -719,7 +719,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                     const next = Math.min(max, current + step);
                     setAnswer(q.id, next);
                   }}
-                  className="w-12 h-12 rounded-lg border border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-violet-500 hover:bg-violet-500/10 hover:text-violet-300 transition-all flex items-center justify-center text-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-12 h-12 rounded-lg border border-slate-700/50 bg-transparent text-slate-400 hover:border-violet-400 hover:text-violet-300 transition-colors flex items-center justify-center text-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed"
                   disabled={
                     value !== null &&
                     value !== undefined &&
@@ -754,18 +754,18 @@ export default function Step3ProfileV7Curated(props: Props) {
                     type="button"
                     onClick={() => setAnswer(q.id, optVal)}
                     className={`
-                      p-3.5 rounded-lg border text-center transition-all relative
+                      p-3.5 rounded-lg border text-center transition-colors relative
                       ${
                         selected
-                          ? "border-violet-500 bg-violet-500/20 text-white ring-2 ring-violet-500/50 shadow-lg shadow-violet-500/20 scale-[1.02]"
-                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-violet-400/40 hover:bg-slate-800/80 hover:scale-[1.01]"
+                          ? "border-violet-400 text-violet-300 font-semibold bg-transparent"
+                          : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
                       }
-                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-[0.98]"}
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                     `}
                     disabled={opt.disabled}
                   >
                     {selected && (
-                      <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center text-white text-sm font-bold shadow-md animate-in fade-in zoom-in duration-200">
+                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-violet-400 flex items-center justify-center text-violet-400 text-xs font-bold">
                         ✓
                       </span>
                     )}
@@ -798,7 +798,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                 <div className="space-y-3">
                   {/* Current value badge */}
                   <div className="flex justify-center">
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/30 text-violet-200 font-bold text-base">
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg border border-violet-400/40 text-violet-300 font-bold text-base">
                       {sliderVal}
                       {q.unit || ""}
                     </span>
@@ -808,7 +808,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                     <input
                       type="range"
                       className="w-full h-2 rounded-full appearance-none cursor-pointer
-                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-violet-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-violet-300 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-violet-500/40 [&::-webkit-slider-thumb]:cursor-pointer
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-violet-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-violet-300 [&::-webkit-slider-thumb]:cursor-pointer
                       [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-violet-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-violet-300 [&::-moz-range-thumb]:cursor-pointer"
                       style={{
                         background: `linear-gradient(to right, rgb(139 92 246) 0%, rgb(139 92 246) ${pct}%, rgb(51 65 85) ${pct}%, rgb(51 65 85) 100%)`,
@@ -843,16 +843,16 @@ export default function Step3ProfileV7Curated(props: Props) {
                   type="button"
                   onClick={() => setAnswer(q.id, opt)}
                   className={`
-                    flex-1 p-3 rounded-lg border transition-all relative
+                    flex-1 p-3 rounded-lg border transition-colors relative
                     ${
                       value === opt
-                        ? "border-emerald-500 bg-emerald-500/20 text-white ring-2 ring-emerald-500/50 shadow-lg shadow-emerald-500/20 scale-[1.02]"
-                        : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-emerald-400/40 hover:bg-slate-800/80 hover:scale-[1.01] active:scale-[0.98]"
+                        ? "border-emerald-400 text-emerald-300 font-semibold bg-transparent"
+                        : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
                     }
                   `}
                 >
                   {value === opt && (
-                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">
+                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-emerald-400 flex items-center justify-center text-emerald-400 text-xs font-bold">
                       ✓
                     </span>
                   )}
@@ -896,18 +896,18 @@ export default function Step3ProfileV7Curated(props: Props) {
                       }
                     }}
                     className={`
-                      p-3 rounded-lg border text-left transition-all relative
+                      p-3 rounded-lg border text-left transition-colors relative
                       ${
                         selected
-                          ? "border-violet-500 bg-violet-500/20 text-white ring-2 ring-violet-500/50 shadow-lg shadow-violet-500/20 scale-[1.02]"
-                          : "border-slate-700/60 bg-slate-900/60 text-slate-300 hover:border-violet-400/40 hover:bg-slate-800/80 hover:scale-[1.01]"
+                          ? "border-violet-400 text-violet-300 font-semibold bg-transparent"
+                          : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
                       }
-                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-[0.98]"}
+                      ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                     `}
                     disabled={opt.disabled}
                   >
                     {selected && (
-                      <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center text-white text-sm font-bold shadow-md animate-in fade-in zoom-in duration-200">
+                      <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-violet-400 flex items-center justify-center text-violet-400 text-xs font-bold">
                         ✓
                       </span>
                     )}
@@ -960,7 +960,7 @@ export default function Step3ProfileV7Curated(props: Props) {
   return (
     <div className="w-full">
       {/* Hero Header */}
-      <div className="rounded-2xl overflow-hidden border border-slate-700/40 bg-slate-950/40 mb-4">
+      <div className="rounded-xl overflow-hidden border border-slate-700/50 bg-slate-950/60 mb-4">
         <div className="relative h-32 w-full">
           <img
             src={heroImg}
@@ -974,7 +974,7 @@ export default function Step3ProfileV7Curated(props: Props) {
           <div className="absolute left-5 top-5">
             <div className="flex items-center gap-2">
               <span className="text-2xl">{icon}</span>
-              <div className="text-lg font-extrabold text-slate-50">Step 3 — Profile</div>
+              <div className="text-lg font-extrabold text-slate-50 tracking-tight">Step 3 — Profile</div>
             </div>
             <div className="text-sm text-slate-300 mt-1">{displayName}</div>
           </div>
@@ -1085,7 +1085,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                         void actions.submitStep3();
                       }
                     }}
-                    className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all"
+                    className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-purple-600 to-blue-600 text-white transition-all"
                   >
                     Looks good — Continue →
                   </button>
@@ -1120,7 +1120,7 @@ export default function Step3ProfileV7Curated(props: Props) {
               px-6 py-3 rounded-xl font-bold text-base transition-all
               ${
                 isComplete && state.pricingStatus !== "pending"
-                  ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 cursor-pointer"
+                  ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white cursor-pointer"
                   : "bg-slate-800 text-slate-500 cursor-not-allowed"
               }
             `}

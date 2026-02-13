@@ -23,9 +23,11 @@ import { sanitizeQuoteForDisplay, type DisplayQuote } from "@/wizard/v7/utils/pr
 import { buildV7ExportData } from "@/utils/buildV7ExportData";
 import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
+import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 import { useMerlinData } from "@/wizard/v7/memory";
 import TrueQuoteFinancialModal from "../shared/TrueQuoteFinancialModal";
+import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
 
 type Props = {
   state: WizardV7State;
@@ -44,7 +46,7 @@ type Props = {
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl ${className ?? ""}`}>
+    <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] p-5 ${className ?? ""}`}>
       {children}
     </div>
   );
@@ -64,7 +66,7 @@ function StatPill({ icon, label, value, accent }: { icon: React.ReactNode; label
   const glow = glowMap[accent ?? ""] ?? "shadow-slate-500/10 border-white/[0.06]";
 
   return (
-    <div className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl bg-white/[0.03] border min-w-[120px] shadow-[0_0_12px] transition-shadow hover:shadow-[0_0_18px] ${glow}`}>
+    <div className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl bg-white/[0.03] border min-w-[120px] transition-colors ${glow}`}>
       <div className={accent || "text-slate-400"}>{icon}</div>
       <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-[0.08em]">{label}</div>
       <div className="text-base font-black text-slate-100 tabular-nums tracking-tight">{value}</div>
@@ -220,6 +222,10 @@ export default function Step6ResultsV7({ state, actions }: Props) {
 
   // TrueQuote™ Financial Projection modal state
   const [showFinancialModal, setShowFinancialModal] = useState(false);
+  // TrueQuote™ explainer modal state
+  const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
+  // ProQuote™ upsell modal state
+  const [showProQuoteModal, setShowProQuoteModal] = useState(false);
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -349,9 +355,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       ================================================================ */}
       {quoteReady && quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
         <div className="relative rounded-3xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 via-cyan-600/15 to-purple-600/15" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.25),transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(139,92,246,0.15),transparent_50%)]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 via-cyan-600/10 to-purple-600/10" />
 
           <div className="relative p-8 border border-emerald-500/25 rounded-3xl">
             <div className="text-center">
@@ -572,7 +576,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       {(() => {
         const badge = resolveBadge(pricingStatus, state.templateMode, quote);
         const badgeStyles: Record<string, string> = {
-          truequote: "bg-emerald-500/10 border-emerald-500/25 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]",
+          truequote: "bg-emerald-500/10 border-emerald-500/25 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.12)]",
           estimate: "bg-blue-500/10 border-blue-500/25 text-blue-400",
           "load-only": "bg-amber-500/10 border-amber-500/25 text-amber-400",
         };
@@ -679,10 +683,72 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       )}
 
       {/* ================================================================
+          PROQUOTE™ UPSELL — Merlin is the salesman
+      ================================================================ */}
+      <Card>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-bold text-slate-200 tracking-tight">
+              Want to go deeper?
+            </div>
+            <div className="text-xs text-slate-500 mt-1 leading-relaxed">
+              ProQuote™ gives you full engineering control — custom equipment, fuel cells, financial modeling, and bank-ready exports.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowProQuoteModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-purple-500/25 bg-purple-500/[0.06] hover:border-purple-400/40 hover:bg-purple-500/[0.12] transition-all shrink-0 group"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-400 group-hover:text-purple-300" />
+            <span className="text-xs font-bold text-purple-300 group-hover:text-purple-200 tracking-wide">
+              Open ProQuote™
+            </span>
+          </button>
+        </div>
+      </Card>
+
+      {/* ================================================================
           EXPORT / DOWNLOAD — TrueQuote™ branded exports
           Available whenever we have at least a load profile (Layer A)
       ================================================================ */}
-      {quote && quote.peakLoadKW != null && <ExportBar state={state} />}
+      {quote && quote.peakLoadKW != null && <ExportBar state={state} onTrueQuoteClick={() => setShowTrueQuoteModal(true)} />}
+
+      {/* ================================================================
+          PROQUOTE™ EXPLAINER MODAL
+      ================================================================ */}
+      <ProQuoteHowItWorksModal
+        isOpen={showProQuoteModal}
+        onClose={() => setShowProQuoteModal(false)}
+        onOpenProQuote={() => {
+          setShowProQuoteModal(false);
+          window.location.href = "/quote-builder";
+        }}
+      />
+
+      {/* ================================================================
+          TRUEQUOTE™ EXPLAINER MODAL
+      ================================================================ */}
+      <TrueQuoteModal
+        isOpen={showTrueQuoteModal}
+        onClose={() => setShowTrueQuoteModal(false)}
+      />
+
+      {/* ================================================================
+          TRUEQUOTE™ FINANCIAL PROJECTION MODAL
+      ================================================================ */}
+      <TrueQuoteFinancialModal
+        isOpen={showFinancialModal}
+        onClose={() => setShowFinancialModal(false)}
+        totalInvestment={Number(quote.capexUSD ?? 0)}
+        federalITC={Number(quote.capexUSD ?? 0) * 0.30}
+        netInvestment={Number(quote.capexUSD ?? 0) * 0.70}
+        annualSavings={Number(quote.annualSavingsUSD ?? 0)}
+        bessKWh={Number(quote.bessKWh ?? 0) || undefined}
+        solarKW={Number(quote.solarKW ?? 0) || undefined}
+        industry={data.industry || undefined}
+        location={locLine !== "—" ? locLine : undefined}
+      />
     </div>
   );
 }
@@ -874,7 +940,7 @@ function AdvisorRecommendations({
             return (
               <div
                 key={rec.type}
-                className={`rounded-xl border ${style.border} ${style.bg} p-4 shadow-[0_0_15px] ${style.glow} transition-all hover:shadow-[0_0_20px]`}
+                className={`rounded-xl border ${style.border} ${style.bg} p-4 transition-colors`}
               >
                 <div className="flex items-start gap-3">
                   <span className="text-xl flex-shrink-0 mt-0.5">{rec.icon}</span>
@@ -899,22 +965,6 @@ function AdvisorRecommendations({
           </div>
         </div>
       )}
-
-      {/* ================================================================
-          TRUEQUOTE™ FINANCIAL PROJECTION MODAL
-      ================================================================ */}
-      <TrueQuoteFinancialModal
-        isOpen={showFinancialModal}
-        onClose={() => setShowFinancialModal(false)}
-        totalInvestment={Number(quote.capexUSD ?? 0)}
-        federalITC={Number(quote.capexUSD ?? 0) * 0.30}
-        netInvestment={Number(quote.capexUSD ?? 0) * 0.70}
-        annualSavings={Number(quote.annualSavingsUSD ?? 0)}
-        bessKWh={Number(quote.bessKWh ?? 0) || undefined}
-        solarKW={Number(quote.solarKW ?? 0) || undefined}
-        industry={data.industry || undefined}
-        location={locLine !== "—" ? locLine : undefined}
-      />
     </div>
   );
 }
@@ -925,7 +975,7 @@ function AdvisorRecommendations({
 
 type ExportFormat = "pdf" | "word" | "excel";
 
-function ExportBar({ state }: { state: WizardV7State }) {
+function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQuoteClick?: () => void }) {
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -977,7 +1027,7 @@ function ExportBar({ state }: { state: WizardV7State }) {
           <div style={{ fontSize: 14, fontWeight: 900, color: "rgba(232,235,243,0.95)" }}>Download Quote</div>
           <div style={{ fontSize: 12, color: "rgba(232,235,243,0.5)", marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
             {isTrueQuote
-              ? <><TrueQuoteBadgeCanonical showTooltip={false} /><span>includes kW breakdown, confidence score & methodology</span></>
+              ? <><TrueQuoteBadgeCanonical showTooltip={false} onClick={onTrueQuoteClick} /><span>includes kW breakdown, confidence score & methodology</span></>
               : hasPricing
                 ? <span style={{ color: "rgba(232,235,243,0.6)" }}>📊 Estimate — includes financial projections</span>
                 : <span style={{ color: "rgba(232,235,243,0.5)" }}>📋 Load profile only — pricing pending</span>}

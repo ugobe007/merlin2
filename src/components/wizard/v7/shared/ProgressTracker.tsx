@@ -14,15 +14,16 @@ interface ProgressTrackerProps {
 
 export default function ProgressTracker({ 
   currentStep, 
-  totalSteps 
+  totalSteps: _totalSteps 
 }: ProgressTrackerProps) {
   
   const steps = [
-    { id: 0, name: 'Welcome', short: 'Welcome' },
-    { id: 1, name: 'Opportunity', short: 'Value' },
-    { id: 2, name: 'Details', short: 'Details' },
-    { id: 3, name: 'Configure', short: 'Config' },
-    { id: 4, name: 'Results', short: 'Results' },
+    { id: 0, name: 'Location', short: 'Location' },
+    { id: 1, name: 'Industry', short: 'Industry' },
+    { id: 2, name: 'Profile', short: 'Profile' },
+    { id: 3, name: 'Options', short: 'Options' },
+    { id: 4, name: 'MagicFit', short: 'MagicFit' },
+    { id: 5, name: 'Quote', short: 'Quote' },
   ];
 
   return (

@@ -11,13 +11,13 @@
 import React from "react";
 
 interface BottomNavigationProps {
-  currentStep: number; // 1..7
+  currentStep: number; // 1..6
   goBack: () => void;
   goNext: () => void;
   canProceed: () => boolean;
 }
 
-const stepNames = ["Location", "Goals", "Industry", "Details", "Options", "System", "Quote"];
+const stepNames = ["Location", "Industry", "Profile", "Options", "MagicFit", "Quote"];
 
 export default function BottomNavigation({
   currentStep,
@@ -29,10 +29,10 @@ export default function BottomNavigation({
   const nextDisabled = !canProceed();
 
   const backLabel = backDisabled ? "Back" : `Back to ${stepNames[currentStep - 2]}`;
-  const nextLabel = currentStep < 7 ? `Continue to ${stepNames[currentStep]}` : "Finish";
+  const nextLabel = currentStep < 6 ? `Continue to ${stepNames[currentStep]}` : "Finish";
 
   return (
-    <div className="shrink-0 border-t border-white/10 bg-slate-950/40 backdrop-blur-md">
+    <div className="shrink-0 border-t border-white/10 bg-slate-950/80">
       <div className="px-10 py-5">
         <div className="grid grid-cols-3 items-center gap-6">
           {/* LEFT: Back */}
@@ -54,7 +54,7 @@ export default function BottomNavigation({
           {/* CENTER: Step Dots */}
           <div className="flex flex-col items-center justify-center">
             <div className="flex gap-1.5 mb-2">
-              {Array.from({ length: 7 }, (_, i) => {
+              {Array.from({ length: 6 }, (_, i) => {
                 const stepNum = i + 1;
                 const isDone = stepNum < currentStep;
                 const isActive = stepNum === currentStep;
@@ -69,7 +69,7 @@ export default function BottomNavigation({
               })}
             </div>
             <div className="text-xs text-slate-500">
-              Step <span className="text-slate-300 font-semibold">{currentStep}</span> of 7
+              Step <span className="text-slate-300 font-semibold">{currentStep}</span> of 6
             </div>
           </div>
 
@@ -79,10 +79,10 @@ export default function BottomNavigation({
               onClick={goNext}
               disabled={nextDisabled}
               className={[
-                "px-6 py-3 rounded-xl text-sm font-semibold transition-all shadow-lg border",
+                "px-6 py-3 rounded-xl text-sm font-semibold transition-all border",
                 nextDisabled
                   ? "bg-slate-800/40 border-white/10 text-slate-500 cursor-not-allowed opacity-60"
-                  : "bg-gradient-to-r from-violet-600 to-indigo-700 border-violet-400/30 text-white hover:from-violet-500 hover:to-indigo-600 hover:shadow-xl",
+                  : "bg-gradient-to-r from-violet-600 to-indigo-700 border-violet-400/30 text-white hover:from-violet-500 hover:to-indigo-600",
               ].join(" ")}
             >
               {nextLabel} →

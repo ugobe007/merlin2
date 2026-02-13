@@ -381,7 +381,7 @@ interface ReadinessGlowProps {
   children: ReactNode;
   
   /** Optional: glow color */
-  color?: "emerald" | "blue" | "purple";
+  color?: "emerald" | "blue" | "teal";
 }
 
 /**
@@ -400,7 +400,7 @@ export function ReadinessGlow({
   const colors = {
     emerald: "shadow-emerald-500/40",
     blue: "shadow-blue-500/40",
-    purple: "shadow-purple-500/40",
+    teal: "shadow-teal-500/40",
   };
   
   const intensity = Math.round(readiness * 30); // 0-30px shadow

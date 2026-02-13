@@ -207,6 +207,9 @@ export type DisplayQuote = {
 
   // --- Primary money numbers (null = render "—") ---
   capexUSD: number | null;
+  grossCost: number | null;          // Total project cost BEFORE ITC
+  itcAmount: number | null;          // ITC credit dollar amount
+  itcRate: number | null;            // ITC rate applied (e.g. 0.30)
   annualSavingsUSD: number | null;
   roiYears: number | null;
   npv: number | null;
@@ -291,6 +294,9 @@ function emptyDisplayQuote(): DisplayQuote {
     bessKW: null,
     durationHours: null,
     capexUSD: null,
+    grossCost: null,
+    itcAmount: null,
+    itcRate: null,
     annualSavingsUSD: null,
     roiYears: null,
     npv: null,
@@ -386,7 +392,8 @@ export function sanitizeQuoteForDisplay(quote: unknown): DisplayQuote {
   // ── 5. Build typed DisplayQuote — known fields only, extras in _extra ──
   const KNOWN_KEYS = new Set<string>([
     "pricingComplete", "peakLoadKW", "baseLoadKW", "bessKWh", "bessKW",
-    "durationHours", "capexUSD", "annualSavingsUSD", "roiYears", "npv",
+    "durationHours", "capexUSD", "grossCost", "itcAmount", "itcRate",
+    "annualSavingsUSD", "roiYears", "npv",
     "irr", "paybackYears", "demandChargeSavings", "solarKW", "generatorKW",
     "confidence", "trueQuoteValidation", "notes", "missingInputs",
     "_displayHints",
@@ -408,6 +415,9 @@ export function sanitizeQuoteForDisplay(quote: unknown): DisplayQuote {
     bessKW: sanitized.bessKW as number | null ?? null,
     durationHours: sanitized.durationHours as number | null ?? null,
     capexUSD: sanitized.capexUSD as number | null ?? null,
+    grossCost: sanitized.grossCost as number | null ?? null,
+    itcAmount: sanitized.itcAmount as number | null ?? null,
+    itcRate: sanitized.itcRate as number | null ?? null,
     annualSavingsUSD: sanitized.annualSavingsUSD as number | null ?? null,
     roiYears: sanitized.roiYears as number | null ?? null,
     npv: sanitized.npv as number | null ?? null,

@@ -113,12 +113,8 @@ export default function WizardShellV7({
               background: "#101424",
               borderRadius: 20,
               padding: 24,
-              boxShadow: `
-                0 8px 40px rgba(0, 0, 0, 0.5),
-                0 0 60px rgba(104, 191, 250, 0.12),
-                0 0 80px rgba(91, 33, 182, 0.08),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05)
-              `,
+              border: "1px solid rgba(255, 255, 255, 0.06)",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
               display: "flex",
               flexDirection: "column",
             }}
@@ -132,7 +128,7 @@ export default function WizardShellV7({
                     height: 72,
                     borderRadius: "50%",
                     overflow: "hidden",
-                    boxShadow: "0 4px 16px rgba(139, 92, 246, 0.25)",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
                   }}
                 >
                   <img
@@ -150,7 +146,6 @@ export default function WizardShellV7({
                     height: 16,
                     borderRadius: "50%",
                     background: "#4ade80",
-                    boxShadow: "0 0 8px rgba(74, 222, 128, 0.5)",
                   }}
                 />
               </div>
@@ -172,7 +167,7 @@ export default function WizardShellV7({
                 background:
                   "linear-gradient(135deg, rgba(104, 191, 250, 0.12) 0%, rgba(91, 33, 182, 0.08) 100%)",
                 boxShadow:
-                  "inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 40px rgba(104, 191, 250, 0.12)",
+                  "inset 0 1px 0 rgba(255, 255, 255, 0.06)",
                 transition: "all 0.25s ease",
                 display: "flex",
                 flexDirection: "column",
@@ -258,8 +253,7 @@ export default function WizardShellV7({
                     borderRadius: "50%",
                     background:
                       "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
-                    boxShadow:
-                      "0 0 6px rgba(242, 193, 79, 0.45), inset 0 0 2px rgba(255, 255, 255, 0.35)",
+                    boxShadow: "0 0 6px rgba(242, 193, 79, 0.4)",
                     flexShrink: 0,
                   }}
                 />
@@ -287,10 +281,7 @@ export default function WizardShellV7({
                 padding: "14px 24px",
                 background: "rgba(16, 20, 36, 0.75)",
                 borderRadius: "20px 20px 0 0",
-                boxShadow: `
-                  0 -2px 20px rgba(0, 0, 0, 0.3),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.05)
-                `,
+                boxShadow: "0 -1px 12px rgba(0, 0, 0, 0.2)",
               }}
             >
               {stepLabels.map((label, idx) => {
@@ -330,7 +321,7 @@ export default function WizardShellV7({
                           : isComplete
                             ? "rgba(74, 222, 128, 0.1)"
                             : "transparent",
-                        boxShadow: isActive ? "0 2px 12px rgba(104, 191, 250, 0.2)" : "none",
+                        boxShadow: "none",
                         opacity: isFuture ? 0.4 : 1,
                         transition: "all 0.2s ease",
                         whiteSpace: "nowrap",
@@ -389,11 +380,8 @@ export default function WizardShellV7({
                 background: "#101424",
                 borderRadius: "0 0 20px 20px",
                 padding: 36,
-                boxShadow: `
-                  0 8px 40px rgba(0, 0, 0, 0.5),
-                  0 0 60px rgba(104, 191, 250, 0.12),
-                  0 0 80px rgba(91, 33, 182, 0.08)
-                `,
+                border: "1px solid rgba(255, 255, 255, 0.06)",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
                 minHeight: 500,
                 animation: "merlin-step-fadein 0.3s ease-out",
               }}
@@ -508,7 +496,7 @@ export default function WizardShellV7({
               fontWeight: 700,
               boxShadow:
                 canGoNext && !isNextLoading
-                  ? "0 4px 20px rgba(59, 91, 219, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2)"
+                  ? "0 2px 8px rgba(0, 0, 0, 0.3)"
                   : "none",
               transition: "all 0.15s ease",
             }}
