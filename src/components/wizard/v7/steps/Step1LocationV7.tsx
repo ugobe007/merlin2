@@ -96,6 +96,13 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
     return () => { if (goalsTimerRef.current) clearTimeout(goalsTimerRef.current); };
   }, [state.locationConfirmed, state.goalsConfirmed, showGoalsModal, state.isBusy, state.businessCard]);
 
+  // ✅ FIX Feb 13: Listen to goalsModalRequested from shell's handleNext ("Set Goals & Continue" button)
+  useEffect(() => {
+    if (state.goalsModalRequested && !showGoalsModal && !state.goalsConfirmed) {
+      setShowGoalsModal(true);
+    }
+  }, [state.goalsModalRequested, showGoalsModal, state.goalsConfirmed]);
+
   // ✅ FIX Feb 13: Scroll to top when business card appears so user can see & review it
   useEffect(() => {
     if (state.businessConfirmed && state.businessCard) {

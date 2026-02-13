@@ -92,6 +92,37 @@ export default function BusinessProfileCard({
       {/* ── Top bar: green accent line ── */}
       <div style={{ height: 3, background: "linear-gradient(90deg, #4ade80 0%, #22d3ee 100%)" }} />
 
+      {/* ── Business photo banner (from Google Maps) ── */}
+      {photo && (
+        <div style={{
+          width: "100%",
+          height: 140,
+          overflow: "hidden",
+          position: "relative",
+          background: "rgba(0,0,0,0.3)",
+        }}>
+          <img
+            src={photo}
+            alt={displayName}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.85,
+            }}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+          />
+          <div style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 40,
+            background: "linear-gradient(transparent, rgba(14, 18, 32, 0.9))",
+          }} />
+        </div>
+      )}
+
       <div style={{ padding: "20px 24px 16px" }}>
         {/* ── Header: Verified + Edit ── */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
@@ -140,27 +171,20 @@ export default function BusinessProfileCard({
 
         {/* ── Profile row ── */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {/* Avatar */}
-          <div style={{
-            width: 52, height: 52, borderRadius: 14,
-            overflow: "hidden", flexShrink: 0,
-            background: photo ? "transparent" : "linear-gradient(135deg, rgba(79, 140, 255, 0.25) 0%, rgba(139, 92, 246, 0.20) 100%)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            {photo ? (
-              <img
-                src={photo}
-                alt={displayName}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-              />
-            ) : (
+          {/* Avatar — only show when no banner photo */}
+          {!photo && (
+            <div style={{
+              width: 52, height: 52, borderRadius: 14,
+              overflow: "hidden", flexShrink: 0,
+              background: "linear-gradient(135deg, rgba(79, 140, 255, 0.25) 0%, rgba(139, 92, 246, 0.20) 100%)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
               <span style={{ fontSize: 18, fontWeight: 900, color: "rgba(255,255,255,0.7)", letterSpacing: "1px" }}>
                 {initials(biz.name)}
               </span>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Name + address */}
           <div style={{ minWidth: 0, flex: 1 }}>
