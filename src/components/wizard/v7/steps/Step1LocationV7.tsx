@@ -67,6 +67,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
   const [businessValue, setBusinessValue] = useState<string>("");
   const [addressValue, setAddressValue] = useState<string>("");
   const [isResolvingBusiness, setIsResolvingBusiness] = useState(false);
+  const [businessSearchError, setBusinessSearchError] = useState<string | null>(null);
 
   const zipDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -154,6 +155,17 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
     const addr = addressValue.trim();
     if (!name) return;
 
+    // ✅ FIX Feb 13: Require ZIP before business search — geocoder needs geographic context
+    if (!isValidZip) {
+      setBusinessSearchError("Please enter your ZIP code above first — it helps us find the right location.");
+      // Focus the ZIP input
+      const el = document.getElementById("merlin-zip-input") as HTMLInputElement | null;
+      el?.focus();
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    setBusinessSearchError(null);
     const locationContext = [addr, normalizedZip].filter(Boolean).join(" ");
     const searchQuery = locationContext ? `${name}, ${locationContext}` : name;
 
@@ -163,6 +175,14 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
 
       // CRITICAL: do not write searchQuery into locationRawInput.
       await submitLocation(searchQuery, { name, address: addr || undefined });
+    } catch (err) {
+      // Show a friendly inline error instead of letting the SSOT error display at the top
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("No location found") || msg.includes("VALIDATION")) {
+        setBusinessSearchError("Couldn't find that business. Try adding more details to the address field (city, state).");
+      } else {
+        setBusinessSearchError("Search failed — please try again.");
+      }
     } finally {
       setIsResolvingBusiness(false);
     }
@@ -527,6 +547,26 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
             Adding your business helps Merlin tailor equipment sizing, load profiles, and incentive eligibility to your exact facility.
           </div>
 
+          {/* Inline validation error */}
+          {businessSearchError && (
+            <div style={{
+              marginBottom: 12,
+              padding: "10px 14px",
+              borderRadius: 10,
+              background: "rgba(251, 191, 36, 0.08)",
+              border: "1px solid rgba(251, 191, 36, 0.25)",
+              fontSize: 13,
+              color: "rgba(251, 191, 36, 0.9)",
+              lineHeight: 1.5,
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 8,
+            }}>
+              <span style={{ flexShrink: 0, fontSize: 14 }}>⚠️</span>
+              <span>{businessSearchError}</span>
+            </div>
+          )}
+
           <div style={{ marginBottom: 12 }}>
             <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "rgba(232, 235, 243, 0.5)", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.3px" }}>
               Business Name
@@ -538,6 +578,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 const v = e.target.value;
                 setBusinessValue(v);
                 setBusinessDraft({ name: v });
+                if (businessSearchError) setBusinessSearchError(null);
               }}
               placeholder="e.g. Dash Car Wash"
               style={{
@@ -566,6 +607,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 const v = e.target.value;
                 setAddressValue(v);
                 setBusinessDraft({ address: v });
+                if (businessSearchError) setBusinessSearchError(null);
               }}
               placeholder="e.g. Eastern Blvd, Henderson"
               style={{
