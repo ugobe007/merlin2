@@ -257,6 +257,44 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       </div>
 
       {/* ================================================================
+          TRUEQUOTE™ GOLD BADGE — Prominent banner, opens financial modal
+      ================================================================ */}
+      {quoteReady && (() => {
+        const badge = resolveBadge(pricingStatus, state.templateMode, quote);
+        if (badge.tier !== "truequote") return null;
+        return (
+          <button
+            type="button"
+            onClick={() => setShowFinancialModal(true)}
+            className="group w-full flex items-center gap-4 p-4 rounded-xl border-2 border-amber-500/30 bg-amber-500/[0.04] hover:border-amber-400/50 hover:bg-amber-500/[0.08] transition-all duration-300 cursor-pointer"
+            aria-label="Open TrueQuote financial summary"
+          >
+            <div className="shrink-0">
+              <img
+                src={badgeGoldIcon}
+                alt="TrueQuote Verified"
+                className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
+              />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-xl font-bold text-amber-400 tracking-tight">TrueQuote™</span>
+                <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Verified</span>
+              </div>
+              <p className="text-sm text-slate-400 leading-snug">
+                Every number is sourced. View full 10-year financial projection, ROI, and sensitivity analysis.
+              </p>
+            </div>
+            <div className="shrink-0 text-amber-500/50 group-hover:text-amber-400 group-hover:translate-x-1 transition-all duration-300">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+        );
+      })()}
+
+      {/* ================================================================
           QUOTE RESULTS — Full quote display (add-ons configured in Step 4)
       ================================================================ */}
 
@@ -387,44 +425,6 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           </div>
         </div>
       )}
-
-      {/* ================================================================
-          TRUEQUOTE™ GOLD BADGE — Prominent banner, opens financial modal
-      ================================================================ */}
-      {quoteReady && (() => {
-        const badge = resolveBadge(pricingStatus, state.templateMode, quote);
-        if (badge.tier !== "truequote") return null;
-        return (
-          <button
-            type="button"
-            onClick={() => setShowFinancialModal(true)}
-            className="group w-full flex items-center gap-4 p-4 rounded-xl border-2 border-amber-500/30 bg-amber-500/[0.04] hover:border-amber-400/50 hover:bg-amber-500/[0.08] transition-all duration-300 cursor-pointer"
-            aria-label="Open TrueQuote financial summary"
-          >
-            <div className="shrink-0">
-              <img
-                src={badgeGoldIcon}
-                alt="TrueQuote Verified"
-                className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
-              />
-            </div>
-            <div className="flex-1 text-left">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-xl font-bold text-amber-400 tracking-tight">TrueQuote™</span>
-                <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Verified</span>
-              </div>
-              <p className="text-sm text-slate-400 leading-snug">
-                Every number is sourced. View full 10-year financial projection, ROI, and sensitivity analysis.
-              </p>
-            </div>
-            <div className="shrink-0 text-amber-500/50 group-hover:text-amber-400 group-hover:translate-x-1 transition-all duration-300">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          </button>
-        );
-      })()}
 
       {/* ================================================================
           STATS BAR — Key metrics at a glance
