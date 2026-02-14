@@ -289,7 +289,22 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
       luxury: "luxury",
     };
     const hotelClass = HOTEL_CLASS_MAP[rawHotelClass] || rawHotelClass;
-    const occupancyRate = Number(inputs.occupancyRate) || 70;
+
+    // ✅ FIX (Feb 14, 2026): Map button string values → occupancy %
+    // Curated buttons: 'high'/'medium'/'seasonal'/'low' (NOT numbers)
+    const OCC_MAP: Record<string, number> = {
+      high: 85,      // 75-100% → midpoint 85
+      medium: 65,    // 50-75% → midpoint 65
+      seasonal: 55,  // Variable → conservative estimate
+      low: 40,       // < 50% → 40%
+    };
+    const rawOcc = inputs.occupancyRate;
+    const occupancyRate =
+      typeof rawOcc === "string" && rawOcc in OCC_MAP
+        ? OCC_MAP[rawOcc]
+        : rawOcc != null && Number.isFinite(Number(rawOcc)) && Number(rawOcc) > 0
+          ? Number(rawOcc)
+          : 70;
 
     // Build amenities from either array or individual boolean flags
     // Bridge both template format (pool_on_site) and curated format (poolOnSite)
@@ -1938,9 +1953,22 @@ export const TRUCK_STOP_LOAD_V1_SSOT: CalculatorContract = {
     const warnings: string[] = [];
     const assumptions: string[] = [];
 
-    // Core sizing inputs (from adapter _rawExtensions or direct answers)
-    const rawDieselLanes = inputs.fuelPumps != null ? Number(inputs.fuelPumps) : 12;
-    const dieselLanes = Number.isFinite(rawDieselLanes) && rawDieselLanes > 0 ? rawDieselLanes : 12;
+    // Core sizing inputs (from curated config button values or direct numbers)
+    // fuelPumps comes as 'small'|'medium'|'large'|'mega' from buttons
+    const PUMP_MAP: Record<string, number> = {
+      small: 6,    // Small truck stop
+      medium: 12,  // Standard truck stop
+      large: 20,   // Large travel center
+      mega: 30,    // Major travel plaza
+    };
+    const rawPumpsInput = inputs.fuelPumps;
+    const rawDieselLanes =
+      typeof rawPumpsInput === "string" && rawPumpsInput in PUMP_MAP
+        ? PUMP_MAP[rawPumpsInput]
+        : rawPumpsInput != null && Number.isFinite(Number(rawPumpsInput)) && Number(rawPumpsInput) > 0
+          ? Number(rawPumpsInput)
+          : 12;
+    const dieselLanes = rawDieselLanes;
     const rawCStoreSqFt = inputs.cStoreSqFt != null ? Number(inputs.cStoreSqFt) : 5000;
     const cStoreSqFt = Number.isFinite(rawCStoreSqFt) && rawCStoreSqFt > 0 ? rawCStoreSqFt : 5000;
     const rawParkingSpots =
@@ -1949,12 +1977,17 @@ export const TRUCK_STOP_LOAD_V1_SSOT: CalculatorContract = {
       Number.isFinite(rawParkingSpots) && rawParkingSpots > 0 ? rawParkingSpots : 80;
     const stationType = String(inputs.stationType || "truck-stop");
 
-    const hasShowers = inputs.hasShowers !== false && inputs.hasShowers !== "false";
-    const hasLaundry = inputs.hasLaundry !== false && inputs.hasLaundry !== "false";
-    const hasRestaurant = inputs.hasRestaurant !== false && inputs.hasRestaurant !== "false";
-    const hasCarWash = inputs.hasCarWash === true || inputs.hasCarWash === "true";
+    // Bridge curated button values for boolean fields
+    const hasShowers = inputs.hasShowers !== false && inputs.hasShowers !== "false" && inputs.hasShowers !== "no" && inputs.hasShowers !== "none";
+    const hasLaundry = inputs.hasLaundry !== false && inputs.hasLaundry !== "false" && inputs.hasLaundry !== "no" && inputs.hasLaundry !== "none";
+    const hasRestaurant = inputs.hasRestaurant !== false && inputs.hasRestaurant !== "false" && inputs.hasRestaurant !== "no" && inputs.hasRestaurant !== "none";
+    // carWash: curated buttons are 'tunnel'|'automatic'|'self-service'|'none'
+    const cwVal = inputs.carWash ?? inputs.hasCarWash;
+    const hasCarWash = cwVal != null
+      ? cwVal !== "none" && cwVal !== "no" && cwVal !== false && cwVal !== "false"
+      : false;
 
-    if (!inputs.fuelPumps || !Number.isFinite(Number(inputs.fuelPumps))) {
+    if (!inputs.fuelPumps || (typeof rawPumpsInput === "string" && !(rawPumpsInput in PUMP_MAP) && !Number.isFinite(Number(rawPumpsInput)))) {
       assumptions.push("Default: 12 diesel lanes (no user input)");
     }
 
@@ -2137,23 +2170,67 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     // Bridge curated config field names → calculator field names
-    // Curated: fuelPumps (number), convenienceStore ("yes"/"no"), carWash ("yes"/"no"),
-    //          stationType, foodService ("none"/"deli"/"full-restaurant"), evChargers, squareFootage
-    const fuelPumps = Number(inputs.fuelPumps) || 8;
+    // Curated buttons use string values that need semantic mapping:
+    //   fuelPumps: 'small'|'medium'|'large'|'mega' → actual pump counts
+    //   convenienceStore: 'full'|'limited'|'none' → boolean
+    //   carWash: 'tunnel'|'automatic'|'self-service'|'none' → boolean
+    //   foodService: 'full-kitchen'|'quick-serve'|'coffee-only'|'none' → boolean
+    //   evChargers: 'dcfc-multiple'|'dcfc-few'|'l2-only'|'planned'|'none' → count
+
+    // ── fuelPumps: button string → pump count ──────────────────────────
+    const PUMP_MAP: Record<string, number> = {
+      small: 3,    // 2-4 dispensers
+      medium: 8,   // 6-10 dispensers
+      large: 16,   // 12-20 dispensers
+      mega: 24,    // 20+ dispensers
+    };
+    const rawPumps = inputs.fuelPumps;
+    const fuelPumps =
+      typeof rawPumps === "string" && rawPumps in PUMP_MAP
+        ? PUMP_MAP[rawPumps]
+        : rawPumps != null && Number.isFinite(Number(rawPumps)) && Number(rawPumps) > 0
+          ? Number(rawPumps)
+          : 8;
+
+    // ── convenienceStore: button string → boolean ──────────────────────
+    // Curated: 'full'|'limited'|'none' (NOT 'yes'/'no')
+    const csVal = inputs.convenienceStore;
     const hasConvenienceStore =
-      inputs.convenienceStore != null
-        ? inputs.convenienceStore === "yes" || inputs.convenienceStore === true
+      csVal != null
+        ? csVal !== "none" && csVal !== "no" && csVal !== false && csVal !== "false"
         : inputs.hasConvenienceStore !== false && inputs.hasConvenienceStore !== "false";
+
+    // ── carWash: button string → boolean ───────────────────────────────
+    // Curated: 'tunnel'|'automatic'|'self-service'|'none'
+    const cwVal = inputs.carWash;
     const hasCarWash =
-      inputs.carWash != null
-        ? inputs.carWash === "yes" || inputs.carWash === true
+      cwVal != null
+        ? cwVal !== "none" && cwVal !== "no" && cwVal !== false && cwVal !== "false"
         : inputs.hasCarWash === true || inputs.hasCarWash === "true";
+
+    // ── foodService: button string → boolean ───────────────────────────
     const hasFood =
       inputs.foodService != null
         ? String(inputs.foodService) !== "none" && inputs.foodService !== false
         : false;
-    const evChargerCount = inputs.evChargers != null ? Number(inputs.evChargers) : 0;
-    const hasLEDSignage = inputs.signage === "led-digital";
+
+    // ── evChargers: button string → charger count ──────────────────────
+    const EV_MAP: Record<string, number> = {
+      "dcfc-multiple": 6,  // 4+ DC fast chargers
+      "dcfc-few": 2,       // 1-3 DC fast chargers
+      "l2-only": 4,        // Level 2 chargers
+      planned: 0,          // Not yet installed
+      none: 0,
+    };
+    const rawEV = inputs.evChargers;
+    const evChargerCount =
+      typeof rawEV === "string" && rawEV in EV_MAP
+        ? EV_MAP[rawEV]
+        : rawEV != null && Number.isFinite(Number(rawEV)) && Number(rawEV) > 0
+          ? Number(rawEV)
+          : 0;
+
+    const hasLEDSignage = inputs.signage === "led-digital" || inputs.signage === "large";
     const stationType = String(
       inputs.stationType || (hasConvenienceStore ? "with-cstore" : "gas-only")
     );
@@ -2170,7 +2247,7 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
         stationType: hasConvenienceStore ? "with-cstore" : "gas-only",
       })
     );
-    const peakLoadKW = Math.round(result.powerMW * 1000);
+    const ssotPeakLoadKW = Math.round(result.powerMW * 1000);
 
     // Build contributor breakdown based on facility configuration
     const pumpKW = fuelPumps * 1.5;
@@ -2207,52 +2284,55 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
     // LED signage (from curated config)
     const signageKW = hasLEDSignage ? 3 : 1;
 
+    // ✅ FIX (Feb 14, 2026): Add-on loads (carWash, EV, food) are NOT in the
+    // SSOT's gas-station model. Add them ON TOP of the SSOT peak, not scaled into it.
+    const addOnKW = carWashKW + evChargingKW + foodServiceKW;
+    const peakLoadKW = ssotPeakLoadKW + addOnKW;
+
     const controlsKW = peakLoadKW * 0.05; // POS, tank monitors, payment
 
-    // Scale contributors to match SSOT peak (SSOT may include store load)
-    const rawSum =
-      pumpKW +
-      canopyLightingKW +
-      cstoreHvacKW +
-      refrigerationKW +
-      carWashKW +
-      evChargingKW +
-      foodServiceKW +
-      signageKW +
-      controlsKW;
-    const scale = rawSum > 0 && peakLoadKW > 0 ? peakLoadKW / rawSum : 1;
+    // Build contributor breakdown matching total peakLoadKW
+    // SSOT portion (pumps + store) is scaled to match ssotPeakLoadKW
+    const ssotContributorSum =
+      pumpKW + canopyLightingKW + cstoreHvacKW + refrigerationKW + signageKW;
+    const ssotScale =
+      ssotContributorSum > 0 && ssotPeakLoadKW > 0 ? ssotPeakLoadKW / ssotContributorSum : 1;
 
-    const scaledPumps = pumpKW * scale;
-    const scaledLighting = (canopyLightingKW + signageKW) * scale;
-    const scaledHvac = cstoreHvacKW * scale;
-    const scaledCooling = refrigerationKW * scale;
-    const scaledCarWash = carWashKW * scale;
-    const scaledControls = controlsKW * scale;
-    const scaledCharging = evChargingKW * scale;
-    const scaledFood = foodServiceKW * scale;
-    const scaledOther = Math.max(
-      0,
-      peakLoadKW -
-        scaledPumps -
-        scaledLighting -
-        scaledHvac -
-        scaledCooling -
-        scaledCarWash -
-        scaledCharging -
-        scaledFood -
-        scaledControls
-    );
+    const scaledPumps = pumpKW * ssotScale;
+    const scaledLighting = (canopyLightingKW + signageKW) * ssotScale;
+    const scaledHvac = cstoreHvacKW * ssotScale;
+    const scaledCooling = refrigerationKW * ssotScale;
+    // Add-on loads are NOT scaled — they're real measured loads
+    const scaledCarWash = carWashKW;
+    const scaledControls = controlsKW;
+    const scaledCharging = evChargingKW;
+    const scaledFood = foodServiceKW;
+    // Ensure "other" is always non-zero for TrueQuote contributor requirements
+    // If the sum of known contributors exceeds peakLoadKW, clamp and redistribute
+    const knownContributorsSum =
+      scaledPumps + scaledLighting + scaledHvac + scaledCooling +
+      scaledCarWash + scaledCharging + scaledFood + scaledControls;
+    const minOther = Math.max(1, peakLoadKW * 0.02); // At least 1 kW for misc (security, POS backup)
+    const scaledOther = Math.max(minOther, peakLoadKW - knownContributorsSum);
+
+    // Normalize so total matches peakLoadKW exactly
+    const rawTotal = knownContributorsSum + scaledOther;
+    const normFactor = peakLoadKW > 0 && rawTotal > 0 ? peakLoadKW / rawTotal : 1;
+
+    // Apply normalization so contributors sum exactly to peakLoadKW
+    const nPumps = scaledPumps * normFactor;
+    const nLighting = scaledLighting * normFactor;
+    const nHvac = scaledHvac * normFactor;
+    const nCooling = scaledCooling * normFactor;
+    const nControls = scaledControls * normFactor;
+    const nCarWash = scaledCarWash * normFactor;
+    const nCharging = scaledCharging * normFactor;
+    const nFood = scaledFood * normFactor;
+    const nOther = scaledOther * normFactor;
 
     const kWContributorsTotalKW =
-      scaledPumps +
-      scaledLighting +
-      scaledHvac +
-      scaledCooling +
-      scaledControls +
-      scaledCarWash +
-      scaledCharging +
-      scaledFood +
-      scaledOther;
+      nPumps + nLighting + nHvac + nCooling + nControls +
+      nCarWash + nCharging + nFood + nOther;
 
     assumptions.push(
       `Gas Station (${stationType}): ${fuelPumps} pumps${hasConvenienceStore ? " + C-store" : ""}${hasCarWash ? " + car wash" : ""}${evChargerCount > 0 ? ` + ${evChargerCount} EV` : ""} → ${peakLoadKW}kW (NACS benchmark)`
@@ -2266,25 +2346,25 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
       version: "v1",
       dutyCycle,
       kWContributors: {
-        hvac: scaledHvac,
-        lighting: scaledLighting,
-        process: scaledPumps + scaledFood, // Fuel dispensing + food service = process
-        controls: scaledControls,
+        hvac: nHvac,
+        lighting: nLighting,
+        process: nPumps + nFood, // Fuel dispensing + food service = process
+        controls: nControls,
         itLoad: 0,
-        cooling: scaledCooling,
-        charging: scaledCharging,
-        other: scaledCarWash + scaledOther,
+        cooling: nCooling,
+        charging: nCharging,
+        other: nCarWash + nOther,
       },
       kWContributorsTotalKW,
       kWContributorShares: {
-        hvacPct: peakLoadKW > 0 ? (scaledHvac / peakLoadKW) * 100 : 0,
-        lightingPct: peakLoadKW > 0 ? (scaledLighting / peakLoadKW) * 100 : 0,
-        processPct: peakLoadKW > 0 ? ((scaledPumps + scaledFood) / peakLoadKW) * 100 : 0,
-        controlsPct: peakLoadKW > 0 ? (scaledControls / peakLoadKW) * 100 : 0,
+        hvacPct: peakLoadKW > 0 ? (nHvac / peakLoadKW) * 100 : 0,
+        lightingPct: peakLoadKW > 0 ? (nLighting / peakLoadKW) * 100 : 0,
+        processPct: peakLoadKW > 0 ? ((nPumps + nFood) / peakLoadKW) * 100 : 0,
+        controlsPct: peakLoadKW > 0 ? (nControls / peakLoadKW) * 100 : 0,
         itLoadPct: 0,
-        coolingPct: peakLoadKW > 0 ? (scaledCooling / peakLoadKW) * 100 : 0,
-        chargingPct: peakLoadKW > 0 ? (scaledCharging / peakLoadKW) * 100 : 0,
-        otherPct: peakLoadKW > 0 ? ((scaledCarWash + scaledOther) / peakLoadKW) * 100 : 0,
+        coolingPct: peakLoadKW > 0 ? (nCooling / peakLoadKW) * 100 : 0,
+        chargingPct: peakLoadKW > 0 ? (nCharging / peakLoadKW) * 100 : 0,
+        otherPct: peakLoadKW > 0 ? ((nCarWash + nOther) / peakLoadKW) * 100 : 0,
       },
       details: {
         gas_station: {
@@ -2466,8 +2546,40 @@ export const CASINO_LOAD_V1_SSOT: CalculatorContract = {
           inputs.gamingSpaceSqFt
       ) || 100000;
     const totalPropertySqFt = Number(inputs.totalPropertySqFt) || gamingFloorSqft * 2;
-    const hotelRooms = Number(inputs.hotelRooms) || 0;
-    const restaurants = Number(inputs.restaurants) || 0;
+
+    // ✅ FIX (Feb 14, 2026): Map button string values → numeric hotel room count
+    // Curated buttons: 'none'/'small'/'medium'/'large'/'mega' (NOT numbers)
+    const HOTEL_ROOM_MAP: Record<string, number> = {
+      none: 0,
+      small: 250,    // < 500 rooms → midpoint
+      medium: 1000,  // 500-1,500 rooms → midpoint
+      large: 2250,   // 1,500-3,000 rooms → midpoint
+      mega: 4000,    // 3,000+ rooms
+    };
+    const rawRooms = inputs.hotelRooms;
+    const hotelRooms =
+      typeof rawRooms === "string" && rawRooms in HOTEL_ROOM_MAP
+        ? HOTEL_ROOM_MAP[rawRooms]
+        : rawRooms != null && Number.isFinite(Number(rawRooms))
+          ? Number(rawRooms)
+          : 0;
+
+    // ✅ FIX (Feb 14, 2026): Map button string values → numeric restaurant count
+    // Curated buttons: '1-3'/'4-8'/'9-15'/'15+' (NOT numbers)
+    const RESTAURANT_MAP: Record<string, number> = {
+      "1-3": 2,
+      "4-8": 6,
+      "9-15": 12,
+      "15+": 20,
+    };
+    const rawRest = inputs.restaurants;
+    const restaurants =
+      typeof rawRest === "string" && rawRest in RESTAURANT_MAP
+        ? RESTAURANT_MAP[rawRest]
+        : rawRest != null && Number.isFinite(Number(rawRest)) && Number(rawRest) > 0
+          ? Number(rawRest)
+          : 0;
+
     const casinoType = String(inputs.casinoType ?? "full-resort").toLowerCase();
 
     assumptions.push(`Gaming floor: ${gamingFloorSqft.toLocaleString()} sq ft (${casinoType})`);
@@ -2571,7 +2683,22 @@ export const APARTMENT_LOAD_V1_SSOT: CalculatorContract = {
 
     // ── Bridge curated → SSOT fields ───────────────────────────────
     const unitCount = Number(inputs.unitCount ?? inputs.numUnits ?? inputs.units) || 400;
-    const avgUnitSize = Number(inputs.avgUnitSize) || 900;
+
+    // ✅ FIX (Feb 14, 2026): Map button string values → numeric sq ft
+    // Curated buttons: 'studio'(<600)/'1br'(600-900)/'2br'(900-1200)/'large'(1200+)
+    const UNIT_SIZE_MAP: Record<string, number> = {
+      studio: 450,   // midpoint of <600
+      "1br": 750,    // midpoint of 600-900
+      "2br": 1050,   // midpoint of 900-1200
+      large: 1400,   // conservative estimate for 1200+
+    };
+    const rawUnitSize = inputs.avgUnitSize;
+    const avgUnitSize =
+      typeof rawUnitSize === "string" && rawUnitSize in UNIT_SIZE_MAP
+        ? UNIT_SIZE_MAP[rawUnitSize]
+        : rawUnitSize != null && Number.isFinite(Number(rawUnitSize)) && Number(rawUnitSize) > 0
+          ? Number(rawUnitSize)
+          : 900;
     const propertyType = String(inputs.propertyType ?? "mid-rise").toLowerCase();
     const hasElevators =
       inputs.elevators && inputs.elevators !== "none" && inputs.elevators !== "no";
@@ -2787,7 +2914,22 @@ export const COLD_STORAGE_LOAD_V1_SSOT: CalculatorContract = {
     // ── Bridge curated → SSOT fields ───────────────────────────────
     const squareFootage = Number(inputs.squareFootage ?? inputs.sqFt) || 20000;
     const temperatureZones = String(inputs.temperatureZones ?? "frozen-and-cooled").toLowerCase();
-    const dockDoors = Number(inputs.dockDoors) || 4;
+
+    // ✅ FIX (Feb 14, 2026): Map button string values → numeric dock door count
+    // Curated buttons: 'small'(1-5)/'medium'(6-15)/'large'(15-30)/'mega'(30+)
+    const DOCK_MAP: Record<string, number> = {
+      small: 3,    // midpoint of 1-5
+      medium: 10,  // midpoint of 6-15
+      large: 22,   // midpoint of 15-30
+      mega: 40,    // conservative estimate for 30+
+    };
+    const rawDocks = inputs.dockDoors;
+    const dockDoors =
+      typeof rawDocks === "string" && rawDocks in DOCK_MAP
+        ? DOCK_MAP[rawDocks]
+        : rawDocks != null && Number.isFinite(Number(rawDocks)) && Number(rawDocks) > 0
+          ? Number(rawDocks)
+          : 4;
     const compressorSystem = String(inputs.compressorSystem ?? "industrial-rack").toLowerCase();
     const facilityType = String(inputs.facilityType ?? "distribution").toLowerCase();
 
@@ -2908,7 +3050,23 @@ export const INDOOR_FARM_LOAD_V1_SSOT: CalculatorContract = {
     // ── Bridge curated → SSOT fields ───────────────────────────────
     const squareFootage =
       Number(inputs.squareFootage ?? inputs.growingAreaSqFt ?? inputs.sqFt) || 50000;
-    const growingLevels = Number(inputs.growingLevels) || 1;
+
+    // ✅ FIX (Feb 14, 2026): Map button string values → numeric growing levels
+    // Curated buttons: '1'/'2-4'/'5-8'/'9+' (NOT plain numbers for ranges)
+    const LEVEL_MAP: Record<string, number> = {
+      "1": 1,
+      "2-4": 3,   // midpoint of 2-4
+      "5-8": 6,   // midpoint of 5-8
+      "9+": 10,   // conservative estimate for 9+
+    };
+    const rawLevels = inputs.growingLevels;
+    const growingLevels =
+      typeof rawLevels === "string" && rawLevels in LEVEL_MAP
+        ? LEVEL_MAP[rawLevels]
+        : rawLevels != null && Number.isFinite(Number(rawLevels)) && Number(rawLevels) > 0
+          ? Number(rawLevels)
+          : 1;
+
     const effectiveGrowArea = squareFootage * Math.max(1, growingLevels);
     const lightingSystem = String(inputs.lightingSystem ?? "led-full-spectrum").toLowerCase();
     const lightSchedule = String(inputs.lightSchedule ?? "18-6").toLowerCase();
