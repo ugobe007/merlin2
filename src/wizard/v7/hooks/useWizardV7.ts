@@ -609,19 +609,25 @@ function runContractQuote(params: {
     logger.logStart(tpl.questions.length);
 
     // 3. Validate template vs calculator (hard fail on mismatch)
-    const validation = validateTemplateAgainstCalculator(tpl, calc, {
-      minQuestions: 16,
-      maxQuestions: 18,
-    });
+    //    SKIP validation when industry borrows another industry's template
+    //    (e.g., gas_station borrows hotel template but uses gas_station_load_v1 calculator)
+    const isBorrowedTemplate = ctx.templateKey !== ctx.canonicalSlug;
 
-    if (!validation.ok) {
-      const issues = validation.issues.map((i) => `${i.level}:${i.code}:${i.message}`);
+    if (!isBorrowedTemplate) {
+      const validation = validateTemplateAgainstCalculator(tpl, calc, {
+        minQuestions: 16,
+        maxQuestions: 18,
+      });
 
-      // Log validation failure
-      logger.logValidationFailed(issues);
+      if (!validation.ok) {
+        const issues = validation.issues.map((i) => `${i.level}:${i.code}:${i.message}`);
 
-      const errorMsg = issues.join(" | ");
-      throw { code: "VALIDATION", message: `Template validation failed: ${errorMsg}` };
+        // Log validation failure
+        logger.logValidationFailed(issues);
+
+        const errorMsg = issues.join(" | ");
+        throw { code: "VALIDATION", message: `Template validation failed: ${errorMsg}` };
+      }
     }
 
     // 4. Apply mapping (answers → canonical calculator inputs)
