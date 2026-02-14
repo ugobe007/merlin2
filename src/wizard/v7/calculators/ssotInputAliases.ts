@@ -191,6 +191,42 @@ export const SSOT_ALIASES = {
       ssotAlternates: [],
       ssotDefault: true,
     },
+    convenienceStore: {
+      adapterField: "convenienceStore",
+      ssotField: "hasConvenienceStore",
+      ssotAlternates: [],
+      ssotDefault: "yes",
+    },
+    carWash: {
+      adapterField: "carWash",
+      ssotField: "hasCarWash",
+      ssotAlternates: [],
+      ssotDefault: "no",
+    },
+    stationType: {
+      adapterField: "stationType",
+      ssotField: "stationType",
+      ssotAlternates: [],
+      ssotDefault: "with-cstore",
+    },
+    foodService: {
+      adapterField: "foodService",
+      ssotField: "foodService",
+      ssotAlternates: [],
+      ssotDefault: "none",
+    },
+    evChargers: {
+      adapterField: "evChargers",
+      ssotField: "evChargerCount",
+      ssotAlternates: ["evChargingCount"],
+      ssotDefault: 0,
+    },
+    squareFootage: {
+      adapterField: "squareFootage",
+      ssotField: "buildingSquareFootage",
+      ssotAlternates: ["cStoreSqFt"],
+      ssotDefault: 2500,
+    },
   } satisfies IndustryAliasMap,
 
   truck_stop: {
@@ -206,11 +242,47 @@ export const SSOT_ALIASES = {
       ssotAlternates: ["convenienceStoreSqFt", "storeSqFt"],
       ssotDefault: 4000,
     },
+    squareFootage: {
+      adapterField: "squareFootage",
+      ssotField: "buildingSquareFootage",
+      ssotAlternates: ["cStoreSqFt"],
+      ssotDefault: 5000,
+    },
     truckParkingSpots: {
       adapterField: "truckParkingSpots",
       ssotField: "truckParkingSpots",
       ssotAlternates: ["parkingSpots", "overnightSpots"],
       ssotDefault: 50,
+    },
+    stationType: {
+      adapterField: "stationType",
+      ssotField: "stationType",
+      ssotAlternates: [],
+      ssotDefault: "truck-stop",
+    },
+    convenienceStore: {
+      adapterField: "convenienceStore",
+      ssotField: "hasConvenienceStore",
+      ssotAlternates: [],
+      ssotDefault: "yes",
+    },
+    foodService: {
+      adapterField: "foodService",
+      ssotField: "foodService",
+      ssotAlternates: [],
+      ssotDefault: "full-restaurant",
+    },
+    carWash: {
+      adapterField: "carWash",
+      ssotField: "hasCarWash",
+      ssotAlternates: [],
+      ssotDefault: "no",
+    },
+    evChargers: {
+      adapterField: "evChargers",
+      ssotField: "evChargerCount",
+      ssotAlternates: [],
+      ssotDefault: 0,
     },
   } satisfies IndustryAliasMap,
 } as const;
