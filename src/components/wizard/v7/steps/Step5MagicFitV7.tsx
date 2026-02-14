@@ -22,8 +22,8 @@ import React, { useState, useEffect } from 'react';
 import { Check, Loader2, AlertTriangle, Battery, Sun, Fuel, Clock, TrendingUp, DollarSign, Shield } from 'lucide-react';
 import type { WizardState as WizardV7State, EnergyGoal, WizardStep, QuoteOutput } from '@/wizard/v7/hooks/useWizardV7';
 import { getIndustryMeta } from '@/wizard/v7/industryMeta';
-import { TrueQuoteBadgeCanonical } from '@/components/shared/TrueQuoteBadgeCanonical';
-import TrueQuoteModal from '@/components/shared/TrueQuoteModal';
+import TrueQuoteFinancialModal from '@/components/wizard/v7/shared/TrueQuoteFinancialModal';
+import badgeGoldIcon from '@/assets/images/badge_gold_icon.jpg';
 
 // SSOT calculation engine
 import { calculateQuote } from '@/services/unifiedQuoteCalculator';
@@ -397,46 +397,79 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* TrueQuote Modal */}
-      <TrueQuoteModal
-        isOpen={showTrueQuoteModal}
-        onClose={() => setShowTrueQuoteModal(false)}
-        mode="about"
-      />
+      {/* TrueQuote Financial Modal — full ROI, 10yr cashflow, sensitivity */}
+      {(() => {
+        const modalTier = tiers.find(t => t.tierKey === (selectedTier || 'perfectFit'));
+        const mq = modalTier?.quote;
+        return (
+          <TrueQuoteFinancialModal
+            isOpen={showTrueQuoteModal}
+            onClose={() => setShowTrueQuoteModal(false)}
+            totalInvestment={mq?.costs?.totalProjectCost ?? 0}
+            federalITC={mq?.costs?.taxCredit ?? 0}
+            netInvestment={mq?.costs?.netCost ?? 0}
+            annualSavings={mq?.financials?.annualSavings ?? 0}
+            bessKWh={mq?.equipment?.batteries ? (mq.equipment.batteries.unitEnergyMWh ?? 0) * (mq.equipment.batteries.quantity ?? 0) * 1000 : 0}
+            solarKW={mq?.equipment?.solar ? (mq.equipment.solar.totalMW ?? 0) * 1000 : 0}
+            industry={getIndustryLabel(data.industry)}
+            location={data.location.state}
+          />
+        );
+      })()}
 
-      {/* Header row: guidance + TrueQuote Proof badge */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-2.5">
-          <p className="text-sm leading-relaxed text-slate-400">
-            Three system options for your{" "}
-            <span className="text-slate-200 font-medium">{getIndustryLabel(data.industry)}</span> facility
-            <span className="text-slate-500">{" "}· sized by Merlin based on your profile and goals</span>
-          </p>
-
-          {/* Goal-based sizing hints */}
-          {goalModifiers.goalHints.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {goalModifiers.goalHints.map((hint, idx) => (
-                <span key={idx} className="text-xs text-[#3ECF8E]/80">
-                  {hint}
-                </span>
-              ))}
-            </div>
-          )}
+      {/* ✅ TrueQuote Hero Badge — large, gold, unmissable */}
+      <button
+        type="button"
+        onClick={() => setShowTrueQuoteModal(true)}
+        className="group w-full flex items-center gap-4 p-4 rounded-xl border-2 border-amber-500/30 bg-amber-500/[0.04] hover:border-amber-400/50 hover:bg-amber-500/[0.08] transition-all duration-300 cursor-pointer"
+        aria-label="Open TrueQuote financial summary"
+      >
+        {/* Gold Shield Image */}
+        <div className="shrink-0 relative">
+          <img
+            src={badgeGoldIcon}
+            alt="TrueQuote Verified"
+            className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
+          />
         </div>
 
-        {/* ✅ TrueQuote Proof badge (prominent + clickable) */}
-        <button
-          type="button"
-          onClick={() => setShowTrueQuoteModal(true)}
-          className="shrink-0 group"
-          aria-label="Open TrueQuote financial summary"
-        >
-          <TrueQuoteBadgeCanonical showTooltip={false} />
-          <div className="mt-1 text-[11px] text-slate-500 text-right group-hover:text-slate-300 transition-colors">
-            View financial summary →
+        {/* Badge Text */}
+        <div className="flex-1 text-left">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-xl font-bold text-amber-400 tracking-tight">TrueQuote™</span>
+            <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Verified</span>
           </div>
-        </button>
+          <p className="text-sm text-slate-400 leading-snug">
+            Every number is sourced. Click to view full financial projection, ROI analysis, and payback timeline.
+          </p>
+        </div>
+
+        {/* Arrow */}
+        <div className="shrink-0 text-amber-500/50 group-hover:text-amber-400 group-hover:translate-x-1 transition-all duration-300">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </button>
+
+      {/* Inline guidance */}
+      <div className="space-y-2">
+        <p className="text-sm leading-relaxed text-slate-400">
+          Three system options for your{" "}
+          <span className="text-slate-200 font-medium">{getIndustryLabel(data.industry)}</span> facility
+          <span className="text-slate-500">{" "}· sized by Merlin based on your profile and goals</span>
+        </p>
+
+        {/* Goal-based sizing hints */}
+        {goalModifiers.goalHints.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {goalModifiers.goalHints.map((hint, idx) => (
+              <span key={idx} className="text-xs text-[#3ECF8E]/80">
+                {hint}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Tier Cards Grid */}
@@ -498,9 +531,10 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                 )}
 
                 {/* TrueQuote verified label */}
-                <div className="text-[11px] text-slate-500 flex items-center gap-2 mb-2">
-                  <span className="text-[#3ECF8E] font-semibold">TrueQuote</span>
-                  <span>verified pricing</span>
+                <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mb-2">
+                  <Shield className="w-3 h-3 text-amber-500" />
+                  <span className="text-amber-400 font-semibold">TrueQuote™</span>
+                  <span>verified</span>
                 </div>
 
                 {/* Tier Name + Tagline */}
