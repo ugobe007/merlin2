@@ -114,10 +114,19 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
 
     // 1. Parse fields from template mapping (itLoadCapacity, currentPUE, etc.)
     //    Then translate to SSOT field names (itLoadKW, rackCount, etc.)
-    const itLoadKW = Number(inputs.itLoadCapacity) || undefined;
-    const currentPUE = String(inputs.currentPUE || "1.3-1.5");
+    //    Also bridge legacy curated schema fields (capacity MW → itLoadCapacity kW)
+    //    Legacy "capacity" is in MW from the curated questionnaire; prefer it when
+    //    the user explicitly changed it (non-zero, non-undefined) because the
+    //    template-mapped itLoadCapacity may just be the seeded default.
+    const legacyCapacityMW = inputs.capacity != null ? Number(inputs.capacity) : undefined;
+    const templateItLoadKW = inputs.itLoadCapacity != null ? Number(inputs.itLoadCapacity) : undefined;
+    // Legacy capacity (MW → kW) takes priority when it's a plausible user entry
+    const itLoadKW = (legacyCapacityMW && legacyCapacityMW > 0)
+      ? legacyCapacityMW * 1000
+      : (templateItLoadKW || undefined);
+    const currentPUE = String(inputs.currentPUE || inputs.pue || "1.3-1.5");
     const itUtilization = String(inputs.itUtilization || "60-80%");
-    const dataCenterTier = String(inputs.dataCenterTier || "tier_3");
+    const dataCenterTier = String(inputs.dataCenterTier || inputs.uptimeRequirement || "tier_3");
 
     // 2. Map to SSOT parameters (field names the SSOT actually reads)
     const useCaseData: Record<string, unknown> = {

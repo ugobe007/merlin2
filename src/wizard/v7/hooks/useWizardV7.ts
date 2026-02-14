@@ -8,7 +8,7 @@ import type { CalcInputs } from "@/wizard/v7/calculators/contract";
 import { ContractRunLogger } from "@/wizard/v7/telemetry/contractTelemetry";
 import { validateTemplate, formatValidationResult } from "@/wizard/v7/validation/templateValidator";
 import { sanityCheckQuote, type PricingSanity } from "@/wizard/v7/utils/pricingSanity";
-import { getTier1Blockers } from "@/wizard/v7/schema/curatedFieldsResolver";
+import { getTier1Blockers, resolveStep3Schema } from "@/wizard/v7/schema/curatedFieldsResolver";
 
 // Industry Context — SSOT resolver (Feb 7, 2026)
 import { resolveIndustryContext } from "@/wizard/v7/industry";
@@ -625,7 +625,13 @@ function runContractQuote(params: {
     }
 
     // 4. Apply mapping (answers → canonical calculator inputs)
-    const inputs = applyTemplateMapping(tpl, params.answers);
+    const mappedInputs = applyTemplateMapping(tpl, params.answers);
+    
+    // 4a. Bridge: pass raw answers underneath mapped inputs.
+    // This ensures legacy curated-schema field names (e.g., "capacity",
+    // "uptimeRequirement") are visible to calculator adapters even when
+    // the template mapping doesn't reference them. Mapped values win.
+    const inputs = { ...params.answers, ...mappedInputs };
 
     // 5. Run calculator
     const computed = calc.compute(inputs as CalcInputs);
