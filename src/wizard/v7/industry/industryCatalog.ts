@@ -68,7 +68,7 @@ export interface ResolutionTrace {
   /** Resolved calculator ID */
   calculatorId: string;
   /** How the resolution happened */
-  reason: 'exact' | 'alias' | 'variant' | 'fallback';
+  reason: "exact" | "alias" | "variant" | "fallback";
   /** If templateKey or schemaKey differ from canonicalSlug, who they were borrowed from */
   borrowedFrom?: string;
   /** ISO timestamp of resolution */
@@ -164,7 +164,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "dc_load_v1",
     schemaKey: "datacenter",
     aliases: ["datacenter", "data-center"],
-    sizingDefaults: { ratio: 0.50, hours: 4 },
+    sizingDefaults: { ratio: 0.5, hours: 4 },
     hasTemplate: true,
     hasCuratedSchema: true,
   },
@@ -174,7 +174,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "hotel_load_v1",
     schemaKey: "hotel",
     aliases: ["hospitality"],
-    sizingDefaults: { ratio: 0.40, hours: 4 },
+    sizingDefaults: { ratio: 0.4, hours: 4 },
     hasTemplate: true,
     hasCuratedSchema: true,
   },
@@ -194,7 +194,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "hospital_load_v1",
     schemaKey: "hospital",
     aliases: ["healthcare", "medical", "clinic"],
-    sizingDefaults: { ratio: 0.70, hours: 4 },
+    sizingDefaults: { ratio: 0.7, hours: 4 },
     hasTemplate: true,
     hasCuratedSchema: true,
   },
@@ -204,7 +204,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "ev_charging_load_v1",
     schemaKey: "ev-charging",
     aliases: ["evcharging", "ev-charging", "ev_charger"],
-    sizingDefaults: { ratio: 0.60, hours: 2 },
+    sizingDefaults: { ratio: 0.6, hours: 2 },
     hasTemplate: true,
     hasCuratedSchema: true,
   },
@@ -237,11 +237,11 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     canonicalSlug: "restaurant",
     templateKey: "hotel", // borrows hotel's commercial template
     calculatorId: "restaurant_load_v1", // has own physics model
-    schemaKey: "hotel", // borrows hotel's curated schema
+    schemaKey: "restaurant", // now has its own curated schema with restaurant-specific questions
     aliases: ["food-service", "dining"],
-    sizingDefaults: { ratio: 0.40, hours: 4 },
+    sizingDefaults: { ratio: 0.4, hours: 4 },
     hasTemplate: false,
-    hasCuratedSchema: true, // resolves via schemaKey → hotel's COMPLETE_SCHEMAS entry
+    hasCuratedSchema: true, // resolves via schemaKey → restaurant's COMPLETE_SCHEMAS entry
   },
   {
     canonicalSlug: "retail",
@@ -259,7 +259,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "warehouse_load_v1", // has own physics model
     schemaKey: "warehouse",
     aliases: ["logistics", "logistics-center", "logistics_center", "distribution"],
-    sizingDefaults: { ratio: 0.30, hours: 2 },
+    sizingDefaults: { ratio: 0.3, hours: 2 },
     hasTemplate: false,
     hasCuratedSchema: true,
   },
@@ -269,7 +269,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "gas_station_load_v1", // has own physics model
     schemaKey: "gas-station",
     aliases: ["gas-station", "fuel-station"],
-    sizingDefaults: { ratio: 0.40, hours: 2 },
+    sizingDefaults: { ratio: 0.4, hours: 2 },
     hasTemplate: false,
     hasCuratedSchema: true,
   },
@@ -279,7 +279,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "truck_stop_load_v1", // dedicated truck stop calculator
     schemaKey: "gas-station", // shares gas station questionnaire
     aliases: ["truck-stop", "travel-center", "heavy_duty_truck_stop"],
-    sizingDefaults: { ratio: 0.50, hours: 4 }, // larger BESS for truck stops
+    sizingDefaults: { ratio: 0.5, hours: 4 }, // larger BESS for truck stops
     hasTemplate: false,
     hasCuratedSchema: true, // resolves via schemaKey → gas-station's COMPLETE_SCHEMAS entry
   },
@@ -294,7 +294,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "generic_ssot_v1",
     schemaKey: "airport",
     aliases: [],
-    sizingDefaults: { ratio: 0.50, hours: 4 },
+    sizingDefaults: { ratio: 0.5, hours: 4 },
     hasTemplate: false,
     hasCuratedSchema: true,
   },
@@ -314,7 +314,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "generic_ssot_v1",
     schemaKey: "college",
     aliases: ["university", "campus"],
-    sizingDefaults: { ratio: 0.40, hours: 4 },
+    sizingDefaults: { ratio: 0.4, hours: 4 },
     hasTemplate: false,
     hasCuratedSchema: true,
   },
@@ -334,7 +334,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "generic_ssot_v1",
     schemaKey: "residential",
     aliases: ["home", "single-family"],
-    sizingDefaults: { ratio: 0.30, hours: 4 },
+    sizingDefaults: { ratio: 0.3, hours: 4 },
     hasTemplate: false,
     hasCuratedSchema: true,
   },
@@ -344,7 +344,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "generic_ssot_v1",
     schemaKey: "cold-storage",
     aliases: ["cold-storage", "refrigerated"],
-    sizingDefaults: { ratio: 0.50, hours: 4 },
+    sizingDefaults: { ratio: 0.5, hours: 4 },
     hasTemplate: false,
     hasCuratedSchema: true,
   },
@@ -354,7 +354,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "generic_ssot_v1",
     schemaKey: "indoor-farm",
     aliases: ["indoor-farm", "vertical-farm", "greenhouse"],
-    sizingDefaults: { ratio: 0.40, hours: 4 },
+    sizingDefaults: { ratio: 0.4, hours: 4 },
     hasTemplate: false,
     hasCuratedSchema: true,
   },
@@ -374,7 +374,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "generic_ssot_v1",
     schemaKey: "government",
     aliases: ["public", "municipal"],
-    sizingDefaults: { ratio: 0.40, hours: 4 },
+    sizingDefaults: { ratio: 0.4, hours: 4 },
     hasTemplate: false,
     hasCuratedSchema: true,
   },
@@ -389,7 +389,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "generic_ssot_v1",
     schemaKey: "other",
     aliases: ["custom", "unknown", "generic"],
-    sizingDefaults: { ratio: 0.40, hours: 4 },
+    sizingDefaults: { ratio: 0.4, hours: 4 },
     hasTemplate: false,
     hasCuratedSchema: false,
   },
@@ -399,7 +399,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "generic_ssot_v1",
     schemaKey: "auto",
     aliases: [],
-    sizingDefaults: { ratio: 0.40, hours: 4 },
+    sizingDefaults: { ratio: 0.4, hours: 4 },
     hasTemplate: false,
     hasCuratedSchema: false,
   },

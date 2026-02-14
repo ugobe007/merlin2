@@ -24,19 +24,13 @@
  */
 
 import { describe, it, expect } from "vitest";
-import {
-  INDUSTRY_CATALOG,
-  type IndustryCatalogEntry,
-} from "../industryCatalog";
+import { INDUSTRY_CATALOG, type IndustryCatalogEntry } from "../industryCatalog";
 import {
   resolveIndustryContext,
   listCanonicalSlugs,
   isKnownIndustry,
 } from "../resolveIndustryContext";
-import {
-  normalizeSchemaKey,
-  normalizeTemplateKey,
-} from "../normalize";
+import { normalizeSchemaKey, normalizeTemplateKey } from "../normalize";
 import { CALCULATORS_BY_ID } from "@/wizard/v7/calculators/registry";
 import { getTemplate, hasTemplate } from "@/wizard/v7/templates/templateIndex";
 import {
@@ -247,11 +241,11 @@ describe("Industry Catalog — Alias Resolution", () => {
 // ============================================================================
 
 describe("Industry Catalog — Restaurant Bug Regression", () => {
-  it("restaurant resolves to hotel template, own calculator", () => {
+  it("restaurant resolves to hotel template, own calculator, own schema", () => {
     const ctx = resolveIndustryContext("restaurant");
     expect(ctx.templateKey).toBe("hotel");
     expect(ctx.calculatorId).toBe("restaurant_load_v1");
-    expect(ctx.schemaKey).toBe("hotel");
+    expect(ctx.schemaKey).toBe("restaurant");
   });
 
   it("restaurant template is loadable", () => {
@@ -350,9 +344,7 @@ describe("Industry Catalog — Borrowing Invariants", () => {
       const schema = resolveStep3Schema(entry.canonicalSlug);
       // Both sides normalized to schema-key namespace (hyphens).
       // This catches naming-convention drift without false positives.
-      expect(normalizeSchemaKey(schema.industry)).toBe(
-        normalizeSchemaKey(ctx.schemaKey)
-      );
+      expect(normalizeSchemaKey(schema.industry)).toBe(normalizeSchemaKey(ctx.schemaKey));
     });
 
     it(`${entry.canonicalSlug} template.industry matches effective templateKey (normalized)`, () => {
@@ -360,9 +352,7 @@ describe("Industry Catalog — Borrowing Invariants", () => {
       const tpl = getTemplate(ctx.templateKey);
       expect(tpl).not.toBeNull();
       // Both sides normalized to template-key namespace (underscores).
-      expect(normalizeTemplateKey(tpl!.industry)).toBe(
-        normalizeTemplateKey(ctx.templateKey)
-      );
+      expect(normalizeTemplateKey(tpl!.industry)).toBe(normalizeTemplateKey(ctx.templateKey));
     });
   }
 });
@@ -414,18 +404,18 @@ describe("Industry Catalog — Blocker Question Integrity", () => {
 describe("Industry Catalog — Quote Pipeline Smoke Tests", () => {
   // Industries that exercise the most alias/variant/borrowing complexity
   const SMOKE_INDUSTRIES = [
-    "data_center",   // alias: datacenter, data-center
-    "hotel",         // alias: hospitality; borrower: restaurant
-    "car_wash",      // alias: carwash, car-wash; COMPLETE_SCHEMA
-    "ev_charging",   // alias: evcharging, ev-charging, ev_charger
-    "hospital",      // alias: healthcare, medical, clinic
-    "restaurant",    // borrows hotel template + schema
-    "gas_station",   // alias: gas-station; borrows hotel template
-    "warehouse",     // alias: logistics; borrows data_center template
-    "other",         // alias: custom, unknown, generic
+    "data_center", // alias: datacenter, data-center
+    "hotel", // alias: hospitality; borrower: restaurant
+    "car_wash", // alias: carwash, car-wash; COMPLETE_SCHEMA
+    "ev_charging", // alias: evcharging, ev-charging, ev_charger
+    "hospital", // alias: healthcare, medical, clinic
+    "restaurant", // borrows hotel template + schema
+    "gas_station", // alias: gas-station; borrows hotel template
+    "warehouse", // alias: logistics; borrows data_center template
+    "other", // alias: custom, unknown, generic
     "manufacturing", // alias: industrial, factory
-    "retail",        // alias: shopping; borrows hotel template
-    "office",        // alias: commercial-office, coworking
+    "retail", // alias: shopping; borrows hotel template
+    "office", // alias: commercial-office, coworking
   ];
 
   for (const slug of SMOKE_INDUSTRIES) {
@@ -514,10 +504,9 @@ describe("Industry Catalog — Quote Pipeline Smoke Tests", () => {
 
           if (v.kWContributors) {
             for (const [key, value] of Object.entries(v.kWContributors)) {
-              expect(
-                Number.isFinite(value),
-                `kWContributor "${key}" is not finite: ${value}`
-              ).toBe(true);
+              expect(Number.isFinite(value), `kWContributor "${key}" is not finite: ${value}`).toBe(
+                true
+              );
               expect(value as number).toBeGreaterThanOrEqual(0);
             }
           }
@@ -541,12 +530,8 @@ describe("Industry Catalog — Quote Pipeline Smoke Tests", () => {
         expect(calc).toBeDefined();
 
         // Cross-namespace checks (normalized)
-        expect(normalizeSchemaKey(schema.industry)).toBe(
-          normalizeSchemaKey(ctx.schemaKey)
-        );
-        expect(normalizeTemplateKey(tpl!.industry)).toBe(
-          normalizeTemplateKey(ctx.templateKey)
-        );
+        expect(normalizeSchemaKey(schema.industry)).toBe(normalizeSchemaKey(ctx.schemaKey));
+        expect(normalizeTemplateKey(tpl!.industry)).toBe(normalizeTemplateKey(ctx.templateKey));
         expect(calc.id).toBe(ctx.calculatorId);
       });
     });
@@ -583,9 +568,7 @@ describe("Industry Catalog — Quote Pipeline Smoke Tests", () => {
         const uSchema = resolveStep3Schema(underscore);
         expect(hSchema.questionCount).toBe(uSchema.questionCount);
         expect(hSchema.source).toBe(uSchema.source);
-        expect(hSchema.questions.map((q) => q.id)).toEqual(
-          uSchema.questions.map((q) => q.id)
-        );
+        expect(hSchema.questions.map((q) => q.id)).toEqual(uSchema.questions.map((q) => q.id));
 
         // Calculator identity (same reference, not just equal)
         const hCalc = CALCULATORS_BY_ID[hCtx.calculatorId];

@@ -1,49 +1,101 @@
 /**
  * CURATED FIELDS RESOLVER (Phase 1: Step 3 Magic Restoration)
- * 
+ *
  * Created: February 2, 2026
- * 
+ *
  * PURPOSE:
  * ========
  * This resolver is the SINGLE SOURCE OF TRUTH for Step 3 field schemas.
  * It replaces the broken templateMapping that collapsed 14 industries into 3.
- * 
+ *
  * DOCTRINE:
  * - Templates can exist for copy/sections/order
  * - But the FIELD SET comes from this curated schema
  * - Each industry has its own lovingly-crafted question definitions
  * - Icons, validation, conditional logic, Merlin tips - all preserved
- * 
+ *
  * ARCHITECTURE:
  * - resolveStep3Schema(industry) → returns curated fields list
  * - Step 3 uses this, NOT the backend template's questions
  * - Backend templates are "thin" (sections, order) - NOT the field definitions
  */
 
-import type { Question as CarWashQuestion } from '@/data/carwash-questions-complete.config';
-import { carWashQuestionsComplete, carWashSections } from '@/data/carwash-questions-complete.config';
-import type { Question as HotelQuestion } from '@/data/hotel-questions-complete.config';
-import { hotelQuestionsComplete, hotelSections } from '@/data/hotel-questions-complete.config';
-import type { Question as EVChargingQuestion } from '@/data/evcharging-questions-complete.config';
-import { evChargingQuestionsComplete, evChargingSections } from '@/data/evcharging-questions-complete.config';
-import { datacenterQuestionsComplete, datacenterSections } from '@/data/datacenter-questions-complete.config';
-import { hospitalQuestionsComplete, hospitalSections } from '@/data/hospital-questions-complete.config';
-import { officeQuestionsComplete, officeSections } from '@/data/office-questions-complete.config';
-import { manufacturingQuestionsComplete, manufacturingSections } from '@/data/manufacturing-questions-complete.config';
-import { warehouseQuestionsComplete, warehouseSections } from '@/data/warehouse-questions-complete.config';
-import { retailQuestionsComplete, retailSections } from '@/data/retail-questions-complete.config';
-import { gasStationQuestionsComplete, gasStationSections } from '@/data/gasstation-questions-complete.config';
-import { airportQuestionsComplete, airportSections } from '@/data/airport-questions-complete.config';
-import { casinoQuestionsComplete, casinoSections } from '@/data/casino-questions-complete.config';
-import { apartmentQuestionsComplete, apartmentSections } from '@/data/apartment-questions-complete.config';
-import { collegeQuestionsComplete, collegeSections } from '@/data/college-questions-complete.config';
-import { coldStorageQuestionsComplete, coldStorageSections } from '@/data/coldstorage-questions-complete.config';
-import { indoorFarmQuestionsComplete, indoorFarmSections } from '@/data/indoorfarm-questions-complete.config';
-import { agricultureQuestionsComplete, agricultureSections } from '@/data/agriculture-questions-complete.config';
-import { residentialQuestionsComplete, residentialSections } from '@/data/residential-questions-complete.config';
-import { governmentQuestionsComplete, governmentSections } from '@/data/government-questions-complete.config';
-import { industryQuestionnaires, type Question as LegacyQuestion } from '@/data/industryQuestionnaires';
-import { resolveIndustryContext } from '@/wizard/v7/industry';
+import type { Question as CarWashQuestion } from "@/data/carwash-questions-complete.config";
+import {
+  carWashQuestionsComplete,
+  carWashSections,
+} from "@/data/carwash-questions-complete.config";
+import type { Question as HotelQuestion } from "@/data/hotel-questions-complete.config";
+import { hotelQuestionsComplete, hotelSections } from "@/data/hotel-questions-complete.config";
+import type { Question as EVChargingQuestion } from "@/data/evcharging-questions-complete.config";
+import {
+  evChargingQuestionsComplete,
+  evChargingSections,
+} from "@/data/evcharging-questions-complete.config";
+import {
+  datacenterQuestionsComplete,
+  datacenterSections,
+} from "@/data/datacenter-questions-complete.config";
+import {
+  hospitalQuestionsComplete,
+  hospitalSections,
+} from "@/data/hospital-questions-complete.config";
+import { officeQuestionsComplete, officeSections } from "@/data/office-questions-complete.config";
+import {
+  manufacturingQuestionsComplete,
+  manufacturingSections,
+} from "@/data/manufacturing-questions-complete.config";
+import {
+  warehouseQuestionsComplete,
+  warehouseSections,
+} from "@/data/warehouse-questions-complete.config";
+import { retailQuestionsComplete, retailSections } from "@/data/retail-questions-complete.config";
+import {
+  gasStationQuestionsComplete,
+  gasStationSections,
+} from "@/data/gasstation-questions-complete.config";
+import {
+  airportQuestionsComplete,
+  airportSections,
+} from "@/data/airport-questions-complete.config";
+import { casinoQuestionsComplete, casinoSections } from "@/data/casino-questions-complete.config";
+import {
+  apartmentQuestionsComplete,
+  apartmentSections,
+} from "@/data/apartment-questions-complete.config";
+import {
+  collegeQuestionsComplete,
+  collegeSections,
+} from "@/data/college-questions-complete.config";
+import {
+  coldStorageQuestionsComplete,
+  coldStorageSections,
+} from "@/data/coldstorage-questions-complete.config";
+import {
+  indoorFarmQuestionsComplete,
+  indoorFarmSections,
+} from "@/data/indoorfarm-questions-complete.config";
+import {
+  agricultureQuestionsComplete,
+  agricultureSections,
+} from "@/data/agriculture-questions-complete.config";
+import {
+  residentialQuestionsComplete,
+  residentialSections,
+} from "@/data/residential-questions-complete.config";
+import {
+  governmentQuestionsComplete,
+  governmentSections,
+} from "@/data/government-questions-complete.config";
+import {
+  restaurantQuestionsComplete,
+  restaurantSections,
+} from "@/data/restaurant-questions-complete.config";
+import {
+  industryQuestionnaires,
+  type Question as LegacyQuestion,
+} from "@/data/industryQuestionnaires";
+import { resolveIndustryContext } from "@/wizard/v7/industry";
 
 // ============================================================================
 // TIER 1 BLOCKERS — Single Source of Truth for Step 3 Gating
@@ -51,175 +103,183 @@ import { resolveIndustryContext } from '@/wizard/v7/industry';
 
 /**
  * Tier 1 Blockers: Questions that MUST be answered for "definitive" load profile.
- * 
+ *
  * Principle: Keep this 6-10 max per industry.
  * - If a question materially changes peak kW, duty cycle, or energy per unit → Tier 1
  * - If only used for solar/roof, incentives, layout, features → Tier 2 (recommended)
- * 
+ *
  * Tier 2 questions remain required in schema for UI emphasis, but don't gate navigation.
- * 
+ *
  * Updated: Feb 3, 2026 — Car wash reduced from 24 to 8 blockers
  */
 const TIER1_BLOCKERS: Record<string, string[]> = {
-  'car-wash': [
-    'facilityType',          // Core: tunnel vs IBA vs self-serve
-    'tunnelOrBayCount',      // Core: primary capacity driver
-    'operatingHours',        // Core: duty cycle
-    'daysPerWeek',           // Core: annual energy driver
-    'dailyVehicles',         // Core: throughput proxy
-    'waterHeaterType',       // Load driver: 10-30 kW continuous
-    'dryerConfiguration',    // CRITICAL: 40-50% of bill
-    'pumpConfiguration',     // CRITICAL: 20-30% of bill
+  "car-wash": [
+    "facilityType", // Core: tunnel vs IBA vs self-serve
+    "tunnelOrBayCount", // Core: primary capacity driver
+    "operatingHours", // Core: duty cycle
+    "daysPerWeek", // Core: annual energy driver
+    "dailyVehicles", // Core: throughput proxy
+    "waterHeaterType", // Load driver: 10-30 kW continuous
+    "dryerConfiguration", // CRITICAL: 40-50% of bill
+    "pumpConfiguration", // CRITICAL: 20-30% of bill
   ],
-  'hotel': [
-    'hotelCategory',         // Core: class drives HVAC + amenity intensity
-    'numRooms',              // Core: primary capacity driver
-    'occupancyRate',         // Core: baseload vs peak ratio
-    'poolOnSite',            // Load driver: 30-80 kW pumps + heating
-    'restaurantOnSite',      // Load driver: 80-200 kW full kitchen
-    'spaOnSite',             // Load driver: 40-100 kW water + HVAC
-    'gridConnection',        // Architecture: on-grid vs off-grid
+  hotel: [
+    "hotelCategory", // Core: class drives HVAC + amenity intensity
+    "numRooms", // Core: primary capacity driver
+    "occupancyRate", // Core: baseload vs peak ratio
+    "poolOnSite", // Load driver: 30-80 kW pumps + heating
+    "restaurantOnSite", // Load driver: 80-200 kW full kitchen
+    "spaOnSite", // Load driver: 40-100 kW water + HVAC
+    "gridConnection", // Architecture: on-grid vs off-grid
   ],
-  'ev-charging': [
-    'stationType',           // Core: utilization profile driver
-    'level2Chargers',        // Core: L2 count (adapter requiredInput)
-    'level2Power',           // Core: kW per L2 port
-    'dcFastChargers',        // Core: DCFC count (adapter requiredInput)
-    'dcFastPower',           // Core: kW per DCFC port
-    'gridConnection',        // Architecture: on-grid vs limited vs off-grid
-    'operatingHours',        // Core: duty cycle driver
+  "ev-charging": [
+    "stationType", // Core: utilization profile driver
+    "level2Chargers", // Core: L2 count (adapter requiredInput)
+    "level2Power", // Core: kW per L2 port
+    "dcFastChargers", // Core: DCFC count (adapter requiredInput)
+    "dcFastPower", // Core: kW per DCFC port
+    "gridConnection", // Architecture: on-grid vs limited vs off-grid
+    "operatingHours", // Core: duty cycle driver
   ],
-  'datacenter': [
-    'dataCenterTier',        // Core: redundancy & power density
-    'itLoadCapacity',        // Core: primary power driver (MW)
-    'currentPUE',            // Core: total facility power = IT × PUE
-    'itUtilization',         // Core: actual IT load percentage
-    'coolingSystem',         // Load driver: cooling is 30-40% of total
-    'squareFootage',         // Secondary: facility size context
-    'gridConnection',        // Architecture
+  datacenter: [
+    "dataCenterTier", // Core: redundancy & power density
+    "itLoadCapacity", // Core: primary power driver (MW)
+    "currentPUE", // Core: total facility power = IT × PUE
+    "itUtilization", // Core: actual IT load percentage
+    "coolingSystem", // Load driver: cooling is 30-40% of total
+    "squareFootage", // Secondary: facility size context
+    "gridConnection", // Architecture
   ],
-  'hospital': [
-    'facilityType',          // Core: hospital vs clinic vs specialty
-    'bedCount',              // Core: primary capacity driver
-    'criticalSystems',       // Load driver: which systems are critical
-    'operatingRooms',        // Load driver: high-power surgical suites
-    'gridConnection',        // Architecture
-    'existingGenerator',     // Hybrid system design
-    'backupDuration',        // Sizing: backup hours needed
+  hospital: [
+    "facilityType", // Core: hospital vs clinic vs specialty
+    "bedCount", // Core: primary capacity driver
+    "criticalSystems", // Load driver: which systems are critical
+    "operatingRooms", // Load driver: high-power surgical suites
+    "gridConnection", // Architecture
+    "existingGenerator", // Hybrid system design
+    "backupDuration", // Sizing: backup hours needed
   ],
-  'office': [
-    'buildingClass',         // Core: Class A/B/C drives power density
-    'squareFootage',         // Core: primary area-based calculation
-    'floors',                // Core: elevator/HVAC scaling
-    'hvacSystem',            // Load driver: 40-60% of energy
-    'operatingHours',        // Core: duty cycle
-    'gridConnection',        // Architecture
+  office: [
+    "buildingClass", // Core: Class A/B/C drives power density
+    "squareFootage", // Core: primary area-based calculation
+    "floors", // Core: elevator/HVAC scaling
+    "hvacSystem", // Load driver: 40-60% of energy
+    "operatingHours", // Core: duty cycle
+    "gridConnection", // Architecture
   ],
-  'manufacturing': [
-    'facilityType',          // Core: light vs heavy vs process
-    'squareFootage',         // Core: primary area driver
-    'shifts',                // Core: duty cycle driver
-    'processLoads',          // Load driver: motors, presses, etc.
-    'heavyMachinery',        // Load driver: large motors
-    'gridConnection',        // Architecture
-    'powerQuality',          // Sizing: power quality needs
+  manufacturing: [
+    "facilityType", // Core: light vs heavy vs process
+    "squareFootage", // Core: primary area driver
+    "shifts", // Core: duty cycle driver
+    "processLoads", // Load driver: motors, presses, etc.
+    "heavyMachinery", // Load driver: large motors
+    "gridConnection", // Architecture
+    "powerQuality", // Sizing: power quality needs
   ],
-  'warehouse': [
-    'warehouseType',         // Core: dry vs cold vs automated
-    'squareFootage',         // Core: primary area driver
-    'refrigeration',         // Load driver: cold chain storage
-    'automationLevel',       // Load driver: automated material handling
-    'operatingHours',        // Core: duty cycle
-    'gridConnection',        // Architecture
+  warehouse: [
+    "warehouseType", // Core: dry vs cold vs automated
+    "squareFootage", // Core: primary area driver
+    "refrigeration", // Load driver: cold chain storage
+    "automationLevel", // Load driver: automated material handling
+    "operatingHours", // Core: duty cycle
+    "gridConnection", // Architecture
   ],
-  'retail': [
-    'retailType',            // Core: grocery vs dept store vs mall
-    'squareFootage',         // Core: primary area driver
-    'refrigerationLevel',    // Load driver: grocery/food retail
-    'operatingHours',        // Core: duty cycle
-    'gridConnection',        // Architecture
-    'demandCharges',         // Sizing: peak shaving opportunity
+  retail: [
+    "retailType", // Core: grocery vs dept store vs mall
+    "squareFootage", // Core: primary area driver
+    "refrigerationLevel", // Load driver: grocery/food retail
+    "operatingHours", // Core: duty cycle
+    "gridConnection", // Architecture
+    "demandCharges", // Sizing: peak shaving opportunity
   ],
-  'gas-station': [
-    'stationType',           // Core: basic vs convenience vs truck stop
-    'fuelPumps',             // Core: canopy/pump electrical load
-    'convenienceStore',      // Load driver: refrigeration + HVAC
-    'foodService',           // Load driver: kitchen equipment
-    'evChargers',            // Load driver: EV charging adds significant load
-    'gridConnection',        // Architecture
+  "gas-station": [
+    "stationType", // Core: basic vs convenience vs truck stop
+    "fuelPumps", // Core: canopy/pump electrical load
+    "convenienceStore", // Load driver: refrigeration + HVAC
+    "foodService", // Load driver: kitchen equipment
+    "evChargers", // Load driver: EV charging adds significant load
+    "gridConnection", // Architecture
   ],
-  'airport': [
-    'airportClass',          // Core: commercial vs regional vs GA
-    'annualPassengers',      // Core: primary capacity driver
-    'terminalSqFt',          // Core: area-based calculation
-    'jetBridges',            // Load driver: 50-75 kW each
-    'gridConnection',        // Architecture
-    'existingGenerator',     // Hybrid system design
+  airport: [
+    "airportClass", // Core: commercial vs regional vs GA
+    "annualPassengers", // Core: primary capacity driver
+    "terminalSqFt", // Core: area-based calculation
+    "jetBridges", // Load driver: 50-75 kW each
+    "gridConnection", // Architecture
+    "existingGenerator", // Hybrid system design
   ],
-  'casino': [
-    'casinoType',            // Core: casino-only vs resort
-    'gamingFloorSqft',       // Core: primary load driver
-    'totalPropertySqFt',     // Core: total area
-    'hotelRooms',            // Load driver: integrated hotel
-    'restaurants',           // Load driver: F&B operations
-    'gridConnection',        // Architecture
+  casino: [
+    "casinoType", // Core: casino-only vs resort
+    "gamingFloorSqft", // Core: primary load driver
+    "totalPropertySqFt", // Core: total area
+    "hotelRooms", // Load driver: integrated hotel
+    "restaurants", // Load driver: F&B operations
+    "gridConnection", // Architecture
   ],
-  'apartment': [
-    'propertyType',          // Core: garden vs midrise vs highrise
-    'unitCount',             // Core: primary capacity driver
-    'avgUnitSize',           // Core: per-unit consumption
-    'hvacType',              // Load driver: central vs individual HVAC
-    'commonAmenities',       // Load driver: pool, gym, etc.
-    'gridConnection',        // Architecture
+  apartment: [
+    "propertyType", // Core: garden vs midrise vs highrise
+    "unitCount", // Core: primary capacity driver
+    "avgUnitSize", // Core: per-unit consumption
+    "hvacType", // Load driver: central vs individual HVAC
+    "commonAmenities", // Load driver: pool, gym, etc.
+    "gridConnection", // Architecture
   ],
-  'college': [
-    'institutionType',       // Core: community vs research university
-    'campusSqFt',            // Core: primary area driver
-    'enrollment',            // Core: capacity/occupancy factor
-    'researchLabs',          // Load driver: high-power lab equipment
-    'studentHousing',        // Load driver: residential load component
-    'gridConnection',        // Architecture
+  college: [
+    "institutionType", // Core: community vs research university
+    "campusSqFt", // Core: primary area driver
+    "enrollment", // Core: capacity/occupancy factor
+    "researchLabs", // Load driver: high-power lab equipment
+    "studentHousing", // Load driver: residential load component
+    "gridConnection", // Architecture
   ],
-  'cold-storage': [
-    'facilityType',          // Core: frozen vs cooled vs multi-temp
-    'squareFootage',         // Core: primary area driver
-    'temperatureZones',      // Core: number/type of temperature zones
-    'compressorSystem',      // Load driver: compressor technology
-    'operatingHours',        // Core: 24/7 vs shift-based
-    'gridConnection',        // Architecture
+  "cold-storage": [
+    "facilityType", // Core: frozen vs cooled vs multi-temp
+    "squareFootage", // Core: primary area driver
+    "temperatureZones", // Core: number/type of temperature zones
+    "compressorSystem", // Load driver: compressor technology
+    "operatingHours", // Core: 24/7 vs shift-based
+    "gridConnection", // Architecture
   ],
-  'indoor-farm': [
-    'farmType',              // Core: vertical vs greenhouse vs hybrid
-    'squareFootage',         // Core: primary area driver
-    'growingLevels',         // Core: vertical stacking multiplier
-    'lightingSystem',        // Load driver: lighting is 40-60% of energy
-    'lightSchedule',         // Core: photoperiod duty cycle
-    'hvacDehumidification',  // Load driver: climate control
-    'gridConnection',        // Architecture
+  "indoor-farm": [
+    "farmType", // Core: vertical vs greenhouse vs hybrid
+    "squareFootage", // Core: primary area driver
+    "growingLevels", // Core: vertical stacking multiplier
+    "lightingSystem", // Load driver: lighting is 40-60% of energy
+    "lightSchedule", // Core: photoperiod duty cycle
+    "hvacDehumidification", // Load driver: climate control
+    "gridConnection", // Architecture
   ],
-  'agriculture': [
-    'farmType',              // Core: crop vs livestock vs dairy
-    'acreage',               // Core: primary scale driver
-    'irrigationType',        // Load driver: pumping energy
-    'coldStorage',           // Load driver: post-harvest cooling
-    'processing',            // Load driver: on-site processing
-    'gridConnection',        // Architecture
+  agriculture: [
+    "farmType", // Core: crop vs livestock vs dairy
+    "acreage", // Core: primary scale driver
+    "irrigationType", // Load driver: pumping energy
+    "coldStorage", // Load driver: post-harvest cooling
+    "processing", // Load driver: on-site processing
+    "gridConnection", // Architecture
   ],
-  'residential': [
-    'homeType',              // Core: single family vs townhome
-    'squareFootage',         // Core: primary area driver
-    'hvacType',              // Load driver: heat pump vs conventional
-    'evCharging',            // Load driver: EV adds 30-40% consumption
-    'waterHeater',           // Load driver: tankless electric = huge peaks
-    'gridConnection',        // Architecture
+  residential: [
+    "homeType", // Core: single family vs townhome
+    "squareFootage", // Core: primary area driver
+    "hvacType", // Load driver: heat pump vs conventional
+    "evCharging", // Load driver: EV adds 30-40% consumption
+    "waterHeater", // Load driver: tankless electric = huge peaks
+    "gridConnection", // Architecture
   ],
-  'government': [
-    'facilityType',          // Core: office vs public safety vs water
-    'squareFootage',         // Core: primary area driver
-    'criticalOperations',    // Core: FEMA tier for backup sizing
-    'operatingHours',        // Core: 24/7 vs business hours
-    'dataCenter',            // Load driver: server room/comms
-    'gridConnection',        // Architecture
+  government: [
+    "facilityType", // Core: office vs public safety vs water
+    "squareFootage", // Core: primary area driver
+    "criticalOperations", // Core: FEMA tier for backup sizing
+    "operatingHours", // Core: 24/7 vs business hours
+    "dataCenter", // Load driver: server room/comms
+    "gridConnection", // Architecture
+  ],
+  restaurant: [
+    "restaurantType", // Core: service model drives kitchen intensity
+    "seatingCapacity", // Core: primary capacity driver
+    "kitchenType", // Load driver: kitchen complexity
+    "operatingHours", // Core: duty cycle driver
+    "cookingEquipment", // Load driver: electric vs gas kitchen
+    "gridConnection", // Architecture
   ],
 };
 
@@ -302,7 +362,7 @@ export interface CuratedSchema {
   // Metadata
   questionCount: number;
   requiredCount: number;
-  source: 'curated-complete' | 'curated-legacy' | 'fallback';
+  source: "curated-complete" | "curated-legacy" | "fallback";
 }
 
 // ============================================================================
@@ -312,34 +372,34 @@ export interface CuratedSchema {
 // CANONICAL KEYS ONLY - these are the normalized slugs returned by normalizeIndustrySlug()
 const INDUSTRY_META: Record<string, { displayName: string; icon: string }> = {
   // Primary (complete curated questionnaire)
-  'car-wash': { displayName: 'Car Wash', icon: '🚗' },
-  
+  "car-wash": { displayName: "Car Wash", icon: "🚗" },
+
   // Legacy-supported (industryQuestionnaires.ts)
-  'hotel': { displayName: 'Hotel / Hospitality', icon: '🏨' },
-  'ev-charging': { displayName: 'EV Charging Station', icon: '🔌' },
-  'datacenter': { displayName: 'Data Center', icon: '🖥️' },
-  'hospital': { displayName: 'Healthcare Facility', icon: '🏥' },
-  'airport': { displayName: 'Airport', icon: '✈️' },
-  'casino': { displayName: 'Casino & Gaming', icon: '🎰' },
-  'warehouse': { displayName: 'Warehouse / Logistics', icon: '📦' },
-  'retail': { displayName: 'Retail / Shopping', icon: '🏪' },
-  'gas-station': { displayName: 'Gas / Truck Stop', icon: '⛽' },
-  
+  hotel: { displayName: "Hotel / Hospitality", icon: "🏨" },
+  "ev-charging": { displayName: "EV Charging Station", icon: "🔌" },
+  datacenter: { displayName: "Data Center", icon: "🖥️" },
+  hospital: { displayName: "Healthcare Facility", icon: "🏥" },
+  airport: { displayName: "Airport", icon: "✈️" },
+  casino: { displayName: "Casino & Gaming", icon: "🎰" },
+  warehouse: { displayName: "Warehouse / Logistics", icon: "📦" },
+  retail: { displayName: "Retail / Shopping", icon: "🏪" },
+  "gas-station": { displayName: "Gas / Truck Stop", icon: "⛽" },
+
   // Fallback industries (use generic schema)
-  'office': { displayName: 'Office Building', icon: '🏢' },
-  'manufacturing': { displayName: 'Manufacturing', icon: '🏭' },
-  'restaurant': { displayName: 'Restaurant', icon: '🍽️' },
-  'college': { displayName: 'College / University', icon: '🎓' },
-  'agriculture': { displayName: 'Agriculture', icon: '🌾' },
-  'cold-storage': { displayName: 'Cold Storage', icon: '❄️' },
-  'apartment': { displayName: 'Apartment Complex', icon: '🏠' },
-  'residential': { displayName: 'Residential', icon: '🏡' },
-  'indoor-farm': { displayName: 'Indoor Farm', icon: '🌱' },
-  'government': { displayName: 'Government & Public', icon: '🏛️' },
-  
+  office: { displayName: "Office Building", icon: "🏢" },
+  manufacturing: { displayName: "Manufacturing", icon: "🏭" },
+  restaurant: { displayName: "Restaurant", icon: "🍽️" },
+  college: { displayName: "College / University", icon: "🎓" },
+  agriculture: { displayName: "Agriculture", icon: "🌾" },
+  "cold-storage": { displayName: "Cold Storage", icon: "❄️" },
+  apartment: { displayName: "Apartment Complex", icon: "🏠" },
+  residential: { displayName: "Residential", icon: "🏡" },
+  "indoor-farm": { displayName: "Indoor Farm", icon: "🌱" },
+  government: { displayName: "Government & Public", icon: "🏛️" },
+
   // Default
-  'other': { displayName: 'Commercial Facility', icon: '🏗️' },
-  'auto': { displayName: 'Your Facility', icon: '⚡' },
+  other: { displayName: "Commercial Facility", icon: "🏗️" },
+  auto: { displayName: "Your Facility", icon: "⚡" },
 };
 
 // Export canonical keys as const array for type enforcement
@@ -369,7 +429,7 @@ export const CANONICAL_INDUSTRY_KEYS = [
 ] as const;
 
 // Type for canonical industry keys (compile-time enforcement)
-export type CanonicalIndustryKey = typeof CANONICAL_INDUSTRY_KEYS[number];
+export type CanonicalIndustryKey = (typeof CANONICAL_INDUSTRY_KEYS)[number];
 
 // ============================================================================
 // FORMAT CONVERSION (internal — not a resolver)
@@ -383,10 +443,10 @@ export type CanonicalIndustryKey = typeof CANONICAL_INDUSTRY_KEYS[number];
  * @internal Only used within this module for INDUSTRY_META / COMPLETE_SCHEMAS lookups.
  */
 function normalizeIndustrySlug(slug: string): CanonicalIndustryKey {
-  const hyphenated = slug.toLowerCase().replace(/_/g, '-');
+  const hyphenated = slug.toLowerCase().replace(/_/g, "-");
   return CANONICAL_INDUSTRY_KEYS.includes(hyphenated as CanonicalIndustryKey)
     ? (hyphenated as CanonicalIndustryKey)
-    : 'other';
+    : "other";
 }
 
 // ============================================================================
@@ -396,99 +456,118 @@ function normalizeIndustrySlug(slug: string): CanonicalIndustryKey {
 /**
  * Industry-standard default values for each question.
  * Sources: ASHRAE, CBECS, Energy Star, NREL ATB 2024, IEEE, LADWP.
- * 
+ *
  * These get pre-filled into the form so users just REVIEW & ADJUST
  * instead of answering from scratch. Dramatically reduces friction.
  */
 const INDUSTRY_SMART_DEFAULTS: Record<string, Record<string, unknown>> = {
   // EV Charging — based on typical public urban deployment
-  'ev-charging': {
-    stationType: 'public-urban',
+  "ev-charging": {
+    stationType: "public-urban",
     level2Chargers: 12,
-    level2Power: '11',
+    level2Power: "11",
     dcFastChargers: 8,
-    dcFastPower: '150',
-    utilizationProfile: 'medium',
-    peakConcurrency: '50',
-    gridConnection: 'on-grid',
-    operatingHours: '24-7',
+    dcFastPower: "150",
+    utilizationProfile: "medium",
+    peakConcurrency: "50",
+    gridConnection: "on-grid",
+    operatingHours: "24-7",
   },
   // Hotel — based on SSOT 150-room midscale (ASHRAE/CBECS)
-  'hotel': {
+  hotel: {
     numRooms: 150,
-    hotelCategory: '3-star',
+    hotelCategory: "3-star",
     squareFootage: 75000,
-    gridConnection: 'on-grid',
-    occupancyRate: 'medium',
-    amenities: ['pool', 'restaurant', 'hvac'],
-    evChargers: 'no',
-    utilityRate: 'no',
-    gridReliability: 'reliable',
+    gridConnection: "on-grid",
+    occupancyRate: "medium",
+    amenities: ["pool", "restaurant", "hvac"],
+    evChargers: "no",
+    utilityRate: "no",
+    gridReliability: "reliable",
   },
   // Data Center — based on SSOT small/mid colo (Uptime Institute)
-  'datacenter': {
+  datacenter: {
     squareFootage: 50000,
     capacity: 2,
-    gridConnection: 'redundant',
-    uptimeRequirement: 'tier3',
-    coolingSystem: 'air',
+    gridConnection: "redundant",
+    uptimeRequirement: "tier3",
+    coolingSystem: "air",
   },
   // Hospital — based on SSOT 200-bed facility (NEC 517, NFPA 99)
-  'hospital': {
+  hospital: {
     bedCount: 200,
-    gridConnection: 'on-grid',
-    criticalSystems: ['icu', 'surgery', 'imaging'],
-    backupPower: 'ups-generator',
-    backupDuration: '8hr',
+    gridConnection: "on-grid",
+    criticalSystems: ["icu", "surgery", "imaging"],
+    backupPower: "ups-generator",
+    backupDuration: "8hr",
   },
   // Airport — based on medium regional airport (FAA standards)
-  'airport': {
-    facilityType: 'terminal',
-    operationSize: 'medium',
-    criticalLoads: ['lighting', 'security', 'baggage'],
+  airport: {
+    facilityType: "terminal",
+    operationSize: "medium",
+    criticalLoads: ["lighting", "security", "baggage"],
   },
   // Casino — based on mid-size tribal casino (IEEE 446)
-  'casino': {
+  casino: {
     squareFootage: 75000,
-    facilitySize: 'medium',
-    gridConnection: 'on-grid',
-    amenities: ['hotel', 'restaurants', 'entertainment'],
-    operations: '24-7',
-    backupCritical: 'mission-critical',
+    facilitySize: "medium",
+    gridConnection: "on-grid",
+    amenities: ["hotel", "restaurants", "entertainment"],
+    operations: "24-7",
+    backupCritical: "mission-critical",
   },
   // Warehouse / Logistics — based on SSOT 200K sqft (ASHRAE)
-  'warehouse': {
+  warehouse: {
     squareFootage: 200000,
-    facilityType: 'warehouse',
-    facilitySize: 'medium',
-    gridConnection: 'on-grid',
-    operations: '2-shift',
-    criticalLoads: ['automation', 'sorting'],
+    facilityType: "warehouse",
+    facilitySize: "medium",
+    gridConnection: "on-grid",
+    operations: "2-shift",
+    criticalLoads: ["automation", "sorting"],
   },
   // Retail / Shopping Center — based on typical community center (CBECS)
-  'retail': {
+  retail: {
     squareFootage: 250000,
-    centerSize: 'community',
+    centerSize: "community",
     numTenants: 25,
-    gridConnection: 'on-grid',
-    anchorTenants: ['grocery', 'restaurant'],
-    hvacLoad: 'medium',
+    gridConnection: "on-grid",
+    anchorTenants: ["grocery", "restaurant"],
+    hvacLoad: "medium",
   },
   // Gas Station / Truck Stop — based on typical gas+c-store (CBECS)
-  'gas-station': {
-    stationType: 'with-cstore',
+  "gas-station": {
+    stationType: "with-cstore",
     numPumps: 8,
-    gridConnection: 'on-grid',
-    operations: '24-7',
-    additionalServices: ['refrigeration'],
+    gridConnection: "on-grid",
+    operations: "24-7",
+    additionalServices: ["refrigeration"],
   },
   // Car Wash (legacy format — complete config has its own smartDefaults)
-  'car-wash': {
+  "car-wash": {
     numBays: 4,
-    washType: 'automatic',
-    gridConnection: 'on-grid',
+    washType: "automatic",
+    gridConnection: "on-grid",
     operatingHours: 12,
-    heatedWater: 'yes',
+    heatedWater: "yes",
+  },
+  // Restaurant — based on CBECS 2018 food service (100-seat full-service)
+  restaurant: {
+    restaurantType: "full-service",
+    seatingCapacity: 100,
+    squareFootage: 3000,
+    kitchenType: "standard",
+    operatingHours: "lunch-dinner",
+    cookingEquipment: "gas-primary",
+    refrigeration: "standard",
+    exhaustHood: "standard",
+    dishwasher: "under-counter",
+    barArea: "none",
+    gridConnection: "on-grid",
+    gridReliability: "reliable",
+    existingGenerator: "none",
+    existingSolar: "no",
+    primaryGoal: "cost-savings",
+    budgetTimeline: "exploring",
   },
 };
 
@@ -496,25 +575,29 @@ const INDUSTRY_SMART_DEFAULTS: Record<string, Record<string, unknown>> = {
 // CONVERT LEGACY QUESTION FORMAT → CURATED FIELD
 // ============================================================================
 
-function convertLegacyQuestion(q: LegacyQuestion, sectionId: string, industryKey?: string): CuratedField {
+function convertLegacyQuestion(
+  q: LegacyQuestion,
+  sectionId: string,
+  industryKey?: string
+): CuratedField {
   // Use legacy metadata if present, otherwise default to required
   const required = (q as Record<string, unknown>).required !== false;
-  
+
   // Look up smart default from industry defaults map
   const industryDefaults = industryKey ? INDUSTRY_SMART_DEFAULTS[industryKey] : undefined;
   const smartDefault = industryDefaults?.[q.id];
-  
+
   return {
     id: q.id,
-    type: q.type === 'multi-select' || q.type === 'multiselect' ? 'multiselect' : q.type,
+    type: q.type === "multi-select" || q.type === "multiselect" ? "multiselect" : q.type,
     section: sectionId,
     title: q.label || q.question || q.id,
     label: q.label || q.question,
     placeholder: q.placeholder,
     helpText: q.helpText,
     smartDefault,
-    options: q.options?.map(opt => 
-      typeof opt === 'string' 
+    options: q.options?.map((opt) =>
+      typeof opt === "string"
         ? { value: opt, label: opt }
         : { value: String(opt.value), label: opt.label, description: opt.description }
     ),
@@ -522,16 +605,18 @@ function convertLegacyQuestion(q: LegacyQuestion, sectionId: string, industryKey
     suffix: q.suffix || q.unit,
     required,
     validation: { required },
-    conditionalLogic: q.conditional ? {
-      dependsOn: q.conditional.field || q.conditional.dependsOn || '',
-      showIf: (value: unknown) => {
-        if (q.conditional?.operator === '>') return Number(value) > Number(q.conditional.value);
-        if (q.conditional?.operator === '==') return value === q.conditional.value;
-        if (q.conditional?.operator === '<') return Number(value) < Number(q.conditional.value);
-        if (q.conditional?.dependsOn) return value === q.conditional.value;
-        return true;
-      }
-    } : undefined,
+    conditionalLogic: q.conditional
+      ? {
+          dependsOn: q.conditional.field || q.conditional.dependsOn || "",
+          showIf: (value: unknown) => {
+            if (q.conditional?.operator === ">") return Number(value) > Number(q.conditional.value);
+            if (q.conditional?.operator === "==") return value === q.conditional.value;
+            if (q.conditional?.operator === "<") return Number(value) < Number(q.conditional.value);
+            if (q.conditional?.dependsOn) return value === q.conditional.value;
+            return true;
+          },
+        }
+      : undefined,
   };
 }
 
@@ -544,14 +629,16 @@ function convertLegacyQuestion(q: LegacyQuestion, sectionId: string, industryKey
  * All industry configs import the same Question interface from hotel config,
  * so HotelQuestion is the canonical shared type.
  */
-function convertCompleteQuestion(q: CarWashQuestion | HotelQuestion | EVChargingQuestion): CuratedField {
+function convertCompleteQuestion(
+  q: CarWashQuestion | HotelQuestion | EVChargingQuestion
+): CuratedField {
   // For range_buttons: synthesize button options from rangeConfig.ranges
   // so the standard button renderer can display them (hotel squareFootage, etc.)
   let options = q.options;
-  if (q.type === 'range_buttons' && !options?.length && q.rangeConfig) {
+  if (q.type === "range_buttons" && !options?.length && q.rangeConfig) {
     const rc = q.rangeConfig;
     if (rc?.ranges) {
-      options = rc.ranges.map(r => ({
+      options = rc.ranges.map((r) => ({
         value: String(r.min),
         label: r.label,
       }));
@@ -589,16 +676,16 @@ function convertCompleteQuestion(q: CarWashQuestion | HotelQuestion | EVCharging
  */
 function getLegacyQuestionnaireKey(industryKey: string): string | null {
   const keyMap: Record<string, string> = {
-    'ev-charging': 'ev-charging',
-    'hotel': 'hotel',
-    'datacenter': 'datacenter',
-    'hospital': 'hospital',
-    'airport': 'airport',
-    'casino': 'tribal-casino',
-    'warehouse': 'logistics-center',
-    'retail': 'shopping-center',
-    'gas-station': 'gas-station',
-    'car-wash': 'car-wash',
+    "ev-charging": "ev-charging",
+    hotel: "hotel",
+    datacenter: "datacenter",
+    hospital: "hospital",
+    airport: "airport",
+    casino: "tribal-casino",
+    warehouse: "logistics-center",
+    retail: "shopping-center",
+    "gas-station": "gas-station",
+    "car-wash": "car-wash",
   };
   return keyMap[industryKey] ?? null;
 }
@@ -617,11 +704,11 @@ function makeCompleteResolver(
   displayName: string,
   icon: string,
   questions: HotelQuestion[],
-  sections: Array<{ id: string; title: string; description?: string; icon?: string }>,
+  sections: Array<{ id: string; title: string; description?: string; icon?: string }>
 ): () => CuratedSchema {
   return () => {
     const convertedQuestions = questions.map(convertCompleteQuestion);
-    const convertedSections = sections.map(s => ({
+    const convertedSections = sections.map((s) => ({
       id: s.id,
       label: s.title,
       description: s.description,
@@ -634,8 +721,8 @@ function makeCompleteResolver(
       questions: convertedQuestions,
       sections: convertedSections,
       questionCount: convertedQuestions.length,
-      requiredCount: convertedQuestions.filter(q => q.required).length,
-      source: 'curated-complete' as const,
+      requiredCount: convertedQuestions.filter((q) => q.required).length,
+      source: "curated-complete" as const,
     };
   };
 }
@@ -650,45 +737,162 @@ function makeCompleteResolver(
  * 3. Register here with makeCompleteResolver()
  */
 const COMPLETE_SCHEMAS: Record<string, () => CuratedSchema> = {
-  'car-wash': makeCompleteResolver('car-wash', 'Car Wash', '🚗', carWashQuestionsComplete, carWashSections),
-  'hotel': makeCompleteResolver('hotel', 'Hotel', '🏨', hotelQuestionsComplete, hotelSections),
-  'ev-charging': makeCompleteResolver('ev-charging', 'EV Charging Station', '⚡', evChargingQuestionsComplete, evChargingSections),
-  'datacenter': makeCompleteResolver('datacenter', 'Data Center', '🖥️', datacenterQuestionsComplete, datacenterSections),
-  'hospital': makeCompleteResolver('hospital', 'Healthcare Facility', '🏥', hospitalQuestionsComplete, hospitalSections),
-  'office': makeCompleteResolver('office', 'Office Building', '🏢', officeQuestionsComplete, officeSections),
-  'manufacturing': makeCompleteResolver('manufacturing', 'Manufacturing', '🏭', manufacturingQuestionsComplete, manufacturingSections),
-  'warehouse': makeCompleteResolver('warehouse', 'Warehouse / Logistics', '📦', warehouseQuestionsComplete, warehouseSections),
-  'retail': makeCompleteResolver('retail', 'Retail / Shopping', '🏪', retailQuestionsComplete, retailSections),
-  'gas-station': makeCompleteResolver('gas-station', 'Gas / Truck Stop', '⛽', gasStationQuestionsComplete, gasStationSections),
-  'airport': makeCompleteResolver('airport', 'Airport', '✈️', airportQuestionsComplete, airportSections),
-  'casino': makeCompleteResolver('casino', 'Casino & Gaming', '🎰', casinoQuestionsComplete, casinoSections),
-  'apartment': makeCompleteResolver('apartment', 'Apartment Complex', '🏠', apartmentQuestionsComplete, apartmentSections),
-  'college': makeCompleteResolver('college', 'College / University', '🎓', collegeQuestionsComplete, collegeSections),
-  'cold-storage': makeCompleteResolver('cold-storage', 'Cold Storage', '❄️', coldStorageQuestionsComplete, coldStorageSections),
-  'indoor-farm': makeCompleteResolver('indoor-farm', 'Indoor Farm', '🌱', indoorFarmQuestionsComplete, indoorFarmSections),
-  'agriculture': makeCompleteResolver('agriculture', 'Agriculture', '🌾', agricultureQuestionsComplete, agricultureSections),
-  'residential': makeCompleteResolver('residential', 'Residential', '🏡', residentialQuestionsComplete, residentialSections),
-  'government': makeCompleteResolver('government', 'Government & Public', '🏛️', governmentQuestionsComplete, governmentSections),
+  "car-wash": makeCompleteResolver(
+    "car-wash",
+    "Car Wash",
+    "🚗",
+    carWashQuestionsComplete,
+    carWashSections
+  ),
+  hotel: makeCompleteResolver("hotel", "Hotel", "🏨", hotelQuestionsComplete, hotelSections),
+  "ev-charging": makeCompleteResolver(
+    "ev-charging",
+    "EV Charging Station",
+    "⚡",
+    evChargingQuestionsComplete,
+    evChargingSections
+  ),
+  datacenter: makeCompleteResolver(
+    "datacenter",
+    "Data Center",
+    "🖥️",
+    datacenterQuestionsComplete,
+    datacenterSections
+  ),
+  hospital: makeCompleteResolver(
+    "hospital",
+    "Healthcare Facility",
+    "🏥",
+    hospitalQuestionsComplete,
+    hospitalSections
+  ),
+  office: makeCompleteResolver(
+    "office",
+    "Office Building",
+    "🏢",
+    officeQuestionsComplete,
+    officeSections
+  ),
+  manufacturing: makeCompleteResolver(
+    "manufacturing",
+    "Manufacturing",
+    "🏭",
+    manufacturingQuestionsComplete,
+    manufacturingSections
+  ),
+  warehouse: makeCompleteResolver(
+    "warehouse",
+    "Warehouse / Logistics",
+    "📦",
+    warehouseQuestionsComplete,
+    warehouseSections
+  ),
+  retail: makeCompleteResolver(
+    "retail",
+    "Retail / Shopping",
+    "🏪",
+    retailQuestionsComplete,
+    retailSections
+  ),
+  "gas-station": makeCompleteResolver(
+    "gas-station",
+    "Gas / Truck Stop",
+    "⛽",
+    gasStationQuestionsComplete,
+    gasStationSections
+  ),
+  airport: makeCompleteResolver(
+    "airport",
+    "Airport",
+    "✈️",
+    airportQuestionsComplete,
+    airportSections
+  ),
+  casino: makeCompleteResolver(
+    "casino",
+    "Casino & Gaming",
+    "🎰",
+    casinoQuestionsComplete,
+    casinoSections
+  ),
+  apartment: makeCompleteResolver(
+    "apartment",
+    "Apartment Complex",
+    "🏠",
+    apartmentQuestionsComplete,
+    apartmentSections
+  ),
+  college: makeCompleteResolver(
+    "college",
+    "College / University",
+    "🎓",
+    collegeQuestionsComplete,
+    collegeSections
+  ),
+  "cold-storage": makeCompleteResolver(
+    "cold-storage",
+    "Cold Storage",
+    "❄️",
+    coldStorageQuestionsComplete,
+    coldStorageSections
+  ),
+  "indoor-farm": makeCompleteResolver(
+    "indoor-farm",
+    "Indoor Farm",
+    "🌱",
+    indoorFarmQuestionsComplete,
+    indoorFarmSections
+  ),
+  agriculture: makeCompleteResolver(
+    "agriculture",
+    "Agriculture",
+    "🌾",
+    agricultureQuestionsComplete,
+    agricultureSections
+  ),
+  residential: makeCompleteResolver(
+    "residential",
+    "Residential",
+    "🏡",
+    residentialQuestionsComplete,
+    residentialSections
+  ),
+  government: makeCompleteResolver(
+    "government",
+    "Government & Public",
+    "🏛️",
+    governmentQuestionsComplete,
+    governmentSections
+  ),
+  restaurant: makeCompleteResolver(
+    "restaurant",
+    "Restaurant",
+    "🍽️",
+    restaurantQuestionsComplete as HotelQuestion[],
+    restaurantSections
+  ),
 };
 
 function resolveLegacySchema(industryKey: string): CuratedSchema | null {
   // Use SSOT helper for key mapping
   const questKey = getLegacyQuestionnaireKey(industryKey);
   const questionnaire = questKey ? industryQuestionnaires[questKey] : null;
-  
+
   if (!questionnaire) return null;
-  
-  const questions = questionnaire.questions.map(q => convertLegacyQuestion(q, 'general', industryKey));
-  
+
+  const questions = questionnaire.questions.map((q) =>
+    convertLegacyQuestion(q, "general", industryKey)
+  );
+
   // Auto-generate sections from question flow
   const sections: CuratedSection[] = [
-    { id: 'general', label: 'Facility Details', icon: '🏢' },
-    { id: 'operations', label: 'Operations', icon: '⚙️' },
-    { id: 'energy', label: 'Energy & Grid', icon: '⚡' },
+    { id: "general", label: "Facility Details", icon: "🏢" },
+    { id: "operations", label: "Operations", icon: "⚙️" },
+    { id: "energy", label: "Energy & Grid", icon: "⚡" },
   ];
-  
-  const meta = INDUSTRY_META[industryKey] || INDUSTRY_META['other'];
-  
+
+  const meta = INDUSTRY_META[industryKey] || INDUSTRY_META["other"];
+
   return {
     industry: industryKey,
     displayName: meta.displayName,
@@ -696,8 +900,8 @@ function resolveLegacySchema(industryKey: string): CuratedSchema | null {
     questions,
     sections,
     questionCount: questions.length,
-    requiredCount: questions.filter(q => q.required).length,
-    source: 'curated-legacy',
+    requiredCount: questions.filter((q) => q.required).length,
+    source: "curated-legacy",
   };
 }
 
@@ -706,134 +910,154 @@ function resolveLegacySchema(industryKey: string): CuratedSchema | null {
 // ============================================================================
 
 function resolveFallbackSchema(industry: string): CuratedSchema {
-  const meta = INDUSTRY_META[industry] || INDUSTRY_META['other'];
-  
+  const meta = INDUSTRY_META[industry] || INDUSTRY_META["other"];
+
   const questions: CuratedField[] = [
     {
-      id: 'facilitySize',
-      type: 'select',
-      section: 'facility',
-      title: 'Facility Size',
-      label: 'How large is your facility?',
-      smartDefault: 'medium',
+      id: "facilitySize",
+      type: "select",
+      section: "facility",
+      title: "Facility Size",
+      label: "How large is your facility?",
+      smartDefault: "medium",
       options: [
-        { value: 'small', label: 'Small', icon: '🟢', description: '< 10,000 sq ft' },
-        { value: 'medium', label: 'Medium', icon: '🟡', description: '10,000 - 50,000 sq ft' },
-        { value: 'large', label: 'Large', icon: '🟠', description: '50,000 - 200,000 sq ft' },
-        { value: 'enterprise', label: 'Enterprise', icon: '🔴', description: '> 200,000 sq ft' },
+        { value: "small", label: "Small", icon: "🟢", description: "< 10,000 sq ft" },
+        { value: "medium", label: "Medium", icon: "🟡", description: "10,000 - 50,000 sq ft" },
+        { value: "large", label: "Large", icon: "🟠", description: "50,000 - 200,000 sq ft" },
+        { value: "enterprise", label: "Enterprise", icon: "🔴", description: "> 200,000 sq ft" },
       ],
       required: true,
       validation: { required: true },
     },
     {
-      id: 'operatingHours',
-      type: 'select',
-      section: 'operations',
-      title: 'Operating Hours',
-      label: 'What are your operating hours?',
-      smartDefault: 'business',
+      id: "operatingHours",
+      type: "select",
+      section: "operations",
+      title: "Operating Hours",
+      label: "What are your operating hours?",
+      smartDefault: "business",
       options: [
-        { value: 'business', label: 'Business Hours', icon: '🏢', description: '8 AM - 6 PM' },
-        { value: 'extended', label: 'Extended', icon: '🌅', description: '6 AM - 10 PM' },
-        { value: '24-7', label: '24/7', icon: '🌙', description: 'Always Open' },
+        { value: "business", label: "Business Hours", icon: "🏢", description: "8 AM - 6 PM" },
+        { value: "extended", label: "Extended", icon: "🌅", description: "6 AM - 10 PM" },
+        { value: "24-7", label: "24/7", icon: "🌙", description: "Always Open" },
       ],
       required: true,
       validation: { required: true },
     },
     {
-      id: 'gridConnection',
-      type: 'select',
-      section: 'energy',
-      title: 'Grid Connection',
-      label: 'What is your grid connection status?',
-      smartDefault: 'on-grid',
+      id: "gridConnection",
+      type: "select",
+      section: "energy",
+      title: "Grid Connection",
+      label: "What is your grid connection status?",
+      smartDefault: "on-grid",
       options: [
-        { value: 'on-grid', label: 'On-Grid', icon: '🔌', description: 'Full utility connection' },
-        { value: 'limited', label: 'Limited', icon: '⚠️', description: 'Capacity constraints' },
-        { value: 'off-grid', label: 'Off-Grid', icon: '🏝️', description: 'Remote location' },
+        { value: "on-grid", label: "On-Grid", icon: "🔌", description: "Full utility connection" },
+        { value: "limited", label: "Limited", icon: "⚠️", description: "Capacity constraints" },
+        { value: "off-grid", label: "Off-Grid", icon: "🏝️", description: "Remote location" },
       ],
       required: true,
       validation: { required: true },
     },
     {
-      id: 'criticalLoadPct',
-      type: 'select',
-      section: 'energy',
-      title: 'Critical Load',
-      label: 'What percentage of your load is critical (must not lose power)?',
-      smartDefault: '50',
+      id: "criticalLoadPct",
+      type: "select",
+      section: "energy",
+      title: "Critical Load",
+      label: "What percentage of your load is critical (must not lose power)?",
+      smartDefault: "50",
       options: [
-        { value: '25', label: '25%', description: 'Basic lighting & security' },
-        { value: '50', label: '50%', description: 'Core operations' },
-        { value: '75', label: '75%', description: 'Most systems' },
-        { value: '100', label: '100%', description: 'All systems critical' },
+        { value: "25", label: "25%", description: "Basic lighting & security" },
+        { value: "50", label: "50%", description: "Core operations" },
+        { value: "75", label: "75%", description: "Most systems" },
+        { value: "100", label: "100%", description: "All systems critical" },
       ],
       required: true,
       validation: { required: true },
     },
     {
-      id: 'peakDemandKW',
-      type: 'number',
-      section: 'energy',
-      title: 'Peak Demand',
-      label: 'Estimated peak demand (if known)',
-      placeholder: 'e.g., 500',
-      suffix: 'kW',
+      id: "peakDemandKW",
+      type: "number",
+      section: "energy",
+      title: "Peak Demand",
+      label: "Estimated peak demand (if known)",
+      placeholder: "e.g., 500",
+      suffix: "kW",
       required: false,
       validation: { required: false },
     },
     {
-      id: 'monthlyKWH',
-      type: 'number',
-      section: 'energy',
-      title: 'Monthly Usage',
-      label: 'Monthly electricity usage (if known)',
-      placeholder: 'e.g., 50000',
-      suffix: 'kWh',
+      id: "monthlyKWH",
+      type: "number",
+      section: "energy",
+      title: "Monthly Usage",
+      label: "Monthly electricity usage (if known)",
+      placeholder: "e.g., 50000",
+      suffix: "kWh",
       required: false,
       validation: { required: false },
     },
     {
-      id: 'existingSolar',
-      type: 'select',
-      section: 'solar',
-      title: 'Existing Solar',
-      label: 'Do you currently have solar installed?',
-      smartDefault: 'none',
+      id: "existingSolar",
+      type: "select",
+      section: "solar",
+      title: "Existing Solar",
+      label: "Do you currently have solar installed?",
+      smartDefault: "none",
       options: [
-        { value: 'none', label: 'No Solar', icon: '❌' },
-        { value: 'partial', label: 'Some Solar', icon: '☀️', description: 'Covers part of load' },
-        { value: 'full', label: 'Full Solar', icon: '🌞', description: 'Covers most of load' },
+        { value: "none", label: "No Solar", icon: "❌" },
+        { value: "partial", label: "Some Solar", icon: "☀️", description: "Covers part of load" },
+        { value: "full", label: "Full Solar", icon: "🌞", description: "Covers most of load" },
       ],
       required: true,
       validation: { required: true },
     },
     {
-      id: 'primaryGoal',
-      type: 'select',
-      section: 'goals',
-      title: 'Primary Goal',
-      label: 'What is your primary goal for energy storage?',
-      smartDefault: 'cost-savings',
+      id: "primaryGoal",
+      type: "select",
+      section: "goals",
+      title: "Primary Goal",
+      label: "What is your primary goal for energy storage?",
+      smartDefault: "cost-savings",
       options: [
-        { value: 'cost-savings', label: 'Cost Savings', icon: '💰', description: 'Reduce utility bills' },
-        { value: 'backup-power', label: 'Backup Power', icon: '🔋', description: 'Resilience during outages' },
-        { value: 'peak-shaving', label: 'Peak Shaving', icon: '📉', description: 'Reduce demand charges' },
-        { value: 'sustainability', label: 'Sustainability', icon: '🌍', description: 'Environmental goals' },
+        {
+          value: "cost-savings",
+          label: "Cost Savings",
+          icon: "💰",
+          description: "Reduce utility bills",
+        },
+        {
+          value: "backup-power",
+          label: "Backup Power",
+          icon: "🔋",
+          description: "Resilience during outages",
+        },
+        {
+          value: "peak-shaving",
+          label: "Peak Shaving",
+          icon: "📉",
+          description: "Reduce demand charges",
+        },
+        {
+          value: "sustainability",
+          label: "Sustainability",
+          icon: "🌍",
+          description: "Environmental goals",
+        },
       ],
       required: true,
       validation: { required: true },
     },
   ];
-  
+
   const sections: CuratedSection[] = [
-    { id: 'facility', label: 'Facility', icon: '🏢' },
-    { id: 'operations', label: 'Operations', icon: '⚙️' },
-    { id: 'energy', label: 'Energy & Grid', icon: '⚡' },
-    { id: 'solar', label: 'Solar', icon: '☀️' },
-    { id: 'goals', label: 'Goals', icon: '🎯' },
+    { id: "facility", label: "Facility", icon: "🏢" },
+    { id: "operations", label: "Operations", icon: "⚙️" },
+    { id: "energy", label: "Energy & Grid", icon: "⚡" },
+    { id: "solar", label: "Solar", icon: "☀️" },
+    { id: "goals", label: "Goals", icon: "🎯" },
   ];
-  
+
   return {
     industry,
     displayName: meta.displayName,
@@ -841,8 +1065,8 @@ function resolveFallbackSchema(industry: string): CuratedSchema {
     questions,
     sections,
     questionCount: questions.length,
-    requiredCount: questions.filter(q => q.required).length,
-    source: 'fallback',
+    requiredCount: questions.filter((q) => q.required).length,
+    source: "fallback",
   };
 }
 
@@ -872,8 +1096,11 @@ export function resolveStep3Schema(industry: string): CuratedSchema {
   if (complete) {
     const schema = complete();
     if (import.meta.env.DEV) {
-      const borrowed = ctx.schemaKey !== ctx.canonicalSlug ? ` (borrowed from ${ctx.schemaKey})` : '';
-      console.log(`[CuratedResolver] ✅ COMPLETE schema for "${industry}"${borrowed} (${schema.questionCount}Q)`);
+      const borrowed =
+        ctx.schemaKey !== ctx.canonicalSlug ? ` (borrowed from ${ctx.schemaKey})` : "";
+      console.log(
+        `[CuratedResolver] ✅ COMPLETE schema for "${industry}"${borrowed} (${schema.questionCount}Q)`
+      );
     }
     return schema;
   }
@@ -882,7 +1109,9 @@ export function resolveStep3Schema(industry: string): CuratedSchema {
   const legacy = resolveLegacySchema(effectiveSchemaKey);
   if (legacy) {
     if (import.meta.env.DEV) {
-      console.log(`[CuratedResolver] ✅ LEGACY schema for "${industry}" (${legacy.questionCount}Q)`);
+      console.log(
+        `[CuratedResolver] ✅ LEGACY schema for "${industry}" (${legacy.questionCount}Q)`
+      );
     }
     return legacy;
   }
@@ -901,7 +1130,7 @@ export function resolveStep3Schema(industry: string): CuratedSchema {
 export function getIndustryMeta(industry: string): { displayName: string; icon: string } {
   const ctx = resolveIndustryContext(industry);
   const ownKey = normalizeIndustrySlug(ctx.canonicalSlug);
-  return INDUSTRY_META[ownKey] || INDUSTRY_META[ctx.schemaKey] || INDUSTRY_META['other'];
+  return INDUSTRY_META[ownKey] || INDUSTRY_META[ctx.schemaKey] || INDUSTRY_META["other"];
 }
 
 /**
@@ -927,14 +1156,14 @@ export function hasCuratedSchema(industry: string): boolean {
 
 export function debugCuratedResolver(): void {
   if (!import.meta.env.DEV) return;
-  
+
   const allIndustries = Object.keys(INDUSTRY_META);
   const withCurated = allIndustries.filter(hasCuratedSchema);
-  const withFallback = allIndustries.filter(i => !hasCuratedSchema(i));
-  
-  console.log('[CuratedResolver] Diagnostics:');
-  console.log(`  - Curated: ${withCurated.join(', ')}`);
-  console.log(`  - Fallback: ${withFallback.join(', ')}`);
+  const withFallback = allIndustries.filter((i) => !hasCuratedSchema(i));
+
+  console.log("[CuratedResolver] Diagnostics:");
+  console.log(`  - Curated: ${withCurated.join(", ")}`);
+  console.log(`  - Fallback: ${withFallback.join(", ")}`);
 }
 
 export default resolveStep3Schema;
