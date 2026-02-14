@@ -136,16 +136,13 @@ describe("Tier A — Enforcement Covenant: no direct calculator imports from UI"
     expect(
       violations,
       `Covenant violation: ${violations.length} file(s) import CALCULATORS_BY_ID directly.\n` +
-      `Only step3Compute.ts may import it.\n` +
-      `Violations:\n  ${violations.join("\n  ")}`
+        `Only step3Compute.ts may import it.\n` +
+        `Violations:\n  ${violations.join("\n  ")}`
     ).toHaveLength(0);
   });
 
   it("step3Compute.ts DOES import CALCULATORS_BY_ID (sanity check)", () => {
-    const computePath = path.join(
-      WORKSPACE_ROOT,
-      "src/wizard/v7/step3/step3Compute.ts"
-    );
+    const computePath = path.join(WORKSPACE_ROOT, "src/wizard/v7/step3/step3Compute.ts");
     const content = fs.readFileSync(computePath, "utf-8");
     expect(content).toMatch(/CALCULATORS_BY_ID/);
   });
@@ -217,8 +214,8 @@ describe("Tier A — Enforcement Covenant: no direct calculator imports from UI"
     expect(
       violations,
       `Service boundary violation: ${violations.length} file(s) import step3 internals directly.\n` +
-      `UI/hooks must only import from '@/wizard/v7/step3' (the index barrel).\n` +
-      `Violations:\n  ${violations.join("\n  ")}`
+        `UI/hooks must only import from '@/wizard/v7/step3' (the index barrel).\n` +
+        `Violations:\n  ${violations.join("\n  ")}`
     ).toHaveLength(0);
   });
 });
@@ -269,9 +266,7 @@ describe("Tier B — Adapter contract invariants", () => {
         const ALWAYS_AVAILABLE_KEYS = new Set([
           // These come from wizard state, not schema questions
         ]);
-        const realPhantoms = phantomKeys.filter(
-          (k) => !ALWAYS_AVAILABLE_KEYS.has(k)
-        );
+        const realPhantoms = phantomKeys.filter((k) => !ALWAYS_AVAILABLE_KEYS.has(k));
 
         // Soft check: warn but don't fail for borrowed schemas
         // When restaurant borrows hotel schema, the question IDs match hotel's schema
@@ -282,7 +277,7 @@ describe("Tier B — Adapter contract invariants", () => {
           // Still log it for visibility
           console.warn(
             `[B1] ${slug} borrows ${ctx.schemaKey} schema — ` +
-            `${realPhantoms.length} phantom keys: ${realPhantoms.join(", ")}`
+              `${realPhantoms.length} phantom keys: ${realPhantoms.join(", ")}`
           );
         }
 
@@ -291,7 +286,7 @@ describe("Tier B — Adapter contract invariants", () => {
           expect(
             realPhantoms,
             `${slug}: consumedAnswerKeys has ${realPhantoms.length} phantom keys ` +
-            `not in schema: [${realPhantoms.join(", ")}]`
+              `not in schema: [${realPhantoms.join(", ")}]`
           ).toHaveLength(0);
         }
       });
@@ -418,7 +413,7 @@ describe("Tier C — Per-calculator required input contracts", () => {
       expect(
         envelope.peakKW,
         `${slug}: peakKW = 0 suggests calculator didn't receive required inputs ` +
-        `[${requiredKeys.join(", ")}]. Check flattenForCalculator field names.`
+          `[${requiredKeys.join(", ")}]. Check flattenForCalculator field names.`
       ).toBeGreaterThan(0);
 
       // For adapters with _rawExtensions, verify the keys are present
@@ -439,7 +434,7 @@ describe("Tier C — Per-calculator required input contracts", () => {
           expect(
             hasKey,
             `${slug}: required key "${key}" not found in _rawExtensions, ` +
-            `mockAnswers, or scale mapping. Calculator will fall through to default.`
+              `mockAnswers, or scale mapping. Calculator will fall through to default.`
           ).toBe(true);
         }
       }
@@ -507,8 +502,8 @@ describe("Tier D — Move 3 adapter round-trip sanity", () => {
       industry: "restaurant",
       answers: { numRooms: 100, hotelCategory: "3-star" },
     });
-    expect(envelope.peakKW).toBeGreaterThan(10);   // 100 seats × ~40W/seat = ~4kW min via SSOT
-    expect(envelope.peakKW).toBeLessThan(500);     // Sanity ceiling
+    expect(envelope.peakKW).toBeGreaterThan(10); // 100 seats × ~40W/seat = ~4kW min via SSOT
+    expect(envelope.peakKW).toBeLessThan(500); // Sanity ceiling
     expect(envelope.contributors.length).toBeGreaterThan(0);
   });
 
@@ -532,8 +527,8 @@ describe("Tier D — Move 3 adapter round-trip sanity", () => {
       industry: "office",
       answers: { facilitySize: "large" },
     });
-    expect(envelope.peakKW).toBeGreaterThan(50);   // 100k sqft × 6W/sqft = 600kW via SSOT
-    expect(envelope.peakKW).toBeLessThan(2000);    // Sanity ceiling
+    expect(envelope.peakKW).toBeGreaterThan(50); // 100k sqft × 6W/sqft = 600kW via SSOT
+    expect(envelope.peakKW).toBeLessThan(2000); // Sanity ceiling
     expect(envelope.contributors.length).toBeGreaterThan(0);
   });
 
@@ -554,8 +549,8 @@ describe("Tier D — Move 3 adapter round-trip sanity", () => {
       industry: "truck_stop",
       answers: { facilitySize: "medium" },
     });
-    expect(envelope.peakKW).toBeGreaterThan(10);   // Truck stop minimum via SSOT
-    expect(envelope.peakKW).toBeLessThan(1000);    // Sanity ceiling
+    expect(envelope.peakKW).toBeGreaterThan(10); // Truck stop minimum via SSOT
+    expect(envelope.peakKW).toBeLessThan(1000); // Sanity ceiling
     expect(envelope.contributors.length).toBeGreaterThan(0);
   });
 
@@ -595,14 +590,14 @@ function validateNormalizedShape(inputs: NormalizedLoadInputs, context: string) 
 
   // Schedule
   expect(inputs.schedule, `${context}: schedule`).toBeDefined();
-  expect(inputs.schedule.hoursPerDay, `${context}: schedule.hoursPerDay`)
-    .toBeGreaterThan(0);
-  expect(inputs.schedule.hoursPerDay, `${context}: schedule.hoursPerDay ≤ 24`)
-    .toBeLessThanOrEqual(24);
-  expect(inputs.schedule.daysPerWeek, `${context}: schedule.daysPerWeek`)
-    .toBeGreaterThan(0);
-  expect(inputs.schedule.daysPerWeek, `${context}: schedule.daysPerWeek ≤ 7`)
-    .toBeLessThanOrEqual(7);
+  expect(inputs.schedule.hoursPerDay, `${context}: schedule.hoursPerDay`).toBeGreaterThan(0);
+  expect(inputs.schedule.hoursPerDay, `${context}: schedule.hoursPerDay ≤ 24`).toBeLessThanOrEqual(
+    24
+  );
+  expect(inputs.schedule.daysPerWeek, `${context}: schedule.daysPerWeek`).toBeGreaterThan(0);
+  expect(inputs.schedule.daysPerWeek, `${context}: schedule.daysPerWeek ≤ 7`).toBeLessThanOrEqual(
+    7
+  );
 
   // Scale
   expect(inputs.scale, `${context}: scale`).toBeDefined();
@@ -614,8 +609,10 @@ function validateNormalizedShape(inputs: NormalizedLoadInputs, context: string) 
 
   // Architecture
   expect(inputs.architecture, `${context}: architecture`).toBeDefined();
-  expect(inputs.architecture.gridConnection, `${context}: architecture.gridConnection`)
-    .toBeTruthy();
+  expect(
+    inputs.architecture.gridConnection,
+    `${context}: architecture.gridConnection`
+  ).toBeTruthy();
 
   // Process loads should be an array (can be empty)
   expect(Array.isArray(inputs.processLoads), `${context}: processLoads is array`).toBe(true);
@@ -623,13 +620,22 @@ function validateNormalizedShape(inputs: NormalizedLoadInputs, context: string) 
   // No NaN in numeric fields
   expect(Number.isFinite(inputs.scale.value), `${context}: scale.value not NaN`).toBe(true);
   for (const load of inputs.processLoads) {
-    expect(Number.isFinite(load.kW), `${context}: processLoad.kW not NaN (${load.label})`).toBe(true);
-    expect(Number.isFinite(load.dutyCycle), `${context}: processLoad.dutyCycle not NaN (${load.label})`).toBe(true);
+    expect(Number.isFinite(load.kW), `${context}: processLoad.kW not NaN (${load.label})`).toBe(
+      true
+    );
+    expect(
+      Number.isFinite(load.dutyCycle),
+      `${context}: processLoad.dutyCycle not NaN (${load.label})`
+    ).toBe(true);
     expect(load.kW, `${context}: processLoad.kW ≥ 0 (${load.label})`).toBeGreaterThanOrEqual(0);
-    expect(load.dutyCycle, `${context}: processLoad.dutyCycle in [0,1] (${load.label})`)
-      .toBeGreaterThanOrEqual(0);
-    expect(load.dutyCycle, `${context}: processLoad.dutyCycle in [0,1] (${load.label})`)
-      .toBeLessThanOrEqual(1);
+    expect(
+      load.dutyCycle,
+      `${context}: processLoad.dutyCycle in [0,1] (${load.label})`
+    ).toBeGreaterThanOrEqual(0);
+    expect(
+      load.dutyCycle,
+      `${context}: processLoad.dutyCycle in [0,1] (${load.label})`
+    ).toBeLessThanOrEqual(1);
   }
 }
 
@@ -644,16 +650,16 @@ describe("Tier E — TrueQuote™ Policy Taxonomy", () => {
   });
 
   it("borrowed schema emits BORROWED_SCHEMA event", () => {
-    // Restaurant borrows hotel schema → should emit BORROWED_SCHEMA
+    // Truck stop borrows gas-station schema → should emit BORROWED_SCHEMA
     const envelope = step3Compute({
-      industry: "restaurant",
-      answers: { numRooms: 100, hotelCategory: "3-star" },
+      industry: "truck_stop",
+      answers: { fuelPumps: 20, convenienceStore: "yes" },
     });
     const borrowed = envelope.policyEvents.filter(
       (e) => e.policyCode === PolicyCode.BORROWED_SCHEMA
     );
     expect(borrowed.length).toBeGreaterThanOrEqual(1);
-    expect(borrowed[0].industry).toBe("restaurant");
+    expect(borrowed[0].industry).toBe("truck_stop");
     expect(borrowed[0].severity).toBe("info");
   });
 
@@ -678,11 +684,11 @@ describe("Tier E — TrueQuote™ Policy Taxonomy", () => {
 
   it("summarizePolicyEvents produces correct counts", () => {
     const envelope = step3Compute({
-      industry: "restaurant",
-      answers: { numRooms: 100 },
+      industry: "truck_stop",
+      answers: { fuelPumps: 20 },
     });
     const summary = summarizePolicyEvents(envelope.policyEvents);
-    // Restaurant borrows schema → at least one BORROWED_SCHEMA event
+    // Truck stop borrows gas-station schema → at least one BORROWED_SCHEMA event
     if (envelope.policyEvents.some((e) => e.policyCode === PolicyCode.BORROWED_SCHEMA)) {
       expect(summary[PolicyCode.BORROWED_SCHEMA]).toBeGreaterThanOrEqual(1);
     }
@@ -690,9 +696,27 @@ describe("Tier E — TrueQuote™ Policy Taxonomy", () => {
 
   it("filterBySeverity filters correctly", () => {
     const mockEvents: PolicyEvent[] = [
-      { policyCode: PolicyCode.BORROWED_SCHEMA, severity: "info", detail: "test", industry: "x", calculatorId: "y" },
-      { policyCode: PolicyCode.NAN_SANITIZED, severity: "warn", detail: "test", industry: "x", calculatorId: "y" },
-      { policyCode: PolicyCode.CALCULATOR_FALLBACK, severity: "error", detail: "test", industry: "x", calculatorId: "y" },
+      {
+        policyCode: PolicyCode.BORROWED_SCHEMA,
+        severity: "info",
+        detail: "test",
+        industry: "x",
+        calculatorId: "y",
+      },
+      {
+        policyCode: PolicyCode.NAN_SANITIZED,
+        severity: "warn",
+        detail: "test",
+        industry: "x",
+        calculatorId: "y",
+      },
+      {
+        policyCode: PolicyCode.CALCULATOR_FALLBACK,
+        severity: "error",
+        detail: "test",
+        industry: "x",
+        calculatorId: "y",
+      },
     ];
     expect(filterBySeverity(mockEvents, "info").length).toBe(3);
     expect(filterBySeverity(mockEvents, "warn").length).toBe(2);

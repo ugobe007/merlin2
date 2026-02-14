@@ -3,7 +3,7 @@
  * ============================
  *
  * Created: February 8, 2026
- * Move 3 adapter: restaurant borrows hotel template + schema, own calculator
+ * Move 3 adapter: restaurant has own curated schema + own calculator
  *
  * Maps restaurant questionnaire answers → NormalizedLoadInputs.
  *
@@ -34,58 +34,68 @@ import { registerAdapter } from "../step3Compute";
 // ============================================================================
 
 /** Restaurant type → watts per seat + HVAC class */
-const RESTAURANT_TYPE_PROFILES: Record<string, { wattsPerSeat: number; hvac: "low" | "medium" | "high" }> = {
-  "fast-food":     { wattsPerSeat: 20, hvac: "medium" },
-  "fast_food":     { wattsPerSeat: 20, hvac: "medium" },
+const RESTAURANT_TYPE_PROFILES: Record<
+  string,
+  { wattsPerSeat: number; hvac: "low" | "medium" | "high" }
+> = {
+  "fast-food": { wattsPerSeat: 20, hvac: "medium" },
+  fast_food: { wattsPerSeat: 20, hvac: "medium" },
   "quick-service": { wattsPerSeat: 20, hvac: "medium" },
-  "casual":        { wattsPerSeat: 35, hvac: "medium" },
-  "full-service":  { wattsPerSeat: 40, hvac: "high" },
-  "full_service":  { wattsPerSeat: 40, hvac: "high" },
-  "fine-dining":   { wattsPerSeat: 55, hvac: "high" },
-  "fine_dining":   { wattsPerSeat: 55, hvac: "high" },
-  "food-hall":     { wattsPerSeat: 30, hvac: "medium" },
-  "food_hall":     { wattsPerSeat: 30, hvac: "medium" },
-  "buffet":        { wattsPerSeat: 50, hvac: "high" },
-  "cafe":          { wattsPerSeat: 15, hvac: "low" },
+  casual: { wattsPerSeat: 35, hvac: "medium" },
+  "full-service": { wattsPerSeat: 40, hvac: "high" },
+  full_service: { wattsPerSeat: 40, hvac: "high" },
+  "fine-dining": { wattsPerSeat: 55, hvac: "high" },
+  fine_dining: { wattsPerSeat: 55, hvac: "high" },
+  "food-hall": { wattsPerSeat: 30, hvac: "medium" },
+  food_hall: { wattsPerSeat: 30, hvac: "medium" },
+  buffet: { wattsPerSeat: 50, hvac: "high" },
+  cafe: { wattsPerSeat: 15, hvac: "low" },
 };
 
-/** All question IDs this adapter reads */
+/** All question IDs this adapter reads — must match restaurant curated schema */
 const CONSUMED_KEYS = [
-  // Scale — use hotel schema questions that map to restaurant context
-  "hotelCategory",       // → maps to restaurant type (economy=fast-food, luxury=fine-dining)
-  "numRooms",            // → maps to seating capacity (rooms → seats)
-  "squareFootage",       // → secondary scale (if provided)
-  "occupancyRate",       // → meal period utilization
-  // Amenities → process loads (hotel schema questions)
-  "restaurantOnSite",    // → "yes" (always, it IS a restaurant)
-  "poolOnSite",          // → outdoor dining / patio
-  "spaOnSite",           // → bar / lounge area
-  "laundryOnSite",       // → linens (full-service indicator)
+  // Facility
+  "restaurantType", // → restaurant type (fast_food, casual, full_service, fine_dining, etc.)
+  "seatingCapacity", // → primary scale (number of seats)
+  "squareFootage", // → secondary scale
+  "kitchenType", // → kitchen complexity
+  "operatingHours", // → operating hours per day
+  // Equipment
+  "cookingEquipment", // → process load indicator
+  "refrigeration", // → cooling load indicator
+  "exhaustHood", // → kitchen ventilation
+  "dishwasher", // → hot water load indicator
+  "barArea", // → bar / lounge area
   // Architecture
   "gridConnection",
   "gridReliability",
   "existingGenerator",
   "existingSolar",
   "primaryGoal",
+  "budgetTimeline",
 ] as const;
 
 // ============================================================================
 // ADAPTER IMPLEMENTATION
 // ============================================================================
 
-function mapAnswers(
-  answers: Record<string, unknown>,
-  _schemaKey: string
-): NormalizedLoadInputs {
+function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): NormalizedLoadInputs {
   // ── Scale ──
-  // Hotel schema's numRooms → restaurant seating capacity
-  const seatingCapacity = answers.numRooms != null ? Number(answers.numRooms) : 100;
+  // Restaurant schema's seatingCapacity → primary scale
+  const seatingCapacity =
+    answers.seatingCapacity != null
+      ? Number(answers.seatingCapacity)
+      : answers.numRooms != null
+        ? Number(answers.numRooms)
+        : 100;
 
-  // Hotel schema's hotelCategory → restaurant type mapping
-  const categoryRaw = String(answers.hotelCategory || "3-star");
-  const restaurantType = mapCategoryToRestaurantType(categoryRaw);
-  const profile = RESTAURANT_TYPE_PROFILES[restaurantType]
-    ?? RESTAURANT_TYPE_PROFILES["full-service"]!;
+  // Restaurant schema's restaurantType → restaurant type mapping
+  const restaurantTypeRaw = String(
+    answers.restaurantType || answers.hotelCategory || "full_service"
+  );
+  const restaurantType = mapToRestaurantType(restaurantTypeRaw);
+  const profile =
+    RESTAURANT_TYPE_PROFILES[restaurantType] ?? RESTAURANT_TYPE_PROFILES["full-service"]!;
 
   // ── Schedule ──
   // Restaurants: typically 14h (7am-9pm) with lunch+dinner peaks
@@ -107,7 +117,7 @@ function mapAnswers(
   processLoads.push({
     category: "process",
     label: "Kitchen Equipment (cooking, fryers, hoods)",
-    kW: basePeakKW * 0.45 * 1000 / 1000, // Keep in kW
+    kW: (basePeakKW * 0.45 * 1000) / 1000, // Keep in kW
     dutyCycle: 0.6, // Active during meal service
   });
 
@@ -115,7 +125,7 @@ function mapAnswers(
   processLoads.push({
     category: "cooling",
     label: "Refrigeration (walk-in + reach-in)",
-    kW: basePeakKW * 0.15 * 1000 / 1000,
+    kW: (basePeakKW * 0.15 * 1000) / 1000,
     dutyCycle: 0.95, // Near-continuous
   });
 
@@ -123,7 +133,7 @@ function mapAnswers(
   processLoads.push({
     category: "process",
     label: "Dishwashing & Hot Water",
-    kW: basePeakKW * 0.05 * 1000 / 1000,
+    kW: (basePeakKW * 0.05 * 1000) / 1000,
     dutyCycle: 0.5,
   });
 
@@ -131,7 +141,7 @@ function mapAnswers(
   processLoads.push({
     category: "lighting",
     label: "Dining & Kitchen Lighting",
-    kW: basePeakKW * 0.10 * 1000 / 1000,
+    kW: (basePeakKW * 0.1 * 1000) / 1000,
     dutyCycle: 0.7,
   });
 
@@ -139,11 +149,11 @@ function mapAnswers(
   processLoads.push({
     category: "controls",
     label: "POS / Hood Controls / Fire Systems",
-    kW: basePeakKW * 0.05 * 1000 / 1000,
+    kW: (basePeakKW * 0.05 * 1000) / 1000,
     dutyCycle: 1.0,
   });
 
-  // Outdoor / patio (if poolOnSite = "yes" → outdoor dining area)
+  // Outdoor / patio — not tracked in restaurant schema, skip unless legacy field present
   const hasOutdoor = toBool(answers.poolOnSite);
   if (hasOutdoor) {
     processLoads.push({
@@ -154,8 +164,8 @@ function mapAnswers(
     });
   }
 
-  // Bar / lounge (if spaOnSite = "yes" → bar area)
-  const hasBar = toBool(answers.spaOnSite);
+  // Bar / lounge (restaurant schema: barArea question)
+  const hasBar = toBool(answers.barArea) || toBool(answers.spaOnSite);
   if (hasBar) {
     processLoads.push({
       category: "process",
@@ -167,9 +177,12 @@ function mapAnswers(
 
   // ── Architecture ──
   const gridRaw = String(answers.gridConnection || "on-grid");
-  const gridConnection = gridRaw === "off-grid"
-    ? "off-grid" as const
-    : gridRaw === "limited" ? "limited" as const : "on-grid" as const;
+  const gridConnection =
+    gridRaw === "off-grid"
+      ? ("off-grid" as const)
+      : gridRaw === "limited"
+        ? ("limited" as const)
+        : ("on-grid" as const);
 
   const existingSolarKW = parseSolarAnswer(answers.existingSolar);
   const existingGeneratorKW = parseGeneratorAnswer(answers.existingGenerator);
@@ -204,40 +217,60 @@ function mapAnswers(
 }
 
 function getDefaultInputs(): NormalizedLoadInputs {
-  return mapAnswers({
-    hotelCategory: "3-star",  // → full-service
-    numRooms: 100,            // → 100 seats
-    occupancyRate: "medium",
-    restaurantOnSite: "yes",
-    poolOnSite: "no",
-    spaOnSite: "no",
-    laundryOnSite: "yes",
-    gridConnection: "on-grid",
-    gridReliability: "reliable",
-  }, "hotel");
+  return mapAnswers(
+    {
+      restaurantType: "full_service",
+      seatingCapacity: 100,
+      squareFootage: 3000,
+      kitchenType: "full",
+      operatingHours: 14,
+      cookingEquipment: "standard",
+      refrigeration: "standard",
+      barArea: "no",
+      gridConnection: "on-grid",
+      gridReliability: "reliable",
+    },
+    "restaurant"
+  );
 }
 
 // ============================================================================
 // HELPERS
 // ============================================================================
 
-/** Map hotel category → restaurant type */
-function mapCategoryToRestaurantType(category: string): string {
+/** Map restaurant type or hotel category → restaurant type key */
+function mapToRestaurantType(input: string): string {
   const map: Record<string, string> = {
-    "budget":    "fast-food",
-    "economy":   "fast-food",
-    "1-star":    "fast-food",
-    "2-star":    "quick-service",
-    "midscale":  "casual",
-    "3-star":    "full-service",
-    "standard":  "casual",
-    "upscale":   "full-service",
-    "4-star":    "full-service",
-    "luxury":    "fine-dining",
-    "5-star":    "fine-dining",
-    "resort":    "fine-dining",
+    // Restaurant schema values (direct)
+    fast_food: "fast-food",
+    "fast-food": "fast-food",
+    quick_service: "quick-service",
+    "quick-service": "quick-service",
+    casual: "casual",
+    casual_dining: "casual",
+    full_service: "full-service",
+    "full-service": "full-service",
+    fine_dining: "fine-dining",
+    "fine-dining": "fine-dining",
+    food_hall: "food-hall",
+    "food-hall": "food-hall",
+    buffet: "buffet",
+    cafe: "cafe",
+    // Legacy hotel category mapping
+    budget: "fast-food",
+    economy: "fast-food",
+    "1-star": "fast-food",
+    "2-star": "quick-service",
+    midscale: "casual",
+    "3-star": "full-service",
+    standard: "casual",
+    upscale: "full-service",
+    "4-star": "full-service",
+    luxury: "fine-dining",
+    "5-star": "fine-dining",
+    resort: "fine-dining",
   };
-  return map[category.toLowerCase()] ?? "full-service";
+  return map[input.toLowerCase()] ?? "full-service";
 }
 
 function toBool(val: unknown): boolean {
