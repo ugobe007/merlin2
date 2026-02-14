@@ -28,6 +28,7 @@ import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 import { Shield } from 'lucide-react';
 import badgeGoldIcon from '@/assets/images/badge_gold_icon.jpg';
+import badgeProQuoteIcon from '@/assets/images/badge_icon.jpg';
 import { useMerlinData } from "@/wizard/v7/memory";
 import TrueQuoteFinancialModal from "../shared/TrueQuoteFinancialModal";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
@@ -700,9 +701,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
         <div className="flex items-center gap-5">
           <div className="shrink-0">
             <img
-              src={badgeGoldIcon}
+              src={badgeProQuoteIcon}
               alt="ProQuote"
-              className="w-14 h-14 object-contain opacity-70"
+              className="w-14 h-14 object-contain"
             />
           </div>
           <div className="flex-1 min-w-0">
