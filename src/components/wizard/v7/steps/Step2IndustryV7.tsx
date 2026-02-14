@@ -13,6 +13,15 @@ import manufacturingImg from "@/assets/images/manufacturing_1.jpg";
 import officeImg from "@/assets/images/office_building1.jpg";
 import healthcareImg from "@/assets/images/hospital_1.jpg";
 import dataCenterImg from "@/assets/images/data-center-1.jpg";
+import gasStationImg from "@/assets/images/truck_stop.png";
+import airportImg from "@/assets/images/airport_1.jpg";
+import casinoImg from "@/assets/images/casino_gaming1.jpg";
+import collegeImg from "@/assets/images/college_1.jpg";
+import apartmentImg from "@/assets/images/apartment_building.jpg";
+import residentialImg from "@/assets/images/Residential1.jpg";
+import coldStorageImg from "@/assets/images/cold_storage.jpg";
+import indoorFarmImg from "@/assets/images/indoor_farm1.jpg";
+import agricultureImg from "@/assets/images/agriculture_1.jpg";
 
 const IMAGE_MAP: Record<string, string> = {
   car_wash: carWashImg,
@@ -26,6 +35,15 @@ const IMAGE_MAP: Record<string, string> = {
   hospital: healthcareImg,
   healthcare: healthcareImg,
   data_center: dataCenterImg,
+  gas_station: gasStationImg,
+  airport: airportImg,
+  casino: casinoImg,
+  college: collegeImg,
+  apartment: apartmentImg,
+  residential: residentialImg,
+  cold_storage: coldStorageImg,
+  indoor_farm: indoorFarmImg,
+  agriculture: agricultureImg,
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -116,6 +134,15 @@ const DISPLAY_ORDER: string[] = [
   "office",
   "healthcare",
   "data_center",
+  "gas_station",
+  "airport",
+  "casino",
+  "college",
+  "apartment",
+  "residential",
+  "cold_storage",
+  "indoor_farm",
+  "agriculture",
   "other",
 ];
 
