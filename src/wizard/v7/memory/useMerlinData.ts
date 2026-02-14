@@ -254,9 +254,11 @@ export function useMerlinData(state?: any): MerlinData {
     const industryConfidence = memIndustry?.confidence ?? (industryInferred ? 0.9 : 1.0);
 
     // ── Profile (Memory → State fallback) ───────────────────────────────
-    const peakLoadKW = memProfile?.peakLoadKW ?? state?.quote?.peakLoadKW ?? 0;
-    const avgLoadKW = memProfile?.avgLoadKW ?? state?.quote?.baseLoadKW ?? 0;
-    const energyKWhPerDay = memProfile?.energyKWhPerDay ?? state?.quote?.energyKWhPerDay ?? 0;
+    // ⚠️ Use || (not ??) so that 0 falls through to state.quote.
+    // Memory profile may have 0 if written before async pricing completes.
+    const peakLoadKW = memProfile?.peakLoadKW || state?.quote?.peakLoadKW || 0;
+    const avgLoadKW = memProfile?.avgLoadKW || state?.quote?.baseLoadKW || 0;
+    const energyKWhPerDay = memProfile?.energyKWhPerDay || state?.quote?.energyKWhPerDay || 0;
     const dutyCycle = memProfile?.dutyCycle ?? 0.5;
     const contributors = memProfile?.contributors ?? {};
     const profileAnswers = memProfile?.answers ?? state?.step3Answers ?? {};
