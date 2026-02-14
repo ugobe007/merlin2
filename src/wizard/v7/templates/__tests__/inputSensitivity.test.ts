@@ -346,9 +346,9 @@ describe("SSOT_ALIASES structural integrity", () => {
     }
   });
 
-  test("all 12 industries have alias entries", () => {
+  test("all 21 industries have alias entries", () => {
     const industries = listAliasIndustries();
-    expect(industries.length).toBe(12);
+    expect(industries.length).toBe(21);
     expect(industries).toContain("office");
     expect(industries).toContain("retail");
     expect(industries).toContain("warehouse");
@@ -361,5 +361,15 @@ describe("SSOT_ALIASES structural integrity", () => {
     expect(industries).toContain("restaurant");
     expect(industries).toContain("gas_station");
     expect(industries).toContain("truck_stop");
+    // Phase 2B: 9 newly-dedicated industries
+    expect(industries).toContain("airport");
+    expect(industries).toContain("casino");
+    expect(industries).toContain("apartment");
+    expect(industries).toContain("college");
+    expect(industries).toContain("cold_storage");
+    expect(industries).toContain("indoor_farm");
+    expect(industries).toContain("agriculture");
+    expect(industries).toContain("residential");
+    expect(industries).toContain("government");
   });
 });

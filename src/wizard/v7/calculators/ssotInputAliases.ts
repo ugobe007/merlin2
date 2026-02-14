@@ -285,6 +285,339 @@ export const SSOT_ALIASES = {
       ssotDefault: 0,
     },
   } satisfies IndustryAliasMap,
+
+  // ──────────────────────────────────────────────────────
+  // Phase 2B: 9 newly-dedicated industries (Feb 2026)
+  // Previously routed through generic_ssot_v1, now each
+  // has a dedicated adapter + SSOT alias map.
+  // ──────────────────────────────────────────────────────
+
+  airport: {
+    annualPassengers: {
+      adapterField: "annualPassengers",
+      ssotField: "annualPassengers",
+      ssotAlternates: ["passengers"],
+      ssotDefault: 1000000,
+    },
+    airportClass: {
+      adapterField: "airportClass",
+      ssotField: "airportClass",
+      ssotAlternates: [],
+      ssotDefault: "medium-hub",
+    },
+    terminalSqFt: {
+      adapterField: "terminalSqFt",
+      ssotField: "terminalSqFt",
+      ssotAlternates: ["terminalSquareFootage"],
+      ssotDefault: 0,
+    },
+    jetBridges: {
+      adapterField: "jetBridges",
+      ssotField: "jetBridges",
+      ssotAlternates: [],
+      ssotDefault: 0,
+    },
+    cargoFacility: {
+      adapterField: "cargoFacility",
+      ssotField: "cargoFacility",
+      ssotAlternates: [],
+      ssotDefault: false,
+    },
+  } satisfies IndustryAliasMap,
+
+  casino: {
+    gamingFloorSqft: {
+      adapterField: "gamingFloorSqft",
+      ssotField: "gamingFloorSqft",
+      ssotAlternates: ["gamingFloorSqFt", "gamingFloorSize", "gamingSpaceSqFt"],
+      ssotDefault: 100000,
+    },
+    totalPropertySqFt: {
+      adapterField: "totalPropertySqFt",
+      ssotField: "totalPropertySqFt",
+      ssotAlternates: ["totalPropertySquareFootage"],
+      ssotDefault: 0,
+    },
+    hotelRooms: {
+      adapterField: "hotelRooms",
+      ssotField: "hotelRooms",
+      ssotAlternates: ["rooms"],
+      ssotDefault: 0,
+    },
+    restaurants: {
+      adapterField: "restaurants",
+      ssotField: "restaurants",
+      ssotAlternates: ["restaurantCount"],
+      ssotDefault: 0,
+    },
+    casinoType: {
+      adapterField: "casinoType",
+      ssotField: "casinoType",
+      ssotAlternates: [],
+      ssotDefault: "full-resort",
+    },
+  } satisfies IndustryAliasMap,
+
+  apartment: {
+    unitCount: {
+      adapterField: "unitCount",
+      ssotField: "unitCount",
+      ssotAlternates: ["units", "numUnits", "numberOfUnits"],
+      ssotDefault: 400,
+    },
+    avgUnitSize: {
+      adapterField: "avgUnitSize",
+      ssotField: "avgUnitSize",
+      ssotAlternates: ["averageUnitSqFt", "unitSqFt"],
+      ssotDefault: 900,
+    },
+    propertyType: {
+      adapterField: "propertyType",
+      ssotField: "propertyType",
+      ssotAlternates: [],
+      ssotDefault: "garden-style",
+    },
+    elevators: {
+      adapterField: "elevators",
+      ssotField: "elevators",
+      ssotAlternates: ["elevatorCount"],
+      ssotDefault: 0,
+    },
+  } satisfies IndustryAliasMap,
+
+  college: {
+    enrollment: {
+      adapterField: "enrollment",
+      ssotField: "enrollment",
+      ssotAlternates: ["studentCount", "students"],
+      ssotDefault: 15000,
+    },
+    campusSqFt: {
+      adapterField: "campusSqFt",
+      ssotField: "campusSqFt",
+      ssotAlternates: ["campusSquareFootage"],
+      ssotDefault: 0,
+    },
+    institutionType: {
+      adapterField: "institutionType",
+      ssotField: "institutionType",
+      ssotAlternates: [],
+      ssotDefault: "public-university",
+    },
+    researchLabs: {
+      adapterField: "researchLabs",
+      ssotField: "researchLabs",
+      ssotAlternates: [],
+      ssotDefault: false,
+    },
+    studentHousing: {
+      adapterField: "studentHousing",
+      ssotField: "studentHousing",
+      ssotAlternates: [],
+      ssotDefault: false,
+    },
+    dataCenterHPC: {
+      adapterField: "dataCenterHPC",
+      ssotField: "dataCenterHPC",
+      ssotAlternates: [],
+      ssotDefault: false,
+    },
+  } satisfies IndustryAliasMap,
+
+  cold_storage: {
+    squareFootage: {
+      adapterField: "squareFootage",
+      ssotField: "warehouseSqFt",
+      ssotAlternates: ["squareFeet", "coldStorageSqFt"],
+      ssotDefault: 20000,
+    },
+    totalRefrigerationKW: {
+      adapterField: "totalRefrigerationKW",
+      ssotField: "totalRefrigerationKW",
+      ssotAlternates: ["refrigerationLoad"],
+      ssotDefault: 0,
+    },
+    compressorHP: {
+      adapterField: "compressorHP",
+      ssotField: "compressorHP",
+      ssotAlternates: ["compressorHorsePower"],
+      ssotDefault: 0,
+    },
+    cubicFeet: {
+      adapterField: "cubicFeet",
+      ssotField: "cubicFeet",
+      ssotAlternates: ["volume"],
+      ssotDefault: 0,
+    },
+    temperatureZones: {
+      adapterField: "temperatureZones",
+      ssotField: "temperatureZones",
+      ssotAlternates: [],
+      ssotDefault: 1,
+    },
+    dockDoors: {
+      adapterField: "dockDoors",
+      ssotField: "dockDoors",
+      ssotAlternates: [],
+      ssotDefault: 0,
+    },
+    compressorSystem: {
+      adapterField: "compressorSystem",
+      ssotField: "compressorSystem",
+      ssotAlternates: [],
+      ssotDefault: "ammonia",
+    },
+    facilityType: {
+      adapterField: "facilityType",
+      ssotField: "facilityType",
+      ssotAlternates: [],
+      ssotDefault: "frozen-warehouse",
+    },
+  } satisfies IndustryAliasMap,
+
+  indoor_farm: {
+    squareFootage: {
+      adapterField: "squareFootage",
+      ssotField: "squareFootage",
+      ssotAlternates: ["growingAreaSqFt", "farmSqFt"],
+      ssotDefault: 50000,
+    },
+    wPerSqFt: {
+      adapterField: "wPerSqFt",
+      ssotField: "wPerSqFt",
+      ssotAlternates: ["wattsPerSqFt", "lightingWPerSqFt"],
+      ssotDefault: 40,
+    },
+    growingLevels: {
+      adapterField: "growingLevels",
+      ssotField: "growingLevels",
+      ssotAlternates: ["levels", "verticalLevels"],
+      ssotDefault: 1,
+    },
+    lightingSystem: {
+      adapterField: "lightingSystem",
+      ssotField: "lightingSystem",
+      ssotAlternates: [],
+      ssotDefault: "led-standard",
+    },
+    lightSchedule: {
+      adapterField: "lightSchedule",
+      ssotField: "lightSchedule",
+      ssotAlternates: [],
+      ssotDefault: "18-6",
+    },
+    farmType: {
+      adapterField: "farmType",
+      ssotField: "farmType",
+      ssotAlternates: [],
+      ssotDefault: "vertical-indoor",
+    },
+  } satisfies IndustryAliasMap,
+
+  agriculture: {
+    acreage: {
+      adapterField: "acreage",
+      ssotField: "acreage",
+      ssotAlternates: ["acres", "farmAcres"],
+      ssotDefault: 500,
+    },
+    farmType: {
+      adapterField: "farmType",
+      ssotField: "farmType",
+      ssotAlternates: [],
+      ssotDefault: "row-crop",
+    },
+    irrigationType: {
+      adapterField: "irrigationType",
+      ssotField: "irrigationType",
+      ssotAlternates: [],
+      ssotDefault: "center-pivot",
+    },
+    buildingsSqFt: {
+      adapterField: "buildingsSqFt",
+      ssotField: "buildingsSqFt",
+      ssotAlternates: ["buildingSquareFootage"],
+      ssotDefault: 0,
+    },
+  } satisfies IndustryAliasMap,
+
+  residential: {
+    squareFootage: {
+      adapterField: "squareFootage",
+      ssotField: "homeSqFt",
+      ssotAlternates: ["homeSquareFootage", "houseSqFt"],
+      ssotDefault: 2000,
+    },
+    occupants: {
+      adapterField: "occupants",
+      ssotField: "homes",
+      ssotAlternates: ["homeCount", "numberOfHomes"],
+      ssotDefault: 1,
+    },
+    homeType: {
+      adapterField: "homeType",
+      ssotField: "homeType",
+      ssotAlternates: [],
+      ssotDefault: "single-family",
+    },
+    hvacType: {
+      adapterField: "hvacType",
+      ssotField: "hvacType",
+      ssotAlternates: [],
+      ssotDefault: "central-ac",
+    },
+    evCharging: {
+      adapterField: "evCharging",
+      ssotField: "evCharging",
+      ssotAlternates: [],
+      ssotDefault: false,
+    },
+    pool: {
+      adapterField: "pool",
+      ssotField: "pool",
+      ssotAlternates: [],
+      ssotDefault: false,
+    },
+  } satisfies IndustryAliasMap,
+
+  government: {
+    squareFootage: {
+      adapterField: "squareFootage",
+      ssotField: "squareFootage",
+      ssotAlternates: ["buildingSqFt", "facilitySqFt"],
+      ssotDefault: 75000,
+    },
+    facilityType: {
+      adapterField: "facilityType",
+      ssotField: "facilityType",
+      ssotAlternates: [],
+      ssotDefault: "office-building",
+    },
+    criticalOperations: {
+      adapterField: "criticalOperations",
+      ssotField: "criticalOperations",
+      ssotAlternates: [],
+      ssotDefault: false,
+    },
+    campusOrStandalone: {
+      adapterField: "campusOrStandalone",
+      ssotField: "campusOrStandalone",
+      ssotAlternates: [],
+      ssotDefault: "standalone",
+    },
+    dataCenter: {
+      adapterField: "dataCenter",
+      ssotField: "dataCenter",
+      ssotAlternates: [],
+      ssotDefault: false,
+    },
+    evFleet: {
+      adapterField: "evFleet",
+      ssotField: "evFleet",
+      ssotAlternates: [],
+      ssotDefault: false,
+    },
+  } satisfies IndustryAliasMap,
 } as const;
 
 // Type helper: valid industry slugs in this alias registry

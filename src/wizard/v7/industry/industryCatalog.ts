@@ -291,7 +291,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
   {
     canonicalSlug: "airport",
     templateKey: "generic",
-    calculatorId: "generic_ssot_v1",
+    calculatorId: "airport_load_v1",
     schemaKey: "airport",
     aliases: [],
     sizingDefaults: { ratio: 0.5, hours: 4 },
@@ -301,7 +301,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
   {
     canonicalSlug: "casino",
     templateKey: "generic",
-    calculatorId: "generic_ssot_v1",
+    calculatorId: "casino_load_v1",
     schemaKey: "casino",
     aliases: ["tribal-casino", "tribal_casino", "casino-gaming", "casino_gaming"],
     sizingDefaults: { ratio: 0.45, hours: 4 },
@@ -311,7 +311,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
   {
     canonicalSlug: "college",
     templateKey: "generic",
-    calculatorId: "generic_ssot_v1",
+    calculatorId: "college_load_v1",
     schemaKey: "college",
     aliases: ["university", "campus"],
     sizingDefaults: { ratio: 0.4, hours: 4 },
@@ -321,7 +321,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
   {
     canonicalSlug: "apartment",
     templateKey: "generic",
-    calculatorId: "generic_ssot_v1",
+    calculatorId: "apartment_load_v1",
     schemaKey: "apartment",
     aliases: ["multifamily", "condo", "residential-complex"],
     sizingDefaults: { ratio: 0.35, hours: 4 },
@@ -331,7 +331,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
   {
     canonicalSlug: "residential",
     templateKey: "generic",
-    calculatorId: "generic_ssot_v1",
+    calculatorId: "residential_load_v1",
     schemaKey: "residential",
     aliases: ["home", "single-family"],
     sizingDefaults: { ratio: 0.3, hours: 4 },
@@ -341,7 +341,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
   {
     canonicalSlug: "cold_storage",
     templateKey: "generic",
-    calculatorId: "generic_ssot_v1",
+    calculatorId: "cold_storage_load_v1",
     schemaKey: "cold-storage",
     aliases: ["cold-storage", "refrigerated"],
     sizingDefaults: { ratio: 0.5, hours: 4 },
@@ -351,7 +351,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
   {
     canonicalSlug: "indoor_farm",
     templateKey: "generic",
-    calculatorId: "generic_ssot_v1",
+    calculatorId: "indoor_farm_load_v1",
     schemaKey: "indoor-farm",
     aliases: ["indoor-farm", "vertical-farm", "greenhouse"],
     sizingDefaults: { ratio: 0.4, hours: 4 },
@@ -361,7 +361,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
   {
     canonicalSlug: "agriculture",
     templateKey: "generic",
-    calculatorId: "generic_ssot_v1",
+    calculatorId: "agriculture_load_v1",
     schemaKey: "agriculture",
     aliases: ["farm", "farming", "irrigation"],
     sizingDefaults: { ratio: 0.35, hours: 4 },
@@ -371,7 +371,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
   {
     canonicalSlug: "government",
     templateKey: "generic",
-    calculatorId: "generic_ssot_v1",
+    calculatorId: "government_load_v1",
     schemaKey: "government",
     aliases: ["public", "municipal"],
     sizingDefaults: { ratio: 0.4, hours: 4 },
