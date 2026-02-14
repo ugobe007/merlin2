@@ -202,14 +202,14 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
     body: "4A5568", // Body text
     muted: "718096", // Muted/caption text
     border: "E2E8F0", // Table borders
-    headerBg: "1A1F36", // Dark header bg for tables
+    headerBg: "1E293B", // Dark header bg for tables (matches panelDark)
     headerText: "FFFFFF", // White text on dark bg
     highlight: "F0FFF4", // Highlight rows
     amber: "D97706",
     red: "DC2626",
-    // ── Dark panels (matches Merlin Wizard advisor rail) ──
-    panelDark: "0F1420", // Wizard dark background
-    panelDarkAlt: "1A1F36", // Slightly lighter dark
+    // ── Dark panels (matches Merlin Wizard Step 1 panels) ──
+    panelDark: "1E293B", // Tailwind slate-800 — wizard Step 1 panel color
+    panelDarkAlt: "334155", // Tailwind slate-700 — subtle contrast
     lightGrey: "F1F5F9", // Light grey sub-panel
     lightGreyDark: "E2E8F0", // Slightly darker grey
     gold: "D4A017", // Gold accent for TrueQuote badge
@@ -428,74 +428,82 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           // Top padding
           new Paragraph({
             shading: { type: ShadingType.SOLID, color: C.panelDark },
-            children: [new TextRun({ text: " ", size: 16 })],
+            children: [new TextRun({ text: " ", size: 20 })],
             spacing: { after: 0 },
           }),
-          // Company name + Merlin icon
+          // Company brand: Merlin icon + company name
           new Paragraph({
             shading: { type: ShadingType.SOLID, color: C.panelDark },
-            spacing: { after: 120 },
+            spacing: { after: 200 },
             children: [
               new TextRun({ text: "  ", size: 10 }),
               new ImageRun({
                 data: merlinProfileImg,
-                transformation: { width: 44, height: 38 },
+                transformation: { width: 50, height: 44 },
                 type: "png",
               }),
-              new TextRun({ text: "  ", size: 10 }),
-              new TextRun({ text: "MERLIN", size: 44, bold: true, color: C.headerText }),
-              new TextRun({ text: "  ENERGY SOLUTIONS", size: 24, color: "8B9DC3" }),
+              new TextRun({ text: "  ", size: 14 }),
+              new TextRun({ text: "MERLIN", size: 36, bold: true, color: C.headerText }),
+              new TextRun({ text: " ENERGY SOLUTIONS", size: 20, color: "94A3B8" }),
             ],
           }),
-          // Emerald accent line
+          // Title: Battery Energy Storage System
           new Paragraph({
             shading: { type: ShadingType.SOLID, color: C.panelDark },
-            children: [],
-            border: {
-              bottom: { color: C.emeraldLight, space: 2, style: BorderStyle.SINGLE, size: 10 },
-            },
-            spacing: { after: 160 },
-          }),
-          // Title
-          new Paragraph({
-            shading: { type: ShadingType.SOLID, color: C.panelDark },
-            spacing: { after: 80 },
+            spacing: { after: 60 },
             children: [
               new TextRun({ text: "  ", size: 10 }),
               new TextRun({
                 text: "Battery Energy Storage System",
-                size: 38,
+                size: 42,
                 bold: true,
                 color: C.headerText,
               }),
             ],
           }),
-          // Subtitle with TrueQuote badge inline
+          // Subtitle: PROFESSIONAL PROPOSAL
           new Paragraph({
             shading: { type: ShadingType.SOLID, color: C.panelDark },
-            spacing: { after: 100 },
+            spacing: { after: 140 },
             children: [
               new TextRun({ text: "  ", size: 10 }),
               new TextRun({
                 text: "PROFESSIONAL PROPOSAL",
-                size: 24,
+                size: 26,
                 bold: true,
                 color: C.emeraldLight,
               }),
-              new TextRun({ text: "     ", size: 24 }),
+            ],
+          }),
+          // Emerald accent divider
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
+            children: [],
+            border: {
+              bottom: { color: C.emeraldLight, space: 2, style: BorderStyle.SINGLE, size: 8 },
+            },
+            spacing: { after: 140 },
+          }),
+          // TrueQuote badge row: icon + text (own clean line)
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
+            spacing: { after: 40 },
+            children: [
+              new TextRun({ text: "  ", size: 10 }),
               new ImageRun({
                 data: truequoteBadgeImg,
-                transformation: { width: 28, height: 33 },
+                transformation: { width: 22, height: 26 },
                 type: "png",
               }),
-              new TextRun({ text: " ", size: 10 }),
+              new TextRun({ text: "  ", size: 10 }),
               new TextRun({ text: "TrueQuote™ Verified", size: 20, bold: true, color: "FFD700" }),
+              new TextRun({ text: "  —  Every estimate backed by published sources", size: 18, color: "94A3B8" }),
             ],
           }),
           // Bottom padding
           new Paragraph({
             shading: { type: ShadingType.SOLID, color: C.panelDark },
-            children: [new TextRun({ text: " ", size: 12 })],
+            children: [new TextRun({ text: " ", size: 16 })],
             spacing: { after: 0 },
           }),
 
@@ -1256,7 +1264,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
               new TextRun({
                 text: "Let's build your energy future together.",
                 size: 20,
-                color: "8B9DC3",
+                color: "94A3B8",
                 italics: true,
               }),
             ],
@@ -1322,66 +1330,65 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.lightGrey },
-            children: [new TextRun({ text: " ", size: 8 })],
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
+            children: [new TextRun({ text: " ", size: 12 })],
             spacing: { after: 0 },
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
             spacing: { after: 60 },
             children: [
               new ImageRun({
                 data: proquoteBadgeImg,
-                transformation: { width: 32, height: 40 },
+                transformation: { width: 28, height: 35 },
                 type: "png",
               }),
             ],
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
             spacing: { after: 40 },
             children: [
-              new TextRun({ text: "Want more detail?  ", size: 22, color: C.dark }),
+              new TextRun({ text: "Want more detail?  ", size: 22, color: "94A3B8" }),
               new TextRun({
                 text: "Consider ProQuote™",
                 size: 22,
                 bold: true,
-                color: C.panelDarkAlt,
+                color: C.emeraldLight,
               }),
             ],
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
             spacing: { after: 40 },
             children: [
               new TextRun({
-                text: "For a more detailed quote — including detailed engineering, 8760 hourly analysis, Monte Carlo risk modeling,",
+                text: "8760 hourly analysis  •  Monte Carlo risk modeling  •  Bank-ready financials",
                 size: 18,
-                color: C.muted,
+                color: "94A3B8",
               }),
             ],
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
             spacing: { after: 40 },
             children: [
               new TextRun({
-                text: "bank-ready financial statements, and project-specific site assessment — upgrade to ",
+                text: "Detailed engineering  •  Project-specific site assessment  •  ",
                 size: 18,
-                color: C.muted,
+                color: "94A3B8",
               }),
-              new TextRun({ text: "ProQuote™", size: 18, bold: true, color: C.panelDarkAlt }),
-              new TextRun({ text: ".", size: 18, color: C.muted }),
+              new TextRun({ text: "Upgrade to ProQuote™", size: 18, bold: true, color: C.emeraldLight }),
             ],
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.lightGrey },
-            children: [new TextRun({ text: " ", size: 8 })],
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
+            children: [new TextRun({ text: " ", size: 12 })],
             spacing: { after: 100 },
           }),
 
