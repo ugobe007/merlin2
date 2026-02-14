@@ -404,24 +404,39 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         mode="about"
       />
 
-      {/* Inline guidance */}
-      <div className="space-y-2.5">
-        <p className="text-sm leading-relaxed text-slate-400">
-          Three system options for your{" "}
-          <span className="text-slate-200 font-medium">{getIndustryLabel(data.industry)}</span> facility
-          <span className="text-slate-500">{" "}· sized by Merlin based on your profile and goals</span>
-        </p>
+      {/* Header row: guidance + TrueQuote Proof badge */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-2.5">
+          <p className="text-sm leading-relaxed text-slate-400">
+            Three system options for your{" "}
+            <span className="text-slate-200 font-medium">{getIndustryLabel(data.industry)}</span> facility
+            <span className="text-slate-500">{" "}· sized by Merlin based on your profile and goals</span>
+          </p>
 
-        {/* Goal-based sizing hints */}
-        {goalModifiers.goalHints.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {goalModifiers.goalHints.map((hint, idx) => (
-              <span key={idx} className="text-xs text-[#3ECF8E]/80">
-                {hint}
-              </span>
-            ))}
+          {/* Goal-based sizing hints */}
+          {goalModifiers.goalHints.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {goalModifiers.goalHints.map((hint, idx) => (
+                <span key={idx} className="text-xs text-[#3ECF8E]/80">
+                  {hint}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ✅ TrueQuote Proof badge (prominent + clickable) */}
+        <button
+          type="button"
+          onClick={() => setShowTrueQuoteModal(true)}
+          className="shrink-0 group"
+          aria-label="Open TrueQuote financial summary"
+        >
+          <TrueQuoteBadgeCanonical showTooltip={false} />
+          <div className="mt-1 text-[11px] text-slate-500 text-right group-hover:text-slate-300 transition-colors">
+            View financial summary →
           </div>
-        )}
+        </button>
       </div>
 
       {/* Tier Cards Grid */}
@@ -481,6 +496,12 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                     <Check className="w-4 h-4 text-[#3ECF8E]" />
                   </div>
                 )}
+
+                {/* TrueQuote verified label */}
+                <div className="text-[11px] text-slate-500 flex items-center gap-2 mb-2">
+                  <span className="text-[#3ECF8E] font-semibold">TrueQuote</span>
+                  <span>verified pricing</span>
+                </div>
 
                 {/* Tier Name + Tagline */}
                 <h3 className={`${tier.config.headlineClass} mb-1 leading-tight`}>
@@ -605,14 +626,6 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
             </div>
           );
         })}
-      </div>
-
-      {/* TrueQuote Badge — clickable, opens proof modal */}
-      <div className="flex justify-center">
-        <TrueQuoteBadgeCanonical
-          onClick={() => setShowTrueQuoteModal(true)}
-          showTooltip={true}
-        />
       </div>
 
       {/* Equipment Legend */}
