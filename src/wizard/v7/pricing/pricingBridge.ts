@@ -26,7 +26,11 @@
  * - localStorage.setItem("V7_MOCK_PRICING", "fail")
  */
 
-import { calculateQuote, type QuoteInput, type QuoteResult } from "@/services/unifiedQuoteCalculator";
+import {
+  calculateQuote,
+  type QuoteInput,
+  type QuoteResult,
+} from "@/services/unifiedQuoteCalculator";
 import type { EquipmentBreakdown } from "@/utils/equipmentCalculations";
 import { getMockBehavior, delay, logMockMode } from "./mockPricingControl";
 
@@ -80,7 +84,7 @@ export interface ContractQuoteResult {
     // System add-ons (Step 4 configuration → feeds into SSOT calculateQuote)
     solarMW?: number;
     generatorMW?: number;
-    generatorFuelType?: 'natural-gas' | 'diesel' | 'dual-fuel';
+    generatorFuelType?: "natural-gas" | "diesel" | "dual-fuel";
     windMW?: number;
   };
 }
@@ -194,72 +198,72 @@ export interface WizardQuoteSSOT {
  */
 const INDUSTRY_SIZING_DEFAULTS: Record<string, { ratio: number; hours: number }> = {
   // Commercial (default)
-  "other": { ratio: 0.40, hours: 4 },
-  "auto": { ratio: 0.40, hours: 4 },
+  other: { ratio: 0.4, hours: 4 },
+  auto: { ratio: 0.4, hours: 4 },
 
   // Car wash: moderate demand spikes
   "car-wash": { ratio: 0.35, hours: 2 },
-  "car_wash": { ratio: 0.35, hours: 2 },
+  car_wash: { ratio: 0.35, hours: 2 },
 
   // Hotel: evening peak, overnight storage
-  "hotel": { ratio: 0.40, hours: 4 },
+  hotel: { ratio: 0.4, hours: 4 },
 
   // EV Charging: high peak, short duration
-  "ev-charging": { ratio: 0.60, hours: 2 },
-  "ev_charging": { ratio: 0.60, hours: 2 },
+  "ev-charging": { ratio: 0.6, hours: 2 },
+  ev_charging: { ratio: 0.6, hours: 2 },
 
   // Data center: critical load, long duration
-  "datacenter": { ratio: 0.50, hours: 4 },
-  "data_center": { ratio: 0.50, hours: 4 },
+  datacenter: { ratio: 0.5, hours: 4 },
+  data_center: { ratio: 0.5, hours: 4 },
 
   // Hospital: critical, redundancy required
-  "hospital": { ratio: 0.70, hours: 4 },
-  "healthcare": { ratio: 0.70, hours: 4 },
+  hospital: { ratio: 0.7, hours: 4 },
+  healthcare: { ratio: 0.7, hours: 4 },
 
-  // Warehouse: low demand, cost optimization
-  "warehouse": { ratio: 0.30, hours: 2 },
+  // Warehouse: TOU arbitrage + peak shaving
+  warehouse: { ratio: 0.3, hours: 4 },
 
   // Retail: TOU arbitrage focused
-  "retail": { ratio: 0.35, hours: 4 },
+  retail: { ratio: 0.35, hours: 4 },
 
-  // Manufacturing: demand charge focused
-  "manufacturing": { ratio: 0.45, hours: 2 },
+  // Manufacturing: NREL C&I standard + TOU arbitrage
+  manufacturing: { ratio: 0.45, hours: 4 },
 
   // Gas station: EV + convenience store
-  "gas-station": { ratio: 0.40, hours: 2 },
+  "gas-station": { ratio: 0.4, hours: 2 },
 
   // Truck stop: larger BESS for fleet charging + amenities
-  "truck-stop": { ratio: 0.50, hours: 4 },
+  "truck-stop": { ratio: 0.5, hours: 4 },
 
   // Airport: critical systems
-  "airport": { ratio: 0.50, hours: 4 },
+  airport: { ratio: 0.5, hours: 4 },
 
   // Casino: 24/7 operations
-  "casino": { ratio: 0.45, hours: 4 },
+  casino: { ratio: 0.45, hours: 4 },
 
   // Office: daytime peak shaving
-  "office": { ratio: 0.35, hours: 4 },
+  office: { ratio: 0.35, hours: 4 },
 
   // Restaurant: commercial load profile
-  "restaurant": { ratio: 0.40, hours: 4 },
+  restaurant: { ratio: 0.4, hours: 4 },
 
   // College/University: campus operations
-  "college": { ratio: 0.40, hours: 4 },
+  college: { ratio: 0.4, hours: 4 },
 
   // Apartment: multifamily residential
-  "apartment": { ratio: 0.35, hours: 4 },
+  apartment: { ratio: 0.35, hours: 4 },
 
   // Residential: single-family
-  "residential": { ratio: 0.30, hours: 4 },
+  residential: { ratio: 0.3, hours: 4 },
 
   // Cold storage: high continuous load
-  "cold-storage": { ratio: 0.50, hours: 4 },
+  "cold-storage": { ratio: 0.5, hours: 4 },
 
   // Indoor farm: grow lights + HVAC
-  "indoor-farm": { ratio: 0.40, hours: 4 },
+  "indoor-farm": { ratio: 0.4, hours: 4 },
 
   // Agriculture: irrigation + processing
-  "agriculture": { ratio: 0.35, hours: 4 },
+  agriculture: { ratio: 0.35, hours: 4 },
 };
 
 /**
@@ -299,13 +303,13 @@ export async function runPricingQuote(
   if (import.meta.env.DEV) {
     logMockMode();
     const mock = getMockBehavior();
-    
+
     // Apply delay if configured
     if (mock.delayMs > 0) {
       console.log(`🧪 [V7 Mock] Delaying pricing by ${mock.delayMs}ms (mode: ${mock.mode})`);
       await delay(mock.delayMs);
     }
-    
+
     // Force failure if configured
     if (mock.shouldFail) {
       console.log(`🧪 [V7 Mock] Forcing pricing failure (mode: ${mock.mode})`);
@@ -319,7 +323,7 @@ export async function runPricingQuote(
   // =========================================================================
   // REAL PRICING LOGIC
   // =========================================================================
-  
+
   // 1. Determine sizing (config override > contract hints)
   const ratio = config.storageToPeakRatioOverride ?? contract.sizingHints.storageToPeakRatio;
   const hours = config.durationHoursOverride ?? contract.sizingHints.durationHours;
@@ -366,7 +370,7 @@ export async function runPricingQuote(
         capexUSD: quoteResult.costs.netCost,
         grossCost: quoteResult.costs.totalProjectCost,
         itcAmount: quoteResult.costs.taxCredit,
-        itcRate: quoteResult.benchmarkAudit?.assumptions?.itcRate ?? 0.30,
+        itcRate: quoteResult.benchmarkAudit?.assumptions?.itcRate ?? 0.3,
         annualSavingsUSD: quoteResult.financials.annualSavings,
         roiYears: quoteResult.financials.paybackYears,
         breakdown: quoteResult.equipment,
@@ -446,7 +450,7 @@ export function generatePricingSnapshotId(inputs: {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32bit integer
   }
 

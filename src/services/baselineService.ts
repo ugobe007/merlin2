@@ -709,8 +709,8 @@ export function calculateDatacenterBESS(
 ): { powerMW: number; durationHours: number; description: string } {
   // Default multipliers (fallback if not in database)
   const defaultMultipliers = {
-    tier3: { power: 0.5, duration: 3 },
-    tier4: { power: 0.6, duration: 4 },
+    tier3: { power: 0.5, duration: 4 }, // Aligned to V7 industryCatalog data_center=4h
+    tier4: { power: 0.7, duration: 4 }, // Aligned to V7 hospital ratio=0.7, 4h
     microgrid: { power: 0.8, duration: 6 },
     limited: { power: 0.8, duration: 6 },
   };
@@ -2310,9 +2310,9 @@ export function calculateBESSSize(params: {
 
   switch (primaryObjective) {
     case "peak-shaving":
-      recommendedPowerMW = (peakDemandkW * 0.3) / 1000; // 30% peak shaving
-      recommendedDurationHours = 2;
-      peakShavingPercent = 30;
+      recommendedPowerMW = (peakDemandkW * 0.4) / 1000; // 40% peak shaving (NREL/IEEE standard)
+      recommendedDurationHours = 4; // NREL ATB 2024 C&I standard
+      peakShavingPercent = 40;
       break;
 
     case "backup":

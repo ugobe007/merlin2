@@ -28,17 +28,28 @@ export const SOLAR_TO_BESS_RATIO = 0.6; // Solar should be ~60% of BESS capacity
 // ============================================================================
 
 export const INDUSTRY_BESS_RATIOS: Record<string, number> = {
-  hotel: 0.5,
-  hospital: 0.6,
-  "data-center": 0.7,
+  // Aligned to V7 industryCatalog canonical values (Feb 14, 2026)
+  hotel: 0.4,
+  hospital: 0.7,
+  "data-center": 0.5,
   manufacturing: 0.45,
-  warehouse: 0.35,
-  retail: 0.4,
-  "car-wash": 0.45,
-  "ev-charging": 0.55,
-  casino: 0.55,
+  warehouse: 0.3,
+  retail: 0.35,
+  "car-wash": 0.35,
+  "ev-charging": 0.6,
+  casino: 0.45,
   airport: 0.5,
-  office: 0.4,
+  office: 0.35,
+  "gas-station": 0.4,
+  "truck-stop": 0.5,
+  restaurant: 0.4,
+  college: 0.4,
+  apartment: 0.35,
+  residential: 0.3,
+  "cold-storage": 0.5,
+  "indoor-farm": 0.4,
+  agriculture: 0.35,
+  government: 0.4,
   default: 0.4,
 };
 
