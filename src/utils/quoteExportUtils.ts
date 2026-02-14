@@ -7,6 +7,7 @@ import {
   Document,
   Paragraph,
   TextRun,
+  ImageRun,
   AlignmentType,
   Header,
   PageNumber,
@@ -23,6 +24,9 @@ import {
 import { saveAs } from "file-saver";
 import { loadWatermarkSettings } from "../components/AdminWatermarkSettings";
 import { MERLIN_ICON_BASE64 } from "./merlinIconData";
+import { TRUEQUOTE_BADGE_BASE64 } from "./truequoteBadgeData";
+import { PROQUOTE_BADGE_BASE64 } from "./proquoteBadgeData";
+import { MERLIN_PROFILE_BASE64 } from "./merlinProfileData";
 
 export interface QuoteExportData {
   // Project Information
@@ -166,37 +170,63 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   const storageKWh = storageMWh * 1000;
   const annualSavings = data.financialAnalysis?.annualSavingsUSD ?? 0;
   const paybackYears = data.financialAnalysis?.paybackYears ?? 0;
-  const roi10Year = annualSavings > 0 && data.systemCost > 0
-    ? (((annualSavings * 10) - data.systemCost) / data.systemCost * 100) : 0;
-  const roi25Year = annualSavings > 0 && data.systemCost > 0
-    ? (((annualSavings * 25) - data.systemCost) / data.systemCost * 100) : 0;
+  const roi10Year =
+    annualSavings > 0 && data.systemCost > 0
+      ? ((annualSavings * 10 - data.systemCost) / data.systemCost) * 100
+      : 0;
+  const roi25Year =
+    annualSavings > 0 && data.systemCost > 0
+      ? ((annualSavings * 25 - data.systemCost) / data.systemCost) * 100
+      : 0;
   const lifetimeSavings = annualSavings * 25;
-  const itcRate = data.financialAnalysis ? 0.30 : 0;
+  const itcRate = data.financialAnalysis ? 0.3 : 0;
   const itcAmount = data.systemCost * itcRate;
   const netCost = data.systemCost - itcAmount;
-  const demandChargeSavings = data.financialAnalysis?.demandChargeSavings ?? (data.demandCharge * storageKW * 0.5 * 12);
+  const demandChargeSavings =
+    data.financialAnalysis?.demandChargeSavings ?? data.demandCharge * storageKW * 0.5 * 12;
 
-  const fmt = (v: number) => `$${v.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-  const fmtDec = (v: number) => `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmt = (v: number) =>
+    `$${v.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  const fmtDec = (v: number) =>
+    `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const fmtPct = (v: number) => `${v.toFixed(1)}%`;
   const fmtNum = (v: number) => v.toLocaleString("en-US");
 
-  // ── Professional color palette (WHITE background) ────────────────
+  // ── Professional color palette (Supabase-inspired, WHITE background) ─
   const C = {
-    emerald: "1B8F5A",       // Dark green — readable on white
-    emeraldLight: "3ECF8E",  // Light green accent
-    emeraldBg: "EDFDF5",     // Very light green bg for tables
-    navy: "1A1F36",          // Primary text
-    dark: "2D3748",          // Secondary text
-    body: "4A5568",          // Body text
-    muted: "718096",         // Muted/caption text
-    border: "E2E8F0",        // Table borders
-    headerBg: "1A1F36",      // Dark header bg for tables
-    headerText: "FFFFFF",    // White text on dark bg
-    highlight: "F0FFF4",     // Highlight rows
+    emerald: "1B8F5A", // Dark green — readable on white
+    emeraldLight: "3ECF8E", // Light green accent
+    emeraldBg: "EDFDF5", // Very light green bg for tables
+    navy: "1A1F36", // Primary text
+    dark: "2D3748", // Secondary text
+    body: "4A5568", // Body text
+    muted: "718096", // Muted/caption text
+    border: "E2E8F0", // Table borders
+    headerBg: "1A1F36", // Dark header bg for tables
+    headerText: "FFFFFF", // White text on dark bg
+    highlight: "F0FFF4", // Highlight rows
     amber: "D97706",
     red: "DC2626",
+    // ── Slate Blue / Light Grey panels (Supabase style) ──
+    slateBlue: "3D5A80", // Slate Blue headline panel
+    slateBlueDark: "2B4162", // Darker variant
+    lightGrey: "F1F5F9", // Light grey sub-panel
+    lightGreyDark: "E2E8F0", // Slightly darker grey
+    gold: "D4A017", // Gold accent for TrueQuote badge
   };
+
+  // ── Helper: decode base64 string to Uint8Array for ImageRun ──────
+  const b64toUint8 = (b64: string): Uint8Array => {
+    const raw = atob(b64);
+    const arr = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  };
+
+  // Pre-decode images
+  const merlinProfileImg = b64toUint8(MERLIN_PROFILE_BASE64);
+  const truequoteBadgeImg = b64toUint8(TRUEQUOTE_BADGE_BASE64);
+  const proquoteBadgeImg = b64toUint8(PROQUOTE_BADGE_BASE64);
 
   // ── Helper: Section heading ──────────────────────────────────────
   const sectionHeading = (num: string, text: string) =>
@@ -214,9 +244,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   // ── Helper: Sub-heading ──────────────────────────────────────────
   const subHeading = (text: string) =>
     new Paragraph({
-      children: [
-        new TextRun({ text, size: 24, bold: true, color: C.dark }),
-      ],
+      children: [new TextRun({ text, size: 24, bold: true, color: C.dark })],
       spacing: { before: 280, after: 120 },
     });
 
@@ -233,7 +261,12 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
     new Paragraph({
       children: [
         new TextRun({ text: `${label}:  `, bold: true, size: 22, color: C.dark }),
-        new TextRun({ text: value, size: 22, color: valueColor || C.navy, bold: valueBold ?? !!valueColor }),
+        new TextRun({
+          text: value,
+          size: 22,
+          color: valueColor || C.navy,
+          bold: valueBold ?? !!valueColor,
+        }),
       ],
       spacing: { after: 100 },
     });
@@ -257,31 +290,46 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
       rows: [
         new TableRow({
           tableHeader: true,
-          children: headers.map((h) =>
-            new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: h, size: 20, bold: true, color: C.headerText })], alignment: AlignmentType.LEFT })],
-              shading: { type: ShadingType.SOLID, color: C.headerBg },
-              width: { size: Math.floor(100 / headers.length), type: WidthType.PERCENTAGE },
-            })
+          children: headers.map(
+            (h) =>
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    children: [new TextRun({ text: h, size: 20, bold: true, color: C.headerText })],
+                    alignment: AlignmentType.LEFT,
+                  }),
+                ],
+                shading: { type: ShadingType.SOLID, color: C.headerBg },
+                width: { size: Math.floor(100 / headers.length), type: WidthType.PERCENTAGE },
+              })
           ),
         }),
-        ...rows.map((row, rowIdx) =>
-          new TableRow({
-            children: row.map((cell, colIdx) =>
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun({
-                    text: cell,
-                    size: 20,
-                    color: highlightCol === colIdx ? C.emerald : C.navy,
-                    bold: highlightCol === colIdx,
-                  })],
-                  alignment: colIdx === 0 ? AlignmentType.LEFT : AlignmentType.RIGHT,
-                })],
-                shading: rowIdx % 2 === 1 ? { type: ShadingType.SOLID, color: C.highlight } : undefined,
-              })
-            ),
-          })
+        ...rows.map(
+          (row, rowIdx) =>
+            new TableRow({
+              children: row.map(
+                (cell, colIdx) =>
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: cell,
+                            size: 20,
+                            color: highlightCol === colIdx ? C.emerald : C.navy,
+                            bold: highlightCol === colIdx,
+                          }),
+                        ],
+                        alignment: colIdx === 0 ? AlignmentType.LEFT : AlignmentType.RIGHT,
+                      }),
+                    ],
+                    shading:
+                      rowIdx % 2 === 1
+                        ? { type: ShadingType.SOLID, color: C.highlight }
+                        : undefined,
+                  })
+              ),
+            })
         ),
       ],
     });
@@ -298,15 +346,22 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
     });
 
   // ── Helper: Spacer ───────────────────────────────────────────────
-  const spacer = (pts = 200) => new Paragraph({ children: [new TextRun({ text: "" })], spacing: { after: pts } });
+  const spacer = (pts = 200) =>
+    new Paragraph({ children: [new TextRun({ text: "" })], spacing: { after: pts } });
 
   // ── TrueQuote confidence text ────────────────────────────────────
-  const confidenceText = data.trueQuoteConfidence?.overall === "high"
-    ? "HIGH — Industry-specific model with verified inputs"
-    : data.trueQuoteConfidence?.overall === "medium"
-      ? "MEDIUM — Some inputs estimated from industry defaults"
-      : "STANDARD — General facility estimate";
-  const confidenceColor = data.trueQuoteConfidence?.overall === "high" ? C.emerald : data.trueQuoteConfidence?.overall === "medium" ? C.amber : C.muted;
+  const confidenceText =
+    data.trueQuoteConfidence?.overall === "high"
+      ? "HIGH — Industry-specific model with verified inputs"
+      : data.trueQuoteConfidence?.overall === "medium"
+        ? "MEDIUM — Some inputs estimated from industry defaults"
+        : "STANDARD — General facility estimate";
+  const confidenceColor =
+    data.trueQuoteConfidence?.overall === "high"
+      ? C.emerald
+      : data.trueQuoteConfidence?.overall === "medium"
+        ? C.amber
+        : C.muted;
 
   // ════════════════════════════════════════════════════════════════════
   // BUILD DOCUMENT
@@ -314,7 +369,8 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   const doc = new Document({
     creator: "Merlin Energy Solutions — TrueQuote™",
     title: `${data.useCase} BESS Proposal — ${data.quoteNumber}`,
-    description: "Professional Battery Energy Storage System proposal with TrueQuote™ verified pricing",
+    description:
+      "Professional Battery Energy Storage System proposal with TrueQuote™ verified pricing",
     styles: {
       default: {
         document: { run: { font: "Calibri", size: 22, color: C.navy } },
@@ -332,7 +388,11 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             children: [
               new Paragraph({
                 children: [
-                  new TextRun({ text: watermarkText?.toUpperCase() || "", size: 14, color: "BBBBBB" }),
+                  new TextRun({
+                    text: watermarkText?.toUpperCase() || "",
+                    size: 14,
+                    color: "BBBBBB",
+                  }),
                   new TextRun({ text: "\t" }),
                   new TextRun({ text: `Quote ${data.quoteNumber}`, size: 14, color: "BBBBBB" }),
                 ],
@@ -347,7 +407,11 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
               new Paragraph({
                 alignment: AlignmentType.CENTER,
                 children: [
-                  new TextRun({ text: "Merlin Energy Solutions  •  TrueQuote™ Verified  •  Page ", size: 16, color: C.muted }),
+                  new TextRun({
+                    text: "Merlin Energy Solutions  •  TrueQuote™ Verified  •  Page ",
+                    size: 16,
+                    color: C.muted,
+                  }),
                   new TextRun({ children: [PageNumber.CURRENT], size: 16, color: C.muted }),
                   new TextRun({ text: "  •  Confidential", size: 16, color: C.muted }),
                 ],
@@ -356,73 +420,177 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           }),
         },
         children: [
+          // ═══════════════════════════════════════════════════════════
+          // COVER / HEADER BLOCK — Slate Blue + Light Grey panels
+          // ═══════════════════════════════════════════════════════════
 
-          // ═══════════════════════════════════════════════════════════
-          // COVER / HEADER BLOCK
-          // ═══════════════════════════════════════════════════════════
+          // ── Slate Blue Headline Panel ────────────────────────────
           new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            children: [new TextRun({ text: " ", size: 8 })],
+            spacing: { after: 0 },
+          }),
+          // Merlin icon + company name row
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            spacing: { after: 40 },
             children: [
-              new TextRun({ text: "MERLIN", size: 52, bold: true, color: C.navy }),
-              new TextRun({ text: "  ENERGY SOLUTIONS", size: 32, color: C.muted }),
+              new TextRun({ text: "    ", size: 10 }),
+              new ImageRun({
+                data: merlinProfileImg,
+                transformation: { width: 50, height: 43 },
+                type: "png",
+              }),
+              new TextRun({ text: "   ", size: 10 }),
+              new TextRun({ text: "MERLIN", size: 52, bold: true, color: C.headerText }),
+              new TextRun({ text: "  ENERGY SOLUTIONS", size: 28, color: "B0C4DE" }),
+            ],
+          }),
+          // Divider line inside Slate Blue
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            children: [],
+            border: {
+              bottom: { color: C.emeraldLight, space: 1, style: BorderStyle.SINGLE, size: 12 },
+            },
+            spacing: { after: 100 },
+          }),
+          // Main title row with TrueQuote badge
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            spacing: { after: 40 },
+            children: [
+              new TextRun({ text: "    ", size: 10 }),
+              new TextRun({
+                text: "Battery Energy Storage System",
+                size: 40,
+                bold: true,
+                color: C.headerText,
+              }),
+            ],
+          }),
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            spacing: { after: 60 },
+            children: [
+              new TextRun({ text: "    ", size: 10 }),
+              new TextRun({
+                text: "PROFESSIONAL PROPOSAL",
+                size: 26,
+                bold: true,
+                color: C.emeraldLight,
+                allCaps: true,
+              }),
+              new TextRun({ text: "            ", size: 10 }),
+              new ImageRun({
+                data: truequoteBadgeImg,
+                transformation: { width: 60, height: 72 },
+                type: "png",
+              }),
+              new TextRun({ text: "  ", size: 10 }),
+              new TextRun({ text: "TrueQuote™ Verified", size: 24, bold: true, color: "FFD700" }),
+            ],
+          }),
+          // Bottom of Slate Blue panel
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            children: [new TextRun({ text: " ", size: 8 })],
+            spacing: { after: 0 },
+          }),
+
+          // ── Light Grey Sub-Panel (project metadata) ──────────────
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            children: [new TextRun({ text: " ", size: 6 })],
+            spacing: { after: 0 },
+          }),
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            spacing: { after: 40 },
+            children: [
+              new TextRun({ text: "    ", size: 10 }),
+              new TextRun({ text: "Client:  ", size: 20, bold: true, color: C.dark }),
+              new TextRun({
+                text: data.projectName?.replace(/—.*/, "").trim() || "Custom Configuration",
+                size: 20,
+                color: C.navy,
+              }),
+              new TextRun({ text: "      |      ", size: 18, color: C.muted }),
+              new TextRun({ text: "Location:  ", size: 20, bold: true, color: C.dark }),
+              new TextRun({ text: data.location || "—", size: 20, color: C.navy }),
+            ],
+          }),
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            spacing: { after: 40 },
+            children: [
+              new TextRun({ text: "    ", size: 10 }),
+              new TextRun({ text: "Industry:  ", size: 20, bold: true, color: C.dark }),
+              new TextRun({ text: data.useCase || "Commercial", size: 20, color: C.navy }),
+              new TextRun({ text: "      |      ", size: 18, color: C.muted }),
+              new TextRun({ text: "Quote:  ", size: 20, bold: true, color: C.dark }),
+              new TextRun({
+                text: `${data.quoteNumber}  •  ${data.quoteDate}`,
+                size: 20,
+                color: C.navy,
+              }),
+            ],
+          }),
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            spacing: { after: 40 },
+            children: [
+              new TextRun({ text: "    ", size: 10 }),
+              new TextRun({ text: "Grid:  ", size: 20, bold: true, color: C.dark }),
+              new TextRun({ text: data.gridConnection || "Grid-Tied", size: 20, color: C.navy }),
+              new TextRun({ text: "      |      ", size: 18, color: C.muted }),
+              new TextRun({ text: "Valid For:  ", size: 20, bold: true, color: C.dark }),
+              new TextRun({ text: "30 days from issue date", size: 20, color: C.navy }),
+            ],
+          }),
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            children: [new TextRun({ text: " ", size: 6 })],
+            spacing: { after: 0 },
+          }),
+
+          // ── TrueQuote™ verification strip ────────────────────────
+          new Paragraph({
+            shading: { type: ShadingType.SOLID, color: C.emeraldBg },
+            children: [
+              new TextRun({ text: "  ✓  ", size: 24, bold: true, color: C.emerald }),
+              new TextRun({ text: "TrueQuote™ Verified", size: 22, bold: true, color: C.emerald }),
+              new TextRun({
+                text: "  —  Every number in this proposal is traceable to an authoritative source (NREL, EIA, IEEE, IRA 2022). ",
+                size: 20,
+                color: C.dark,
+              }),
+              new TextRun({ text: "No black-box estimates.", size: 20, bold: true, color: C.dark }),
             ],
             spacing: { after: 60 },
           }),
           new Paragraph({
-            children: [],
-            border: {
-              bottom: { color: C.emeraldLight, space: 1, style: BorderStyle.SINGLE, size: 18 },
-            },
-            spacing: { after: 300 },
-          }),
-
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Battery Energy Storage System", size: 40, bold: true, color: C.navy }),
-            ],
-            spacing: { after: 80 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "PROFESSIONAL PROPOSAL", size: 28, bold: true, color: C.emerald, allCaps: true }),
-            ],
-            spacing: { after: 200 },
-          }),
-
-          // TrueQuote™ explanation box
-          new Paragraph({
             shading: { type: ShadingType.SOLID, color: C.emeraldBg },
             children: [
-              new TextRun({ text: "  ✓  TrueQuote™ Verified", size: 24, bold: true, color: C.emerald }),
-              new TextRun({ text: "  —  Every number in this proposal is traceable to an authoritative source (NREL, EIA, IEEE, IRA 2022). ", size: 20, color: C.dark }),
-              new TextRun({ text: "No black-box estimates.", size: 20, bold: true, color: C.dark }),
-            ],
-            spacing: { after: 120 },
-          }),
-          new Paragraph({
-            shading: { type: ShadingType.SOLID, color: C.emeraldBg },
-            children: [
-              new TextRun({ text: `  Confidence: ${confidenceText}`, size: 20, color: confidenceColor, bold: true }),
-              ...(data.trueQuoteConfidence ? [
-                new TextRun({ text: `  |  Profile: ${data.trueQuoteConfidence.profileCompleteness}% complete (${data.trueQuoteConfidence.userInputs} inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults)`, size: 18, color: C.muted }),
-              ] : []),
+              new TextRun({
+                text: `  Confidence: ${confidenceText}`,
+                size: 20,
+                color: confidenceColor,
+                bold: true,
+              }),
+              ...(data.trueQuoteConfidence
+                ? [
+                    new TextRun({
+                      text: `  |  Profile: ${data.trueQuoteConfidence.profileCompleteness}% complete (${data.trueQuoteConfidence.userInputs} inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults)`,
+                      size: 18,
+                      color: C.muted,
+                    }),
+                  ]
+                : []),
             ],
             spacing: { after: 300 },
           }),
-
-          // Project info table
-          makeTable(
-            ["Project Detail", "Value"],
-            [
-              ["Client / Facility", data.projectName?.replace(/—.*/, "").trim() || "Custom Configuration"],
-              ["Location", data.location || "—"],
-              ["Industry / Application", data.useCase || "Commercial"],
-              ["Quote Date", data.quoteDate],
-              ["Quote Reference", data.quoteNumber],
-              ["Grid Connection", data.gridConnection || "Grid-Tied"],
-              ["Valid For", "30 days from issue date"],
-            ]
-          ),
-          spacer(400),
+          spacer(100),
 
           // ═══════════════════════════════════════════════════════════
           // 1. EXECUTIVE SUMMARY
@@ -430,27 +598,35 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           sectionHeading("01", "Executive Summary"),
           bodyParagraph(
             `This proposal presents a turnkey ${storageMWh.toFixed(1)} MWh Battery Energy Storage System (BESS) ` +
-            `designed for your ${data.useCase} facility in ${data.location || "your area"}. ` +
-            `The system delivers measurable cost reductions through peak demand shaving, energy arbitrage, ` +
-            `and demand charge management while providing backup power resilience.`
+              `designed for your ${data.useCase} facility in ${data.location || "your area"}. ` +
+              `The system delivers measurable cost reductions through peak demand shaving, energy arbitrage, ` +
+              `and demand charge management while providing backup power resilience.`
           ),
           spacer(100),
 
           // Hero metrics
           metricBox("Total System Investment", fmt(data.systemCost)),
           ...(itcAmount > 0 ? [metricBox("Federal ITC Credit (30%)", `– ${fmt(itcAmount)}`)] : []),
-          ...(netCost !== data.systemCost ? [metricBox("Net Investment After Incentives", fmt(netCost))] : []),
+          ...(netCost !== data.systemCost
+            ? [metricBox("Net Investment After Incentives", fmt(netCost))]
+            : []),
           metricBox("Estimated Annual Savings", `${fmt(annualSavings)}/year`),
-          ...(paybackYears > 0 ? [metricBox("Simple Payback Period", `${paybackYears.toFixed(1)} years`)] : []),
+          ...(paybackYears > 0
+            ? [metricBox("Simple Payback Period", `${paybackYears.toFixed(1)} years`)]
+            : []),
           ...(roi25Year > 0 ? [metricBox("25-Year Lifetime ROI", fmtPct(roi25Year))] : []),
-          ...(lifetimeSavings > 0 ? [metricBox("Projected 25-Year Savings", fmt(lifetimeSavings))] : []),
+          ...(lifetimeSavings > 0
+            ? [metricBox("Projected 25-Year Savings", fmt(lifetimeSavings))]
+            : []),
           spacer(200),
 
           // ═══════════════════════════════════════════════════════════
           // 2. SYSTEM SPECIFICATIONS
           // ═══════════════════════════════════════════════════════════
           sectionHeading("02", "System Specifications"),
-          bodyParagraph("The following specifications detail the proposed BESS configuration, optimized for your facility's load profile and energy goals."),
+          bodyParagraph(
+            "The following specifications detail the proposed BESS configuration, optimized for your facility's load profile and energy goals."
+          ),
 
           subHeading("Battery Energy Storage"),
           makeTable(
@@ -472,31 +648,81 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           makeTable(
             ["Component", "Specification"],
             [
-              ["Inverter / PCS", `${data.numberOfInverters || 1}× ${fmtNum(data.inverterRating || storageKW)} kW — ${data.inverterType || "PCS"}`],
+              [
+                "Inverter / PCS",
+                `${data.numberOfInverters || 1}× ${fmtNum(data.inverterRating || storageKW)} kW — ${data.inverterType || "PCS"}`,
+              ],
               ["Inverter Efficiency", `${data.inverterEfficiency || 96}%`],
               ["System Voltage (AC)", `${data.systemVoltage || 480}V, 3-phase`],
               ["DC Bus Voltage", `${data.dcVoltage || 800}V nominal`],
-              ["Switchgear", `${data.switchgearType || "AC Switchgear"} — ${fmtNum(Math.round(data.switchgearRating || storageKW * 1.25))} kW rated`],
+              [
+                "Switchgear",
+                `${data.switchgearType || "AC Switchgear"} — ${fmtNum(Math.round(data.switchgearRating || storageKW * 1.25))} kW rated`,
+              ],
               ["BMS", `${data.bmsType || "Distributed"} Battery Management System`],
-              ...(data.transformerRequired ? [["Transformer", `${data.transformerVoltage || "480V/13.8kV"} — ${fmtNum(Math.round(data.transformerRating || storageKW))} kVA`]] : []),
+              ...(data.transformerRequired
+                ? [
+                    [
+                      "Transformer",
+                      `${data.transformerVoltage || "480V/13.8kV"} — ${fmtNum(Math.round(data.transformerRating || storageKW))} kVA`,
+                    ],
+                  ]
+                : []),
             ]
           ),
           spacer(200),
 
           // Renewables / generators section (if included)
-          ...((data.solarPVIncluded || data.dieselGenIncluded || data.naturalGasGenIncluded || data.fuelCellIncluded) ? [
-            subHeading("Integrated Generation Assets"),
-            makeTable(
-              ["Asset", "Capacity", "Details"],
-              [
-                ...(data.solarPVIncluded && data.solarCapacityKW ? [["Solar PV Array", `${fmtNum(data.solarCapacityKW)} kW`, `${data.solarPanelType || "Monocrystalline"} — ${data.solarPanelEfficiency || 21}% efficiency`]] : []),
-                ...(data.naturalGasGenIncluded && data.naturalGasCapacityKW ? [["Natural Gas Generator", `${fmtNum(data.naturalGasCapacityKW)} kW`, "Backup / peak shaving"]] : []),
-                ...(data.dieselGenIncluded && data.dieselGenCapacityKW ? [["Diesel Generator", `${fmtNum(data.dieselGenCapacityKW)} kW`, "Emergency backup"]] : []),
-                ...(data.fuelCellIncluded && data.fuelCellCapacityKW ? [["Fuel Cell", `${fmtNum(data.fuelCellCapacityKW)} kW`, `${data.fuelCellType || "Hydrogen"} fuel cell`]] : []),
+          ...(data.solarPVIncluded ||
+          data.dieselGenIncluded ||
+          data.naturalGasGenIncluded ||
+          data.fuelCellIncluded
+            ? [
+                subHeading("Integrated Generation Assets"),
+                makeTable(
+                  ["Asset", "Capacity", "Details"],
+                  [
+                    ...(data.solarPVIncluded && data.solarCapacityKW
+                      ? [
+                          [
+                            "Solar PV Array",
+                            `${fmtNum(data.solarCapacityKW)} kW`,
+                            `${data.solarPanelType || "Monocrystalline"} — ${data.solarPanelEfficiency || 21}% efficiency`,
+                          ],
+                        ]
+                      : []),
+                    ...(data.naturalGasGenIncluded && data.naturalGasCapacityKW
+                      ? [
+                          [
+                            "Natural Gas Generator",
+                            `${fmtNum(data.naturalGasCapacityKW)} kW`,
+                            "Backup / peak shaving",
+                          ],
+                        ]
+                      : []),
+                    ...(data.dieselGenIncluded && data.dieselGenCapacityKW
+                      ? [
+                          [
+                            "Diesel Generator",
+                            `${fmtNum(data.dieselGenCapacityKW)} kW`,
+                            "Emergency backup",
+                          ],
+                        ]
+                      : []),
+                    ...(data.fuelCellIncluded && data.fuelCellCapacityKW
+                      ? [
+                          [
+                            "Fuel Cell",
+                            `${fmtNum(data.fuelCellCapacityKW)} kW`,
+                            `${data.fuelCellType || "Hydrogen"} fuel cell`,
+                          ],
+                        ]
+                      : []),
+                  ]
+                ),
+                spacer(200),
               ]
-            ),
-            spacer(200),
-          ] : []),
+            : []),
 
           // ═══════════════════════════════════════════════════════════
           // 3. LOAD PROFILE & SIZING METHODOLOGY
@@ -504,42 +730,73 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           sectionHeading("03", "Load Profile & Sizing"),
 
           // kW contributors from TrueQuote validation
-          ...(data.trueQuoteValidation?.kWContributors && Object.keys(data.trueQuoteValidation.kWContributors).length > 0 ? [
-            bodyParagraph("Your facility's power demand was analyzed using industry-specific load modeling. Each contributor below has been independently sized using authoritative standards."),
-            subHeading("Load Breakdown — TrueQuote™ Verified"),
-            makeTable(
-              ["Load Component", "Peak Demand (kW)", "Share of Total"],
-              Object.entries(data.trueQuoteValidation.kWContributors)
-                .filter(([, kw]) => kw > 0)
-                .sort(([, a], [, b]) => b - a)
-                .map(([key, kw]) => {
-                  const share = data.trueQuoteValidation?.kWContributorShares?.[key];
-                  const label = key.replace(/_/g, " ").replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()).trim();
-                  return [label, `${fmtNum(Math.round(kw))} kW`, share != null ? fmtPct(share * 100) : "—"];
-                }),
-              2
-            ),
-            ...(data.trueQuoteValidation.dutyCycle != null ? [
-              spacer(80),
-              kvRow("Facility Duty Cycle", fmtPct(data.trueQuoteValidation.dutyCycle * 100), C.emerald),
-            ] : []),
-            spacer(100),
-            ...(data.trueQuoteValidation.assumptions?.length ? [
-              subHeading("Sizing Methodology & Sources"),
-              ...data.trueQuoteValidation.assumptions.map((a) => bullet(a)),
-            ] : []),
-          ] : [
-            bodyParagraph(`The BESS is sized at ${data.storageSizeMW.toFixed(2)} MW / ${data.durationHours}hr based on your facility's estimated peak demand and operational requirements.`),
-          ]),
+          ...(data.trueQuoteValidation?.kWContributors &&
+          Object.keys(data.trueQuoteValidation.kWContributors).length > 0
+            ? [
+                bodyParagraph(
+                  "Your facility's power demand was analyzed using industry-specific load modeling. Each contributor below has been independently sized using authoritative standards."
+                ),
+                subHeading("Load Breakdown — TrueQuote™ Verified"),
+                makeTable(
+                  ["Load Component", "Peak Demand (kW)", "Share of Total"],
+                  Object.entries(data.trueQuoteValidation.kWContributors)
+                    .filter(([, kw]) => kw > 0)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([key, kw]) => {
+                      const share = data.trueQuoteValidation?.kWContributorShares?.[key];
+                      const label = key
+                        .replace(/_/g, " ")
+                        .replace(/([A-Z])/g, " $1")
+                        .replace(/^./, (s) => s.toUpperCase())
+                        .trim();
+                      return [
+                        label,
+                        `${fmtNum(Math.round(kw))} kW`,
+                        share != null ? fmtPct(share * 100) : "—",
+                      ];
+                    }),
+                  2
+                ),
+                ...(data.trueQuoteValidation.dutyCycle != null
+                  ? [
+                      spacer(80),
+                      kvRow(
+                        "Facility Duty Cycle",
+                        fmtPct(data.trueQuoteValidation.dutyCycle * 100),
+                        C.emerald
+                      ),
+                    ]
+                  : []),
+                spacer(100),
+                ...(data.trueQuoteValidation.assumptions?.length
+                  ? [
+                      subHeading("Sizing Methodology & Sources"),
+                      ...data.trueQuoteValidation.assumptions.map((a) => bullet(a)),
+                    ]
+                  : []),
+              ]
+            : [
+                bodyParagraph(
+                  `The BESS is sized at ${data.storageSizeMW.toFixed(2)} MW / ${data.durationHours}hr based on your facility's estimated peak demand and operational requirements.`
+                ),
+              ]),
 
-          ...(data.loadProfile ? [
-            spacer(100),
-            subHeading("Load Summary"),
-            kvRow("Base Load", `${fmtNum(Math.round(data.loadProfile.baseLoadKW))} kW`),
-            kvRow("Peak Load", `${fmtNum(Math.round(data.loadProfile.peakLoadKW))} kW`),
-            kvRow("Daily Energy Consumption", `${fmtNum(Math.round(data.loadProfile.energyKWhPerDay))} kWh/day`),
-            kvRow("Annual Energy Consumption", `${fmtNum(Math.round(data.loadProfile.energyKWhPerDay * 365))} kWh/year`),
-          ] : []),
+          ...(data.loadProfile
+            ? [
+                spacer(100),
+                subHeading("Load Summary"),
+                kvRow("Base Load", `${fmtNum(Math.round(data.loadProfile.baseLoadKW))} kW`),
+                kvRow("Peak Load", `${fmtNum(Math.round(data.loadProfile.peakLoadKW))} kW`),
+                kvRow(
+                  "Daily Energy Consumption",
+                  `${fmtNum(Math.round(data.loadProfile.energyKWhPerDay))} kWh/day`
+                ),
+                kvRow(
+                  "Annual Energy Consumption",
+                  `${fmtNum(Math.round(data.loadProfile.energyKWhPerDay * 365))} kWh/year`
+                ),
+              ]
+            : []),
           spacer(300),
 
           // ═══════════════════════════════════════════════════════════
@@ -548,7 +805,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           sectionHeading("04", "Financial Analysis"),
           bodyParagraph(
             "The financial model below reflects current market pricing (NREL ATB 2024), federal incentives under the Inflation Reduction Act (IRA 2022), " +
-            "and location-specific utility rates. All projections are based on conservative assumptions."
+              "and location-specific utility rates. All projections are based on conservative assumptions."
           ),
 
           subHeading("Investment Summary"),
@@ -556,7 +813,9 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             ["Line Item", "Amount"],
             [
               ["Gross System Cost", fmt(data.systemCost)],
-              ...(itcAmount > 0 ? [["Federal Investment Tax Credit (ITC — 30%)", `– ${fmt(itcAmount)}`]] : []),
+              ...(itcAmount > 0
+                ? [["Federal Investment Tax Credit (ITC — 30%)", `– ${fmt(itcAmount)}`]]
+                : []),
               ...(netCost !== data.systemCost ? [["Net Cost After Incentives", fmt(netCost)]] : []),
             ],
             1
@@ -567,14 +826,50 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           makeTable(
             ["Metric", "Value", "Notes"],
             [
-              ["Annual Energy Savings", `${fmt(annualSavings)}/yr`, "Energy arbitrage + peak shaving"],
-              ...(demandChargeSavings > 0 ? [["Annual Demand Charge Reduction", `${fmt(demandChargeSavings)}/yr`, `At $${data.demandCharge}/kW`]] : []),
-              ...(paybackYears > 0 ? [["Simple Payback Period", `${paybackYears.toFixed(1)} years`, netCost > 0 ? "Net cost basis" : "Gross cost basis"]] : []),
-              ...(roi10Year !== 0 ? [["10-Year ROI", fmtPct(roi10Year), "Net of initial investment"]] : []),
-              ...(roi25Year !== 0 ? [["25-Year Lifetime ROI", fmtPct(roi25Year), "Full system lifespan"]] : []),
-              ...(lifetimeSavings > 0 ? [["25-Year Cumulative Savings", fmt(lifetimeSavings), "Undiscounted"]] : []),
-              ...(data.financialAnalysis?.npv != null ? [["Net Present Value (NPV)", fmt(data.financialAnalysis.npv), "8% discount rate"]] : []),
-              ...(data.financialAnalysis?.irr != null ? [["Internal Rate of Return (IRR)", fmtPct(data.financialAnalysis.irr * 100), "Project-level IRR"]] : []),
+              [
+                "Annual Energy Savings",
+                `${fmt(annualSavings)}/yr`,
+                "Energy arbitrage + peak shaving",
+              ],
+              ...(demandChargeSavings > 0
+                ? [
+                    [
+                      "Annual Demand Charge Reduction",
+                      `${fmt(demandChargeSavings)}/yr`,
+                      `At $${data.demandCharge}/kW`,
+                    ],
+                  ]
+                : []),
+              ...(paybackYears > 0
+                ? [
+                    [
+                      "Simple Payback Period",
+                      `${paybackYears.toFixed(1)} years`,
+                      netCost > 0 ? "Net cost basis" : "Gross cost basis",
+                    ],
+                  ]
+                : []),
+              ...(roi10Year !== 0
+                ? [["10-Year ROI", fmtPct(roi10Year), "Net of initial investment"]]
+                : []),
+              ...(roi25Year !== 0
+                ? [["25-Year Lifetime ROI", fmtPct(roi25Year), "Full system lifespan"]]
+                : []),
+              ...(lifetimeSavings > 0
+                ? [["25-Year Cumulative Savings", fmt(lifetimeSavings), "Undiscounted"]]
+                : []),
+              ...(data.financialAnalysis?.npv != null
+                ? [["Net Present Value (NPV)", fmt(data.financialAnalysis.npv), "8% discount rate"]]
+                : []),
+              ...(data.financialAnalysis?.irr != null
+                ? [
+                    [
+                      "Internal Rate of Return (IRR)",
+                      fmtPct(data.financialAnalysis.irr * 100),
+                      "Project-level IRR",
+                    ],
+                  ]
+                : []),
             ],
             1
           ),
@@ -584,7 +879,11 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           makeTable(
             ["Parameter", "Value", "Source"],
             [
-              ["Commercial Electricity Rate", `$${data.utilityRate.toFixed(4)}/kWh`, "EIA / Local Utility"],
+              [
+                "Commercial Electricity Rate",
+                `$${data.utilityRate.toFixed(4)}/kWh`,
+                "EIA / Local Utility",
+              ],
               ["Demand Charge", `$${data.demandCharge.toFixed(2)}/kW`, "EIA / Local Utility"],
               ["Annual Rate Escalation", "2.5%", "EIA Annual Energy Outlook"],
               ["Discount Rate", "8.0%", "Industry standard (C&I)"],
@@ -593,28 +892,32 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           spacer(200),
 
           // Cash flow summary (5 year snapshot)
-          ...(annualSavings > 0 ? [
-            subHeading("Projected Cash Flow (Years 1–5)"),
-            makeTable(
-              ["Year", "Annual Savings", "Cumulative Savings", "Net Position"],
-              Array.from({ length: 5 }, (_, i) => {
-                const yr = i + 1;
-                const escalation = Math.pow(1.025, yr - 1);
-                const yrSavings = annualSavings * escalation;
-                const cumulative = annualSavings * ((Math.pow(1.025, yr) - 1) / 0.025);
-                const netPos = cumulative - netCost;
-                return [
-                  `Year ${yr}`,
-                  fmt(Math.round(yrSavings)),
-                  fmt(Math.round(cumulative)),
-                  `${netPos >= 0 ? "+" : ""}${fmt(Math.round(netPos))}`,
-                ];
-              }),
-              3
-            ),
-            spacer(100),
-            bodyParagraph("Note: Savings projections include 2.5% annual utility rate escalation. Actual results may vary based on usage patterns, rate changes, and system performance."),
-          ] : []),
+          ...(annualSavings > 0
+            ? [
+                subHeading("Projected Cash Flow (Years 1–5)"),
+                makeTable(
+                  ["Year", "Annual Savings", "Cumulative Savings", "Net Position"],
+                  Array.from({ length: 5 }, (_, i) => {
+                    const yr = i + 1;
+                    const escalation = Math.pow(1.025, yr - 1);
+                    const yrSavings = annualSavings * escalation;
+                    const cumulative = annualSavings * ((Math.pow(1.025, yr) - 1) / 0.025);
+                    const netPos = cumulative - netCost;
+                    return [
+                      `Year ${yr}`,
+                      fmt(Math.round(yrSavings)),
+                      fmt(Math.round(cumulative)),
+                      `${netPos >= 0 ? "+" : ""}${fmt(Math.round(netPos))}`,
+                    ];
+                  }),
+                  3
+                ),
+                spacer(100),
+                bodyParagraph(
+                  "Note: Savings projections include 2.5% annual utility rate escalation. Actual results may vary based on usage patterns, rate changes, and system performance."
+                ),
+              ]
+            : []),
           spacer(300),
 
           // ═══════════════════════════════════════════════════════════
@@ -626,9 +929,17 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           makeTable(
             ["Phase", "Duration", "Activities"],
             [
-              ["1. Engineering & Design", "4–6 weeks", "Site assessment, electrical engineering, permitting"],
+              [
+                "1. Engineering & Design",
+                "4–6 weeks",
+                "Site assessment, electrical engineering, permitting",
+              ],
               ["2. Procurement", "8–12 weeks", "Equipment ordering, logistics, staging"],
-              ["3. Installation", "4–8 weeks", "Foundation, equipment placement, electrical connections"],
+              [
+                "3. Installation",
+                "4–8 weeks",
+                "Foundation, equipment placement, electrical connections",
+              ],
               ["4. Commissioning", "1–2 weeks", "Testing, calibration, utility interconnection"],
               ["5. Operations", "Ongoing", "Monitoring, optimization, maintenance"],
             ]
@@ -637,10 +948,19 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
 
           subHeading("Standards & Certifications"),
           bullet("UL 9540 / UL 9540A — Energy Storage System Safety", "Safety:"),
-          bullet("IEEE 1547 — Interconnection and interoperability of distributed energy resources", "Grid:"),
-          bullet("NFPA 855 — Standard for the installation of stationary energy storage systems", "Fire:"),
+          bullet(
+            "IEEE 1547 — Interconnection and interoperability of distributed energy resources",
+            "Grid:"
+          ),
+          bullet(
+            "NFPA 855 — Standard for the installation of stationary energy storage systems",
+            "Fire:"
+          ),
           bullet("NEC Article 706 — Energy storage systems", "Electrical:"),
-          bullet("All equipment is IRA 2022 domestic content eligible where available", "Incentives:"),
+          bullet(
+            "All equipment is IRA 2022 domestic content eligible where available",
+            "Incentives:"
+          ),
           spacer(300),
 
           // ═══════════════════════════════════════════════════════════
@@ -649,27 +969,54 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           sectionHeading("06", "TrueQuote™ Methodology"),
           bodyParagraph(
             "Every number in this proposal is traceable to an authoritative, published source. " +
-            "TrueQuote™ is Merlin's proprietary methodology that eliminates black-box estimates and provides " +
-            "full transparency into how your quote was generated."
+              "TrueQuote™ is Merlin's proprietary methodology that eliminates black-box estimates and provides " +
+              "full transparency into how your quote was generated."
           ),
           spacer(100),
 
           subHeading("Data Sources"),
-          bullet("National Renewable Energy Laboratory (NREL) Annual Technology Baseline 2024 — Battery and solar cost benchmarks", "NREL ATB 2024:"),
-          bullet("NREL Cost Benchmark for Utility-Scale Battery Storage (Q1 2024) — Installation and BOS costs", "NREL Q1 2024:"),
-          bullet("Inflation Reduction Act of 2022 (Public Law 117-169) — ITC rates and bonus credits", "IRA 2022:"),
-          bullet("U.S. Energy Information Administration — State-level commercial electricity rates", "EIA:"),
-          bullet("IEEE 446-1995, IEEE 4538388, MDPI Energies — Industry-standard sizing ratios", "IEEE/MDPI:"),
+          bullet(
+            "National Renewable Energy Laboratory (NREL) Annual Technology Baseline 2024 — Battery and solar cost benchmarks",
+            "NREL ATB 2024:"
+          ),
+          bullet(
+            "NREL Cost Benchmark for Utility-Scale Battery Storage (Q1 2024) — Installation and BOS costs",
+            "NREL Q1 2024:"
+          ),
+          bullet(
+            "Inflation Reduction Act of 2022 (Public Law 117-169) — ITC rates and bonus credits",
+            "IRA 2022:"
+          ),
+          bullet(
+            "U.S. Energy Information Administration — State-level commercial electricity rates",
+            "EIA:"
+          ),
+          bullet(
+            "IEEE 446-1995, IEEE 4538388, MDPI Energies — Industry-standard sizing ratios",
+            "IEEE/MDPI:"
+          ),
           spacer(200),
 
-          ...(data.trueQuoteConfidence ? [
-            subHeading("Quote Confidence Assessment"),
-            kvRow("Overall Confidence", confidenceText, confidenceColor, true),
-            kvRow("Industry Model", data.trueQuoteConfidence.industry === "v1" ? "Industry-Specific Calculator (TrueQuote™ v1)" : "General Facility Estimate"),
-            kvRow("Profile Completeness", `${data.trueQuoteConfidence.profileCompleteness}%`),
-            kvRow("User Inputs Provided", `${data.trueQuoteConfidence.userInputs} of ${data.trueQuoteConfidence.userInputs + data.trueQuoteConfidence.defaultsUsed} questions`),
-            ...(data.pricingSnapshotId ? [kvRow("Pricing Snapshot ID", data.pricingSnapshotId.slice(0, 16))] : []),
-          ] : []),
+          ...(data.trueQuoteConfidence
+            ? [
+                subHeading("Quote Confidence Assessment"),
+                kvRow("Overall Confidence", confidenceText, confidenceColor, true),
+                kvRow(
+                  "Industry Model",
+                  data.trueQuoteConfidence.industry === "v1"
+                    ? "Industry-Specific Calculator (TrueQuote™ v1)"
+                    : "General Facility Estimate"
+                ),
+                kvRow("Profile Completeness", `${data.trueQuoteConfidence.profileCompleteness}%`),
+                kvRow(
+                  "User Inputs Provided",
+                  `${data.trueQuoteConfidence.userInputs} of ${data.trueQuoteConfidence.userInputs + data.trueQuoteConfidence.defaultsUsed} questions`
+                ),
+                ...(data.pricingSnapshotId
+                  ? [kvRow("Pricing Snapshot ID", data.pricingSnapshotId.slice(0, 16))]
+                  : []),
+              ]
+            : []),
           spacer(300),
 
           // ═══════════════════════════════════════════════════════════
@@ -680,7 +1027,12 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           new Paragraph({
             shading: { type: ShadingType.SOLID, color: C.emeraldBg },
             children: [
-              new TextRun({ text: "  Ready to move forward? Here's how to get started:", size: 24, bold: true, color: C.navy }),
+              new TextRun({
+                text: "  Ready to move forward? Here's how to get started:",
+                size: 24,
+                bold: true,
+                color: C.navy,
+              }),
             ],
             spacing: { after: 160 },
           }),
@@ -688,16 +1040,34 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           new Paragraph({
             children: [
               new TextRun({ text: "  1. ", size: 24, bold: true, color: C.emerald }),
-              new TextRun({ text: "Schedule a Site Assessment  ", size: 24, bold: true, color: C.navy }),
-              new TextRun({ text: "— Our engineers validate the load profile and confirm optimal sizing for your facility.", size: 22, color: C.body }),
+              new TextRun({
+                text: "Schedule a Site Assessment  ",
+                size: 24,
+                bold: true,
+                color: C.navy,
+              }),
+              new TextRun({
+                text: "— Our engineers validate the load profile and confirm optimal sizing for your facility.",
+                size: 22,
+                color: C.body,
+              }),
             ],
             spacing: { after: 120 },
           }),
           new Paragraph({
             children: [
               new TextRun({ text: "  2. ", size: 24, bold: true, color: C.emerald }),
-              new TextRun({ text: "Review Final Engineering  ", size: 24, bold: true, color: C.navy }),
-              new TextRun({ text: "— Receive detailed single-line diagrams, site plans, and interconnection documents.", size: 22, color: C.body }),
+              new TextRun({
+                text: "Review Final Engineering  ",
+                size: 24,
+                bold: true,
+                color: C.navy,
+              }),
+              new TextRun({
+                text: "— Receive detailed single-line diagrams, site plans, and interconnection documents.",
+                size: 22,
+                color: C.body,
+              }),
             ],
             spacing: { after: 120 },
           }),
@@ -705,7 +1075,11 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             children: [
               new TextRun({ text: "  3. ", size: 24, bold: true, color: C.emerald }),
               new TextRun({ text: "Execute Agreement  ", size: 24, bold: true, color: C.navy }),
-              new TextRun({ text: "— Lock in pricing (valid 30 days) and begin the ITC qualification process.", size: 22, color: C.body }),
+              new TextRun({
+                text: "— Lock in pricing (valid 30 days) and begin the ITC qualification process.",
+                size: 22,
+                color: C.body,
+              }),
             ],
             spacing: { after: 120 },
           }),
@@ -713,51 +1087,66 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             children: [
               new TextRun({ text: "  4. ", size: 24, bold: true, color: C.emerald }),
               new TextRun({ text: "Start Saving  ", size: 24, bold: true, color: C.navy }),
-              new TextRun({ text: `— Typical commissioning in 12–16 weeks. Projected savings: ${fmt(annualSavings)}/year from day one.`, size: 22, color: C.body }),
+              new TextRun({
+                text: `— Typical commissioning in 12–16 weeks. Projected savings: ${fmt(annualSavings)}/year from day one.`,
+                size: 22,
+                color: C.body,
+              }),
             ],
             spacing: { after: 200 },
           }),
 
           spacer(100),
 
+          // ── Contact CTA (Slate Blue panel) ───────────────────────
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.headerBg },
-            children: [
-              new TextRun({ text: "\n", size: 12, color: C.headerText }),
-            ],
+            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            children: [new TextRun({ text: " ", size: 12 })],
             spacing: { after: 0 },
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.headerBg },
+            shading: { type: ShadingType.SOLID, color: C.slateBlue },
             children: [
-              new TextRun({ text: "Contact Merlin Energy Solutions", size: 28, bold: true, color: C.headerText }),
+              new TextRun({
+                text: "Contact Merlin Energy Solutions",
+                size: 28,
+                bold: true,
+                color: C.headerText,
+              }),
             ],
             spacing: { after: 60 },
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.headerBg },
+            shading: { type: ShadingType.SOLID, color: C.slateBlue },
             children: [
-              new TextRun({ text: "solutions@merlin.energy  •  merlin.energy", size: 22, color: C.emeraldLight }),
+              new TextRun({
+                text: "solutions@merlin.energy  •  merlin.energy",
+                size: 22,
+                color: C.emeraldLight,
+              }),
             ],
             spacing: { after: 60 },
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.headerBg },
+            shading: { type: ShadingType.SOLID, color: C.slateBlue },
             children: [
-              new TextRun({ text: "Let's build your energy future together.", size: 20, color: "A0AEC0", italics: true }),
+              new TextRun({
+                text: "Let's build your energy future together.",
+                size: 20,
+                color: "B0C4DE",
+                italics: true,
+              }),
             ],
             spacing: { after: 40 },
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.headerBg },
-            children: [
-              new TextRun({ text: " ", size: 12, color: C.headerText }),
-            ],
+            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            children: [new TextRun({ text: " ", size: 12 })],
             spacing: { after: 300 },
           }),
 
@@ -766,26 +1155,112 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           // ═══════════════════════════════════════════════════════════
           sectionHeading("", "Terms & Conditions"),
           bullet("This quote is valid for 30 days from the date of issue."),
-          bullet("All pricing reflects current market conditions as of the quote date. Equipment prices are subject to confirmation at time of order."),
-          bullet("Payment Terms: 30% deposit upon contract signing, 40% upon equipment delivery, 30% upon commissioning."),
-          bullet(`Warranty: ${data.warrantyYears || 15}-year comprehensive warranty covering batteries, inverters, and BMS.`),
-          bullet("Equipment pricing sourced from NREL ATB 2024 and current manufacturer pricing sheets."),
-          bullet("ITC eligibility based on IRA 2022 (Public Law 117-169). Tax credit availability subject to project-specific qualification."),
-          bullet("Final pricing subject to site assessment, permitting costs, and utility interconnection requirements."),
+          bullet(
+            "All pricing reflects current market conditions as of the quote date. Equipment prices are subject to confirmation at time of order."
+          ),
+          bullet(
+            "Payment Terms: 30% deposit upon contract signing, 40% upon equipment delivery, 30% upon commissioning."
+          ),
+          bullet(
+            `Warranty: ${data.warrantyYears || 15}-year comprehensive warranty covering batteries, inverters, and BMS.`
+          ),
+          bullet(
+            "Equipment pricing sourced from NREL ATB 2024 and current manufacturer pricing sheets."
+          ),
+          bullet(
+            "ITC eligibility based on IRA 2022 (Public Law 117-169). Tax credit availability subject to project-specific qualification."
+          ),
+          bullet(
+            "Final pricing subject to site assessment, permitting costs, and utility interconnection requirements."
+          ),
           spacer(200),
 
           new Paragraph({
             children: [
               new TextRun({
-                text: "DISCLAIMER: This proposal has been prepared by Merlin Energy Solutions using TrueQuote™ methodology. " +
+                text:
+                  "DISCLAIMER: This proposal has been prepared by Merlin Energy Solutions using TrueQuote™ methodology. " +
                   "While every effort has been made to ensure accuracy using authoritative data sources, this document is for informational " +
                   "and planning purposes only. Final system design, pricing, and performance guarantees are subject to detailed engineering " +
                   "assessment and executed contract terms. Consult with a qualified tax professional regarding ITC eligibility.",
-                size: 16, color: C.muted, italics: true,
+                size: 16,
+                color: C.muted,
+                italics: true,
               }),
             ],
+            spacing: { after: 200 },
+          }),
+
+          // ═══════════════════════════════════════════════════════════
+          // PROQUOTE™ UPGRADE CTA (with badge)
+          // ═══════════════════════════════════════════════════════════
+          new Paragraph({
+            children: [],
+            border: {
+              bottom: { color: C.lightGreyDark, space: 2, style: BorderStyle.SINGLE, size: 6 },
+            },
+            spacing: { after: 160 },
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            children: [new TextRun({ text: " ", size: 8 })],
+            spacing: { after: 0 },
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            spacing: { after: 60 },
+            children: [
+              new ImageRun({
+                data: proquoteBadgeImg,
+                transformation: { width: 32, height: 40 },
+                type: "png",
+              }),
+            ],
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            spacing: { after: 40 },
+            children: [
+              new TextRun({ text: "Want more detail?  ", size: 22, color: C.dark }),
+              new TextRun({ text: "Consider ProQuote™", size: 22, bold: true, color: C.slateBlue }),
+            ],
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            spacing: { after: 40 },
+            children: [
+              new TextRun({
+                text: "For a more detailed quote — including detailed engineering, 8760 hourly analysis, Monte Carlo risk modeling,",
+                size: 18,
+                color: C.muted,
+              }),
+            ],
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            spacing: { after: 40 },
+            children: [
+              new TextRun({
+                text: "bank-ready financial statements, and project-specific site assessment — upgrade to ",
+                size: 18,
+                color: C.muted,
+              }),
+              new TextRun({ text: "ProQuote™", size: 18, bold: true, color: C.slateBlue }),
+              new TextRun({ text: ".", size: 18, color: C.muted }),
+            ],
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            shading: { type: ShadingType.SOLID, color: C.lightGrey },
+            children: [new TextRun({ text: " ", size: 8 })],
             spacing: { after: 100 },
           }),
+
           new Paragraph({
             alignment: AlignmentType.CENTER,
             children: [
@@ -811,9 +1286,10 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
   const storageMWh = data.storageSizeMWh || data.storageSizeMW * data.durationHours;
   const annualSavings = data.financialAnalysis?.annualSavingsUSD ?? 0;
   const paybackYears = data.financialAnalysis?.paybackYears ?? 0;
-  const roi10Year = annualSavings > 0 && data.systemCost > 0
-    ? (((annualSavings * 10) - data.systemCost) / data.systemCost * 100)
-    : 0;
+  const roi10Year =
+    annualSavings > 0 && data.systemCost > 0
+      ? ((annualSavings * 10 - data.systemCost) / data.systemCost) * 100
+      : 0;
 
   // Format helpers
   const fmtCurrency = (v: number) => {
@@ -1311,7 +1787,7 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
         data.trueQuoteConfidence
           ? `
       <!-- ═══ TRUEQUOTE™ CONFIDENCE ═══ -->
-      <div class="section-heading">${data.trueQuoteValidation?.kWContributors ? (data.financialAnalysis ? "5" : "4") : (data.financialAnalysis ? "4" : "3")}. TrueQuote™ CONFIDENCE</div>
+      <div class="section-heading">${data.trueQuoteValidation?.kWContributors ? (data.financialAnalysis ? "5" : "4") : data.financialAnalysis ? "4" : "3"}. TrueQuote™ CONFIDENCE</div>
       <table class="info-table">
         <tr>
           <td class="label-cell">Overall Confidence</td>
