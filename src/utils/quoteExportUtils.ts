@@ -207,9 +207,9 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
     highlight: "F0FFF4", // Highlight rows
     amber: "D97706",
     red: "DC2626",
-    // ── Slate Blue / Light Grey panels (Supabase style) ──
-    slateBlue: "3D5A80", // Slate Blue headline panel
-    slateBlueDark: "2B4162", // Darker variant
+    // ── Dark panels (matches Merlin Wizard advisor rail) ──
+    panelDark: "0F1420", // Wizard dark background
+    panelDarkAlt: "1A1F36", // Slightly lighter dark
     lightGrey: "F1F5F9", // Light grey sub-panel
     lightGreyDark: "E2E8F0", // Slightly darker grey
     gold: "D4A017", // Gold accent for TrueQuote badge
@@ -421,131 +421,250 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
         },
         children: [
           // ═══════════════════════════════════════════════════════════
-          // COVER / HEADER BLOCK — Slate Blue + Light Grey panels
+          // COVER / HEADER BLOCK — Dark panel (matches Merlin Wizard)
           // ═══════════════════════════════════════════════════════════
 
-          // ── Slate Blue Headline Panel ────────────────────────────
+          // ── Dark Headline Panel ──────────────────────────────────
+          // Top padding
           new Paragraph({
-            shading: { type: ShadingType.SOLID, color: C.slateBlue },
-            children: [new TextRun({ text: " ", size: 8 })],
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
+            children: [new TextRun({ text: " ", size: 16 })],
             spacing: { after: 0 },
           }),
-          // Merlin icon + company name row
+          // Company name + Merlin icon
           new Paragraph({
-            shading: { type: ShadingType.SOLID, color: C.slateBlue },
-            spacing: { after: 40 },
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
+            spacing: { after: 120 },
             children: [
-              new TextRun({ text: "    ", size: 10 }),
+              new TextRun({ text: "  ", size: 10 }),
               new ImageRun({
                 data: merlinProfileImg,
-                transformation: { width: 50, height: 43 },
+                transformation: { width: 44, height: 38 },
                 type: "png",
               }),
-              new TextRun({ text: "   ", size: 10 }),
-              new TextRun({ text: "MERLIN", size: 52, bold: true, color: C.headerText }),
-              new TextRun({ text: "  ENERGY SOLUTIONS", size: 28, color: "B0C4DE" }),
+              new TextRun({ text: "  ", size: 10 }),
+              new TextRun({ text: "MERLIN", size: 44, bold: true, color: C.headerText }),
+              new TextRun({ text: "  ENERGY SOLUTIONS", size: 24, color: "8B9DC3" }),
             ],
           }),
-          // Divider line inside Slate Blue
+          // Emerald accent line
           new Paragraph({
-            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
             children: [],
             border: {
-              bottom: { color: C.emeraldLight, space: 1, style: BorderStyle.SINGLE, size: 12 },
+              bottom: { color: C.emeraldLight, space: 2, style: BorderStyle.SINGLE, size: 10 },
             },
-            spacing: { after: 100 },
+            spacing: { after: 160 },
           }),
-          // Main title row with TrueQuote badge
+          // Title
           new Paragraph({
-            shading: { type: ShadingType.SOLID, color: C.slateBlue },
-            spacing: { after: 40 },
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
+            spacing: { after: 80 },
             children: [
-              new TextRun({ text: "    ", size: 10 }),
+              new TextRun({ text: "  ", size: 10 }),
               new TextRun({
                 text: "Battery Energy Storage System",
-                size: 40,
+                size: 38,
                 bold: true,
                 color: C.headerText,
               }),
             ],
           }),
+          // Subtitle with TrueQuote badge inline
           new Paragraph({
-            shading: { type: ShadingType.SOLID, color: C.slateBlue },
-            spacing: { after: 60 },
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
+            spacing: { after: 100 },
             children: [
-              new TextRun({ text: "    ", size: 10 }),
+              new TextRun({ text: "  ", size: 10 }),
               new TextRun({
                 text: "PROFESSIONAL PROPOSAL",
-                size: 26,
+                size: 24,
                 bold: true,
                 color: C.emeraldLight,
-                allCaps: true,
               }),
-              new TextRun({ text: "            ", size: 10 }),
+              new TextRun({ text: "     ", size: 24 }),
               new ImageRun({
                 data: truequoteBadgeImg,
-                transformation: { width: 60, height: 72 },
+                transformation: { width: 28, height: 33 },
                 type: "png",
               }),
-              new TextRun({ text: "  ", size: 10 }),
-              new TextRun({ text: "TrueQuote™ Verified", size: 24, bold: true, color: "FFD700" }),
+              new TextRun({ text: " ", size: 10 }),
+              new TextRun({ text: "TrueQuote™ Verified", size: 20, bold: true, color: "FFD700" }),
             ],
           }),
-          // Bottom of Slate Blue panel
+          // Bottom padding
           new Paragraph({
-            shading: { type: ShadingType.SOLID, color: C.slateBlue },
-            children: [new TextRun({ text: " ", size: 8 })],
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
+            children: [new TextRun({ text: " ", size: 12 })],
             spacing: { after: 0 },
           }),
 
           // ── Light Grey Sub-Panel (project metadata) ──────────────
           new Paragraph({
             shading: { type: ShadingType.SOLID, color: C.lightGrey },
-            children: [new TextRun({ text: " ", size: 6 })],
+            children: [new TextRun({ text: " ", size: 10 })],
             spacing: { after: 0 },
           }),
-          new Paragraph({
-            shading: { type: ShadingType.SOLID, color: C.lightGrey },
-            spacing: { after: 40 },
-            children: [
-              new TextRun({ text: "    ", size: 10 }),
-              new TextRun({ text: "Client:  ", size: 20, bold: true, color: C.dark }),
-              new TextRun({
-                text: data.projectName?.replace(/—.*/, "").trim() || "Custom Configuration",
-                size: 20,
-                color: C.navy,
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "Client", size: 18, bold: true, color: C.muted }),
+                        ],
+                        spacing: { after: 20 },
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text:
+                              data.projectName?.replace(/—.*/, "").trim() || "Custom Configuration",
+                            size: 20,
+                            color: C.navy,
+                          }),
+                        ],
+                      }),
+                    ],
+                    shading: { type: ShadingType.SOLID, color: C.lightGrey },
+                    width: { size: 33, type: WidthType.PERCENTAGE },
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      bottom: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      left: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      right: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                    },
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "Location", size: 18, bold: true, color: C.muted }),
+                        ],
+                        spacing: { after: 20 },
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: data.location || "—", size: 20, color: C.navy }),
+                        ],
+                      }),
+                    ],
+                    shading: { type: ShadingType.SOLID, color: C.lightGrey },
+                    width: { size: 34, type: WidthType.PERCENTAGE },
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      bottom: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      left: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      right: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                    },
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "Industry", size: 18, bold: true, color: C.muted }),
+                        ],
+                        spacing: { after: 20 },
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: data.useCase || "Commercial",
+                            size: 20,
+                            color: C.navy,
+                          }),
+                        ],
+                      }),
+                    ],
+                    shading: { type: ShadingType.SOLID, color: C.lightGrey },
+                    width: { size: 33, type: WidthType.PERCENTAGE },
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      bottom: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      left: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      right: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                    },
+                  }),
+                ],
               }),
-              new TextRun({ text: "      |      ", size: 18, color: C.muted }),
-              new TextRun({ text: "Location:  ", size: 20, bold: true, color: C.dark }),
-              new TextRun({ text: data.location || "—", size: 20, color: C.navy }),
-            ],
-          }),
-          new Paragraph({
-            shading: { type: ShadingType.SOLID, color: C.lightGrey },
-            spacing: { after: 40 },
-            children: [
-              new TextRun({ text: "    ", size: 10 }),
-              new TextRun({ text: "Industry:  ", size: 20, bold: true, color: C.dark }),
-              new TextRun({ text: data.useCase || "Commercial", size: 20, color: C.navy }),
-              new TextRun({ text: "      |      ", size: 18, color: C.muted }),
-              new TextRun({ text: "Quote:  ", size: 20, bold: true, color: C.dark }),
-              new TextRun({
-                text: `${data.quoteNumber}  •  ${data.quoteDate}`,
-                size: 20,
-                color: C.navy,
+              new TableRow({
+                children: [
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "Quote Ref", size: 18, bold: true, color: C.muted }),
+                        ],
+                        spacing: { after: 20 },
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: data.quoteNumber, size: 20, color: C.navy }),
+                        ],
+                      }),
+                    ],
+                    shading: { type: ShadingType.SOLID, color: C.lightGrey },
+                    width: { size: 33, type: WidthType.PERCENTAGE },
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      bottom: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      left: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      right: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                    },
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "Date", size: 18, bold: true, color: C.muted }),
+                        ],
+                        spacing: { after: 20 },
+                      }),
+                      new Paragraph({
+                        children: [new TextRun({ text: data.quoteDate, size: 20, color: C.navy })],
+                      }),
+                    ],
+                    shading: { type: ShadingType.SOLID, color: C.lightGrey },
+                    width: { size: 34, type: WidthType.PERCENTAGE },
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      bottom: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      left: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      right: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                    },
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "Grid", size: 18, bold: true, color: C.muted }),
+                        ],
+                        spacing: { after: 20 },
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: `${data.gridConnection || "Grid-Tied"}  •  Valid 30 days`,
+                            size: 20,
+                            color: C.navy,
+                          }),
+                        ],
+                      }),
+                    ],
+                    shading: { type: ShadingType.SOLID, color: C.lightGrey },
+                    width: { size: 33, type: WidthType.PERCENTAGE },
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      bottom: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      left: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                      right: { style: BorderStyle.NONE, size: 0, color: C.lightGrey },
+                    },
+                  }),
+                ],
               }),
-            ],
-          }),
-          new Paragraph({
-            shading: { type: ShadingType.SOLID, color: C.lightGrey },
-            spacing: { after: 40 },
-            children: [
-              new TextRun({ text: "    ", size: 10 }),
-              new TextRun({ text: "Grid:  ", size: 20, bold: true, color: C.dark }),
-              new TextRun({ text: data.gridConnection || "Grid-Tied", size: 20, color: C.navy }),
-              new TextRun({ text: "      |      ", size: 18, color: C.muted }),
-              new TextRun({ text: "Valid For:  ", size: 20, bold: true, color: C.dark }),
-              new TextRun({ text: "30 days from issue date", size: 20, color: C.navy }),
             ],
           }),
           new Paragraph({
@@ -1098,16 +1217,16 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
 
           spacer(100),
 
-          // ── Contact CTA (Slate Blue panel) ───────────────────────
+          // ── Contact CTA (dark panel — matches header) ────────────
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.slateBlue },
-            children: [new TextRun({ text: " ", size: 12 })],
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
+            children: [new TextRun({ text: " ", size: 16 })],
             spacing: { after: 0 },
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
             children: [
               new TextRun({
                 text: "Contact Merlin Energy Solutions",
@@ -1116,11 +1235,11 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                 color: C.headerText,
               }),
             ],
-            spacing: { after: 60 },
+            spacing: { after: 80 },
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
             children: [
               new TextRun({
                 text: "solutions@merlin.energy  •  merlin.energy",
@@ -1128,16 +1247,16 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                 color: C.emeraldLight,
               }),
             ],
-            spacing: { after: 60 },
+            spacing: { after: 80 },
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.slateBlue },
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
             children: [
               new TextRun({
                 text: "Let's build your energy future together.",
                 size: 20,
-                color: "B0C4DE",
+                color: "8B9DC3",
                 italics: true,
               }),
             ],
@@ -1145,8 +1264,8 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            shading: { type: ShadingType.SOLID, color: C.slateBlue },
-            children: [new TextRun({ text: " ", size: 12 })],
+            shading: { type: ShadingType.SOLID, color: C.panelDark },
+            children: [new TextRun({ text: " ", size: 16 })],
             spacing: { after: 300 },
           }),
 
@@ -1225,7 +1344,12 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             spacing: { after: 40 },
             children: [
               new TextRun({ text: "Want more detail?  ", size: 22, color: C.dark }),
-              new TextRun({ text: "Consider ProQuote™", size: 22, bold: true, color: C.slateBlue }),
+              new TextRun({
+                text: "Consider ProQuote™",
+                size: 22,
+                bold: true,
+                color: C.panelDarkAlt,
+              }),
             ],
           }),
           new Paragraph({
@@ -1250,7 +1374,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                 size: 18,
                 color: C.muted,
               }),
-              new TextRun({ text: "ProQuote™", size: 18, bold: true, color: C.slateBlue }),
+              new TextRun({ text: "ProQuote™", size: 18, bold: true, color: C.panelDarkAlt }),
               new TextRun({ text: ".", size: 18, color: C.muted }),
             ],
           }),
