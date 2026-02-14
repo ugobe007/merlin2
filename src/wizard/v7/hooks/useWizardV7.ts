@@ -686,7 +686,10 @@ function runContractQuote(params: {
     }
 
     // 7. Get sizing hints (industry-specific defaults + input-based)
-    const sizingDefaults = getSizingDefaults(tpl.industry);
+    // ✅ FIX (Feb 14, 2026): Use ctx.sizingDefaults (canonical industry) instead of
+    // getSizingDefaults(tpl.industry). When gas_station borrows hotel's template,
+    // tpl.industry = "hotel" (hours=4) but gas_station needs hours=2.
+    const sizingDefaults = ctx.sizingDefaults ?? getSizingDefaults(ctx.canonicalSlug);
     const sizingHints = {
       storageToPeakRatio: sizingDefaults.ratio,
       durationHours: sizingDefaults.hours,
@@ -703,7 +706,9 @@ function runContractQuote(params: {
         zip: params.location?.postalCode,
         city: params.location?.city,
       },
-      industry: tpl.industry,
+      // ✅ FIX (Feb 14, 2026): Use canonical slug, not borrowed template industry.
+      // gas_station borrowing hotel template should pass "gas-station" to pricing, not "hotel".
+      industry: ctx.canonicalSlug.replace(/_/g, "-"),
       gridMode: (params.answers.gridMode as GridMode) ?? "grid_tied",
     };
 
@@ -712,7 +717,7 @@ function runContractQuote(params: {
       powerMW: loadProfile.peakLoadKW ? loadProfile.peakLoadKW / 1000 : undefined,
       hours: sizingHints.durationHours,
       mwh: loadProfile.energyKWhPerDay ? loadProfile.energyKWhPerDay / 1000 : undefined,
-      useCase: tpl.industry,
+      useCase: ctx.canonicalSlug.replace(/_/g, "-"),
       createdAtISO: nowISO(),
     };
 
@@ -3778,6 +3783,16 @@ export function useWizardV7() {
           inputsUsed,
         } = contractResult;
 
+        // ✅ FIX (Feb 14, 2026): Immediately persist load profile to Memory after Layer A.
+        // This ensures Steps 4/5/6 always have the latest peakLoadKW, even if Layer B
+        // (pricing) fails or times out. Previously, Memory profile was only written in
+        // submitStep3 BEFORE pricing, leaving peakLoadKW as undefined/stale.
+        merlinMemory.patch("profile", {
+          peakLoadKW: loadProfile.peakLoadKW,
+          avgLoadKW: loadProfile.baseLoadKW,
+          energyKWhPerDay: loadProfile.energyKWhPerDay,
+        });
+
         // 3. LAYER B: Run pricing bridge (financial metrics via SSOT)
         let pricingResult: PricingQuoteResult | null = null;
         const allWarnings: string[] = [
@@ -4027,6 +4042,7 @@ export function useWizardV7() {
         if (pricingResult?.ok && pricingResult.data) {
           const pd = pricingResult.data;
           const fin = pd.financials;
+
           merlinMemory.set("financials", {
             equipmentCost: pd.breakdown?.batteries
               ? Object.values(pd.breakdown).reduce(
