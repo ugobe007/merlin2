@@ -166,7 +166,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["datacenter", "data-center"],
     sizingDefaults: { ratio: 0.50, hours: 4 },
     hasTemplate: true,
-    hasCuratedSchema: false, // uses legacy questionnaire
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "hotel",
@@ -196,7 +196,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["healthcare", "medical", "clinic"],
     sizingDefaults: { ratio: 0.70, hours: 4 },
     hasTemplate: true,
-    hasCuratedSchema: false, // uses legacy questionnaire
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "ev_charging",
@@ -216,7 +216,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["industrial", "factory"],
     sizingDefaults: { ratio: 0.45, hours: 2 },
     hasTemplate: true,
-    hasCuratedSchema: false, // uses fallback
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "office",
@@ -226,7 +226,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["commercial-office", "coworking"],
     sizingDefaults: { ratio: 0.35, hours: 4 },
     hasTemplate: true,
-    hasCuratedSchema: false, // uses fallback
+    hasCuratedSchema: true,
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -251,7 +251,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["shopping", "shopping-center", "shopping_center", "store"],
     sizingDefaults: { ratio: 0.35, hours: 4 },
     hasTemplate: false,
-    hasCuratedSchema: false, // uses legacy questionnaire
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "warehouse",
@@ -261,7 +261,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["logistics", "logistics-center", "logistics_center", "distribution"],
     sizingDefaults: { ratio: 0.30, hours: 2 },
     hasTemplate: false,
-    hasCuratedSchema: false, // uses legacy questionnaire
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "gas_station",
@@ -271,17 +271,17 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["gas-station", "fuel-station"],
     sizingDefaults: { ratio: 0.40, hours: 2 },
     hasTemplate: false,
-    hasCuratedSchema: false, // uses legacy questionnaire
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "truck_stop",
     templateKey: "hotel", // borrows hotel's commercial template
     calculatorId: "truck_stop_load_v1", // dedicated truck stop calculator
-    schemaKey: "gas-station", // shares gas station questionnaire for now
+    schemaKey: "gas-station", // shares gas station questionnaire
     aliases: ["truck-stop", "travel-center", "heavy_duty_truck_stop"],
     sizingDefaults: { ratio: 0.50, hours: 4 }, // larger BESS for truck stops
     hasTemplate: false,
-    hasCuratedSchema: false,
+    hasCuratedSchema: true, // resolves via schemaKey → gas-station's COMPLETE_SCHEMAS entry
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -296,7 +296,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: [],
     sizingDefaults: { ratio: 0.50, hours: 4 },
     hasTemplate: false,
-    hasCuratedSchema: false, // uses legacy questionnaire
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "casino",
@@ -306,7 +306,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["tribal-casino", "tribal_casino", "casino-gaming", "casino_gaming"],
     sizingDefaults: { ratio: 0.45, hours: 4 },
     hasTemplate: false,
-    hasCuratedSchema: false, // uses legacy questionnaire
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "college",
@@ -316,7 +316,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["university", "campus"],
     sizingDefaults: { ratio: 0.40, hours: 4 },
     hasTemplate: false,
-    hasCuratedSchema: false,
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "apartment",
@@ -326,7 +326,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["multifamily", "condo", "residential-complex"],
     sizingDefaults: { ratio: 0.35, hours: 4 },
     hasTemplate: false,
-    hasCuratedSchema: false,
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "residential",
@@ -336,7 +336,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["home", "single-family"],
     sizingDefaults: { ratio: 0.30, hours: 4 },
     hasTemplate: false,
-    hasCuratedSchema: false,
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "cold_storage",
@@ -346,7 +346,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["cold-storage", "refrigerated"],
     sizingDefaults: { ratio: 0.50, hours: 4 },
     hasTemplate: false,
-    hasCuratedSchema: false,
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "indoor_farm",
@@ -356,7 +356,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["indoor-farm", "vertical-farm", "greenhouse"],
     sizingDefaults: { ratio: 0.40, hours: 4 },
     hasTemplate: false,
-    hasCuratedSchema: false,
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "agriculture",
@@ -366,17 +366,17 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     aliases: ["farm", "farming", "irrigation"],
     sizingDefaults: { ratio: 0.35, hours: 4 },
     hasTemplate: false,
-    hasCuratedSchema: false,
+    hasCuratedSchema: true,
   },
   {
     canonicalSlug: "government",
     templateKey: "generic",
     calculatorId: "generic_ssot_v1",
-    schemaKey: "other", // no dedicated schema
+    schemaKey: "government",
     aliases: ["public", "municipal"],
     sizingDefaults: { ratio: 0.40, hours: 4 },
     hasTemplate: false,
-    hasCuratedSchema: false,
+    hasCuratedSchema: true,
   },
 
   // ═══════════════════════════════════════════════════════════════════════════

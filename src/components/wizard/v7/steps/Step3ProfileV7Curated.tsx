@@ -81,6 +81,7 @@ const INDUSTRY_IMAGES: Record<CanonicalIndustryKey, string> = {
   apartment: hotelImg, // TODO: add apartment image
   residential: hotelImg, // TODO: add residential image
   "indoor-farm": hotelImg, // TODO: add indoor farm image
+  government: hotelImg, // TODO: add government image
   other: hotelImg,
   auto: hotelImg,
 };
