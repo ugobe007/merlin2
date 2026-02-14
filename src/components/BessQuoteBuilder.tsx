@@ -264,15 +264,16 @@ export default function BessQuoteBuilder() {
   const [windPricePerKw, setWindPricePerKw] = useState(1200);
   const [genPricePerKw, setGenPricePerKw] = useState(500);
 
-  // Check for URL parameters to open Advanced Quote Builder directly
+  // Check for URL parameters OR /quote-builder path to open Advanced Quote Builder directly
   // MUST be before any early returns to comply with React hooks rules
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const advancedParam = urlParams.get("advanced");
     const verticalParam = urlParams.get("vertical");
     const viewParam = urlParams.get("view"); // New: specify initial view
+    const isQuoteBuilderPath = window.location.pathname === "/quote-builder";
 
-    if (advancedParam === "true") {
+    if (advancedParam === "true" || isQuoteBuilderPath) {
       // Set the use case if coming from a vertical
       if (verticalParam) {
         setUseCase(verticalParam);
@@ -289,8 +290,8 @@ export default function BessQuoteBuilder() {
         );
       }
       setShowAdvancedQuoteBuilderModal(true);
-      // Clean up URL
-      window.history.replaceState({}, "", window.location.pathname);
+      // Clean up URL to root
+      window.history.replaceState({}, "", "/");
     }
   }, [setUseCase, setAdvancedQuoteBuilderInitialView, setShowAdvancedQuoteBuilderModal]);
 
