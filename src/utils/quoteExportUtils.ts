@@ -145,36 +145,56 @@ export function getWatermarkStyle() {
 }
 
 /**
- * Export quote as Word document (.docx) with watermark
+ * Export quote as Word document (.docx)
+ * Matches the approved BESS Proposal template structure.
  */
 export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   const watermarkText = getWatermarkText();
-  if (!watermarkText) {
-    // Watermark disabled, proceed without it
-  }
 
-  // Create Word document
+  // Computed values
+  const storageMWh = data.storageSizeMWh || data.storageSizeMW * data.durationHours;
+  const annualSavings = data.financialAnalysis?.annualSavingsUSD ?? 0;
+  const paybackYears = data.financialAnalysis?.paybackYears ?? 0;
+  const roi10Year = annualSavings > 0 && data.systemCost > 0
+    ? (((annualSavings * 10) - data.systemCost) / data.systemCost * 100)
+    : 0;
+
+  const fmtMoney = (v: number) => `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmtMoneyShort = (v: number) => `$${Math.round(v).toLocaleString("en-US")}`;
+
+  // Helper: section heading with bottom border
+  const sectionHeading = (text: string) =>
+    new Paragraph({
+      children: [
+        new TextRun({ text, size: 28, bold: true, color: "0F172A" }),
+      ],
+      spacing: { before: 500, after: 200 },
+      border: {
+        bottom: { color: "0F172A", space: 1, style: BorderStyle.SINGLE, size: 8 },
+      },
+    });
+
+  // Helper: label/value row
+  const labelValueRow = (label: string, value: string, valueColor?: string) =>
+    new Paragraph({
+      children: [
+        new TextRun({ text: `${label}: `, bold: true, size: 21 }),
+        new TextRun({ text: value, size: 21, ...(valueColor ? { color: valueColor, bold: true } : {}) }),
+      ],
+      spacing: { after: 80 },
+    });
+
   const doc = new Document({
     sections: [
       {
-        properties: {
-          page: {
-            // Add watermark as background text
-            // Note: docx library doesn't support true diagonal watermarks, but we can add footer text
-          },
-        },
+        properties: {},
         headers: {
           default: new Header({
             children: [
               new Paragraph({
                 alignment: AlignmentType.CENTER,
                 children: [
-                  new TextRun({
-                    text: watermarkText.toUpperCase(),
-                    size: 16,
-                    color: "CCCCCC",
-                    bold: true,
-                  }),
+                  new TextRun({ text: watermarkText?.toUpperCase() || "MERLIN ENERGY", size: 14, color: "CCCCCC", bold: true }),
                 ],
               }),
             ],
@@ -186,549 +206,161 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
               new Paragraph({
                 alignment: AlignmentType.CENTER,
                 children: [
-                  new TextRun({
-                    text: `Page `,
-                    size: 20,
-                  }),
-                  new TextRun({
-                    children: [PageNumber.CURRENT],
-                  }),
-                  new TextRun({
-                    text: ` | ${watermarkText}`,
-                    size: 18,
-                    color: "999999",
-                  }),
+                  new TextRun({ text: "Page ", size: 18 }),
+                  new TextRun({ children: [PageNumber.CURRENT] }),
+                  new TextRun({ text: " | Merlin Energy Solutions — TrueQuote™ Verified", size: 16, color: "94A3B8" }),
                 ],
               }),
             ],
           }),
         },
         children: [
-          // Title
+          // ═══ HEADER ═══
           new Paragraph({
             children: [
-              new TextRun({
-                text: "⚡ MERLIN Energy",
-                size: 48,
-                bold: true,
-                color: "1E40AF",
-              }),
+              new TextRun({ text: "BATTERY ENERGY STORAGE SYSTEM PROPOSAL", size: 36, bold: true, color: "0F172A" }),
+            ],
+            spacing: { after: 120 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Professional Energy Storage Solution", size: 22, color: "64748B" }),
+            ],
+            spacing: { after: 60 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "TrueQuote™ Verified • Source-Backed Pricing", size: 20, color: "D97706", bold: true }),
+            ],
+            spacing: { after: 60 },
+          }),
+          new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            children: [
+              new TextRun({ text: "MERLIN", size: 32, bold: true, color: "0F172A" }),
+            ],
+            spacing: { after: 40 },
+          }),
+          new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            children: [
+              new TextRun({ text: "Energy Solutions", size: 18, color: "64748B" }),
+            ],
+            spacing: { after: 300 },
+          }),
+
+          // ═══ PROJECT INFORMATION ═══
+          sectionHeading("PROJECT INFORMATION"),
+          labelValueRow("Client Name", data.projectName?.replace(/—.*/, "").trim() || "Custom Configuration"),
+          labelValueRow("Project Name", `${data.storageSizeMW.toFixed(0)} MW / ${data.durationHours}hr BESS System`),
+          labelValueRow("Quote Date", data.quoteDate),
+          labelValueRow("Location", data.location),
+
+          // ═══ 1. EXECUTIVE SUMMARY ═══
+          sectionHeading("1. EXECUTIVE SUMMARY"),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "This proposal provides a comprehensive Battery Energy Storage System (BESS) solution designed to meet your specific energy requirements and deliver exceptional return on investment.", size: 21, color: "475569" }),
+            ],
+            spacing: { after: 200 },
+          }),
+          // Key Metrics as labeled rows (Word tables would need TableRow import)
+          labelValueRow("System Capacity", `${storageMWh.toFixed(1)} MWh`),
+          labelValueRow("Power Rating", `${data.storageSizeMW.toFixed(0)} MW`),
+          labelValueRow("Total Investment", fmtMoney(data.systemCost)),
+          labelValueRow("Annual Energy Savings", `${fmtMoneyShort(annualSavings)}/year`, "059669"),
+          labelValueRow("Simple Payback Period", paybackYears > 0 ? `${paybackYears.toFixed(2)} years` : "—"),
+          labelValueRow("10-Year ROI", roi10Year !== 0 ? `${roi10Year.toFixed(1)}%` : "—", roi10Year > 0 ? "059669" : undefined),
+          labelValueRow("System Warranty", `${data.warrantyYears} Years`),
+
+          // ═══ 2. PROJECT OVERVIEW ═══
+          sectionHeading("2. PROJECT OVERVIEW & VISUALIZATION"),
+          new Paragraph({
+            children: [
+              new TextRun({ text: `The proposed system integrates with your existing infrastructure to provide energy storage, peak shaving, and grid stabilization for your ${data.useCase} application.`, size: 21, color: "475569" }),
             ],
             spacing: { after: 200 },
           }),
           new Paragraph({
             children: [
-              new TextRun({
-                text: "Battery Energy Storage System Quote",
-                size: 32,
-                color: "475569",
-              }),
+              new TextRun({ text: "[Insert aerial or ground-level photo of installation site]", size: 18, color: "94A3B8", italics: true }),
             ],
-            spacing: { after: 400 },
+            spacing: { after: 80 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "[Insert technical diagram showing BESS configuration and connections]", size: 18, color: "94A3B8", italics: true }),
+            ],
+            spacing: { after: 300 },
           }),
 
-          // Quote Info
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `Quote #${data.quoteNumber} | ${data.quoteDate}`,
-                size: 24,
-                bold: true,
-              }),
-            ],
-            spacing: { after: 400 },
-          }),
-
-          // Project Information Section
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: "Project Information",
-                size: 32,
-                bold: true,
-                color: "1E40AF",
-              }),
-            ],
-            spacing: { before: 400, after: 200 },
-            border: {
-              bottom: {
-                color: "1E40AF",
-                space: 1,
-                style: BorderStyle.SINGLE,
-                size: 6,
-              },
-            },
-          }),
-
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Project Name: ", bold: true }),
-              new TextRun({ text: data.projectName }),
-            ],
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Location: ", bold: true }),
-              new TextRun({ text: data.location }),
-            ],
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Application Type: ", bold: true }),
-              new TextRun({ text: data.applicationType }),
-            ],
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Use Case: ", bold: true }),
-              new TextRun({ text: data.useCase }),
-            ],
-            spacing: { after: 400 },
-          }),
-
-          // System Specifications
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: "System Specifications",
-                size: 32,
-                bold: true,
-                color: "1E40AF",
-              }),
-            ],
-            spacing: { before: 400, after: 200 },
-            border: {
-              bottom: {
-                color: "1E40AF",
-                space: 1,
-                style: BorderStyle.SINGLE,
-                size: 6,
-              },
-            },
-          }),
-
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Power Rating: ", bold: true }),
-              new TextRun({ text: `${data.storageSizeMW.toFixed(1)} MW` }),
-            ],
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Energy Capacity: ", bold: true }),
-              new TextRun({ text: `${data.storageSizeMWh.toFixed(1)} MWh` }),
-            ],
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Duration: ", bold: true }),
-              new TextRun({ text: `${data.durationHours.toFixed(1)} hours` }),
-            ],
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Battery Chemistry: ", bold: true }),
-              new TextRun({ text: data.chemistry.toUpperCase() }),
-            ],
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Round-Trip Efficiency: ", bold: true }),
-              new TextRun({ text: `${data.roundTripEfficiency}%` }),
-            ],
-            spacing: { after: 400 },
-          }),
-
-          // Financial Summary
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: "Investment Summary",
-                size: 32,
-                bold: true,
-                color: "1E40AF",
-              }),
-            ],
-            spacing: { before: 400, after: 200 },
-            border: {
-              bottom: {
-                color: "1E40AF",
-                space: 1,
-                style: BorderStyle.SINGLE,
-                size: 6,
-              },
-            },
-          }),
-
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Total System Cost: ", bold: true, size: 28 }),
-              new TextRun({
-                text: `$${(data.systemCost / 1000000).toFixed(2)}M`,
-                size: 28,
-                bold: true,
-                color: "059669",
-              }),
-            ],
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Cost per kW: ", bold: true }),
-              new TextRun({
-                text: `$${(data.systemCost / (data.storageSizeMW * 1000)).toFixed(0)}/kW`,
-              }),
-            ],
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Cost per kWh: ", bold: true }),
-              new TextRun({
-                text: `$${(data.systemCost / (data.storageSizeMWh * 1000)).toFixed(0)}/kWh`,
-              }),
-            ],
-            spacing: { after: 400 },
-          }),
-
-          // ─── Load Profile (V7 TrueQuote™) ─────────────────────────
-          ...(data.loadProfile
-            ? [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: "Load Profile",
-                      size: 32,
-                      bold: true,
-                      color: "1E40AF",
-                    }),
-                  ],
-                  spacing: { before: 400, after: 200 },
-                  border: {
-                    bottom: {
-                      color: "1E40AF",
-                      space: 1,
-                      style: BorderStyle.SINGLE,
-                      size: 6,
-                    },
-                  },
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: "Base Load: ", bold: true }),
-                    new TextRun({ text: `${Math.round(data.loadProfile.baseLoadKW)} kW` }),
-                  ],
-                  spacing: { after: 100 },
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: "Peak Load: ", bold: true }),
-                    new TextRun({ text: `${Math.round(data.loadProfile.peakLoadKW)} kW` }),
-                  ],
-                  spacing: { after: 100 },
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: "Daily Energy: ", bold: true }),
-                    new TextRun({
-                      text: `${Math.round(data.loadProfile.energyKWhPerDay).toLocaleString()} kWh/day`,
-                    }),
-                  ],
-                  spacing: { after: 400 },
-                }),
-              ]
-            : []),
-
-          // ─── Financial Analysis (V7 TrueQuote™) ────────────────────
-          ...(data.financialAnalysis
-            ? [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: "Financial Analysis",
-                      size: 32,
-                      bold: true,
-                      color: "1E40AF",
-                    }),
-                  ],
-                  spacing: { before: 400, after: 200 },
-                  border: {
-                    bottom: {
-                      color: "1E40AF",
-                      space: 1,
-                      style: BorderStyle.SINGLE,
-                      size: 6,
-                    },
-                  },
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: "Annual Savings: ", bold: true }),
-                    new TextRun({
-                      text: `$${Math.round(data.financialAnalysis.annualSavingsUSD).toLocaleString()}`,
-                      color: "059669",
-                      bold: true,
-                    }),
-                  ],
-                  spacing: { after: 100 },
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: "Simple Payback: ", bold: true }),
-                    new TextRun({
-                      text: `${data.financialAnalysis.paybackYears.toFixed(1)} years`,
-                    }),
-                  ],
-                  spacing: { after: 100 },
-                }),
-                ...(data.financialAnalysis.npv != null
-                  ? [
-                      new Paragraph({
-                        children: [
-                          new TextRun({ text: "NPV (25 yr): ", bold: true }),
-                          new TextRun({
-                            text: `$${Math.round(data.financialAnalysis.npv).toLocaleString()}`,
-                          }),
-                        ],
-                        spacing: { after: 100 },
-                      }),
-                    ]
-                  : []),
-                ...(data.financialAnalysis.irr != null
-                  ? [
-                      new Paragraph({
-                        children: [
-                          new TextRun({ text: "IRR: ", bold: true }),
-                          new TextRun({
-                            text: `${(data.financialAnalysis.irr * 100).toFixed(1)}%`,
-                          }),
-                        ],
-                        spacing: { after: 100 },
-                      }),
-                    ]
-                  : []),
-                ...(data.financialAnalysis.demandChargeSavings != null
-                  ? [
-                      new Paragraph({
-                        children: [
-                          new TextRun({ text: "Demand Charge Savings: ", bold: true }),
-                          new TextRun({
-                            text: `$${Math.round(data.financialAnalysis.demandChargeSavings).toLocaleString()}/yr`,
-                          }),
-                        ],
-                        spacing: { after: 100 },
-                      }),
-                    ]
-                  : []),
-              ]
-            : []),
-
-          // ─── kW Contributors (V7 TrueQuote™) ──────────────────────
+          // ═══ kW Contributors (TrueQuote™) ═══
           ...(data.trueQuoteValidation?.kWContributors
             ? [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: "Load Breakdown — TrueQuote™ Verified",
-                      size: 32,
-                      bold: true,
-                      color: "1E40AF",
-                    }),
-                  ],
-                  spacing: { before: 400, after: 200 },
-                  border: {
-                    bottom: {
-                      color: "1E40AF",
-                      space: 1,
-                      style: BorderStyle.SINGLE,
-                      size: 6,
-                    },
-                  },
-                }),
+                sectionHeading("3. LOAD BREAKDOWN — TrueQuote™ Verified"),
                 ...Object.entries(data.trueQuoteValidation.kWContributors)
                   .filter(([, kw]) => kw > 0)
                   .sort(([, a], [, b]) => b - a)
-                  .map(
-                    ([key, kw]) =>
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: `${key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())}: `,
-                            bold: true,
-                          }),
-                          new TextRun({ text: `${Math.round(kw)} kW` }),
-                          ...(data.trueQuoteValidation?.kWContributorShares?.[key] != null
-                            ? [
-                                new TextRun({
-                                  text: ` (${(data.trueQuoteValidation.kWContributorShares[key] * 100).toFixed(0)}%)`,
-                                  color: "6B7280",
-                                }),
-                              ]
-                            : []),
-                        ],
-                        spacing: { after: 80 },
-                      })
-                  ),
+                  .map(([key, kw]) => {
+                    const share = data.trueQuoteValidation?.kWContributorShares?.[key];
+                    const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
+                    return labelValueRow(label, `${Math.round(kw).toLocaleString()} kW${share != null ? ` (${(share * 100).toFixed(0)}%)` : ""}`);
+                  }),
                 ...(data.trueQuoteValidation.dutyCycle != null
-                  ? [
-                      new Paragraph({
-                        children: [
-                          new TextRun({ text: "Duty Cycle: ", bold: true }),
-                          new TextRun({
-                            text: `${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)}%`,
-                          }),
-                        ],
-                        spacing: { before: 100, after: 100 },
-                      }),
-                    ]
+                  ? [labelValueRow("Duty Cycle", `${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)}%`)]
                   : []),
               ]
             : []),
 
-          // ─── TrueQuote™ Confidence (V7) ────────────────────────────
+          // ═══ Financial Analysis ═══
+          ...(data.financialAnalysis
+            ? [
+                sectionHeading(`${data.trueQuoteValidation?.kWContributors ? "4" : "3"}. FINANCIAL ANALYSIS`),
+                labelValueRow("Total Investment", fmtMoney(data.systemCost)),
+                labelValueRow("Annual Energy Savings", `${fmtMoneyShort(annualSavings)}/year`, "059669"),
+                labelValueRow("Simple Payback", paybackYears > 0 ? `${paybackYears.toFixed(1)} years` : "—"),
+                ...(data.financialAnalysis.npv != null ? [labelValueRow("NPV (25 yr)", fmtMoneyShort(data.financialAnalysis.npv), "059669")] : []),
+                ...(data.financialAnalysis.irr != null ? [labelValueRow("IRR", `${(data.financialAnalysis.irr * 100).toFixed(1)}%`)] : []),
+                ...(data.financialAnalysis.demandChargeSavings != null ? [labelValueRow("Demand Charge Savings", `${fmtMoneyShort(data.financialAnalysis.demandChargeSavings)}/year`, "059669")] : []),
+              ]
+            : []),
+
+          // ═══ TrueQuote™ Confidence ═══
           ...(data.trueQuoteConfidence
             ? [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: "TrueQuote™ Confidence",
-                      size: 32,
-                      bold: true,
-                      color: "1E40AF",
-                    }),
-                  ],
-                  spacing: { before: 400, after: 200 },
-                  border: {
-                    bottom: {
-                      color: "1E40AF",
-                      space: 1,
-                      style: BorderStyle.SINGLE,
-                      size: 6,
-                    },
-                  },
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: "Overall: ", bold: true }),
-                    new TextRun({
-                      text:
-                        data.trueQuoteConfidence.overall === "high"
-                          ? "✓ High Confidence"
-                          : data.trueQuoteConfidence.overall === "medium"
-                            ? "◐ Medium Confidence"
-                            : "○ Low Confidence",
-                      color:
-                        data.trueQuoteConfidence.overall === "high"
-                          ? "059669"
-                          : data.trueQuoteConfidence.overall === "medium"
-                            ? "D97706"
-                            : "DC2626",
-                      bold: true,
-                    }),
-                  ],
-                  spacing: { after: 100 },
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: "Profile Completeness: ", bold: true }),
-                    new TextRun({
-                      text: `${data.trueQuoteConfidence.profileCompleteness}%`,
-                    }),
-                    new TextRun({
-                      text: ` (${data.trueQuoteConfidence.userInputs} user inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults)`,
-                      color: "6B7280",
-                    }),
-                  ],
-                  spacing: { after: 100 },
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: "Industry Model: ", bold: true }),
-                    new TextRun({
-                      text:
-                        data.trueQuoteConfidence.industry === "v1"
-                          ? "Industry-Specific (TrueQuote™)"
-                          : "General Facility Estimate",
-                    }),
-                  ],
-                  spacing: { after: 100 },
-                }),
-                ...(data.pricingSnapshotId
-                  ? [
-                      new Paragraph({
-                        children: [
-                          new TextRun({ text: "Pricing Snapshot: ", bold: true }),
-                          new TextRun({
-                            text: `#${data.pricingSnapshotId.slice(0, 12)}`,
-                            color: "6B7280",
-                            size: 18,
-                          }),
-                        ],
-                        spacing: { after: 100 },
-                      }),
-                    ]
-                  : []),
+                sectionHeading("TrueQuote™ CONFIDENCE"),
+                labelValueRow("Overall Confidence",
+                  data.trueQuoteConfidence.overall === "high" ? "✓ High" : data.trueQuoteConfidence.overall === "medium" ? "◐ Medium" : "○ Low",
+                  data.trueQuoteConfidence.overall === "high" ? "059669" : data.trueQuoteConfidence.overall === "medium" ? "D97706" : "DC2626"
+                ),
+                labelValueRow("Profile Completeness", `${data.trueQuoteConfidence.profileCompleteness}% (${data.trueQuoteConfidence.userInputs} user inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults)`),
+                labelValueRow("Industry Model", data.trueQuoteConfidence.industry === "v1" ? "Industry-Specific (TrueQuote™)" : "General Facility Estimate"),
+                ...(data.pricingSnapshotId ? [labelValueRow("Pricing Snapshot", `#${data.pricingSnapshotId.slice(0, 12)}`)] : []),
                 ...(data.trueQuoteValidation?.assumptions?.length
                   ? [
                       new Paragraph({
-                        children: [new TextRun({ text: "Methodology & Sources:", bold: true })],
-                        spacing: { before: 100, after: 80 },
+                        children: [new TextRun({ text: "Methodology & Sources:", bold: true, size: 21 })],
+                        spacing: { before: 120, after: 60 },
                       }),
                       ...data.trueQuoteValidation.assumptions.map(
-                        (a) =>
-                          new Paragraph({
-                            children: [new TextRun({ text: `• ${a}`, size: 18, color: "475569" })],
-                            spacing: { after: 40 },
-                          })
+                        (a) => new Paragraph({
+                          children: [new TextRun({ text: `• ${a}`, size: 18, color: "475569" })],
+                          spacing: { after: 40 },
+                        })
                       ),
                     ]
                   : []),
               ]
             : []),
 
-          // Footer Notes
+          // ═══ TERMS & CONDITIONS ═══
+          sectionHeading("TERMS & CONDITIONS"),
+          new Paragraph({ children: [new TextRun({ text: "• This quote is valid for 30 days from the date of issue.", size: 20 })], spacing: { after: 80 } }),
+          new Paragraph({ children: [new TextRun({ text: "• Payment Terms: 50% deposit upon contract signing, 50% upon commissioning.", size: 20 })], spacing: { after: 80 } }),
+          new Paragraph({ children: [new TextRun({ text: `• Warranty: ${data.warrantyYears} year comprehensive warranty included.`, size: 20 })], spacing: { after: 80 } }),
+          new Paragraph({ children: [new TextRun({ text: "• All equipment pricing reflects current market conditions (NREL ATB 2024, IRA 2022).", size: 20 })], spacing: { after: 200 } }),
           new Paragraph({
-            children: [
-              new TextRun({
-                text: "Terms & Conditions",
-                size: 24,
-                bold: true,
-              }),
-            ],
-            spacing: { before: 600, after: 200 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: "• This quote is valid for 30 days from the date of issue.",
-                size: 20,
-              }),
-            ],
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: "• Payment Terms: 50% deposit upon contract signing, 50% upon commissioning.",
-                size: 20,
-              }),
-            ],
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `• Warranty: ${data.warrantyYears} year comprehensive warranty included.`,
-                size: 20,
-              }),
-            ],
+            children: [new TextRun({ text: "This proposal was generated by Merlin Energy Solutions using TrueQuote™ methodology. All numbers are sourced from NREL, EIA, IEEE, and other authoritative industry standards. Final pricing may vary based on site assessment, permitting, and interconnection requirements.", size: 16, color: "94A3B8", italics: true })],
             spacing: { after: 100 },
           }),
         ],
@@ -738,138 +370,432 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
 
   // Generate and download
   const blob = await Packer.toBlob(doc);
-  saveAs(blob, `Merlin_BESS_Quote_${data.quoteNumber}.docx`);
+  saveAs(blob, `Merlin_BESS_Proposal_${data.quoteNumber}.docx`);
 }
 
 /**
- * Export quote as PDF with watermark
- * Uses html2pdf.js approach - we'll create a printable HTML and convert
+ * Export quote as professional PDF proposal
+ * Matches the approved BESS Proposal template:
+ * - Dark navy header with MERLIN branding
+ * - TrueQuote™ Verified badge
+ * - Project Information table
+ * - Executive Summary with key metrics
+ * - Project Overview & Visualization
+ * - Load Breakdown (TrueQuote™)
+ * - Financial Analysis
+ * - Terms & Conditions
  */
 export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
-  const watermarkText = getWatermarkText();
+  // Compute derived values
+  const storageMWh = data.storageSizeMWh || data.storageSizeMW * data.durationHours;
+  const annualSavings = data.financialAnalysis?.annualSavingsUSD ?? 0;
+  const paybackYears = data.financialAnalysis?.paybackYears ?? 0;
+  const roi10Year = annualSavings > 0 && data.systemCost > 0
+    ? (((annualSavings * 10) - data.systemCost) / data.systemCost * 100)
+    : 0;
 
-  // Create printable HTML content
+  // Format helpers
+  const fmtCurrency = (v: number) => {
+    if (!v || !Number.isFinite(v)) return "$0";
+    return "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  const fmtCurrencyShort = (v: number) => {
+    if (!v || !Number.isFinite(v)) return "$0";
+    return "$" + v.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  };
+
   const printContent = `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>MERLIN BESS Quote ${data.quoteNumber}</title>
+      <title>BESS Proposal - ${data.projectName}</title>
       <style>
-        @page { size: letter; margin: 1in; }
+        @page { size: letter; margin: 0.6in 0.75in; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-          font-family: 'Calibri', Arial, sans-serif;
-          font-size: 11pt;
+          font-family: 'Segoe UI', 'Calibri', Arial, sans-serif;
+          font-size: 10.5pt;
           color: #1e293b;
-          position: relative;
+          line-height: 1.5;
         }
-        .watermark {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%) rotate(-30deg);
-          font-size: 72px;
-          color: rgba(59, 130, 246, 0.1);
-          font-weight: bold;
-          white-space: nowrap;
-          z-index: -1;
-          pointer-events: none;
+
+        /* ── HEADER ─────────────────────────────────────── */
+        .proposal-header {
+          background: #0f172a;
+          color: white;
+          padding: 28px 32px;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin: -0.6in -0.75in 0 -0.75in;
+          width: calc(100% + 1.5in);
         }
-        .header {
-          border-bottom: 4px solid #1e40af;
-          padding-bottom: 20px;
-          margin-bottom: 30px;
+        .proposal-header .left h1 {
+          font-size: 22pt;
+          font-weight: 800;
+          letter-spacing: 0.5px;
+          margin-bottom: 10px;
+          line-height: 1.15;
         }
-        h1 { font-size: 36pt; color: #1e40af; margin: 0; }
-        h2 { font-size: 24pt; color: #475569; margin: 10px 0 0 0; }
-        .section { margin: 30px 0; }
-        .section-title {
+        .proposal-header .left .subtitle {
+          font-size: 10pt;
+          color: #94a3b8;
+          font-weight: 500;
+        }
+        .proposal-header .left .truequote-line {
+          font-size: 9pt;
+          color: #fbbf24;
+          margin-top: 4px;
+          font-weight: 600;
+        }
+        .proposal-header .right {
+          text-align: right;
+          padding-top: 4px;
+        }
+        .proposal-header .right .wizard-emoji {
+          font-size: 42pt;
+          line-height: 1;
+          margin-bottom: 6px;
+        }
+        .proposal-header .right .brand-name {
           font-size: 18pt;
-          font-weight: bold;
-          color: #1e40af;
-          border-bottom: 2px solid #cbd5e1;
-          padding-bottom: 10px;
-          margin-bottom: 15px;
+          font-weight: 800;
+          letter-spacing: 1px;
         }
-        .row { display: flex; margin: 8px 0; }
-        .label { font-weight: bold; width: 200px; }
-        .value { flex: 1; }
-        .financial {
-          background: #f0f9ff;
-          border: 2px solid #3b82f6;
-          border-radius: 8px;
-          padding: 20px;
-          margin: 30px 0;
+        .proposal-header .right .brand-tagline {
+          font-size: 8.5pt;
+          color: #94a3b8;
+          margin-top: 2px;
         }
-        .total-cost {
-          font-size: 24pt;
-          font-weight: bold;
+
+        /* ── DIVIDER ─────────────────────────────────────── */
+        .gold-divider {
+          height: 3px;
+          background: linear-gradient(90deg, #fbbf24, #f59e0b, #d97706);
+          margin: 0 -0.75in;
+          width: calc(100% + 1.5in);
+        }
+
+        /* ── SECTION HEADERS ────────────────────────────── */
+        .section-heading {
+          font-size: 14pt;
+          font-weight: 800;
+          color: #0f172a;
+          padding: 8px 0;
+          border-bottom: 3px solid #0f172a;
+          margin: 28px 0 16px 0;
+        }
+
+        /* ── INFO TABLE ─────────────────────────────────── */
+        .info-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 12px 0 24px 0;
+        }
+        .info-table td {
+          padding: 7px 12px;
+          border: 1px solid #cbd5e1;
+          font-size: 10pt;
+        }
+        .info-table .label-cell {
+          font-weight: 700;
+          background: #f8fafc;
+          width: 35%;
+          color: #334155;
+        }
+        .info-table .value-cell {
+          color: #1e293b;
+        }
+
+        /* ── KEY METRICS TABLE ──────────────────────────── */
+        .metrics-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 12px 0 24px 0;
+        }
+        .metrics-table thead th {
+          background: #fbbf24;
+          color: #0f172a;
+          font-weight: 800;
+          font-size: 10pt;
+          padding: 8px 12px;
+          text-align: left;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .metrics-table tbody td {
+          padding: 7px 12px;
+          border: 1px solid #cbd5e1;
+          font-size: 10pt;
+        }
+        .metrics-table tbody tr:nth-child(even) {
+          background: #f8fafc;
+        }
+        .metrics-table .metric-label {
+          font-weight: 700;
+          color: #334155;
+        }
+        .metrics-table .metric-value {
+          font-weight: 600;
+          color: #0f172a;
+        }
+        .metrics-table .metric-value.highlight {
           color: #059669;
+          font-weight: 800;
         }
-        .footer {
-          margin-top: 50px;
-          padding-top: 20px;
-          border-top: 1px solid #cbd5e1;
+
+        /* ── OVERVIEW SECTION ───────────────────────────── */
+        .overview-text {
+          font-size: 10pt;
+          color: #475569;
+          margin: 12px 0 20px 0;
+          line-height: 1.6;
+        }
+        .site-layout {
+          display: flex;
+          gap: 24px;
+          margin: 16px 0;
+        }
+        .site-layout .placeholder-box {
+          flex: 1;
+          border: 2px dashed #cbd5e1;
+          border-radius: 8px;
+          padding: 40px 16px;
+          text-align: center;
+          color: #94a3b8;
+          font-size: 9pt;
+          background: #f8fafc;
+        }
+        .site-layout .placeholder-box .icon {
+          font-size: 24pt;
+          display: block;
+          margin-bottom: 8px;
+        }
+        .site-layout .placeholder-box .box-title {
+          font-weight: 700;
           font-size: 9pt;
           color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 4px;
         }
-        .ai-note {
-          color: #dc2626;
+
+        /* ── LOAD BREAKDOWN ─────────────────────────────── */
+        .load-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 12px 0 24px 0;
+        }
+        .load-table thead th {
+          background: #0f172a;
+          color: white;
+          font-weight: 700;
+          font-size: 9pt;
+          padding: 7px 12px;
+          text-align: left;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .load-table tbody td {
+          padding: 6px 12px;
+          border: 1px solid #e2e8f0;
+          font-size: 9.5pt;
+        }
+        .load-table tbody tr:nth-child(even) {
+          background: #f8fafc;
+        }
+
+        /* ── FINANCIAL DETAILS TABLE ────────────────────── */
+        .financial-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 12px 0 24px 0;
+        }
+        .financial-table td {
+          padding: 7px 12px;
+          border: 1px solid #cbd5e1;
+          font-size: 10pt;
+        }
+        .financial-table .label-cell {
+          font-weight: 700;
+          background: #f8fafc;
+          width: 50%;
+          color: #334155;
+        }
+        .financial-table .value-cell {
+          font-weight: 600;
+          color: #0f172a;
+        }
+        .financial-table .value-cell.green {
+          color: #059669;
+        }
+
+        /* ── FOOTER ─────────────────────────────────────── */
+        .proposal-footer {
+          margin-top: 36px;
+          padding-top: 16px;
+          border-top: 2px solid #e2e8f0;
+          font-size: 8.5pt;
+          color: #64748b;
+          line-height: 1.7;
+        }
+        .proposal-footer .disclaimer {
           font-style: italic;
-          font-weight: bold;
-          margin-top: 15px;
+          margin-top: 10px;
+          font-size: 8pt;
+          color: #94a3b8;
         }
+
         @media print {
           body { margin: 0; }
-          .watermark { display: block !important; }
+          .proposal-header {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .metrics-table thead th,
+          .load-table thead th {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
         }
       </style>
     </head>
     <body>
-      <div class="watermark">${watermarkText.toUpperCase()}</div>
 
-      <div class="header">
-        <h1>⚡ MERLIN Energy</h1>
-        <h2>Battery Energy Storage System Quote</h2>
-        <p style="margin-top: 20px; font-weight: bold;">Quote #${data.quoteNumber} | ${data.quoteDate}</p>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Project Information</div>
-        <div class="row"><div class="label">Project Name:</div><div class="value">${data.projectName}</div></div>
-        <div class="row"><div class="label">Location:</div><div class="value">${data.location}</div></div>
-        <div class="row"><div class="label">Application Type:</div><div class="value">${data.applicationType}</div></div>
-        <div class="row"><div class="label">Use Case:</div><div class="value">${data.useCase}</div></div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">System Specifications</div>
-        <div class="row"><div class="label">Power Rating:</div><div class="value">${data.storageSizeMW.toFixed(1)} MW</div></div>
-        <div class="row"><div class="label">Energy Capacity:</div><div class="value">${data.storageSizeMWh.toFixed(1)} MWh</div></div>
-        <div class="row"><div class="label">Duration:</div><div class="value">${data.durationHours.toFixed(1)} hours</div></div>
-        <div class="row"><div class="label">Battery Chemistry:</div><div class="value">${data.chemistry.toUpperCase()}</div></div>
-        <div class="row"><div class="label">Round-Trip Efficiency:</div><div class="value">${data.roundTripEfficiency}%</div></div>
-      </div>
-
-      <div class="financial">
-        <div class="section-title" style="border: none;">Investment Summary</div>
-        <div class="row">
-          <div class="label">Total System Cost:</div>
-          <div class="value total-cost">$${(data.systemCost / 1000000).toFixed(2)}M</div>
+      <!-- ═══ HEADER ═══ -->
+      <div class="proposal-header">
+        <div class="left">
+          <h1>BATTERY ENERGY STORAGE<br>SYSTEM PROPOSAL</h1>
+          <div class="subtitle">Professional Energy Storage Solution</div>
+          <div class="truequote-line">TrueQuote™ Verified &bull; Source-Backed Pricing</div>
         </div>
-        <div class="row"><div class="label">Cost per kW:</div><div class="value">$${(data.systemCost / (data.storageSizeMW * 1000)).toFixed(0)}/kW</div></div>
-        <div class="row"><div class="label">Cost per kWh:</div><div class="value">$${(data.systemCost / (data.storageSizeMWh * 1000)).toFixed(0)}/kWh</div></div>
+        <div class="right">
+          <div class="wizard-emoji">🧙‍♂️</div>
+          <div class="brand-name">MERLIN</div>
+          <div class="brand-tagline">Energy Solutions</div>
+        </div>
+      </div>
+      <div class="gold-divider"></div>
+
+      <!-- ═══ PROJECT INFORMATION ═══ -->
+      <div class="section-heading">PROJECT INFORMATION</div>
+      <table class="info-table">
+        <tr>
+          <td class="label-cell">Client Name:</td>
+          <td class="value-cell">${data.projectName?.replace(/—.*/, "").trim() || "Custom Configuration"}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Project Name:</td>
+          <td class="value-cell">${data.storageSizeMW.toFixed(0)} MW / ${data.durationHours}hr BESS System</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Quote Date:</td>
+          <td class="value-cell">${data.quoteDate}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Location:</td>
+          <td class="value-cell">${data.location}</td>
+        </tr>
+      </table>
+
+      <!-- ═══ 1. EXECUTIVE SUMMARY ═══ -->
+      <div class="section-heading">1. EXECUTIVE SUMMARY</div>
+      <p class="overview-text">
+        This proposal provides a comprehensive Battery Energy Storage System (BESS) solution designed to meet your
+        specific energy requirements and deliver exceptional return on investment.
+      </p>
+      <table class="metrics-table">
+        <thead>
+          <tr>
+            <th>KEY METRIC</th>
+            <th>VALUE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="metric-label">System Capacity</td>
+            <td class="metric-value">${storageMWh.toFixed(1)} MWh</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Power Rating</td>
+            <td class="metric-value">${data.storageSizeMW.toFixed(0)} MW</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Total Investment</td>
+            <td class="metric-value">${fmtCurrency(data.systemCost)}</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Annual Energy Savings</td>
+            <td class="metric-value highlight">${fmtCurrencyShort(annualSavings)}/year</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Simple Payback Period</td>
+            <td class="metric-value">${paybackYears > 0 ? paybackYears.toFixed(2) + " years" : "—"}</td>
+          </tr>
+          <tr>
+            <td class="metric-label">10-Year ROI</td>
+            <td class="metric-value ${roi10Year > 0 ? "highlight" : ""}">${roi10Year !== 0 ? roi10Year.toFixed(1) + "%" : "—"}</td>
+          </tr>
+          <tr>
+            <td class="metric-label">System Warranty</td>
+            <td class="metric-value">${data.warrantyYears} Years</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ═══ 2. PROJECT OVERVIEW & VISUALIZATION ═══ -->
+      <div class="section-heading">2. PROJECT OVERVIEW &amp; VISUALIZATION</div>
+      <p class="overview-text">
+        The proposed system integrates with your existing infrastructure to provide energy storage, peak shaving, and
+        grid stabilization for your <strong>${data.useCase}</strong> application.
+      </p>
+      <p class="overview-text" style="margin-bottom: 8px;"><strong>Project Site Layout &amp; Configuration:</strong></p>
+      <div class="site-layout">
+        <div class="placeholder-box">
+          <span class="icon">📷</span>
+          <div class="box-title">PROJECT SITE PHOTO</div>
+          <em>[Insert aerial or ground-level photo of installation site]</em>
+        </div>
+        <div class="placeholder-box">
+          <span class="icon">🔧</span>
+          <div class="box-title">SYSTEM DIAGRAM</div>
+          <em>[Insert technical diagram showing BESS configuration and connections]</em>
+        </div>
       </div>
 
       ${
-        data.loadProfile
+        data.trueQuoteValidation?.kWContributors
           ? `
-      <div class="section">
-        <div class="section-title">Load Profile</div>
-        <div class="row"><div class="label">Base Load:</div><div class="value">${Math.round(data.loadProfile.baseLoadKW)} kW</div></div>
-        <div class="row"><div class="label">Peak Load:</div><div class="value">${Math.round(data.loadProfile.peakLoadKW)} kW</div></div>
-        <div class="row"><div class="label">Daily Energy:</div><div class="value">${Math.round(data.loadProfile.energyKWhPerDay).toLocaleString()} kWh/day</div></div>
-      </div>
+      <!-- ═══ 3. LOAD BREAKDOWN — TRUEQUOTE™ ═══ -->
+      <div class="section-heading">3. LOAD BREAKDOWN — TrueQuote™ Verified</div>
+      <table class="load-table">
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Load (kW)</th>
+            <th>Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.entries(data.trueQuoteValidation.kWContributors)
+            .filter(([, kw]) => kw > 0)
+            .sort(([, a], [, b]) => b - a)
+            .map(([key, kw]) => {
+              const share = data.trueQuoteValidation?.kWContributorShares?.[key];
+              const label = key
+                .replace(/([A-Z])/g, " $1")
+                .replace(/^./, (s: string) => s.toUpperCase());
+              return `<tr>
+                <td style="font-weight:600">${label}</td>
+                <td>${Math.round(kw).toLocaleString()} kW</td>
+                <td>${share != null ? (share * 100).toFixed(0) + "%" : "—"}</td>
+              </tr>`;
+            })
+            .join("\n          ")}
+          ${data.trueQuoteValidation.dutyCycle != null ? `<tr style="border-top: 2px solid #334155;"><td style="font-weight:700" colspan="2">Duty Cycle</td><td style="font-weight:700">${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)}%</td></tr>` : ""}
+        </tbody>
+      </table>
       `
           : ""
       }
@@ -877,36 +803,25 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
       ${
         data.financialAnalysis
           ? `
-      <div class="section">
-        <div class="section-title">Financial Analysis</div>
-        <div class="row"><div class="label">Annual Savings:</div><div class="value" style="color: #059669; font-weight: bold;">$${Math.round(data.financialAnalysis.annualSavingsUSD).toLocaleString()}</div></div>
-        <div class="row"><div class="label">Simple Payback:</div><div class="value">${data.financialAnalysis.paybackYears.toFixed(1)} years</div></div>
-        ${data.financialAnalysis.npv != null ? `<div class="row"><div class="label">NPV (25 yr):</div><div class="value">$${Math.round(data.financialAnalysis.npv).toLocaleString()}</div></div>` : ""}
-        ${data.financialAnalysis.irr != null ? `<div class="row"><div class="label">IRR:</div><div class="value">${(data.financialAnalysis.irr * 100).toFixed(1)}%</div></div>` : ""}
-        ${data.financialAnalysis.demandChargeSavings != null ? `<div class="row"><div class="label">Demand Charge Savings:</div><div class="value">$${Math.round(data.financialAnalysis.demandChargeSavings).toLocaleString()}/yr</div></div>` : ""}
-      </div>
-      `
-          : ""
-      }
-
-      ${
-        data.trueQuoteValidation?.kWContributors
-          ? `
-      <div class="section">
-        <div class="section-title">Load Breakdown — TrueQuote™ Verified</div>
-        ${Object.entries(data.trueQuoteValidation.kWContributors)
-          .filter(([, kw]) => kw > 0)
-          .sort(([, a], [, b]) => b - a)
-          .map(([key, kw]) => {
-            const share = data.trueQuoteValidation?.kWContributorShares?.[key];
-            const label = key
-              .replace(/([A-Z])/g, " $1")
-              .replace(/^./, (s: string) => s.toUpperCase());
-            return `<div class="row"><div class="label">${label}:</div><div class="value">${Math.round(kw)} kW${share != null ? ` <span style="color:#6b7280">(${(share * 100).toFixed(0)}%)</span>` : ""}</div></div>`;
-          })
-          .join("\n        ")}
-        ${data.trueQuoteValidation.dutyCycle != null ? `<div class="row"><div class="label">Duty Cycle:</div><div class="value">${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)}%</div></div>` : ""}
-      </div>
+      <!-- ═══ ${data.trueQuoteValidation?.kWContributors ? "4" : "3"}. FINANCIAL ANALYSIS ═══ -->
+      <div class="section-heading">${data.trueQuoteValidation?.kWContributors ? "4" : "3"}. FINANCIAL ANALYSIS</div>
+      <table class="financial-table">
+        <tr>
+          <td class="label-cell">Total Investment</td>
+          <td class="value-cell">${fmtCurrency(data.systemCost)}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Annual Energy Savings</td>
+          <td class="value-cell green">${fmtCurrencyShort(annualSavings)}/year</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Simple Payback</td>
+          <td class="value-cell">${paybackYears > 0 ? paybackYears.toFixed(1) + " years" : "—"}</td>
+        </tr>
+        ${data.financialAnalysis.npv != null ? `<tr><td class="label-cell">NPV (25 yr)</td><td class="value-cell green">${fmtCurrencyShort(data.financialAnalysis.npv)}</td></tr>` : ""}
+        ${data.financialAnalysis.irr != null ? `<tr><td class="label-cell">IRR</td><td class="value-cell">${(data.financialAnalysis.irr * 100).toFixed(1)}%</td></tr>` : ""}
+        ${data.financialAnalysis.demandChargeSavings != null ? `<tr><td class="label-cell">Demand Charge Savings</td><td class="value-cell green">${fmtCurrencyShort(data.financialAnalysis.demandChargeSavings)}/year</td></tr>` : ""}
+      </table>
       `
           : ""
       }
@@ -914,30 +829,52 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
       ${
         data.trueQuoteConfidence
           ? `
-      <div class="section" style="background: ${data.trueQuoteConfidence.overall === "high" ? "#f0fdf4" : data.trueQuoteConfidence.overall === "medium" ? "#fffbeb" : "#fef2f2"}; border-radius: 8px; padding: 15px; border: 1px solid ${data.trueQuoteConfidence.overall === "high" ? "#bbf7d0" : data.trueQuoteConfidence.overall === "medium" ? "#fde68a" : "#fecaca"};">
-        <div class="section-title" style="border-bottom: none; margin-bottom: 8px;">TrueQuote™ Confidence</div>
-        <div class="row"><div class="label">Overall:</div><div class="value" style="font-weight: bold; color: ${data.trueQuoteConfidence.overall === "high" ? "#059669" : data.trueQuoteConfidence.overall === "medium" ? "#d97706" : "#dc2626"};">${data.trueQuoteConfidence.overall === "high" ? "✓ High Confidence" : data.trueQuoteConfidence.overall === "medium" ? "◐ Medium Confidence" : "○ Low Confidence"}</div></div>
-        <div class="row"><div class="label">Profile Completeness:</div><div class="value">${data.trueQuoteConfidence.profileCompleteness}% <span style="color:#6b7280">(${data.trueQuoteConfidence.userInputs} user inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults)</span></div></div>
-        <div class="row"><div class="label">Industry Model:</div><div class="value">${data.trueQuoteConfidence.industry === "v1" ? "Industry-Specific (TrueQuote™)" : "General Facility Estimate"}</div></div>
-        ${data.pricingSnapshotId ? `<div class="row"><div class="label">Pricing Snapshot:</div><div class="value" style="font-family: monospace; color: #6b7280;">#${data.pricingSnapshotId.slice(0, 12)}</div></div>` : ""}
-        ${
-          data.trueQuoteValidation?.assumptions?.length
-            ? `
-          <div style="margin-top: 10px; font-weight: bold; font-size: 10pt;">Methodology & Sources:</div>
-          ${data.trueQuoteValidation.assumptions.map((a: string) => `<div style="font-size: 9pt; color: #475569; margin: 3px 0;">• ${a}</div>`).join("\n")}
+      <!-- ═══ TRUEQUOTE™ CONFIDENCE ═══ -->
+      <div class="section-heading">${data.trueQuoteValidation?.kWContributors ? (data.financialAnalysis ? "5" : "4") : (data.financialAnalysis ? "4" : "3")}. TrueQuote™ CONFIDENCE</div>
+      <table class="info-table">
+        <tr>
+          <td class="label-cell">Overall Confidence</td>
+          <td class="value-cell" style="font-weight:700; color: ${data.trueQuoteConfidence.overall === "high" ? "#059669" : data.trueQuoteConfidence.overall === "medium" ? "#d97706" : "#dc2626"};">
+            ${data.trueQuoteConfidence.overall === "high" ? "✓ High" : data.trueQuoteConfidence.overall === "medium" ? "◐ Medium" : "○ Low"}
+          </td>
+        </tr>
+        <tr>
+          <td class="label-cell">Profile Completeness</td>
+          <td class="value-cell">${data.trueQuoteConfidence.profileCompleteness}% (${data.trueQuoteConfidence.userInputs} user inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults)</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Industry Model</td>
+          <td class="value-cell">${data.trueQuoteConfidence.industry === "v1" ? "Industry-Specific (TrueQuote™)" : "General Facility Estimate"}</td>
+        </tr>
+        ${data.pricingSnapshotId ? `<tr><td class="label-cell">Pricing Snapshot</td><td class="value-cell" style="font-family:monospace; color:#64748b;">#${data.pricingSnapshotId.slice(0, 12)}</td></tr>` : ""}
+      </table>
+      ${
+        data.trueQuoteValidation?.assumptions?.length
+          ? `
+          <div style="margin-top: 12px;">
+            <strong style="font-size: 10pt; color: #334155;">Methodology &amp; Sources:</strong>
+            ${data.trueQuoteValidation.assumptions.map((a: string) => `<div style="font-size: 9pt; color: #475569; margin: 4px 0 4px 12px;">• ${a}</div>`).join("\n")}
+          </div>
         `
-            : ""
-        }
-      </div>
+          : ""
+      }
       `
           : ""
       }
 
-      <div class="footer">
-        <p>• This quote is valid for 30 days from the date of issue.</p>
+      <!-- ═══ FOOTER ═══ -->
+      <div class="proposal-footer">
+        <p>• This quote is valid for <strong>30 days</strong> from the date of issue.</p>
         <p>• Payment Terms: 50% deposit upon contract signing, 50% upon commissioning.</p>
-        <p>• Warranty: ${data.warrantyYears} year comprehensive warranty included.</p>
+        <p>• Warranty: <strong>${data.warrantyYears} year</strong> comprehensive warranty included.</p>
+        <p>• All equipment pricing reflects current market conditions (NREL ATB 2024, IRA 2022).</p>
+        <div class="disclaimer">
+          This proposal was generated by Merlin Energy Solutions using TrueQuote™ methodology.
+          All numbers are sourced from NREL, EIA, IEEE, and other authoritative industry standards.
+          Final pricing may vary based on site assessment, permitting, and interconnection requirements.
+        </div>
       </div>
+
     </body>
     </html>
   `;
