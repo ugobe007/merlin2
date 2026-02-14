@@ -63,7 +63,7 @@ import type { ExtractedSpecsData } from "@/services/openAIExtractionService";
 import type { ParsedDocument } from "@/services/documentParserService";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
 import ProQuoteFinancialModal, { type ProQuoteFinancialData } from "@/components/shared/ProQuoteFinancialModal";
-import ProQuoteRunningCalculator from "@/components/ProQuoteRunningCalculator";
+// ProQuoteRunningCalculator removed — replaced by inline cost summary strip
 import { ProjectInfoForm } from "./ProjectInfoForm";
 import { supabase } from "../services/supabaseClient";
 import {
@@ -143,7 +143,7 @@ export default function AdvancedQuoteBuilder({
   const [showWelcomePopup, setShowWelcomePopup] = useState(true); // Welcome popup for first-time users
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showFinancialSummary, setShowFinancialSummary] = useState(false);
-  const [showMobileCalc, setShowMobileCalc] = useState(false);
+  // showMobileCalc removed — calculator is now inline strip
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [projectInfo, setProjectInfo] = useState<{
@@ -281,6 +281,11 @@ export default function AdvancedQuoteBuilder({
   // 2. centralizedCalculations.ts → Financial metrics (ROI, NPV, payback)
   useEffect(() => {
     const calculateFromSSoT = async () => {
+      // Guard: Don't calculate until user has configured BESS size
+      if (storageSizeMW <= 0 || durationHours <= 0) {
+        setFinancialMetrics(null);
+        return;
+      }
       setIsCalculating(true);
       try {
         // Calculate solar/wind/generator MW from kW if included
@@ -1574,11 +1579,129 @@ export default function AdvancedQuoteBuilder({
               />
             </div>
 
-            {/* ═══ MAIN CONFIGURATION — 2-COLUMN: FORM + RUNNING CALCULATOR ═══ */}
+            {/* ═══ MAIN CONFIGURATION — FULL WIDTH ═══ */}
             <div className="max-w-[1440px] mx-auto px-4 py-6 relative z-0">
-              <div className="flex gap-6">
-                {/* LEFT COLUMN: Configuration Form */}
-                <div className="flex-1 min-w-0 space-y-6">
+              <div>
+                {/* FULL WIDTH: Configuration Form */}
+                <div className="space-y-6">
+
+                {/* ═══ INLINE COST SUMMARY STRIP (Supabase-style) ═══ */}
+                <div
+                  className="sticky top-[64px] z-20 -mx-4 px-4"
+                >
+                  <div
+                    className="rounded-xl px-4 py-3 flex items-center gap-3 backdrop-blur-xl transition-all duration-300"
+                    style={{
+                      background: financialMetrics ? 'rgba(15,17,23,0.92)' : 'rgba(15,17,23,0.85)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    {/* Pulse indicator */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div
+                        className={`w-2 h-2 rounded-full ${isCalculating ? 'bg-amber-400 animate-pulse' : financialMetrics ? 'bg-emerald-400' : 'bg-white/20'}`}
+                      />
+                      <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                        {isCalculating ? 'Calculating...' : financialMetrics ? 'Live Quote' : 'Configure BESS'}
+                      </span>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="w-px h-6 shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }} />
+
+                    {/* Metrics row */}
+                    {financialMetrics ? (
+                      <div className="flex items-center gap-4 lg:gap-6 overflow-x-auto flex-1 min-w-0 scrollbar-none">
+                        {/* Total Cost */}
+                        <div className="flex items-baseline gap-1.5 shrink-0">
+                          <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                            Total
+                          </span>
+                          <span className="text-sm font-bold tabular-nums text-white">
+                            {Math.abs(financialMetrics.totalProjectCost ?? 0) >= 1_000_000
+                              ? `$${((financialMetrics.totalProjectCost ?? 0) / 1_000_000).toFixed(2)}M`
+                              : `$${((financialMetrics.totalProjectCost ?? 0) / 1_000).toFixed(0)}K`}
+                          </span>
+                        </div>
+
+                        {/* After ITC */}
+                        {(financialMetrics.netCost ?? 0) > 0 && (financialMetrics.netCost ?? 0) !== (financialMetrics.totalProjectCost ?? 0) && (
+                          <div className="flex items-baseline gap-1.5 shrink-0">
+                            <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                              After ITC
+                            </span>
+                            <span className="text-sm font-bold tabular-nums text-emerald-400">
+                              {Math.abs(financialMetrics.netCost ?? 0) >= 1_000_000
+                                ? `$${((financialMetrics.netCost ?? 0) / 1_000_000).toFixed(2)}M`
+                                : `$${((financialMetrics.netCost ?? 0) / 1_000).toFixed(0)}K`}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* $/kWh */}
+                        <div className="flex items-baseline gap-1.5 shrink-0">
+                          <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                            $/kWh
+                          </span>
+                          <span className="text-sm font-bold tabular-nums" style={{ color: '#38bdf8' }}>
+                            {storageSizeMWh > 0 ? `$${((financialMetrics.totalProjectCost ?? 0) / (storageSizeMWh * 1000)).toFixed(0)}` : '—'}
+                          </span>
+                        </div>
+
+                        {/* Payback */}
+                        <div className="flex items-baseline gap-1.5 shrink-0">
+                          <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                            Payback
+                          </span>
+                          <span className="text-sm font-bold tabular-nums" style={{ color: '#34d399' }}>
+                            {financialMetrics.paybackYears != null ? `${financialMetrics.paybackYears.toFixed(1)} yr` : '—'}
+                          </span>
+                        </div>
+
+                        {/* Annual Savings */}
+                        <div className="flex items-baseline gap-1.5 shrink-0">
+                          <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                            Savings
+                          </span>
+                          <span className="text-sm font-bold tabular-nums" style={{ color: '#a78bfa' }}>
+                            {(financialMetrics.annualSavings ?? 0) > 0
+                              ? (financialMetrics.annualSavings ?? 0) >= 1_000_000
+                                ? `$${((financialMetrics.annualSavings ?? 0) / 1_000_000).toFixed(2)}M/yr`
+                                : `$${((financialMetrics.annualSavings ?? 0) / 1_000).toFixed(0)}K/yr`
+                              : '—'}
+                          </span>
+                        </div>
+
+                        {/* ROI */}
+                        {financialMetrics.roi10Year != null && (
+                          <div className="flex items-baseline gap-1.5 shrink-0 hidden lg:flex">
+                            <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                              10yr ROI
+                            </span>
+                            <span className="text-sm font-bold tabular-nums" style={{ color: '#fbbf24' }}>
+                              {financialMetrics.roi10Year.toFixed(0)}%
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                          Set your BESS power and duration to see real-time pricing
+                        </span>
+                      </div>
+                    )}
+
+                    {/* System badge */}
+                    <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                      <span className="text-[9px] font-medium px-2 py-1 rounded-md" style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        {storageSizeMW > 0 ? `${storageSizeMW.toFixed(1)} MW` : '—'} / {durationHours > 0 ? `${durationHours}h` : '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* ────────────────────────────────────────────────
                     SECTION: SYSTEM CONFIGURATION
                     ──────────────────────────────────────────────── */}
@@ -3346,111 +3469,9 @@ export default function AdvancedQuoteBuilder({
                   </div>
                 </div>
                 </div>
-                {/* END LEFT COLUMN */}
-
-                {/* RIGHT COLUMN: Running Calculator (sticky) */}
-                <div className="hidden xl:block w-[320px] flex-shrink-0">
-                  <div className="sticky top-[120px]" style={{ maxHeight: 'calc(100vh - 140px)' }}>
-                    <div
-                      className="rounded-xl overflow-hidden flex flex-col"
-                      style={{
-                        background: 'rgba(255,255,255,0.02)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        maxHeight: 'calc(100vh - 160px)',
-                      }}
-                    >
-                      <ProQuoteRunningCalculator
-                        storageSizeMW={storageSizeMW}
-                        durationHours={durationHours}
-                        solarIncluded={solarPVIncluded}
-                        solarCapacityKW={solarCapacityKW}
-                        windIncluded={windTurbineIncluded}
-                        windCapacityKW={windCapacityKW}
-                        fuelCellIncluded={fuelCellIncluded}
-                        fuelCellCapacityKW={fuelCellCapacityKW}
-                        dieselGenIncluded={generatorIncluded && (generatorFuelTypeSelected === 'diesel' || generatorFuelTypeSelected === 'dual-fuel')}
-                        dieselGenCapacityKW={generatorFuelTypeSelected === 'diesel' || generatorFuelTypeSelected === 'dual-fuel' ? generatorCapacityKW : 0}
-                        naturalGasGenIncluded={generatorIncluded && (generatorFuelTypeSelected === 'natural-gas' || generatorFuelTypeSelected === 'linear')}
-                        naturalGasCapacityKW={generatorFuelTypeSelected === 'natural-gas' || generatorFuelTypeSelected === 'linear' ? generatorCapacityKW : 0}
-                        utilityRate={utilityRate}
-                        demandCharge={demandCharge}
-                        chemistry={chemistry}
-                        useCase={useCase}
-                        totalKW={totalKW}
-                        maxAmpsAC={maxAmpsAC}
-                        maxAmpsDC={maxAmpsDC}
-                        systemVoltage={systemVoltage}
-                        dcVoltage={dcVoltage}
-                        numberOfInverters={numberOfInverters}
-                        inverterRating={inverterRating}
-                        financialMetrics={financialMetrics}
-                        isCalculating={isCalculating}
-                      />
-                    </div>
-                  </div>
-                </div>
+                {/* END CONFIGURATION FORM */}
               </div>
             </div>
-
-            {/* ═══ MOBILE CALCULATOR TOGGLE (below xl breakpoint) ═══ */}
-            <button
-              onClick={() => setShowMobileCalc(true)}
-              className="xl:hidden fixed bottom-6 right-6 z-30 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl font-bold text-sm transition-all hover:scale-105"
-              style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', backdropFilter: 'blur(12px)' }}
-            >
-              <Calculator className="w-4 h-4" />
-              Calculator
-              {financialMetrics && (
-                <span className="ml-1 px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399' }}>
-                  ${((financialMetrics.totalProjectCost ?? 0) / 1_000_000).toFixed(1)}M
-                </span>
-              )}
-            </button>
-
-            {/* ═══ MOBILE CALCULATOR DRAWER ═══ */}
-            {showMobileCalc && (
-              <div className="xl:hidden fixed inset-0 z-50">
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMobileCalc(false)} />
-                <div className="absolute right-0 top-0 bottom-0 w-[340px] max-w-[90vw] overflow-y-auto" style={{ background: '#0f1117', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <span className="text-sm font-bold text-white">Running Calculator</span>
-                    <button
-                      onClick={() => setShowMobileCalc(false)}
-                      className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-                    >
-                      <X className="w-4 h-4 text-white/50" />
-                    </button>
-                  </div>
-                  <ProQuoteRunningCalculator
-                    storageSizeMW={storageSizeMW}
-                    durationHours={durationHours}
-                    solarIncluded={solarPVIncluded}
-                    solarCapacityKW={solarCapacityKW}
-                    windIncluded={windTurbineIncluded}
-                    windCapacityKW={windCapacityKW}
-                    fuelCellIncluded={fuelCellIncluded}
-                    fuelCellCapacityKW={fuelCellCapacityKW}
-                    dieselGenIncluded={generatorIncluded && (generatorFuelTypeSelected === 'diesel' || generatorFuelTypeSelected === 'dual-fuel')}
-                    dieselGenCapacityKW={generatorFuelTypeSelected === 'diesel' || generatorFuelTypeSelected === 'dual-fuel' ? generatorCapacityKW : 0}
-                    naturalGasGenIncluded={generatorIncluded && (generatorFuelTypeSelected === 'natural-gas' || generatorFuelTypeSelected === 'linear')}
-                    naturalGasCapacityKW={generatorFuelTypeSelected === 'natural-gas' || generatorFuelTypeSelected === 'linear' ? generatorCapacityKW : 0}
-                    utilityRate={utilityRate}
-                    demandCharge={demandCharge}
-                    chemistry={chemistry}
-                    useCase={useCase}
-                    totalKW={totalKW}
-                    maxAmpsAC={maxAmpsAC}
-                    maxAmpsDC={maxAmpsDC}
-                    systemVoltage={systemVoltage}
-                    dcVoltage={dcVoltage}
-                    numberOfInverters={numberOfInverters}
-                    inverterRating={inverterRating}
-                    financialMetrics={financialMetrics}
-                    isCalculating={isCalculating}
-                  />
-                </div>
-              </div>
-            )}
           </div>
         )}
 
