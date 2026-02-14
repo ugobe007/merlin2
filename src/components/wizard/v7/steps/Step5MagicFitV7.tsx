@@ -205,18 +205,31 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   // ✅ MERLIN MEMORY: Read cross-step data from Memory first, fall back to state
   const data = useMerlinData(state);
 
-  // Get base sizing from Memory (profile.peakLoadKW) or state.quote
-  // Defense-in-depth: check data → state.quote → 200 kW conservative fallback
-  const rawBESSKW = data.peakLoadKW || state?.quote?.peakLoadKW || 200;
-  
+  // ✅ FIX (Feb 15, 2026): Use SSOT-computed BESS sizing from pricing pipeline.
+  // data.bessKW already has the industry sizing ratio applied (e.g., 0.4× for gas station peak shaving).
+  // Only fall back to raw peakLoadKW if pricing hasn't completed yet (bessKW = 0).
+  const rawBESSKW = data.bessKW > 0 ? data.bessKW : (data.peakLoadKW || state?.quote?.peakLoadKW || 200);
+
+  // ✅ FIX: Use SSOT industry-specific duration (gas_station=2h, hotel=4h, data_center=4h, etc.)
+  // data.durationHours comes from state.quote.durationHours set by pricingBridge sizingHints.
+  const ssotDuration = data.durationHours > 0 ? data.durationHours : 4;
+
   // Apply goal-based intelligence to sizing
   const goalModifiers = getGoalBasedMultipliers(data.goals as EnergyGoal[]);
-  
+
   const baseBESSKW = rawBESSKW * goalModifiers.bessMultiplier;
-  const baseDuration = 4 * goalModifiers.durationMultiplier;
+  const baseDuration = ssotDuration * goalModifiers.durationMultiplier;
   const baseBESSKWh = baseBESSKW * baseDuration;
-  const baseSolarKW = data.addOns.includeSolar ? baseBESSKW * 0.5 * goalModifiers.solarMultiplier : 0;
-  const baseGeneratorKW = data.addOns.includeGenerator ? baseBESSKW * 0.75 * goalModifiers.generatorMultiplier : 0;
+  // ✅ FIX: Use Step 4 user inputs when available, fall back to proportional sizing
+  const baseSolarKW = data.addOns.includeSolar
+    ? (data.addOns.solarKW > 0 ? data.addOns.solarKW : rawBESSKW * 0.5) * goalModifiers.solarMultiplier
+    : 0;
+  const baseGeneratorKW = data.addOns.includeGenerator
+    ? (data.addOns.generatorKW > 0 ? data.addOns.generatorKW : rawBESSKW * 0.75) * goalModifiers.generatorMultiplier
+    : 0;
+  const baseWindKW = data.addOns.includeWind
+    ? (data.addOns.windKW > 0 ? data.addOns.windKW : rawBESSKW * 0.3) * goalModifiers.solarMultiplier
+    : 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -227,14 +240,19 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
 
       console.log('[Step5 MagicFit] generateTiers starting', {
         rawBESSKW,
+        ssotBESSKW: data.bessKW,
+        ssotDuration: data.durationHours,
         baseBESSKW,
         baseDuration,
         baseSolarKW,
         baseGeneratorKW,
+        baseWindKW,
         location: data.location.state,
         utilityRate: data.utilityRate,
+        demandCharge: data.demandCharge,
         industry: data.industry,
         goals: data.goals,
+        addOns: data.addOns,
       });
       
       // Timeout safety: if calculateQuote hangs, fail after 15s
@@ -251,11 +269,13 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
             const bessKW = baseBESSKW * config.multiplier;
             const solarKW = baseSolarKW * config.solarMultiplier;
             const generatorKW = baseGeneratorKW * config.genMultiplier;
+            const windKW = baseWindKW * config.solarMultiplier;
 
             console.log(`[Step5 MagicFit] Calling calculateQuote for ${tierKey}`, {
               storageSizeMW: bessKW / 1000,
               durationHours: baseDuration,
               solarMW: solarKW / 1000,
+              windMW: windKW / 1000,
               generatorMW: generatorKW / 1000,
             });
 
@@ -270,10 +290,12 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
               location: data.location.state || 'CA',
               zipCode: data.location.zip || '',
               electricityRate: data.utilityRate || 0.12,
-              useCase: data.industry,
+              demandCharge: data.demandCharge || undefined,
+              useCase: (data.industry || 'commercial').replace(/_/g, '-'),
               solarMW: solarKW / 1000,
+              windMW: windKW / 1000,
               generatorMW: generatorKW / 1000,
-              generatorFuelType: 'natural-gas',
+              generatorFuelType: data.addOns.generatorFuelType || 'natural-gas',
               gridConnection: 'on-grid',
               batteryChemistry: 'lfp',
             });
@@ -329,7 +351,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
 
     generateTiers();
     return () => { cancelled = true; };
-  }, [baseBESSKW, baseBESSKWh, baseSolarKW, baseGeneratorKW, baseDuration, data.location.state, data.utilityRate, data.industry]);
+  }, [baseBESSKW, baseBESSKWh, baseSolarKW, baseGeneratorKW, baseWindKW, baseDuration, data.location.state, data.utilityRate, data.demandCharge, data.industry]);
 
   const handleSelectTier = (tierKey: TierKey) => {
     setSelectedTier(tierKey);
