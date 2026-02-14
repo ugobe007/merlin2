@@ -48,21 +48,13 @@ type Props = {
   };
 };
 
-function Card({ children, className }: { children: React.ReactNode; className?: string }) {
+/** Stat item — compact inline readout with no card chrome */
+function StatItem({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent?: string }) {
   return (
-    <div className={`rounded-xl border border-white/[0.06] bg-white/[0.03] p-5 ${className ?? ""}`}>
-      {children}
-    </div>
-  );
-}
-
-/** Stat pill — clean instrument readout */
-function StatPill({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent?: string }) {
-  return (
-    <div className="flex flex-col items-center gap-1.5 px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.06] min-w-[120px] transition-colors">
-      <div className={accent || "text-slate-400"}>{icon}</div>
-      <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-[0.08em]">{label}</div>
-      <div className="text-base font-bold text-slate-100 tabular-nums tracking-tight">{value}</div>
+    <div className="flex items-center gap-2 whitespace-nowrap">
+      <span className={accent || "text-slate-500"}>{icon}</span>
+      <span className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">{label}</span>
+      <span className="text-sm font-bold text-slate-100 tabular-nums">{value}</span>
     </div>
   );
 }
@@ -425,37 +417,37 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           STATS BAR — Key metrics at a glance
       ================================================================ */}
       {quoteReady && (
-        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
-          <StatPill
-            icon={<Zap className="w-4 h-4" />}
-            label="Peak Load"
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 border-b border-white/[0.06]">
+          <StatItem
+            icon={<Zap className="w-3.5 h-3.5" />}
+            label="Peak"
             value={quote.peakLoadKW ? `${fmtNum(Math.round(quote.peakLoadKW))} kW` : "—"}
             accent="text-amber-400"
           />
-          <StatPill
-            icon={<Battery className="w-4 h-4" />}
+          <StatItem
+            icon={<Battery className="w-3.5 h-3.5" />}
             label="BESS"
             value={quote.bessKWh ? `${fmtNum(Math.round(quote.bessKWh))} kWh` : "—"}
             accent="text-violet-400"
           />
-          <StatPill
-            icon={<Zap className="w-4 h-4" />}
+          <StatItem
+            icon={<Zap className="w-3.5 h-3.5" />}
             label="Duration"
             value={quote.durationHours ? `${fmtNum(quote.durationHours)} hrs` : "—"}
             accent="text-blue-400"
           />
           {(quote.solarKW as number) > 0 && (
-            <StatPill
-              icon={<Sun className="w-4 h-4" />}
+            <StatItem
+              icon={<Sun className="w-3.5 h-3.5" />}
               label="Solar"
               value={`${fmtNum(Math.round(quote.solarKW as number))} kW`}
               accent="text-yellow-400"
             />
           )}
           {(quote.generatorKW as number) > 0 && (
-            <StatPill
-              icon={<Fuel className="w-4 h-4" />}
-              label="Generator"
+            <StatItem
+              icon={<Fuel className="w-3.5 h-3.5" />}
+              label="Gen"
               value={`${fmtNum(Math.round(quote.generatorKW as number))} kW`}
               accent="text-red-400"
             />
@@ -467,108 +459,112 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           EQUIPMENT & FINANCIAL SUMMARY — Clean two-column layout
       ================================================================ */}
       {quoteReady && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Equipment Card — Clean Supabase typography */}
-          <Card className="space-y-0">
-            <div className="flex items-center gap-2 mb-3">
-              <Battery className="w-4 h-4 text-[#3ECF8E]" />
-              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Equipment Summary</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-white/[0.06] rounded-lg overflow-hidden">
+          {/* Equipment — left column */}
+          <div className="p-3 border-b md:border-b-0 md:border-r border-white/[0.06]">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Battery className="w-3.5 h-3.5 text-slate-500" />
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Equipment</span>
             </div>
-            <div className="divide-y divide-white/[0.05]">
+            <div className="divide-y divide-white/[0.04]">
               {quote.bessKWh != null && (
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-2">
-                    <Battery className="w-3.5 h-3.5 text-slate-500" />
-                    <span className="text-[13px] text-slate-400">Battery Storage</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[13px] font-bold text-white tabular-nums">{fmtNum(Math.round(quote.bessKWh))} kWh</span>
-                    {quote.bessKW != null && <span className="text-xs text-slate-500 ml-2">{fmtNum(Math.round(quote.bessKW))} kW</span>}
-                  </div>
+                <div className="flex items-baseline justify-between py-1.5">
+                  <span className="text-xs text-slate-400">Battery Storage</span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {fmtNum(Math.round(quote.bessKWh))} kWh
+                    {quote.bessKW != null && <span className="text-slate-500 font-medium ml-1.5">{fmtNum(Math.round(quote.bessKW))} kW</span>}
+                  </span>
                 </div>
               )}
               {quote.durationHours != null && (
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-3.5 h-3.5 text-slate-500" />
-                    <span className="text-[13px] text-slate-400">Duration</span>
-                  </div>
-                  <span className="text-[13px] font-bold text-white tabular-nums">{fmtNum(quote.durationHours)} hours</span>
+                <div className="flex items-baseline justify-between py-1.5">
+                  <span className="text-xs text-slate-400">Duration</span>
+                  <span className="text-xs font-bold text-white tabular-nums">{fmtNum(quote.durationHours)} hours</span>
                 </div>
               )}
               {(quote.solarKW as number) > 0 && (
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-2">
-                    <Sun className="w-3.5 h-3.5 text-slate-500" />
-                    <span className="text-[13px] text-slate-400">Solar Array</span>
-                  </div>
-                  <span className="text-[13px] font-bold text-white tabular-nums">{fmtNum(Math.round(quote.solarKW as number))} kW</span>
+                <div className="flex items-baseline justify-between py-1.5">
+                  <span className="text-xs text-slate-400">Solar Array</span>
+                  <span className="text-xs font-bold text-white tabular-nums">{fmtNum(Math.round(quote.solarKW as number))} kW</span>
                 </div>
               )}
               {(quote.generatorKW as number) > 0 && (
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-2">
-                    <Fuel className="w-3.5 h-3.5 text-slate-500" />
-                    <span className="text-[13px] text-slate-400">Backup Generator</span>
-                  </div>
-                  <span className="text-[13px] font-bold text-white tabular-nums">{fmtNum(Math.round(quote.generatorKW as number))} kW</span>
+                <div className="flex items-baseline justify-between py-1.5">
+                  <span className="text-xs text-slate-400">Backup Generator</span>
+                  <span className="text-xs font-bold text-white tabular-nums">{fmtNum(Math.round(quote.generatorKW as number))} kW</span>
                 </div>
               )}
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-3.5 h-3.5 text-slate-500" />
-                  <span className="text-[13px] text-slate-400">Peak Demand</span>
-                </div>
-                <span className="text-[13px] font-bold text-white tabular-nums">{quote.peakLoadKW ? `${fmtNum(Math.round(quote.peakLoadKW))} kW` : "—"}</span>
+              <div className="flex items-baseline justify-between py-1.5">
+                <span className="text-xs text-slate-400">Peak Demand</span>
+                <span className="text-xs font-bold text-white tabular-nums">{quote.peakLoadKW ? `${fmtNum(Math.round(quote.peakLoadKW))} kW` : "—"}</span>
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Financial Card — Clean Supabase typography */}
-          <Card className="space-y-0">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Financial Summary</h3>
+          {/* Financial — right column */}
+          <div className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5 text-slate-500" />
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Financials</span>
               </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+              <div className="flex items-center gap-1 text-[10px]">
                 <Shield className="w-3 h-3 text-amber-500" />
-                <span className="text-amber-400 font-semibold">TrueQuote™</span>
+                <span className="text-amber-400 font-bold">TrueQuote™</span>
               </div>
             </div>
-
-            {/* Financial rows — tight, no extra padding */}
-            <div className="divide-y divide-white/[0.05]">
-              <div className="flex justify-between py-2">
-                <span className="text-[13px] text-slate-400">Total Investment</span>
-                <span className="text-[13px] font-bold text-white tabular-nums">{fmtUSD(quote.capexUSD as number | null)}</span>
+            <div className="divide-y divide-white/[0.04]">
+              <div className="flex justify-between py-1.5">
+                <span className="text-xs text-slate-400">Total Investment</span>
+                <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(quote.capexUSD as number | null)}</span>
               </div>
-              <div className="flex justify-between py-2">
-                <span className="text-[13px] text-slate-400">Annual Savings</span>
-                <span className="text-[13px] font-bold text-emerald-400 tabular-nums">{fmtUSD(quote.annualSavingsUSD as number | null)}</span>
+              {/* Federal ITC — always show when capex is available */}
+              {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
+                <div className="flex justify-between py-1.5">
+                  <span className="text-xs text-slate-400">Federal ITC (30%)</span>
+                  <span className="text-xs font-bold text-emerald-400 tabular-nums">−{fmtUSD(Number(quote.capexUSD) * 0.30)}</span>
+                </div>
+              )}
+              {/* Net cost after ITC */}
+              {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
+                <div className="flex justify-between py-1.5 bg-white/[0.02] -mx-3 px-3">
+                  <span className="text-xs font-semibold text-slate-200">Net Cost</span>
+                  <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(Number(quote.capexUSD) * 0.70)}</span>
+                </div>
+              )}
+              <div className="flex justify-between py-1.5">
+                <span className="text-xs text-slate-400">Annual Savings</span>
+                <span className="text-xs font-bold text-emerald-400 tabular-nums">{fmtUSD(quote.annualSavingsUSD as number | null)}</span>
               </div>
               {quote.demandChargeSavings != null && Number(quote.demandChargeSavings) > 0 && (
-                <div className="flex justify-between py-2">
-                  <span className="text-[13px] text-slate-400">Demand Charge Savings</span>
-                  <span className="text-[13px] font-bold text-cyan-400 tabular-nums">{fmtUSD(quote.demandChargeSavings as number | null)}</span>
+                <div className="flex justify-between py-1.5">
+                  <span className="text-xs text-slate-400">Demand Charge Savings</span>
+                  <span className="text-xs font-bold text-cyan-400 tabular-nums">{fmtUSD(quote.demandChargeSavings as number | null)}</span>
                 </div>
               )}
-              <div className="flex justify-between py-2">
-                <span className="text-[13px] text-slate-400">Simple Payback</span>
-                <span className="text-[13px] font-bold text-white tabular-nums">
+              {/* Monthly savings for quick reference */}
+              {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
+                <div className="flex justify-between py-1.5">
+                  <span className="text-xs text-slate-400">Monthly Savings</span>
+                  <span className="text-xs font-bold text-slate-300 tabular-nums">{fmtUSD(Number(quote.annualSavingsUSD) / 12)}</span>
+                </div>
+              )}
+              <div className="flex justify-between py-1.5">
+                <span className="text-xs text-slate-400">Simple Payback</span>
+                <span className="text-xs font-bold text-white tabular-nums">
                   {quote.roiYears != null && Number(quote.roiYears) > 0 ? `${parseFloat(Number(quote.roiYears).toFixed(1))} years` : "—"}
                 </span>
               </div>
               {quote.npv != null && (
-                <div className="flex justify-between py-2">
-                  <span className="text-[13px] text-slate-400">NPV (25yr)</span>
-                  <span className="text-[13px] font-bold text-[#3ECF8E] tabular-nums">{fmtUSD(quote.npv as number | null)}</span>
+                <div className="flex justify-between py-1.5">
+                  <span className="text-xs text-slate-400">NPV (25yr)</span>
+                  <span className={`text-xs font-bold tabular-nums ${Number(quote.npv) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmtUSD(quote.npv as number | null)}</span>
                 </div>
               )}
               {quote.irr != null && (
-                <div className="flex justify-between py-2">
-                  <span className="text-[13px] text-slate-400">IRR</span>
-                  <span className="text-[13px] font-bold text-[#3ECF8E] tabular-nums">{(() => {
+                <div className="flex justify-between py-1.5">
+                  <span className="text-xs text-slate-400">IRR</span>
+                  <span className={`text-xs font-bold tabular-nums ${(() => { const raw = Number(quote.irr); const pct = raw > 1 ? raw : raw * 100; return pct >= 8 ? 'text-emerald-400' : 'text-amber-400'; })()}`}>{(() => {
                     const raw = Number(quote.irr);
                     if (!Number.isFinite(raw)) return "—";
                     const pct = raw > 1 ? raw : raw * 100;
@@ -578,24 +574,31 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                 </div>
               )}
               {quote.paybackYears != null && Number(quote.paybackYears) > 0 && (
-                <div className="flex justify-between py-2">
-                  <span className="text-[13px] text-slate-400">Discounted Payback</span>
-                  <span className="text-[13px] font-bold text-white tabular-nums">{parseFloat(Number(quote.paybackYears).toFixed(1))} years</span>
+                <div className="flex justify-between py-1.5">
+                  <span className="text-xs text-slate-400">Discounted Payback</span>
+                  <span className="text-xs font-bold text-white tabular-nums">{parseFloat(Number(quote.paybackYears).toFixed(1))} years</span>
+                </div>
+              )}
+              {/* 10yr cumulative savings */}
+              {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
+                <div className="flex justify-between py-1.5">
+                  <span className="text-xs text-slate-400">10yr Cumulative Savings</span>
+                  <span className="text-xs font-bold text-emerald-400 tabular-nums">{fmtUSD(Number(quote.annualSavingsUSD) * 10)}</span>
                 </div>
               )}
             </div>
 
-            {/* 10-Year Projection button */}
+            {/* Financial projection CTA */}
             {quote.capexUSD != null && Number(quote.capexUSD) > 0 && quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
               <button
                 onClick={() => setShowFinancialModal(true)}
-                className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-amber-500/20 bg-amber-500/[0.06] hover:border-amber-400/40 hover:bg-amber-500/[0.10] transition-all group"
+                className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 rounded-md border border-amber-500/20 bg-amber-500/[0.04] hover:bg-amber-500/[0.08] transition-all group"
               >
-                <TrendingUp className="w-4 h-4 text-amber-400 group-hover:text-amber-300" />
-                <span className="text-xs font-semibold text-amber-400 group-hover:text-amber-300">View 10-Year Financial Projection</span>
+                <TrendingUp className="w-3.5 h-3.5 text-amber-400 group-hover:text-amber-300" />
+                <span className="text-[11px] font-semibold text-amber-400 group-hover:text-amber-300">View 10-Year Financial Projection</span>
               </button>
             )}
-          </Card>
+          </div>
         </div>
       )}
 
