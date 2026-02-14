@@ -4383,12 +4383,15 @@ export function useWizardV7() {
         console.log("[submitStep3] end -> setting step", { nextStep: "options" });
 
         // ✅ MERLIN MEMORY (Feb 11, 2026): Persist profile + sizing for Steps 4-6
+        // ⚠️ Use || undefined (not ?? 0) — state.quote may not have pricing yet
+        // (pricing runs async after this). Writing 0 would block the
+        // useMerlinData fallback chain from reading state.quote later.
         const quoteOutput = state.quote;
         merlinMemory.set("profile", {
           answers: answers as Record<string, unknown>,
-          peakLoadKW: quoteOutput?.peakLoadKW ?? 0,
-          avgLoadKW: quoteOutput?.baseLoadKW,
-          energyKWhPerDay: quoteOutput?.energyKWhPerDay,
+          peakLoadKW: quoteOutput?.peakLoadKW || undefined,
+          avgLoadKW: quoteOutput?.baseLoadKW || undefined,
+          energyKWhPerDay: quoteOutput?.energyKWhPerDay || undefined,
         });
         if (quoteOutput?.bessKWh) {
           merlinMemory.set("sizing", {

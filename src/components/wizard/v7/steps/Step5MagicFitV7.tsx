@@ -206,7 +206,8 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   const data = useMerlinData(state);
 
   // Get base sizing from Memory (profile.peakLoadKW) or state.quote
-  const rawBESSKW = data.peakLoadKW || 1000; // fallback to 1 MW
+  // Defense-in-depth: check data → state.quote → 200 kW conservative fallback
+  const rawBESSKW = data.peakLoadKW || state?.quote?.peakLoadKW || 200;
   
   // Apply goal-based intelligence to sizing
   const goalModifiers = getGoalBasedMultipliers(data.goals as EnergyGoal[]);
@@ -259,6 +260,10 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
             });
 
             // Call SSOT calculateQuote with tier-specific sizing
+            // ⚠️ Do NOT hardcode itcConfig — let calculateQuote use smart defaults:
+            //   - Systems < 1 MW get automatic 30% ITC
+            //   - Systems ≥ 1 MW auto-enable prevailing wage for 30% ITC
+            //   This prevents the 6% vs 30% ITC cliff between tiers.
             const quote = await calculateQuote({
               storageSizeMW: bessKW / 1000,
               durationHours: baseDuration,
@@ -271,12 +276,6 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
               generatorFuelType: 'natural-gas',
               gridConnection: 'on-grid',
               batteryChemistry: 'lfp',
-              itcConfig: {
-                prevailingWage: false,
-                apprenticeship: false,
-                energyCommunity: false,
-                domesticContent: false,
-              },
             });
 
             console.log(`[Step5 MagicFit] ${tierKey} quote result:`, {
