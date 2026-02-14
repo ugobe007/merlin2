@@ -44,7 +44,7 @@ export interface Question {
     suffix?: string;
   };
   fieldName?: string;
-  section: 'facility' | 'amenities' | 'energy' | 'solar';
+  section: string;
   title: string;
   subtitle?: string;
   helpText?: string;

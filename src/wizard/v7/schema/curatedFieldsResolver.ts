@@ -26,6 +26,22 @@ import type { Question as HotelQuestion } from '@/data/hotel-questions-complete.
 import { hotelQuestionsComplete, hotelSections } from '@/data/hotel-questions-complete.config';
 import type { Question as EVChargingQuestion } from '@/data/evcharging-questions-complete.config';
 import { evChargingQuestionsComplete, evChargingSections } from '@/data/evcharging-questions-complete.config';
+import { datacenterQuestionsComplete, datacenterSections } from '@/data/datacenter-questions-complete.config';
+import { hospitalQuestionsComplete, hospitalSections } from '@/data/hospital-questions-complete.config';
+import { officeQuestionsComplete, officeSections } from '@/data/office-questions-complete.config';
+import { manufacturingQuestionsComplete, manufacturingSections } from '@/data/manufacturing-questions-complete.config';
+import { warehouseQuestionsComplete, warehouseSections } from '@/data/warehouse-questions-complete.config';
+import { retailQuestionsComplete, retailSections } from '@/data/retail-questions-complete.config';
+import { gasStationQuestionsComplete, gasStationSections } from '@/data/gasstation-questions-complete.config';
+import { airportQuestionsComplete, airportSections } from '@/data/airport-questions-complete.config';
+import { casinoQuestionsComplete, casinoSections } from '@/data/casino-questions-complete.config';
+import { apartmentQuestionsComplete, apartmentSections } from '@/data/apartment-questions-complete.config';
+import { collegeQuestionsComplete, collegeSections } from '@/data/college-questions-complete.config';
+import { coldStorageQuestionsComplete, coldStorageSections } from '@/data/coldstorage-questions-complete.config';
+import { indoorFarmQuestionsComplete, indoorFarmSections } from '@/data/indoorfarm-questions-complete.config';
+import { agricultureQuestionsComplete, agricultureSections } from '@/data/agriculture-questions-complete.config';
+import { residentialQuestionsComplete, residentialSections } from '@/data/residential-questions-complete.config';
+import { governmentQuestionsComplete, governmentSections } from '@/data/government-questions-complete.config';
 import { industryQuestionnaires, type Question as LegacyQuestion } from '@/data/industryQuestionnaires';
 import { resolveIndustryContext } from '@/wizard/v7/industry';
 
@@ -72,6 +88,138 @@ const TIER1_BLOCKERS: Record<string, string[]> = {
     'dcFastPower',           // Core: kW per DCFC port
     'gridConnection',        // Architecture: on-grid vs limited vs off-grid
     'operatingHours',        // Core: duty cycle driver
+  ],
+  'datacenter': [
+    'dataCenterTier',        // Core: redundancy & power density
+    'itLoadCapacity',        // Core: primary power driver (MW)
+    'currentPUE',            // Core: total facility power = IT × PUE
+    'itUtilization',         // Core: actual IT load percentage
+    'coolingSystem',         // Load driver: cooling is 30-40% of total
+    'squareFootage',         // Secondary: facility size context
+    'gridConnection',        // Architecture
+  ],
+  'hospital': [
+    'facilityType',          // Core: hospital vs clinic vs specialty
+    'bedCount',              // Core: primary capacity driver
+    'criticalSystems',       // Load driver: which systems are critical
+    'operatingRooms',        // Load driver: high-power surgical suites
+    'gridConnection',        // Architecture
+    'existingGenerator',     // Hybrid system design
+    'backupDuration',        // Sizing: backup hours needed
+  ],
+  'office': [
+    'buildingClass',         // Core: Class A/B/C drives power density
+    'squareFootage',         // Core: primary area-based calculation
+    'floors',                // Core: elevator/HVAC scaling
+    'hvacSystem',            // Load driver: 40-60% of energy
+    'operatingHours',        // Core: duty cycle
+    'gridConnection',        // Architecture
+  ],
+  'manufacturing': [
+    'facilityType',          // Core: light vs heavy vs process
+    'squareFootage',         // Core: primary area driver
+    'shifts',                // Core: duty cycle driver
+    'processLoads',          // Load driver: motors, presses, etc.
+    'heavyMachinery',        // Load driver: large motors
+    'gridConnection',        // Architecture
+    'powerQuality',          // Sizing: power quality needs
+  ],
+  'warehouse': [
+    'warehouseType',         // Core: dry vs cold vs automated
+    'squareFootage',         // Core: primary area driver
+    'refrigeration',         // Load driver: cold chain storage
+    'automationLevel',       // Load driver: automated material handling
+    'operatingHours',        // Core: duty cycle
+    'gridConnection',        // Architecture
+  ],
+  'retail': [
+    'retailType',            // Core: grocery vs dept store vs mall
+    'squareFootage',         // Core: primary area driver
+    'refrigerationLevel',    // Load driver: grocery/food retail
+    'operatingHours',        // Core: duty cycle
+    'gridConnection',        // Architecture
+    'demandCharges',         // Sizing: peak shaving opportunity
+  ],
+  'gas-station': [
+    'stationType',           // Core: basic vs convenience vs truck stop
+    'fuelPumps',             // Core: canopy/pump electrical load
+    'convenienceStore',      // Load driver: refrigeration + HVAC
+    'foodService',           // Load driver: kitchen equipment
+    'evChargers',            // Load driver: EV charging adds significant load
+    'gridConnection',        // Architecture
+  ],
+  'airport': [
+    'airportClass',          // Core: commercial vs regional vs GA
+    'annualPassengers',      // Core: primary capacity driver
+    'terminalSqFt',          // Core: area-based calculation
+    'jetBridges',            // Load driver: 50-75 kW each
+    'gridConnection',        // Architecture
+    'existingGenerator',     // Hybrid system design
+  ],
+  'casino': [
+    'casinoType',            // Core: casino-only vs resort
+    'gamingFloorSqft',       // Core: primary load driver
+    'totalPropertySqFt',     // Core: total area
+    'hotelRooms',            // Load driver: integrated hotel
+    'restaurants',           // Load driver: F&B operations
+    'gridConnection',        // Architecture
+  ],
+  'apartment': [
+    'propertyType',          // Core: garden vs midrise vs highrise
+    'unitCount',             // Core: primary capacity driver
+    'avgUnitSize',           // Core: per-unit consumption
+    'hvacType',              // Load driver: central vs individual HVAC
+    'commonAmenities',       // Load driver: pool, gym, etc.
+    'gridConnection',        // Architecture
+  ],
+  'college': [
+    'institutionType',       // Core: community vs research university
+    'campusSqFt',            // Core: primary area driver
+    'enrollment',            // Core: capacity/occupancy factor
+    'researchLabs',          // Load driver: high-power lab equipment
+    'studentHousing',        // Load driver: residential load component
+    'gridConnection',        // Architecture
+  ],
+  'cold-storage': [
+    'facilityType',          // Core: frozen vs cooled vs multi-temp
+    'squareFootage',         // Core: primary area driver
+    'temperatureZones',      // Core: number/type of temperature zones
+    'compressorSystem',      // Load driver: compressor technology
+    'operatingHours',        // Core: 24/7 vs shift-based
+    'gridConnection',        // Architecture
+  ],
+  'indoor-farm': [
+    'farmType',              // Core: vertical vs greenhouse vs hybrid
+    'squareFootage',         // Core: primary area driver
+    'growingLevels',         // Core: vertical stacking multiplier
+    'lightingSystem',        // Load driver: lighting is 40-60% of energy
+    'lightSchedule',         // Core: photoperiod duty cycle
+    'hvacDehumidification',  // Load driver: climate control
+    'gridConnection',        // Architecture
+  ],
+  'agriculture': [
+    'farmType',              // Core: crop vs livestock vs dairy
+    'acreage',               // Core: primary scale driver
+    'irrigationType',        // Load driver: pumping energy
+    'coldStorage',           // Load driver: post-harvest cooling
+    'processing',            // Load driver: on-site processing
+    'gridConnection',        // Architecture
+  ],
+  'residential': [
+    'homeType',              // Core: single family vs townhome
+    'squareFootage',         // Core: primary area driver
+    'hvacType',              // Load driver: heat pump vs conventional
+    'evCharging',            // Load driver: EV adds 30-40% consumption
+    'waterHeater',           // Load driver: tankless electric = huge peaks
+    'gridConnection',        // Architecture
+  ],
+  'government': [
+    'facilityType',          // Core: office vs public safety vs water
+    'squareFootage',         // Core: primary area driver
+    'criticalOperations',    // Core: FEMA tier for backup sizing
+    'operatingHours',        // Core: 24/7 vs business hours
+    'dataCenter',            // Load driver: server room/comms
+    'gridConnection',        // Architecture
   ],
 };
 
@@ -187,6 +335,7 @@ const INDUSTRY_META: Record<string, { displayName: string; icon: string }> = {
   'apartment': { displayName: 'Apartment Complex', icon: '🏠' },
   'residential': { displayName: 'Residential', icon: '🏡' },
   'indoor-farm': { displayName: 'Indoor Farm', icon: '🌱' },
+  'government': { displayName: 'Government & Public', icon: '🏛️' },
   
   // Default
   'other': { displayName: 'Commercial Facility', icon: '🏗️' },
@@ -214,6 +363,7 @@ export const CANONICAL_INDUSTRY_KEYS = [
   "apartment",
   "residential",
   "indoor-farm",
+  "government",
   "other",
   "auto",
 ] as const;
@@ -391,18 +541,15 @@ function convertLegacyQuestion(q: LegacyQuestion, sectionId: string, industryKey
 
 /**
  * Convert any *-questions-complete.config.ts Question to CuratedField.
- * Accepts CarWash, Hotel, and EV Charging question types (structurally
- * identical interfaces with different section literal unions).
+ * All industry configs import the same Question interface from hotel config,
+ * so HotelQuestion is the canonical shared type.
  */
 function convertCompleteQuestion(q: CarWashQuestion | HotelQuestion | EVChargingQuestion): CuratedField {
   // For range_buttons: synthesize button options from rangeConfig.ranges
   // so the standard button renderer can display them (hotel squareFootage, etc.)
   let options = q.options;
-  if (q.type === 'range_buttons' && !options?.length && (q as Record<string, unknown>).rangeConfig) {
-    const rc = (q as Record<string, unknown>).rangeConfig as {
-      ranges: Array<{ label: string; min: number; max: number | null }>;
-      suffix?: string;
-    };
+  if (q.type === 'range_buttons' && !options?.length && q.rangeConfig) {
+    const rc = q.rangeConfig;
     if (rc?.ranges) {
       options = rc.ranges.map(r => ({
         value: String(r.min),
@@ -460,83 +607,68 @@ function getLegacyQuestionnaireKey(industryKey: string): string | null {
 // SCHEMA RESOLVERS BY INDUSTRY
 // ============================================================================
 
-function resolveCarWashSchema(): CuratedSchema {
-  const questions = carWashQuestionsComplete.map(convertCompleteQuestion);
-  const sections = carWashSections.map(s => ({
-    id: s.id,
-    label: s.title, // ✅ FIX: carWashSections uses 'title', not 'label'
-    description: s.description,
-    icon: s.icon,
-  }));
-  
-  return {
-    industry: 'car-wash',
-    displayName: 'Car Wash',
-    icon: '🚗',
-    questions,
-    sections,
-    questionCount: questions.length,
-    requiredCount: questions.filter(q => q.required).length,
-    source: 'curated-complete',
-  };
-}
-
-function resolveHotelSchema(): CuratedSchema {
-  const questions = hotelQuestionsComplete.map(convertCompleteQuestion);
-  const sections = hotelSections.map(s => ({
-    id: s.id,
-    label: s.title,
-    description: s.description,
-    icon: s.icon,
-  }));
-  
-  return {
-    industry: 'hotel',
-    displayName: 'Hotel',
-    icon: '🏨',
-    questions,
-    sections,
-    questionCount: questions.length,
-    requiredCount: questions.filter(q => q.required).length,
-    source: 'curated-complete',
-  };
-}
-
-function resolveEVChargingSchema(): CuratedSchema {
-  const questions = evChargingQuestionsComplete.map(convertCompleteQuestion);
-  const sections = evChargingSections.map(s => ({
-    id: s.id,
-    label: s.title,
-    description: s.description,
-    icon: s.icon,
-  }));
-  
-  return {
-    industry: 'ev-charging',
-    displayName: 'EV Charging Station',
-    icon: '⚡',
-    questions,
-    sections,
-    questionCount: questions.length,
-    requiredCount: questions.filter(q => q.required).length,
-    source: 'curated-complete',
+/**
+ * Generic resolver factory — creates a resolver function for any industry
+ * with a *-questions-complete.config.ts file.
+ * All config files share the same Question type (imported from hotel config).
+ */
+function makeCompleteResolver(
+  industry: string,
+  displayName: string,
+  icon: string,
+  questions: HotelQuestion[],
+  sections: Array<{ id: string; title: string; description?: string; icon?: string }>,
+): () => CuratedSchema {
+  return () => {
+    const convertedQuestions = questions.map(convertCompleteQuestion);
+    const convertedSections = sections.map(s => ({
+      id: s.id,
+      label: s.title,
+      description: s.description,
+      icon: s.icon,
+    }));
+    return {
+      industry,
+      displayName,
+      icon,
+      questions: convertedQuestions,
+      sections: convertedSections,
+      questionCount: convertedQuestions.length,
+      requiredCount: convertedQuestions.filter(q => q.required).length,
+      source: 'curated-complete' as const,
+    };
   };
 }
 
 /**
  * COMPLETE_SCHEMAS registry — Unified lookup for all industries with rich
- * *-questions-complete.config.ts files. Eliminates the special-case branch
- * that previously only handled car-wash.
+ * *-questions-complete.config.ts files (19 industries).
  *
  * To add a new industry:
  * 1. Create src/data/{industry}-questions-complete.config.ts
- * 2. Add resolver function above
- * 3. Register here
+ * 2. Import questions + sections above
+ * 3. Register here with makeCompleteResolver()
  */
 const COMPLETE_SCHEMAS: Record<string, () => CuratedSchema> = {
-  'car-wash': resolveCarWashSchema,
-  'hotel': resolveHotelSchema,
-  'ev-charging': resolveEVChargingSchema,
+  'car-wash': makeCompleteResolver('car-wash', 'Car Wash', '🚗', carWashQuestionsComplete, carWashSections),
+  'hotel': makeCompleteResolver('hotel', 'Hotel', '🏨', hotelQuestionsComplete, hotelSections),
+  'ev-charging': makeCompleteResolver('ev-charging', 'EV Charging Station', '⚡', evChargingQuestionsComplete, evChargingSections),
+  'datacenter': makeCompleteResolver('datacenter', 'Data Center', '🖥️', datacenterQuestionsComplete, datacenterSections),
+  'hospital': makeCompleteResolver('hospital', 'Healthcare Facility', '🏥', hospitalQuestionsComplete, hospitalSections),
+  'office': makeCompleteResolver('office', 'Office Building', '🏢', officeQuestionsComplete, officeSections),
+  'manufacturing': makeCompleteResolver('manufacturing', 'Manufacturing', '🏭', manufacturingQuestionsComplete, manufacturingSections),
+  'warehouse': makeCompleteResolver('warehouse', 'Warehouse / Logistics', '📦', warehouseQuestionsComplete, warehouseSections),
+  'retail': makeCompleteResolver('retail', 'Retail / Shopping', '🏪', retailQuestionsComplete, retailSections),
+  'gas-station': makeCompleteResolver('gas-station', 'Gas / Truck Stop', '⛽', gasStationQuestionsComplete, gasStationSections),
+  'airport': makeCompleteResolver('airport', 'Airport', '✈️', airportQuestionsComplete, airportSections),
+  'casino': makeCompleteResolver('casino', 'Casino & Gaming', '🎰', casinoQuestionsComplete, casinoSections),
+  'apartment': makeCompleteResolver('apartment', 'Apartment Complex', '🏠', apartmentQuestionsComplete, apartmentSections),
+  'college': makeCompleteResolver('college', 'College / University', '🎓', collegeQuestionsComplete, collegeSections),
+  'cold-storage': makeCompleteResolver('cold-storage', 'Cold Storage', '❄️', coldStorageQuestionsComplete, coldStorageSections),
+  'indoor-farm': makeCompleteResolver('indoor-farm', 'Indoor Farm', '🌱', indoorFarmQuestionsComplete, indoorFarmSections),
+  'agriculture': makeCompleteResolver('agriculture', 'Agriculture', '🌾', agricultureQuestionsComplete, agricultureSections),
+  'residential': makeCompleteResolver('residential', 'Residential', '🏡', residentialQuestionsComplete, residentialSections),
+  'government': makeCompleteResolver('government', 'Government & Public', '🏛️', governmentQuestionsComplete, governmentSections),
 };
 
 function resolveLegacySchema(industryKey: string): CuratedSchema | null {
