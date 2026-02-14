@@ -223,22 +223,45 @@ export default function AdvancedQuoteBuilder({
 
   // NEW: Renewables & Alternative Power
   const [includeRenewables, setIncludeRenewables] = useState(false);
+  // Solar PV - expanded configuration
   const [solarPVIncluded, setSolarPVIncluded] = useState(false);
   const [solarCapacityKW, setSolarCapacityKW] = useState(1000);
   const [solarPanelType, setSolarPanelType] = useState("monocrystalline");
   const [solarPanelEfficiency, setSolarPanelEfficiency] = useState(21);
   const [solarInverterType, setSolarInverterType] = useState("string");
+  const [solarInstallType, setSolarInstallType] = useState<'rooftop' | 'canopy' | 'ground-mount' | 'mixed'>('rooftop');
+  const [solarRoofSpaceSqFt, setSolarRoofSpaceSqFt] = useState(10000);
+  const [solarCanopySqFt, setSolarCanopySqFt] = useState(5000);
+  const [solarGroundAcres, setSolarGroundAcres] = useState(2);
+  const [solarPeakSunHours, setSolarPeakSunHours] = useState(5);
+  const [solarTrackingType, setSolarTrackingType] = useState<'fixed' | 'single-axis' | 'dual-axis'>('fixed');
+  // Wind - expanded configuration
   const [windTurbineIncluded, setWindTurbineIncluded] = useState(false);
   const [windCapacityKW, setWindCapacityKW] = useState(500);
   const [windTurbineType, setWindTurbineType] = useState("horizontal");
+  const [windClassRating, setWindClassRating] = useState(3);
+  const [windTurbineCount, setWindTurbineCount] = useState(1);
+  const [windHubHeight, setWindHubHeight] = useState(80);
+  const [windTerrain, setWindTerrain] = useState<'open' | 'suburban' | 'coastal' | 'complex'>('open');
+  // Fuel Cell
   const [fuelCellIncluded, setFuelCellIncluded] = useState(false);
   const [fuelCellCapacityKW, setFuelCellCapacityKW] = useState(250);
   const [fuelCellType, setFuelCellType] = useState("pem");
   const [fuelType, setFuelType] = useState("hydrogen");
-  const [dieselGenIncluded, setDieselGenIncluded] = useState(false);
-  const [dieselGenCapacityKW, setDieselGenCapacityKW] = useState(500);
-  const [naturalGasGenIncluded, setNaturalGasGenIncluded] = useState(false);
-  const [naturalGasCapacityKW, setNaturalGasCapacityKW] = useState(750);
+  // Generator - unified (replaces separate diesel/natgas)
+  const [generatorIncluded, setGeneratorIncluded] = useState(false);
+  const [generatorCapacityKW, setGeneratorCapacityKW] = useState(500);
+  const [generatorFuelTypeSelected, setGeneratorFuelTypeSelected] = useState<'natural-gas' | 'diesel' | 'dual-fuel' | 'linear'>('natural-gas');
+  const [generatorUseCases, setGeneratorUseCases] = useState<string[]>(['backup']);
+  const [generatorRedundancy, setGeneratorRedundancy] = useState(false);
+  const [generatorSpaceAvailable, setGeneratorSpaceAvailable] = useState(true);
+  // EV Chargers (NEW)
+  const [evChargersIncluded, setEvChargersIncluded] = useState(false);
+  const [evLevel2Count, setEvLevel2Count] = useState(8);
+  const [evDCFCCount, setEvDCFCCount] = useState(4);
+  const [evHPCCount, setEvHPCCount] = useState(0);
+  const [evChargersPerStation, setEvChargersPerStation] = useState<1 | 2>(2);
+  const [evAdditionalPowerKW, setEvAdditionalPowerKW] = useState(0);
 
   // Calculated values (with user input overrides)
   const storageSizeMWh = storageSizeMW * durationHours;
@@ -263,19 +286,15 @@ export default function AdvancedQuoteBuilder({
         // Calculate solar/wind/generator MW from kW if included
         const solarMWFromConfig = solarPVIncluded ? solarCapacityKW / 1000 : 0;
         const windMWFromConfig = windTurbineIncluded ? windCapacityKW / 1000 : 0;
-        const generatorMWFromConfig =
-          (dieselGenIncluded ? dieselGenCapacityKW / 1000 : 0) +
-          (naturalGasGenIncluded ? naturalGasCapacityKW / 1000 : 0);
+        const generatorMWFromConfig = generatorIncluded ? generatorCapacityKW / 1000 : 0;
 
         // Calculate fuel cell MW from kW if included (NEW - Dec 2025)
         const fuelCellMWFromConfig = fuelCellIncluded ? fuelCellCapacityKW / 1000 : 0;
 
-        // Determine generator fuel type (diesel takes precedence if both are included)
-        const generatorFuelTypeForQuote = dieselGenIncluded
-          ? ("diesel" as const)
-          : naturalGasGenIncluded
-            ? ("natural-gas" as const)
-            : ("diesel" as const);
+        // Determine generator fuel type from unified selector
+        const generatorFuelTypeForQuote = generatorFuelTypeSelected === 'linear'
+          ? ("natural-gas" as const)
+          : (generatorFuelTypeSelected as "diesel" | "natural-gas" | "dual-fuel");
 
         // Map fuelType state to FuelCellType for SSOT
         const fuelCellTypeForQuote =
@@ -338,13 +357,16 @@ export default function AdvancedQuoteBuilder({
     solarCapacityKW,
     windTurbineIncluded,
     windCapacityKW,
-    dieselGenIncluded,
-    dieselGenCapacityKW,
-    naturalGasGenIncluded,
-    naturalGasCapacityKW,
+    generatorIncluded,
+    generatorCapacityKW,
+    generatorFuelTypeSelected,
     fuelCellIncluded,
     fuelCellCapacityKW,
-    fuelType, // NEW: Fuel cell dependencies
+    fuelType,
+    evChargersIncluded,
+    evLevel2Count,
+    evDCFCCount,
+    evHPCCount,
     location,
     utilityRate,
     gridConnection,
@@ -372,8 +394,8 @@ export default function AdvancedQuoteBuilder({
       // If user set generator in Interactive Dashboard, enable diesel gen in form
       if (generatorMW > 0) {
         setIncludeRenewables(true);
-        setDieselGenIncluded(true);
-        setDieselGenCapacityKW(generatorMW * 1000); // Convert MW to kW
+        setGeneratorIncluded(true);
+        setGeneratorCapacityKW(generatorMW * 1000); // Convert MW to kW
       }
     }
   }, [viewMode, solarMW, windMW, generatorMW]);
@@ -416,8 +438,8 @@ export default function AdvancedQuoteBuilder({
         if (config.generatorKW && config.generatorKW > 0) {
           setGeneratorMW(config.generatorKW / 1000);
           setIncludeRenewables(true);
-          setDieselGenIncluded(true);
-          setDieselGenCapacityKW(config.generatorKW);
+          setGeneratorIncluded(true);
+          setGeneratorCapacityKW(config.generatorKW);
         }
 
         // Set location/state
@@ -514,9 +536,9 @@ export default function AdvancedQuoteBuilder({
       }
 
       if (data.existingInfrastructure?.hasGenerator && data.existingInfrastructure.generatorKW) {
-        setDieselGenIncluded(true);
+        setGeneratorIncluded(true);
         setIncludeRenewables(true);
-        setDieselGenCapacityKW(data.existingInfrastructure.generatorKW);
+        setGeneratorCapacityKW(data.existingInfrastructure.generatorKW);
         setGeneratorMW(data.existingInfrastructure.generatorKW / 1000);
       }
 
@@ -669,14 +691,10 @@ export default function AdvancedQuoteBuilder({
           durationHours,
           solarMW: solarPVIncluded ? solarCapacityKW / 1000 : 0,
           windMW: windTurbineIncluded ? windCapacityKW / 1000 : 0,
-          generatorMW:
-            (dieselGenIncluded ? dieselGenCapacityKW / 1000 : 0) +
-            (naturalGasGenIncluded ? naturalGasCapacityKW / 1000 : 0),
-          generatorFuelType: dieselGenIncluded
-            ? "diesel"
-            : naturalGasGenIncluded
-              ? "natural-gas"
-              : "natural-gas", // SSOT Dec 2025: default to natural-gas
+          generatorMW: generatorIncluded ? generatorCapacityKW / 1000 : 0,
+          generatorFuelType: generatorFuelTypeSelected === 'linear'
+            ? "natural-gas"
+            : (generatorFuelTypeSelected as "diesel" | "natural-gas" | "dual-fuel"),
           fuelCellMW: fuelCellIncluded ? fuelCellCapacityKW / 1000 : 0,
           fuelCellType:
             fuelType === "natural-gas"
@@ -2293,7 +2311,8 @@ export default function AdvancedQuoteBuilder({
 
                     {includeRenewables && (
                       <div className="space-y-6">
-                        {/* Solar PV */}
+
+                        {/* ═══════════════ SOLAR PV SYSTEM ═══════════════ */}
                         <div className="rounded-xl p-6" style={{ background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.15)' }}>
                           <div className="flex items-center justify-between mb-6">
                             <h4 className="text-base font-semibold flex items-center gap-2 text-white">
@@ -2318,96 +2337,243 @@ export default function AdvancedQuoteBuilder({
                                 solarCapacityKW,
                                 panelType: solarPanelType,
                                 panelEfficiency: solarPanelEfficiency,
-                                region: "midwest", // TODO: make region user-selectable if needed
+                                region: "midwest",
                               });
+                              // Solar Sizing Tool: calculate max capacity from available space
+                              const panelAreaSqFt = 21.5; // 400W panel
+                              const panelWattage = 400;
+                              const availableSqFt = solarInstallType === 'rooftop' ? solarRoofSpaceSqFt
+                                : solarInstallType === 'canopy' ? solarCanopySqFt
+                                : solarInstallType === 'ground-mount' ? solarGroundAcres * 43560
+                                : solarRoofSpaceSqFt + solarCanopySqFt + (solarGroundAcres * 43560);
+                              const maxPanelsFromSpace = Math.floor(availableSqFt / panelAreaSqFt);
+                              const maxSolarKWFromSpace = Math.round((maxPanelsFromSpace * panelWattage) / 1000);
+                              const trackingBoost = solarTrackingType === 'single-axis' ? 1.25 : solarTrackingType === 'dual-axis' ? 1.35 : 1.0;
+                              const adjustedAnnualKWh = Math.round(solarSizing.annualKWh * trackingBoost);
+
                               return (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="space-y-5">
+                                  {/* Installation Type */}
                                   <div>
-                                    <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                      Solar Capacity (kW)
+                                    <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                      Installation Type
                                     </label>
-                                    <input
-                                      type="number"
-                                      value={solarCapacityKW}
-                                      onChange={(e) =>
-                                        setSolarCapacityKW(parseFloat(e.target.value) || 0)
-                                      }
-                                      step="50"
-                                      min="0"
-                                      className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
-                                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                    />
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                      {([
+                                        { value: 'rooftop', label: '🏢 Rooftop', desc: 'Building roof' },
+                                        { value: 'canopy', label: '🅿️ Parking Canopy', desc: 'Covered parking' },
+                                        { value: 'ground-mount', label: '🌾 Ground Mount', desc: 'Open land' },
+                                        { value: 'mixed', label: '🔀 Mixed', desc: 'Multiple locations' },
+                                      ] as const).map((opt) => (
+                                        <button
+                                          key={opt.value}
+                                          onClick={() => setSolarInstallType(opt.value)}
+                                          className="p-3 rounded-lg text-left transition-all"
+                                          style={{
+                                            background: solarInstallType === opt.value ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.04)',
+                                            border: solarInstallType === opt.value ? '1px solid rgba(251,191,36,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                                          }}
+                                        >
+                                          <span className="text-sm font-semibold text-white">{opt.label}</span>
+                                          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{opt.desc}</p>
+                                        </button>
+                                      ))}
+                                    </div>
                                   </div>
-                                  <div>
-                                    <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                      Panel Type
-                                    </label>
-                                    <select
-                                      value={solarPanelType}
-                                      onChange={(e) => setSolarPanelType(e.target.value)}
-                                      className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
-                                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                    >
-                                      <option value="monocrystalline">
-                                        Monocrystalline (20-22% eff.)
-                                      </option>
-                                      <option value="polycrystalline">
-                                        Polycrystalline (15-17% eff.)
-                                      </option>
-                                      <option value="thin-film">Thin-Film (10-12% eff.)</option>
-                                      <option value="bifacial">Bifacial (22-24% eff.)</option>
-                                      <option value="perc">PERC (21-23% eff.)</option>
-                                    </select>
+
+                                  {/* Available Space - conditional on install type */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {(solarInstallType === 'rooftop' || solarInstallType === 'mixed') && (
+                                      <div>
+                                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                          Available Roof Space (sq ft)
+                                        </label>
+                                        <input
+                                          type="number"
+                                          value={solarRoofSpaceSqFt}
+                                          onChange={(e) => setSolarRoofSpaceSqFt(parseFloat(e.target.value) || 0)}
+                                          step="500"
+                                          min="0"
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                        />
+                                      </div>
+                                    )}
+                                    {(solarInstallType === 'canopy' || solarInstallType === 'mixed') && (
+                                      <div>
+                                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                          Parking Canopy Area (sq ft)
+                                        </label>
+                                        <input
+                                          type="number"
+                                          value={solarCanopySqFt}
+                                          onChange={(e) => setSolarCanopySqFt(parseFloat(e.target.value) || 0)}
+                                          step="500"
+                                          min="0"
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                        />
+                                      </div>
+                                    )}
+                                    {(solarInstallType === 'ground-mount' || solarInstallType === 'mixed') && (
+                                      <div>
+                                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                          Available Land (acres)
+                                        </label>
+                                        <input
+                                          type="number"
+                                          value={solarGroundAcres}
+                                          onChange={(e) => setSolarGroundAcres(parseFloat(e.target.value) || 0)}
+                                          step="0.5"
+                                          min="0"
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                        />
+                                      </div>
+                                    )}
+                                    <div>
+                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                        Peak Sun Hours (daily avg)
+                                      </label>
+                                      <input
+                                        type="number"
+                                        value={solarPeakSunHours}
+                                        onChange={(e) => setSolarPeakSunHours(parseFloat(e.target.value) || 4)}
+                                        step="0.5"
+                                        min="2"
+                                        max="8"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                      />
+                                      <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Southwest: 6-7h | Midwest: 4-5h | Northeast: 3-4h</p>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                      Panel Efficiency (%)
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={solarPanelEfficiency}
-                                      onChange={(e) =>
-                                        setSolarPanelEfficiency(parseFloat(e.target.value) || 15)
-                                      }
-                                      min="10"
-                                      max="25"
-                                      step="0.5"
-                                      className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
-                                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                    />
+
+                                  {/* Solar Sizing Tool - recommendation banner */}
+                                  <div className="rounded-lg p-4" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <p className="text-sm font-bold text-amber-300">🔧 Solar Sizing Tool</p>
+                                        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                                          Your available space supports up to <strong className="text-amber-200">{maxSolarKWFromSpace.toLocaleString()} kW</strong> ({maxPanelsFromSpace.toLocaleString()} panels)
+                                        </p>
+                                      </div>
+                                      {solarCapacityKW !== maxSolarKWFromSpace && maxSolarKWFromSpace > 0 && (
+                                        <button
+                                          onClick={() => setSolarCapacityKW(maxSolarKWFromSpace)}
+                                          className="px-4 py-2 rounded-lg text-xs font-bold transition-all"
+                                          style={{ background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}
+                                        >
+                                          Use Max
+                                        </button>
+                                      )}
+                                    </div>
+                                    {solarCapacityKW > maxSolarKWFromSpace && maxSolarKWFromSpace > 0 && (
+                                      <p className="text-xs mt-2 text-red-400">
+                                        ⚠️ Selected capacity ({solarCapacityKW} kW) exceeds available space ({maxSolarKWFromSpace} kW)
+                                      </p>
+                                    )}
                                   </div>
-                                  <div>
-                                    <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                      Solar Inverter Type
-                                    </label>
-                                    <select
-                                      value={solarInverterType}
-                                      onChange={(e) => setSolarInverterType(e.target.value)}
-                                      className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
-                                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                    >
-                                      <option value="string">String Inverter</option>
-                                      <option value="micro">Micro-Inverters</option>
-                                      <option value="power-optimizer">Power Optimizers</option>
-                                      <option value="central">Central Inverter</option>
-                                    </select>
+
+                                  {/* Core Solar Config */}
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                        Solar Capacity (kW)
+                                      </label>
+                                      <input
+                                        type="number"
+                                        value={solarCapacityKW}
+                                        onChange={(e) => setSolarCapacityKW(parseFloat(e.target.value) || 0)}
+                                        step="50"
+                                        min="0"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                        Panel Type
+                                      </label>
+                                      <select
+                                        value={solarPanelType}
+                                        onChange={(e) => setSolarPanelType(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                      >
+                                        <option value="monocrystalline">Monocrystalline (20-22%)</option>
+                                        <option value="polycrystalline">Polycrystalline (15-17%)</option>
+                                        <option value="thin-film">Thin-Film (10-12%)</option>
+                                        <option value="bifacial">Bifacial (22-24%)</option>
+                                        <option value="perc">PERC (21-23%)</option>
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                        Panel Efficiency (%)
+                                      </label>
+                                      <input
+                                        type="number"
+                                        value={solarPanelEfficiency}
+                                        onChange={(e) => setSolarPanelEfficiency(parseFloat(e.target.value) || 15)}
+                                        min="10"
+                                        max="25"
+                                        step="0.5"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                      />
+                                    </div>
                                   </div>
-                                  <div className="md:col-span-2 rounded-xl p-4" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)' }}>
+
+                                  {/* Inverter & Tracking */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                        Inverter Type
+                                      </label>
+                                      <select
+                                        value={solarInverterType}
+                                        onChange={(e) => setSolarInverterType(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                      >
+                                        <option value="string">String Inverter</option>
+                                        <option value="micro">Micro-Inverters</option>
+                                        <option value="power-optimizer">Power Optimizers</option>
+                                        <option value="central">Central Inverter</option>
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                        Tracking System
+                                      </label>
+                                      <select
+                                        value={solarTrackingType}
+                                        onChange={(e) => setSolarTrackingType(e.target.value as 'fixed' | 'single-axis' | 'dual-axis')}
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                      >
+                                        <option value="fixed">Fixed Tilt (lowest cost)</option>
+                                        <option value="single-axis">Single-Axis Tracker (+25% output)</option>
+                                        <option value="dual-axis">Dual-Axis Tracker (+35% output)</option>
+                                      </select>
+                                    </div>
+                                  </div>
+
+                                  {/* Production Estimate */}
+                                  <div className="rounded-xl p-4" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)' }}>
                                     <p className="text-sm text-amber-300 font-bold mb-2">
                                       ☀️ Estimated Annual Production:{" "}
                                       <strong className="text-amber-200">
-                                        {solarSizing.annualKWh.toLocaleString()} kWh/year
+                                        {adjustedAnnualKWh.toLocaleString()} kWh/year
                                       </strong>{" "}
-                                      ({solarSizing.sunHours} hrs/year avg)
+                                      ({solarSizing.sunHours} sun-hrs/yr{solarTrackingType !== 'fixed' ? ` + ${solarTrackingType} tracking` : ''})
                                     </p>
                                     <p className="text-sm mt-2 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      Array Size: ~{solarSizing.arrayAreaSqFt.toLocaleString()} sq
-                                      ft (~{solarSizing.arrayAreaAcres} acres) | ~
-                                      {solarSizing.panelsNeeded} panels @ {solarSizing.panelWattage}
-                                      W
+                                      Array: ~{solarSizing.arrayAreaSqFt.toLocaleString()} sq ft (~{solarSizing.arrayAreaAcres} acres) | ~{solarSizing.panelsNeeded} panels @ {solarSizing.panelWattage}W
                                     </p>
                                     <p className="text-sm mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      ILR: {solarSizing.ilr} (DC-coupled, NREL ATB 2024)
+                                      ILR: {solarSizing.ilr} (DC-coupled, NREL ATB 2024) | BESS should store {Math.round(solarCapacityKW * 0.3)} kW for solar smoothing
                                     </p>
                                     <p className="text-xs mt-2 italic" style={{ color: 'rgba(255,255,255,0.35)' }}>
                                       {solarSizing.citation}
@@ -2418,7 +2584,7 @@ export default function AdvancedQuoteBuilder({
                             })()}
                         </div>
 
-                        {/* Wind Turbine */}
+                        {/* ═══════════════ WIND TURBINE SYSTEM ═══════════════ */}
                         <div className="rounded-xl p-6" style={{ background: 'rgba(34,211,238,0.05)', border: '1px solid rgba(34,211,238,0.15)' }}>
                           <div className="flex items-center justify-between mb-4">
                             <h4 className="text-base font-semibold flex items-center gap-2 text-white">
@@ -2438,55 +2604,147 @@ export default function AdvancedQuoteBuilder({
                           </div>
 
                           {windTurbineIncluded && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    Total Wind Capacity (kW)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={windCapacityKW}
+                                    onChange={(e) => setWindCapacityKW(parseFloat(e.target.value) || 0)}
+                                    step="50"
+                                    min="0"
+                                    className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
+                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    Turbine Type
+                                  </label>
+                                  <select
+                                    value={windTurbineType}
+                                    onChange={(e) => setWindTurbineType(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
+                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  >
+                                    <option value="horizontal">Horizontal Axis (HAWT) — Utility scale</option>
+                                    <option value="vertical">Vertical Axis (VAWT) — Urban / rooftop</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    Number of Turbines
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={windTurbineCount}
+                                    onChange={(e) => setWindTurbineCount(Math.max(1, parseInt(e.target.value) || 1))}
+                                    min="1"
+                                    max="50"
+                                    className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
+                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  />
+                                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                                    {Math.round(windCapacityKW / Math.max(1, windTurbineCount))} kW per turbine
+                                  </p>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    Hub Height (m)
+                                  </label>
+                                  <select
+                                    value={windHubHeight}
+                                    onChange={(e) => setWindHubHeight(parseInt(e.target.value))}
+                                    className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
+                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  >
+                                    <option value="30">30m — Small / distributed</option>
+                                    <option value="50">50m — Community scale</option>
+                                    <option value="80">80m — Standard commercial</option>
+                                    <option value="100">100m — Large commercial</option>
+                                    <option value="120">120m — Utility scale</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    Site Terrain
+                                  </label>
+                                  <select
+                                    value={windTerrain}
+                                    onChange={(e) => setWindTerrain(e.target.value as 'open' | 'suburban' | 'coastal' | 'complex')}
+                                    className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
+                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  >
+                                    <option value="open">Open Terrain (best)</option>
+                                    <option value="coastal">Coastal (strong, consistent)</option>
+                                    <option value="suburban">Suburban (reduced)</option>
+                                    <option value="complex">Complex Terrain (ridges, valleys)</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              {/* Wind Class */}
                               <div>
-                                <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                  Wind Capacity (kW)
+                                <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                  IEC Wind Class
                                 </label>
-                                <input
-                                  type="number"
-                                  value={windCapacityKW}
-                                  onChange={(e) =>
-                                    setWindCapacityKW(parseFloat(e.target.value) || 0)
-                                  }
-                                  step="50"
-                                  min="0"
-                                  className="w-full px-4 py-2 rounded-lg text-white font-medium focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
-                                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                />
+                                <div className="grid grid-cols-4 gap-2">
+                                  {([
+                                    { value: 1, label: 'Class I', desc: '10+ m/s', color: 'rgba(34,211,238,0.3)' },
+                                    { value: 2, label: 'Class II', desc: '8.5-10 m/s', color: 'rgba(34,211,238,0.22)' },
+                                    { value: 3, label: 'Class III', desc: '7.5-8.5 m/s', color: 'rgba(34,211,238,0.15)' },
+                                    { value: 4, label: 'Class IV', desc: '<7.5 m/s', color: 'rgba(34,211,238,0.08)' },
+                                  ] as const).map((cls) => (
+                                    <button
+                                      key={cls.value}
+                                      onClick={() => setWindClassRating(cls.value)}
+                                      className="p-3 rounded-lg text-center transition-all"
+                                      style={{
+                                        background: windClassRating === cls.value ? cls.color : 'rgba(255,255,255,0.04)',
+                                        border: windClassRating === cls.value ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                                      }}
+                                    >
+                                      <span className="text-sm font-bold text-white">{cls.label}</span>
+                                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{cls.desc}</p>
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
-                              <div>
-                                <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                  Turbine Type
-                                </label>
-                                <select
-                                  value={windTurbineType}
-                                  onChange={(e) => setWindTurbineType(e.target.value)}
-                                  className="w-full px-4 py-2 rounded-lg text-white font-medium focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
-                                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                >
-                                  <option value="horizontal">Horizontal Axis (HAWT)</option>
-                                  <option value="vertical">Vertical Axis (VAWT)</option>
-                                </select>
-                              </div>
-                              <div className="md:col-span-2 rounded p-3" style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.15)' }}>
-                                <p className="text-sm text-cyan-300 font-bold">
-                                  💨 Estimated Annual Production:{" "}
-                                  <strong className="text-cyan-200">
-                                    {(windCapacityKW * 2200).toLocaleString()} kWh/year
-                                  </strong>{" "}
-                                  (25% capacity factor)
-                                </p>
-                                <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                  Requires: Average wind speed of 5+ m/s | Tower height: 80-120m for
-                                  utility scale
-                                </p>
-                              </div>
+
+                              {/* Wind Production Estimate */}
+                              {(() => {
+                                const terrainFactor = windTerrain === 'open' ? 1.0 : windTerrain === 'coastal' ? 1.05 : windTerrain === 'suburban' ? 0.7 : 0.85;
+                                const classFactor = windClassRating === 1 ? 0.35 : windClassRating === 2 ? 0.30 : windClassRating === 3 ? 0.25 : 0.20;
+                                const heightFactor = windHubHeight >= 100 ? 1.1 : windHubHeight >= 80 ? 1.0 : windHubHeight >= 50 ? 0.9 : 0.75;
+                                const effectiveCF = classFactor * terrainFactor * heightFactor;
+                                const annualWindKWh = Math.round(windCapacityKW * 8760 * effectiveCF);
+                                return (
+                                  <div className="rounded p-4" style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.15)' }}>
+                                    <p className="text-sm text-cyan-300 font-bold">
+                                      💨 Estimated Annual Production:{" "}
+                                      <strong className="text-cyan-200">{annualWindKWh.toLocaleString()} kWh/year</strong>{" "}
+                                      ({(effectiveCF * 100).toFixed(0)}% capacity factor)
+                                    </p>
+                                    <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                      {windTurbineCount} × {Math.round(windCapacityKW / Math.max(1, windTurbineCount))} kW turbines | {windHubHeight}m hub height | {windTerrain} terrain
+                                    </p>
+                                    <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                      BESS should store {Math.round(windCapacityKW * 0.4)} kW for wind variability smoothing
+                                    </p>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           )}
                         </div>
 
-                        {/* Fuel Cell */}
+                        {/* ═══════════════ FUEL CELL SYSTEM ═══════════════ */}
                         <div className="rounded-xl p-6" style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)' }}>
                           <div className="flex items-center justify-between mb-4">
                             <h4 className="text-base font-semibold flex items-center gap-2 text-white">
@@ -2515,9 +2773,7 @@ export default function AdvancedQuoteBuilder({
                                 <input
                                   type="number"
                                   value={fuelCellCapacityKW}
-                                  onChange={(e) =>
-                                    setFuelCellCapacityKW(parseFloat(e.target.value) || 0)
-                                  }
+                                  onChange={(e) => setFuelCellCapacityKW(parseFloat(e.target.value) || 0)}
                                   step="25"
                                   min="0"
                                   className="w-full px-4 py-2 rounded-lg text-white font-medium focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
@@ -2568,177 +2824,410 @@ export default function AdvancedQuoteBuilder({
                           )}
                         </div>
 
-                        {/* Backup Generators */}
+                        {/* ═══════════════ GENERATOR SYSTEM (UNIFIED) ═══════════════ */}
                         <div className="rounded-xl p-6" style={{ background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.15)' }}>
-                          <h4 className="text-base font-semibold mb-4 flex items-center gap-2 text-white">
-                            <GitBranch className="w-5 h-5 text-orange-400" />
-                            Backup Generators
-                          </h4>
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-base font-semibold flex items-center gap-2 text-white">
+                              <GitBranch className="w-5 h-5 text-orange-400" />
+                              Generator System
+                            </h4>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={generatorIncluded}
+                                onChange={(e) => setGeneratorIncluded(e.target.checked)}
+                                className="w-5 h-5 rounded border-white/20 text-orange-500 focus:ring-orange-500/40 bg-transparent"
+                              />
+                              <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                                Include Generator
+                              </span>
+                            </label>
+                          </div>
 
-                          <div className="space-y-4">
-                            {/* Diesel Generator */}
-                            <div className="rounded-lg p-4" style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.12)' }}>
-                              <div className="flex items-center justify-between mb-3">
-                                <h5 className="font-semibold flex items-center gap-2 text-white">
-                                  🛢️ Diesel Generator
-                                </h5>
+                          {generatorIncluded && (
+                            <div className="space-y-4">
+                              {/* Fuel Type Selector */}
+                              <div>
+                                <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                  Fuel Type
+                                </label>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                  {([
+                                    { value: 'natural-gas', label: '🔥 Natural Gas', desc: 'Clean, continuous' },
+                                    { value: 'diesel', label: '🛢️ Diesel', desc: 'Proven reliability' },
+                                    { value: 'dual-fuel', label: '⚡ Dual-Fuel', desc: 'Gas + diesel backup' },
+                                    { value: 'linear', label: '🔄 Linear (Mainspring)', desc: 'Low emissions, quiet' },
+                                  ] as const).map((opt) => (
+                                    <button
+                                      key={opt.value}
+                                      onClick={() => setGeneratorFuelTypeSelected(opt.value)}
+                                      className="p-3 rounded-lg text-left transition-all"
+                                      style={{
+                                        background: generatorFuelTypeSelected === opt.value ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
+                                        border: generatorFuelTypeSelected === opt.value ? '1px solid rgba(249,115,22,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                                      }}
+                                    >
+                                      <span className="text-sm font-bold text-white">{opt.label}</span>
+                                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{opt.desc}</p>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    Generator Capacity (kW)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={generatorCapacityKW}
+                                    onChange={(e) => setGeneratorCapacityKW(parseFloat(e.target.value) || 0)}
+                                    step="50"
+                                    min="0"
+                                    className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-orange-500/40 focus:outline-none"
+                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    Space Available
+                                  </label>
+                                  <div className="flex gap-2 mt-1">
+                                    <button
+                                      onClick={() => setGeneratorSpaceAvailable(true)}
+                                      className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all"
+                                      style={{
+                                        background: generatorSpaceAvailable ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
+                                        border: generatorSpaceAvailable ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                                        color: generatorSpaceAvailable ? '#6ee7b7' : 'rgba(255,255,255,0.5)',
+                                      }}
+                                    >
+                                      ✓ Yes
+                                    </button>
+                                    <button
+                                      onClick={() => setGeneratorSpaceAvailable(false)}
+                                      className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all"
+                                      style={{
+                                        background: !generatorSpaceAvailable ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.04)',
+                                        border: !generatorSpaceAvailable ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                                        color: !generatorSpaceAvailable ? '#fca5a5' : 'rgba(255,255,255,0.5)',
+                                      }}
+                                    >
+                                      ✗ Constrained
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Generator Use Case */}
+                              <div>
+                                <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                  Primary Use Cases <span className="text-xs font-normal">(select all that apply)</span>
+                                </label>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                  {([
+                                    { value: 'backup', label: '🔋 Backup Power', desc: 'Outage protection' },
+                                    { value: 'ups', label: '⚡ UPS / Bridge', desc: 'Instant switchover' },
+                                    { value: 'peak-shaving', label: '📉 Peak Shaving', desc: 'Reduce demand charges' },
+                                    { value: 'grid-stability', label: '🔌 Grid Stability', desc: 'Frequency / voltage' },
+                                    { value: 'augment', label: '💪 Augment Power', desc: 'Supplement grid capacity' },
+                                    { value: 'island', label: '🏝️ Island Mode', desc: 'Off-grid operation' },
+                                  ]).map((opt) => (
+                                    <button
+                                      key={opt.value}
+                                      onClick={() => {
+                                        setGeneratorUseCases(prev =>
+                                          prev.includes(opt.value)
+                                            ? prev.filter(v => v !== opt.value)
+                                            : [...prev, opt.value]
+                                        );
+                                      }}
+                                      className="p-3 rounded-lg text-left transition-all"
+                                      style={{
+                                        background: generatorUseCases.includes(opt.value) ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.04)',
+                                        border: generatorUseCases.includes(opt.value) ? '1px solid rgba(249,115,22,0.35)' : '1px solid rgba(255,255,255,0.08)',
+                                      }}
+                                    >
+                                      <span className="text-sm font-semibold text-white">{opt.label}</span>
+                                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{opt.desc}</p>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* N+1 Redundancy */}
+                              <div className="flex items-center justify-between rounded-lg p-4" style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.12)' }}>
+                                <div>
+                                  <p className="text-sm font-semibold text-white">N+1 Redundancy</p>
+                                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                    Add redundant unit for critical loads (2 × {generatorCapacityKW} kW)
+                                  </p>
+                                </div>
                                 <label className="flex items-center gap-2 cursor-pointer">
                                   <input
                                     type="checkbox"
-                                    checked={dieselGenIncluded}
-                                    onChange={(e) => setDieselGenIncluded(e.target.checked)}
-                                    className="w-4 h-4 rounded border-white/20 text-orange-500 focus:ring-orange-500/40 bg-transparent"
+                                    checked={generatorRedundancy}
+                                    onChange={(e) => setGeneratorRedundancy(e.target.checked)}
+                                    className="w-5 h-5 rounded border-white/20 text-orange-500 focus:ring-orange-500/40 bg-transparent"
                                   />
-                                  <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                                    Include
-                                  </span>
                                 </label>
                               </div>
-                              {dieselGenIncluded && (
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <label className="block text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                      Capacity (kW)
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={dieselGenCapacityKW}
-                                      onChange={(e) =>
-                                        setDieselGenCapacityKW(parseFloat(e.target.value) || 0)
-                                      }
-                                      step="50"
-                                      min="0"
-                                      className="w-full px-3 py-2 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500/40 focus:outline-none"
-                                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                    />
-                                  </div>
-                                  <div className="flex items-end">
-                                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                      Fuel: ~0.3 gal/kWh
-                                      <br />
-                                      Runtime: 8-24 hrs @ 50% load
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
 
-                            {/* Natural Gas Generator */}
-                            <div className="rounded-lg p-4" style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.12)' }}>
-                              <div className="flex items-center justify-between mb-3">
-                                <h5 className="font-semibold flex items-center gap-2 text-white">
-                                  🔥 Natural Gas Generator
-                                </h5>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={naturalGasGenIncluded}
-                                    onChange={(e) => setNaturalGasGenIncluded(e.target.checked)}
-                                    className="w-4 h-4 rounded border-white/20 text-orange-500 focus:ring-orange-500/40 bg-transparent"
-                                  />
-                                  <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                                    Include
-                                  </span>
-                                </label>
+                              {/* Generator Info */}
+                              <div className="rounded p-3" style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.1)' }}>
+                                <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                                  💡 <strong className="text-white">{generatorFuelTypeSelected === 'linear' ? 'Mainspring' : generatorFuelTypeSelected === 'natural-gas' ? 'Natural Gas' : generatorFuelTypeSelected === 'dual-fuel' ? 'Dual-Fuel' : 'Diesel'}:</strong>{' '}
+                                  {generatorFuelTypeSelected === 'natural-gas' ? 'Cleaner than diesel, continuous runtime with utility gas connection. Lower emissions, quieter operation.' :
+                                   generatorFuelTypeSelected === 'diesel' ? 'Proven reliability for critical backup. Fuel: ~0.3 gal/kWh. Runtime: 8-24 hrs at 50% load.' :
+                                   generatorFuelTypeSelected === 'dual-fuel' ? 'Starts on diesel, switches to natural gas. Best of both worlds for reliability + emissions.' :
+                                   'Linear generator (Mainspring Flex). Ultra-low emissions, fuel-flexible, quiet. Ideal for distributed generation + BESS hybrid.'}
+                                  {' '}Best paired with BESS for instant response + generator ramp-up.
+                                </p>
                               </div>
-                              {naturalGasGenIncluded && (
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <label className="block text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                      Capacity (kW)
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={naturalGasCapacityKW}
-                                      onChange={(e) =>
-                                        setNaturalGasCapacityKW(parseFloat(e.target.value) || 0)
-                                      }
-                                      step="50"
-                                      min="0"
-                                      className="w-full px-3 py-2 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500/40 focus:outline-none"
-                                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                    />
-                                  </div>
-                                  <div className="flex items-end">
-                                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                      Cleaner than diesel
-                                      <br />
-                                      Continuous runtime w/ utility gas
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
                             </div>
-                          </div>
-
-                          <div className="mt-4 rounded p-3" style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.1)' }}>
-                            <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                              💡 <strong className="text-white">Note:</strong> Generators provide backup power but have
-                              emissions. Best used with BESS for short-duration peaks.
-                            </p>
-                          </div>
+                          )}
                         </div>
 
-                        {/* Renewables Summary */}
+                        {/* ═══════════════ EV CHARGER SYSTEM (NEW) ═══════════════ */}
+                        <div className="rounded-xl p-6" style={{ background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-base font-semibold flex items-center gap-2 text-white">
+                              🔌 EV Charging System
+                            </h4>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={evChargersIncluded}
+                                onChange={(e) => setEvChargersIncluded(e.target.checked)}
+                                className="w-5 h-5 rounded border-white/20 text-purple-500 focus:ring-purple-500/40 bg-transparent"
+                              />
+                              <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                                Include EV Chargers
+                              </span>
+                            </label>
+                          </div>
+
+                          {evChargersIncluded && (
+                            <div className="space-y-4">
+                              {/* Charger Counts */}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    Level 2 Chargers <span className="text-xs font-normal">(7.2 kW each)</span>
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={evLevel2Count}
+                                    onChange={(e) => setEvLevel2Count(Math.max(0, parseInt(e.target.value) || 0))}
+                                    min="0"
+                                    max="100"
+                                    className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-purple-500/40 focus:outline-none"
+                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  />
+                                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Workplace / overnight charging (4-8 hrs)</p>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    DC Fast Chargers <span className="text-xs font-normal">(150 kW each)</span>
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={evDCFCCount}
+                                    onChange={(e) => setEvDCFCCount(Math.max(0, parseInt(e.target.value) || 0))}
+                                    min="0"
+                                    max="50"
+                                    className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-purple-500/40 focus:outline-none"
+                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  />
+                                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>20-80% in ~30 min (CCS/CHAdeMO)</p>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    High Power Chargers <span className="text-xs font-normal">(250 kW each)</span>
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={evHPCCount}
+                                    onChange={(e) => setEvHPCCount(Math.max(0, parseInt(e.target.value) || 0))}
+                                    min="0"
+                                    max="20"
+                                    className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-purple-500/40 focus:outline-none"
+                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  />
+                                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Ultra-fast: 10-80% in ~15 min</p>
+                                </div>
+                              </div>
+
+                              {/* Station Config */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    Chargers per Station
+                                  </label>
+                                  <div className="flex gap-2">
+                                    {([1, 2] as const).map((n) => (
+                                      <button
+                                        key={n}
+                                        onClick={() => setEvChargersPerStation(n)}
+                                        className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all"
+                                        style={{
+                                          background: evChargersPerStation === n ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.04)',
+                                          border: evChargersPerStation === n ? '1px solid rgba(168,85,247,0.35)' : '1px solid rgba(255,255,255,0.08)',
+                                          color: evChargersPerStation === n ? '#c084fc' : 'rgba(255,255,255,0.5)',
+                                        }}
+                                      >
+                                        {n} Connector{n > 1 ? 's' : ''} / Station
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    Additional Site Power (kW)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={evAdditionalPowerKW}
+                                    onChange={(e) => setEvAdditionalPowerKW(Math.max(0, parseFloat(e.target.value) || 0))}
+                                    step="10"
+                                    min="0"
+                                    className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-purple-500/40 focus:outline-none"
+                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  />
+                                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Lighting, signage, HVAC, convenience store, etc.</p>
+                                </div>
+                              </div>
+
+                              {/* EV Summary Panel */}
+                              {(() => {
+                                const evConnectedKW = (evLevel2Count * 7.2) + (evDCFCCount * 150) + (evHPCCount * 250);
+                                const evPeakKW = Math.round(evConnectedKW * 0.7); // 70% concurrency
+                                const evTotalPeakKW = evPeakKW + evAdditionalPowerKW;
+                                const evBESSRecommendedKW = Math.round(evPeakKW * 0.7); // 70% peak shaving
+                                const evStations = Math.ceil((evLevel2Count + evDCFCCount + evHPCCount) / evChargersPerStation);
+                                return (
+                                  <div className="rounded-lg p-4" style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                      <div>
+                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Connected</p>
+                                        <p className="text-lg font-bold text-purple-300">{evConnectedKW.toFixed(0)} kW</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Peak Demand</p>
+                                        <p className="text-lg font-bold text-purple-300">{evTotalPeakKW.toFixed(0)} kW</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Stations</p>
+                                        <p className="text-lg font-bold text-purple-300">{evStations}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>BESS for Peak Shaving</p>
+                                        <p className="text-lg font-bold text-emerald-400">{evBESSRecommendedKW} kW</p>
+                                      </div>
+                                    </div>
+                                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                      🔋 EV charging creates very spiky demand. BESS peak shaving can reduce demand charges by 50%+ (70% concurrency factor applied)
+                                    </p>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* ═══════════════ COMBINED SUMMARY + BESS SIZING ═══════════════ */}
                         <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                           <h4 className="text-base font-semibold mb-4 flex items-center gap-2 text-white">
                             <Sparkles className="w-5 h-5 text-emerald-400" />
-                            Combined Renewables Summary
+                            Combined System Summary & BESS Sizing
                           </h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="rounded p-3" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                              <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                Total Renewable
-                              </p>
-                              <p className="text-2xl font-bold text-emerald-400">
-                                {(
-                                  (solarPVIncluded ? solarCapacityKW : 0) +
-                                  (windTurbineIncluded ? windCapacityKW : 0) +
-                                  (fuelCellIncluded ? fuelCellCapacityKW : 0)
-                                ).toFixed(0)}{" "}
-                                kW
-                              </p>
-                            </div>
-                            <div className="rounded p-3" style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.15)' }}>
-                              <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Backup Gen</p>
-                              <p className="text-2xl font-bold text-orange-400">
-                                {(
-                                  (dieselGenIncluded ? dieselGenCapacityKW : 0) +
-                                  (naturalGasGenIncluded ? naturalGasCapacityKW : 0)
-                                ).toFixed(0)}{" "}
-                                kW
-                              </p>
-                            </div>
-                            <div className="rounded p-3" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                              <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                BESS + Renewable
-                              </p>
-                              <p className="text-2xl font-bold text-blue-400">
-                                {(
-                                  totalKW +
-                                  (solarPVIncluded ? solarCapacityKW : 0) +
-                                  (windTurbineIncluded ? windCapacityKW : 0)
-                                ).toFixed(0)}{" "}
-                                kW
-                              </p>
-                            </div>
-                            <div className="rounded p-3" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                              <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                Total Capacity
-                              </p>
-                              <p className="text-2xl font-bold text-emerald-400">
-                                {(
-                                  totalKW +
-                                  (solarPVIncluded ? solarCapacityKW : 0) +
-                                  (windTurbineIncluded ? windCapacityKW : 0) +
-                                  (fuelCellIncluded ? fuelCellCapacityKW : 0) +
-                                  (dieselGenIncluded ? dieselGenCapacityKW : 0) +
-                                  (naturalGasGenIncluded ? naturalGasCapacityKW : 0)
-                                ).toFixed(0)}{" "}
-                                kW
-                              </p>
-                            </div>
-                          </div>
+
+                          {(() => {
+                            const totalRenewableKW = (solarPVIncluded ? solarCapacityKW : 0) + (windTurbineIncluded ? windCapacityKW : 0) + (fuelCellIncluded ? fuelCellCapacityKW : 0);
+                            const totalGenKW = generatorIncluded ? (generatorRedundancy ? generatorCapacityKW * 2 : generatorCapacityKW) : 0;
+                            const evConnectedKW = evChargersIncluded ? (evLevel2Count * 7.2) + (evDCFCCount * 150) + (evHPCCount * 250) : 0;
+                            const evPeakKW = Math.round(evConnectedKW * 0.7);
+                            const totalSystemKW = totalKW + totalRenewableKW + totalGenKW + evPeakKW;
+                            // BESS sizing recommendation
+                            const bessSolarSmoothing = solarPVIncluded ? Math.round(solarCapacityKW * 0.3) : 0;
+                            const bessWindSmoothing = windTurbineIncluded ? Math.round(windCapacityKW * 0.4) : 0;
+                            const bessEVPeakShaving = evChargersIncluded ? Math.round(evPeakKW * 0.7) : 0;
+                            const bessBackupBuffer = generatorIncluded ? Math.round(generatorCapacityKW * 0.2) : 0;
+                            const bessRecommendedKW = Math.max(totalKW, bessSolarSmoothing + bessWindSmoothing + bessEVPeakShaving + bessBackupBuffer);
+                            const bessRecommendedKWh = bessRecommendedKW * durationHours;
+
+                            return (
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                  <div className="rounded p-3" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)' }}>
+                                    <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Renewable</p>
+                                    <p className="text-xl font-bold text-amber-400">{totalRenewableKW.toFixed(0)} kW</p>
+                                  </div>
+                                  <div className="rounded p-3" style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.15)' }}>
+                                    <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Generator</p>
+                                    <p className="text-xl font-bold text-orange-400">{totalGenKW.toFixed(0)} kW</p>
+                                  </div>
+                                  <div className="rounded p-3" style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                                    <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>EV Peak</p>
+                                    <p className="text-xl font-bold text-purple-400">{evPeakKW.toFixed(0)} kW</p>
+                                  </div>
+                                  <div className="rounded p-3" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
+                                    <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>BESS</p>
+                                    <p className="text-xl font-bold text-blue-400">{totalKW.toFixed(0)} kW</p>
+                                  </div>
+                                  <div className="rounded p-3" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                                    <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Total System</p>
+                                    <p className="text-xl font-bold text-emerald-400">{totalSystemKW.toFixed(0)} kW</p>
+                                  </div>
+                                </div>
+
+                                {/* BESS Sizing Recommendation */}
+                                <div className="rounded-lg p-4" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                                  <p className="text-sm font-bold text-emerald-300 mb-2">🔋 Recommended BESS Sizing (based on all inputs)</p>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                    {bessSolarSmoothing > 0 && (
+                                      <div className="text-center">
+                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Solar Smoothing</p>
+                                        <p className="text-sm font-bold text-amber-300">{bessSolarSmoothing} kW</p>
+                                      </div>
+                                    )}
+                                    {bessWindSmoothing > 0 && (
+                                      <div className="text-center">
+                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Wind Smoothing</p>
+                                        <p className="text-sm font-bold text-cyan-300">{bessWindSmoothing} kW</p>
+                                      </div>
+                                    )}
+                                    {bessEVPeakShaving > 0 && (
+                                      <div className="text-center">
+                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>EV Peak Shaving</p>
+                                        <p className="text-sm font-bold text-purple-300">{bessEVPeakShaving} kW</p>
+                                      </div>
+                                    )}
+                                    {bessBackupBuffer > 0 && (
+                                      <div className="text-center">
+                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Gen Backup Buffer</p>
+                                        <p className="text-sm font-bold text-orange-300">{bessBackupBuffer} kW</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-between mt-2 pt-2" style={{ borderTop: '1px solid rgba(16,185,129,0.15)' }}>
+                                    <div>
+                                      <p className="text-sm font-medium text-white">
+                                        Recommended: <strong className="text-emerald-300">{bessRecommendedKW.toLocaleString()} kW / {bessRecommendedKWh.toLocaleString()} kWh</strong>
+                                      </p>
+                                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                        Current BESS: {totalKW.toFixed(0)} kW / {(storageSizeMWh * 1000).toFixed(0)} kWh
+                                        {bessRecommendedKW > totalKW * 1.1 && (
+                                          <span className="text-amber-400 ml-2">⚠️ Consider increasing BESS size</span>
+                                        )}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     )}
@@ -2746,8 +3235,8 @@ export default function AdvancedQuoteBuilder({
                     {!includeRenewables && (
                       <div className="text-center py-8">
                         <p className="text-lg text-white/70 font-semibold">
-                          Enable renewables to configure solar, wind, fuel cells, and backup
-                          generators
+                          Enable renewables to configure solar, wind, generators, fuel cells, and EV
+                          chargers
                         </p>
                         <p className="text-sm mt-2 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
                           Hybrid systems can reduce costs and improve resiliency
@@ -2879,10 +3368,10 @@ export default function AdvancedQuoteBuilder({
                         windCapacityKW={windCapacityKW}
                         fuelCellIncluded={fuelCellIncluded}
                         fuelCellCapacityKW={fuelCellCapacityKW}
-                        dieselGenIncluded={dieselGenIncluded}
-                        dieselGenCapacityKW={dieselGenCapacityKW}
-                        naturalGasGenIncluded={naturalGasGenIncluded}
-                        naturalGasCapacityKW={naturalGasCapacityKW}
+                        dieselGenIncluded={generatorIncluded && (generatorFuelTypeSelected === 'diesel' || generatorFuelTypeSelected === 'dual-fuel')}
+                        dieselGenCapacityKW={generatorFuelTypeSelected === 'diesel' || generatorFuelTypeSelected === 'dual-fuel' ? generatorCapacityKW : 0}
+                        naturalGasGenIncluded={generatorIncluded && (generatorFuelTypeSelected === 'natural-gas' || generatorFuelTypeSelected === 'linear')}
+                        naturalGasCapacityKW={generatorFuelTypeSelected === 'natural-gas' || generatorFuelTypeSelected === 'linear' ? generatorCapacityKW : 0}
                         utilityRate={utilityRate}
                         demandCharge={demandCharge}
                         chemistry={chemistry}
@@ -2941,10 +3430,10 @@ export default function AdvancedQuoteBuilder({
                     windCapacityKW={windCapacityKW}
                     fuelCellIncluded={fuelCellIncluded}
                     fuelCellCapacityKW={fuelCellCapacityKW}
-                    dieselGenIncluded={dieselGenIncluded}
-                    dieselGenCapacityKW={dieselGenCapacityKW}
-                    naturalGasGenIncluded={naturalGasGenIncluded}
-                    naturalGasCapacityKW={naturalGasCapacityKW}
+                    dieselGenIncluded={generatorIncluded && (generatorFuelTypeSelected === 'diesel' || generatorFuelTypeSelected === 'dual-fuel')}
+                    dieselGenCapacityKW={generatorFuelTypeSelected === 'diesel' || generatorFuelTypeSelected === 'dual-fuel' ? generatorCapacityKW : 0}
+                    naturalGasGenIncluded={generatorIncluded && (generatorFuelTypeSelected === 'natural-gas' || generatorFuelTypeSelected === 'linear')}
+                    naturalGasCapacityKW={generatorFuelTypeSelected === 'natural-gas' || generatorFuelTypeSelected === 'linear' ? generatorCapacityKW : 0}
                     utilityRate={utilityRate}
                     demandCharge={demandCharge}
                     chemistry={chemistry}
@@ -3263,8 +3752,7 @@ export default function AdvancedQuoteBuilder({
                       {(solarPVIncluded ||
                         windTurbineIncluded ||
                         fuelCellIncluded ||
-                        dieselGenIncluded ||
-                        naturalGasGenIncluded) && (
+                        generatorIncluded) && (
                         <div className="mb-6">
                           <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-300 pb-2">
                             Renewable & Backup Integration
@@ -3347,23 +3835,13 @@ export default function AdvancedQuoteBuilder({
                                   </tr>
                                 </>
                               )}
-                              {dieselGenIncluded && (
+                              {generatorIncluded && (
                                 <tr className="border-b border-gray-200 bg-orange-50">
                                   <td className="py-2 font-semibold text-gray-700">
-                                    🔧 Diesel Generator Capacity:
+                                    {generatorFuelTypeSelected === 'diesel' ? '🛢️ Diesel' : generatorFuelTypeSelected === 'natural-gas' ? '🔥 Natural Gas' : generatorFuelTypeSelected === 'dual-fuel' ? '⚡ Dual-Fuel' : '🔄 Linear'} Generator:
                                   </td>
                                   <td className="py-2 text-gray-900 text-right">
-                                    {dieselGenCapacityKW} kW
-                                  </td>
-                                </tr>
-                              )}
-                              {naturalGasGenIncluded && (
-                                <tr className="border-b border-gray-200 bg-emerald-50">
-                                  <td className="py-2 font-semibold text-gray-700">
-                                    🔥 Natural Gas Generator:
-                                  </td>
-                                  <td className="py-2 text-gray-900 text-right">
-                                    {naturalGasCapacityKW} kW
+                                    {generatorCapacityKW} kW{generatorRedundancy ? ' (N+1)' : ''}
                                   </td>
                                 </tr>
                               )}
