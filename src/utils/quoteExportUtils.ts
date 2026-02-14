@@ -15,6 +15,7 @@ import {
 } from "docx";
 import { saveAs } from "file-saver";
 import { loadWatermarkSettings } from "../components/AdminWatermarkSettings";
+import { MERLIN_ICON_BASE64 } from "./merlinIconData";
 
 export interface QuoteExportData {
   // Project Information
@@ -145,8 +146,8 @@ export function getWatermarkStyle() {
 }
 
 /**
- * Export quote as Word document (.docx)
- * Matches the approved BESS Proposal template structure.
+ * Export quote as Word document (.docx) — Supabase Design System
+ * Dark color scheme with emerald #3ECF8E accents matching the PDF export.
  */
 export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   const watermarkText = getWatermarkText();
@@ -162,24 +163,37 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   const fmtMoney = (v: number) => `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const fmtMoneyShort = (v: number) => `$${Math.round(v).toLocaleString("en-US")}`;
 
-  // Helper: section heading with bottom border
+  // Supabase-themed colors
+  const C = {
+    emerald: "3ECF8E",
+    dark: "171717",
+    text: "EDEDED",
+    muted: "8B8B8B",
+    bg: "0D0D0D",
+    divider: "2A2A2A",
+    green: "3ECF8E",
+    amber: "F59E0B",
+    red: "EF4444",
+  };
+
+  // Helper: section heading with emerald bottom border
   const sectionHeading = (text: string) =>
     new Paragraph({
       children: [
-        new TextRun({ text, size: 28, bold: true, color: "0F172A" }),
+        new TextRun({ text, size: 26, bold: true, color: C.emerald }),
       ],
       spacing: { before: 500, after: 200 },
       border: {
-        bottom: { color: "0F172A", space: 1, style: BorderStyle.SINGLE, size: 8 },
+        bottom: { color: C.emerald, space: 1, style: BorderStyle.SINGLE, size: 6 },
       },
     });
 
-  // Helper: label/value row
+  // Helper: label/value row with muted labels and bright values
   const labelValueRow = (label: string, value: string, valueColor?: string) =>
     new Paragraph({
       children: [
-        new TextRun({ text: `${label}: `, bold: true, size: 21 }),
-        new TextRun({ text: value, size: 21, ...(valueColor ? { color: valueColor, bold: true } : {}) }),
+        new TextRun({ text: `${label}: `, bold: true, size: 21, color: C.muted }),
+        new TextRun({ text: value, size: 21, color: valueColor || C.text, bold: !!valueColor }),
       ],
       spacing: { after: 80 },
     });
@@ -194,7 +208,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
               new Paragraph({
                 alignment: AlignmentType.CENTER,
                 children: [
-                  new TextRun({ text: watermarkText?.toUpperCase() || "MERLIN ENERGY", size: 14, color: "CCCCCC", bold: true }),
+                  new TextRun({ text: watermarkText?.toUpperCase() || "MERLIN ENERGY", size: 14, color: "444444", bold: true }),
                 ],
               }),
             ],
@@ -206,9 +220,9 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
               new Paragraph({
                 alignment: AlignmentType.CENTER,
                 children: [
-                  new TextRun({ text: "Page ", size: 18 }),
+                  new TextRun({ text: "Page ", size: 18, color: C.muted }),
                   new TextRun({ children: [PageNumber.CURRENT] }),
-                  new TextRun({ text: " | Merlin Energy Solutions — TrueQuote™ Verified", size: 16, color: "94A3B8" }),
+                  new TextRun({ text: " | Merlin Energy Solutions — TrueQuote™ Verified", size: 16, color: C.muted }),
                 ],
               }),
             ],
@@ -218,33 +232,33 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           // ═══ HEADER ═══
           new Paragraph({
             children: [
-              new TextRun({ text: "BATTERY ENERGY STORAGE SYSTEM PROPOSAL", size: 36, bold: true, color: "0F172A" }),
+              new TextRun({ text: "BATTERY ENERGY STORAGE SYSTEM PROPOSAL", size: 36, bold: true, color: C.dark }),
             ],
             spacing: { after: 120 },
           }),
           new Paragraph({
             children: [
-              new TextRun({ text: "Professional Energy Storage Solution", size: 22, color: "64748B" }),
+              new TextRun({ text: "Professional Energy Storage Solution", size: 22, color: C.muted }),
             ],
             spacing: { after: 60 },
           }),
           new Paragraph({
             children: [
-              new TextRun({ text: "TrueQuote™ Verified • Source-Backed Pricing", size: 20, color: "D97706", bold: true }),
+              new TextRun({ text: "TrueQuote™ Verified • Source-Backed Pricing", size: 20, color: C.emerald, bold: true }),
             ],
             spacing: { after: 60 },
           }),
           new Paragraph({
             alignment: AlignmentType.RIGHT,
             children: [
-              new TextRun({ text: "MERLIN", size: 32, bold: true, color: "0F172A" }),
+              new TextRun({ text: "MERLIN", size: 32, bold: true, color: C.dark }),
             ],
             spacing: { after: 40 },
           }),
           new Paragraph({
             alignment: AlignmentType.RIGHT,
             children: [
-              new TextRun({ text: "Energy Solutions", size: 18, color: "64748B" }),
+              new TextRun({ text: "Energy Solutions", size: 18, color: C.muted }),
             ],
             spacing: { after: 300 },
           }),
@@ -260,36 +274,36 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           sectionHeading("1. EXECUTIVE SUMMARY"),
           new Paragraph({
             children: [
-              new TextRun({ text: "This proposal provides a comprehensive Battery Energy Storage System (BESS) solution designed to meet your specific energy requirements and deliver exceptional return on investment.", size: 21, color: "475569" }),
+              new TextRun({ text: "This proposal provides a comprehensive Battery Energy Storage System (BESS) solution designed to meet your specific energy requirements and deliver exceptional return on investment.", size: 21, color: C.muted }),
             ],
             spacing: { after: 200 },
           }),
-          // Key Metrics as labeled rows (Word tables would need TableRow import)
+          // Key Metrics
           labelValueRow("System Capacity", `${storageMWh.toFixed(1)} MWh`),
           labelValueRow("Power Rating", `${data.storageSizeMW.toFixed(0)} MW`),
           labelValueRow("Total Investment", fmtMoney(data.systemCost)),
-          labelValueRow("Annual Energy Savings", `${fmtMoneyShort(annualSavings)}/year`, "059669"),
+          labelValueRow("Annual Energy Savings", `${fmtMoneyShort(annualSavings)}/year`, C.emerald),
           labelValueRow("Simple Payback Period", paybackYears > 0 ? `${paybackYears.toFixed(2)} years` : "—"),
-          labelValueRow("10-Year ROI", roi10Year !== 0 ? `${roi10Year.toFixed(1)}%` : "—", roi10Year > 0 ? "059669" : undefined),
+          labelValueRow("10-Year ROI", roi10Year !== 0 ? `${roi10Year.toFixed(1)}%` : "—", roi10Year > 0 ? C.emerald : undefined),
           labelValueRow("System Warranty", `${data.warrantyYears} Years`),
 
           // ═══ 2. PROJECT OVERVIEW ═══
           sectionHeading("2. PROJECT OVERVIEW & VISUALIZATION"),
           new Paragraph({
             children: [
-              new TextRun({ text: `The proposed system integrates with your existing infrastructure to provide energy storage, peak shaving, and grid stabilization for your ${data.useCase} application.`, size: 21, color: "475569" }),
+              new TextRun({ text: `The proposed system integrates with your existing infrastructure to provide energy storage, peak shaving, and grid stabilization for your ${data.useCase} application.`, size: 21, color: C.muted }),
             ],
             spacing: { after: 200 },
           }),
           new Paragraph({
             children: [
-              new TextRun({ text: "[Insert aerial or ground-level photo of installation site]", size: 18, color: "94A3B8", italics: true }),
+              new TextRun({ text: "[Insert aerial or ground-level photo of installation site]", size: 18, color: "555555", italics: true }),
             ],
             spacing: { after: 80 },
           }),
           new Paragraph({
             children: [
-              new TextRun({ text: "[Insert technical diagram showing BESS configuration and connections]", size: 18, color: "94A3B8", italics: true }),
+              new TextRun({ text: "[Insert technical diagram showing BESS configuration and connections]", size: 18, color: "555555", italics: true }),
             ],
             spacing: { after: 300 },
           }),
@@ -307,7 +321,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                     return labelValueRow(label, `${Math.round(kw).toLocaleString()} kW${share != null ? ` (${(share * 100).toFixed(0)}%)` : ""}`);
                   }),
                 ...(data.trueQuoteValidation.dutyCycle != null
-                  ? [labelValueRow("Duty Cycle", `${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)}%`)]
+                  ? [labelValueRow("Duty Cycle", `${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)}%`, C.emerald)]
                   : []),
               ]
             : []),
@@ -317,11 +331,11 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             ? [
                 sectionHeading(`${data.trueQuoteValidation?.kWContributors ? "4" : "3"}. FINANCIAL ANALYSIS`),
                 labelValueRow("Total Investment", fmtMoney(data.systemCost)),
-                labelValueRow("Annual Energy Savings", `${fmtMoneyShort(annualSavings)}/year`, "059669"),
+                labelValueRow("Annual Energy Savings", `${fmtMoneyShort(annualSavings)}/year`, C.emerald),
                 labelValueRow("Simple Payback", paybackYears > 0 ? `${paybackYears.toFixed(1)} years` : "—"),
-                ...(data.financialAnalysis.npv != null ? [labelValueRow("NPV (25 yr)", fmtMoneyShort(data.financialAnalysis.npv), "059669")] : []),
+                ...(data.financialAnalysis.npv != null ? [labelValueRow("NPV (25 yr)", fmtMoneyShort(data.financialAnalysis.npv), C.emerald)] : []),
                 ...(data.financialAnalysis.irr != null ? [labelValueRow("IRR", `${(data.financialAnalysis.irr * 100).toFixed(1)}%`)] : []),
-                ...(data.financialAnalysis.demandChargeSavings != null ? [labelValueRow("Demand Charge Savings", `${fmtMoneyShort(data.financialAnalysis.demandChargeSavings)}/year`, "059669")] : []),
+                ...(data.financialAnalysis.demandChargeSavings != null ? [labelValueRow("Demand Charge Savings", `${fmtMoneyShort(data.financialAnalysis.demandChargeSavings)}/year`, C.emerald)] : []),
               ]
             : []),
 
@@ -330,21 +344,21 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             ? [
                 sectionHeading("TrueQuote™ CONFIDENCE"),
                 labelValueRow("Overall Confidence",
-                  data.trueQuoteConfidence.overall === "high" ? "✓ High" : data.trueQuoteConfidence.overall === "medium" ? "◐ Medium" : "○ Low",
-                  data.trueQuoteConfidence.overall === "high" ? "059669" : data.trueQuoteConfidence.overall === "medium" ? "D97706" : "DC2626"
+                  data.trueQuoteConfidence.overall === "high" ? "✓ HIGH" : data.trueQuoteConfidence.overall === "medium" ? "◐ MEDIUM" : "○ LOW",
+                  data.trueQuoteConfidence.overall === "high" ? C.emerald : data.trueQuoteConfidence.overall === "medium" ? C.amber : C.red
                 ),
-                labelValueRow("Profile Completeness", `${data.trueQuoteConfidence.profileCompleteness}% (${data.trueQuoteConfidence.userInputs} user inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults)`),
+                labelValueRow("Profile Completeness", `${data.trueQuoteConfidence.profileCompleteness}% — ${data.trueQuoteConfidence.userInputs} user inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults`),
                 labelValueRow("Industry Model", data.trueQuoteConfidence.industry === "v1" ? "Industry-Specific (TrueQuote™)" : "General Facility Estimate"),
                 ...(data.pricingSnapshotId ? [labelValueRow("Pricing Snapshot", `#${data.pricingSnapshotId.slice(0, 12)}`)] : []),
                 ...(data.trueQuoteValidation?.assumptions?.length
                   ? [
                       new Paragraph({
-                        children: [new TextRun({ text: "Methodology & Sources:", bold: true, size: 21 })],
+                        children: [new TextRun({ text: "Methodology & Sources", bold: true, size: 21, color: C.emerald })],
                         spacing: { before: 120, after: 60 },
                       }),
                       ...data.trueQuoteValidation.assumptions.map(
                         (a) => new Paragraph({
-                          children: [new TextRun({ text: `• ${a}`, size: 18, color: "475569" })],
+                          children: [new TextRun({ text: `• ${a}`, size: 18, color: C.muted })],
                           spacing: { after: 40 },
                         })
                       ),
@@ -355,12 +369,12 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
 
           // ═══ TERMS & CONDITIONS ═══
           sectionHeading("TERMS & CONDITIONS"),
-          new Paragraph({ children: [new TextRun({ text: "• This quote is valid for 30 days from the date of issue.", size: 20 })], spacing: { after: 80 } }),
-          new Paragraph({ children: [new TextRun({ text: "• Payment Terms: 50% deposit upon contract signing, 50% upon commissioning.", size: 20 })], spacing: { after: 80 } }),
-          new Paragraph({ children: [new TextRun({ text: `• Warranty: ${data.warrantyYears} year comprehensive warranty included.`, size: 20 })], spacing: { after: 80 } }),
-          new Paragraph({ children: [new TextRun({ text: "• All equipment pricing reflects current market conditions (NREL ATB 2024, IRA 2022).", size: 20 })], spacing: { after: 200 } }),
+          new Paragraph({ children: [new TextRun({ text: "• This quote is valid for 30 days from the date of issue.", size: 20, color: C.muted })], spacing: { after: 80 } }),
+          new Paragraph({ children: [new TextRun({ text: "• Payment Terms: 50% deposit upon contract signing, 50% upon commissioning.", size: 20, color: C.muted })], spacing: { after: 80 } }),
+          new Paragraph({ children: [new TextRun({ text: `• Warranty: ${data.warrantyYears} year comprehensive warranty included.`, size: 20, color: C.muted })], spacing: { after: 80 } }),
+          new Paragraph({ children: [new TextRun({ text: "• All equipment pricing reflects current market conditions (NREL ATB 2024, IRA 2022).", size: 20, color: C.muted })], spacing: { after: 200 } }),
           new Paragraph({
-            children: [new TextRun({ text: "This proposal was generated by Merlin Energy Solutions using TrueQuote™ methodology. All numbers are sourced from NREL, EIA, IEEE, and other authoritative industry standards. Final pricing may vary based on site assessment, permitting, and interconnection requirements.", size: 16, color: "94A3B8", italics: true })],
+            children: [new TextRun({ text: "This proposal was generated by Merlin Energy Solutions using TrueQuote™ methodology. All numbers are sourced from NREL, EIA, IEEE, and other authoritative industry standards. Final pricing may vary based on site assessment, permitting, and interconnection requirements.", size: 16, color: "555555", italics: true })],
             spacing: { after: 100 },
           }),
         ],
@@ -374,16 +388,8 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
 }
 
 /**
- * Export quote as professional PDF proposal
- * Matches the approved BESS Proposal template:
- * - Dark navy header with MERLIN branding
- * - TrueQuote™ Verified badge
- * - Project Information table
- * - Executive Summary with key metrics
- * - Project Overview & Visualization
- * - Load Breakdown (TrueQuote™)
- * - Financial Analysis
- * - Terms & Conditions
+ * Export quote as professional PDF proposal — Supabase Design System
+ * Dark theme with emerald #3ECF8E accents, real Merlin icon, clean modern typography
  */
 export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
   // Compute derived values
@@ -414,77 +420,89 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
         @page { size: letter; margin: 0.6in 0.75in; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-          font-family: 'Segoe UI', 'Calibri', Arial, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
           font-size: 10.5pt;
-          color: #1e293b;
-          line-height: 1.5;
+          color: #ededed;
+          line-height: 1.55;
+          background: #0D0D0D;
         }
 
         /* ── HEADER ─────────────────────────────────────── */
         .proposal-header {
-          background: #0f172a;
-          color: white;
+          background: #171717;
+          border-bottom: 2px solid #3ECF8E;
           padding: 28px 32px;
           display: flex;
           justify-content: space-between;
-          align-items: flex-start;
+          align-items: center;
           margin: -0.6in -0.75in 0 -0.75in;
           width: calc(100% + 1.5in);
         }
         .proposal-header .left h1 {
-          font-size: 22pt;
-          font-weight: 800;
-          letter-spacing: 0.5px;
-          margin-bottom: 10px;
-          line-height: 1.15;
+          font-size: 20pt;
+          font-weight: 700;
+          letter-spacing: 0.3px;
+          margin-bottom: 8px;
+          line-height: 1.2;
+          color: #ffffff;
         }
         .proposal-header .left .subtitle {
           font-size: 10pt;
-          color: #94a3b8;
-          font-weight: 500;
+          color: #8B8B8B;
+          font-weight: 400;
         }
         .proposal-header .left .truequote-line {
           font-size: 9pt;
-          color: #fbbf24;
-          margin-top: 4px;
+          color: #3ECF8E;
+          margin-top: 6px;
           font-weight: 600;
+          letter-spacing: 0.5px;
         }
         .proposal-header .right {
           text-align: right;
-          padding-top: 4px;
+          display: flex;
+          align-items: center;
+          gap: 14px;
         }
-        .proposal-header .right .wizard-emoji {
-          font-size: 42pt;
-          line-height: 1;
-          margin-bottom: 6px;
+        .proposal-header .right .merlin-icon {
+          width: 56px;
+          height: 56px;
+          border-radius: 12px;
+          border: 2px solid #3ECF8E;
+        }
+        .proposal-header .right .brand-text {
+          text-align: right;
         }
         .proposal-header .right .brand-name {
-          font-size: 18pt;
-          font-weight: 800;
+          font-size: 16pt;
+          font-weight: 700;
           letter-spacing: 1px;
+          color: #ffffff;
         }
         .proposal-header .right .brand-tagline {
           font-size: 8.5pt;
-          color: #94a3b8;
+          color: #8B8B8B;
           margin-top: 2px;
         }
 
-        /* ── DIVIDER ─────────────────────────────────────── */
-        .gold-divider {
+        /* ── ACCENT BAR ──────────────────────────────────── */
+        .accent-bar {
           height: 3px;
-          background: linear-gradient(90deg, #fbbf24, #f59e0b, #d97706);
+          background: linear-gradient(90deg, #3ECF8E, #2BA86E, #1A7A4E);
           margin: 0 -0.75in;
           width: calc(100% + 1.5in);
         }
 
         /* ── SECTION HEADERS ────────────────────────────── */
         .section-heading {
-          font-size: 14pt;
-          font-weight: 800;
-          color: #0f172a;
+          font-size: 12pt;
+          font-weight: 700;
+          color: #3ECF8E;
           padding: 8px 0;
-          border-bottom: 3px solid #0f172a;
-          margin: 28px 0 16px 0;
+          border-bottom: 1px solid #2a2a2a;
+          margin: 28px 0 14px 0;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
         }
 
         /* ── INFO TABLE ─────────────────────────────────── */
@@ -494,18 +512,19 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
           margin: 12px 0 24px 0;
         }
         .info-table td {
-          padding: 7px 12px;
-          border: 1px solid #cbd5e1;
+          padding: 8px 14px;
+          border: 1px solid #2a2a2a;
           font-size: 10pt;
         }
         .info-table .label-cell {
-          font-weight: 700;
-          background: #f8fafc;
+          font-weight: 600;
+          background: #1a1a1a;
           width: 35%;
-          color: #334155;
+          color: #8B8B8B;
         }
         .info-table .value-cell {
-          color: #1e293b;
+          color: #ededed;
+          background: #111111;
         }
 
         /* ── KEY METRICS TABLE ──────────────────────────── */
@@ -515,67 +534,68 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
           margin: 12px 0 24px 0;
         }
         .metrics-table thead th {
-          background: #fbbf24;
-          color: #0f172a;
-          font-weight: 800;
+          background: #3ECF8E;
+          color: #0D0D0D;
+          font-weight: 700;
           font-size: 10pt;
-          padding: 8px 12px;
+          padding: 9px 14px;
           text-align: left;
           text-transform: uppercase;
           letter-spacing: 0.5px;
         }
         .metrics-table tbody td {
-          padding: 7px 12px;
-          border: 1px solid #cbd5e1;
+          padding: 8px 14px;
+          border: 1px solid #2a2a2a;
           font-size: 10pt;
+          background: #111111;
         }
-        .metrics-table tbody tr:nth-child(even) {
-          background: #f8fafc;
+        .metrics-table tbody tr:nth-child(even) td {
+          background: #171717;
         }
         .metrics-table .metric-label {
-          font-weight: 700;
-          color: #334155;
+          font-weight: 600;
+          color: #8B8B8B;
         }
         .metrics-table .metric-value {
           font-weight: 600;
-          color: #0f172a;
+          color: #ededed;
         }
         .metrics-table .metric-value.highlight {
-          color: #059669;
-          font-weight: 800;
+          color: #3ECF8E;
+          font-weight: 700;
         }
 
         /* ── OVERVIEW SECTION ───────────────────────────── */
         .overview-text {
           font-size: 10pt;
-          color: #475569;
+          color: #8B8B8B;
           margin: 12px 0 20px 0;
-          line-height: 1.6;
+          line-height: 1.65;
         }
         .site-layout {
           display: flex;
-          gap: 24px;
+          gap: 20px;
           margin: 16px 0;
         }
         .site-layout .placeholder-box {
           flex: 1;
-          border: 2px dashed #cbd5e1;
+          border: 1px dashed #3ECF8E40;
           border-radius: 8px;
-          padding: 40px 16px;
+          padding: 36px 16px;
           text-align: center;
-          color: #94a3b8;
+          color: #555;
           font-size: 9pt;
-          background: #f8fafc;
+          background: #171717;
         }
         .site-layout .placeholder-box .icon {
-          font-size: 24pt;
+          font-size: 22pt;
           display: block;
           margin-bottom: 8px;
         }
         .site-layout .placeholder-box .box-title {
           font-weight: 700;
           font-size: 9pt;
-          color: #64748b;
+          color: #3ECF8E;
           text-transform: uppercase;
           letter-spacing: 0.5px;
           margin-bottom: 4px;
@@ -588,22 +608,25 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
           margin: 12px 0 24px 0;
         }
         .load-table thead th {
-          background: #0f172a;
-          color: white;
+          background: #1a1a1a;
+          color: #3ECF8E;
           font-weight: 700;
           font-size: 9pt;
-          padding: 7px 12px;
+          padding: 8px 14px;
           text-align: left;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          border-bottom: 2px solid #3ECF8E;
         }
         .load-table tbody td {
-          padding: 6px 12px;
-          border: 1px solid #e2e8f0;
+          padding: 7px 14px;
+          border: 1px solid #2a2a2a;
           font-size: 9.5pt;
+          background: #111111;
+          color: #ededed;
         }
-        .load-table tbody tr:nth-child(even) {
-          background: #f8fafc;
+        .load-table tbody tr:nth-child(even) td {
+          background: #171717;
         }
 
         /* ── FINANCIAL DETAILS TABLE ────────────────────── */
@@ -613,48 +636,89 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
           margin: 12px 0 24px 0;
         }
         .financial-table td {
-          padding: 7px 12px;
-          border: 1px solid #cbd5e1;
+          padding: 8px 14px;
+          border: 1px solid #2a2a2a;
           font-size: 10pt;
         }
         .financial-table .label-cell {
-          font-weight: 700;
-          background: #f8fafc;
+          font-weight: 600;
+          background: #1a1a1a;
           width: 50%;
-          color: #334155;
+          color: #8B8B8B;
         }
         .financial-table .value-cell {
           font-weight: 600;
-          color: #0f172a;
+          color: #ededed;
+          background: #111111;
         }
         .financial-table .value-cell.green {
-          color: #059669;
+          color: #3ECF8E;
+        }
+
+        /* ── CONFIDENCE BADGE ───────────────────────────── */
+        .confidence-badge {
+          display: inline-block;
+          padding: 3px 10px;
+          border-radius: 999px;
+          font-size: 9pt;
+          font-weight: 700;
+          letter-spacing: 0.3px;
+        }
+        .confidence-badge.high {
+          background: #3ECF8E20;
+          color: #3ECF8E;
+          border: 1px solid #3ECF8E40;
+        }
+        .confidence-badge.medium {
+          background: #F59E0B20;
+          color: #F59E0B;
+          border: 1px solid #F59E0B40;
+        }
+        .confidence-badge.low {
+          background: #EF444420;
+          color: #EF4444;
+          border: 1px solid #EF444440;
         }
 
         /* ── FOOTER ─────────────────────────────────────── */
         .proposal-footer {
           margin-top: 36px;
           padding-top: 16px;
-          border-top: 2px solid #e2e8f0;
+          border-top: 1px solid #2a2a2a;
           font-size: 8.5pt;
-          color: #64748b;
+          color: #555;
           line-height: 1.7;
+        }
+        .proposal-footer p {
+          margin: 3px 0;
+        }
+        .proposal-footer strong {
+          color: #8B8B8B;
         }
         .proposal-footer .disclaimer {
           font-style: italic;
-          margin-top: 10px;
+          margin-top: 12px;
           font-size: 8pt;
-          color: #94a3b8;
+          color: #444;
+          padding: 10px 12px;
+          background: #171717;
+          border-radius: 6px;
+          border-left: 3px solid #3ECF8E40;
         }
 
         @media print {
-          body { margin: 0; }
-          .proposal-header {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
+          body { margin: 0; background: #0D0D0D; }
+          .proposal-header,
           .metrics-table thead th,
-          .load-table thead th {
+          .load-table thead th,
+          .info-table .label-cell,
+          .financial-table .label-cell,
+          .metrics-table tbody td,
+          .load-table tbody td,
+          .financial-table td,
+          .info-table td,
+          .proposal-footer .disclaimer,
+          .site-layout .placeholder-box {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
@@ -671,30 +735,32 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
           <div class="truequote-line">TrueQuote™ Verified &bull; Source-Backed Pricing</div>
         </div>
         <div class="right">
-          <div class="wizard-emoji">🧙‍♂️</div>
-          <div class="brand-name">MERLIN</div>
-          <div class="brand-tagline">Energy Solutions</div>
+          <div class="brand-text">
+            <div class="brand-name">MERLIN</div>
+            <div class="brand-tagline">Energy Solutions</div>
+          </div>
+          <img class="merlin-icon" src="${MERLIN_ICON_BASE64}" alt="Merlin" />
         </div>
       </div>
-      <div class="gold-divider"></div>
+      <div class="accent-bar"></div>
 
       <!-- ═══ PROJECT INFORMATION ═══ -->
       <div class="section-heading">PROJECT INFORMATION</div>
       <table class="info-table">
         <tr>
-          <td class="label-cell">Client Name:</td>
+          <td class="label-cell">Client Name</td>
           <td class="value-cell">${data.projectName?.replace(/—.*/, "").trim() || "Custom Configuration"}</td>
         </tr>
         <tr>
-          <td class="label-cell">Project Name:</td>
+          <td class="label-cell">Project Name</td>
           <td class="value-cell">${data.storageSizeMW.toFixed(0)} MW / ${data.durationHours}hr BESS System</td>
         </tr>
         <tr>
-          <td class="label-cell">Quote Date:</td>
+          <td class="label-cell">Quote Date</td>
           <td class="value-cell">${data.quoteDate}</td>
         </tr>
         <tr>
-          <td class="label-cell">Location:</td>
+          <td class="label-cell">Location</td>
           <td class="value-cell">${data.location}</td>
         </tr>
       </table>
@@ -748,9 +814,9 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
       <div class="section-heading">2. PROJECT OVERVIEW &amp; VISUALIZATION</div>
       <p class="overview-text">
         The proposed system integrates with your existing infrastructure to provide energy storage, peak shaving, and
-        grid stabilization for your <strong>${data.useCase}</strong> application.
+        grid stabilization for your <strong style="color:#ededed">${data.useCase}</strong> application.
       </p>
-      <p class="overview-text" style="margin-bottom: 8px;"><strong>Project Site Layout &amp; Configuration:</strong></p>
+      <p class="overview-text" style="margin-bottom: 8px;"><strong style="color:#ededed">Project Site Layout &amp; Configuration:</strong></p>
       <div class="site-layout">
         <div class="placeholder-box">
           <span class="icon">📷</span>
@@ -793,7 +859,7 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
               </tr>`;
             })
             .join("\n          ")}
-          ${data.trueQuoteValidation.dutyCycle != null ? `<tr style="border-top: 2px solid #334155;"><td style="font-weight:700" colspan="2">Duty Cycle</td><td style="font-weight:700">${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)}%</td></tr>` : ""}
+          ${data.trueQuoteValidation.dutyCycle != null ? `<tr style="border-top: 2px solid #3ECF8E;"><td style="font-weight:700;color:#3ECF8E" colspan="2">Duty Cycle</td><td style="font-weight:700;color:#3ECF8E">${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)}%</td></tr>` : ""}
         </tbody>
       </table>
       `
@@ -834,26 +900,28 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
       <table class="info-table">
         <tr>
           <td class="label-cell">Overall Confidence</td>
-          <td class="value-cell" style="font-weight:700; color: ${data.trueQuoteConfidence.overall === "high" ? "#059669" : data.trueQuoteConfidence.overall === "medium" ? "#d97706" : "#dc2626"};">
-            ${data.trueQuoteConfidence.overall === "high" ? "✓ High" : data.trueQuoteConfidence.overall === "medium" ? "◐ Medium" : "○ Low"}
+          <td class="value-cell">
+            <span class="confidence-badge ${data.trueQuoteConfidence.overall}">
+              ${data.trueQuoteConfidence.overall === "high" ? "✓ HIGH" : data.trueQuoteConfidence.overall === "medium" ? "◐ MEDIUM" : "○ LOW"}
+            </span>
           </td>
         </tr>
         <tr>
           <td class="label-cell">Profile Completeness</td>
-          <td class="value-cell">${data.trueQuoteConfidence.profileCompleteness}% (${data.trueQuoteConfidence.userInputs} user inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults)</td>
+          <td class="value-cell">${data.trueQuoteConfidence.profileCompleteness}% — ${data.trueQuoteConfidence.userInputs} user inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults</td>
         </tr>
         <tr>
           <td class="label-cell">Industry Model</td>
           <td class="value-cell">${data.trueQuoteConfidence.industry === "v1" ? "Industry-Specific (TrueQuote™)" : "General Facility Estimate"}</td>
         </tr>
-        ${data.pricingSnapshotId ? `<tr><td class="label-cell">Pricing Snapshot</td><td class="value-cell" style="font-family:monospace; color:#64748b;">#${data.pricingSnapshotId.slice(0, 12)}</td></tr>` : ""}
+        ${data.pricingSnapshotId ? `<tr><td class="label-cell">Pricing Snapshot</td><td class="value-cell" style="font-family:'SF Mono',monospace; color:#555; font-size:9pt;">#${data.pricingSnapshotId.slice(0, 12)}</td></tr>` : ""}
       </table>
       ${
         data.trueQuoteValidation?.assumptions?.length
           ? `
-          <div style="margin-top: 12px;">
-            <strong style="font-size: 10pt; color: #334155;">Methodology &amp; Sources:</strong>
-            ${data.trueQuoteValidation.assumptions.map((a: string) => `<div style="font-size: 9pt; color: #475569; margin: 4px 0 4px 12px;">• ${a}</div>`).join("\n")}
+          <div style="margin-top: 14px;">
+            <strong style="font-size: 10pt; color: #3ECF8E;">Methodology &amp; Sources</strong>
+            ${data.trueQuoteValidation.assumptions.map((a: string) => `<div style="font-size: 9pt; color: #8B8B8B; margin: 5px 0 5px 14px; padding-left: 8px; border-left: 2px solid #3ECF8E30;">• ${a}</div>`).join("\n")}
           </div>
         `
           : ""
