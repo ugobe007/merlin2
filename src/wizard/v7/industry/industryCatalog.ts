@@ -214,7 +214,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "manufacturing_load_v1",
     schemaKey: "manufacturing",
     aliases: ["industrial", "factory"],
-    sizingDefaults: { ratio: 0.45, hours: 2 },
+    sizingDefaults: { ratio: 0.45, hours: 4 },
     hasTemplate: true,
     hasCuratedSchema: true,
   },
@@ -259,7 +259,7 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     calculatorId: "warehouse_load_v1", // has own physics model
     schemaKey: "warehouse",
     aliases: ["logistics", "logistics-center", "logistics_center", "distribution"],
-    sizingDefaults: { ratio: 0.3, hours: 2 },
+    sizingDefaults: { ratio: 0.3, hours: 4 },
     hasTemplate: false,
     hasCuratedSchema: true,
   },
