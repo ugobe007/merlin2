@@ -26,6 +26,8 @@ import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
+import { Shield } from 'lucide-react';
+import badgeGoldIcon from '@/assets/images/badge_gold_icon.jpg';
 import { useMerlinData } from "@/wizard/v7/memory";
 import TrueQuoteFinancialModal from "../shared/TrueQuoteFinancialModal";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
@@ -387,22 +389,41 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       )}
 
       {/* ================================================================
-          TRUEQUOTE™ BADGE — Prominent, right after savings hero
-          Using official TrueQuoteBadgeCanonical component
+          TRUEQUOTE™ GOLD BADGE — Prominent banner, opens financial modal
       ================================================================ */}
       {quoteReady && (() => {
         const badge = resolveBadge(pricingStatus, state.templateMode, quote);
-        if (badge.tier === "truequote") {
-          return (
-            <div className="flex justify-center">
-              <TrueQuoteBadgeCanonical
-                onClick={() => setShowTrueQuoteModal(true)}
-                showTooltip={true}
+        if (badge.tier !== "truequote") return null;
+        return (
+          <button
+            type="button"
+            onClick={() => setShowFinancialModal(true)}
+            className="group w-full flex items-center gap-4 p-4 rounded-xl border-2 border-amber-500/30 bg-amber-500/[0.04] hover:border-amber-400/50 hover:bg-amber-500/[0.08] transition-all duration-300 cursor-pointer"
+            aria-label="Open TrueQuote financial summary"
+          >
+            <div className="shrink-0">
+              <img
+                src={badgeGoldIcon}
+                alt="TrueQuote Verified"
+                className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
               />
             </div>
-          );
-        }
-        return null;
+            <div className="flex-1 text-left">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-xl font-bold text-amber-400 tracking-tight">TrueQuote™</span>
+                <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Verified</span>
+              </div>
+              <p className="text-sm text-slate-400 leading-snug">
+                Every number is sourced. View full 10-year financial projection, ROI, and sensitivity analysis.
+              </p>
+            </div>
+            <div className="shrink-0 text-amber-500/50 group-hover:text-amber-400 group-hover:translate-x-1 transition-all duration-300">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+        );
       })()}
 
       {/* ================================================================
@@ -452,100 +473,107 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       ================================================================ */}
       {quoteReady && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Equipment Card */}
-          <Card className="space-y-3">
-            <div className="flex items-center gap-2 mb-1">
+          {/* Equipment Card — Clean Supabase typography */}
+          <Card className="space-y-0">
+            <div className="flex items-center gap-2 mb-3">
               <Battery className="w-4 h-4 text-[#3ECF8E]" />
               <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Equipment Summary</h3>
             </div>
-            <div className="space-y-2.5">
+            <div className="divide-y divide-white/[0.05]">
               {quote.bessKWh != null && (
-                <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
+                <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-2">
-                    <Battery className="w-4 h-4 text-slate-500" />
-                    <span className="text-sm text-slate-300">Battery Storage</span>
+                    <Battery className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="text-[13px] text-slate-400">Battery Storage</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-bold text-white">{fmtNum(Math.round(quote.bessKWh))} kWh</div>
-                    {quote.bessKW != null && <div className="text-xs text-slate-500">{fmtNum(Math.round(quote.bessKW))} kW</div>}
+                    <span className="text-[13px] font-bold text-white tabular-nums">{fmtNum(Math.round(quote.bessKWh))} kWh</span>
+                    {quote.bessKW != null && <span className="text-xs text-slate-500 ml-2">{fmtNum(Math.round(quote.bessKW))} kW</span>}
                   </div>
                 </div>
               )}
               {quote.durationHours != null && (
-                <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
+                <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-slate-500" />
-                    <span className="text-sm text-slate-300">Duration</span>
+                    <Zap className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="text-[13px] text-slate-400">Duration</span>
                   </div>
-                  <div className="text-sm font-bold text-white">{fmtNum(quote.durationHours)} hours</div>
+                  <span className="text-[13px] font-bold text-white tabular-nums">{fmtNum(quote.durationHours)} hours</span>
                 </div>
               )}
               {(quote.solarKW as number) > 0 && (
-                <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
+                <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-2">
-                    <Sun className="w-4 h-4 text-slate-500" />
-                    <span className="text-sm text-slate-300">Solar Array</span>
+                    <Sun className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="text-[13px] text-slate-400">Solar Array</span>
                   </div>
-                  <div className="text-sm font-bold text-white">{fmtNum(Math.round(quote.solarKW as number))} kW</div>
+                  <span className="text-[13px] font-bold text-white tabular-nums">{fmtNum(Math.round(quote.solarKW as number))} kW</span>
                 </div>
               )}
               {(quote.generatorKW as number) > 0 && (
-                <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
+                <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-2">
-                    <Fuel className="w-4 h-4 text-slate-500" />
-                    <span className="text-sm text-slate-300">Backup Generator</span>
+                    <Fuel className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="text-[13px] text-slate-400">Backup Generator</span>
                   </div>
-                  <div className="text-sm font-bold text-white">{fmtNum(Math.round(quote.generatorKW as number))} kW</div>
+                  <span className="text-[13px] font-bold text-white tabular-nums">{fmtNum(Math.round(quote.generatorKW as number))} kW</span>
                 </div>
               )}
-              {/* Load profile */}
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-slate-500" />
-                  <span className="text-sm text-slate-300">Peak Demand</span>
+                  <Zap className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="text-[13px] text-slate-400">Peak Demand</span>
                 </div>
-                <div className="text-sm font-bold text-white">{quote.peakLoadKW ? `${fmtNum(Math.round(quote.peakLoadKW))} kW` : "—"}</div>
+                <span className="text-[13px] font-bold text-white tabular-nums">{quote.peakLoadKW ? `${fmtNum(Math.round(quote.peakLoadKW))} kW` : "—"}</span>
               </div>
             </div>
           </Card>
 
-          {/* Financial Card */}
-          <Card className="space-y-3">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Financial Summary</h3>
-            </div>
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
-                <span className="text-sm text-slate-300">Total Investment</span>
-                <span className="text-sm font-bold text-white">{fmtUSD(quote.capexUSD as number | null)}</span>
+          {/* Financial Card — Clean Supabase typography */}
+          <Card className="space-y-0">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Financial Summary</h3>
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
-                <span className="text-sm text-slate-300">Annual Savings</span>
-                <span className="text-sm font-bold text-emerald-400">{fmtUSD(quote.annualSavingsUSD as number | null)}</span>
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                <Shield className="w-3 h-3 text-amber-500" />
+                <span className="text-amber-400 font-semibold">TrueQuote™</span>
+              </div>
+            </div>
+
+            {/* Financial rows — tight, no extra padding */}
+            <div className="divide-y divide-white/[0.05]">
+              <div className="flex justify-between py-2">
+                <span className="text-[13px] text-slate-400">Total Investment</span>
+                <span className="text-[13px] font-bold text-white tabular-nums">{fmtUSD(quote.capexUSD as number | null)}</span>
+              </div>
+              <div className="flex justify-between py-2">
+                <span className="text-[13px] text-slate-400">Annual Savings</span>
+                <span className="text-[13px] font-bold text-emerald-400 tabular-nums">{fmtUSD(quote.annualSavingsUSD as number | null)}</span>
               </div>
               {quote.demandChargeSavings != null && Number(quote.demandChargeSavings) > 0 && (
-                <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
-                  <span className="text-sm text-slate-300">Demand Charge Savings</span>
-                  <span className="text-sm font-bold text-cyan-400">{fmtUSD(quote.demandChargeSavings as number | null)}</span>
+                <div className="flex justify-between py-2">
+                  <span className="text-[13px] text-slate-400">Demand Charge Savings</span>
+                  <span className="text-[13px] font-bold text-cyan-400 tabular-nums">{fmtUSD(quote.demandChargeSavings as number | null)}</span>
                 </div>
               )}
-              <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
-                <span className="text-sm text-slate-300">Simple Payback</span>
-                <span className="text-sm font-bold text-white">
+              <div className="flex justify-between py-2">
+                <span className="text-[13px] text-slate-400">Simple Payback</span>
+                <span className="text-[13px] font-bold text-white tabular-nums">
                   {quote.roiYears != null && Number(quote.roiYears) > 0 ? `${parseFloat(Number(quote.roiYears).toFixed(1))} years` : "—"}
                 </span>
               </div>
               {quote.npv != null && (
-                <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
-                  <span className="text-sm text-slate-300">NPV (25yr)</span>
-                  <span className="text-sm font-bold text-[#3ECF8E]">{fmtUSD(quote.npv as number | null)}</span>
+                <div className="flex justify-between py-2">
+                  <span className="text-[13px] text-slate-400">NPV (25yr)</span>
+                  <span className="text-[13px] font-bold text-[#3ECF8E] tabular-nums">{fmtUSD(quote.npv as number | null)}</span>
                 </div>
               )}
               {quote.irr != null && (
-                <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
-                  <span className="text-sm text-slate-300">IRR</span>
-                  <span className="text-sm font-bold text-[#3ECF8E]">{(() => {
+                <div className="flex justify-between py-2">
+                  <span className="text-[13px] text-slate-400">IRR</span>
+                  <span className="text-[13px] font-bold text-[#3ECF8E] tabular-nums">{(() => {
                     const raw = Number(quote.irr);
                     if (!Number.isFinite(raw)) return "—";
                     const pct = raw > 1 ? raw : raw * 100;
@@ -555,21 +583,21 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                 </div>
               )}
               {quote.paybackYears != null && Number(quote.paybackYears) > 0 && (
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm text-slate-300">Discounted Payback</span>
-                  <span className="text-sm font-bold text-white">{parseFloat(Number(quote.paybackYears).toFixed(1))} years</span>
+                <div className="flex justify-between py-2">
+                  <span className="text-[13px] text-slate-400">Discounted Payback</span>
+                  <span className="text-[13px] font-bold text-white tabular-nums">{parseFloat(Number(quote.paybackYears).toFixed(1))} years</span>
                 </div>
               )}
             </div>
 
-            {/* ✅ TrueQuote™ Financial Projection button */}
+            {/* 10-Year Projection button */}
             {quote.capexUSD != null && Number(quote.capexUSD) > 0 && quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
               <button
                 onClick={() => setShowFinancialModal(true)}
-                className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#3ECF8E]/[0.08] border border-[#3ECF8E]/20 hover:border-[#3ECF8E]/40 hover:bg-[#3ECF8E]/[0.12] transition-all group"
+                className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-amber-500/20 bg-amber-500/[0.06] hover:border-amber-400/40 hover:bg-amber-500/[0.10] transition-all group"
               >
-                <TrendingUp className="w-4 h-4 text-[#3ECF8E] group-hover:text-[#3ECF8E]" />
-                <span className="text-xs font-semibold text-[#3ECF8E] group-hover:text-[#3ECF8E]">View 10-Year Financial Projection</span>
+                <TrendingUp className="w-4 h-4 text-amber-400 group-hover:text-amber-300" />
+                <span className="text-xs font-semibold text-amber-400 group-hover:text-amber-300">View 10-Year Financial Projection</span>
               </button>
             )}
           </Card>
