@@ -577,27 +577,29 @@ export default function HeroSection({
                     }
                     setShowSmartWizard(true);
                   }}
-                  className="inline-flex items-center justify-center gap-2.5 mb-6 transition-all duration-200 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2.5 mb-6 transition-all duration-200 cursor-pointer w-full"
                   style={{
-                    background: "#fbbf24",
-                    border: "none",
-                    color: "#1a0a2e",
-                    borderRadius: "100px",
+                    background: "transparent",
+                    border: "2px solid #3ECF8E",
+                    color: "#3ECF8E",
+                    borderRadius: "14px",
                     fontWeight: 700,
                     fontSize: "20px",
                     letterSpacing: "-0.01em",
                     padding: "18px 42px",
-                    boxShadow: "0 4px 24px rgba(251,191,36,0.3)",
+                    maxWidth: "480px",
                   }}
                   aria-label="Start Saving with SmartWizard"
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#fcd34d";
-                    e.currentTarget.style.boxShadow = "0 6px 32px rgba(251,191,36,0.45)";
+                    e.currentTarget.style.background = "rgba(62,207,142,0.08)";
+                    e.currentTarget.style.borderColor = "#5fe0a8";
+                    e.currentTarget.style.color = "#fff";
                     e.currentTarget.style.transform = "translateY(-2px)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "#fbbf24";
-                    e.currentTarget.style.boxShadow = "0 4px 24px rgba(251,191,36,0.3)";
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.borderColor = "#3ECF8E";
+                    e.currentTarget.style.color = "#3ECF8E";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
@@ -611,9 +613,9 @@ export default function HeroSection({
                   className="inline-flex items-center justify-center gap-2.5 mb-6 transition-all duration-200 cursor-pointer"
                   style={{
                     background: "transparent",
-                    border: "1px solid rgba(255,255,255,0.25)",
-                    color: "rgba(255,255,255,0.75)",
-                    borderRadius: "100px",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    color: "rgba(255,255,255,0.65)",
+                    borderRadius: "14px",
                     fontWeight: 700,
                     fontSize: "18px",
                     letterSpacing: "-0.01em",
@@ -622,14 +624,14 @@ export default function HeroSection({
                     maxWidth: "480px",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.45)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)";
                     e.currentTarget.style.color = "#fff";
                     e.currentTarget.style.background = "rgba(255,255,255,0.05)";
                     e.currentTarget.style.transform = "translateY(-2px)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
-                    e.currentTarget.style.color = "rgba(255,255,255,0.75)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                    e.currentTarget.style.color = "rgba(255,255,255,0.65)";
                     e.currentTarget.style.background = "transparent";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
@@ -723,13 +725,13 @@ export default function HeroSection({
                       setShowUseCaseDetail(true);
                     }}
                     style={{
-                      background: "rgba(15, 10, 35, 0.15)",
-                      backdropFilter: "blur(20px)",
-                      WebkitBackdropFilter: "blur(20px)",
-                      border: "1px solid rgba(255,255,255,0.2)",
-                      borderRadius: "20px",
-                      padding: "24px 32px",
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
+                      background: "rgba(15, 10, 35, 0.25)",
+                      backdropFilter: "blur(24px)",
+                      WebkitBackdropFilter: "blur(24px)",
+                      border: "2px solid rgba(62,207,142,0.35)",
+                      borderRadius: "16px",
+                      padding: "28px 36px",
+                      boxShadow: "0 8px 40px rgba(0,0,0,0.3), 0 0 20px rgba(62,207,142,0.08), inset 0 1px 0 rgba(255,255,255,0.12)",
                     }}
                   >
                     <div className="flex items-center justify-between mb-5">

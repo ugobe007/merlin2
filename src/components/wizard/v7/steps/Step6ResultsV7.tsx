@@ -702,28 +702,35 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       {/* ================================================================
           PROQUOTE™ UPSELL — Merlin is the salesman
       ================================================================ */}
-      <Card>
-        <div className="flex items-center justify-between gap-4">
+      <div className="rounded-xl border-2 border-white/[0.08] bg-white/[0.03] p-6 hover:border-white/[0.12] transition-all">
+        <div className="flex items-center gap-5">
+          <div className="shrink-0">
+            <img
+              src={badgeGoldIcon}
+              alt="ProQuote"
+              className="w-14 h-14 object-contain opacity-70"
+            />
+          </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold text-slate-200 tracking-tight">
+            <div className="text-base font-bold text-slate-100 tracking-tight">
               Want to go deeper?
             </div>
-            <div className="text-xs text-slate-500 mt-1 leading-relaxed">
+            <div className="text-sm text-slate-400 mt-1 leading-relaxed">
               ProQuote™ gives you full engineering control — custom equipment, fuel cells, financial modeling, and bank-ready exports.
             </div>
           </div>
           <button
             type="button"
             onClick={() => setShowProQuoteModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/40 hover:bg-[#3ECF8E]/[0.12] transition-all shrink-0 group"
+            className="flex items-center gap-2.5 px-5 py-3 rounded-xl border-2 border-[#3ECF8E]/30 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/50 hover:bg-[#3ECF8E]/[0.12] transition-all shrink-0 group"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#3ECF8E] group-hover:text-[#3ECF8E]" />
-            <span className="text-xs font-semibold text-[#3ECF8E] group-hover:text-[#3ECF8E] tracking-wide">
+            <Sparkles className="w-4 h-4 text-[#3ECF8E]" />
+            <span className="text-sm font-bold text-[#3ECF8E] tracking-wide">
               Open ProQuote™
             </span>
           </button>
         </div>
-      </Card>
+      </div>
 
       {/* ================================================================
           EXPORT / DOWNLOAD — TrueQuote™ branded exports
@@ -1038,11 +1045,11 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
   ];
 
   return (
-    <Card>
+    <div className="rounded-xl border-2 border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] p-6">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "rgba(232,235,243,0.95)" }}>Download Quote</div>
-          <div style={{ fontSize: 12, color: "rgba(232,235,243,0.5)", marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "rgba(232,235,243,0.95)", letterSpacing: "-0.01em" }}>Download Quote</div>
+          <div style={{ fontSize: 14, color: "rgba(232,235,243,0.55)", marginTop: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
             {isTrueQuote
               ? <><TrueQuoteBadgeCanonical showTooltip={false} onClick={onTrueQuoteClick} /><span>kW breakdown, confidence score &amp; methodology included</span></>
               : hasPricing
@@ -1051,7 +1058,7 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
           {buttons.map(({ format, icon, label }) => (
             <button
               key={format}
@@ -1061,17 +1068,17 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
-                height: 36,
-                padding: "0 14px",
-                borderRadius: 8,
-                border: "1px solid rgba(62,207,142,0.25)",
+                gap: 8,
+                height: 44,
+                padding: "0 20px",
+                borderRadius: 12,
+                border: "2px solid rgba(62,207,142,0.30)",
                 background:
                   exporting === format ? "rgba(62,207,142,0.15)" : "rgba(62,207,142,0.06)",
                 color: exporting !== null && exporting !== format ? "rgba(232,235,243,0.3)" : "rgba(62,207,142,0.9)",
                 cursor: exporting !== null ? "not-allowed" : "pointer",
-                fontWeight: 600,
-                fontSize: 13,
+                fontWeight: 700,
+                fontSize: 15,
                 transition: "all 0.15s",
               }}
             >
@@ -1091,12 +1098,12 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
             background: "rgba(239, 68, 68, 0.1)",
             border: "1px solid rgba(239, 68, 68, 0.25)",
             color: "rgba(239,68,68,0.9)",
-            fontSize: 12,
+            fontSize: 13,
           }}
         >
           {error}
         </div>
       )}
-    </Card>
+    </div>
   );
 }
