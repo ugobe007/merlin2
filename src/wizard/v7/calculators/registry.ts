@@ -2328,6 +2328,1064 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
  * NOTE: Not currently used - primary path is CAR_WASH_LOAD_V1_SSOT above
  */
 
+// ========== 9 NEW DEDICATED ADAPTERS (Feb 14, 2026) ==========
+// Replacing generic_ssot_v1 fallback with proper field bridges + TrueQuote envelopes
+
+/**
+ * AIRPORT SSOT ADAPTER
+ *
+ * Curated fields: airportClass, annualPassengers, terminalSqFt, terminals,
+ *   jetBridges, parkingStructure, groundTransport, evChargers, cargoFacility
+ * SSOT: calculateAirportPower(annualPassengersMillions)
+ * Source: FAA/industry airport benchmarks
+ */
+export const AIRPORT_LOAD_V1_SSOT: CalculatorContract = {
+  id: "airport_load_v1",
+  requiredInputs: ["annualPassengers"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    // ── Bridge curated → SSOT fields ───────────────────────────────
+    const rawPassengers = Number(inputs.annualPassengers ?? inputs.annual_passengers) || 1000000;
+    const annualPassengersMillions =
+      rawPassengers >= 1000 ? rawPassengers / 1000000 : rawPassengers;
+    const terminalSqFt = Number(inputs.terminalSqFt) || 500000;
+    const jetBridges = Number(inputs.jetBridges) || 10;
+
+    const rawClass = String(inputs.airportClass ?? "medium-regional").toLowerCase();
+    const AIRPORT_CLASS_MAP: Record<string, string> = {
+      "small-regional": "Small Regional",
+      "medium-regional": "Medium Regional",
+      "large-regional": "Large Regional",
+      "major-hub": "Major Hub",
+      "mega-hub": "Mega Hub",
+    };
+    const classification = AIRPORT_CLASS_MAP[rawClass] || "Medium Regional";
+
+    assumptions.push(`${annualPassengersMillions.toFixed(1)}M passengers/year (${classification})`);
+    assumptions.push(`Terminal: ${terminalSqFt.toLocaleString()} sq ft, ${jetBridges} jet bridges`);
+    if (inputs.cargoFacility && inputs.cargoFacility !== "none")
+      assumptions.push(`Cargo: ${inputs.cargoFacility}`);
+    if (inputs.evChargers && inputs.evChargers !== "none")
+      assumptions.push(`EV chargers: ${inputs.evChargers}`);
+
+    // ── Delegate to SSOT ───────────────────────────────────────────
+    const result = calculateUseCasePower("airport", { annualPassengers: rawPassengers });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // Airport loads: terminal HVAC, lighting, jet bridges, baggage, ground transport
+    const terminalHvacPct = 0.35;
+    const terminalLightingPct = 0.15;
+    const jetBridgePct = 0.12;
+    const baggagePct = 0.1;
+    const groundTransportPct = 0.08;
+    const controlsPct = 0.05;
+    const otherPct = 0.15; // parking, cargo, retail
+
+    const hvacKW = peakLoadKW * terminalHvacPct;
+    const lightingKW = peakLoadKW * terminalLightingPct;
+    const processKW = peakLoadKW * (jetBridgePct + baggagePct + groundTransportPct);
+    const controlsKW = peakLoadKW * controlsPct;
+    const otherKW = peakLoadKW * otherPct;
+    const kWContributorsTotalKW = hvacKW + lightingKW + processKW + controlsKW + otherKW;
+
+    const dutyCycle = 0.75; // Airports run 18-20+ hours/day
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: 0,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: terminalHvacPct * 100,
+        lightingPct: terminalLightingPct * 100,
+        processPct: (jetBridgePct + baggagePct + groundTransportPct) * 100,
+        controlsPct: controlsPct * 100,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: otherPct * 100,
+      },
+      details: {
+        airport: { annualPassengersMillions, terminalSqFt, jetBridges, classification },
+      },
+      notes: [
+        `Airport: ${annualPassengersMillions.toFixed(1)}M pax → ${peakLoadKW.toLocaleString()} kW peak (FAA benchmark)`,
+        `Process: jet bridges (${(jetBridgePct * 100).toFixed(0)}%) + baggage (${(baggagePct * 100).toFixed(0)}%) + ground (${(groundTransportPct * 100).toFixed(0)}%)`,
+        `Terminal HVAC: ${terminalHvacPct * 100}%, Lighting: ${terminalLightingPct * 100}%`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: result,
+    };
+  },
+};
+
+/**
+ * CASINO SSOT ADAPTER
+ *
+ * Curated fields: casinoType, gamingFloorSqft, totalPropertySqFt, hotelRooms,
+ *   restaurants, entertainmentVenues, poolSpa, parkingGarage, evChargers
+ * SSOT: calculateCasinoPower(gamingFloorSqFt)
+ * Source: Gaming industry peak demand (18 W/sq ft)
+ */
+export const CASINO_LOAD_V1_SSOT: CalculatorContract = {
+  id: "casino_load_v1",
+  requiredInputs: ["gamingFloorSqft"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    // ── Bridge curated → SSOT fields ───────────────────────────────
+    const gamingFloorSqft =
+      Number(
+        inputs.gamingFloorSqft ??
+          inputs.gamingFloorSqFt ??
+          inputs.gamingFloorSize ??
+          inputs.gamingSpaceSqFt
+      ) || 100000;
+    const totalPropertySqFt = Number(inputs.totalPropertySqFt) || gamingFloorSqft * 2;
+    const hotelRooms = Number(inputs.hotelRooms) || 0;
+    const restaurants = Number(inputs.restaurants) || 0;
+    const casinoType = String(inputs.casinoType ?? "full-resort").toLowerCase();
+
+    assumptions.push(`Gaming floor: ${gamingFloorSqft.toLocaleString()} sq ft (${casinoType})`);
+    if (hotelRooms > 0) assumptions.push(`Hotel: ${hotelRooms} rooms`);
+    if (restaurants > 0) assumptions.push(`Restaurants: ${restaurants}`);
+    if (inputs.entertainmentVenues && inputs.entertainmentVenues !== "none")
+      assumptions.push(`Entertainment: ${inputs.entertainmentVenues}`);
+
+    // ── Delegate to SSOT ───────────────────────────────────────────
+    const result = calculateUseCasePower("casino", { gamingFloorSqFt: gamingFloorSqft });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // Casino: gaming floor (machines+lighting), HVAC (24/7), hotel, restaurants, entertainment
+    const gamingMachinesPct = 0.3;
+    const hvacPct = 0.25;
+    const lightingPct = 0.15;
+    const hotelLoadPct = hotelRooms > 0 ? 0.1 : 0;
+    const restaurantLoadPct = restaurants > 0 ? 0.05 : 0;
+    const controlsPct = 0.05;
+    const otherPct =
+      1.0 -
+      gamingMachinesPct -
+      hvacPct -
+      lightingPct -
+      hotelLoadPct -
+      restaurantLoadPct -
+      controlsPct;
+
+    const processKW = peakLoadKW * gamingMachinesPct;
+    const hvacKW = peakLoadKW * hvacPct;
+    const lightingKW = peakLoadKW * lightingPct;
+    const controlsKW = peakLoadKW * controlsPct;
+    const otherKW = peakLoadKW * Math.max(0.05, otherPct);
+    const kWContributorsTotalKW = processKW + hvacKW + lightingKW + controlsKW + otherKW;
+
+    const dutyCycle = 0.9; // Casinos run 24/7
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        process: processKW,
+        hvac: hvacKW,
+        lighting: lightingKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: 0,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        processPct: gamingMachinesPct * 100,
+        hvacPct: hvacPct * 100,
+        lightingPct: lightingPct * 100,
+        controlsPct: controlsPct * 100,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: Math.max(5, otherPct * 100),
+      },
+      details: {
+        casino: { gamingFloorSqft, totalPropertySqFt, hotelRooms, restaurants, casinoType },
+      },
+      notes: [
+        `Casino: ${gamingFloorSqft.toLocaleString()} sq ft gaming → ${peakLoadKW.toLocaleString()} kW (18 W/sqft benchmark)`,
+        `Gaming machines: ${gamingMachinesPct * 100}%, HVAC: ${hvacPct * 100}%, Lighting: ${lightingPct * 100}%`,
+        `24/7 operation, duty cycle: ${dutyCycle}`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: result,
+    };
+  },
+};
+
+/**
+ * APARTMENT SSOT ADAPTER
+ *
+ * Curated fields: propertyType, unitCount, avgUnitSize, buildingAge,
+ *   hvacType, commonAmenities, laundry, evChargers, elevators
+ * SSOT: calculateApartmentPower(unitCount)
+ * Source: RECS multifamily benchmark (1.8 kW/unit)
+ */
+export const APARTMENT_LOAD_V1_SSOT: CalculatorContract = {
+  id: "apartment_load_v1",
+  requiredInputs: ["unitCount"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    // ── Bridge curated → SSOT fields ───────────────────────────────
+    const unitCount = Number(inputs.unitCount ?? inputs.numUnits ?? inputs.units) || 400;
+    const avgUnitSize = Number(inputs.avgUnitSize) || 900;
+    const propertyType = String(inputs.propertyType ?? "mid-rise").toLowerCase();
+    const hasElevators =
+      inputs.elevators && inputs.elevators !== "none" && inputs.elevators !== "no";
+    const hasPool = inputs.commonAmenities && String(inputs.commonAmenities).includes("pool");
+
+    assumptions.push(`${unitCount} units @ ${avgUnitSize} avg sq ft (${propertyType})`);
+    if (hasElevators) assumptions.push(`Elevators: ${inputs.elevators}`);
+    if (inputs.hvacType) assumptions.push(`HVAC: ${inputs.hvacType}`);
+
+    // ── Delegate to SSOT ───────────────────────────────────────────
+    const result = calculateUseCasePower("apartment", { unitCount, numUnits: unitCount });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // Apartments: per-unit HVAC, lighting, plug loads, common areas, elevators
+    const hvacPct = 0.4;
+    const lightingPct = 0.15;
+    const plugLoadsPct = 0.2;
+    const commonAreaPct = 0.1; // lobby, hallways, laundry
+    const elevatorPct = hasElevators ? 0.08 : 0;
+    const controlsPct = 0.03;
+    const otherPct = Math.max(
+      0.04,
+      1.0 - hvacPct - lightingPct - plugLoadsPct - commonAreaPct - elevatorPct - controlsPct
+    );
+
+    const hvacKW = peakLoadKW * hvacPct;
+    const lightingKW = peakLoadKW * lightingPct;
+    const processKW = peakLoadKW * (plugLoadsPct + commonAreaPct + elevatorPct);
+    const controlsKW = peakLoadKW * controlsPct;
+    const otherKW = peakLoadKW * otherPct;
+    const kWContributorsTotalKW = hvacKW + lightingKW + processKW + controlsKW + otherKW;
+
+    const dutyCycle = 0.55; // Residential peaks morning + evening
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: 0,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: hvacPct * 100,
+        lightingPct: lightingPct * 100,
+        processPct: (plugLoadsPct + commonAreaPct + elevatorPct) * 100,
+        controlsPct: controlsPct * 100,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: otherPct * 100,
+      },
+      details: {
+        apartment: { unitCount, avgUnitSize, propertyType, hasElevators, hasPool },
+      },
+      notes: [
+        `Apartments: ${unitCount} units × 1.8 kW/unit → ${peakLoadKW.toLocaleString()} kW (RECS benchmark)`,
+        `HVAC: ${hvacPct * 100}%, Plug loads: ${plugLoadsPct * 100}%, Common: ${commonAreaPct * 100}%`,
+        `Residential duty cycle: ${dutyCycle} (morning/evening peaks)`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: result,
+    };
+  },
+};
+
+/**
+ * COLLEGE/UNIVERSITY SSOT ADAPTER
+ *
+ * Curated fields: institutionType, campusSqFt, enrollment, buildingAge,
+ *   researchLabs, studentHousing, dataCenterHPC, athleticFacilities, evChargers
+ * SSOT: calculateCollegePower(studentCount)
+ * Source: AASHE higher education benchmark (0.5 kW/student)
+ */
+export const COLLEGE_LOAD_V1_SSOT: CalculatorContract = {
+  id: "college_load_v1",
+  requiredInputs: ["enrollment"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    // ── Bridge curated → SSOT fields ───────────────────────────────
+    const enrollment = Number(inputs.enrollment ?? inputs.studentCount ?? inputs.students) || 15000;
+    const campusSqFt = Number(inputs.campusSqFt) || 0;
+    const institutionType = String(inputs.institutionType ?? "university").toLowerCase();
+    const hasResearchLabs =
+      inputs.researchLabs && inputs.researchLabs !== "none" && inputs.researchLabs !== "no";
+    const hasStudentHousing =
+      inputs.studentHousing && inputs.studentHousing !== "none" && inputs.studentHousing !== "no";
+    const hasDataCenter =
+      inputs.dataCenterHPC && inputs.dataCenterHPC !== "none" && inputs.dataCenterHPC !== "no";
+
+    assumptions.push(`${enrollment.toLocaleString()} students (${institutionType})`);
+    if (campusSqFt > 0) assumptions.push(`Campus: ${campusSqFt.toLocaleString()} sq ft`);
+    if (hasResearchLabs) assumptions.push(`Research labs: ${inputs.researchLabs}`);
+    if (hasStudentHousing) assumptions.push(`Housing: ${inputs.studentHousing}`);
+    if (hasDataCenter) assumptions.push(`Data center/HPC: ${inputs.dataCenterHPC}`);
+
+    // ── Delegate to SSOT ───────────────────────────────────────────
+    const result = calculateUseCasePower("college", { studentCount: enrollment, enrollment });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // College: classrooms, labs, housing, dining, athletics, IT
+    const hvacPct = 0.3;
+    const lightingPct = 0.15;
+    const labsPct = hasResearchLabs ? 0.15 : 0.05;
+    const housingPct = hasStudentHousing ? 0.12 : 0;
+    const itPct = hasDataCenter ? 0.1 : 0.05;
+    const controlsPct = 0.05;
+    const otherPct = Math.max(
+      0.08,
+      1.0 - hvacPct - lightingPct - labsPct - housingPct - itPct - controlsPct
+    );
+
+    const hvacKW = peakLoadKW * hvacPct;
+    const lightingKW = peakLoadKW * lightingPct;
+    const processKW = peakLoadKW * (labsPct + housingPct);
+    const controlsKW = peakLoadKW * controlsPct;
+    const itLoadKW = peakLoadKW * itPct;
+    const otherKW = peakLoadKW * otherPct;
+    const kWContributorsTotalKW = hvacKW + lightingKW + processKW + controlsKW + itLoadKW + otherKW;
+
+    const dutyCycle = 0.5; // Campus: heavy daytime, light evenings/weekends
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: itLoadKW,
+        cooling: 0,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: hvacPct * 100,
+        lightingPct: lightingPct * 100,
+        processPct: (labsPct + housingPct) * 100,
+        controlsPct: controlsPct * 100,
+        itLoadPct: itPct * 100,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: otherPct * 100,
+      },
+      details: {
+        college: {
+          enrollment,
+          campusSqFt,
+          institutionType,
+          hasResearchLabs,
+          hasStudentHousing,
+          hasDataCenter,
+        },
+      },
+      notes: [
+        `College: ${enrollment.toLocaleString()} students × 0.5 kW → ${peakLoadKW.toLocaleString()} kW (AASHE benchmark)`,
+        `Labs: ${(labsPct * 100).toFixed(0)}%, Housing: ${(housingPct * 100).toFixed(0)}%, IT: ${(itPct * 100).toFixed(0)}%`,
+        `Campus duty cycle: ${dutyCycle} (daytime-heavy, light weekends)`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: result,
+    };
+  },
+};
+
+/**
+ * COLD STORAGE SSOT ADAPTER
+ *
+ * Curated fields: facilityType, squareFootage, temperatureZones, dockDoors,
+ *   compressorSystem, operatingHours, defrostCycles, materialHandling, throughput
+ * SSOT: calculateUseCasePower("cold-storage", ...) → calculateWarehousePower(sqFt, true)
+ * Source: CBECS cold storage benchmark (8 W/sq ft refrigerated)
+ */
+export const COLD_STORAGE_LOAD_V1_SSOT: CalculatorContract = {
+  id: "cold_storage_load_v1",
+  requiredInputs: ["squareFootage"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    // ── Bridge curated → SSOT fields ───────────────────────────────
+    const squareFootage = Number(inputs.squareFootage ?? inputs.sqFt) || 20000;
+    const temperatureZones = String(inputs.temperatureZones ?? "frozen-and-cooled").toLowerCase();
+    const dockDoors = Number(inputs.dockDoors) || 4;
+    const compressorSystem = String(inputs.compressorSystem ?? "industrial-rack").toLowerCase();
+    const facilityType = String(inputs.facilityType ?? "distribution").toLowerCase();
+
+    // Determine if there's a frozen zone (higher load)
+    const hasFrozen = temperatureZones.includes("frozen") || temperatureZones.includes("deep");
+
+    assumptions.push(`Cold storage: ${squareFootage.toLocaleString()} sq ft (${facilityType})`);
+    assumptions.push(`Zones: ${temperatureZones}, ${dockDoors} dock doors`);
+    assumptions.push(`Compressor: ${compressorSystem}`);
+
+    // ── Delegate to SSOT ───────────────────────────────────────────
+    const result = calculateUseCasePower("cold-storage", {
+      squareFeet: squareFootage,
+      sqFt: squareFootage,
+    });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // Cold storage: refrigeration-dominant (60-70%), plus HVAC, lighting, material handling
+    const refrigerationPct = hasFrozen ? 0.7 : 0.6;
+    const hvacPct = 0.05; // Minimal — refrigeration handles most climate
+    const lightingPct = 0.08;
+    const materialHandlingPct = 0.1; // Forklifts, conveyors, dock equipment
+    const defrostPct = 0.05;
+    const controlsPct = 0.04;
+    const otherPct = Math.max(
+      0.03,
+      1.0 -
+        refrigerationPct -
+        hvacPct -
+        lightingPct -
+        materialHandlingPct -
+        defrostPct -
+        controlsPct
+    );
+
+    const coolingKW = peakLoadKW * refrigerationPct;
+    const hvacKW = peakLoadKW * hvacPct;
+    const lightingKW = peakLoadKW * lightingPct;
+    const processKW = peakLoadKW * (materialHandlingPct + defrostPct);
+    const controlsKW = peakLoadKW * controlsPct;
+    const otherKW = peakLoadKW * otherPct;
+    const kWContributorsTotalKW =
+      coolingKW + hvacKW + lightingKW + processKW + controlsKW + otherKW;
+
+    const dutyCycle = 0.85; // Cold storage runs compressors 24/7
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: coolingKW,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: hvacPct * 100,
+        lightingPct: lightingPct * 100,
+        processPct: (materialHandlingPct + defrostPct) * 100,
+        controlsPct: controlsPct * 100,
+        itLoadPct: 0,
+        coolingPct: refrigerationPct * 100,
+        chargingPct: 0,
+        otherPct: otherPct * 100,
+      },
+      details: {
+        coldStorage: {
+          squareFootage,
+          temperatureZones,
+          hasFrozen,
+          dockDoors,
+          compressorSystem,
+          facilityType,
+        },
+      },
+      notes: [
+        `Cold storage: ${squareFootage.toLocaleString()} sq ft → ${peakLoadKW.toLocaleString()} kW (CBECS 8 W/sqft)`,
+        `Refrigeration-dominant: ${(refrigerationPct * 100).toFixed(0)}% (${hasFrozen ? "frozen+cooled" : "cooled only"})`,
+        `24/7 compressor operation, duty cycle: ${dutyCycle}`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: result,
+    };
+  },
+};
+
+/**
+ * INDOOR FARM SSOT ADAPTER
+ *
+ * Curated fields: farmType, squareFootage, growingLevels, cropType,
+ *   lightingSystem, lightSchedule, hvacDehumidification, irrigationSystem, waterTreatment
+ * SSOT: calculateIndoorFarmPower(growingAreaSqFt, ledWattagePerSqFt)
+ * Source: CEA industry peak demand (LED + 30% HVAC)
+ */
+export const INDOOR_FARM_LOAD_V1_SSOT: CalculatorContract = {
+  id: "indoor_farm_load_v1",
+  requiredInputs: ["squareFootage"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    // ── Bridge curated → SSOT fields ───────────────────────────────
+    const squareFootage =
+      Number(inputs.squareFootage ?? inputs.growingAreaSqFt ?? inputs.sqFt) || 50000;
+    const growingLevels = Number(inputs.growingLevels) || 1;
+    const effectiveGrowArea = squareFootage * Math.max(1, growingLevels);
+    const lightingSystem = String(inputs.lightingSystem ?? "led-full-spectrum").toLowerCase();
+    const lightSchedule = String(inputs.lightSchedule ?? "18-6").toLowerCase();
+    const farmType = String(inputs.farmType ?? "vertical-farm").toLowerCase();
+
+    // LED wattage by lighting type
+    const LED_WATTAGE_MAP: Record<string, number> = {
+      "led-full-spectrum": 50,
+      "led-targeted": 40,
+      "led-basic": 30,
+      "hps-legacy": 60,
+      "hybrid-led-hps": 55,
+      fluorescent: 35,
+    };
+    const ledWattagePerSqFt = LED_WATTAGE_MAP[lightingSystem] || 50;
+
+    assumptions.push(
+      `Indoor farm: ${squareFootage.toLocaleString()} sq ft × ${growingLevels} levels (${farmType})`
+    );
+    assumptions.push(
+      `Lighting: ${lightingSystem} @ ${ledWattagePerSqFt} W/sqft, schedule: ${lightSchedule}`
+    );
+
+    // ── Delegate to SSOT ───────────────────────────────────────────
+    const result = calculateUseCasePower("indoor-farm", {
+      growingAreaSqFt: effectiveGrowArea,
+      ledWattagePerSqFt,
+    });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // Indoor farm: LED lighting (50-65%), HVAC/dehumidification (20-30%), irrigation, controls
+    const lightingPct = 0.55;
+    const hvacDehumidPct = 0.25;
+    const irrigationPct = 0.08;
+    const controlsPct = 0.05;
+    const otherPct = 0.07; // CO2 injection, water treatment, packaging
+
+    const lightingKW = peakLoadKW * lightingPct;
+    const hvacKW = peakLoadKW * hvacDehumidPct;
+    const processKW = peakLoadKW * irrigationPct;
+    const controlsKW = peakLoadKW * controlsPct;
+    const otherKW = peakLoadKW * otherPct;
+    const kWContributorsTotalKW = lightingKW + hvacKW + processKW + controlsKW + otherKW;
+
+    // Duty cycle: LEDs on 16-18h/day, HVAC always → ~0.80
+    const dutyCycle = lightSchedule.includes("24") ? 0.9 : lightSchedule.includes("18") ? 0.8 : 0.7;
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: 0,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: hvacDehumidPct * 100,
+        lightingPct: lightingPct * 100,
+        processPct: irrigationPct * 100,
+        controlsPct: controlsPct * 100,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: otherPct * 100,
+      },
+      details: {
+        indoorFarm: {
+          squareFootage,
+          growingLevels,
+          effectiveGrowArea,
+          lightingSystem,
+          ledWattagePerSqFt,
+          lightSchedule,
+          farmType,
+        },
+      },
+      notes: [
+        `Indoor farm: ${effectiveGrowArea.toLocaleString()} sq ft grow area → ${peakLoadKW.toLocaleString()} kW (CEA benchmark)`,
+        `Lighting-dominant: ${(lightingPct * 100).toFixed(0)}% at ${ledWattagePerSqFt} W/sqft`,
+        `Light schedule: ${lightSchedule}, duty cycle: ${dutyCycle}`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: result,
+    };
+  },
+};
+
+/**
+ * AGRICULTURE SSOT ADAPTER
+ *
+ * Curated fields: farmType, acreage, irrigationType, buildingsSqFt,
+ *   coldStorage, processing, dairyMilking, grainDrying, evEquipment
+ * SSOT: calculateAgriculturePower(acres, irrigationKW, farmType)
+ * Source: USDA agricultural peak demand
+ */
+export const AGRICULTURE_LOAD_V1_SSOT: CalculatorContract = {
+  id: "agriculture_load_v1",
+  requiredInputs: ["acreage"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    // ── Bridge curated → SSOT fields ───────────────────────────────
+    const acreage = Number(inputs.acreage ?? inputs.farmSize ?? inputs.acres) || 500;
+    const farmType = String(inputs.farmType ?? "mixed").toLowerCase();
+    const irrigationType = String(inputs.irrigationType ?? "center-pivot").toLowerCase();
+
+    // Estimate irrigation kW from type
+    const IRRIGATION_KW_MAP: Record<string, number> = {
+      "center-pivot": acreage * 0.3,
+      "drip-micro": acreage * 0.15,
+      "flood-furrow": acreage * 0.1,
+      sprinkler: acreage * 0.25,
+      none: 0,
+      "dry-farm": 0,
+    };
+    const irrigationKW = IRRIGATION_KW_MAP[irrigationType] || acreage * 0.2;
+
+    const hasProcessing =
+      inputs.processing && inputs.processing !== "none" && inputs.processing !== "no";
+    const hasDairy =
+      inputs.dairyMilking && inputs.dairyMilking !== "none" && inputs.dairyMilking !== "no";
+    const hasColdStorage =
+      inputs.coldStorage && inputs.coldStorage !== "none" && inputs.coldStorage !== "no";
+    const hasGrainDrying =
+      inputs.grainDrying && inputs.grainDrying !== "none" && inputs.grainDrying !== "no";
+
+    assumptions.push(`Farm: ${acreage.toLocaleString()} acres (${farmType})`);
+    assumptions.push(`Irrigation: ${irrigationType} (~${irrigationKW.toFixed(0)} kW)`);
+    if (hasProcessing) assumptions.push(`On-site processing: ${inputs.processing}`);
+    if (hasDairy) assumptions.push(`Dairy: ${inputs.dairyMilking}`);
+
+    // ── Delegate to SSOT ───────────────────────────────────────────
+    const result = calculateUseCasePower("agriculture", {
+      acreage,
+      farmSize: acreage,
+      irrigationLoad: irrigationKW,
+      farmType,
+    });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // Agriculture: irrigation (40-60%), processing, dairy, storage, buildings
+    const irrigationPct = peakLoadKW > 0 ? Math.min(0.6, irrigationKW / peakLoadKW) : 0.4;
+    const processingPct = hasProcessing ? 0.15 : 0.05;
+    const dairyPct = hasDairy ? 0.1 : 0;
+    const coldStoragePct = hasColdStorage ? 0.08 : 0;
+    const buildingsPct = 0.1; // barns, offices
+    const controlsPct = 0.03;
+    const otherPct = Math.max(
+      0.04,
+      1.0 - irrigationPct - processingPct - dairyPct - coldStoragePct - buildingsPct - controlsPct
+    );
+
+    const processKW = peakLoadKW * (irrigationPct + processingPct + dairyPct);
+    const hvacKW = peakLoadKW * buildingsPct;
+    const lightingKW = peakLoadKW * 0.05; // minimal outdoor
+    const coolingKW = peakLoadKW * coldStoragePct;
+    const controlsKW = peakLoadKW * controlsPct;
+    const otherKW = peakLoadKW * Math.max(0.04, otherPct - 0.05); // subtract lighting
+    const kWContributorsTotalKW =
+      processKW + hvacKW + lightingKW + coolingKW + controlsKW + otherKW;
+
+    const dutyCycle = 0.4; // Seasonal peaks, irrigation runs 8-12h during growing season
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: coolingKW,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: buildingsPct * 100,
+        lightingPct: 5,
+        processPct: (irrigationPct + processingPct + dairyPct) * 100,
+        controlsPct: controlsPct * 100,
+        itLoadPct: 0,
+        coolingPct: coldStoragePct * 100,
+        chargingPct: 0,
+        otherPct: Math.max(4, (otherPct - 0.05) * 100),
+      },
+      details: {
+        agriculture: {
+          acreage,
+          farmType,
+          irrigationType,
+          irrigationKW,
+          hasProcessing,
+          hasDairy,
+          hasColdStorage,
+          hasGrainDrying,
+        },
+      },
+      notes: [
+        `Agriculture: ${acreage.toLocaleString()} acres (${farmType}) → ${peakLoadKW.toLocaleString()} kW (USDA benchmark)`,
+        `Irrigation: ${irrigationType} → ${irrigationKW.toFixed(0)} kW (${(irrigationPct * 100).toFixed(0)}% of peak)`,
+        `Seasonal operation, duty cycle: ${dutyCycle}`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: result,
+    };
+  },
+};
+
+/**
+ * RESIDENTIAL SSOT ADAPTER
+ *
+ * Curated fields: homeType, squareFootage, occupants, buildingAge,
+ *   hvacType, evCharging, pool, waterHeater, cooking
+ * SSOT: calculateUseCasePower("residential", { squareFeet, homeCount })
+ * Source: Residential benchmark (5 W/sq ft peak)
+ */
+export const RESIDENTIAL_LOAD_V1_SSOT: CalculatorContract = {
+  id: "residential_load_v1",
+  requiredInputs: ["squareFootage"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    // ── Bridge curated → SSOT fields ───────────────────────────────
+    const squareFootage = Number(inputs.squareFootage ?? inputs.sqFt ?? inputs.homeSize) || 2000;
+    const homeType = String(inputs.homeType ?? "single-family").toLowerCase();
+    const occupants = Number(inputs.occupants) || 4;
+    const hasEV = inputs.evCharging && inputs.evCharging !== "none" && inputs.evCharging !== "no";
+    const hasPool = inputs.pool && inputs.pool !== "none" && inputs.pool !== "no";
+    const hvacType = String(inputs.hvacType ?? "central-ac").toLowerCase();
+
+    assumptions.push(
+      `Home: ${squareFootage.toLocaleString()} sq ft ${homeType}, ${occupants} occupants`
+    );
+    assumptions.push(`HVAC: ${hvacType}`);
+    if (hasEV) assumptions.push(`EV charging: ${inputs.evCharging}`);
+    if (hasPool) assumptions.push(`Pool: ${inputs.pool}`);
+
+    // ── Delegate to SSOT ───────────────────────────────────────────
+    const result = calculateUseCasePower("residential", {
+      squareFeet: squareFootage,
+      sqFt: squareFootage,
+      homeSize: squareFootage,
+      homeCount: 1,
+      units: 1,
+    });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // Residential: HVAC (45-50%), plug loads, lighting, EV, pool
+    const hvacPct = 0.45;
+    const lightingPct = 0.1;
+    const plugLoadsPct = 0.15; // appliances, cooking, water heater
+    const evPct = hasEV ? 0.15 : 0;
+    const poolPct = hasPool ? 0.08 : 0;
+    const controlsPct = 0.02;
+    const otherPct = Math.max(
+      0.05,
+      1.0 - hvacPct - lightingPct - plugLoadsPct - evPct - poolPct - controlsPct
+    );
+
+    const hvacKW = peakLoadKW * hvacPct;
+    const lightingKW = peakLoadKW * lightingPct;
+    const processKW = peakLoadKW * plugLoadsPct;
+    const chargingKW = peakLoadKW * evPct;
+    const controlsKW = peakLoadKW * controlsPct;
+    const otherKW = peakLoadKW * (otherPct + poolPct);
+    const kWContributorsTotalKW =
+      hvacKW + lightingKW + processKW + chargingKW + controlsKW + otherKW;
+
+    const dutyCycle = 0.35; // Residential: evening peaks, low daytime
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: 0,
+        charging: chargingKW,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: hvacPct * 100,
+        lightingPct: lightingPct * 100,
+        processPct: plugLoadsPct * 100,
+        controlsPct: controlsPct * 100,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: evPct * 100,
+        otherPct: (otherPct + poolPct) * 100,
+      },
+      details: {
+        residential: { squareFootage, homeType, occupants, hvacType, hasEV, hasPool },
+      },
+      notes: [
+        `Residential: ${squareFootage.toLocaleString()} sq ft → ${peakLoadKW.toLocaleString()} kW (5 W/sqft benchmark)`,
+        `HVAC: ${hvacPct * 100}%, Plug loads: ${plugLoadsPct * 100}%${hasEV ? `, EV: ${evPct * 100}%` : ""}`,
+        `Residential duty cycle: ${dutyCycle} (evening peaks)`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: result,
+    };
+  },
+};
+
+/**
+ * GOVERNMENT SSOT ADAPTER
+ *
+ * Curated fields: facilityType, squareFootage, buildingAge, campusOrStandalone,
+ *   criticalOperations, operatingHours, dataCenter, evFleet
+ * SSOT: calculateGovernmentPower(sqFt)
+ * Source: FEMP public building benchmark (1.5 W/sq ft)
+ */
+export const GOVERNMENT_LOAD_V1_SSOT: CalculatorContract = {
+  id: "government_load_v1",
+  requiredInputs: ["squareFootage"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    // ── Bridge curated → SSOT fields ───────────────────────────────
+    const squareFootage =
+      Number(inputs.squareFootage ?? inputs.buildingSqFt ?? inputs.sqFt) || 75000;
+    const facilityType = String(inputs.facilityType ?? "office-building").toLowerCase();
+    const campusOrStandalone = String(inputs.campusOrStandalone ?? "standalone").toLowerCase();
+    const hasCriticalOps =
+      inputs.criticalOperations &&
+      inputs.criticalOperations !== "none" &&
+      inputs.criticalOperations !== "no";
+    const hasDataCenter =
+      inputs.dataCenter && inputs.dataCenter !== "none" && inputs.dataCenter !== "no";
+    const hasEVFleet = inputs.evFleet && inputs.evFleet !== "none" && inputs.evFleet !== "no";
+    const operatingHours = String(inputs.operatingHours ?? "standard").toLowerCase();
+
+    assumptions.push(`Government: ${squareFootage.toLocaleString()} sq ft (${facilityType})`);
+    assumptions.push(`Configuration: ${campusOrStandalone}, hours: ${operatingHours}`);
+    if (hasCriticalOps) assumptions.push(`Critical operations: ${inputs.criticalOperations}`);
+    if (hasDataCenter) assumptions.push(`Data center: ${inputs.dataCenter}`);
+    if (hasEVFleet) assumptions.push(`EV fleet: ${inputs.evFleet}`);
+
+    // ── Delegate to SSOT ───────────────────────────────────────────
+    const result = calculateUseCasePower("government", {
+      squareFeet: squareFootage,
+      buildingSqFt: squareFootage,
+      sqFt: squareFootage,
+    });
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // Government: similar to office but higher security/IT loads
+    const hvacPct = 0.35;
+    const lightingPct = 0.15;
+    const itPct = hasDataCenter ? 0.15 : 0.08;
+    const securityPct = hasCriticalOps ? 0.1 : 0.05;
+    const evFleetPct = hasEVFleet ? 0.08 : 0;
+    const controlsPct = 0.05;
+    const otherPct = Math.max(
+      0.05,
+      1.0 - hvacPct - lightingPct - itPct - securityPct - evFleetPct - controlsPct
+    );
+
+    const hvacKW = peakLoadKW * hvacPct;
+    const lightingKW = peakLoadKW * lightingPct;
+    const itLoadKW = peakLoadKW * itPct;
+    const processKW = peakLoadKW * securityPct;
+    const chargingKW = peakLoadKW * evFleetPct;
+    const controlsKW = peakLoadKW * controlsPct;
+    const otherKW = peakLoadKW * otherPct;
+    const kWContributorsTotalKW =
+      hvacKW + lightingKW + itLoadKW + processKW + chargingKW + controlsKW + otherKW;
+
+    // Duty cycle: standard office hours unless 24/7 ops
+    const is24x7 =
+      operatingHours.includes("24") || operatingHours.includes("always") || hasCriticalOps;
+    const dutyCycle = is24x7 ? 0.7 : 0.45;
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: itLoadKW,
+        cooling: 0,
+        charging: chargingKW,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: hvacPct * 100,
+        lightingPct: lightingPct * 100,
+        processPct: securityPct * 100,
+        controlsPct: controlsPct * 100,
+        itLoadPct: itPct * 100,
+        coolingPct: 0,
+        chargingPct: evFleetPct * 100,
+        otherPct: otherPct * 100,
+      },
+      details: {
+        government: {
+          squareFootage,
+          facilityType,
+          campusOrStandalone,
+          hasCriticalOps,
+          hasDataCenter,
+          hasEVFleet,
+          operatingHours,
+        },
+      },
+      notes: [
+        `Government: ${squareFootage.toLocaleString()} sq ft → ${peakLoadKW.toLocaleString()} kW (FEMP 1.5 W/sqft)`,
+        `IT: ${(itPct * 100).toFixed(0)}%, Security: ${(securityPct * 100).toFixed(0)}%${hasEVFleet ? `, EV fleet: ${(evFleetPct * 100).toFixed(0)}%` : ""}`,
+        `Duty cycle: ${dutyCycle} (${is24x7 ? "24/7 operations" : "standard business hours"})`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: result,
+    };
+  },
+};
+
 // ========== REGISTRY ==========
 
 /**
@@ -2350,7 +3408,8 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
  * EXECUTION: orchestrator calls contract.compute(inputs)
  */
 export const CALCULATORS_BY_ID: Record<string, CalculatorContract> = {
-  // Generic adapter (works for ALL industries via slug routing)
+  // Generic adapter — ONLY for "other"/"auto"/"unknown" industries
+  // All real industries MUST have dedicated adapters with TrueQuote envelopes
   [GENERIC_SSOT_ADAPTER.id]: GENERIC_SSOT_ADAPTER,
 
   // Core industries (refactored from hardcoded to SSOT adapters)
@@ -2368,6 +3427,17 @@ export const CALCULATORS_BY_ID: Record<string, CalculatorContract> = {
   [RESTAURANT_LOAD_V1_SSOT.id]: RESTAURANT_LOAD_V1_SSOT,
   [TRUCK_STOP_LOAD_V1_SSOT.id]: TRUCK_STOP_LOAD_V1_SSOT,
   [GAS_STATION_LOAD_V1_SSOT.id]: GAS_STATION_LOAD_V1_SSOT,
+
+  // NEW: 9 dedicated adapters replacing generic fallback (Feb 14, 2026)
+  [AIRPORT_LOAD_V1_SSOT.id]: AIRPORT_LOAD_V1_SSOT,
+  [CASINO_LOAD_V1_SSOT.id]: CASINO_LOAD_V1_SSOT,
+  [APARTMENT_LOAD_V1_SSOT.id]: APARTMENT_LOAD_V1_SSOT,
+  [COLLEGE_LOAD_V1_SSOT.id]: COLLEGE_LOAD_V1_SSOT,
+  [COLD_STORAGE_LOAD_V1_SSOT.id]: COLD_STORAGE_LOAD_V1_SSOT,
+  [INDOOR_FARM_LOAD_V1_SSOT.id]: INDOOR_FARM_LOAD_V1_SSOT,
+  [AGRICULTURE_LOAD_V1_SSOT.id]: AGRICULTURE_LOAD_V1_SSOT,
+  [RESIDENTIAL_LOAD_V1_SSOT.id]: RESIDENTIAL_LOAD_V1_SSOT,
+  [GOVERNMENT_LOAD_V1_SSOT.id]: GOVERNMENT_LOAD_V1_SSOT,
 };
 
 /**

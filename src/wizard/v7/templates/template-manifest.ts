@@ -416,6 +416,156 @@ export const MANIFEST: ManifestEntry[] = [
     typicalPeakKWRange: [30, 500],
     ssotInputAliases: SSOT_ALIASES.gas_station,
   },
+
+  // ══════════════════════════════════════════════════════
+  // PHASE 2B: 9 NEWLY-DEDICATED INDUSTRIES (Feb 2026)
+  // Previously routed through generic_ssot_v1.
+  // Now each has a dedicated adapter with TrueQuote envelope.
+  // ══════════════════════════════════════════════════════
+
+  // ──────────────────────────────────────────────────────
+  // AIRPORT (adapter-only, curated step 3)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "airport",
+    templateVersion: "adapter-only",
+    calculatorId: "airport_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["annualPassengers"],
+    contributorKeysExpected: ["hvac", "lighting", "process", "controls", "other"],
+    dutyCycleRange: [0.7, 0.8],
+    typicalPeakKWRange: [500, 25000],
+    ssotInputAliases: SSOT_ALIASES.airport,
+  },
+
+  // ──────────────────────────────────────────────────────
+  // CASINO (adapter-only, curated step 3)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "casino",
+    templateVersion: "adapter-only",
+    calculatorId: "casino_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["gamingFloorSqft"],
+    contributorKeysExpected: ["process", "hvac", "lighting", "controls", "other"],
+    dutyCycleRange: [0.85, 0.95],
+    typicalPeakKWRange: [500, 10000],
+    ssotInputAliases: SSOT_ALIASES.casino,
+  },
+
+  // ──────────────────────────────────────────────────────
+  // APARTMENT (adapter-only, curated step 3)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "apartment",
+    templateVersion: "adapter-only",
+    calculatorId: "apartment_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["unitCount"],
+    contributorKeysExpected: ["hvac", "lighting", "process", "controls", "other"],
+    dutyCycleRange: [0.45, 0.6],
+    typicalPeakKWRange: [100, 5000],
+    ssotInputAliases: SSOT_ALIASES.apartment,
+  },
+
+  // ──────────────────────────────────────────────────────
+  // COLLEGE (adapter-only, curated step 3)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "college",
+    templateVersion: "adapter-only",
+    calculatorId: "college_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["enrollment"],
+    contributorKeysExpected: ["hvac", "lighting", "process", "itLoad", "controls", "other"],
+    dutyCycleRange: [0.4, 0.6],
+    typicalPeakKWRange: [500, 15000],
+    ssotInputAliases: SSOT_ALIASES.college,
+  },
+
+  // ──────────────────────────────────────────────────────
+  // COLD STORAGE (adapter-only, curated step 3)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "cold_storage",
+    templateVersion: "adapter-only",
+    calculatorId: "cold_storage_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["squareFootage"],
+    contributorKeysExpected: ["cooling", "hvac", "lighting", "process", "controls", "other"],
+    dutyCycleRange: [0.8, 0.9],
+    typicalPeakKWRange: [50, 3000],
+    ssotInputAliases: SSOT_ALIASES.cold_storage,
+  },
+
+  // ──────────────────────────────────────────────────────
+  // INDOOR FARM (adapter-only, curated step 3)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "indoor_farm",
+    templateVersion: "adapter-only",
+    calculatorId: "indoor_farm_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["squareFootage"],
+    contributorKeysExpected: ["lighting", "hvac", "process", "controls", "other"],
+    dutyCycleRange: [0.6, 0.95],
+    typicalPeakKWRange: [100, 10000],
+    ssotInputAliases: SSOT_ALIASES.indoor_farm,
+  },
+
+  // ──────────────────────────────────────────────────────
+  // AGRICULTURE (adapter-only, curated step 3)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "agriculture",
+    templateVersion: "adapter-only",
+    calculatorId: "agriculture_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["acreage"],
+    contributorKeysExpected: ["process", "hvac", "lighting", "controls", "other"],
+    dutyCycleRange: [0.3, 0.5],
+    typicalPeakKWRange: [50, 2000],
+    ssotInputAliases: SSOT_ALIASES.agriculture,
+  },
+
+  // ──────────────────────────────────────────────────────
+  // RESIDENTIAL (adapter-only, curated step 3)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "residential",
+    templateVersion: "adapter-only",
+    calculatorId: "residential_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["squareFootage"],
+    contributorKeysExpected: ["hvac", "lighting", "process", "controls", "other"],
+    dutyCycleRange: [0.25, 0.45],
+    typicalPeakKWRange: [5, 50],
+    ssotInputAliases: SSOT_ALIASES.residential,
+  },
+
+  // ──────────────────────────────────────────────────────
+  // GOVERNMENT (adapter-only, curated step 3)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "government",
+    templateVersion: "adapter-only",
+    calculatorId: "government_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["squareFootage"],
+    contributorKeysExpected: ["hvac", "lighting", "process", "controls", "other"],
+    dutyCycleRange: [0.4, 0.75],
+    typicalPeakKWRange: [50, 2000],
+    ssotInputAliases: SSOT_ALIASES.government,
+  },
 ];
 
 // ──────────────────────────────────────────────────────
