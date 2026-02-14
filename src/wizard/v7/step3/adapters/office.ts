@@ -43,16 +43,17 @@ const OFFICE_TYPE_PROFILES: Record<string, { multiplier: number; hvac: "low" | "
   "law-firm":    { multiplier: 0.85, hvac: "low" },     // Paper-heavy, lower plug
 };
 
-/** All question IDs this adapter reads from office schema */
+/** All question IDs this adapter reads from office curated schema */
 const CONSUMED_KEYS = [
-  "facilitySize",       // Fallback schema: small/medium/large/enterprise
-  "operatingHours",     // Fallback schema: business/extended/24-7
-  "gridConnection",     // Fallback schema: on-grid/limited/off-grid
-  "criticalLoadPct",    // Fallback schema: 25/50/75/100
-  "peakDemandKW",       // Fallback schema: optional number
-  "monthlyKWH",         // Fallback schema: optional number
-  "existingSolar",      // Fallback schema: none/partial/full
-  "primaryGoal",        // Fallback schema: peak-shaving/backup/etc
+  "buildingClass",      // Curated Q1: class-a / class-b / class-c / coworking
+  "squareFootage",      // Curated Q2: slider 5,000–500,000 sqft
+  "floors",             // Curated Q3: 1-5 / 6-15 / 16-30 / 30+
+  "operatingHours",     // Curated Q6: business / extended / 24-7
+  "hvacSystem",         // Curated Q7: central-chilled / rooftop / split / none
+  "gridConnection",     // Curated Q10: on-grid / limited / off-grid
+  "demandCharges",      // Curated Q13: high / moderate / low / unknown
+  "existingSolar",      // Curated Q14: existing / planned / none
+  "primaryGoal",        // Curated Q15: peak-shaving / backup / sustainability / cost
 ] as const;
 
 // ============================================================================
@@ -64,8 +65,11 @@ function mapAnswers(
   _schemaKey: string
 ): NormalizedLoadInputs {
   // ── Scale ──
-  // Parse facilitySize from fallback schema (small/medium/large/enterprise)
-  const sqft = parseSqftFromSizeCategory(answers.facilitySize) ?? 50000;
+  // Parse squareFootage from curated slider (actual number), fall back to category
+  const rawSqft = answers.squareFootage ?? answers.facilitySize;
+  const sqft = (rawSqft != null && !isNaN(Number(rawSqft)) && Number(rawSqft) > 0)
+    ? Number(rawSqft)
+    : parseSqftFromSizeCategory(rawSqft) ?? 50000;
 
   // ── Schedule ──
   const hoursRaw = String(answers.operatingHours || "business");
@@ -76,7 +80,11 @@ function mapAnswers(
       : { ...SCHEDULE_PRESETS["office"] };
 
   // ── HVAC ──
-  // Office HVAC is always medium minimum (tenant comfort requirement)
+  // Use curated hvacSystem answer to influence cooling type
+  const hvacRaw = String(answers.hvacSystem || "central-chilled");
+  const coolingType = hvacRaw === "rooftop" ? "central-ac" as const
+    : hvacRaw === "split" ? "split" as const
+    : "central-ac" as const;
   const hvacClass = "medium" as const;
 
   // ── Process Loads ──
@@ -121,8 +129,10 @@ function mapAnswers(
     ? "off-grid" as const
     : gridRaw === "limited" ? "limited" as const : "on-grid" as const;
 
-  const criticalLoadPct = answers.criticalLoadPct != null
-    ? Number(answers.criticalLoadPct) / 100  // Convert 25/50/75/100 → 0.25-1.0
+  // Derive critical load % from demandCharges answer (high → more critical)
+  const demandRaw = String(answers.demandCharges || "moderate");
+  const criticalLoadPct = demandRaw === "high" ? 0.75
+    : demandRaw === "low" ? 0.25
     : 0.5;
 
   const existingSolarKW = parseSolarAnswer(answers.existingSolar);
@@ -146,8 +156,8 @@ function mapAnswers(
       criticalLoadPct,
       existingSolarKW,
     },
-    peakDemandOverrideKW: answers.peakDemandKW != null ? Number(answers.peakDemandKW) : undefined,
-    monthlyEnergyKWh: answers.monthlyKWH != null ? Number(answers.monthlyKWH) : undefined,
+    peakDemandOverrideKW: undefined,
+    monthlyEnergyKWh: undefined,
     _rawExtensions: {
       squareFootage: sqft,
       officeType: "corporate",
@@ -157,11 +167,15 @@ function mapAnswers(
 
 function getDefaultInputs(): NormalizedLoadInputs {
   return mapAnswers({
-    facilitySize: "medium",
+    buildingClass: "class-b",
+    squareFootage: 50000,
+    floors: "mid-rise",
     operatingHours: "business",
+    hvacSystem: "central-chilled",
     gridConnection: "on-grid",
-    criticalLoadPct: "50",
+    demandCharges: "moderate",
     existingSolar: "none",
+    primaryGoal: "peak-shaving",
   }, "office");
 }
 

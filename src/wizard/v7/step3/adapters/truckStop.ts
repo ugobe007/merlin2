@@ -82,16 +82,20 @@ const TRUCK_STOP_SIZE_PROFILES: Record<string, {
   },
 };
 
-/** All question IDs this adapter reads from fallback schema */
+/** All question IDs this adapter reads from gas station curated config */
 const CONSUMED_KEYS = [
-  "facilitySize",       // small/medium/large/enterprise → truck stop scale
-  "operatingHours",     // always 24/7 for truck stops
-  "gridConnection",     // on-grid/limited/off-grid
-  "criticalLoadPct",    // 50-75% typical (fueling + refrigeration + lighting)
-  "peakDemandKW",       // Optional override
-  "monthlyKWH",         // Optional override
-  "existingSolar",      // none/partial/full
-  "primaryGoal",        // peak-shaving typical
+  "stationType",        // Curated Q1: gas-only / with-cstore / truck-stop / travel-center
+  "squareFootage",      // Curated Q2: slider (c-store sqft)
+  "fuelPumps",          // Curated Q3: slider (number of fuel pumps/diesel lanes)
+  "operatingHours",     // Curated Q4: extended / 24-7
+  "convenienceStore",   // Curated Q5: yes / no
+  "foodService",        // Curated Q6: none / deli / full-restaurant
+  "carWash",            // Curated Q7: yes / no
+  "evChargers",         // Curated Q8: number or none
+  "signage",            // Curated Q9: standard / led-digital
+  "gridConnection",     // Curated Q10: on-grid / limited / off-grid
+  "existingSolar",      // Curated Q14: existing / planned / none
+  "primaryGoal",        // Curated Q15: peak-shaving / backup etc.
 ] as const;
 
 // ============================================================================
@@ -103,9 +107,57 @@ function mapAnswers(
   _schemaKey: string
 ): NormalizedLoadInputs {
   // ── Scale ──
-  const sizeCategory = String(answers.facilitySize || "medium").toLowerCase();
-  const profile = TRUCK_STOP_SIZE_PROFILES[sizeCategory]
-    ?? TRUCK_STOP_SIZE_PROFILES["medium"]!;
+  // Bridge curated IDs: stationType + fuelPumps + squareFootage + convenienceStore
+  // If fuelPumps is provided directly, use it; otherwise fall back to facilitySize category
+  const rawPumps = answers.fuelPumps != null ? Number(answers.fuelPumps) : null;
+  const rawSqft = answers.squareFootage != null ? Number(answers.squareFootage) : null;
+  const stationType = String(answers.stationType || "gas-only").toLowerCase();
+  const isTruckStop = stationType.includes("truck") || stationType.includes("travel");
+
+  // Determine size profile: direct curated values take priority over facilitySize category
+  let dieselLanes: number;
+  let cStoreSqFt: number;
+  let parkingSpots: number;
+  let hasShowers: boolean;
+  let hasLaundry: boolean;
+  let hasRestaurant: boolean;
+
+  if (rawPumps != null && rawPumps > 0) {
+    // Curated config provides fuelPumps directly
+    dieselLanes = rawPumps;
+    cStoreSqFt = rawSqft != null && rawSqft > 0 ? rawSqft : (isTruckStop ? 5000 : 2500);
+    // Scale parking spots with pump count for truck stops
+    parkingSpots = isTruckStop ? Math.round(dieselLanes * 6) : 0;
+    // Derive amenities from curated answers or station type
+    hasRestaurant = answers.foodService != null
+      ? String(answers.foodService) !== "none" && answers.foodService !== false
+      : isTruckStop;
+    hasShowers = isTruckStop && dieselLanes >= 8;
+    hasLaundry = isTruckStop && dieselLanes >= 10;
+  } else {
+    // Legacy path: facilitySize category
+    const sizeCategory = String(answers.facilitySize || "medium").toLowerCase();
+    const profile = TRUCK_STOP_SIZE_PROFILES[sizeCategory]
+      ?? TRUCK_STOP_SIZE_PROFILES["medium"]!;
+    dieselLanes = profile.dieselLanes;
+    cStoreSqFt = profile.cStoreSqFt;
+    parkingSpots = profile.parkingSpots;
+    hasShowers = profile.hasShowers;
+    hasLaundry = profile.hasLaundry;
+    hasRestaurant = profile.hasRestaurant;
+  }
+
+  // Override amenities from curated answers if explicitly provided
+  if (answers.convenienceStore != null) {
+    const hasCS = answers.convenienceStore === "yes" || answers.convenienceStore === true;
+    if (!hasCS) cStoreSqFt = 0;
+  }
+  if (answers.carWash != null) {
+    // Captured in _rawExtensions below
+  }
+  if (answers.foodService != null) {
+    hasRestaurant = String(answers.foodService) !== "none" && answers.foodService !== false;
+  }
 
   // ── Schedule ──
   // Truck stops are 24/7 — override any user selection
@@ -123,7 +175,7 @@ function mapAnswers(
   processLoads.push({
     category: "process",
     label: "Diesel Lanes & DEF Dispensing",
-    kW: profile.dieselLanes * 1.5,
+    kW: dieselLanes * 1.5,
     dutyCycle: 0.7, // Trucks fuel around the clock
   });
 
@@ -131,12 +183,12 @@ function mapAnswers(
   processLoads.push({
     category: "lighting",
     label: "Canopy + Truck Lot Lighting",
-    kW: profile.dieselLanes * 1.0 + (profile.parkingSpots * 0.05),
+    kW: dieselLanes * 1.0 + (parkingSpots * 0.05),
     dutyCycle: 0.6, // Dusk to dawn + canopy daytime
   });
 
   // C-store HVAC (larger than gas station c-store)
-  const cstoreHVACkW = profile.cStoreSqFt * 0.003; // ~3 W/sqft HVAC
+  const cstoreHVACkW = cStoreSqFt * 0.003; // ~3 W/sqft HVAC
   processLoads.push({
     category: "hvac",
     label: "Convenience Store HVAC",
@@ -145,7 +197,7 @@ function mapAnswers(
   });
 
   // C-store refrigeration (walk-in coolers, beverage, ice)
-  const refrigerationKW = profile.cStoreSqFt * 0.0015; // ~1.5 W/sqft refrigeration
+  const refrigerationKW = cStoreSqFt * 0.0015; // ~1.5 W/sqft refrigeration
   processLoads.push({
     category: "cooling",
     label: "Refrigeration (walk-in, beverage, ice)",
@@ -154,18 +206,18 @@ function mapAnswers(
   });
 
   // Truck parking shore power / idle reduction
-  if (profile.parkingSpots > 0) {
+  if (parkingSpots > 0) {
     // ~10% utilization, 2 kW per spot (IdleAire standard)
     processLoads.push({
       category: "process",
       label: "Truck Parking Shore Power (idle reduction)",
-      kW: profile.parkingSpots * 2 * 0.10,
+      kW: parkingSpots * 2 * 0.10,
       dutyCycle: 0.6, // Overnight bias
     });
   }
 
   // Showers (water heaters, exhaust fans)
-  if (profile.hasShowers) {
+  if (hasShowers) {
     processLoads.push({
       category: "process",
       label: "Shower Facilities (water heating, ventilation)",
@@ -175,7 +227,7 @@ function mapAnswers(
   }
 
   // Laundry (commercial washers/dryers)
-  if (profile.hasLaundry) {
+  if (hasLaundry) {
     processLoads.push({
       category: "process",
       label: "Laundry (commercial washers & dryers)",
@@ -185,7 +237,7 @@ function mapAnswers(
   }
 
   // Restaurant / deli (cooking, prep, walk-in)
-  if (profile.hasRestaurant) {
+  if (hasRestaurant) {
     processLoads.push({
       category: "process",
       label: "Restaurant / Deli (cooking, prep, walk-in cooler)",
@@ -204,7 +256,7 @@ function mapAnswers(
 
   // ── HVAC ──
   // Truck stops: medium-high HVAC (large open c-store, frequent door openings)
-  const hvacClass = sizeCategory === "enterprise" || sizeCategory === "large"
+  const hvacClass = isTruckStop && dieselLanes >= 12
     ? "high" as const
     : "medium" as const;
 
@@ -214,19 +266,20 @@ function mapAnswers(
     ? "off-grid" as const
     : gridRaw === "limited" ? "limited" as const : "on-grid" as const;
 
-  const criticalLoadPct = answers.criticalLoadPct != null
-    ? Number(answers.criticalLoadPct) / 100
-    : 0.60; // Fueling + refrigeration + lighting must stay on
+  // Derive critical load from station type (fueling + refrigeration + lighting must stay on)
+  const criticalLoadPct = isTruckStop ? 0.65 : 0.50;
 
   const existingSolarKW = parseSolarAnswer(answers.existingSolar);
+
+  const hasCarWash = answers.carWash === "yes" || answers.carWash === true;
 
   return {
     industrySlug: "truck_stop",
     schedule,
     scale: {
       kind: "pumps",
-      value: profile.dieselLanes,
-      subType: sizeCategory,
+      value: dieselLanes,
+      subType: stationType,
     },
     hvac: {
       class: hvacClass,
@@ -236,29 +289,36 @@ function mapAnswers(
     processLoads,
     architecture: {
       gridConnection,
-      criticality: "standard", // Fueling is essential but not life-safety
+      criticality: "standard",
       criticalLoadPct,
       existingSolarKW,
     },
-    peakDemandOverrideKW: answers.peakDemandKW != null ? Number(answers.peakDemandKW) : undefined,
-    monthlyEnergyKWh: answers.monthlyKWH != null ? Number(answers.monthlyKWH) : undefined,
+    peakDemandOverrideKW: undefined,
+    monthlyEnergyKWh: undefined,
     _rawExtensions: {
-      fuelPumps: profile.dieselLanes,
-      hasConvenienceStore: true,
-      hasCarWash: false, // can be added later
-      stationType: "truck-stop",
-      truckParkingSpots: profile.parkingSpots,
-      cStoreSqFt: profile.cStoreSqFt,
+      fuelPumps: dieselLanes,
+      hasConvenienceStore: cStoreSqFt > 0,
+      hasCarWash,
+      stationType,
+      truckParkingSpots: parkingSpots,
+      cStoreSqFt,
+      hasShowers,
+      hasLaundry,
+      hasRestaurant,
     },
   };
 }
 
 function getDefaultInputs(): NormalizedLoadInputs {
   return mapAnswers({
-    facilitySize: "medium",
+    stationType: "truck-stop",
+    fuelPumps: 12,
+    squareFootage: 5000,
     operatingHours: "24-7",
+    convenienceStore: "yes",
+    foodService: "full-restaurant",
+    carWash: "no",
     gridConnection: "on-grid",
-    criticalLoadPct: "60",
     existingSolar: "none",
     primaryGoal: "peak-shaving",
   }, "gas-station");
@@ -293,10 +353,15 @@ export const truckStopAdapter: IndustryAdapter = {
 export const gasStationAdapter: IndustryAdapter = {
   industrySlug: "gas_station",
   mapAnswers: (answers, schemaKey) => {
-    // For plain gas stations, default to "small" profile
+    // For plain gas stations, default to smaller profile
     const gasAnswers = { ...answers };
-    if (!gasAnswers.facilitySize) {
-      gasAnswers.facilitySize = "small";
+    if (!gasAnswers.stationType) {
+      gasAnswers.stationType = "with-cstore";
+    }
+    // Only inject default fuelPumps if NEITHER fuelPumps NOR facilitySize provided
+    // (facilitySize triggers legacy path for backward compatibility with tests)
+    if (!gasAnswers.fuelPumps && !gasAnswers.facilitySize) {
+      gasAnswers.fuelPumps = 8;
     }
     const result = mapAnswers(gasAnswers, schemaKey);
     result.industrySlug = "gas_station";
@@ -304,10 +369,14 @@ export const gasStationAdapter: IndustryAdapter = {
   },
   getDefaultInputs: () => {
     const result = mapAnswers({
-      facilitySize: "small",
+      stationType: "with-cstore",
+      fuelPumps: 8,
+      squareFootage: 2500,
       operatingHours: "24-7",
+      convenienceStore: "yes",
+      foodService: "none",
+      carWash: "no",
       gridConnection: "on-grid",
-      criticalLoadPct: "50",
       existingSolar: "none",
     }, "gas-station");
     result.industrySlug = "gas_station";

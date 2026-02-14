@@ -12,7 +12,7 @@
  *   naturalGasLine, waterHeaterType, pumpConfiguration, waterReclamation,
  *   dryerConfiguration, vacuumStations, evCharging, paymentKiosks,
  *   conveyorMotorSize, brushMotorCount, blowerCount, heatedDryers,
- *   centralVacuumHP, highPressurePumpCount, roSystemPump, gridConnection
+ *   centralVacuumHP, highPressurePumpCount, roSystemPump
  *
  * CALCULATOR: car_wash_load_v1 (reads: bayTunnelCount, averageWashesPerDay,
  *             operatingHours, carWashType, primaryEquipment)
@@ -60,7 +60,6 @@ const CONSUMED_KEYS = [
   "centralVacuumHP",
   "highPressurePumpCount",
   "roSystemPump",
-  "gridConnection",
 ] as const;
 
 // ============================================================================
