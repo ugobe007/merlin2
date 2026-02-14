@@ -228,6 +228,9 @@ const INDUSTRY_SIZING_DEFAULTS: Record<string, { ratio: number; hours: number }>
   // Gas station: EV + convenience store
   "gas-station": { ratio: 0.40, hours: 2 },
 
+  // Truck stop: larger BESS for fleet charging + amenities
+  "truck-stop": { ratio: 0.50, hours: 4 },
+
   // Airport: critical systems
   "airport": { ratio: 0.50, hours: 4 },
 
@@ -236,6 +239,27 @@ const INDUSTRY_SIZING_DEFAULTS: Record<string, { ratio: number; hours: number }>
 
   // Office: daytime peak shaving
   "office": { ratio: 0.35, hours: 4 },
+
+  // Restaurant: commercial load profile
+  "restaurant": { ratio: 0.40, hours: 4 },
+
+  // College/University: campus operations
+  "college": { ratio: 0.40, hours: 4 },
+
+  // Apartment: multifamily residential
+  "apartment": { ratio: 0.35, hours: 4 },
+
+  // Residential: single-family
+  "residential": { ratio: 0.30, hours: 4 },
+
+  // Cold storage: high continuous load
+  "cold-storage": { ratio: 0.50, hours: 4 },
+
+  // Indoor farm: grow lights + HVAC
+  "indoor-farm": { ratio: 0.40, hours: 4 },
+
+  // Agriculture: irrigation + processing
+  "agriculture": { ratio: 0.35, hours: 4 },
 };
 
 /**
