@@ -223,15 +223,15 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-gradient-to-br from-slate-800/90 via-purple-900/50 to-slate-800/90 backdrop-blur-md border-2 border-purple-500/30 rounded-2xl p-6 mb-6 shadow-2xl"
+      className="bg-gradient-to-br from-slate-800/90 via-slate-900/80 to-slate-800/90 backdrop-blur-md border border-emerald-500/20 rounded-2xl p-6 mb-6 shadow-2xl"
     >
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-            <Target className="w-6 h-6 text-purple-400" />
+            <Target className="w-6 h-6 text-emerald-400" />
             Project Information
           </h2>
-          <p className="text-sm text-purple-200/70">
+          <p className="text-sm text-slate-400">
             Create your account to save and download quotes
           </p>
         </div>
@@ -240,7 +240,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Project Name - Required */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-purple-200 mb-2">
+          <label className="block text-sm font-semibold text-slate-300 mb-2">
             Project Name <span className="text-red-400">*</span>
           </label>
           <input
@@ -248,8 +248,8 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
             value={formData.projectName}
             onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
             placeholder="e.g., Hotel Energy Storage System"
-            className={`w-full px-4 py-3 bg-slate-700/50 border-2 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-              errors.projectName ? "border-red-500" : "border-purple-500/50 focus:border-purple-400"
+            className={`w-full px-4 py-3 bg-slate-700/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all ${
+              errors.projectName ? "border-red-500" : "border-slate-600 focus:border-emerald-400"
             }`}
             required
           />
@@ -258,7 +258,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
 
         {/* Project Location - Optional */}
         <div>
-          <label className="block text-sm font-semibold text-purple-200 mb-2 flex items-center gap-2">
+          <label className="block text-sm font-semibold text-slate-300 mb-2 flex items-center gap-2">
             <MapPin className="w-4 h-4" />
             Project Location
           </label>
@@ -267,23 +267,23 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
             value={formData.projectLocation}
             onChange={(e) => setFormData({ ...formData, projectLocation: e.target.value })}
             placeholder="e.g., Las Vegas, NV"
-            className="w-full px-4 py-3 bg-slate-700/50 border-2 border-purple-500/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-400 transition-all"
+            className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-all"
           />
         </div>
 
         {/* Project Goals - Required */}
         <div>
-          <label className="block text-sm font-semibold text-purple-200 mb-2 flex items-center gap-2">
+          <label className="block text-sm font-semibold text-slate-300 mb-2 flex items-center gap-2">
             <Target className="w-4 h-4" />
             Project Goals <span className="text-red-400">*</span>
           </label>
           <select
             value={formData.projectGoals}
             onChange={(e) => setFormData({ ...formData, projectGoals: e.target.value })}
-            className={`w-full px-4 py-3 bg-slate-700/50 border-2 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+            className={`w-full px-4 py-3 bg-slate-700/50 border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all ${
               errors.projectGoals
                 ? "border-red-500"
-                : "border-purple-500/50 focus:border-purple-400"
+                : "border-slate-600 focus:border-emerald-400"
             }`}
             required
           >
@@ -302,14 +302,14 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
 
         {/* Project Schedule - Optional */}
         <div>
-          <label className="block text-sm font-semibold text-purple-200 mb-2 flex items-center gap-2">
+          <label className="block text-sm font-semibold text-slate-300 mb-2 flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Project Schedule
           </label>
           <select
             value={formData.projectSchedule}
             onChange={(e) => setFormData({ ...formData, projectSchedule: e.target.value })}
-            className="w-full px-4 py-3 bg-slate-700/50 border-2 border-purple-500/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-400 transition-all"
+            className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-all"
           >
             <option value="">Select timeline...</option>
             <option value="immediate">Immediate (0-3 months)</option>
@@ -322,7 +322,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
 
         {/* User Name - Required */}
         <div>
-          <label className="block text-sm font-semibold text-purple-200 mb-2 flex items-center gap-2">
+          <label className="block text-sm font-semibold text-slate-300 mb-2 flex items-center gap-2">
             <User className="w-4 h-4" />
             Your Name <span className="text-red-400">*</span>
           </label>
@@ -331,8 +331,8 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
             value={formData.userName}
             onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
             placeholder="John Doe"
-            className={`w-full px-4 py-3 bg-slate-700/50 border-2 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-              errors.userName ? "border-red-500" : "border-purple-500/50 focus:border-purple-400"
+            className={`w-full px-4 py-3 bg-slate-700/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all ${
+              errors.userName ? "border-red-500" : "border-slate-600 focus:border-emerald-400"
             }`}
             required
           />
@@ -341,7 +341,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
 
         {/* Email - Required */}
         <div>
-          <label className="block text-sm font-semibold text-purple-200 mb-2 flex items-center gap-2">
+          <label className="block text-sm font-semibold text-slate-300 mb-2 flex items-center gap-2">
             <Mail className="w-4 h-4" />
             Email Address <span className="text-red-400">*</span>
           </label>
@@ -350,8 +350,8 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             placeholder="john@example.com"
-            className={`w-full px-4 py-3 bg-slate-700/50 border-2 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-              errors.email ? "border-red-500" : "border-purple-500/50 focus:border-purple-400"
+            className={`w-full px-4 py-3 bg-slate-700/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all ${
+              errors.email ? "border-red-500" : "border-slate-600 focus:border-emerald-400"
             }`}
             required
           />
@@ -366,14 +366,14 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
       )}
 
       <div className="mt-6 flex items-center justify-between">
-        <p className="text-xs text-purple-200/60">
+        <p className="text-xs text-slate-500">
           <span className="text-red-400">*</span> Required fields. Account required to download
           quotes.
         </p>
         <button
           type="submit"
           disabled={isLoading}
-          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {isLoading ? (
             <>
