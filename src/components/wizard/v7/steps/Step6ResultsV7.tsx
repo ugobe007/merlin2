@@ -516,20 +516,20 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             <div className="divide-y divide-white/[0.04]">
               <div className="flex justify-between py-1.5">
                 <span className="text-xs text-slate-400">Total Investment</span>
-                <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(quote.capexUSD as number | null)}</span>
+                <span className="text-xs font-bold text-white tabular-nums">{fmtUSD((quote.grossCost ?? quote.capexUSD) as number | null)}</span>
               </div>
-              {/* Federal ITC — always show when capex is available */}
-              {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
+              {/* Federal ITC — use actual itcAmount from calculator, not hardcoded 30% */}
+              {(quote.grossCost ?? quote.capexUSD) != null && Number(quote.grossCost ?? quote.capexUSD) > 0 && (
                 <div className="flex justify-between py-1.5">
-                  <span className="text-xs text-slate-400">Federal ITC (30%)</span>
-                  <span className="text-xs font-bold text-emerald-400 tabular-nums">−{fmtUSD(Number(quote.capexUSD) * 0.30)}</span>
+                  <span className="text-xs text-slate-400">Federal ITC ({quote.itcRate != null ? `${Math.round(Number(quote.itcRate) * 100)}%` : '30%'})</span>
+                  <span className="text-xs font-bold text-emerald-400 tabular-nums">−{fmtUSD(quote.itcAmount != null ? Number(quote.itcAmount) : Number(quote.grossCost ?? quote.capexUSD ?? 0) * 0.30)}</span>
                 </div>
               )}
-              {/* Net cost after ITC */}
+              {/* Net cost after ITC — capexUSD IS already net of ITC */}
               {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
                 <div className="flex justify-between py-1.5 bg-white/[0.02] -mx-3 px-3">
                   <span className="text-xs font-semibold text-slate-200">Net Cost</span>
-                  <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(Number(quote.capexUSD) * 0.70)}</span>
+                  <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(quote.capexUSD as number | null)}</span>
                 </div>
               )}
               <div className="flex justify-between py-1.5">
@@ -589,7 +589,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             </div>
 
             {/* Financial projection CTA */}
-            {quote.capexUSD != null && Number(quote.capexUSD) > 0 && quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
+            {(quote.grossCost ?? quote.capexUSD) != null && Number(quote.grossCost ?? quote.capexUSD) > 0 && quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
               <button
                 onClick={() => setShowFinancialModal(true)}
                 className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 rounded-md border border-amber-500/20 bg-amber-500/[0.04] hover:bg-amber-500/[0.08] transition-all group"
@@ -762,9 +762,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       <TrueQuoteFinancialModal
         isOpen={showFinancialModal}
         onClose={() => setShowFinancialModal(false)}
-        totalInvestment={Number(quote.capexUSD ?? 0)}
-        federalITC={Number(quote.capexUSD ?? 0) * 0.30}
-        netInvestment={Number(quote.capexUSD ?? 0) * 0.70}
+        totalInvestment={Number(quote.grossCost ?? quote.capexUSD ?? 0)}
+        federalITC={Number(quote.itcAmount ?? 0) || Number(quote.grossCost ?? quote.capexUSD ?? 0) * (Number(quote.itcRate) || 0.30)}
+        netInvestment={Number(quote.capexUSD ?? 0)}
         annualSavings={Number(quote.annualSavingsUSD ?? 0)}
         bessKWh={Number(quote.bessKWh ?? 0) || undefined}
         solarKW={Number(quote.solarKW ?? 0) || undefined}

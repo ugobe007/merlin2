@@ -544,7 +544,7 @@ export function generatePricingRunId(): string {
  * Build margin policy line items from SSOT QuoteResult equipment breakdown
  * and apply the margin policy engine.
  */
-function applyMarginToQuote(quoteResult: QuoteResult, energyMWh: number): MarginQuoteResult {
+export function applyMarginToQuote(quoteResult: QuoteResult, energyMWh: number): MarginQuoteResult {
   const eq = quoteResult.equipment;
   const lineItems: MarginPolicyInput["lineItems"] = [];
 

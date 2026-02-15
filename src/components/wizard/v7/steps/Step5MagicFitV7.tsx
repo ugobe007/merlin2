@@ -27,6 +27,7 @@ import badgeGoldIcon from '@/assets/images/badge_gold_icon.jpg';
 
 // SSOT calculation engine
 import { calculateQuote } from '@/services/unifiedQuoteCalculator';
+import { applyMarginToQuote } from '@/wizard/v7/pricing/pricingBridge';
 import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 
@@ -300,6 +301,31 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
               batteryChemistry: 'lfp',
             });
 
+            // ═══════════════════════════════════════════════════════════
+            // Apply Margin Policy (Feb 2026)
+            // Every customer-facing quote must include Merlin margin.
+            // ═══════════════════════════════════════════════════════════
+            const energyMWh = (bessKW / 1000) * baseDuration;
+            const marginResult = applyMarginToQuote(quote, energyMWh);
+
+            // Attach margin-adjusted costs to quote for downstream use
+            const itcRate = quote.benchmarkAudit?.assumptions?.itcRate ?? 0.3;
+            const sellPriceTotal = marginResult.sellPriceTotal;
+            const itcAmount = sellPriceTotal * itcRate;
+            const netCost = sellPriceTotal - itcAmount;
+
+            // Augment quote.costs with margin so handleSelectTier gets sell prices
+            (quote as any)._margin = {
+              sellPriceTotal,
+              baseCostTotal: marginResult.baseCostTotal,
+              marginDollars: marginResult.totalMarginDollars,
+              marginPercent: marginResult.blendedMarginPercent,
+              marginBand: marginResult.marginBandDescription,
+              itcRate,
+              itcAmount,
+              netCost,
+            };
+
             console.log(`[Step5 MagicFit] ${tierKey} quote result:`, {
               annualSavings: quote?.financials?.annualSavings,
               totalCost: quote?.costs?.totalProjectCost,
@@ -365,20 +391,36 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       const bessKW = batt ? (batt.unitPowerMW ?? 0) * (batt.quantity ?? 0) * 1000 : 0;
       const solarKW = eq?.solar ? (eq.solar.totalMW ?? 0) * 1000 : 0;
       const genKW = eq?.generators ? (eq.generators.unitPowerMW ?? 0) * (eq.generators.quantity ?? 0) * 1000 : 0;
+
+      // Use margin-adjusted pricing (sell price) when available
+      const margin = (tierData.quote as any)?._margin;
+      const grossCost = margin?.sellPriceTotal ?? tierData.quote.costs?.totalProjectCost ?? 0;
+      const itcAmount = margin?.itcAmount ?? grossCost * 0.3;
+      const netCost = margin?.netCost ?? (grossCost - itcAmount);
+      const itcRate = margin?.itcRate ?? 0.3;
+
       actions.updateQuote({
         bessKWh,
         bessKW,
         solarKW,
         generatorKW: genKW,
-        capexUSD: tierData.quote.costs?.totalProjectCost ?? 0,
+        capexUSD: netCost,
+        grossCost,
+        itcAmount,
+        itcRate,
         annualSavingsUSD: tierData.quote.financials?.annualSavings ?? 0,
-        roiYears: tierData.quote.financials?.paybackYears ?? 0,
+        roiYears: tierData.quote.financials?.annualSavings
+          ? Math.min(netCost / tierData.quote.financials.annualSavings, 99)
+          : tierData.quote.financials?.paybackYears ?? 0,
         npv: tierData.quote.financials?.npv ?? undefined,
         irr: tierData.quote.financials?.irr ?? undefined,
         paybackYears: tierData.quote.financials?.paybackYears ?? 0,
         durationHours: baseDuration,
         pricingComplete: true,
-        notes: [`MagicFit tier: ${TIER_CONFIG[tierKey].name} (${TIER_CONFIG[tierKey].multiplier}x)`],
+        notes: [
+          `MagicFit tier: ${TIER_CONFIG[tierKey].name} (${TIER_CONFIG[tierKey].multiplier}x)`,
+          ...(margin ? [`Margin: ${margin.marginBand} (${(margin.marginPercent * 100).toFixed(1)}%)`] : []),
+        ],
       });
     }
     
@@ -422,13 +464,14 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       {(() => {
         const modalTier = tiers.find(t => t.tierKey === (selectedTier || 'perfectFit'));
         const mq = modalTier?.quote;
+        const mm = (mq as any)?._margin;
         return (
           <TrueQuoteFinancialModal
             isOpen={showTrueQuoteModal}
             onClose={() => setShowTrueQuoteModal(false)}
-            totalInvestment={mq?.costs?.totalProjectCost ?? 0}
-            federalITC={mq?.costs?.taxCredit ?? 0}
-            netInvestment={mq?.costs?.netCost ?? 0}
+            totalInvestment={mm?.sellPriceTotal ?? mq?.costs?.totalProjectCost ?? 0}
+            federalITC={mm?.itcAmount ?? mq?.costs?.taxCredit ?? 0}
+            netInvestment={mm?.netCost ?? mq?.costs?.netCost ?? 0}
             annualSavings={mq?.financials?.annualSavings ?? 0}
             bessKWh={mq?.equipment?.batteries ? (mq.equipment.batteries.unitEnergyMWh ?? 0) * (mq.equipment.batteries.quantity ?? 0) * 1000 : 0}
             solarKW={mq?.equipment?.solar ? (mq.equipment.solar.totalMW ?? 0) * 1000 : 0}
@@ -623,19 +666,28 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                 {/* Financial Summary */}
                 <div className="space-y-1.5 mb-4 pb-4 border-b border-white/[0.06]">
                   <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Financials</div>
-                  
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Investment</span>
-                    <span className="text-white font-semibold tabular-nums">{formatCurrency(quote.costs?.totalProjectCost)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Federal ITC</span>
-                    <span className="text-green-400 font-semibold tabular-nums">−{formatCurrency(quote.costs?.taxCredit)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs font-bold">
-                    <span className="text-white">Net Cost</span>
-                    <span className="text-white tabular-nums">{formatCurrency(quote.costs?.netCost)}</span>
-                  </div>
+                  {(() => {
+                    const m = (quote as any)?._margin;
+                    const investment = m?.sellPriceTotal ?? quote.costs?.totalProjectCost ?? 0;
+                    const itc = m?.itcAmount ?? quote.costs?.taxCredit ?? 0;
+                    const net = m?.netCost ?? quote.costs?.netCost ?? 0;
+                    return (
+                      <>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Investment</span>
+                          <span className="text-white font-semibold tabular-nums">{formatCurrency(investment)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Federal ITC</span>
+                          <span className="text-green-400 font-semibold tabular-nums">−{formatCurrency(itc)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-bold">
+                          <span className="text-white">Net Cost</span>
+                          <span className="text-white tabular-nums">{formatCurrency(net)}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* ROI Metrics */}

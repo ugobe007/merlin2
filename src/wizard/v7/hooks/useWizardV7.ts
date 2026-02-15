@@ -347,6 +347,18 @@ export type QuoteOutput = {
     kWContributorShares?: Record<string, number>;
     assumptions?: string[];
   };
+
+  // Margin policy (Feb 2026) — sell price commercialization
+  margin?: {
+    sellPriceTotal: number;
+    baseCostTotal: number;
+    marginDollars: number;
+    marginPercent: number;
+    marginBand: string;
+    policyVersion: string;
+    needsReview: boolean;
+    warnings: string[];
+  };
 };
 
 export type BusinessDraft = {
@@ -3936,6 +3948,19 @@ export function useWizardV7() {
                   : undefined,
                 pricingSnapshotId: pricingResult.data.pricingSnapshotId,
                 pricingComplete: true,
+                // Margin policy (Feb 2026)
+                margin: pricingResult.data.margin
+                  ? {
+                      sellPriceTotal: pricingResult.data.margin.sellPriceTotal,
+                      baseCostTotal: pricingResult.data.margin.baseCostTotal,
+                      marginDollars: pricingResult.data.margin.marginDollars,
+                      marginPercent: pricingResult.data.margin.marginPercent,
+                      marginBand: pricingResult.data.margin.marginBand,
+                      policyVersion: pricingResult.data.margin.policyVersion,
+                      needsReview: pricingResult.data.margin.needsReview,
+                      warnings: pricingResult.data.margin.warnings,
+                    }
+                  : undefined,
               }
             : {
                 // MONOTONIC: pricingComplete=false means NO financial fields populated

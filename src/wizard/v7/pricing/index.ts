@@ -13,6 +13,7 @@ export {
   getSizingDefaults,
   generatePricingSnapshotId,
   generatePricingRunId,
+  applyMarginToQuote,
   type ContractQuoteResult,
   type PricingQuoteResult,
   type PricingQuoteData,
