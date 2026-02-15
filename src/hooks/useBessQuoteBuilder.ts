@@ -331,7 +331,7 @@ export function useBessQuoteBuilder() {
   const [valueKwh, setValueKwh] = useState(0.25);
   const [utilization, setUtilization] = useState(0.3);
   const [warranty, setWarranty] = useState("10 years");
-  const [location, setLocation] = useState("UK (6%)");
+  const [location, setLocation] = useState("California, USA");
   const [selectedCountry, setSelectedCountry] = useState("United States");
   const [currency, setCurrency] = useState("USD");
 
@@ -621,7 +621,7 @@ export function useBessQuoteBuilder() {
     setValueKwh(data.valueKwh || 0.25);
     setUtilization(data.utilization || 0.3);
     setWarranty(data.warranty || "10 years");
-    setLocation(data.location || "UK (6%)");
+    setLocation(data.location || "California, USA");
     setCurrency(data.currency || "USD");
     setBatteryKwh(data.batteryKwh || 140);
     setPcsKw(data.pcsKw || 150);
@@ -659,7 +659,7 @@ export function useBessQuoteBuilder() {
     setValueKwh(data.valueKwh || 0.25);
     setUtilization(data.utilization || 0.3);
     setWarranty(data.warranty || "10 years");
-    setLocation(data.location || "UK (6%)");
+    setLocation(data.location || "California, USA");
     setBatteryKwh(data.batteryKwh || 140);
     setPcsKw(data.pcsKw || 150);
     setBosPercent(data.bosPercent || 0.12);
