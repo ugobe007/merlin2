@@ -10,7 +10,6 @@
 import React, { useState, useEffect } from "react";
 import {
   X,
-  ArrowRight,
   Sliders,
   Landmark,
   FileSpreadsheet,
@@ -193,19 +192,12 @@ export default function ProQuoteHowItWorksModal({
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all"
+              style={{ background: 'transparent', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(251,191,36,0.06)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
             >
-              Close
-            </button>
-            <button
-              onClick={() => { onClose(); onOpenProQuote?.(); }}
-              className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold text-white transition-all"
-              style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(251,191,36,0.25)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(251,191,36,0.15)"; }}
-            >
-              Open ProQuote™
-              <ArrowRight className="w-3.5 h-3.5" />
+              Got It
             </button>
           </div>
         </div>
