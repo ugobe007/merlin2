@@ -372,7 +372,7 @@ export default function HeroSection({
           batterySystem: quoteResult.equipment.batteries.totalCost,
           pcs: quoteResult.equipment.inverters.totalCost,
           transformers: quoteResult.equipment.transformers.totalCost,
-          inverters: quoteResult.equipment.inverters.totalCost,
+          inverters: 0, // PCS field above already covers BESS inverters; solarInverters is separate
           switchgear: quoteResult.equipment.switchgear.totalCost,
           microgridControls: Math.round(quoteResult.costs.installationCost * 0.1), // ~10% of installation
           solar: 0,
