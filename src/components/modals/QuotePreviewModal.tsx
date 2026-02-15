@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel, PageBreak, ImageRun } from 'docx';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel, PageBreak, ImageRun, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
 import { generateCalculationBreakdown } from '../../utils/calculationFormulas';
 import { createCalculationTables } from '../../utils/wordHelpers';
@@ -97,9 +97,10 @@ function buildEquipmentGallery(config: {
   // Section header
   elements.push(
     new Paragraph({
-      children: [
-        new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "FBBF24", size: 22, font: "Helvetica" }),
-      ],
+      border: {
+        bottom: { color: "FBBF24", space: 2, style: BorderStyle.SINGLE, size: 6 },
+      },
+      children: [],
       spacing: { before: 400, after: 100 },
     }),
     new Paragraph({
@@ -427,7 +428,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
       sections: [{
         properties: {},
         children: [
-          // SALES HEADER - Lighter navy with Merlin branding & $/kWh callout
+          // SALES HEADER — Clean navy panel with Merlin branding
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: [
@@ -436,35 +437,30 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                   new TableCell({
                     width: { size: 65, type: WidthType.PERCENTAGE },
                     shading: { fill: "1E3350" },
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0 },
+                      bottom: { style: BorderStyle.NONE, size: 0 },
+                      left: { style: BorderStyle.NONE, size: 0 },
+                      right: { style: BorderStyle.NONE, size: 0 },
+                    },
                     children: [
                       new Paragraph({
                         children: [
-                          new TextRun({ text: "BATTERY ENERGY STORAGE", bold: true, size: 48, color: "FFFFFF", font: "Helvetica" }),
+                          new TextRun({ text: "BESS PROPOSAL", bold: true, size: 52, color: "FFFFFF", font: "Helvetica" }),
                         ],
-                        spacing: { before: 300 },
+                        spacing: { before: 300, after: 60 },
                       }),
                       new Paragraph({
                         children: [
-                          new TextRun({ text: "SYSTEM PROPOSAL", bold: true, size: 48, color: "FFFFFF", font: "Helvetica" }),
-                        ],
-                      }),
-                      new Paragraph({
-                        children: [
-                          new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 18, color: "FBBF24", font: "Helvetica" }),
-                        ],
-                        spacing: { before: 120, after: 120 },
-                      }),
-                      new Paragraph({
-                        children: [
-                          new TextRun({ text: `$${pricePerKWh}/kWh`, bold: true, size: 44, color: "FBBF24", font: "Helvetica" }),
-                          new TextRun({ text: "  Equipment Price", size: 22, color: "94A3B8", font: "Helvetica" }),
+                          new TextRun({ text: `$${pricePerKWh}/kWh`, bold: true, size: 40, color: "FBBF24", font: "Helvetica" }),
+                          new TextRun({ text: "  All-In Equipment", size: 20, color: "94A3B8", font: "Helvetica" }),
                         ],
                         spacing: { after: 80 },
                       }),
                       new Paragraph({
                         children: [
-                          new TextRun({ text: "✦ TrueQuote™ Verified", bold: true, size: 22, color: "FBBF24", font: "Helvetica" }),
-                          new TextRun({ text: "  •  Source-Backed Pricing", size: 20, color: "94A3B8", font: "Helvetica" }),
+                          new TextRun({ text: "✦ TrueQuote™ Verified", bold: true, size: 20, color: "FBBF24", font: "Helvetica" }),
+                          new TextRun({ text: "  ·  NREL, EIA, IEEE & industry sources", size: 18, color: "94A3B8", font: "Helvetica" }),
                         ],
                         spacing: { after: 300 },
                       }),
@@ -473,6 +469,12 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                   new TableCell({
                     width: { size: 35, type: WidthType.PERCENTAGE },
                     shading: { fill: "162844" },
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0 },
+                      bottom: { style: BorderStyle.NONE, size: 0 },
+                      left: { style: BorderStyle.NONE, size: 0 },
+                      right: { style: BorderStyle.NONE, size: 0 },
+                    },
                     children: [
                       ...(merlinImageData ? [
                         new Paragraph({
@@ -480,30 +482,30 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                             new ImageRun({
                               type: "png",
                               data: merlinImageData,
-                              transformation: { width: 130, height: 112 },
+                              transformation: { width: 110, height: 95 },
                             }),
                           ],
                           alignment: AlignmentType.CENTER,
-                          spacing: { before: 200, after: 80 },
+                          spacing: { before: 200, after: 60 },
                         }),
                       ] : [
                         new Paragraph({
-                          children: [new TextRun({ text: "🧙‍♂️", bold: true, size: 120, font: "Helvetica" })],
+                          children: [new TextRun({ text: "🧙‍♂️", bold: true, size: 100, font: "Helvetica" })],
                           alignment: AlignmentType.CENTER,
-                          spacing: { before: 200, after: 80 },
+                          spacing: { before: 200, after: 60 },
                         }),
                       ]),
                       new Paragraph({
-                        children: [new TextRun({ text: "MERLIN", bold: true, size: 52, color: "FBBF24", font: "Helvetica" })],
+                        children: [
+                          new TextRun({ text: "MERLIN", bold: true, size: 44, color: "FBBF24", font: "Helvetica" }),
+                        ],
                         alignment: AlignmentType.CENTER,
+                        spacing: { after: 20 },
                       }),
                       new Paragraph({
-                        children: [new TextRun({ text: "━━━━━━━━━━━━━", size: 18, color: "FBBF24", font: "Helvetica" })],
-                        alignment: AlignmentType.CENTER,
-                        spacing: { before: 50, after: 50 },
-                      }),
-                      new Paragraph({
-                        children: [new TextRun({ text: "Energy Solutions", italics: true, size: 24, color: "FFFFFF", font: "Helvetica" })],
+                        children: [
+                          new TextRun({ text: "Energy Solutions", italics: true, size: 22, color: "CBD5E1", font: "Helvetica" }),
+                        ],
                         alignment: AlignmentType.CENTER,
                         spacing: { after: 200 },
                       }),
@@ -514,39 +516,9 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
             ],
           }),
 
-          // TrueQuote™ Certification Banner
-          new Table({
-            width: { size: 100, type: WidthType.PERCENTAGE },
-            rows: [
-              new TableRow({
-                children: [
-                  new TableCell({
-                    shading: { fill: "FEF3C7" },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({ text: "  ✦  TrueQuote™ CERTIFIED  ✦  ", bold: true, size: 28, color: "92400E", font: "Helvetica" }),
-                          new TextRun({ text: " Every price traceable to NREL, EIA, IEEE & industry sources", size: 18, color: "78350F", font: "Helvetica" }),
-                        ],
-                        alignment: AlignmentType.CENTER,
-                        spacing: { before: 150, after: 150 },
-                      }),
-                    ],
-                  }),
-                ],
-              }),
-            ],
-          }),
-
-          new Paragraph({ text: "", spacing: { after: 300 } }),
+          new Paragraph({ text: "", spacing: { after: 200 } }),
 
           // PROJECT INFORMATION Table
-          new Paragraph({
-            children: [
-              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "FBBF24", size: 20 }),
-            ],
-            spacing: { before: 300, after: 100 },
-          }),
           new Paragraph({
             children: [new TextRun({ text: "PROJECT INFORMATION", bold: true, size: 30, color: "1E3350", font: "Helvetica" })],
             spacing: { before: 100, after: 200 },
@@ -618,10 +590,11 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
           // 1. EXECUTIVE SUMMARY
           new Paragraph({
-            children: [
-              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "FBBF24", size: 22, font: "Helvetica" }),
-            ],
-            spacing: { before: 400, after: 100 },
+            border: {
+              top: { color: "E2E8F0", space: 4, style: BorderStyle.SINGLE, size: 6 },
+            },
+            children: [],
+            spacing: { before: 300, after: 100 },
           }),
           new Paragraph({
             children: [new TextRun({ text: "1. EXECUTIVE SUMMARY", bold: true, size: 30, color: "FFFFFF", font: "Helvetica" })],
@@ -731,9 +704,10 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
           // 2. PROJECT OVERVIEW & VISUALIZATION
           new Paragraph({
-            children: [
-              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "FBBF24", size: 20 }),
-            ],
+            border: {
+              bottom: { color: "FBBF24", space: 2, style: BorderStyle.SINGLE, size: 6 },
+            },
+            children: [],
             spacing: { before: 400, after: 100 },
           }),
           new Paragraph({
@@ -791,9 +765,10 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
           // 3. EQUIPMENT QUOTE
           new Paragraph({
-            children: [
-              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "FBBF24", size: 22, font: "Helvetica" }),
-            ],
+            border: {
+              bottom: { color: "FBBF24", space: 2, style: BorderStyle.SINGLE, size: 6 },
+            },
+            children: [],
             spacing: { before: 400, after: 100 },
           }),
           new Paragraph({
@@ -1028,9 +1003,10 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
           // SYSTEM ARCHITECTURE DIAGRAM
           new Paragraph({
-            children: [
-              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "FBBF24", size: 22, font: "Helvetica" }),
-            ],
+            border: {
+              bottom: { color: "FBBF24", space: 2, style: BorderStyle.SINGLE, size: 6 },
+            },
+            children: [],
             spacing: { before: 200, after: 100 },
           }),
           new Paragraph({
@@ -1129,9 +1105,10 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
           // 4. RETURN ON INVESTMENT
           new Paragraph({
-            children: [
-              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "FBBF24", size: 22, font: "Helvetica" }),
-            ],
+            border: {
+              bottom: { color: "FBBF24", space: 2, style: BorderStyle.SINGLE, size: 6 },
+            },
+            children: [],
             spacing: { before: 400, after: 100 },
           }),
           new Paragraph({
@@ -1303,9 +1280,10 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
           
           // TRUEQUOTE™ VERIFICATION
           new Paragraph({
-            children: [
-              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "FBBF24", size: 20 }),
-            ],
+            border: {
+              bottom: { color: "FBBF24", space: 2, style: BorderStyle.SINGLE, size: 6 },
+            },
+            children: [],
             spacing: { before: 400, after: 100 },
           }),
           new Paragraph({
