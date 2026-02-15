@@ -597,7 +597,7 @@ export default function AdvancedQuoteBuilder({
       icon: <Landmark className="w-8 h-8" />,
       title: "Bank-Ready Model",
       description: "3-Statement pro-forma with DSCR, LCOS, IRR, MACRS, and revenue stacking",
-      color: "from-amber-400 via-yellow-500 to-orange-600",
+      color: "from-emerald-400 via-teal-500 to-green-600",
       action: () => setViewMode("professional-model"),
       tier: "professional",
       badge: "NEW",
@@ -629,7 +629,7 @@ export default function AdvancedQuoteBuilder({
       icon: <BarChart3 className="w-8 h-8" />,
       title: "Market Analytics",
       description: "Market trends, pricing intelligence, and competitive analysis",
-      color: "from-orange-400 via-amber-500 to-orange-600",
+      color: "from-blue-400 via-sky-500 to-cyan-600",
       action: () => {
         onClose();
         onOpenMarketIntel?.();
@@ -980,7 +980,7 @@ export default function AdvancedQuoteBuilder({
         {/* LANDING PAGE VIEW */}
         {viewMode === "landing" && (
           <>
-            {/* Premium header - sleek dark with amber accent line */}
+            {/* Premium header - sleek dark with emerald accent line */}
             <div className="sticky top-0 z-10 backdrop-blur-xl" style={{ background: 'rgba(15, 17, 23, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <div className="max-w-7xl mx-auto px-6 py-4">
                 <div className="flex items-center justify-between">
@@ -1008,12 +1008,12 @@ export default function AdvancedQuoteBuilder({
                     <button
                       onClick={() => setShowHowItWorks(true)}
                       className="group flex items-center gap-2 rounded-full px-4 py-2 transition-all duration-200 hover:scale-105"
-                      style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.2)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.1)'; }}
+                      style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                     >
-                      <Sparkles className="w-4 h-4 text-amber-400" />
-                      <span className="text-xs font-semibold text-amber-300">How It Works</span>
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      <span className="text-xs font-semibold text-slate-200">How It Works</span>
                     </button>
 
                     <button
@@ -1101,9 +1101,9 @@ export default function AdvancedQuoteBuilder({
             {/* BESS Market Pricing Intelligence - Clean horizontal strip */}
             <div className="max-w-7xl mx-auto px-6 pt-6 pb-4">
               <div className="flex flex-wrap items-center justify-center gap-3">
-                <div className="flex items-center gap-2 px-4 py-2" style={{ background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.2)', borderRadius: 20 }}>
-                  <TrendingUp className="w-4 h-4" style={{ color: '#fbbf24' }} />
-                  <span className="text-sm font-semibold" style={{ color: '#fbbf24' }}>Market Pricing</span>
+                <div className="flex items-center gap-2 px-4 py-2" style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: 20 }}>
+                  <TrendingUp className="w-4 h-4" style={{ color: '#34d399' }} />
+                  <span className="text-sm font-semibold" style={{ color: '#34d399' }}>Market Pricing</span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2" style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: 20 }}>
                   <Battery className="w-4 h-4 text-blue-400" />
@@ -1145,7 +1145,7 @@ export default function AdvancedQuoteBuilder({
                   {/* Content on the right */}
                   <div className="flex-1">
                     {/* START HERE badge */}
-                    <span className="inline-block px-3 py-1 text-xs font-semibold rounded-md mb-5" style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.2)' }}>
+                    <span className="inline-block px-3 py-1 text-xs font-semibold rounded-md mb-5" style={{ background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.2)' }}>
                       START HERE
                     </span>
 
@@ -1161,7 +1161,7 @@ export default function AdvancedQuoteBuilder({
                     {/* Feature highlights */}
                     <div className="grid md:grid-cols-2 gap-4 mb-8">
                       <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <Sparkles className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#fbbf24' }} />
+                        <Sparkles className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#34d399' }} />
                         <div>
                           <p className="font-semibold text-white mb-1">Professional Tools</p>
                           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -1180,7 +1180,7 @@ export default function AdvancedQuoteBuilder({
                       </div>
                     </div>
 
-                    {/* Large Launch button - amber to match brand */}
+                    {/* Large Launch button - emerald to match brand */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1190,9 +1190,9 @@ export default function AdvancedQuoteBuilder({
                         }
                       }}
                       className="group/btn w-full md:w-auto px-8 py-3.5 font-semibold text-base rounded-lg flex items-center justify-center gap-3 transition-all duration-200"
-                      style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.25)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.15)'; }}
+                      style={{ background: 'transparent', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(16,185,129,0.08)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                     >
                       <Sliders className="w-5 h-5" />
                       <span>Launch Configuration Tool</span>
@@ -1280,7 +1280,7 @@ export default function AdvancedQuoteBuilder({
                           </span>
                         )}
                         {extractedData.existingInfrastructure?.hasSolar && (
-                          <span className="px-3 py-1.5 bg-amber-800/50 rounded-lg text-sm text-amber-300 border border-amber-700/50">
+                          <span className="px-3 py-1.5 bg-emerald-800/50 rounded-lg text-sm text-emerald-300 border border-emerald-700/50">
                             ☀️ {extractedData.existingInfrastructure.solarKW} kW solar
                           </span>
                         )}
@@ -1313,8 +1313,8 @@ export default function AdvancedQuoteBuilder({
                   {/* Tools explanation */}
                   <div className="px-6 pb-2 space-y-3">
                     <div className="flex items-start gap-4 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ background: 'rgba(251, 191, 36, 0.1)' }}>
-                        <Sliders className="w-5 h-5" style={{ color: '#fbbf24' }} />
+                      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+                        <Sliders className="w-5 h-5" style={{ color: '#34d399' }} />
                       </div>
                       <div>
                         <h3 className="font-semibold text-white text-sm">System Configuration</h3>
@@ -1354,7 +1354,7 @@ export default function AdvancedQuoteBuilder({
                     <button
                       onClick={() => setShowWelcomePopup(false)}
                       className="w-full font-semibold py-3 px-6 rounded-lg transition-all"
-                      style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
+                      style={{ background: 'transparent', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)' }}
                     >
                       Let's Build a Quote →
                     </button>
@@ -1410,22 +1410,22 @@ export default function AdvancedQuoteBuilder({
                         onClick={tool.action}
                         className="group flex items-start gap-4 rounded-lg p-4 text-left transition-colors duration-150 relative"
                         style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(251,191,36,0.15)'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
                       >
                         {"badge" in tool && tool.badge && (
-                          <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
+                          <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399' }}>
                             {tool.badge}
                           </span>
                         )}
-                        <div className="p-2 rounded-md flex-shrink-0" style={{ background: 'rgba(251,191,36,0.08)' }}>
-                          <div style={{ color: '#fbbf24' }} className="[&>svg]:w-5 [&>svg]:h-5">{tool.icon}</div>
+                        <div className="p-2 rounded-md flex-shrink-0" style={{ background: 'rgba(16,185,129,0.08)' }}>
+                          <div style={{ color: '#34d399' }} className="[&>svg]:w-5 [&>svg]:h-5">{tool.icon}</div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-semibold text-white mb-0.5">{tool.title}</h4>
                           <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{tool.description}</p>
                         </div>
-                        <ArrowRight className="w-4 h-4 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all" style={{ color: '#fbbf24' }} />
+                        <ArrowRight className="w-4 h-4 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all" style={{ color: '#34d399' }} />
                       </button>
                     ))}
                 </div>
@@ -1451,10 +1451,10 @@ export default function AdvancedQuoteBuilder({
                           onMouseEnter={(e) => { if (!isLocked) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; } }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
                         >
-                          <div className="p-2 rounded-md flex-shrink-0" style={{ background: isLocked ? 'rgba(255,255,255,0.04)' : 'rgba(168,85,247,0.08)' }}>
+                          <div className="p-2 rounded-md flex-shrink-0" style={{ background: isLocked ? 'rgba(255,255,255,0.04)' : 'rgba(16,185,129,0.08)' }}>
                             {isLocked
                               ? <Lock className="w-5 h-5" style={{ color: 'rgba(255,255,255,0.25)' }} />
-                              : <div style={{ color: '#a855f7' }} className="[&>svg]:w-5 [&>svg]:h-5">{tool.icon}</div>
+                              : <div style={{ color: '#34d399' }} className="[&>svg]:w-5 [&>svg]:h-5">{tool.icon}</div>
                             }
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1509,8 +1509,8 @@ export default function AdvancedQuoteBuilder({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowHowItWorks(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-amber-500/[0.06]"
-                    style={{ background: 'transparent', border: '1px solid rgba(251,191,36,0.35)', color: '#fbbf24' }}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-white/[0.06]"
+                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}
                   >
                     <Sparkles className="w-4 h-4" />
                     <span className="hidden sm:inline">How It Works</span>
@@ -1525,7 +1525,7 @@ export default function AdvancedQuoteBuilder({
                   </button>
                   <button
                     onClick={() => setViewMode("professional-model")}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-transparent hover:bg-amber-500/[0.06] text-amber-300 rounded-lg text-sm font-medium transition-all border border-amber-500/35"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-transparent hover:bg-white/[0.06] text-slate-200 rounded-lg text-sm font-medium transition-all border border-white/15"
                   >
                     <Landmark className="w-4 h-4" />
                     <span className="hidden sm:inline">Bank Model</span>
@@ -1690,7 +1690,7 @@ export default function AdvancedQuoteBuilder({
                       className="h-[2px] w-full"
                       style={{
                         background: financialMetrics
-                          ? 'linear-gradient(90deg, #34d399 0%, #38bdf8 25%, #a78bfa 50%, #fbbf24 75%, #34d399 100%)'
+                          ? 'linear-gradient(90deg, #34d399 0%, #38bdf8 25%, #6ee7b7 50%, #38bdf8 75%, #34d399 100%)'
                           : 'linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 100%)',
                       }}
                     />
@@ -1702,8 +1702,8 @@ export default function AdvancedQuoteBuilder({
                           {/* System badge - left */}
                           <div className="flex items-center gap-2 shrink-0">
                             <div
-                              className={`w-2.5 h-2.5 rounded-full ${isCalculating ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`}
-                              style={{ boxShadow: isCalculating ? '0 0 8px rgba(251,191,36,0.5)' : '0 0 8px rgba(52,211,153,0.5)' }}
+                              className={`w-2.5 h-2.5 rounded-full ${isCalculating ? 'bg-blue-400 animate-pulse' : 'bg-emerald-400'}`}
+                              style={{ boxShadow: isCalculating ? '0 0 8px rgba(59,130,246,0.5)' : '0 0 8px rgba(52,211,153,0.5)' }}
                             />
                             <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline" style={{ color: 'rgba(52,211,153,0.7)' }}>
                               {isCalculating ? 'Updating' : 'Live'}
@@ -1787,7 +1787,7 @@ export default function AdvancedQuoteBuilder({
                                 <span className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
                                   10yr ROI
                                 </span>
-                                <span className="text-lg font-extrabold tabular-nums leading-tight" style={{ color: '#fbbf24' }}>
+                                <span className="text-lg font-extrabold tabular-nums leading-tight" style={{ color: '#34d399' }}>
                                   {financialMetrics.roi10Year.toFixed(0)}%
                                 </span>
                               </div>
@@ -2093,8 +2093,8 @@ export default function AdvancedQuoteBuilder({
                 >
                   <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                     <h3 className="text-lg font-semibold text-white flex items-center gap-3">
-                      <div className="p-2 rounded-lg" style={{ background: 'rgba(251,191,36,0.1)' }}>
-                        <DollarSign className="w-5 h-5" style={{ color: '#fbbf24' }} />
+                      <div className="p-2 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)' }}>
+                        <DollarSign className="w-5 h-5" style={{ color: '#34d399' }} />
                       </div>
                       Financial Parameters
                       <span className="text-xs font-normal ml-auto" style={{ color: 'rgba(255,255,255,0.35)' }}>
@@ -2110,13 +2110,13 @@ export default function AdvancedQuoteBuilder({
                           Utility Rate
                         </label>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'rgba(251,191,36,0.6)' }}>$</span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'rgba(16,185,129,0.6)' }}>$</span>
                           <input
                             type="number"
                             value={utilityRate}
                             onChange={(e) => setUtilityRate(parseFloat(e.target.value) || 0)}
                             step="0.01"
-                            className="w-full pl-7 pr-14 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-amber-500/50 focus:outline-none"
+                            className="w-full pl-7 pr-14 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
                             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>/kWh</span>
@@ -2128,12 +2128,12 @@ export default function AdvancedQuoteBuilder({
                           Demand Charge
                         </label>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'rgba(251,191,36,0.6)' }}>$</span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'rgba(16,185,129,0.6)' }}>$</span>
                           <input
                             type="number"
                             value={demandCharge}
                             onChange={(e) => setDemandCharge(parseFloat(e.target.value) || 0)}
-                            className="w-full pl-7 pr-12 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-amber-500/50 focus:outline-none"
+                            className="w-full pl-7 pr-12 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
                             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>/kW</span>
@@ -2149,7 +2149,7 @@ export default function AdvancedQuoteBuilder({
                             type="number"
                             value={cyclesPerYear}
                             onChange={(e) => setCyclesPerYear(parseFloat(e.target.value) || 1)}
-                            className="w-full px-3 pr-14 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-amber-500/50 focus:outline-none"
+                            className="w-full px-3 pr-14 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
                             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>cyc/yr</span>
@@ -2165,7 +2165,7 @@ export default function AdvancedQuoteBuilder({
                             type="number"
                             value={warrantyYears}
                             onChange={(e) => setWarrantyYears(parseFloat(e.target.value) || 10)}
-                            className="w-full px-3 pr-12 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-amber-500/50 focus:outline-none"
+                            className="w-full px-3 pr-12 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
                             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>years</span>
@@ -2174,10 +2174,10 @@ export default function AdvancedQuoteBuilder({
                     </div>
 
                     {/* Advanced Financials Link */}
-                    <div className="mt-6 p-4 rounded-xl" style={{ background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.15)' }}>
+                    <div className="mt-6 p-4 rounded-xl" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Landmark className="w-5 h-5" style={{ color: '#fbbf24' }} />
+                          <Landmark className="w-5 h-5" style={{ color: '#34d399' }} />
                           <div>
                             <p className="text-sm font-semibold text-white">
                               Need Bank-Ready Financials?
@@ -2190,7 +2190,7 @@ export default function AdvancedQuoteBuilder({
                         <button
                           onClick={() => setViewMode("professional-model")}
                           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-                          style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.2)' }}
+                          style={{ background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.2)' }}
                         >
                           Open Pro Model
                           <ArrowRight className="w-4 h-4" />
@@ -2358,7 +2358,7 @@ export default function AdvancedQuoteBuilder({
                     {/* Electrical Parameters - INPUT FIELDS */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                       {/* System Watts */}
-                      <div className="rounded-xl p-4" style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                      <div className="rounded-xl p-4" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
                         <label className="block text-xs mb-2 font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
                           System Power (Watts)
                         </label>
@@ -2564,7 +2564,7 @@ export default function AdvancedQuoteBuilder({
                           context="IRA 2022 Section 48E + NREL ATB 2024 PV-Plus-Battery guidance"
                         />
                         {/* ═══════════════ SOLAR PV SYSTEM ═══════════════ */}
-                        <div className="rounded-xl p-6" style={{ background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.15)' }}>
+                        <div className="rounded-xl p-6" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
                           <div className="flex items-center justify-between mb-6">
                             <h4 className="text-base font-semibold flex items-center gap-2 text-white">
                               ☀️ Solar PV System
@@ -2574,7 +2574,7 @@ export default function AdvancedQuoteBuilder({
                                 type="checkbox"
                                 checked={solarPVIncluded}
                                 onChange={(e) => setSolarPVIncluded(e.target.checked)}
-                                className="w-5 h-5 rounded border-2 border-white/20 text-amber-500 focus:ring-amber-500/40 bg-transparent"
+                                className="w-5 h-5 rounded border-2 border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
                               />
                               <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
                                 Include Solar
@@ -2621,8 +2621,8 @@ export default function AdvancedQuoteBuilder({
                                           onClick={() => setSolarInstallType(opt.value)}
                                           className="p-3 rounded-lg text-left transition-all"
                                           style={{
-                                            background: solarInstallType === opt.value ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.04)',
-                                            border: solarInstallType === opt.value ? '1px solid rgba(251,191,36,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                                            background: solarInstallType === opt.value ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
+                                            border: solarInstallType === opt.value ? '1px solid rgba(16,185,129,0.4)' : '1px solid rgba(255,255,255,0.08)',
                                           }}
                                         >
                                           <span className="text-sm font-semibold text-white">{opt.label}</span>
@@ -2645,7 +2645,7 @@ export default function AdvancedQuoteBuilder({
                                           onChange={(e) => setSolarRoofSpaceSqFt(parseFloat(e.target.value) || 0)}
                                           step="500"
                                           min="0"
-                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                         />
                                       </div>
@@ -2661,7 +2661,7 @@ export default function AdvancedQuoteBuilder({
                                           onChange={(e) => setSolarCanopySqFt(parseFloat(e.target.value) || 0)}
                                           step="500"
                                           min="0"
-                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                         />
                                       </div>
@@ -2677,7 +2677,7 @@ export default function AdvancedQuoteBuilder({
                                           onChange={(e) => setSolarGroundAcres(parseFloat(e.target.value) || 0)}
                                           step="0.5"
                                           min="0"
-                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                         />
                                       </div>
@@ -2693,7 +2693,7 @@ export default function AdvancedQuoteBuilder({
                                         step="0.5"
                                         min="2"
                                         max="8"
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                       />
                                       <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Southwest: 6-7h | Midwest: 4-5h | Northeast: 3-4h</p>
@@ -2701,19 +2701,19 @@ export default function AdvancedQuoteBuilder({
                                   </div>
 
                                   {/* Solar Sizing Tool - recommendation banner */}
-                                  <div className="rounded-lg p-4" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                                  <div className="rounded-lg p-4" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
                                     <div className="flex items-center justify-between">
                                       <div>
-                                        <p className="text-sm font-bold text-amber-300">🔧 Solar Sizing Tool</p>
+                                        <p className="text-sm font-bold text-emerald-300">🔧 Solar Sizing Tool</p>
                                         <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                          Your available space supports up to <strong className="text-amber-200">{maxSolarKWFromSpace.toLocaleString()} kW</strong> ({maxPanelsFromSpace.toLocaleString()} panels)
+                                          Your available space supports up to <strong className="text-emerald-200">{maxSolarKWFromSpace.toLocaleString()} kW</strong> ({maxPanelsFromSpace.toLocaleString()} panels)
                                         </p>
                                       </div>
                                       {solarCapacityKW !== maxSolarKWFromSpace && maxSolarKWFromSpace > 0 && (
                                         <button
                                           onClick={() => setSolarCapacityKW(maxSolarKWFromSpace)}
                                           className="px-4 py-2 rounded-lg text-xs font-bold transition-all"
-                                          style={{ background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}
+                                          style={{ background: 'transparent', border: '1px solid rgba(16,185,129,0.35)', color: '#34d399' }}
                                         >
                                           Use Max
                                         </button>
@@ -2738,7 +2738,7 @@ export default function AdvancedQuoteBuilder({
                                         onChange={(e) => setSolarCapacityKW(parseFloat(e.target.value) || 0)}
                                         step="50"
                                         min="0"
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                       />
                                     </div>
@@ -2749,7 +2749,7 @@ export default function AdvancedQuoteBuilder({
                                       <select
                                         value={solarPanelType}
                                         onChange={(e) => setSolarPanelType(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                       >
                                         <option value="monocrystalline">Monocrystalline (20-22%)</option>
@@ -2770,7 +2770,7 @@ export default function AdvancedQuoteBuilder({
                                         min="10"
                                         max="25"
                                         step="0.5"
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                       />
                                     </div>
@@ -2785,7 +2785,7 @@ export default function AdvancedQuoteBuilder({
                                       <select
                                         value={solarInverterType}
                                         onChange={(e) => setSolarInverterType(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                       >
                                         <option value="string">String Inverter</option>
@@ -2801,7 +2801,7 @@ export default function AdvancedQuoteBuilder({
                                       <select
                                         value={solarTrackingType}
                                         onChange={(e) => setSolarTrackingType(e.target.value as 'fixed' | 'single-axis' | 'dual-axis')}
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                       >
                                         <option value="fixed">Fixed Tilt (lowest cost)</option>
@@ -2812,10 +2812,10 @@ export default function AdvancedQuoteBuilder({
                                   </div>
 
                                   {/* Production Estimate */}
-                                  <div className="rounded-xl p-4" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)' }}>
-                                    <p className="text-sm text-amber-300 font-bold mb-2">
+                                  <div className="rounded-xl p-4" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                                    <p className="text-sm text-emerald-300 font-bold mb-2">
                                       ☀️ Estimated Annual Production:{" "}
-                                      <strong className="text-amber-200">
+                                      <strong className="text-emerald-200">
                                         {adjustedAnnualKWh.toLocaleString()} kWh/year
                                       </strong>{" "}
                                       ({solarSizing.sunHours} sun-hrs/yr{solarTrackingType !== 'fixed' ? ` + ${solarTrackingType} tracking` : ''})
@@ -3076,10 +3076,10 @@ export default function AdvancedQuoteBuilder({
                         </div>
 
                         {/* ═══════════════ GENERATOR SYSTEM (UNIFIED) ═══════════════ */}
-                        <div className="rounded-xl p-6" style={{ background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.15)' }}>
+                        <div className="rounded-xl p-6" style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)' }}>
                           <div className="flex items-center justify-between mb-4">
                             <h4 className="text-base font-semibold flex items-center gap-2 text-white">
-                              <GitBranch className="w-5 h-5 text-orange-400" />
+                              <GitBranch className="w-5 h-5 text-emerald-400" />
                               Generator System
                             </h4>
                             <label className="flex items-center gap-2 cursor-pointer">
@@ -3087,7 +3087,7 @@ export default function AdvancedQuoteBuilder({
                                 type="checkbox"
                                 checked={generatorIncluded}
                                 onChange={(e) => setGeneratorIncluded(e.target.checked)}
-                                className="w-5 h-5 rounded border-white/20 text-orange-500 focus:ring-orange-500/40 bg-transparent"
+                                className="w-5 h-5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
                               />
                               <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
                                 Include Generator
@@ -3114,8 +3114,8 @@ export default function AdvancedQuoteBuilder({
                                       onClick={() => setGeneratorFuelTypeSelected(opt.value)}
                                       className="p-3 rounded-lg text-left transition-all"
                                       style={{
-                                        background: generatorFuelTypeSelected === opt.value ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
-                                        border: generatorFuelTypeSelected === opt.value ? '1px solid rgba(249,115,22,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                                        background: generatorFuelTypeSelected === opt.value ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)',
+                                        border: generatorFuelTypeSelected === opt.value ? '1px solid rgba(59,130,246,0.4)' : '1px solid rgba(255,255,255,0.08)',
                                       }}
                                     >
                                       <span className="text-sm font-bold text-white">{opt.label}</span>
@@ -3136,7 +3136,7 @@ export default function AdvancedQuoteBuilder({
                                     onChange={(e) => setGeneratorCapacityKW(parseFloat(e.target.value) || 0)}
                                     step="50"
                                     min="0"
-                                    className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-orange-500/40 focus:outline-none"
+                                    className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                     style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                   />
                                 </div>
@@ -3196,8 +3196,8 @@ export default function AdvancedQuoteBuilder({
                                       }}
                                       className="p-3 rounded-lg text-left transition-all"
                                       style={{
-                                        background: generatorUseCases.includes(opt.value) ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.04)',
-                                        border: generatorUseCases.includes(opt.value) ? '1px solid rgba(249,115,22,0.35)' : '1px solid rgba(255,255,255,0.08)',
+                                        background: generatorUseCases.includes(opt.value) ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.04)',
+                                        border: generatorUseCases.includes(opt.value) ? '1px solid rgba(59,130,246,0.35)' : '1px solid rgba(255,255,255,0.08)',
                                       }}
                                     >
                                       <span className="text-sm font-semibold text-white">{opt.label}</span>
@@ -3208,7 +3208,7 @@ export default function AdvancedQuoteBuilder({
                               </div>
 
                               {/* N+1 Redundancy */}
-                              <div className="flex items-center justify-between rounded-lg p-4" style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.12)' }}>
+                              <div className="flex items-center justify-between rounded-lg p-4" style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.12)' }}>
                                 <div>
                                   <p className="text-sm font-semibold text-white">N+1 Redundancy</p>
                                   <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
@@ -3220,13 +3220,13 @@ export default function AdvancedQuoteBuilder({
                                     type="checkbox"
                                     checked={generatorRedundancy}
                                     onChange={(e) => setGeneratorRedundancy(e.target.checked)}
-                                    className="w-5 h-5 rounded border-white/20 text-orange-500 focus:ring-orange-500/40 bg-transparent"
+                                    className="w-5 h-5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
                                   />
                                 </label>
                               </div>
 
                               {/* Generator Info */}
-                              <div className="rounded p-3" style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.1)' }}>
+                              <div className="rounded p-3" style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.1)' }}>
                                 <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
                                   💡 <strong className="text-white">{generatorFuelTypeSelected === 'linear' ? 'Mainspring' : generatorFuelTypeSelected === 'natural-gas' ? 'Natural Gas' : generatorFuelTypeSelected === 'dual-fuel' ? 'Dual-Fuel' : 'Diesel'}:</strong>{' '}
                                   {generatorFuelTypeSelected === 'natural-gas' ? 'Cleaner than diesel, continuous runtime with utility gas connection. Lower emissions, quieter operation.' :
@@ -3241,7 +3241,7 @@ export default function AdvancedQuoteBuilder({
                         </div>
 
                         {/* ═══════════════ EV CHARGER SYSTEM (EXPANDED) ═══════════════ */}
-                        <div className="rounded-xl p-6" style={{ background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                        <div className="rounded-xl p-6" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
                           <div className="flex items-center justify-between mb-4">
                             <h4 className="text-base font-semibold flex items-center gap-2 text-white">
                               🔌 EV Charging System
@@ -3251,7 +3251,7 @@ export default function AdvancedQuoteBuilder({
                                 type="checkbox"
                                 checked={evChargersIncluded}
                                 onChange={(e) => setEvChargersIncluded(e.target.checked)}
-                                className="w-5 h-5 rounded border-white/20 text-purple-500 focus:ring-purple-500/40 bg-transparent"
+                                className="w-5 h-5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
                               />
                               <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
                                 Include EV Chargers
@@ -3317,7 +3317,7 @@ export default function AdvancedQuoteBuilder({
                               <div className="rounded-lg p-4" style={{ background: 'rgba(251,146,60,0.05)', border: '1px solid rgba(251,146,60,0.12)' }}>
                                 <div className="flex items-center gap-2 mb-3">
                                   <span className="text-base">🟠</span>
-                                  <h5 className="text-sm font-bold text-orange-300">DC Fast Charging — DCFC</h5>
+                                  <h5 className="text-sm font-bold text-emerald-300">DC Fast Charging — DCFC</h5>
                                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full ml-auto" style={{ background: 'rgba(251,146,60,0.12)', color: '#fdba74', border: '1px solid rgba(251,146,60,0.2)' }}>
                                     150 kW per port
                                   </span>
@@ -3333,7 +3333,7 @@ export default function AdvancedQuoteBuilder({
                                       onChange={(e) => setEvDCFCCount(Math.max(0, parseInt(e.target.value) || 0))}
                                       min="0"
                                       max="50"
-                                      className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-orange-500/40 focus:outline-none"
+                                      className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                       style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                     />
                                   </div>
@@ -3428,9 +3428,9 @@ export default function AdvancedQuoteBuilder({
                                         onClick={() => setEvChargersPerStation(n)}
                                         className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all"
                                         style={{
-                                          background: evChargersPerStation === n ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.04)',
-                                          border: evChargersPerStation === n ? '1px solid rgba(168,85,247,0.35)' : '1px solid rgba(255,255,255,0.08)',
-                                          color: evChargersPerStation === n ? '#c084fc' : 'rgba(255,255,255,0.5)',
+                                          background: evChargersPerStation === n ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
+                                          border: evChargersPerStation === n ? '1px solid rgba(16,185,129,0.35)' : '1px solid rgba(255,255,255,0.08)',
+                                          color: evChargersPerStation === n ? '#6ee7b7' : 'rgba(255,255,255,0.5)',
                                         }}
                                       >
                                         {n} Connector{n > 1 ? 's' : ''} / Station
@@ -3448,7 +3448,7 @@ export default function AdvancedQuoteBuilder({
                                     onChange={(e) => setEvAdditionalPowerKW(Math.max(0, parseFloat(e.target.value) || 0))}
                                     step="10"
                                     min="0"
-                                    className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-purple-500/40 focus:outline-none"
+                                    className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
                                     style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                                   />
                                   <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Lighting, signage, HVAC, convenience store, etc.</p>
@@ -3491,28 +3491,28 @@ export default function AdvancedQuoteBuilder({
                                 if (totalChargers === 0) return null;
 
                                 return (
-                                  <div className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(168,85,247,0.2)' }}>
+                                  <div className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(16,185,129,0.2)' }}>
                                     {/* Summary Header */}
-                                    <div className="px-4 py-3" style={{ background: 'rgba(168,85,247,0.1)' }}>
-                                      <h5 className="text-sm font-bold text-purple-200 flex items-center gap-2">
+                                    <div className="px-4 py-3" style={{ background: 'rgba(16,185,129,0.1)' }}>
+                                      <h5 className="text-sm font-bold text-emerald-200 flex items-center gap-2">
                                         📊 EV Infrastructure Summary
                                       </h5>
                                     </div>
 
-                                    <div className="p-4 space-y-4" style={{ background: 'rgba(168,85,247,0.04)' }}>
+                                    <div className="p-4 space-y-4" style={{ background: 'rgba(16,185,129,0.04)' }}>
                                       {/* Power Metrics */}
                                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         <div className="text-center p-2.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                                           <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Connected</p>
-                                          <p className="text-xl font-extrabold text-purple-300">{evConnectedKW.toFixed(0)} <span className="text-xs font-medium">kW</span></p>
+                                          <p className="text-xl font-extrabold text-emerald-300">{evConnectedKW.toFixed(0)} <span className="text-xs font-medium">kW</span></p>
                                         </div>
                                         <div className="text-center p-2.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                                           <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Peak Demand</p>
-                                          <p className="text-xl font-extrabold text-purple-300">{evTotalPeakKW.toFixed(0)} <span className="text-xs font-medium">kW</span></p>
+                                          <p className="text-xl font-extrabold text-emerald-300">{evTotalPeakKW.toFixed(0)} <span className="text-xs font-medium">kW</span></p>
                                         </div>
                                         <div className="text-center p-2.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                                           <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Stations</p>
-                                          <p className="text-xl font-extrabold text-purple-300">{evStations}</p>
+                                          <p className="text-xl font-extrabold text-emerald-300">{evStations}</p>
                                         </div>
                                         <div className="text-center p-2.5 rounded-lg" style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.12)' }}>
                                           <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>BESS Peak Shaving</p>
@@ -3534,7 +3534,7 @@ export default function AdvancedQuoteBuilder({
                                         {evDCFCCount > 0 && (
                                           <div className="flex items-center justify-between text-xs">
                                             <span style={{ color: 'rgba(255,255,255,0.5)' }}>🟠 DCFC × {evDCFCCount}</span>
-                                            <span className="font-semibold text-orange-300">${((evDCFCHW + evDCFCInstall) / 1000).toFixed(0)}K</span>
+                                            <span className="font-semibold text-emerald-300">${((evDCFCHW + evDCFCInstall) / 1000).toFixed(0)}K</span>
                                           </div>
                                         )}
                                         {evHPCCount > 0 && (
@@ -3551,7 +3551,7 @@ export default function AdvancedQuoteBuilder({
                                         )}
                                         <div className="flex items-center justify-between text-sm font-bold pt-2 mt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                                           <span className="text-white">Total EV Infrastructure</span>
-                                          <span className="text-purple-300">${evGrandTotal >= 1_000_000 ? `${(evGrandTotal / 1_000_000).toFixed(2)}M` : `${(evGrandTotal / 1000).toFixed(0)}K`}</span>
+                                          <span className="text-emerald-300">${evGrandTotal >= 1_000_000 ? `${(evGrandTotal / 1_000_000).toFixed(2)}M` : `${(evGrandTotal / 1000).toFixed(0)}K`}</span>
                                         </div>
                                       </div>
 
@@ -3595,17 +3595,17 @@ export default function AdvancedQuoteBuilder({
                             return (
                               <div className="space-y-4">
                                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                                  <div className="rounded p-3" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)' }}>
+                                  <div className="rounded p-3" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
                                     <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Renewable</p>
-                                    <p className="text-xl font-bold text-amber-400">{totalRenewableKW.toFixed(0)} kW</p>
+                                    <p className="text-xl font-bold text-emerald-400">{totalRenewableKW.toFixed(0)} kW</p>
                                   </div>
-                                  <div className="rounded p-3" style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.15)' }}>
+                                  <div className="rounded p-3" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
                                     <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Generator</p>
-                                    <p className="text-xl font-bold text-orange-400">{totalGenKW.toFixed(0)} kW</p>
+                                    <p className="text-xl font-bold text-emerald-400">{totalGenKW.toFixed(0)} kW</p>
                                   </div>
-                                  <div className="rounded p-3" style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                                  <div className="rounded p-3" style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.15)' }}>
                                     <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>EV Peak</p>
-                                    <p className="text-xl font-bold text-purple-400">{evPeakKW.toFixed(0)} kW</p>
+                                    <p className="text-xl font-bold text-teal-400">{evPeakKW.toFixed(0)} kW</p>
                                   </div>
                                   <div className="rounded p-3" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
                                     <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>BESS</p>
@@ -3624,7 +3624,7 @@ export default function AdvancedQuoteBuilder({
                                     {bessSolarSmoothing > 0 && (
                                       <div className="text-center">
                                         <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Solar Smoothing</p>
-                                        <p className="text-sm font-bold text-amber-300">{bessSolarSmoothing} kW</p>
+                                        <p className="text-sm font-bold text-emerald-300">{bessSolarSmoothing} kW</p>
                                       </div>
                                     )}
                                     {bessWindSmoothing > 0 && (
@@ -3636,13 +3636,13 @@ export default function AdvancedQuoteBuilder({
                                     {bessEVPeakShaving > 0 && (
                                       <div className="text-center">
                                         <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>EV Peak Shaving</p>
-                                        <p className="text-sm font-bold text-purple-300">{bessEVPeakShaving} kW</p>
+                                        <p className="text-sm font-bold text-emerald-300">{bessEVPeakShaving} kW</p>
                                       </div>
                                     )}
                                     {bessBackupBuffer > 0 && (
                                       <div className="text-center">
                                         <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Gen Backup Buffer</p>
-                                        <p className="text-sm font-bold text-orange-300">{bessBackupBuffer} kW</p>
+                                        <p className="text-sm font-bold text-emerald-300">{bessBackupBuffer} kW</p>
                                       </div>
                                     )}
                                   </div>
@@ -3654,7 +3654,7 @@ export default function AdvancedQuoteBuilder({
                                       <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
                                         Current BESS: {totalKW.toFixed(0)} kW / {(storageSizeMWh * 1000).toFixed(0)} kWh
                                         {bessRecommendedKW > totalKW * 1.1 && (
-                                          <span className="text-amber-400 ml-2">⚠️ Consider increasing BESS size</span>
+                                          <span className="text-emerald-400 ml-2">⚠️ Consider increasing BESS size</span>
                                         )}
                                       </p>
                                     </div>
@@ -3763,7 +3763,7 @@ export default function AdvancedQuoteBuilder({
                         )}
                         <div className="flex items-center gap-2">
                           <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>25yr ROI</span>
-                          <span className="text-sm font-bold text-amber-400">{(financialMetrics.roi25Year ?? 0).toFixed(0)}%</span>
+                          <span className="text-sm font-bold text-emerald-400">{(financialMetrics.roi25Year ?? 0).toFixed(0)}%</span>
                         </div>
                         <button
                           onClick={() => setShowFinancialSummary(true)}
@@ -3853,7 +3853,7 @@ export default function AdvancedQuoteBuilder({
                         onClose();
                       }}
                       className="flex-1 px-6 py-3 rounded-lg font-semibold transition-all"
-                      style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
+                      style={{ background: 'transparent', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)' }}
                     >
                       Generate Detailed Quote →
                     </button>
@@ -3862,7 +3862,7 @@ export default function AdvancedQuoteBuilder({
 
                 {/* Help Section */}
                 <div className="mt-8 rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <h3 className="font-semibold text-amber-400 mb-3 flex items-center gap-2">
+                  <h3 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
                     💡 Configuration Guidelines
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -4273,7 +4273,7 @@ export default function AdvancedQuoteBuilder({
                                 </>
                               )}
                               {generatorIncluded && (
-                                <tr className="border-b border-gray-200 bg-orange-50">
+                                <tr className="border-b border-gray-200 bg-blue-50">
                                   <td className="py-2 font-semibold text-gray-700">
                                     {generatorFuelTypeSelected === 'diesel' ? '🛢️ Diesel' : generatorFuelTypeSelected === 'natural-gas' ? '🔥 Natural Gas' : generatorFuelTypeSelected === 'dual-fuel' ? '⚡ Dual-Fuel' : '🔄 Linear'} Generator:
                                   </td>
@@ -4759,14 +4759,14 @@ export default function AdvancedQuoteBuilder({
         {viewMode === "interactive-dashboard" && (
           <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: '#060d1f' }}>
             <div className="rounded-2xl p-8 max-w-md text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <Sparkles className="w-16 h-16 text-amber-400 mx-auto mb-4" />
+              <Sparkles className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-2">Interactive Dashboard</h2>
               <p className="mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
                 This feature is being upgraded to V5. Please use the Custom Configuration for now.
               </p>
               <button
                 onClick={() => setViewMode("custom-config")}
-                className="px-6 py-3 bg-amber-500 text-black rounded-xl font-medium hover:bg-amber-400 transition-colors"
+                className="px-6 py-3 bg-transparent text-emerald-400 border border-emerald-500/35 rounded-xl font-medium hover:bg-emerald-500/10 transition-colors"
               >
                 Go to Custom Configuration
               </button>
@@ -4790,8 +4790,8 @@ export default function AdvancedQuoteBuilder({
                       <span className="text-sm font-medium">Back</span>
                     </button>
                     <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-                    <div className="p-2 rounded-lg" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)' }}>
-                      <Landmark className="w-5 h-5 text-amber-400" />
+                    <div className="p-2 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                      <Landmark className="w-5 h-5 text-emerald-400" />
                     </div>
                     <div>
                       <h1 className="text-xl font-semibold text-white">
@@ -4816,7 +4816,7 @@ export default function AdvancedQuoteBuilder({
               {/* Configuration Panel */}
               <div className="rounded-xl p-6 mb-8" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                  <Sliders className="w-5 h-5 text-amber-400" />
+                  <Sliders className="w-5 h-5 text-emerald-400" />
                   Model Configuration
                 </h2>
 
@@ -4845,7 +4845,7 @@ export default function AdvancedQuoteBuilder({
                       onChange={(e) =>
                         setSelectedISORegion(e.target.value as typeof selectedISORegion)
                       }
-                      className="w-full rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      className="w-full rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                       style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                     >
                       <option value="CAISO">CAISO (California)</option>
@@ -4869,7 +4869,7 @@ export default function AdvancedQuoteBuilder({
                       max="80"
                       value={projectLeverage}
                       onChange={(e) => setProjectLeverage(Number(e.target.value))}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                      className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                       style={{ background: 'rgba(255,255,255,0.1)' }}
                     />
                     <div className="flex justify-between text-xs text-slate-400 mt-1">
@@ -4891,7 +4891,7 @@ export default function AdvancedQuoteBuilder({
                         max="15"
                         value={interestRate}
                         onChange={(e) => setInterestRate(Number(e.target.value))}
-                        className="w-full rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                        className="w-full rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                       />
                       <span className="text-slate-400">%</span>
@@ -4937,7 +4937,7 @@ export default function AdvancedQuoteBuilder({
                       </div>
                       <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                         <p className="text-xs text-slate-500">Target IRR</p>
-                        <p className="text-lg font-bold text-amber-400">12-18%</p>
+                        <p className="text-lg font-bold text-emerald-400">12-18%</p>
                       </div>
                       <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                         <p className="text-xs text-slate-500">DSCR Target</p>
@@ -5016,7 +5016,7 @@ export default function AdvancedQuoteBuilder({
                     }}
                     disabled={isGeneratingModel}
                     className="flex items-center gap-3 font-semibold px-8 py-3.5 rounded-lg transition-all disabled:opacity-50"
-                    style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
+                    style={{ background: 'transparent', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)' }}
                   >
                     {isGeneratingModel ? (
                       <>
@@ -5039,7 +5039,7 @@ export default function AdvancedQuoteBuilder({
                   {/* Executive Summary */}
                   <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                      <FileSpreadsheet className="w-5 h-5 text-amber-400" />
+                      <FileSpreadsheet className="w-5 h-5 text-emerald-400" />
                       Executive Summary
                     </h2>
 
@@ -5065,7 +5065,7 @@ export default function AdvancedQuoteBuilder({
                         <p className="text-xs text-slate-400 uppercase tracking-wide">
                           Levered IRR
                         </p>
-                        <p className="text-2xl font-bold text-amber-300">
+                        <p className="text-2xl font-bold text-emerald-300">
                           {(professionalModel.summary.leveredIRR * 100).toFixed(1)}%
                         </p>
                       </div>
@@ -5118,7 +5118,7 @@ export default function AdvancedQuoteBuilder({
                         <p className="text-xs text-slate-500 uppercase tracking-wide">
                           Simple Payback
                         </p>
-                        <p className="text-2xl font-bold text-amber-400">
+                        <p className="text-2xl font-bold text-emerald-400">
                           {professionalModel.summary.simplePayback.toFixed(1)} yrs
                         </p>
                       </div>
@@ -5281,7 +5281,7 @@ export default function AdvancedQuoteBuilder({
                     {/* Cash Flow */}
                     <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                       <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-amber-400" />
+                        <DollarSign className="w-4 h-4 text-emerald-400" />
                         Cash Flow (Y1)
                       </h3>
                       <div className="space-y-2 text-sm">
@@ -5333,7 +5333,7 @@ export default function AdvancedQuoteBuilder({
                   {/* DSCR & Debt Schedule Chart (simplified table) */}
                   <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                      <Banknote className="w-5 h-5 text-amber-400" />
+                      <Banknote className="w-5 h-5 text-emerald-400" />
                       Debt Service Coverage Ratio (DSCR) by Year
                     </h3>
                     <div className="overflow-x-auto">
