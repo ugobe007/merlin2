@@ -1509,30 +1509,30 @@ export default function AdvancedQuoteBuilder({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowHowItWorks(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
-                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-amber-500/[0.06]"
+                    style={{ background: 'transparent', border: '1px solid rgba(251,191,36,0.35)', color: '#fbbf24' }}
                   >
                     <Sparkles className="w-4 h-4" />
                     <span className="hidden sm:inline">How It Works</span>
                   </button>
                   <button
                     onClick={() => setShowFinancialSummary(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
-                    style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#34d399' }}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-emerald-500/[0.06]"
+                    style={{ background: 'transparent', border: '1px solid rgba(16,185,129,0.35)', color: '#34d399' }}
                   >
                     <BarChart3 className="w-4 h-4" />
                     <span className="hidden sm:inline">Financial Summary</span>
                   </button>
                   <button
                     onClick={() => setViewMode("professional-model")}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-sm font-medium transition-all border border-amber-500/40"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-transparent hover:bg-amber-500/[0.06] text-amber-300 rounded-lg text-sm font-medium transition-all border border-amber-500/35"
                   >
                     <Landmark className="w-4 h-4" />
                     <span className="hidden sm:inline">Bank Model</span>
                   </button>
                   <button
                     onClick={() => setShowQuotePreview(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-lg text-sm font-medium transition-all border border-emerald-500/40"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-transparent hover:bg-emerald-500/[0.06] text-emerald-300 rounded-lg text-sm font-medium transition-all border border-emerald-500/35"
                   >
                     <Download className="w-4 h-4" />
                     <span className="hidden sm:inline">Export</span>
@@ -1588,7 +1588,7 @@ export default function AdvancedQuoteBuilder({
 
 
             {/* ═══ PROJECT INFO FORM - Account Creation ═══ */}
-            <div className="max-w-7xl mx-auto px-4 py-6 relative z-0">
+            <div className="max-w-[1440px] mx-auto px-4 py-6 relative z-0">
               <ProjectInfoForm
                 onComplete={(data) => {
                   setProjectInfo(data);
