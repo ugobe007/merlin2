@@ -3680,6 +3680,110 @@ export default function AdvancedQuoteBuilder({
                     )}
                   </div>
 
+                  {/* ProQuote™ Badge + Financial Summary */}
+                  <div className="rounded-xl p-6" style={{ background: 'rgba(59,130,246,0.04)', border: '1px solid rgba(59,130,246,0.12)' }}>
+                    {/* Badge row */}
+                    <div className="flex items-center gap-3 mb-5">
+                      <img
+                        src={badgeIcon}
+                        alt="ProQuote"
+                        className="w-10 h-10 object-contain"
+                        style={{ filter: 'drop-shadow(0 2px 6px rgba(59,130,246,0.35))' }}
+                      />
+                      <div>
+                        <span className="text-base font-bold text-white tracking-tight">ProQuote™</span>
+                        <span className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(59,130,246,0.2)', color: 'rgb(147,197,253)' }}>VERIFIED</span>
+                      </div>
+                    </div>
+
+                    {/* Financial metrics strip */}
+                    {financialMetrics && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {/* Gross Cost */}
+                        <div>
+                          <p className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Total Investment</p>
+                          <p className="text-xl font-bold text-white">
+                            {localSystemCost >= 1_000_000
+                              ? `$${(localSystemCost / 1_000_000).toFixed(2)}M`
+                              : `$${(localSystemCost / 1_000).toFixed(0)}K`}
+                          </p>
+                        </div>
+                        {/* ITC Credit */}
+                        {(financialMetrics.taxCredit ?? 0) > 0 && (
+                          <div>
+                            <p className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Federal ITC (30%)</p>
+                            <p className="text-xl font-bold text-emerald-400">
+                              −{financialMetrics.taxCredit >= 1_000_000
+                                ? `$${(financialMetrics.taxCredit / 1_000_000).toFixed(2)}M`
+                                : `$${(financialMetrics.taxCredit / 1_000).toFixed(0)}K`}
+                            </p>
+                          </div>
+                        )}
+                        {/* Net Cost */}
+                        <div>
+                          <p className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Net Cost</p>
+                          <p className="text-xl font-bold text-blue-400">
+                            {(financialMetrics.netCost ?? localSystemCost) >= 1_000_000
+                              ? `$${((financialMetrics.netCost ?? localSystemCost) / 1_000_000).toFixed(2)}M`
+                              : `$${((financialMetrics.netCost ?? localSystemCost) / 1_000).toFixed(0)}K`}
+                          </p>
+                        </div>
+                        {/* Annual Savings */}
+                        <div>
+                          <p className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Annual Savings</p>
+                          <p className="text-xl font-bold text-emerald-400">
+                            {estimatedAnnualSavings >= 1_000_000
+                              ? `$${(estimatedAnnualSavings / 1_000_000).toFixed(2)}M`
+                              : `$${(estimatedAnnualSavings / 1_000).toFixed(0)}K`}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payback + ROI row */}
+                    {financialMetrics && (
+                      <div className="flex items-center gap-6 mt-4 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>Payback</span>
+                          <span className="text-sm font-bold text-white">{paybackYears.toFixed(1)} yrs</span>
+                        </div>
+                        {(financialMetrics.npv ?? 0) > 0 && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>NPV</span>
+                            <span className="text-sm font-bold text-emerald-400">
+                              ${((financialMetrics.npv ?? 0) / 1_000_000).toFixed(1)}M
+                            </span>
+                          </div>
+                        )}
+                        {(financialMetrics.irr ?? 0) > 0 && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>IRR</span>
+                            <span className="text-sm font-bold text-blue-400">{(financialMetrics.irr ?? 0).toFixed(1)}%</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>25yr ROI</span>
+                          <span className="text-sm font-bold text-amber-400">{(financialMetrics.roi25Year ?? 0).toFixed(0)}%</span>
+                        </div>
+                        <button
+                          onClick={() => setShowFinancialSummary(true)}
+                          className="ml-auto text-[11px] font-semibold px-3 py-1 rounded-md transition-colors"
+                          style={{ color: 'rgb(147,197,253)', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}
+                        >
+                          View Full Breakdown →
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Loading state */}
+                    {!financialMetrics && isCalculating && (
+                      <div className="flex items-center gap-3 py-4">
+                        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>Calculating financials…</span>
+                      </div>
+                    )}
+                  </div>
+
                   {/* System Summary */}
                   <div className="rounded-xl p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <h3 className="text-lg font-semibold mb-6 text-white flex items-center gap-2">
