@@ -562,6 +562,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
       windMW,
       generatorMW,
 
+      gridConnection,
       application,
       location,
       tariffRegion,
