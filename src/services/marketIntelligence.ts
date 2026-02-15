@@ -102,30 +102,31 @@ export function calculateMarketAlignedBESSPricing(
 ) {
   const energyCapacityMWh = systemSizeMW * durationHours;
 
-  // Q1 2026 Market Reality Pricing (from actual vendor quotes)
-  // Market drivers: Chinese LFP oversupply continues, cell prices ~$50-60/kWh
-  // 
+  // Q1 2026 Market Reality Pricing — BATTERY PACK ONLY (cells + BMS + enclosure)
+  // Market drivers: Chinese LFP oversupply, cell prices ~$45-55/kWh
+  // PCS, transformers, switchgear, BoS, EPC are quoted SEPARATELY
+  //
   // UTILITY SCALE (≥3 MW):
-  //   - 50+ MW: $85-105/kWh → $95/kWh
-  //   - 10-50 MW: $90-115/kWh → $105/kWh  
-  //   - 3-10 MW: $100-135/kWh → $115/kWh
+  //   - 50+ MW: $80-95/kWh  → $88/kWh  (mega projects, direct from CATL/BYD)
+  //   - 10-50 MW: $85-105/kWh → $95/kWh  (large utility)
+  //   - 3-10 MW: $95-115/kWh → $105/kWh (mid utility)
   //
   // COMMERCIAL (<3 MW):
-  //   - 100kW-3MW: $150-200/kWh → $175/kWh
-  //   - <100kW: $250-325/kWh → $275/kWh
+  //   - 100kW-3MW: $110-140/kWh → $130/kWh (C&I containerized)
+  //   - <100kW: $130-160/kWh → $150/kWh  (small commercial / modular)
   //
-  // RESIDENTIAL: $400-600/kWh (not our target market)
+  // Sources: BNEF 1H 2026, NREL ATB 2024, vendor quotes Dec 2025
   let batteryCostPerKWh: number;
   if (systemSizeMW >= 50) {
-    batteryCostPerKWh = 95;   // $85-105/kWh range (utility mega-scale)
+    batteryCostPerKWh = 88;   // $80-95/kWh (utility mega-scale, direct procurement)
   } else if (systemSizeMW >= 10) {
-    batteryCostPerKWh = 105;  // $90-115/kWh range (utility large)
+    batteryCostPerKWh = 95;   // $85-105/kWh (utility large)
   } else if (systemSizeMW >= 3) {
-    batteryCostPerKWh = 115;  // $100-135/kWh range (utility mid) - YOUR MARKET QUOTES
+    batteryCostPerKWh = 105;  // $95-115/kWh (utility mid)
   } else if (systemSizeMW >= 0.1) {
-    batteryCostPerKWh = 175;  // $150-200/kWh commercial range
+    batteryCostPerKWh = 130;  // $110-140/kWh (C&I containerized)
   } else {
-    batteryCostPerKWh = 275;  // $250-325/kWh small commercial
+    batteryCostPerKWh = 150;  // $130-160/kWh (small commercial, max $150)
   }
   const pcsCostPerKW = 120; // $/kW - power conversion (validated from UK EV Hub quote)
   const bosCostPerKW = 28.8; // $/kW - balance of system (12%)

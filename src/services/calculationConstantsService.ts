@@ -54,8 +54,8 @@ export interface ConstantsCache {
 
 const FALLBACK_CONSTANTS: Record<string, { value: number; source: string }> = {
   // Pricing - Q1 2026 Market
-  battery_cost_per_kwh_small: { value: 275, source: "Q1 2026 Market (<100kW)" },
-  battery_cost_per_kwh_medium: { value: 175, source: "Q1 2026 Market (100kW-3MW)" },
+  battery_cost_per_kwh_small: { value: 150, source: "Q1 2026 Battery Pack (<100kW)" },
+  battery_cost_per_kwh_medium: { value: 130, source: "Q1 2026 Battery Pack (100kW-3MW)" },
   battery_cost_per_kwh_large: { value: 115, source: "Q1 2026 Market (≥3MW)" },
   solar_cost_per_watt: { value: 0.95, source: "Q1 2026 Market (commercial)" },
   inverter_cost_per_kw: { value: 150, source: "Industry average" },

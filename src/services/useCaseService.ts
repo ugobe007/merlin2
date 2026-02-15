@@ -830,9 +830,9 @@ export class UseCaseService {
         pricingScenarios[0]
       );
 
-      // ✅ FIX: Use centralized pricing service (SSOT: $175/kWh commercial) instead of hardcoded $600/kWh
+      // ✅ FIX: Use centralized pricing service (SSOT: $130/kWh battery pack) instead of hardcoded $600/kWh
       const batteryPricing = await getBatteryPricing(recommendedSizeMw, preferredDurationHours);
-      const systemCostPerKwh = batteryPricing.pricePerKWh || 175; // Fallback to DEFAULTS.BESS.costPerKWhCommercial
+      const systemCostPerKwh = batteryPricing.pricePerKWh || 130; // Fallback to 2026 battery pack market rate
       const estimatedCost = recommendedSizeMw * 1000 * preferredDurationHours * systemCostPerKwh;
 
       // ✅ FIX: Use centralized financial calculations for consistent payback/ROI

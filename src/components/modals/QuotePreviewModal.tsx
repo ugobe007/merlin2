@@ -640,7 +640,10 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
       (generatorMW > 0 ? costs.generator + (costs.generatorControls || 0) : 0);
     const equipmentTotal = coreEquipmentTotal + renewablesTotal;
     const implementationEstimate = costs.bos + costs.epc + costs.tariffs + costs.shipping;
-    const pricePerKWh = Math.round(equipmentTotal / (batteryMWh * 1000));
+    // Battery-only $/kWh (market rate) — NOT all-in equipment cost
+    const batteryPricePerKWh = Math.round(costs.batterySystem / (batteryMWh * 1000));
+    const pricePerKWh = batteryPricePerKWh; // display as market battery rate
+    const allInPerKWh = Math.round(equipmentTotal / (batteryMWh * 1000)); // for reference only
 
     // NPV @ 8% discount rate (10-year horizon)
     const discountRate = 0.08;
@@ -709,7 +712,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                               font: "Helvetica",
                             }),
                             new TextRun({
-                              text: "  All-In Equipment",
+                              text: "  Battery Market Rate",
                               size: 20,
                               color: "94A3B8",
                               font: "Helvetica",
@@ -1092,7 +1095,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `This proposal delivers a ${batteryMWh.toFixed(1)} MWh Battery Energy Storage System at $${pricePerKWh}/kWh — designed to reduce your energy costs by $${annualSavings.toLocaleString()} annually with a ${paybackPeriod.toFixed(1)}-year payback.`,
+                  text: `This proposal delivers a ${batteryMWh.toFixed(1)} MWh Battery Energy Storage System at $${pricePerKWh}/kWh (battery) — designed to reduce your energy costs by $${annualSavings.toLocaleString()} annually with a ${paybackPeriod.toFixed(1)}-year payback.`,
                   size: 24,
                   font: "Helvetica",
                 }),
@@ -1147,7 +1150,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                         new Paragraph({
                           children: [
                             new TextRun({
-                              text: "Price per kWh",
+                              text: "Battery Price ($/kWh)",
                               bold: true,
                               size: 26,
                               font: "Helvetica",
@@ -2048,7 +2051,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                         new Paragraph({
                           children: [
                             new TextRun({
-                              text: `$${pricePerKWh}/kWh`,
+                              text: `$${allInPerKWh}/kWh all-in`,
                               bold: true,
                               size: 24,
                               color: "FFFFFF",
@@ -3131,7 +3134,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                       children: [
                         new Paragraph({
                           children: [
-                            new TextRun({ text: "Price per kWh", size: 20, font: "Helvetica" }),
+                            new TextRun({ text: "Battery $/kWh", size: 20, font: "Helvetica" }),
                           ],
                         }),
                       ],
@@ -3142,7 +3145,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                         new Paragraph({
                           children: [
                             new TextRun({
-                              text: "Equipment Total ÷ (MWh × 1,000)",
+                              text: "Battery Cost ÷ (MWh × 1,000)",
                               size: 20,
                               font: "Helvetica",
                             }),
@@ -3522,14 +3525,15 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
       (solarMW > 0 ? costs.solar + (costs.solarInverters || 0) : 0) +
       (windMW > 0 ? costs.wind + (costs.windConverters || 0) : 0) +
       (generatorMW > 0 ? costs.generator + (costs.generatorControls || 0) : 0);
-    const csvPricePerKWh = Math.round(csvEquipTotal / (batteryMWh * 1000));
+    const csvBatteryPerKWh = Math.round(costs.batterySystem / (batteryMWh * 1000));
+    const csvAllInPerKWh = Math.round(csvEquipTotal / (batteryMWh * 1000));
     const csvImplEstimate = costs.bos + costs.epc + costs.tariffs + costs.shipping;
 
     let csv = '"MERLIN ENERGY SOLUTIONS","BATTERY ENERGY STORAGE SYSTEM - EQUIPMENT QUOTE"\n';
     csv += `\"Generated:\",\"${new Date().toLocaleDateString()}\"\n`;
     csv += `\"Project:\",\"${quoteData.projectName}\"\n`;
     csv += `\"Client:\",\"${quoteData.clientName}\"\n`;
-    csv += `\"Price per kWh:\",\"$${csvPricePerKWh}/kWh\"\n`;
+    csv += `\"Battery $/kWh:\",\"$${csvBatteryPerKWh}/kWh\"\n`;
     csv += `\"TrueQuote Verified:\",\"Yes - Source-backed pricing\"\n`;
     csv += "\n";
 
@@ -3566,7 +3570,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
     }
 
     csv += "\n";
-    csv += `\"EQUIPMENT TOTAL\",\"$${csvPricePerKWh}/kWh\",${csvEquipTotal}\n`;
+    csv += `\"EQUIPMENT TOTAL\",\"$${csvAllInPerKWh}/kWh all-in\",${csvEquipTotal}\n`;
     csv += "\n";
 
     // Estimated implementation (separate from main quote)
@@ -3581,7 +3585,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
     // Financial Analysis
     csv += '"═══ RETURN ON INVESTMENT ═══════════════════════════════════"\n';
     csv += '"Financial Metric","Value"\n';
-    csv += `\"Price per kWh\",\"$${csvPricePerKWh}/kWh\"\n`;
+    csv += `\"Battery $/kWh\",\"$${csvBatteryPerKWh}/kWh\"\n`;
     csv += `\"Annual Energy Savings\",\"$${annualSavings.toLocaleString()}\"\n`;
     csv += `\"Payback Period\",\"${paybackPeriod.toFixed(1)} years\"\n`;
     csv += `\"10-Year Net Savings\",\"$${(annualSavings * 10 - csvEquipTotal).toLocaleString()}\"\n`;

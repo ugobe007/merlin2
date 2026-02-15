@@ -917,7 +917,7 @@ export class BESSOptimizationEngine {
 
     // Simple ROI calculation - using NREL ATB 2024 pricing estimate
     // NOTE: For accurate pricing, use calculateFinancialMetrics() from centralizedCalculations.ts
-    const NREL_PRICE_PER_KWH = 155; // NREL ATB 2024
+    const NREL_PRICE_PER_KWH = 130; // Battery pack 2026 (NREL ATB + BNEF 1H 2026)
     const INVERTER_PRICE_PER_KW = 80; // Industry average
     const initial_cost =
       batteryModel.capacity_kWh * NREL_PRICE_PER_KWH +
