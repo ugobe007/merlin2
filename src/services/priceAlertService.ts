@@ -81,8 +81,8 @@ export interface NewsArticle {
 
 const BASELINE_PRICES = {
   battery_kwh_utility: 115.0, // $/kWh for utility-scale (≥3 MW)
-  battery_kwh_commercial: 175.0, // $/kWh for commercial (100kW-3MW)
-  battery_kwh_residential: 275.0, // $/kWh for small commercial (<100kW)
+  battery_kwh_commercial: 130.0, // $/kWh for commercial (100kW-3MW) — 2026 battery pack
+  battery_kwh_residential: 150.0, // $/kWh for small commercial (<100kW) — 2026 battery pack
   battery_mwh_utility: 115000, // $/MWh installed (utility-scale)
   solar_watt: 0.95, // $/W installed (commercial)
   wind_kw: 1500.0, // $/kW installed

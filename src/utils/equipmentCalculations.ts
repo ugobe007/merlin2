@@ -300,8 +300,8 @@ export const calculateEquipmentBreakdown = async (
   // costPerKWh includes PCS + BoS + EPC which are added separately below
   const marketPricePerKWh = marketAnalysis.systemCosts.batteryCostPerKWh;
 
-  // Use market pricing with realistic cap
-  const effectivePricePerKWh = Math.min(marketPricePerKWh, 580); // Cap at realistic $580/kWh for small systems
+  // Use market pricing with $150/kWh cap (2026 battery pack, excl. PCS/BoS)
+  const effectivePricePerKWh = Math.min(marketPricePerKWh, 150);
 
   // ✅ CRITICAL FIX: Calculate battery cost based on ACTUAL energy needed, not fixed unit size
   // Small systems (< 1 MW) should pay per-kWh, not per-unit

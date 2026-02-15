@@ -89,10 +89,10 @@ export interface TrueQuoteReport {
 /** NREL ATB 2024 / Margin Policy Engine pricing bounds */
 const PRICING_BOUNDS = {
   bess: {
-    minPerKWh: 80,     // Aggressive utility-scale (BNEF 2025)
-    maxPerKWh: 250,    // Fully installed with margin (Margin Policy ceiling)
-    typicalPerKWh: { low: 100, high: 175 }, // NREL ATB 2024
-    source: "NREL ATB 2024 + Margin Policy Engine",
+    minPerKWh: 70,     // Aggressive utility mega-scale (BNEF 1H 2026)
+    maxPerKWh: 160,    // Small commercial pack price ceiling
+    typicalPerKWh: { low: 88, high: 150 }, // Battery pack only (2026 market)
+    source: "BNEF 1H 2026 + NREL ATB 2024 (battery pack only, excl. PCS/BoS)",
   },
   solar: {
     minPerWatt: 0.50,  // Utility-scale modules only

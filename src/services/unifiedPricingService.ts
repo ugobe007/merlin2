@@ -115,8 +115,8 @@ export function clearAllPricingCaches(): void {
 // TODO: Check for NREL ATB 2025/2026 data and update if available
 
 const NREL_ATB_2024_BATTERY: BatteryPricing = {
-  pricePerKWh: 155, // NREL ATB 2024 Moderate scenario (may be updated to 2025/2026)
-  manufacturer: "Various (NREL ATB 2024)",
+  pricePerKWh: 130, // Q1 2026 battery pack price (BNEF + NREL ATB, LFP cells ~$50/kWh)
+  manufacturer: "Various (NREL ATB 2024 + BNEF 1H 2026)",
   model: "Utility-Scale LFP",
   chemistry: "LFP",
   warrantyYears: 10,

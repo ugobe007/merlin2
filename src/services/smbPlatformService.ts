@@ -609,7 +609,7 @@ export function quickEstimate(input: { unitCount: number; state: string; industr
   const monthlySavings = (storageKwh * rate * 0.3 * 30) / hoursBackup;
 
   // Rough cost estimate
-  const cost = storageKwh * 175; // $175/kWh commercial (DEFAULTS.BESS.costPerKWhCommercial)
+  const cost = storageKwh * 130; // $130/kWh battery pack (2026 C&I market rate)
   const netCost = cost * 0.7; // After ITC
   const paybackYears = netCost / (monthlySavings * 12);
 

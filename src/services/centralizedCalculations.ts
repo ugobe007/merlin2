@@ -375,7 +375,7 @@ export async function calculateFinancialMetrics(
   let finalTariffCost = tariffCost;
 
   if (equipmentCost === 0) {
-    // ✅ FIX: Fetch actual NREL ATB 2024 pricing ($155/kWh) instead of placeholder
+    // ✅ FIX: Fetch battery pack pricing ($130/kWh 2026 market) via unifiedPricingService
     const batteryPricing = await getBatteryPricing(storageSizeMW, durationHours);
     finalEquipmentCost = totalEnergyKWh * batteryPricing.pricePerKWh;
     finalInstallationCost = finalEquipmentCost * 0.15; // 15% installation (industry standard)
