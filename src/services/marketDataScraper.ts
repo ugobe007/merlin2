@@ -819,6 +819,173 @@ export function extractPrices(text: string, equipment: string[]): ExtractedPrice
     }
   }
 
+  // ─── Wind pricing ($/kW) ───
+  if (
+    detectedEquipment.includes("wind") ||
+    textLower.includes("wind turbine") ||
+    textLower.includes("wind farm") ||
+    textLower.includes("wind power")
+  ) {
+    const windPatterns = [
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kw(?!h)/gi,
+      /wind.*?\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kw(?!h)/gi,
+      /(?:cost|price|priced)\s*(?:at|of)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kw(?!h).*?wind/gi,
+    ];
+
+    for (const pattern of windPatterns) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(cleanText)) !== null) {
+        const price = parseFloat(match[1].replace(/,/g, ""));
+        if (price > 500 && price < 5000) {
+          const start = Math.max(0, match.index - 100);
+          const end = Math.min(cleanText.length, match.index + match[0].length + 100);
+          const context = cleanText.slice(start, end);
+
+          const isDuplicate = prices.some(
+            (p) => p.equipment === "wind" && Math.abs(p.price - price) < 100 && p.unit === "kW"
+          );
+
+          if (!isDuplicate) {
+            prices.push({
+              equipment: "wind",
+              price,
+              unit: "kW",
+              currency: "USD",
+              context,
+              confidence: 0.65,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // ─── Inverter pricing ($/kW) ───
+  if (
+    detectedEquipment.includes("inverter") ||
+    textLower.includes("inverter") ||
+    textLower.includes("pcs") ||
+    textLower.includes("power conversion")
+  ) {
+    const inverterPatterns = [
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kw(?!h)/gi,
+      /inverter.*?\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kw(?!h)/gi,
+      /pcs.*?\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kw(?!h)/gi,
+    ];
+
+    for (const pattern of inverterPatterns) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(cleanText)) !== null) {
+        const price = parseFloat(match[1].replace(/,/g, ""));
+        if (price > 30 && price < 500) {
+          const start = Math.max(0, match.index - 100);
+          const end = Math.min(cleanText.length, match.index + match[0].length + 100);
+          const context = cleanText.slice(start, end);
+
+          const isDuplicate = prices.some(
+            (p) => p.equipment === "inverter" && Math.abs(p.price - price) < 20 && p.unit === "kW"
+          );
+
+          if (!isDuplicate) {
+            prices.push({
+              equipment: "inverter",
+              price,
+              unit: "kW",
+              currency: "USD",
+              context,
+              confidence: 0.65,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // ─── Transformer pricing ($/kVA) ───
+  if (
+    detectedEquipment.includes("transformer") ||
+    textLower.includes("transformer") ||
+    textLower.includes("substation")
+  ) {
+    const transformerPatterns = [
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kva/gi,
+      /transformer.*?\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kva/gi,
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kw(?!h).*?transformer/gi,
+    ];
+
+    for (const pattern of transformerPatterns) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(cleanText)) !== null) {
+        const price = parseFloat(match[1].replace(/,/g, ""));
+        if (price > 15 && price < 200) {
+          const start = Math.max(0, match.index - 100);
+          const end = Math.min(cleanText.length, match.index + match[0].length + 100);
+          const context = cleanText.slice(start, end);
+
+          const isDuplicate = prices.some(
+            (p) =>
+              p.equipment === "transformer" && Math.abs(p.price - price) < 10 && p.unit === "kVA"
+          );
+
+          if (!isDuplicate) {
+            prices.push({
+              equipment: "transformer",
+              price,
+              unit: "kVA",
+              currency: "USD",
+              context,
+              confidence: 0.6,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // ─── Switchgear pricing ($/unit) ───
+  if (
+    detectedEquipment.includes("switchgear") ||
+    textLower.includes("switchgear") ||
+    textLower.includes("circuit breaker")
+  ) {
+    const switchgearPatterns = [
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*(?:unit|panel|bay|section)/gi,
+      /switchgear.*?\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)/gi,
+    ];
+
+    for (const pattern of switchgearPatterns) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(cleanText)) !== null) {
+        const price = parseFloat(match[1].replace(/,/g, ""));
+        if (price > 5000 && price < 500000) {
+          const start = Math.max(0, match.index - 100);
+          const end = Math.min(cleanText.length, match.index + match[0].length + 100);
+          const context = cleanText.slice(start, end);
+
+          const isDuplicate = prices.some(
+            (p) =>
+              p.equipment === "switchgear" && Math.abs(p.price - price) < 1000 && p.unit === "unit"
+          );
+
+          if (!isDuplicate) {
+            prices.push({
+              equipment: "switchgear",
+              price,
+              unit: "unit",
+              currency: "USD",
+              context,
+              confidence: 0.55,
+            });
+          }
+        }
+      }
+    }
+  }
+
   return prices;
 }
 

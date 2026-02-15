@@ -34,6 +34,16 @@ import {
 import type { EquipmentBreakdown } from "@/utils/equipmentCalculations";
 import { getMockBehavior, delay, logMockMode } from "./mockPricingControl";
 
+// ─── MARGIN POLICY ENGINE (Feb 2026) ───
+// This is how Merlin makes money. Every quote must include margin.
+import {
+  applyMarginPolicy,
+  type MarginPolicyInput,
+  type MarginQuoteResult,
+  type ProductClass,
+} from "@/services/marginPolicyEngine";
+import { supabase } from "@/services/supabaseClient";
+
 // ============================================================================
 // TYPES — Layer A (Load Profile)
 // ============================================================================
@@ -114,11 +124,14 @@ export interface PricingConfig {
  * Output from runPricingQuote() — financial metrics + breakdown
  */
 export interface PricingQuoteData {
-  /** Total CapEx (net of ITC) */
+  /** Total CapEx (net of ITC) — THIS IS THE SELL PRICE (includes Merlin margin) */
   capexUSD: number;
 
-  /** Total project cost BEFORE ITC (gross) — use for financial modal */
+  /** Total project cost BEFORE ITC (gross) — sell price before tax credit */
   grossCost: number;
+
+  /** Base cost (before margin) for internal reference */
+  baseCost: number;
 
   /** ITC credit dollar amount */
   itcAmount: number;
@@ -129,7 +142,7 @@ export interface PricingQuoteData {
   /** Annual savings estimate */
   annualSavingsUSD: number;
 
-  /** Simple payback years */
+  /** Simple payback years (based on sell price) */
   roiYears: number;
 
   /** Equipment line-item breakdown */
@@ -149,6 +162,26 @@ export interface PricingQuoteData {
     storageSizeMW: number;
     durationHours: number;
     energyMWh: number;
+  };
+
+  /** ─── MARGIN POLICY (Feb 2026) ─── */
+  margin: {
+    /** Sell price total (customer sees this) */
+    sellPriceTotal: number;
+    /** Base cost total (SSOT market cost) */
+    baseCostTotal: number;
+    /** Margin dollars (profit) */
+    marginDollars: number;
+    /** Blended margin percent */
+    marginPercent: number;
+    /** Margin band applied */
+    marginBand: string;
+    /** Policy version */
+    policyVersion: string;
+    /** Whether human review is needed */
+    needsReview: boolean;
+    /** Warnings from margin engine */
+    warnings: string[];
   };
 }
 
@@ -355,24 +388,48 @@ export async function runPricingQuote(
   try {
     const quoteResult = await calculateQuote(quoteInput);
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // 4b. APPLY MARGIN POLICY (Feb 2026)
+    // This is how Merlin makes money. Every quote must include margin.
+    // Market cost → Obtainable cost → Sell price (customer sees this)
+    // ═══════════════════════════════════════════════════════════════════════
+    const marginResult = applyMarginToQuote(quoteResult, energyMWh);
+
     // 5. Build notes from assumptions + warnings
     const notes: string[] = [
       ...(contract.assumptions ?? []),
       ...(contract.warnings ?? []).map((w) => `⚠️ ${w}`),
       `Sizing: ${ratio.toFixed(2)}x peak × ${hours}h = ${energyMWh.toFixed(2)} MWh`,
       `Pricing snapshot: ${config.snapshotId}`,
+      `Margin: ${marginResult.marginBandDescription} (${(marginResult.blendedMarginPercent * 100).toFixed(1)}%)`,
     ];
 
-    // 6. Return unified result (success wrapper)
+    // Adjust costs with margin applied
+    const sellPriceTotal = marginResult.sellPriceTotal;
+    const baseCostTotal = marginResult.baseCostTotal;
+    const itcRate = quoteResult.benchmarkAudit?.assumptions?.itcRate ?? 0.3;
+    const itcAmount = sellPriceTotal * itcRate;
+    const grossCost = sellPriceTotal;
+    const netCost = grossCost - itcAmount;
+
+    // Recalculate payback with sell price
+    const annualSavings = quoteResult.financials.annualSavings;
+    const adjustedPayback = annualSavings > 0 ? netCost / annualSavings : 99;
+
+    // 6. Log margin audit (async, non-blocking)
+    logMarginAudit(marginResult, config.snapshotId, contract.inputsUsed.industry).catch(() => {});
+
+    // 7. Return unified result (success wrapper)
     return {
       ok: true as const,
       data: {
-        capexUSD: quoteResult.costs.netCost,
-        grossCost: quoteResult.costs.totalProjectCost,
-        itcAmount: quoteResult.costs.taxCredit,
-        itcRate: quoteResult.benchmarkAudit?.assumptions?.itcRate ?? 0.3,
-        annualSavingsUSD: quoteResult.financials.annualSavings,
-        roiYears: quoteResult.financials.paybackYears,
+        capexUSD: netCost,
+        grossCost,
+        baseCost: baseCostTotal,
+        itcAmount,
+        itcRate,
+        annualSavingsUSD: annualSavings,
+        roiYears: Math.min(adjustedPayback, 99),
         breakdown: quoteResult.equipment,
         financials: quoteResult.financials,
         pricingSnapshotId: config.snapshotId,
@@ -381,6 +438,16 @@ export async function runPricingQuote(
           storageSizeMW,
           durationHours: hours,
           energyMWh,
+        },
+        margin: {
+          sellPriceTotal: marginResult.sellPriceTotal,
+          baseCostTotal: marginResult.baseCostTotal,
+          marginDollars: marginResult.totalMarginDollars,
+          marginPercent: marginResult.blendedMarginPercent,
+          marginBand: marginResult.marginBandDescription,
+          policyVersion: marginResult.policyVersion,
+          needsReview: marginResult.needsHumanReview,
+          warnings: marginResult.quoteLevelWarnings,
         },
       },
     };
@@ -467,6 +534,184 @@ export function generatePricingRunId(): string {
   const time = now.toISOString().slice(11, 19).replace(/:/g, "");
   const rand = Math.random().toString(16).slice(2, 6);
   return `run_${time}_${rand}`;
+}
+
+// ============================================================================
+// MARGIN HELPERS — Build line items from SSOT quote and apply margin
+// ============================================================================
+
+/**
+ * Build margin policy line items from SSOT QuoteResult equipment breakdown
+ * and apply the margin policy engine.
+ */
+function applyMarginToQuote(quoteResult: QuoteResult, energyMWh: number): MarginQuoteResult {
+  const eq = quoteResult.equipment;
+  const lineItems: MarginPolicyInput["lineItems"] = [];
+
+  // ─── Battery (BESS) ───
+  if (eq.batteries && eq.batteries.totalCost > 0) {
+    lineItems.push({
+      sku: "bess-battery-pack",
+      category: "bess" as ProductClass,
+      description: `Battery Storage (${(energyMWh * 1000).toFixed(0)} kWh)`,
+      baseCost: eq.batteries.totalCost,
+      quantity: energyMWh * 1000, // kWh
+      unitCost: eq.batteries.totalCost / Math.max(1, energyMWh * 1000),
+      unit: "kWh",
+      costSource: "SSOT unifiedQuoteCalculator",
+    });
+  }
+
+  // ─── Inverter/PCS ───
+  if (eq.inverters && eq.inverters.totalCost > 0) {
+    const invQty = eq.inverters.quantity || 1;
+    const invKW = (eq.inverters.unitPowerMW || 0) * 1000;
+    lineItems.push({
+      sku: "inverter-pcs",
+      category: "inverter_pcs" as ProductClass,
+      description: `Inverter/PCS (${invQty} × ${invKW.toFixed(0)} kW)`,
+      baseCost: eq.inverters.totalCost,
+      quantity: invQty,
+      unitCost: eq.inverters.unitCost || eq.inverters.totalCost,
+      unit: "unit",
+      costSource: "SSOT equipmentCalculations",
+    });
+  }
+
+  // ─── Transformer ───
+  if (eq.transformers && eq.transformers.totalCost > 0) {
+    const xfmrMVA = eq.transformers.unitPowerMVA || 0;
+    lineItems.push({
+      sku: "transformer",
+      category: "transformer" as ProductClass,
+      description: `Transformer (${(xfmrMVA * 1000).toFixed(0)} kVA)`,
+      baseCost: eq.transformers.totalCost,
+      quantity: eq.transformers.quantity || 1,
+      unitCost: eq.transformers.unitCost || eq.transformers.totalCost,
+      unit: "unit",
+      costSource: "SSOT equipmentCalculations",
+    });
+  }
+
+  // ─── Switchgear ───
+  if (eq.switchgear && eq.switchgear.totalCost > 0) {
+    lineItems.push({
+      sku: "switchgear",
+      category: "bess" as ProductClass, // No switchgear ProductClass, use bess
+      description: `Switchgear (${eq.switchgear.type || "MV"})`,
+      baseCost: eq.switchgear.totalCost,
+      quantity: eq.switchgear.quantity || 1,
+      unitCost: eq.switchgear.unitCost || eq.switchgear.totalCost,
+      unit: "unit",
+      costSource: "SSOT equipmentCalculations",
+    });
+  }
+
+  // ─── Solar ───
+  if (eq.solar && eq.solar.totalCost > 0) {
+    const solarMW = eq.solar.totalMW || 0;
+    lineItems.push({
+      sku: "solar-array",
+      category: "solar" as ProductClass,
+      description: `Solar Array (${solarMW.toFixed(2)} MW)`,
+      baseCost: eq.solar.totalCost,
+      quantity: solarMW * 1_000_000, // Watts
+      unitCost: eq.solar.totalCost / Math.max(1, solarMW * 1_000_000),
+      unit: "W",
+      costSource: "SSOT equipmentCalculations",
+    });
+  }
+
+  // ─── Generator ───
+  if (eq.generators && eq.generators.totalCost > 0) {
+    const genMW = eq.generators.unitPowerMW || 0;
+    lineItems.push({
+      sku: "generator",
+      category: "generator" as ProductClass,
+      description: `Generator (${genMW.toFixed(2)} MW, ${eq.generators.fuelType || "natural-gas"})`,
+      baseCost: eq.generators.totalCost,
+      quantity: genMW * 1000, // kW
+      unitCost: eq.generators.costPerKW || eq.generators.totalCost / Math.max(1, genMW * 1000),
+      unit: "kW",
+      costSource: "SSOT equipmentCalculations",
+    });
+  }
+
+  // ─── Installation / Labor (from costs) ───
+  const installationCost = quoteResult.costs.installationCost || 0;
+  if (installationCost > 0) {
+    lineItems.push({
+      sku: "installation-labor",
+      category: "construction_labor" as ProductClass,
+      description: "Installation & Commissioning",
+      baseCost: installationCost,
+      quantity: 1,
+      unitCost: installationCost,
+      unit: "project",
+      costSource: "SSOT unifiedQuoteCalculator",
+    });
+  }
+
+  // If no line items were built (edge case), create a single BESS catch-all
+  if (lineItems.length === 0) {
+    lineItems.push({
+      sku: "bess-system-complete",
+      category: "bess" as ProductClass,
+      description: "Complete BESS System",
+      baseCost: quoteResult.costs.totalProjectCost,
+      quantity: energyMWh * 1000,
+      unitCost: quoteResult.costs.totalProjectCost / Math.max(1, energyMWh * 1000),
+      unit: "kWh",
+      costSource: "SSOT unifiedQuoteCalculator (fallback)",
+    });
+  }
+
+  const totalBaseCost = lineItems.reduce((sum, item) => sum + item.baseCost, 0);
+
+  // Apply margin policy
+  const marginInput: MarginPolicyInput = {
+    lineItems,
+    totalBaseCost,
+    riskLevel: "standard",
+    customerSegment: "direct",
+    quoteUnits: {
+      bess: energyMWh * 1000, // kWh for quote-level guards
+    },
+  };
+
+  return applyMarginPolicy(marginInput);
+}
+
+/**
+ * Log margin application to audit trail (async, non-blocking)
+ * Writes to margin_audit_log table for compliance tracking.
+ */
+async function logMarginAudit(
+  result: MarginQuoteResult,
+  snapshotId: string,
+  industry: string
+): Promise<void> {
+  try {
+    // margin_audit_log may not be in generated Supabase types yet — use rpc or cast
+    await (supabase as any).from("margin_audit_log").insert({
+      snapshot_id: snapshotId,
+      industry,
+      base_cost_total: result.baseCostTotal,
+      sell_price_total: result.sellPriceTotal,
+      margin_dollars: result.totalMarginDollars,
+      margin_percent: result.blendedMarginPercent,
+      margin_band_id: result.marginBandId,
+      policy_version: result.policyVersion,
+      line_item_count: result.lineItems.length,
+      clamp_events: result.clampEvents.length,
+      needs_review: result.needsHumanReview,
+      warnings: result.quoteLevelWarnings,
+      created_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    // Non-blocking — log failure but don't break the quote
+    console.warn("[MarginAudit] Failed to log audit:", (err as Error)?.message);
+  }
 }
 
 // ============================================================================
