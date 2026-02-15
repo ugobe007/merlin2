@@ -227,6 +227,106 @@ function extractPrices(text: string, equipment: string[]): Array<{
     }
   }
   
+  // Generator $/kW
+  if (equipment.includes('generator')) {
+    const genRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kw(?!h)/gi;
+    let match;
+    while ((match = genRegex.exec(text)) !== null) {
+      const price = parseFloat(match[1].replace(/,/g, ''));
+      if (price > 200 && price < 2000) {
+        const start = Math.max(0, match.index - 100);
+        const end = Math.min(text.length, match.index + match[0].length + 100);
+        prices.push({
+          equipment: 'generator',
+          price,
+          unit: 'kW',
+          context: text.slice(start, end),
+          confidence: 0.7
+        });
+      }
+    }
+  }
+
+  // Wind $/kW
+  if (equipment.includes('wind')) {
+    const windRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kw(?!h)/gi;
+    let match;
+    while ((match = windRegex.exec(text)) !== null) {
+      const price = parseFloat(match[1].replace(/,/g, ''));
+      if (price > 500 && price < 5000) {
+        const start = Math.max(0, match.index - 100);
+        const end = Math.min(text.length, match.index + match[0].length + 100);
+        prices.push({
+          equipment: 'wind',
+          price,
+          unit: 'kW',
+          context: text.slice(start, end),
+          confidence: 0.65
+        });
+      }
+    }
+  }
+
+  // Inverter $/kW
+  if (equipment.includes('inverter')) {
+    const invRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kw(?!h)/gi;
+    let match;
+    while ((match = invRegex.exec(text)) !== null) {
+      const price = parseFloat(match[1].replace(/,/g, ''));
+      if (price > 30 && price < 500) {
+        const start = Math.max(0, match.index - 100);
+        const end = Math.min(text.length, match.index + match[0].length + 100);
+        prices.push({
+          equipment: 'inverter',
+          price,
+          unit: 'kW',
+          context: text.slice(start, end),
+          confidence: 0.65
+        });
+      }
+    }
+  }
+
+  // Transformer $/kVA
+  if (equipment.includes('transformer')) {
+    const xfmrRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kva/gi;
+    let match;
+    while ((match = xfmrRegex.exec(text)) !== null) {
+      const price = parseFloat(match[1].replace(/,/g, ''));
+      if (price > 15 && price < 200) {
+        const start = Math.max(0, match.index - 100);
+        const end = Math.min(text.length, match.index + match[0].length + 100);
+        prices.push({
+          equipment: 'transformer',
+          price,
+          unit: 'kVA',
+          context: text.slice(start, end),
+          confidence: 0.6
+        });
+      }
+    }
+  }
+
+  // EV Charger $/unit
+  if (equipment.includes('ev-charger')) {
+    const evRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*(?:charger|unit|station|port)/gi;
+    let match;
+    while ((match = evRegex.exec(text)) !== null) {
+      const price = parseFloat(match[1].replace(/,/g, ''));
+      if (price > 100 && price < 500000) {
+        const start = Math.max(0, match.index - 100);
+        const end = Math.min(text.length, match.index + match[0].length + 100);
+        prices.push({
+          equipment: 'ev-charger',
+          price,
+          unit: 'unit',
+          context: text.slice(start, end),
+          confidence: 0.7
+        });
+      }
+    }
+  }
+  
   return prices;
 }
 
@@ -408,7 +508,24 @@ async function runDailyScrape() {
 runDailyScrape()
   .then(results => {
     console.log('\nExiting with results:', JSON.stringify(results, null, 2));
-    process.exit(results.errors.length > 0 ? 1 : 0);
+    // Only fail if ZERO sources succeeded OR zero articles saved AND there were errors
+    // Previously: any single error = exit 1, which caused GitHub Actions to always fail
+    const totalSources = results.sourcesProcessed + results.errors.length;
+    const allFailed = results.sourcesProcessed === 0 && results.errors.length > 0;
+    const noData = results.articlesSaved === 0 && totalSources > 0;
+    
+    if (allFailed) {
+      console.error('\n🚨 ALL sources failed. Exiting with error.');
+      process.exit(1);
+    } else if (noData && results.errors.length > 0) {
+      console.warn('\n⚠️ No articles saved despite processing sources. Exiting with error.');
+      process.exit(1);
+    } else {
+      if (results.errors.length > 0) {
+        console.warn(`\n⚠️ ${results.errors.length} source(s) had errors, but ${results.sourcesProcessed} succeeded. Treating as partial success.`);
+      }
+      process.exit(0);
+    }
   })
   .catch(err => {
     console.error('Fatal error:', err);

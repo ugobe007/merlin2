@@ -151,6 +151,8 @@ export async function getRSSSourcesForEquipment(
 
 /**
  * Get latest market prices for an equipment type
+ * UPDATED Feb 2026: Now reads from BOTH collected_market_prices (fresh scraper data)
+ * AND market_pricing_data (legacy seed data) for full coverage.
  */
 export async function getMarketPrices(
   equipmentType: "bess" | "solar" | "wind" | "generator" | "inverter" | "ev-charger",
@@ -160,31 +162,85 @@ export async function getMarketPrices(
   try {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - maxAgeDays);
+    const cutoffStr = cutoffDate.toISOString().split("T")[0];
 
-    const { data, error } = await supabase
+    // ─── Primary: collected_market_prices (fresh scraper data) ───
+    const { data: freshData, error: freshError } = await supabase
+      .from("collected_market_prices")
+      .select("*")
+      .eq("equipment_type", equipmentType)
+      .gte("price_date", cutoffStr)
+      .order("price_date", { ascending: false })
+      .limit(100);
+
+    if (freshError) {
+      console.warn(
+        `[MarketData] collected_market_prices query failed for ${equipmentType}:`,
+        freshError.message
+      );
+    }
+
+    // ─── Secondary: market_pricing_data (legacy seed / manual entries) ───
+    const { data: legacyData, error: legacyError } = await supabase
       .from("market_pricing_data")
       .select("*")
       .eq("equipment_type", equipmentType)
-      .gte("data_date", cutoffDate.toISOString().split("T")[0])
+      .gte("data_date", cutoffStr)
       .order("data_date", { ascending: false })
       .limit(100);
 
-    if (error) {
-      console.error(`Failed to fetch market prices for ${equipmentType}:`, error);
-      return [];
+    if (legacyError) {
+      console.warn(
+        `[MarketData] market_pricing_data query failed for ${equipmentType}:`,
+        legacyError.message
+      );
     }
 
-    return (data || []).map((row) => ({
-      equipmentType: row.equipment_type,
-      pricePerUnit: row.price_per_unit,
-      unitType: `$/${row.unit_type}` as MarketPriceData["unitType"],
-      dataSource: row.data_source,
-      dataDate: new Date(row.data_date),
-      confidence: row.confidence_level || "medium",
-      region: row.region,
-      systemScale: row.metadata?.scale,
-      metadata: row.metadata,
-    }));
+    // ─── Merge results (fresh data takes priority via higher confidence) ───
+    const results: MarketPriceData[] = [];
+
+    // Map fresh collected prices
+    for (const row of freshData || []) {
+      // Skip China/CNY prices that skew BESS averages (Fix #5)
+      if (equipmentType === "bess" && row.currency === "CNY") continue;
+      if (
+        equipmentType === "bess" &&
+        row.region &&
+        /china|cn|asia/i.test(row.region) &&
+        row.price_per_unit < 80
+      )
+        continue;
+
+      results.push({
+        equipmentType: row.equipment_type,
+        pricePerUnit: row.price_per_unit,
+        unitType: `$/${row.unit}` as MarketPriceData["unitType"],
+        dataSource: `scraped:${row.source_id?.slice(0, 8) || "unknown"}`,
+        dataDate: new Date(row.price_date),
+        confidence:
+          row.confidence_score >= 0.7 ? "high" : row.confidence_score >= 0.4 ? "medium" : "low",
+        region: row.region || region,
+        systemScale: row.technology === "utility" ? "utility" : "commercial",
+        metadata: { sourceTable: "collected_market_prices", isVerified: row.is_verified },
+      });
+    }
+
+    // Map legacy pricing data (lower confidence since it may be stale)
+    for (const row of legacyData || []) {
+      results.push({
+        equipmentType: row.equipment_type,
+        pricePerUnit: row.price_per_unit,
+        unitType: `$/${row.unit_type}` as MarketPriceData["unitType"],
+        dataSource: row.data_source,
+        dataDate: new Date(row.data_date),
+        confidence: row.confidence_level || "low",
+        region: row.region,
+        systemScale: row.metadata?.scale,
+        metadata: { ...row.metadata, sourceTable: "market_pricing_data" },
+      });
+    }
+
+    return results;
   } catch (error) {
     console.error(`Error fetching market prices for ${equipmentType}:`, error);
     return [];
@@ -210,8 +266,16 @@ export async function getMarketPriceSummary(
     return null;
   }
 
+  // Filter out non-USD / non-regional prices that may skew averages
+  const filteredPrices = prices.filter((p) => {
+    // For BESS, exclude suspiciously low prices (likely China cell-only, not system)
+    if (equipmentType === "bess" && p.pricePerUnit < 60) return false;
+    return true;
+  });
+
   // Weight prices by confidence and recency
-  const weightedPrices = prices.map((p) => {
+  const pricesToUse = filteredPrices.length > 0 ? filteredPrices : prices;
+  const weightedPrices = pricesToUse.map((p) => {
     const confidenceWeight = p.confidence === "high" ? 1.0 : p.confidence === "medium" ? 0.7 : 0.4;
     const daysSince = (Date.now() - p.dataDate.getTime()) / (1000 * 60 * 60 * 24);
     const recencyWeight = Math.max(0.3, 1 - daysSince / 90); // Decay over 90 days
@@ -228,7 +292,7 @@ export async function getMarketPriceSummary(
     weightedPrices.reduce((sum, p) => sum + p.price * p.weight, 0) / totalWeight;
 
   // Calculate other statistics
-  const priceValues = prices.map((p) => p.pricePerUnit).sort((a, b) => a - b);
+  const priceValues = pricesToUse.map((p) => p.pricePerUnit).sort((a, b) => a - b);
   const medianIndex = Math.floor(priceValues.length / 2);
   const medianPrice =
     priceValues.length % 2 === 0
@@ -236,13 +300,13 @@ export async function getMarketPriceSummary(
       : priceValues[medianIndex];
 
   // Get unique sources
-  const sources = [...new Set(prices.map((p) => p.dataSource))];
+  const sources = [...new Set(pricesToUse.map((p) => p.dataSource))];
 
   // Calculate 30-day price change
-  const recentPrices = prices.filter(
+  const recentPrices = pricesToUse.filter(
     (p) => Date.now() - p.dataDate.getTime() < 30 * 24 * 60 * 60 * 1000
   );
-  const olderPrices = prices.filter(
+  const olderPrices = pricesToUse.filter(
     (p) =>
       Date.now() - p.dataDate.getTime() >= 30 * 24 * 60 * 60 * 1000 &&
       Date.now() - p.dataDate.getTime() < 90 * 24 * 60 * 60 * 1000
@@ -262,8 +326,8 @@ export async function getMarketPriceSummary(
     minPrice: Math.min(...priceValues),
     maxPrice: Math.max(...priceValues),
     medianPrice: Math.round(medianPrice * 100) / 100,
-    dataPointCount: prices.length,
-    lastUpdated: prices[0]?.dataDate || new Date(),
+    dataPointCount: pricesToUse.length,
+    lastUpdated: pricesToUse[0]?.dataDate || new Date(),
     priceChange30d,
     sources,
   };
