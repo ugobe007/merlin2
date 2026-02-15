@@ -296,7 +296,9 @@ export const calculateEquipmentBreakdown = async (
 
   // Get market-aligned pricing from NREL ATB 2024 + live market intelligence
   const marketAnalysis = calculateMarketAlignedBESSPricing(storageSizeMW, durationHours, location);
-  const marketPricePerKWh = marketAnalysis.systemCosts.costPerKWh;
+  // ✅ FIX Feb 2026: Use battery-only cost, NOT all-in costPerKWh
+  // costPerKWh includes PCS + BoS + EPC which are added separately below
+  const marketPricePerKWh = marketAnalysis.systemCosts.batteryCostPerKWh;
 
   // Use market pricing with realistic cap
   const effectivePricePerKWh = Math.min(marketPricePerKWh, 580); // Cap at realistic $580/kWh for small systems

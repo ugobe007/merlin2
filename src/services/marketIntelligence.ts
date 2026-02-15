@@ -206,6 +206,7 @@ export function calculateMarketAlignedBESSPricing(
       totalCapex,
       costPerKW: totalCapex / (systemSizeMW * 1000),
       costPerKWh: totalCapex / (energyCapacityMWh * 1000),
+      batteryCostPerKWh,
     },
     marketOpportunity: {
       location,
