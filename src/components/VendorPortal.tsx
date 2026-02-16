@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Upload, FileText, DollarSign, CheckCircle, Clock, TrendingUp, Building2, AlertCircle, Loader2, Calculator, Sparkles, ShieldCheck } from "lucide-react";
+import { Upload, FileText, DollarSign, CheckCircle, Clock, TrendingUp, Building2, AlertCircle, Loader2, Calculator, Sparkles, ShieldCheck, Home, ArrowLeft } from "lucide-react";
 import merlinIcon from "@/assets/images/new_small_profile_.png";
 import badgeIcon from "@/assets/images/badge_icon.jpg";
 import {
@@ -296,6 +296,16 @@ const VendorPortal: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#0f1117] py-12 px-4">
         <div className="max-w-6xl mx-auto">
+          {/* Back to Home */}
+          <div className="mb-6">
+            <a
+              href="/"
+              className="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-400 transition-colors text-sm"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Merlin Home
+            </a>
+          </div>
           {/* Header */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-4 mb-4">
@@ -658,12 +668,21 @@ const VendorPortal: React.FC = () => {
               <span className="text-sm text-slate-400 ml-2">({currentVendor.company_name})</span>
             )}
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-slate-400 hover:text-white font-semibold transition-colors"
-          >
-            Sign Out
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLogout}
+              className="text-slate-400 hover:text-white font-semibold transition-colors"
+            >
+              Sign Out
+            </button>
+            <a
+              href="/"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-sm rounded-lg font-medium transition-all"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Home</span>
+            </a>
+          </div>
         </div>
       </div>
 
