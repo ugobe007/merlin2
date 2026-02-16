@@ -2,11 +2,44 @@ node_modules
 dist
 .git
 .gitignore
-*.md
 .DS_Store
 .vscode
 .idea
+
+# Test artifacts
+playwright-report
+test-results
+test-artifacts
+_reports
+audit-results
+coverage
+
+# Logs & reports
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+eslint-report.json
+eslint.report.json
+eslint.full.txt
+eslint.unix.txt
+eslint.unix.afterfix.txt
+eslint.unix.errors.txt
+eslint.errors.txt
+eslint.errors.afterfix.txt
+
+# Docs & markdown (not needed in prod image)
+*.md
+docs
+*.pdf
+
+# Dev/CI files
+*.sql
+*.sh
+*.py
+*.mjs
+*.spec.ts
+*.test.ts
+html
+button_mapping_audit_report.json
+customQuestions
