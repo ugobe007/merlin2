@@ -462,7 +462,7 @@ export async function validateVendorProductById(
     }
 
     return await validateVendorPricing({
-      product_category: product.product_category,
+      product_category: product.product_category as "battery" | "inverter" | "ems" | "bos" | "container",
       manufacturer: product.manufacturer,
       model: product.model,
       capacity_kwh: product.capacity_kwh ? Number(product.capacity_kwh) : undefined,

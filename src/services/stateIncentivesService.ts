@@ -1020,7 +1020,7 @@ export async function getStateIncentives(stateCode: string): Promise<StateIncent
       return [];
     }
 
-    return data || [];
+    return (data as unknown as StateIncentive[]) || [];
   } catch (err) {
     console.error("❌ Failed to fetch state incentives:", err);
     return [];

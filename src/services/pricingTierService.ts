@@ -83,7 +83,7 @@ export async function getPricingTier(
       const { data: funcData, error: funcError } = await supabase.rpc("get_pricing_tier", {
         p_category: category,
         p_size_kw: sizeKW,
-        p_size_mwh: null,
+        p_size_mwh: null as any,
       });
 
       if (!funcError && funcData && funcData.length > 0) {
@@ -100,13 +100,13 @@ export async function getPricingTier(
         return {
           price,
           unit: configData.price_unit || "$/kWh",
-          tier: tierData as PricingTier,
+          tier: tierData as unknown as PricingTier,
         };
       }
     } else if (sizeMWh !== null && sizeMWh !== undefined) {
       const { data: funcData, error: funcError } = await supabase.rpc("get_pricing_tier", {
         p_category: category,
-        p_size_kw: null,
+        p_size_kw: null as any,
         p_size_mwh: sizeMWh,
       });
 
@@ -124,7 +124,7 @@ export async function getPricingTier(
         return {
           price,
           unit: configData.price_unit || "$/kWh",
-          tier: tierData as PricingTier,
+          tier: tierData as unknown as PricingTier,
         };
       }
     }
@@ -193,7 +193,7 @@ export async function getPricingTier(
     return {
       price,
       unit: configData.price_unit || "$/kWh",
-      tier: data as PricingTier,
+      tier: data as unknown as PricingTier,
     };
   } catch (error) {
     console.error("[pricingTierService] Error fetching pricing tier:", error);
@@ -221,7 +221,7 @@ export async function getAllPricingTiers(category: string): Promise<PricingTier[
       return [];
     }
 
-    return (data || []) as PricingTier[];
+    return (data || []) as unknown as PricingTier[];
   } catch (error) {
     console.error("[pricingTierService] Error fetching pricing tiers:", error);
     return [];
@@ -247,7 +247,7 @@ export async function getPricingTierByKey(configKey: string): Promise<PricingTie
       return null;
     }
 
-    return data as PricingTier;
+    return data as unknown as PricingTier;
   } catch (error) {
     console.error("[pricingTierService] Error fetching pricing tier by key:", error);
     return null;

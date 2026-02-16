@@ -277,7 +277,7 @@ export async function getAllMarkupConfigs(): Promise<Array<{
   config_key: string;
   markup_percentage: number;
   description: string | null;
-  is_active: boolean;
+  is_active: boolean | null;
 }>> {
   try {
     const { data, error } = await supabase
@@ -450,7 +450,7 @@ export async function getEquipmentPricing(
     const { data, error } = await query;
     
     if (error) throw error;
-    return data || [];
+    return (data || []) as unknown as EquipmentPricingTier[];
   } catch (error) {
     console.error(`[EquipmentPricingService] Error fetching ${equipmentType} pricing:`, error);
     return [];
@@ -478,17 +478,19 @@ export async function getEquipmentPrice(query: PricingQuery): Promise<EquipmentP
       dbQuery = dbQuery.ilike('manufacturer', `%${query.manufacturer}%`);
     }
     
-    const { data, error } = await dbQuery.order('tier_name');
+    const { data: rawData, error } = await dbQuery.order('tier_name');
     
     if (error) throw error;
-    if (!data || data.length === 0) return null;
+    if (!rawData || rawData.length === 0) return null;
+    
+    const data = rawData as unknown as EquipmentPricingTier[];
     
     // Find best match based on size
     let bestMatch: EquipmentPricingTier | undefined;
     
     if (query.size !== undefined) {
       // Find tier that matches the size range
-      bestMatch = data.find((tier: EquipmentPricingTier) => {
+      bestMatch = data.find((tier) => {
         const min = tier.size_min ?? 0;
         const max = tier.size_max ?? Infinity;
         return query.size! >= min && query.size! <= max;
@@ -600,7 +602,7 @@ export async function getAllEquipmentPricing(): Promise<Record<EquipmentType, Eq
     // Group by equipment type
     const grouped: Record<string, EquipmentPricingTier[]> = {};
     
-    for (const tier of data || []) {
+    for (const tier of (data || []) as unknown as EquipmentPricingTier[]) {
       if (!grouped[tier.equipment_type]) {
         grouped[tier.equipment_type] = [];
       }
@@ -624,7 +626,7 @@ export async function updateEquipmentPricing(
   try {
     const { error } = await supabase
       .from('equipment_pricing_tiers')
-      .update(updates)
+      .update(updates as any)
       .eq('id', id);
     
     if (error) throw error;
@@ -644,7 +646,7 @@ export async function createEquipmentPricing(
   try {
     const { data, error } = await supabase
       .from('equipment_pricing_tiers')
-      .insert(tier)
+      .insert(tier as any)
       .select('id')
       .single();
     
@@ -732,7 +734,7 @@ export async function getMarketAdjustedPrice(
     } else if (!marketError && marketPrices && marketPrices.length > 0) {
       // Calculate weighted average from market data
       interface MarketPrice { price: number; confidence?: number; price_date: string; source_name?: string; }
-      const prices = marketPrices as MarketPrice[];
+      const prices = marketPrices as unknown as MarketPrice[];
       
       // Weight by recency (newer = higher weight)
       let totalWeight = 0;
@@ -846,7 +848,7 @@ export async function syncPricingFromMarketData(
     
     // Calculate weighted average
     interface MarketPrice { price: number; [key: string]: unknown; }
-    const avgPrice = marketPrices.reduce((sum: number, p: MarketPrice) => sum + p.price, 0) / marketPrices.length;
+    const avgPrice = (marketPrices as unknown as MarketPrice[]).reduce((sum, p) => sum + p.price, 0) / marketPrices.length;
     
     // Update standard tier pricing
     const { error: updateError } = await supabase

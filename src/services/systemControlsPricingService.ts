@@ -914,7 +914,7 @@ class SystemControlsPricingService {
 
     // Save to database
     try {
-      const { error } = await supabase.from("pricing_configurations").upsert(
+      const { error } = await (supabase as any).from("pricing_configurations").upsert(
         {
           config_key: "system_controls_pricing",
           config_category: "system_controls",

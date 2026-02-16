@@ -81,6 +81,9 @@ export type LoadProfile = {
 export type ContractQuoteComputed = {
   dutyCycle?: number;
   kWContributors?: Record<string, number>;
+  contributorShares?: Record<string, number>;
+  details?: Record<string, unknown>;
+  notes?: string[];
   assumptions?: string[];
   warnings?: string[];
 };
@@ -243,8 +246,8 @@ export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResu
     });
     console.log("Inputs Used:", inputsUsed);
     console.log("Load Profile:", loadProfile);
-    console.log("Duty Cycle:", computed?.dutyCycle ?? "not provided");
-    console.log("kW Contributors:", computed?.kWContributors ?? "not provided");
+    console.log("Duty Cycle:", computed?.validation?.dutyCycle ?? "not provided");
+    console.log("kW Contributors:", computed?.validation?.kWContributors ?? "not provided");
     if (warnings.length) console.warn("Warnings:", warnings);
     console.groupEnd();
   }
@@ -259,11 +262,10 @@ export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResu
     loadProfile,
     sizingHints,
     computed: {
-      version: validation?.version,           // Contract version for drift detection
       dutyCycle: validation?.dutyCycle,
       // ✅ NORMALIZED: All 8 canonical keys always present (even zeros)
       kWContributors: normalizeContributors(validation?.kWContributors),
-      kWContributorShares: validation?.kWContributorShares,
+      contributorShares: (validation as any)?.kWContributorShares,
       // ✅ VALIDATED: Details namespace must match industry (prevents cross-contamination)
       details: enforceDetailsNamespace(validation?.details, tpl.industry),
       notes: validation?.notes,

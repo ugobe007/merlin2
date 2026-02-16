@@ -112,22 +112,22 @@ export async function getSubIndustries(industrySlug: string): Promise<SubIndustr
     return [];
   }
 
-  return (data || []).map((row: SubIndustryRow) => ({
+  return (data || []).map((row) => ({
     id: row.id,
     industrySlug: row.industry_slug,
     subIndustrySlug: row.sub_industry_slug,
     name: row.name,
     description: row.description,
     icon: row.icon,
-    loadMultiplier: parseFloat(String(row.load_multiplier)) || 1.0,
-    backupMultiplier: parseFloat(String(row.backup_multiplier)) || 1.0,
-    solarAffinity: parseFloat(String(row.solar_affinity)) || 1.0,
-    evAffinity: parseFloat(String(row.ev_affinity)) || 1.0,
+    loadMultiplier: Number(row.load_multiplier) || 1.0,
+    backupMultiplier: Number(row.backup_multiplier) || 1.0,
+    solarAffinity: Number(row.solar_affinity) || 1.0,
+    evAffinity: Number(row.ev_affinity) || 1.0,
     typicalSizeMin: row.typical_size_min,
     typicalSizeMax: row.typical_size_max,
     sizeUnit: row.size_unit,
-    displayOrder: row.display_order,
-    isActive: row.is_active,
+    displayOrder: row.display_order ?? 0,
+    isActive: row.is_active ?? true,
   }));
 }
 
@@ -156,15 +156,15 @@ export async function getSubIndustry(
     name: data.name,
     description: data.description,
     icon: data.icon,
-    loadMultiplier: parseFloat(data.load_multiplier) || 1.0,
-    backupMultiplier: parseFloat(data.backup_multiplier) || 1.0,
-    solarAffinity: parseFloat(data.solar_affinity) || 1.0,
-    evAffinity: parseFloat(data.ev_affinity) || 1.0,
+    loadMultiplier: Number(data.load_multiplier) || 1.0,
+    backupMultiplier: Number(data.backup_multiplier) || 1.0,
+    solarAffinity: Number(data.solar_affinity) || 1.0,
+    evAffinity: Number(data.ev_affinity) || 1.0,
     typicalSizeMin: data.typical_size_min,
     typicalSizeMax: data.typical_size_max,
     sizeUnit: data.size_unit,
-    displayOrder: data.display_order,
-    isActive: data.is_active,
+    displayOrder: data.display_order ?? 0,
+    isActive: data.is_active ?? true,
   };
 }
 
@@ -188,19 +188,19 @@ export async function getBusinessSizeTiers(industrySlug: string): Promise<Busine
     return [];
   }
 
-  return (data || []).map((row: BusinessSizeTierRow) => ({
+  return (data || []).map((row) => ({
     id: row.id,
     industrySlug: row.industry_slug,
-    tier: row.tier,
+    tier: row.tier as BusinessSizeTier['tier'],
     tierName: row.tier_name,
     sizeField: row.size_field,
     minValue: row.min_value,
     maxValue: row.max_value,
-    questionnaireDepth: row.questionnaire_depth,
-    targetQuestionCount: row.target_question_count,
+    questionnaireDepth: row.questionnaire_depth as BusinessSizeTier['questionnaireDepth'],
+    targetQuestionCount: row.target_question_count ?? 15,
     description: row.description,
-    displayOrder: row.display_order,
-    isActive: row.is_active,
+    displayOrder: row.display_order ?? 0,
+    isActive: row.is_active ?? true,
   }));
 }
 

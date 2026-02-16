@@ -224,7 +224,7 @@ export class PricingClient {
       return null;
     }
 
-    return data;
+    return data as unknown as PricingConfiguration;
   }
 
   // Get all pricing configurations
@@ -243,7 +243,7 @@ export class PricingClient {
       return [];
     }
 
-    return data || [];
+    return (data || []) as unknown as PricingConfiguration[];
   }
 
   // Update pricing configuration
@@ -270,7 +270,7 @@ export class PricingClient {
       return null;
     }
 
-    return data;
+    return data as unknown as PricingConfiguration;
   }
 
   // Create new pricing configuration
@@ -283,7 +283,7 @@ export class PricingClient {
     );
     const { data, error } = await supabase
       .from("pricing_configurations")
-      .insert(config)
+      .insert(config as any)
       .select()
       .single();
 
@@ -292,7 +292,7 @@ export class PricingClient {
       return null;
     }
 
-    return data;
+    return data as unknown as PricingConfiguration;
   }
 
   // Get daily price data for a date range
@@ -319,7 +319,7 @@ export class PricingClient {
       return [];
     }
 
-    return data || [];
+    return (data || []) as unknown as DailyPriceData[];
   }
 
   // Insert daily price data
@@ -337,7 +337,7 @@ export class PricingClient {
       return null;
     }
 
-    return data;
+    return data as unknown as DailyPriceData;
   }
 
   // Get unresolved pricing alerts
@@ -353,28 +353,28 @@ export class PricingClient {
       return [];
     }
 
-    return data || [];
+    return (data || []) as unknown as PricingAlert[];
   }
 
   // Create pricing alert
   async createPricingAlert(
     alert: Omit<PricingAlert, "id" | "created_at" | "triggered_at">
   ): Promise<PricingAlert | null> {
-    const { data, error } = await supabase.from("pricing_alerts").insert(alert).select().single();
+    const { data, error } = await supabase.from("pricing_alerts").insert(alert as any).select().single();
 
     if (error) {
       console.error("Error creating pricing alert:", error);
       return null;
     }
 
-    return data;
+    return data as unknown as PricingAlert;
   }
 
   // Calculate size-weighted BESS pricing using database function
   async calculateBESSPricing(energyCapacityMWh: number, configId?: string): Promise<number | null> {
     const { data, error } = await supabase.rpc("calculate_bess_pricing", {
       energy_capacity_mwh: energyCapacityMWh,
-      config_id: configId || null,
+      config_id: configId ?? undefined,
     });
 
     if (error) {

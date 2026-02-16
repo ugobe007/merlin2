@@ -119,7 +119,7 @@ export async function getDepreciationSchedule(
       return null;
     }
 
-    const schedule = data as DepreciationSchedule;
+    const schedule = data as unknown as DepreciationSchedule;
     setCache(cacheKey, schedule);
     return schedule;
   } catch (err) {
@@ -147,7 +147,7 @@ export async function getAllDepreciationSchedules(): Promise<DepreciationSchedul
       return [];
     }
 
-    const schedules = data as DepreciationSchedule[];
+    const schedules = data as unknown as DepreciationSchedule[];
     setCache(cacheKey, schedules);
     return schedules;
   } catch (err) {

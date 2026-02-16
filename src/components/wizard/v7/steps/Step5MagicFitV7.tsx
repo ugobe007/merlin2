@@ -296,7 +296,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
               solarMW: solarKW / 1000,
               windMW: windKW / 1000,
               generatorMW: generatorKW / 1000,
-              generatorFuelType: data.addOns.generatorFuelType || 'natural-gas',
+              generatorFuelType: (data.addOns.generatorFuelType || 'natural-gas') as 'diesel' | 'natural-gas' | 'dual-fuel',
               gridConnection: 'on-grid',
               batteryChemistry: 'lfp',
             });

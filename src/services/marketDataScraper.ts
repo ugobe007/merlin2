@@ -1189,7 +1189,7 @@ export async function saveScrapedArticles(
     }
 
     // Insert new article
-    const { error } = await supabase.from("scraped_articles").insert({
+    const { error } = await (supabase as any).from("scraped_articles").insert({
       source_id: article.source_id,
       title: article.title,
       url: article.url,
@@ -1253,7 +1253,7 @@ export async function updateScrapeJobStatus(
       items_new: itemsNew,
       prices_extracted: pricesExtracted,
       last_error: error,
-      consecutive_failures: status === "failed" ? supabase.rpc("increment_failures") : 0,
+      consecutive_failures: status === "failed" ? (supabase.rpc as any)("increment_failures") : 0,
     })
     .eq("source_id", sourceId);
 
@@ -1282,7 +1282,7 @@ export async function getDueScrapeJobs(): Promise<ScrapeJob[]> {
     return [];
   }
 
-  return data || [];
+  return (data as unknown as ScrapeJob[]) || [];
 }
 
 /**

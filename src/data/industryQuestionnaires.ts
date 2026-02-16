@@ -21,6 +21,8 @@ export interface QuestionOption {
   value: string;
   label: string;
   description?: string;
+  icon?: string;
+  disabled?: boolean;
 }
 
 export interface QuestionConditional {
@@ -34,7 +36,15 @@ export interface Question {
   id: string;
   label?: string;
   question?: string; // Alternative to label (for compatibility with useCaseTemplates)
-  type: "number" | "select" | "multi-select" | "multiselect";
+  type:
+    | "number"
+    | "number_stepper"
+    | "select"
+    | "multi-select"
+    | "multiselect"
+    | "buttons"
+    | "toggle"
+    | "slider";
   placeholder?: string;
   suffix?: string;
   unit?: string; // Alternative to suffix (for compatibility with useCaseTemplates)

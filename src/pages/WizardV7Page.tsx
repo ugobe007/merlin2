@@ -609,7 +609,7 @@ function WizardV7Page() {
       <V7AdvisorPanel
         title="Merlin Advisor"
         subtitle={insights.subtitle}
-        badges={insights.badges}
+        badges={insights.badges as any}
         bullets={fallbackBullets.slice(0, 5)}
       />
     );

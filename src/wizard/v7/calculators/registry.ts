@@ -310,19 +310,19 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
     // Bridge both template format (pool_on_site) and curated format (poolOnSite)
     let hotelAmenities: string[] = [];
     if (Array.isArray(inputs.hotelAmenities)) {
-      hotelAmenities = inputs.hotelAmenities;
+      hotelAmenities = inputs.hotelAmenities.map(String);
     } else {
       // Pool: curated sends "indoor"/"outdoor"/"both"/"none"; template sends boolean
       const poolVal = inputs.pool_on_site ?? inputs.poolOnSite;
-      if (poolVal && poolVal !== "none" && poolVal !== "no" && poolVal !== false)
+      if (poolVal && poolVal !== "none" && poolVal !== "no")
         hotelAmenities.push("pool");
       // Spa: curated sends "full-spa"/"fitness-only"/"both"/"none"; template sends boolean
       const spaVal = inputs.spa_on_site ?? inputs.spaOnSite;
-      if (spaVal && spaVal !== "none" && spaVal !== "no" && spaVal !== false)
+      if (spaVal && spaVal !== "none" && spaVal !== "no")
         hotelAmenities.push("spa");
       // Restaurant: curated sends "full-service"/"breakfast-only"/"bar-lounge"/"none"
       const restVal = inputs.restaurant_on_site ?? inputs.restaurantOnSite;
-      if (restVal && restVal !== "none" && restVal !== "no" && restVal !== false)
+      if (restVal && restVal !== "none" && restVal !== "no")
         hotelAmenities.push("restaurant");
       // Bar: curated restaurantOnSite="bar-lounge" also implies bar
       const barVal = inputs.bar_on_site ?? inputs.barOnSite;
@@ -333,8 +333,7 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
         laundryVal &&
         laundryVal !== "outsourced" &&
         laundryVal !== "none" &&
-        laundryVal !== "no" &&
-        laundryVal !== false
+        laundryVal !== "no"
       )
         hotelAmenities.push("laundry");
     }

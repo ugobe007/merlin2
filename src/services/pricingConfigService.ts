@@ -428,7 +428,7 @@ class PricingConfigService {
       // Convert database format to PricingConfiguration
       const config: PricingConfiguration = {
         ...(data.config_data as any),
-        lastUpdated: data.last_updated || data.updated_at,
+        lastUpdated: (data as any).last_updated || data.updated_at,
         updatedBy: data.updated_by || "System",
         version: data.version || "1.0.0",
       };
@@ -469,7 +469,7 @@ class PricingConfigService {
       // First, unset any existing default
       await supabase
         .from("pricing_configurations")
-        .update({ is_default: false })
+        .update({ is_default: false } as any)
         .eq("is_default", true);
 
       // Check if default config exists
@@ -506,13 +506,13 @@ class PricingConfigService {
         // Update existing
         const { error: updateError } = await supabase
           .from("pricing_configurations")
-          .update(configData)
+          .update(configData as any)
           .eq("id", existing.id);
         error = updateError;
       } else {
         // Insert new
-        const { error: insertError } = await supabase
-          .from("pricing_configurations")
+        const { error: insertError } = await (supabase
+          .from("pricing_configurations") as any)
           .insert(configData);
         error = insertError;
       }

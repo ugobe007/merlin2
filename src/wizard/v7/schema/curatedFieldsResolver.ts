@@ -581,7 +581,7 @@ function convertLegacyQuestion(
   industryKey?: string
 ): CuratedField {
   // Use legacy metadata if present, otherwise default to required
-  const required = (q as Record<string, unknown>).required !== false;
+  const required = (q as unknown as Record<string, unknown>).required !== false;
 
   // Look up smart default from industry defaults map
   const industryDefaults = industryKey ? INDUSTRY_SMART_DEFAULTS[industryKey] : undefined;

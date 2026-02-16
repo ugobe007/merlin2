@@ -103,12 +103,18 @@ export async function sendContractTelemetry(event: ContractTelemetryEvent): Prom
 export class ContractRunLogger {
   private sessionId: string;
   private startTime: number;
+  private industry: string;
+  private templateVersion?: string;
+  private calculatorId?: string;
   
   constructor(
-    private industry: string,
-    private templateVersion?: string,
-    private calculatorId?: string,
+    industry: string,
+    templateVersion?: string,
+    calculatorId?: string,
   ) {
+    this.industry = industry;
+    this.templateVersion = templateVersion;
+    this.calculatorId = calculatorId;
     this.sessionId = generateSessionId();
     this.startTime = Date.now();
   }

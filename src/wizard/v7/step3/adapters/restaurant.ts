@@ -102,7 +102,7 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
   const schedule = {
     hoursPerDay: 14,
     daysPerWeek: 7,
-    profileType: "lunch-dinner-peak" as const,
+    profileType: "dual-peak" as const,  // lunch + dinner peaks
   };
 
   // ── HVAC ──

@@ -18,11 +18,13 @@ function _calculateEVChargerLoad(evChargers: unknown): number {
   let totalKW = 0;
 
   // Level 2 chargers (7.2 kW each)
-  const l2Count = chargers.L2?.count || chargers.level2Count || 0;
+  const l2Obj = chargers.L2 as Record<string, unknown> | undefined;
+  const l2Count = Number(l2Obj?.count || chargers.level2Count || 0);
   totalKW += l2Count * 7.2;
 
   // DCFC chargers (150 kW each)
-  const dcfcCount = chargers.DCFC?.count || chargers.dcfcCount || 0;
+  const dcfcObj = chargers.DCFC as Record<string, unknown> | undefined;
+  const dcfcCount = Number(dcfcObj?.count || chargers.dcfcCount || 0);
   totalKW += dcfcCount * 150;
 
   return totalKW;
@@ -38,30 +40,30 @@ function estimateBaseBuildingLoad(state: WizardState): number {
 
   // Hotel
   if (industry.includes("hotel")) {
-    const rooms = inputs.roomCount || 0;
+    const rooms = Number(inputs.roomCount || 0);
     return rooms * 2.5; // ~2.5 kW per room average
   }
 
   // Car wash
   if (industry.includes("car wash")) {
-    const bays = inputs.bayCount || inputs.bays || 0;
+    const bays = Number(inputs.bayCount || inputs.bays || 0);
     return bays * 15; // ~15 kW per bay
   }
 
   // Data center
   if (industry.includes("data center")) {
-    const racks = inputs.rackCount || 0;
+    const racks = Number(inputs.rackCount || 0);
     return racks * 5; // ~5 kW per rack
   }
 
   // Hospital
   if (industry.includes("hospital")) {
-    const beds = inputs.bedCount || 0;
+    const beds = Number(inputs.bedCount || 0);
     return beds * 3; // ~3 kW per bed
   }
 
   // Generic fallback: square footage
-  const sqft = inputs.squareFootage || inputs.squareFeet || 0;
+  const sqft = Number(inputs.squareFootage || inputs.squareFeet || 0);
   return sqft * 0.015; // ~15 W per sqft (typical commercial)
 }
 
@@ -94,7 +96,7 @@ export function recalcWizardCalculated(state: WizardState): WizardState["calcula
 
   // Annual consumption estimate
   const inputs = (state.useCaseData?.inputs || {}) as Record<string, unknown>;
-  const operatingHours = inputs.operatingHours || 8760; // Default to full year
+  const operatingHours = Number(inputs.operatingHours || 8760); // Default to full year
   const annualConsumptionKWh = Math.round(baseBuildingLoadKW * operatingHours * 0.7); // 70% capacity factor
 
   // Utility costs

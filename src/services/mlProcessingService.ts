@@ -114,7 +114,7 @@ async function analyzePriceTrends(): Promise<PriceTrendAnalysis[]> {
     // Group by product type
     const byProductType = new Map<string, typeof pricingData>();
     for (const record of pricingData) {
-      const productType = record.product_type;
+      const productType = record.product_type ?? 'unknown';
       if (!byProductType.has(productType)) {
         byProductType.set(productType, []);
       }
@@ -129,8 +129,8 @@ async function analyzePriceTrends(): Promise<PriceTrendAnalysis[]> {
           const dataJson = r.data_json as any;
           return {
             price: dataJson?.pricePerUnit || 0,
-            timestamp: new Date(r.created_at).getTime(),
-            manufacturer: r.manufacturer,
+            timestamp: new Date(r.created_at ?? 0).getTime(),
+            manufacturer: r.manufacturer ?? undefined,
           };
         })
         .filter((p) => p.price > 0);
@@ -184,7 +184,7 @@ async function analyzePriceTrends(): Promise<PriceTrendAnalysis[]> {
 
       trends.push({
         productType,
-        manufacturer: pricePoints[0].manufacturer,
+        manufacturer: pricePoints[0].manufacturer ?? undefined,
         averagePrice: Math.round(avgPrice * 100) / 100,
         priceChange30d: Math.round(change30d * 10) / 10,
         priceChange90d: Math.round(change90d * 10) / 10,
@@ -484,24 +484,24 @@ export async function getLatestMLInsights(): Promise<{
 
     const priceTrends: PriceTrendAnalysis[] = (trendsResult.data || []).map((t) => ({
       productType: t.product_type,
-      manufacturer: t.manufacturer,
-      averagePrice: t.average_price,
-      priceChange30d: t.price_change_30d,
-      priceChange90d: t.price_change_90d,
-      trend: t.trend_direction,
-      confidence: t.confidence,
-      forecastNextQuarter: t.forecast_next_quarter,
-      dataPoints: t.data_points,
+      manufacturer: t.manufacturer ?? undefined,
+      averagePrice: t.average_price ?? 0,
+      priceChange30d: t.price_change_30d ?? 0,
+      priceChange90d: t.price_change_90d ?? 0,
+      trend: (t.trend_direction ?? 'stable') as PriceTrendAnalysis['trend'],
+      confidence: t.confidence ?? 0,
+      forecastNextQuarter: t.forecast_next_quarter ?? 0,
+      dataPoints: t.data_points ?? 0,
     }));
 
     const marketInsights: MarketInsight[] = (insightsResult.data || []).map((i) => ({
       category: i.category,
-      insight: i.insight_text,
-      impact: i.impact_level,
+      insight: i.insight_text ?? '',
+      impact: (i.impact_level ?? 'medium') as MarketInsight['impact'],
       affectedProducts: i.affected_products || [],
-      confidence: i.confidence,
-      sourceCount: i.source_count,
-      timestamp: i.created_at,
+      confidence: i.confidence ?? 0,
+      sourceCount: i.source_count ?? 0,
+      timestamp: i.created_at ?? new Date().toISOString(),
     }));
 
     return {

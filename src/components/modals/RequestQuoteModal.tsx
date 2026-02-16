@@ -93,7 +93,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
 
     try {
       // Save quote request to database
-      const { error: insertError } = await supabase
+      const { error: insertError } = await (supabase as any)
         .from('quote_requests')
         .insert({
           first_name: formData.firstName.trim(),

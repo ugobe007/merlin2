@@ -198,52 +198,52 @@ export async function getCalculationConstants(): Promise<CalculationConstants> {
     // Map database rows to constants object
     const constants: CalculationConstants = { ...DEFAULT_CONSTANTS };
 
-    data.forEach((row: { key: string; value_numeric: number }) => {
+    data.forEach((row: { key: string; value_numeric: number | null }) => {
       switch (row.key) {
         case "battery_cost_per_kwh_small":
-          constants.batteryCostPerKwhSmall = row.value_numeric;
+          constants.batteryCostPerKwhSmall = row.value_numeric ?? DEFAULT_CONSTANTS.batteryCostPerKwhSmall;
           break;
         case "battery_cost_per_kwh_medium":
-          constants.batteryCostPerKwhMedium = row.value_numeric;
+          constants.batteryCostPerKwhMedium = row.value_numeric ?? DEFAULT_CONSTANTS.batteryCostPerKwhMedium;
           break;
         case "battery_cost_per_kwh_large":
-          constants.batteryCostPerKwhLarge = row.value_numeric;
+          constants.batteryCostPerKwhLarge = row.value_numeric ?? DEFAULT_CONSTANTS.batteryCostPerKwhLarge;
           break;
         case "solar_cost_per_watt":
-          constants.solarCostPerWatt = row.value_numeric;
+          constants.solarCostPerWatt = row.value_numeric ?? DEFAULT_CONSTANTS.solarCostPerWatt;
           break;
         case "inverter_cost_per_kw":
-          constants.inverterCostPerKw = row.value_numeric;
+          constants.inverterCostPerKw = row.value_numeric ?? DEFAULT_CONSTANTS.inverterCostPerKw;
           break;
         case "installation_percentage":
-          constants.installationPercentage = row.value_numeric;
+          constants.installationPercentage = row.value_numeric ?? DEFAULT_CONSTANTS.installationPercentage;
           break;
         case "federal_itc_rate":
-          constants.federalItcRate = row.value_numeric;
+          constants.federalItcRate = row.value_numeric ?? DEFAULT_CONSTANTS.federalItcRate;
           break;
         case "discount_rate":
-          constants.discountRate = row.value_numeric;
+          constants.discountRate = row.value_numeric ?? DEFAULT_CONSTANTS.discountRate;
           break;
         case "project_lifetime_years":
-          constants.projectLifetimeYears = row.value_numeric;
+          constants.projectLifetimeYears = row.value_numeric ?? DEFAULT_CONSTANTS.projectLifetimeYears;
           break;
         case "battery_degradation_rate":
-          constants.batteryDegradationRate = row.value_numeric;
+          constants.batteryDegradationRate = row.value_numeric ?? DEFAULT_CONSTANTS.batteryDegradationRate;
           break;
         case "electricity_escalation_rate":
-          constants.electricityEscalationRate = row.value_numeric;
+          constants.electricityEscalationRate = row.value_numeric ?? DEFAULT_CONSTANTS.electricityEscalationRate;
           break;
         case "peak_shaving_target_percent":
-          constants.peakShavingTargetPercent = row.value_numeric;
+          constants.peakShavingTargetPercent = row.value_numeric ?? DEFAULT_CONSTANTS.peakShavingTargetPercent;
           break;
         case "backup_hours_minimum":
-          constants.backupHoursMinimum = row.value_numeric;
+          constants.backupHoursMinimum = row.value_numeric ?? DEFAULT_CONSTANTS.backupHoursMinimum;
           break;
         case "backup_hours_recommended":
-          constants.backupHoursRecommended = row.value_numeric;
+          constants.backupHoursRecommended = row.value_numeric ?? DEFAULT_CONSTANTS.backupHoursRecommended;
           break;
         case "solar_to_storage_ratio":
-          constants.solarToStorageRatio = row.value_numeric;
+          constants.solarToStorageRatio = row.value_numeric ?? DEFAULT_CONSTANTS.solarToStorageRatio;
           break;
       }
     });
@@ -283,19 +283,19 @@ export async function getIndustryPowerProfile(
     }
 
     return {
-      industrySlug: data.industry_slug,
-      typicalPeakDemandKw: data.typical_peak_demand_kw,
-      typicalMonthlyKwh: data.typical_monthly_kwh,
-      peakDemandTiming: data.peak_demand_timing,
-      loadProfileType: data.load_profile_type,
-      recommendedBatteryKwhPerUnit: data.recommended_battery_kwh_per_unit,
-      recommendedBackupHours: data.recommended_backup_hours,
-      recommendedSolarKwPerUnit: data.recommended_solar_kw_per_unit,
-      unitName: data.unit_name,
-      unitPlural: data.unit_plural,
-      avgElectricityRate: data.avg_electricity_rate,
-      avgDemandCharge: data.avg_demand_charge,
-      typicalPaybackYears: data.typical_payback_years,
+      industrySlug: data.industry_slug ?? '',
+      typicalPeakDemandKw: data.typical_peak_demand_kw ?? 0,
+      typicalMonthlyKwh: data.typical_monthly_kwh ?? 0,
+      peakDemandTiming: data.peak_demand_timing ?? '',
+      loadProfileType: data.load_profile_type ?? '',
+      recommendedBatteryKwhPerUnit: data.recommended_battery_kwh_per_unit ?? 0,
+      recommendedBackupHours: data.recommended_backup_hours ?? 0,
+      recommendedSolarKwPerUnit: data.recommended_solar_kw_per_unit ?? 0,
+      unitName: data.unit_name ?? 'unit',
+      unitPlural: data.unit_plural ?? 'units',
+      avgElectricityRate: data.avg_electricity_rate ?? 0,
+      avgDemandCharge: data.avg_demand_charge ?? 0,
+      typicalPaybackYears: data.typical_payback_years ?? 0,
     };
   } catch (error) {
     console.error("[SMBPlatform] Error:", error);
@@ -343,16 +343,16 @@ export async function getSiteConfig(siteSlug: string): Promise<SMBSiteConfig | n
     if (error || !data) return null;
 
     return {
-      slug: data.slug,
-      domain: data.domain,
-      name: data.name,
-      tagline: data.tagline,
-      primaryColor: data.primary_color,
-      secondaryColor: data.secondary_color,
-      logoUrl: data.logo_url,
-      industryCategory: data.industry_category,
-      useCaseSlug: data.use_case_slug,
-      features: data.features,
+      slug: data.slug ?? '',
+      domain: data.domain ?? '',
+      name: data.name ?? '',
+      tagline: data.tagline ?? '',
+      primaryColor: data.primary_color ?? '',
+      secondaryColor: data.secondary_color ?? '',
+      logoUrl: data.logo_url ?? undefined,
+      industryCategory: data.industry_category ?? '',
+      useCaseSlug: data.use_case_slug ?? '',
+      features: (data.features ?? { showSolar: false, showWind: false, showGenerator: false, showEV: false, showFinancing: false, showMarketIntelligence: false }) as SMBSiteConfig['features'],
     };
   } catch (error) {
     console.error("[SMBPlatform] Error loading site config:", error);
@@ -537,8 +537,8 @@ export async function getOrCreatePowerProfile(anonymousId: string): Promise<{
 
     if (existing) {
       return {
-        level: existing.level,
-        points: existing.points,
+        level: existing.level ?? 1,
+        points: existing.points ?? 0,
         completedChecks: existing.completed_checks || [],
       };
     }
@@ -553,8 +553,8 @@ export async function getOrCreatePowerProfile(anonymousId: string): Promise<{
     if (error) throw error;
 
     return {
-      level: created.level,
-      points: created.points,
+      level: created.level ?? 1,
+      points: created.points ?? 0,
       completedChecks: created.completed_checks || [],
     };
   } catch (error) {

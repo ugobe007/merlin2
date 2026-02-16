@@ -161,7 +161,7 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
 
       // Try to save to Supabase (non-blocking)
       try {
-        await supabase.from('download_leads').insert({
+        await (supabase as any).from('download_leads').insert({
           name: formData.name,
           email: formData.email,
           company: formData.company,

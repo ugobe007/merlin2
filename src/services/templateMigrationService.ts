@@ -76,8 +76,8 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
       }
 
       // 1. Insert template
-      const { data: templateData, error: templateError } = await supabase
-        .from("use_case_templates")
+      const { data: templateData, error: templateError } = await (supabase
+        .from("use_case_templates") as any)
         .insert({
           slug: template.slug,
           name: template.name,

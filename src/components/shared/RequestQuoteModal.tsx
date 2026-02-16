@@ -85,7 +85,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
     setError(null);
 
     try {
-      const { error: insertError } = await supabase.from("quote_requests").insert({
+      const { error: insertError } = await (supabase as any).from("quote_requests").insert({
         first_name: formData.firstName.trim(),
         last_name: formData.lastName.trim(),
         email: formData.email.trim().toLowerCase(),

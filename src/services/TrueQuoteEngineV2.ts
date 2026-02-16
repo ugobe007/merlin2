@@ -319,7 +319,7 @@ export async function processQuote(
   console.log("💰 Applying margin policy...");
   const tiers = ["starter", "perfectFit", "beastMode"] as const;
   for (const tier of tiers) {
-    const opt = authenticatedOptions[tier];
+    const opt = (authenticatedOptions as any)[tier];
     const baseCost = opt.financials.totalInvestment;
     try {
       const marginResult = applyMarginPolicy({

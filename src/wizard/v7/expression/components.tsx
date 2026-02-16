@@ -55,7 +55,7 @@ export function CertaintyIndicator({
   certainty,
   variant = "decoration",
   size = "sm",
-}: CertaintyIndicatorProps): JSX.Element {
+}: CertaintyIndicatorProps): React.ReactElement {
   const weight = certaintyToWeight(certainty);
   
   const sizeClass = size === "sm" ? "w-2 h-2" : "w-3 h-3";
@@ -132,7 +132,7 @@ export function Attribution({
   attribution,
   children,
   position = "top",
-}: AttributionProps): JSX.Element {
+}: AttributionProps): React.ReactElement {
   if (!attribution) {
     return <>{children}</>;
   }
@@ -193,7 +193,7 @@ export function ConfidenceBar({
   confidence,
   showValue = false,
   variant = "bar",
-}: ConfidenceBarProps): JSX.Element {
+}: ConfidenceBarProps): React.ReactElement {
   const intensity = confidenceToIntensity(confidence);
   const percent = Math.round(confidence * 100);
   
@@ -318,7 +318,7 @@ export function PhaseIndicator({
   isProcessing,
   isComplete,
   showLabel = false,
-}: PhaseIndicatorProps): JSX.Element {
+}: PhaseIndicatorProps): React.ReactElement {
   // Phase to icon mapping
   const getIcon = () => {
     if (isComplete) return "✓";
@@ -396,7 +396,7 @@ export function ReadinessGlow({
   readiness,
   children,
   color = "emerald",
-}: ReadinessGlowProps): JSX.Element {
+}: ReadinessGlowProps): React.ReactElement {
   const colors = {
     emerald: "shadow-emerald-500/40",
     blue: "shadow-blue-500/40",
@@ -440,7 +440,7 @@ interface HumilityWrapperProps {
 export function HumilityWrapper({
   humility,
   children,
-}: HumilityWrapperProps): JSX.Element {
+}: HumilityWrapperProps): React.ReactElement {
   const softness = humilityToSoftness(humility);
   
   const softnessClasses = {
@@ -492,7 +492,7 @@ interface SourceLegendProps {
 export function SourceLegend({
   sourceBreakdown,
   compact = false,
-}: SourceLegendProps): JSX.Element {
+}: SourceLegendProps): React.ReactElement {
   const sources = [
     { key: "user", label: "You entered", color: "bg-emerald-400", count: sourceBreakdown.user },
     { key: "location_intel", label: "From your area", color: "bg-blue-400", count: sourceBreakdown.location_intel },
@@ -566,7 +566,7 @@ export function FieldWrapper({
   children,
   showCertainty = true,
   showAttribution = true,
-}: FieldWrapperProps): JSX.Element {
+}: FieldWrapperProps): React.ReactElement {
   const weight = certaintyToWeight(certainty);
   
   // Weight to opacity mapping

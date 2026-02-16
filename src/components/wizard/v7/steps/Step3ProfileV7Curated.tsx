@@ -149,8 +149,8 @@ export default function Step3ProfileV7Curated(props: Props) {
   // This guarantees: stable IDs (fixes React keys), normalized options (fixes blank cards), consistent types
   const questions: CuratedField[] = useMemo(() => {
     const raw: Record<string, unknown>[] =
-      (curatedSchema as Record<string, unknown>)?.questions as Record<string, unknown>[] ??
-      (curatedSchema as Record<string, unknown>)?.fields as Record<string, unknown>[] ??
+      (curatedSchema as unknown as Record<string, unknown>)?.questions as Record<string, unknown>[] ??
+      (curatedSchema as unknown as Record<string, unknown>)?.fields as Record<string, unknown>[] ??
       [];
 
     return (raw ?? []).map((q: Record<string, unknown>, idx: number) => {
@@ -410,21 +410,29 @@ export default function Step3ProfileV7Curated(props: Props) {
     const options = getOptions(q);
     
     // ✅ Normalize options to prevent blank cards (with Array guard to prevent crash)
-    const normalizedOptions = Array.isArray(options)
-      ? options.map((o: Record<string, unknown> | string | number, i: number) => {
+    // Preserves icon, description, disabled for rich button cards
+    type NormalizedOption = { label: string; value: string; icon?: string; description?: string; disabled?: boolean };
+    const normalizedOptions: NormalizedOption[] = Array.isArray(options)
+      ? options.map((o: Record<string, unknown> | string | number, i: number): NormalizedOption => {
           if (typeof o === "string" || typeof o === "number") {
-            return { label: String(o), value: o };
+            return { label: String(o), value: String(o) };
           }
-          const label = o?.label ?? o?.text ?? o?.name ?? String(o?.value ?? i);
-          const value = o?.value ?? o?.id ?? o?.key ?? label ?? i;
-          return { label: String(label), value };
+          const label = String(o?.label ?? o?.text ?? o?.name ?? String(o?.value ?? i));
+          const value = String(o?.value ?? o?.id ?? o?.key ?? label ?? i);
+          return {
+            label,
+            value,
+            icon: typeof o?.icon === "string" ? o.icon : undefined,
+            description: typeof o?.description === "string" ? o.description : undefined,
+            disabled: typeof o?.disabled === "boolean" ? o.disabled : undefined,
+          };
         })
       : [];
 
     // Choose renderer based on type and option count (extracted for testability)
     // ✅ Pass normalized question so renderer sees correct option count
     const qForRender = { ...q, options: normalizedOptions };
-    const renderer = chooseRendererForQuestion(qForRender);
+    const renderer = chooseRendererForQuestion(qForRender as CuratedField);
 
     return (
       <div
@@ -659,7 +667,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                 <button
                   type="button"
                   onClick={() => {
-                    const current = typeof value === "number" ? value : (q.smartDefault ?? 0);
+                    const current = typeof value === "number" ? value : Number(q.smartDefault ?? 0);
                     const min = q.range?.min ?? q.validation?.min ?? 0;
                     const step = q.range?.step ?? 1;
                     const next = Math.max(min, current - step);
@@ -715,7 +723,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                 <button
                   type="button"
                   onClick={() => {
-                    const current = typeof value === "number" ? value : (q.smartDefault ?? 0);
+                    const current = typeof value === "number" ? value : Number(q.smartDefault ?? 0);
                     const max = q.range?.max ?? q.validation?.max ?? 9999;
                     const step = q.range?.step ?? 1;
                     const next = Math.min(max, current + step);

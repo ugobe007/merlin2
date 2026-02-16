@@ -454,13 +454,13 @@ function extractWithRegex(text: string, rawMatches: string[]): ExtractedSpecs {
  */
 async function extractWithAI(text: string): Promise<Partial<ExtractedSpecs> | null> {
   // Check if we have OpenAI configuration
-  const { data: config } = await supabase
+  const { data: config } = await (supabase as any)
     .from("app_settings")
     .select("value")
     .eq("key", "openai_api_key")
     .single();
 
-  if (!config?.value) {
+  if (!(config as any)?.value) {
     console.log("OpenAI API key not configured, skipping AI extraction");
     return null;
   }
@@ -499,7 +499,7 @@ Return ONLY the JSON object, no markdown, no explanation.`;
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${config.value}`,
+        Authorization: `Bearer ${(config as any).value}`,
       },
       body: JSON.stringify({
         model: "gpt-4-turbo-preview",

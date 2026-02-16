@@ -778,6 +778,9 @@ export interface CalculationsSelected {
   federalITC: number;
   federalITCRate?: number;
   netInvestment: number;
+
+  // Margin policy envelope (added Feb 2026)
+  marginRender?: import('@/types/marginRenderEnvelope').MarginRenderEnvelope;
 }
 
 /**

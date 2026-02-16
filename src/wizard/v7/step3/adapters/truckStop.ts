@@ -164,7 +164,7 @@ function mapAnswers(
   const schedule = {
     hoursPerDay: 24,
     daysPerWeek: 7,
-    profileType: "24-7" as const,
+    profileType: "flat" as const,  // 24/7 truck stop
   };
 
   // ── Process Loads ──
@@ -284,7 +284,7 @@ function mapAnswers(
     hvac: {
       class: hvacClass,
       heatingType: "gas",
-      coolingType: "rooftop-unit",
+      coolingType: "split-system",
     },
     processLoads,
     architecture: {

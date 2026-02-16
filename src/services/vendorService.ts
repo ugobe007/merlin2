@@ -59,7 +59,7 @@ export const registerVendor = async (data: VendorRegistrationData) => {
         website: data.website,
         description: data.description,
         status: "pending",
-      })
+      } as any)
       .select()
       .single();
 
@@ -485,7 +485,7 @@ export const createRFQ = async (data: CreateRFQData) => {
         status: "open",
         due_date: dueDate.toISOString(),
         responses_count: 0,
-      })
+      } as any)
       .select()
       .single();
 
@@ -586,7 +586,7 @@ async function queueVendorEmails(
       created_at: new Date().toISOString(),
     }));
 
-    await supabase.from("email_queue").insert(emailJobs);
+    await (supabase as any).from("email_queue").insert(emailJobs);
   } catch (error) {
     console.error("Error queuing vendor emails:", error);
   }
@@ -657,7 +657,7 @@ export const submitRFQResponse = async (data: RFQResponseData) => {
   if (error) throw error;
 
   // Update RFQ response count
-  await supabase.rpc("increment_rfq_responses", { rfq_id: data.rfq_id });
+  await (supabase.rpc as any)("increment_rfq_responses", { rfq_id: data.rfq_id });
 
   return response;
 };
@@ -774,7 +774,7 @@ export const getVendorStats = async () => {
     .eq("vendor_id", vendor.id);
 
   const activeSubmissions =
-    responses?.filter((r) => ["submitted", "under_review"].includes(r.status)).length || 0;
+    responses?.filter((r) => ["submitted", "under_review"].includes(r.status ?? '')).length || 0;
 
   // Get open RFQs count
   const { count: openRFQsCount } = await supabase
@@ -853,7 +853,7 @@ async function sendVendorProductApprovalEmail(product: any, adminId: string): Pr
     }
 
     // Queue email (using email_queue table if available)
-    const { error } = await supabase.from("email_queue").insert({
+    const { error } = await (supabase as any).from("email_queue").insert({
       to_email: vendor.email,
       subject: `✅ Product Approved: ${product.manufacturer} ${product.model}`,
       body: `
@@ -908,7 +908,7 @@ async function sendVendorProductRejectionEmail(
     }
 
     // Queue email
-    const { error } = await supabase.from("email_queue").insert({
+    const { error } = await (supabase as any).from("email_queue").insert({
       to_email: vendor.email,
       subject: `Product Review Required: ${product.manufacturer} ${product.model}`,
       body: `

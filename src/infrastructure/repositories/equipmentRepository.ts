@@ -173,7 +173,7 @@ export class EquipmentRepository {
       totalNameplateCapacityKw: 0
     };
 
-    data.forEach(item => {
+    (data as any[]).forEach(item => {
       // Count by category
       stats.byCategory[item.category] = (stats.byCategory[item.category] || 0) + 1;
       

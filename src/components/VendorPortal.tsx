@@ -80,7 +80,7 @@ const VendorPortal: React.FC = () => {
       try {
         const vendor = await getCurrentVendor();
         if (vendor) {
-          setCurrentVendor(vendor);
+          setCurrentVendor(vendor as any);
           setIsLoggedIn(true);
           await loadDashboardData();
         }
@@ -102,9 +102,9 @@ const VendorPortal: React.FC = () => {
         getOpenRFQs(),
         getVendorStats(),
       ]);
-      setVendorProducts(products);
-      setOpenRFQs(rfqs);
-      setStats(vendorStats);
+      setVendorProducts(products as any);
+      setOpenRFQs(rfqs as any);
+      setStats(vendorStats as any);
     } catch (err: any) {
       console.error("Error loading dashboard data:", err);
     }
@@ -122,7 +122,7 @@ const VendorPortal: React.FC = () => {
       });
 
       if (result.success && result.vendor) {
-        setCurrentVendor(result.vendor);
+        setCurrentVendor(result.vendor as any);
         setIsLoggedIn(true);
         await loadDashboardData();
       } else {

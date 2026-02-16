@@ -132,7 +132,7 @@ export function VerticalLandingPage({
               <div className="animate-spin w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full" />
             </div>
           }>
-            <WizardV7Page initialIndustry={config.wizardIndustrySlug} />
+            <WizardV7Page {...{ initialIndustry: config.wizardIndustrySlug } as any} />
           </React.Suspense>
         </div>
       )}

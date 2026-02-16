@@ -114,7 +114,7 @@ const STEP_MESSAGES: Record<number, (props: MerlinBarProps) => { main: string; t
       return { main: "🏢 What type of facility do you have? I'll tailor your system." };
     }
     return { 
-      main: `Perfect! I know ${_p.industryName || _p.industry} energy patterns well.`,
+      main: `Perfect! I know ${p.industryName || p.industry} energy patterns well.`,
       tip: "Next: Tell me about your facility size and usage."
     };
   },
@@ -124,9 +124,9 @@ const STEP_MESSAGES: Record<number, (props: MerlinBarProps) => { main: string; t
   }),
   4: (_p) => {
     const parts: string[] = [];
-    if (p.hasSolar) parts.push('solar');
-    if (p.hasGenerator) parts.push('backup power');
-    if (p.hasEv) parts.push('EV charging');
+    if (_p.hasSolar) parts.push('solar');
+    if (_p.hasGenerator) parts.push('backup power');
+    if (_p.hasEv) parts.push('EV charging');
     
     if (parts.length === 0) {
       return { main: "⚡ Select your energy options - I'll size them optimally." };
@@ -181,7 +181,7 @@ function calculateProgressiveEstimate(props: MerlinBarProps): {
   confidence: number; // 1-5 stars
   source: string;
 } {
-  const { currentStep, industry, sunHours: _sunHours, electricityRate: _electricityRate, annualSavings, goals: _goals } = props;
+  const { currentStep, industry, sunHours, electricityRate, annualSavings, goals: _goals } = props;
   
   // If we have actual calculations, use them
   if (annualSavings && annualSavings > 0) {
@@ -247,7 +247,7 @@ function getEnergyOpportunities(props: MerlinBarProps): Array<{
     color: string;
   }> = [];
   
-  const { sunHours, electricityRate: _electricityRate, goals: _goals, hasSolar: _hasSolar, hasGenerator: _hasGenerator, hasEv: _hasEv } = props;
+  const { sunHours, electricityRate: _electricityRate, goals, hasSolar: _hasSolar, hasGenerator, hasEv } = props;
   
   // Peak shaving is always available with BESS
   opportunities.push({
