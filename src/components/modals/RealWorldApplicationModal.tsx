@@ -7,7 +7,7 @@
 import React from 'react';
 import { X, TrendingUp, Zap, DollarSign, Clock, ArrowRight, Building2, Database, Car, Factory, Store, Thermometer } from 'lucide-react';
 
-export type ApplicationType = 'hotel' | 'data-center' | 'ev-charging' | 'office' | 'manufacturing' | 'retail' | 'cold-storage';
+export type ApplicationType = 'hotel' | 'data-center' | 'ev-charging' | 'car-wash' | 'office' | 'manufacturing' | 'retail' | 'cold-storage';
 
 interface RealWorldApplicationModalProps {
   show: boolean;
@@ -43,7 +43,7 @@ const applicationData: Record<ApplicationType, {
   'office': {
     title: 'Corporate Office Building',
     subtitle: '75,000 sq ft Class A office with 500 employees',
-    icon: <Building2 className="w-12 h-12 text-blue-600" />,
+    icon: <Building2 className="w-12 h-12" style={{ color: '#60a5fa' }} />,
     image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070',
     facilitySize: '75,000 sq ft',
     peakPowerKW: 350,
@@ -77,7 +77,7 @@ const applicationData: Record<ApplicationType, {
   'manufacturing': {
     title: 'Manufacturing Facility',
     subtitle: 'Medium-scale production plant with heavy machinery',
-    icon: <Factory className="w-12 h-12 text-orange-600" />,
+    icon: <Factory className="w-12 h-12" style={{ color: '#60a5fa' }} />,
     image: 'https://images.unsplash.com/photo-1565008447742-97f6f38c985c?q=80&w=2070',
     facilitySize: '200,000 sq ft',
     peakPowerKW: 2800,
@@ -111,7 +111,7 @@ const applicationData: Record<ApplicationType, {
   'retail': {
     title: 'Large Retail Store',
     subtitle: 'Big box retailer with refrigeration and high foot traffic',
-    icon: <Store className="w-12 h-12 text-green-600" />,
+    icon: <Store className="w-12 h-12" style={{ color: '#3ECF8E' }} />,
     image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070',
     facilitySize: '120,000 sq ft',
     peakPowerKW: 450,
@@ -145,7 +145,7 @@ const applicationData: Record<ApplicationType, {
   'cold-storage': {
     title: 'Cold Storage Warehouse',
     subtitle: 'Temperature-controlled distribution center',
-    icon: <Thermometer className="w-12 h-12 text-cyan-600" />,
+    icon: <Thermometer className="w-12 h-12" style={{ color: '#60a5fa' }} />,
     image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070',
     facilitySize: '80,000 sq ft',
     peakPowerKW: 1200,
@@ -176,10 +176,57 @@ const applicationData: Record<ApplicationType, {
       'Compressor cycling patterns'
     ]
   },
+  'car-wash': {
+    title: 'Multi-Bay Car Wash',
+    subtitle: '6-tunnel express wash with vacuum stations and detail bays',
+    icon: <Car className="w-12 h-12 text-[#3ECF8E]" />,
+    image: 'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?q=80&w=2070',
+    facilitySize: '8,000 sq ft (6 tunnels + 12 vacuum stations)',
+    
+    // Load Profile
+    peakPowerKW: 500,
+    avgPowerKW: 280,
+    dailyEnergyKWh: 6720,
+    operatingHours: '7am-9pm daily, peak 11am-3pm',
+    
+    // BESS Solution
+    systemSizeMW: 0.5,
+    systemSizeMWh: 2.0,
+    duration: 4,
+    
+    // Financial Data
+    demandChargeBefore: 180000,
+    demandChargeAfter: 72000,
+    energyCostBefore: 285000,
+    energyCostAfter: 158000,
+    
+    // ROI Metrics
+    totalAnnualSavings: 235000,
+    systemCost: 210000,
+    paybackYears: 0.89,
+    roi25Year: '2,700%',
+    
+    // Key Benefits
+    benefits: [
+      'Peak shaving during midday wash rushes',
+      'Blower and dryer motor load smoothing',
+      'Backup power keeps tunnels running during outages',
+      'EV vacuum station power without grid upgrades'
+    ],
+    
+    // Real-world context
+    challenges: [
+      'Tunnel conveyor motor startup surges',
+      'High-pressure pump cycling (200+ HP)',
+      'Blower/dryer banks pulling 150+ kW',
+      'Weekend demand spikes 2-3x weekday'
+    ]
+  },
+
   'hotel': {
     title: 'Luxury Hotel - 300 Rooms',
     subtitle: 'Full-service property with restaurant, gym, conference center',
-    icon: <Building2 className="w-12 h-12 text-[#3ECF8E]" />,
+    icon: <Building2 className="w-12 h-12" style={{ color: '#3ECF8E' }} />,
     image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2070',
     facilitySize: '150,000 sq ft',
     
@@ -226,7 +273,7 @@ const applicationData: Record<ApplicationType, {
   'data-center': {
     title: 'Cloud Data Center',
     subtitle: 'Edge colocation facility with 99.999% uptime requirement',
-    icon: <Database className="w-12 h-12 text-blue-600" />,
+    icon: <Database className="w-12 h-12" style={{ color: '#60a5fa' }} />,
     image: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=2832',
     facilitySize: '25,000 sq ft (200-400 racks)',
     
@@ -273,7 +320,7 @@ const applicationData: Record<ApplicationType, {
   'ev-charging': {
     title: 'Fast Charging Hub',
     subtitle: 'Highway rest stop with 100 charging stations',
-    icon: <Car className="w-12 h-12 text-green-600" />,
+    icon: <Car className="w-12 h-12" style={{ color: '#3ECF8E' }} />,
     image: 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=2072',
     facilitySize: '20 acres (50 DC fast + 50 L2 chargers)',
     
@@ -512,18 +559,20 @@ const RealWorldApplicationModal: React.FC<RealWorldApplicationModalProps> = ({
             <h3 className="text-2xl font-bold text-white mb-3">
               🧙‍♂️ Get Your Custom Quote
             </h3>
-            <p className="text-slate-400 mb-6">
-              Merlin can calculate a personalized BESS solution for your facility in just 3 minutes
+            <p className="mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              Merlin can calculate a personalized BESS solution for your facility in under 3 minutes
             </p>
             <button
               onClick={() => {
                 onClose();
                 onStartWizard?.();
               }}
-              className="px-12 py-4 rounded-full text-xl font-bold transition-all transform hover:scale-105"
-              style={{ background: 'rgba(62,207,142,0.15)', border: '2px solid rgba(62,207,142,0.3)', color: '#3ECF8E' }}
+              className="px-10 py-3.5 rounded-lg text-base font-bold transition-all duration-200"
+              style={{ background: 'transparent', border: '1px solid rgba(62,207,142,0.35)', color: '#3ECF8E' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.08)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
-              Start SmartWizard →
+              Build My Quote →
             </button>
           </div>
         </div>

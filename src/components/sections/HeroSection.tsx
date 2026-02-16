@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import type { UseCaseData } from "../UseCaseROI";
 // QuoteBuilderLanding moved to legacy - using wizard v5
 import RealWorldApplicationModal from "../modals/RealWorldApplicationModal";
+import type { ApplicationType } from "../modals/RealWorldApplicationModal";
 import { QuoteEngine } from "@/core/calculations";
 import merlinImage from "../../assets/images/new_profile_merlin.png";
 import badgeIcon from "../../assets/images/badge_icon.jpg";
@@ -305,8 +306,7 @@ export default function HeroSection({
   const [, setShowQuoteBuilderLanding] = useState(false); // Only setter used
   const [selectedUseCaseForQuote, setSelectedUseCaseForQuote] = useState<UseCaseData | null>(null);
   const [showRealWorldModal, setShowRealWorldModal] = useState(false);
-  const [selectedApplication] = useState<"hotel" | "data-center" | "ev-charging">("hotel");
-  void selectedApplication; // Explicitly mark as intentionally unused if not used later
+  const [selectedApplication, setSelectedApplication] = useState<ApplicationType>("hotel");
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showUseCaseDetail, setShowUseCaseDetail] = useState(false);
@@ -971,8 +971,8 @@ export default function HeroSection({
             <div
               className="group cursor-pointer"
               onClick={() => {
-                console.log("Data Center card clicked");
-                setShowSmartWizard(true);
+                setSelectedApplication('car-wash');
+                setShowRealWorldModal(true);
               }}
             >
               <div
@@ -1030,8 +1030,8 @@ export default function HeroSection({
             <div
               className="group cursor-pointer"
               onClick={() => {
-                console.log("Hotel card clicked");
-                setShowSmartWizard(true);
+                setSelectedApplication('hotel');
+                setShowRealWorldModal(true);
               }}
             >
               <div
@@ -1083,8 +1083,8 @@ export default function HeroSection({
             <div
               className="group cursor-pointer"
               onClick={() => {
-                console.log("EV Charging card clicked");
-                setShowSmartWizard(true);
+                setSelectedApplication('ev-charging');
+                setShowRealWorldModal(true);
               }}
             >
               <div
