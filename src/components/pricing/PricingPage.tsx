@@ -59,7 +59,7 @@ const PLANS = [
     borderColor: 'border-emerald-500/30',
     badgeBg: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
     ctaText: 'Start Pro Trial',
-    ctaStyle: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20',
+    ctaStyle: 'border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50',
     features: [
       'Unlimited quotes',
       'NPV, IRR & DCF analysis',
@@ -84,7 +84,7 @@ const PLANS = [
     borderColor: 'border-cyan-500/30',
     badgeBg: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20',
     ctaText: 'Start Enterprise Trial',
-    ctaStyle: 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/20',
+    ctaStyle: 'border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50',
     features: [
       'Everything in Professional',
       'Monte Carlo risk analysis',
@@ -263,8 +263,8 @@ export default function PricingPage() {
                   onClick={() => setBillingCycle('monthly')}
                   className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
                     billingCycle === 'monthly'
-                      ? 'bg-emerald-600 text-white shadow-md'
-                      : 'text-white/50 hover:text-white'
+                      ? 'border border-emerald-500/40 text-emerald-400'
+                      : 'text-white/50 hover:text-white border border-transparent'
                   }`}
                 >
                   Monthly
@@ -273,10 +273,10 @@ export default function PricingPage() {
                   onClick={() => setBillingCycle('annual')}
                   className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all relative ${
                     billingCycle === 'annual'
-                      ? 'bg-emerald-600 text-white shadow-md'
-                      : 'text-white/50 hover:text-white'
+                      ? 'border border-emerald-500/40 text-emerald-400'
+                      : 'text-white/50 hover:text-white border border-transparent'
                   }`}
-                >
+                  >
                   Annual
                   <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full border border-emerald-500/30">
                     -17%
@@ -404,7 +404,7 @@ export default function PricingPage() {
                 <div className="flex flex-wrap gap-3">
                   <a
                     href="/vendor"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg font-semibold text-sm transition-all shadow-lg shadow-cyan-500/20"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 border border-cyan-500/30 text-cyan-400 rounded-lg font-semibold text-sm hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all"
                   >
                     <Rocket className="w-4 h-4" />
                     Get API Access
