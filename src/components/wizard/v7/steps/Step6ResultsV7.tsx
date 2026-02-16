@@ -731,6 +731,33 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       </div>
 
       {/* ================================================================
+          VENDOR / EPC PORTAL CTA — Bring vendors into the platform
+      ================================================================ */}
+      <div className="rounded-xl border-2 border-blue-500/[0.12] bg-blue-500/[0.03] p-6 hover:border-blue-500/[0.20] transition-all">
+        <div className="flex items-center gap-5">
+          <div className="shrink-0 w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center">
+            <Building2 className="w-7 h-7 text-blue-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-base font-bold text-slate-100 tracking-tight">
+              Are you a vendor or EPC?
+            </div>
+            <div className="text-sm text-slate-400 mt-1 leading-relaxed">
+              Build professional proposals for your customers using Merlin's TrueQuote™ engine — Monte Carlo analysis, 8760 hourly modeling, and bank-ready exports.
+            </div>
+          </div>
+          <a
+            href="/vendor"
+            className="flex items-center gap-2.5 px-5 py-3 rounded-xl border-2 border-blue-400/30 bg-blue-400/[0.06] hover:border-blue-400/50 hover:bg-blue-400/[0.12] transition-all shrink-0 group no-underline"
+          >
+            <span className="text-sm font-bold text-blue-400 tracking-wide">
+              Vendor Portal →
+            </span>
+          </a>
+        </div>
+      </div>
+
+      {/* ================================================================
           EXPORT / DOWNLOAD — TrueQuote™ branded exports
           Available whenever we have at least a load profile (Layer A)
       ================================================================ */}

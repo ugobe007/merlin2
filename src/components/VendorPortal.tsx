@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Upload, FileText, DollarSign, CheckCircle, Clock, TrendingUp, Building2, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, FileText, DollarSign, CheckCircle, Clock, TrendingUp, Building2, AlertCircle, Loader2, Calculator, Sparkles } from "lucide-react";
 import {
   registerVendor,
   loginVendor,
@@ -31,7 +31,7 @@ const VendorPortal: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentVendor, setCurrentVendor] = useState<Vendor | null>(null);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "submit-pricing" | "rfqs" | "profile">(
+  const [activeTab, setActiveTab] = useState<"dashboard" | "submit-pricing" | "rfqs" | "build-quote" | "profile">(
     "dashboard"
   );
   const [showRegistration, setShowRegistration] = useState(false);
@@ -652,6 +652,7 @@ const VendorPortal: React.FC = () => {
               { id: "dashboard", label: "Dashboard", icon: TrendingUp },
               { id: "submit-pricing", label: "Submit Pricing", icon: DollarSign },
               { id: "rfqs", label: "Active RFQs", icon: FileText },
+              { id: "build-quote", label: "Build a Quote", icon: Calculator },
               { id: "profile", label: "Profile", icon: Building2 },
             ].map((tab) => (
               <button
@@ -1050,6 +1051,117 @@ const VendorPortal: React.FC = () => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Build a Quote Tab — ProQuote for Vendors */}
+        {activeTab === "build-quote" && (
+          <div className="space-y-6">
+            {/* Hero CTA */}
+            <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 rounded-2xl p-8 text-white relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
+              </div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-5 h-5 text-emerald-400" />
+                  <span className="text-xs font-bold text-emerald-400 tracking-wider uppercase">ProQuote™ for Vendors</span>
+                </div>
+                <h2 className="text-3xl font-black mb-3">
+                  Build Professional Proposals
+                </h2>
+                <p className="text-blue-200/80 text-lg mb-6 max-w-2xl">
+                  Use Merlin's TrueQuote™ engine to build bank-ready quotes for your customers —
+                  complete with Monte Carlo risk analysis, 8760 hourly modeling, and IRA 2022 tax credit optimization.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <a
+                    href="/quote-builder"
+                    className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold transition-colors no-underline"
+                  >
+                    <Calculator className="w-5 h-5" />
+                    Open ProQuote™ Builder
+                  </a>
+                  <a
+                    href="/wizard"
+                    className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-semibold transition-colors border border-white/20 no-underline"
+                  >
+                    Quick Estimate (Wizard)
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* What You Get */}
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-emerald-500">
+                <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mb-3">
+                  <Calculator className="w-5 h-5 text-emerald-600" />
+                </div>
+                <h3 className="font-bold text-gray-800 mb-2">Full Engineering Control</h3>
+                <p className="text-sm text-gray-600">
+                  Configure BESS, solar, generators, EV chargers, and fuel cells with your own specs and pricing.
+                </p>
+              </div>
+              <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+                  <TrendingUp className="w-5 h-5 text-blue-600" />
+                </div>
+                <h3 className="font-bold text-gray-800 mb-2">Advanced Financial Analysis</h3>
+                <p className="text-sm text-gray-600">
+                  Monte Carlo P10/P50/P90, 8760 hourly dispatch, NPV/IRR, DSCR — ready for bank review.
+                </p>
+              </div>
+              <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-purple-500">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
+                  <FileText className="w-5 h-5 text-purple-600" />
+                </div>
+                <h3 className="font-bold text-gray-800 mb-2">Branded Exports</h3>
+                <p className="text-sm text-gray-600">
+                  Export Word, Excel, and PDF proposals with TrueQuote™ source attribution — your client sees the rigor.
+                </p>
+              </div>
+            </div>
+
+            {/* How It Works */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">How It Works</h3>
+              <div className="grid md:grid-cols-4 gap-4">
+                {[
+                  { step: "1", title: "Enter Project Specs", desc: "System size, location, use case, and customer requirements" },
+                  { step: "2", title: "Set Your Pricing", desc: "Use your equipment pricing or let Merlin suggest market rates" },
+                  { step: "3", title: "Run Analysis", desc: "Monte Carlo, 8760 hourly, degradation modeling — automated" },
+                  { step: "4", title: "Export Proposal", desc: "Bank-ready PDF/Word with TrueQuote™ attribution" },
+                ].map((item) => (
+                  <div key={item.step} className="text-center">
+                    <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mx-auto mb-2">
+                      {item.step}
+                    </div>
+                    <h4 className="font-semibold text-gray-800 text-sm mb-1">{item.title}</h4>
+                    <p className="text-xs text-gray-500">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Pricing Tiers Preview */}
+            <div className="bg-gradient-to-r from-blue-50 to-emerald-50 rounded-xl p-6 border border-blue-200/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-1">Vendor Quoting Plans</h3>
+                  <p className="text-sm text-gray-600">
+                    Free: 3 quotes/month with Merlin watermark • Pro: Unlimited quotes, white-label exports
+                  </p>
+                </div>
+                <a
+                  href="/quote-builder"
+                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors text-sm no-underline"
+                >
+                  Start Building →
+                </a>
+              </div>
+            </div>
           </div>
         )}
 
