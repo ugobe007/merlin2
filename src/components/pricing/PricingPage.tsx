@@ -11,7 +11,9 @@ import React, { useState } from 'react';
 import {
   Check, ArrowLeft, Zap, Crown, Building2, Rocket,
   Shield, Users, FileText, BarChart3, Globe, Code,
-  Star, Sparkles, ChevronRight,
+  Star, Sparkles, ChevronRight, Battery, Sun, Wind,
+  Cpu, Settings, Plug, Atom, Wrench, TrendingUp,
+  Award, CircleDollarSign, Package,
 } from 'lucide-react';
 import merlinIcon from '@/assets/images/new_small_profile_.png';
 
@@ -157,6 +159,18 @@ const VENDOR_API_FEATURES = [
     title: 'RFQ Auto-Response',
     description: 'Configure automatic responses to matching RFQs based on your pricing rules.',
   },
+];
+
+const EQUIPMENT_CATEGORIES = [
+  { icon: Battery, label: 'Batteries', desc: 'LFP, NMC, NCA, Flow, Sodium-Ion — all chemistries' },
+  { icon: Cpu, label: 'Inverters & PCS', desc: 'String, central, and hybrid inverters' },
+  { icon: Settings, label: 'Transformers', desc: 'Step-up, step-down, pad-mount, dry-type' },
+  { icon: Wrench, label: 'BOS Equipment', desc: 'Patch panels, AC/DC switchgear, breakers, combiner boxes' },
+  { icon: Sun, label: 'Solar + Equipment', desc: 'Panels, trackers, racking, optimizers, microinverters' },
+  { icon: Wind, label: 'Wind + Equipment', desc: 'Turbines, towers, controllers, grid-tie systems' },
+  { icon: Zap, label: 'Power Generators', desc: 'Natural gas, diesel, dual-fuel, fuel cells, Mainspring' },
+  { icon: Plug, label: 'EV Chargers', desc: 'Level 2, DCFC, HPC — hardware, make-ready, install' },
+  { icon: Atom, label: 'Nuclear / SMR', desc: 'Small modular reactors, micro-reactors, fusion pilot units' },
 ];
 
 export default function PricingPage() {
@@ -398,8 +412,9 @@ export default function PricingPage() {
                   </span>
                 </div>
                 <p className="text-white/50 text-lg mb-4 max-w-xl">
-                  Connect your systems to Merlin's marketplace. Push pricing updates, sync product catalogs,
-                  and receive RFQ notifications — all via REST API.
+                  Stop chasing vendor quotes manually. Merlin automates pricing collection, product configurations, 
+                  and bid management across <span className="text-cyan-400 font-semibold">every equipment category</span> — batteries, solar, wind, 
+                  generators, EV chargers, and more. Test configurations in ProQuote™ with TrueQuote™ verification.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a
@@ -445,7 +460,65 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* API Features Grid */}
+          {/* Equipment Categories */}
+          <h3 className="text-xl font-bold text-white mb-2">Equipment Categories</h3>
+          <p className="text-white/40 mb-6 text-sm">Manage pricing and configurations for every product type — all from one platform.</p>
+          <div className="grid grid-cols-3 lg:grid-cols-9 gap-3 mb-12">
+            {EQUIPMENT_CATEGORIES.map((cat, i) => {
+              const CatIcon = cat.icon;
+              return (
+                <div key={i} className="bg-white/[0.03] rounded-xl border border-white/[0.08] p-3 text-center hover:bg-white/[0.05] hover:border-cyan-500/20 transition-all group" title={cat.desc}>
+                  <div className="w-9 h-9 mx-auto rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 mb-2 group-hover:bg-cyan-500/20 transition-colors">
+                    <CatIcon className="w-4.5 h-4.5 text-cyan-400" />
+                  </div>
+                  <p className="text-[11px] font-semibold text-white/60 leading-tight">{cat.label}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Why Vendors Love Merlin */}
+          <div className="bg-gradient-to-br from-emerald-500/[0.04] to-cyan-500/[0.03] rounded-2xl border border-emerald-500/20 p-8 mb-12">
+            <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-emerald-400" />
+              Why Vendors Choose Merlin
+            </h3>
+            <p className="text-white/40 mb-5 max-w-3xl">
+              Normally, vendors spend weeks collecting pricing sheets, product specs, and configuration data from dozens of 3rd-party suppliers.
+              Merlin automates <span className="text-white/70 font-medium">all of it</span> — then lets you validate every configuration with ProQuote™ and the TrueQuote™ stamp of approval.
+            </p>
+            <div className="grid md:grid-cols-3 gap-5">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 flex-shrink-0 mt-0.5">
+                  <Package className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white text-sm">Automated Price Collection</h4>
+                  <p className="text-xs text-white/40 mt-0.5">Pull pricing from batteries, solar, wind, generators, EV chargers, and nuclear — no spreadsheets needed.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 flex-shrink-0 mt-0.5">
+                  <Award className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white text-sm">TrueQuote™ Verified</h4>
+                  <p className="text-xs text-white/40 mt-0.5">Test your product configurations in ProQuote™. Every number traced to NREL, IEEE, and IRA sources.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 flex-shrink-0 mt-0.5">
+                  <CircleDollarSign className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white text-sm">Right-to-Bid Positioning</h4>
+                  <p className="text-xs text-white/40 mt-0.5">Get positioned in front of active buyers. Priority placement when your products match RFQ requirements.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Integration Capabilities */}
           <h3 className="text-xl font-bold text-white mb-6">Integration Capabilities</h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
             {VENDOR_API_FEATURES.map((feature, i) => {
@@ -467,51 +540,66 @@ export default function PricingPage() {
 
           {/* API Pricing */}
           <div className="bg-white/[0.03] rounded-2xl border border-white/[0.08] p-8">
-            <h3 className="text-xl font-bold text-white mb-2">API Pricing</h3>
+            <h3 className="text-xl font-bold text-white mb-2">Vendor Plans</h3>
             <p className="text-white/40 mb-6">
-              Vendor API access is included with Enterprise and Business plans. Need standalone API access?
+              Everything you need to manage pricing, products, and bids across all energy equipment categories.
             </p>
 
             <div className="grid md:grid-cols-3 gap-5">
-              {/* Starter API */}
-              <div className="bg-white/[0.02] rounded-xl border border-white/[0.06] p-5">
-                <h4 className="font-bold text-white mb-1">Starter API</h4>
-                <p className="text-2xl font-black text-white mb-1">Free</p>
-                <p className="text-xs text-white/40 mb-4">With any vendor account</p>
+              {/* Starter $29/mo */}
+              <div className="bg-emerald-500/[0.04] rounded-xl border border-emerald-500/20 p-5 relative">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Most Popular
+                </div>
+                <h4 className="font-bold text-white mb-1">Starter</h4>
+                <p className="text-2xl font-black text-emerald-400 mb-1">$29<span className="text-sm text-white/40">/mo</span></p>
+                <p className="text-xs text-white/40 mb-4">Full platform access for vendors</p>
                 <ul className="space-y-2 text-sm text-white/50">
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-400" />100 API calls/month</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-400" />Product submissions</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-400" />RFQ notifications</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-400" />Test environment</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />API access (1,000 calls/mo)</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />Right-to-bid positioning</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />ProQuote™ quote building</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />Product & price management</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" /><span>Config tools: <span className="text-white/70">batteries, inverters, transformers, switchgear, panels</span></span></li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" /><span>Config tools: <span className="text-white/70">solar, wind, generators, EV chargers, nuclear</span></span></li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />TrueQuote™ verified configurations</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />RFQ notifications & matching</li>
                 </ul>
+                <a href="/vendor" className="block w-full mt-5 py-2.5 rounded-lg text-sm font-semibold text-center border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all">Get Started</a>
               </div>
 
-              {/* Pro API */}
+              {/* Pro API $99/mo */}
               <div className="bg-cyan-500/[0.04] rounded-xl border border-cyan-500/20 p-5">
-                <h4 className="font-bold text-white mb-1">Pro API</h4>
+                <h4 className="font-bold text-white mb-1">Pro</h4>
                 <p className="text-2xl font-black text-cyan-400 mb-1">$99<span className="text-sm text-white/40">/mo</span></p>
-                <p className="text-xs text-white/40 mb-4">For active vendor partners</p>
+                <p className="text-xs text-white/40 mb-4">For high-volume vendor partners</p>
                 <ul className="space-y-2 text-sm text-white/50">
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-cyan-400" />10,000 API calls/month</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-cyan-400" />Automated pricing feeds</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-cyan-400" />Webhook notifications</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-cyan-400" />Market intelligence API</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-cyan-400" />Priority matching</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Everything in Starter</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />10,000 API calls/month</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Automated pricing feeds</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Webhook notifications</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Market intelligence API</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Priority bid placement</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Bulk product catalog sync</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Priority support</li>
                 </ul>
+                <a href="/vendor" className="block w-full mt-5 py-2.5 rounded-lg text-sm font-semibold text-center border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all">Upgrade to Pro</a>
               </div>
 
               {/* Enterprise API */}
               <div className="bg-white/[0.02] rounded-xl border border-white/[0.06] p-5">
-                <h4 className="font-bold text-white mb-1">Enterprise API</h4>
+                <h4 className="font-bold text-white mb-1">Enterprise</h4>
                 <p className="text-2xl font-black text-white mb-1">Custom</p>
                 <p className="text-xs text-white/40 mb-4">Unlimited + dedicated support</p>
                 <ul className="space-y-2 text-sm text-white/50">
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-400" />Unlimited API calls</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-400" />Custom integrations</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-400" />Dedicated endpoint</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-400" />SLA guarantee</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-400" />Account manager</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />Everything in Pro</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />Unlimited API calls</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />Custom integrations</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />Dedicated endpoint</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />SLA guarantee</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />Dedicated account manager</li>
+                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />White-label API</li>
                 </ul>
+                <a href="mailto:sales@merlin.energy?subject=Enterprise Vendor API" className="block w-full mt-5 py-2.5 rounded-lg text-sm font-semibold text-center border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50 transition-all">Contact Sales</a>
               </div>
             </div>
           </div>
