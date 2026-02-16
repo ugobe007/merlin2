@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Upload, FileText, DollarSign, CheckCircle, Clock, TrendingUp, Building2, AlertCircle, Loader2, Calculator, Sparkles } from "lucide-react";
+import { Upload, FileText, DollarSign, CheckCircle, Clock, TrendingUp, Building2, AlertCircle, Loader2, Calculator, Sparkles, ShieldCheck } from "lucide-react";
+import merlinIcon from "@/assets/images/new_small_profile_.png";
+import badgeIcon from "@/assets/images/badge_icon.jpg";
 import {
   registerVendor,
   loginVendor,
@@ -280,10 +282,10 @@ const VendorPortal: React.FC = () => {
   // Show loading spinner while checking session
   if (isLoading && !isLoggedIn && !showRegistration) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-purple-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading vendor portal...</p>
+          <Loader2 className="w-12 h-12 text-[#3ECF8E] animate-spin mx-auto mb-4" />
+          <p className="text-slate-400">Loading ProQuote™ portal...</p>
         </div>
       </div>
     );
@@ -292,37 +294,49 @@ const VendorPortal: React.FC = () => {
   // Login/Registration Screen
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-12 px-4">
+      <div className="min-h-screen bg-[#0f1117] py-12 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-3 mb-4">
-              <span className="text-5xl">🧙‍♂️</span>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Merlin Vendor Portal
-              </h1>
+            <div className="inline-flex items-center gap-4 mb-4">
+              {/* ProQuote Blue Shield Badge */}
+              <div className="relative w-16 h-16 flex-shrink-0">
+                <img src={badgeIcon} alt="ProQuote" className="w-16 h-16 rounded-xl object-cover" />
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-[#0f1117]">
+                  <ShieldCheck className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-white">
+                  Pro<span className="text-[#3ECF8E]">Quote</span>™
+                </h1>
+                <p className="text-sm text-slate-400 font-medium">Vendor Partner Portal</p>
+              </div>
             </div>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-slate-400">
               Partner with Merlin to provide competitive pricing for energy storage solutions
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Login Section */}
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">Vendor Login</h2>
+            <div className="rounded-xl p-8 border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
+              <div className="flex items-center gap-3 mb-6">
+                <img src={merlinIcon} alt="Merlin" className="w-8 h-8 rounded-lg" />
+                <h2 className="text-2xl font-bold text-white">Vendor Login</h2>
+              </div>
 
               {/* Error Display */}
               {error && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <div className="text-red-700 text-sm">{error}</div>
+                <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-red-300 text-sm">{error}</div>
                 </div>
               )}
 
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Email Address
                   </label>
                   <input
@@ -332,7 +346,7 @@ const VendorPortal: React.FC = () => {
                       setLoginForm({ ...loginForm, email: e.target.value });
                       setError(null);
                     }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50 transition-colors"
                     placeholder="vendor@company.com"
                     required
                     disabled={isLoading}
@@ -340,7 +354,7 @@ const VendorPortal: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
                   <input
                     type="password"
                     value={loginForm.password}
@@ -348,7 +362,7 @@ const VendorPortal: React.FC = () => {
                       setLoginForm({ ...loginForm, password: e.target.value });
                       setError(null);
                     }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50 transition-colors"
                     placeholder="••••••••"
                     required
                     disabled={isLoading}
@@ -358,7 +372,7 @@ const VendorPortal: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-[#3ECF8E] hover:bg-[#35b87a] text-[#0f1117] py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>
@@ -370,8 +384,8 @@ const VendorPortal: React.FC = () => {
                   )}
                 </button>
 
-                <p className="text-center text-sm text-gray-600 mt-4">
-                  <a href="#" className="text-purple-600 hover:underline">
+                <p className="text-center text-sm text-slate-500 mt-4">
+                  <a href="#" className="text-[#3ECF8E] hover:underline">
                     Forgot password?
                   </a>
                 </p>
@@ -379,45 +393,45 @@ const VendorPortal: React.FC = () => {
             </div>
 
             {/* Benefits Section */}
-            <div className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl shadow-lg p-8 text-white">
-              <h2 className="text-2xl font-bold mb-6">Why Partner with Merlin?</h2>
+            <div className="rounded-xl p-8 border border-[#3ECF8E]/20 bg-gradient-to-br from-[#3ECF8E]/[0.06] to-transparent">
+              <h2 className="text-2xl font-bold text-white mb-6">Why Partner with Merlin?</h2>
 
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <TrendingUp className="w-6 h-6 flex-shrink-0 mt-1" />
+                  <TrendingUp className="w-6 h-6 text-[#3ECF8E] flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-bold text-lg">Access to Active RFQs</h3>
-                    <p className="text-white/90 text-sm">
+                    <h3 className="font-bold text-lg text-white">Access to Active RFQs</h3>
+                    <p className="text-slate-400 text-sm">
                       Real-time notifications for projects matching your products
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <DollarSign className="w-6 h-6 flex-shrink-0 mt-1" />
+                  <DollarSign className="w-6 h-6 text-[#3ECF8E] flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-bold text-lg">Competitive Exposure</h3>
-                    <p className="text-white/90 text-sm">
+                    <h3 className="font-bold text-lg text-white">Competitive Exposure</h3>
+                    <p className="text-slate-400 text-sm">
                       Your pricing included in thousands of quotes generated monthly
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <FileText className="w-6 h-6 flex-shrink-0 mt-1" />
+                  <FileText className="w-6 h-6 text-[#3ECF8E] flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-bold text-lg">Streamlined Process</h3>
-                    <p className="text-white/90 text-sm">
+                    <h3 className="font-bold text-lg text-white">Streamlined Process</h3>
+                    <p className="text-slate-400 text-sm">
                       Simple pricing submission and proposal management
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="w-6 h-6 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-6 h-6 text-[#3ECF8E] flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-bold text-lg">Transparent Platform</h3>
-                    <p className="text-white/90 text-sm">
+                    <h3 className="font-bold text-lg text-white">Transparent Platform</h3>
+                    <p className="text-slate-400 text-sm">
                       Fair comparison based on price, lead time, and quality
                     </p>
                   </div>
@@ -426,7 +440,7 @@ const VendorPortal: React.FC = () => {
 
               <button
                 onClick={() => setShowRegistration(true)}
-                className="w-full bg-white text-purple-600 py-3 rounded-lg font-bold mt-8 hover:shadow-xl transition-all"
+                className="w-full border-2 border-[#3ECF8E] text-[#3ECF8E] hover:bg-[#3ECF8E]/10 py-3 rounded-lg font-bold mt-8 transition-all"
               >
                 Become a Vendor Partner
               </button>
@@ -435,22 +449,25 @@ const VendorPortal: React.FC = () => {
 
           {/* Registration Modal */}
           {showRegistration && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Vendor Registration</h2>
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-[#1a1c23] border border-white/[0.08] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <img src={merlinIcon} alt="Merlin" className="w-8 h-8 rounded-lg" />
+                  <h2 className="text-2xl font-bold text-white">Vendor Registration</h2>
+                </div>
 
                 {/* Error Display */}
                 {error && (
-                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <div className="text-red-700 text-sm">{error}</div>
+                  <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-red-300 text-sm">{error}</div>
                   </div>
                 )}
 
                 <form onSubmit={handleRegistration} className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
                         Company Name *
                       </label>
                       <input
@@ -460,14 +477,14 @@ const VendorPortal: React.FC = () => {
                           setRegistrationForm({ ...registrationForm, company: e.target.value });
                           setError(null);
                         }}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                         required
                         disabled={isLoading}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
                         Contact Name *
                       </label>
                       <input
@@ -476,7 +493,7 @@ const VendorPortal: React.FC = () => {
                         onChange={(e) =>
                           setRegistrationForm({ ...registrationForm, contact_name: e.target.value })
                         }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                         required
                       />
                     </div>
@@ -484,7 +501,7 @@ const VendorPortal: React.FC = () => {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
                         Email Address *
                       </label>
                       <input
@@ -493,13 +510,13 @@ const VendorPortal: React.FC = () => {
                         onChange={(e) =>
                           setRegistrationForm({ ...registrationForm, email: e.target.value })
                         }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
                         Phone Number *
                       </label>
                       <input
@@ -508,14 +525,14 @@ const VendorPortal: React.FC = () => {
                         onChange={(e) =>
                           setRegistrationForm({ ...registrationForm, phone: e.target.value })
                         }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                         required
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
                       Password *
                     </label>
                     <input
@@ -524,13 +541,13 @@ const VendorPortal: React.FC = () => {
                       onChange={(e) =>
                         setRegistrationForm({ ...registrationForm, password: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
                       Specialty/Product Category *
                     </label>
                     <select
@@ -541,7 +558,7 @@ const VendorPortal: React.FC = () => {
                           specialty: e.target.value as typeof registrationForm.specialty,
                         })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                       required
                     >
                       <option value="">Select category...</option>
@@ -555,7 +572,7 @@ const VendorPortal: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
                       Company Website
                     </label>
                     <input
@@ -564,13 +581,13 @@ const VendorPortal: React.FC = () => {
                       onChange={(e) =>
                         setRegistrationForm({ ...registrationForm, website: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                       placeholder="https://..."
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
                       Company Description
                     </label>
                     <textarea
@@ -578,7 +595,7 @@ const VendorPortal: React.FC = () => {
                       onChange={(e) =>
                         setRegistrationForm({ ...registrationForm, description: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                       rows={4}
                       placeholder="Tell us about your company and products..."
                     />
@@ -592,14 +609,14 @@ const VendorPortal: React.FC = () => {
                         setError(null);
                       }}
                       disabled={isLoading}
-                      className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors disabled:opacity-50"
+                      className="flex-1 bg-white/[0.06] text-slate-300 py-3 rounded-lg font-semibold hover:bg-white/[0.1] border border-white/[0.1] transition-colors disabled:opacity-50"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="flex-1 bg-[#3ECF8E] hover:bg-[#35b87a] text-[#0f1117] py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isLoading ? (
                         <>
@@ -622,22 +639,28 @@ const VendorPortal: React.FC = () => {
 
   // Vendor Dashboard (After Login)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <div className="min-h-screen bg-[#0f1117]">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-[#1a1c23] border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">🧙‍♂️</span>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Merlin Vendor Portal
+            <div className="relative">
+              <img src={merlinIcon} alt="Merlin" className="w-10 h-10 rounded-lg" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-[#1a1c23]">
+                <ShieldCheck className="w-2.5 h-2.5 text-white" />
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-white">
+              Pro<span className="text-[#3ECF8E]">Quote</span>™
             </h1>
+            <span className="text-xs text-slate-500 font-medium px-2 py-0.5 rounded-full border border-white/[0.08] bg-white/[0.03]">Vendor Portal</span>
             {currentVendor && (
-              <span className="text-sm text-gray-500 ml-2">({currentVendor.company_name})</span>
+              <span className="text-sm text-slate-400 ml-2">({currentVendor.company_name})</span>
             )}
           </div>
           <button
             onClick={handleLogout}
-            className="text-gray-600 hover:text-gray-800 font-semibold"
+            className="text-slate-400 hover:text-white font-semibold transition-colors"
           >
             Sign Out
           </button>
@@ -645,7 +668,7 @@ const VendorPortal: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white border-b">
+      <div className="bg-[#1a1c23] border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4">
           <nav className="flex gap-8">
             {[
@@ -660,8 +683,8 @@ const VendorPortal: React.FC = () => {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-2 px-4 py-4 border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? "border-purple-600 text-purple-600 font-semibold"
-                    : "border-transparent text-gray-600 hover:text-gray-800"
+                    ? "border-[#3ECF8E] text-[#3ECF8E] font-semibold"
+                    : "border-transparent text-slate-400 hover:text-white"
                 }`}
               >
                 <tab.icon className="w-5 h-5" />
@@ -677,7 +700,7 @@ const VendorPortal: React.FC = () => {
         {/* Dashboard Tab */}
         {activeTab === "dashboard" && (
           <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-gray-800">
+            <h2 className="text-3xl font-bold text-white">
               Welcome Back{currentVendor ? `, ${currentVendor.contact_name}` : ""}!
             </h2>
 
@@ -748,51 +771,51 @@ const VendorPortal: React.FC = () => {
 
             {/* Stats */}
             <div className="grid md:grid-cols-4 gap-6">
-              <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="rounded-xl p-6 border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-gray-600">Pending Products</p>
+                  <p className="text-slate-400">Pending Products</p>
                   <Clock className="w-5 h-5 text-yellow-500" />
                 </div>
-                <p className="text-3xl font-bold text-gray-800">{stats?.pendingProducts || 0}</p>
+                <p className="text-3xl font-bold text-white">{stats?.pendingProducts || 0}</p>
               </div>
 
-              <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="rounded-xl p-6 border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-gray-600">Approved Products</p>
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <p className="text-slate-400">Approved Products</p>
+                  <CheckCircle className="w-5 h-5 text-[#3ECF8E]" />
                 </div>
-                <p className="text-3xl font-bold text-gray-800">{stats?.approvedProducts || 0}</p>
+                <p className="text-3xl font-bold text-white">{stats?.approvedProducts || 0}</p>
               </div>
 
-              <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="rounded-xl p-6 border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-gray-600">Open RFQs</p>
-                  <FileText className="w-5 h-5 text-blue-500" />
+                  <p className="text-slate-400">Open RFQs</p>
+                  <FileText className="w-5 h-5 text-blue-400" />
                 </div>
-                <p className="text-3xl font-bold text-gray-800">
+                <p className="text-3xl font-bold text-white">
                   {stats?.openRFQs || openRFQs.length}
                 </p>
               </div>
 
-              <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="rounded-xl p-6 border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-gray-600">Quotes This Month</p>
-                  <TrendingUp className="w-5 h-5 text-purple-500" />
+                  <p className="text-slate-400">Quotes This Month</p>
+                  <TrendingUp className="w-5 h-5 text-[#3ECF8E]" />
                 </div>
-                <p className="text-3xl font-bold text-gray-800">{stats?.quotesThisMonth || 0}</p>
+                <p className="text-3xl font-bold text-white">{stats?.quotesThisMonth || 0}</p>
               </div>
             </div>
 
             {/* Recent Submissions */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Pricing Submissions</h3>
+            <div className="rounded-xl p-6 border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
+              <h3 className="text-xl font-bold text-white mb-4">Recent Pricing Submissions</h3>
               {vendorProducts.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-slate-500">
                   <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>No products submitted yet.</p>
                   <button
                     onClick={() => setActiveTab("submit-pricing")}
-                    className="mt-3 text-purple-600 hover:text-purple-700 font-semibold"
+                    className="mt-3 text-[#3ECF8E] hover:text-[#35b87a] font-semibold"
                   >
                     Submit your first product →
                   </button>
@@ -802,13 +825,13 @@ const VendorPortal: React.FC = () => {
                   {vendorProducts.slice(0, 5).map((product) => (
                     <div
                       key={product.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-4 bg-white/[0.03] rounded-lg border border-white/[0.06]"
                     >
                       <div>
-                        <p className="font-semibold text-gray-800">
+                        <p className="font-semibold text-white">
                           {product.product_category} - {product.model}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-slate-400">
                           {product.price_per_kwh ? `$${product.price_per_kwh}/kWh` : ""}
                           {product.price_per_kwh && product.price_per_kw ? " • " : ""}
                           {product.price_per_kw ? `$${product.price_per_kw}/kW` : ""} •
@@ -836,20 +859,20 @@ const VendorPortal: React.FC = () => {
 
         {/* Submit Pricing Tab */}
         {activeTab === "submit-pricing" && (
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Submit Product Pricing</h2>
+          <div className="rounded-xl p-8 border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
+            <h2 className="text-2xl font-bold text-white mb-6">Submit Product Pricing</h2>
 
             {/* Error Display */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <div className="text-red-700 text-sm">{error}</div>
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="text-red-300 text-sm">{error}</div>
               </div>
             )}
 
             <form onSubmit={handlePricingSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Product Category *
                 </label>
                 <select
@@ -858,7 +881,7 @@ const VendorPortal: React.FC = () => {
                     setPricingForm({ ...pricingForm, product_category: e.target.value as any });
                     setError(null);
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                   required
                   disabled={isLoading}
                 >
@@ -872,7 +895,7 @@ const VendorPortal: React.FC = () => {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Manufacturer *
                   </label>
                   <input
@@ -882,7 +905,7 @@ const VendorPortal: React.FC = () => {
                       setPricingForm({ ...pricingForm, manufacturer: e.target.value });
                       setError(null);
                     }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                     placeholder="e.g., CATL, BYD, Tesla"
                     required
                     disabled={isLoading}
@@ -890,7 +913,7 @@ const VendorPortal: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Model Number *
                   </label>
                   <input
@@ -900,7 +923,7 @@ const VendorPortal: React.FC = () => {
                       setPricingForm({ ...pricingForm, model: e.target.value });
                       setError(null);
                     }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                     placeholder="e.g., LFP 280Ah"
                     required
                     disabled={isLoading}
@@ -910,7 +933,7 @@ const VendorPortal: React.FC = () => {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Capacity (kWh)
                   </label>
                   <input
@@ -920,13 +943,13 @@ const VendorPortal: React.FC = () => {
                     onChange={(e) =>
                       setPricingForm({ ...pricingForm, capacity_kwh: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                     disabled={isLoading}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Power Rating (kW)
                   </label>
                   <input
@@ -934,14 +957,14 @@ const VendorPortal: React.FC = () => {
                     step="0.1"
                     value={pricingForm.power_kw}
                     onChange={(e) => setPricingForm({ ...pricingForm, power_kw: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                   />
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Price per kWh (USD) *
                   </label>
                   <input
@@ -951,14 +974,14 @@ const VendorPortal: React.FC = () => {
                     onChange={(e) =>
                       setPricingForm({ ...pricingForm, price_per_kwh: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                     placeholder="e.g., 145.00"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Price per kW (USD)
                   </label>
                   <input
@@ -968,7 +991,7 @@ const VendorPortal: React.FC = () => {
                     onChange={(e) =>
                       setPricingForm({ ...pricingForm, price_per_kw: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                     placeholder="e.g., 180.00"
                   />
                 </div>
@@ -976,7 +999,7 @@ const VendorPortal: React.FC = () => {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Lead Time (weeks) *
                   </label>
                   <input
@@ -985,13 +1008,13 @@ const VendorPortal: React.FC = () => {
                     onChange={(e) =>
                       setPricingForm({ ...pricingForm, lead_time_weeks: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Warranty (years) *
                   </label>
                   <input
@@ -1000,14 +1023,14 @@ const VendorPortal: React.FC = () => {
                     onChange={(e) =>
                       setPricingForm({ ...pricingForm, warranty_years: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Certifications
                 </label>
                 <input
@@ -1016,14 +1039,14 @@ const VendorPortal: React.FC = () => {
                   onChange={(e) =>
                     setPricingForm({ ...pricingForm, certifications: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                   placeholder="e.g., UL9540, IEC 62619, UN38.3"
                   disabled={isLoading}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Product Datasheet (PDF)
                 </label>
                 <input
@@ -1032,7 +1055,7 @@ const VendorPortal: React.FC = () => {
                   onChange={(e) =>
                     setPricingForm({ ...pricingForm, datasheet: e.target.files?.[0] || null })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-lg text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#3ECF8E]/20 file:text-[#3ECF8E] hover:file:bg-[#3ECF8E]/30 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/50"
                   disabled={isLoading}
                 />
               </div>
@@ -1040,7 +1063,7 @@ const VendorPortal: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-lg font-semibold text-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#3ECF8E] hover:bg-[#35b87a] text-[#0f1117] py-4 rounded-lg font-bold text-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>
@@ -1061,54 +1084,54 @@ const VendorPortal: React.FC = () => {
         {/* RFQs Tab */}
         {activeTab === "rfqs" && (
           <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-gray-800">Active RFQs</h2>
+            <h2 className="text-3xl font-bold text-white">Active RFQs</h2>
 
             {openRFQs.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-bold text-gray-800 mb-2">No Open RFQs</h3>
-                <p className="text-gray-600">
+              <div className="rounded-xl p-8 text-center border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
+                <FileText className="w-16 h-16 mx-auto mb-4 text-slate-600" />
+                <h3 className="text-xl font-bold text-white mb-2">No Open RFQs</h3>
+                <p className="text-slate-400">
                   There are no active requests for quotes at the moment. Check back later!
                 </p>
               </div>
             ) : (
               <div className="grid gap-6">
                 {openRFQs.map((rfq) => (
-                  <div key={rfq.id} className="bg-white rounded-xl shadow-lg p-6">
+                  <div key={rfq.id} className="rounded-xl p-6 border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <p className="text-sm text-purple-600 font-semibold">{rfq.rfq_number}</p>
-                        <h3 className="text-xl font-bold text-gray-800 mt-1">{rfq.project_name}</h3>
+                        <p className="text-sm text-[#3ECF8E] font-semibold">{rfq.rfq_number}</p>
+                        <h3 className="text-xl font-bold text-white mt-1">{rfq.project_name}</h3>
                       </div>
-                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
+                      <span className="px-3 py-1 bg-[#3ECF8E]/10 text-[#3ECF8E] rounded-full text-sm font-semibold border border-[#3ECF8E]/20">
                         {rfq.status.toUpperCase()}
                       </span>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-4 mb-4">
                       <div>
-                        <p className="text-sm text-gray-600">System Size</p>
-                        <p className="font-semibold text-gray-800">
+                        <p className="text-sm text-slate-400">System Size</p>
+                        <p className="font-semibold text-white">
                           {rfq.system_size_mw} MW / {rfq.system_size_mw * rfq.duration_hours} MWh
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600">Location</p>
-                        <p className="font-semibold text-gray-800">{rfq.location}</p>
+                        <p className="text-sm text-slate-400">Location</p>
+                        <p className="font-semibold text-white">{rfq.location}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600">Due Date</p>
-                        <p className="font-semibold text-gray-800">
+                        <p className="text-sm text-slate-400">Due Date</p>
+                        <p className="font-semibold text-white">
                           {new Date(rfq.due_date).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex gap-4">
-                      <button className="flex-1 bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                      <button className="flex-1 bg-[#3ECF8E] hover:bg-[#35b87a] text-[#0f1117] py-2 rounded-lg font-bold transition-colors">
                         Submit Proposal
                       </button>
-                      <button className="px-6 bg-gray-200 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                      <button className="px-6 bg-white/[0.06] text-slate-300 py-2 rounded-lg font-semibold hover:bg-white/[0.1] border border-white/[0.1] transition-colors">
                         View Details
                       </button>
                     </div>
@@ -1165,38 +1188,38 @@ const VendorPortal: React.FC = () => {
 
             {/* What You Get */}
             <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-emerald-500">
-                <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mb-3">
-                  <Calculator className="w-5 h-5 text-emerald-600" />
+              <div className="rounded-xl p-6 border border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.04]">
+                <div className="w-10 h-10 bg-[#3ECF8E]/10 rounded-lg flex items-center justify-center mb-3">
+                  <Calculator className="w-5 h-5 text-[#3ECF8E]" />
                 </div>
-                <h3 className="font-bold text-gray-800 mb-2">Full Engineering Control</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-bold text-white mb-2">Full Engineering Control</h3>
+                <p className="text-sm text-slate-400">
                   Configure BESS, solar, generators, EV chargers, and fuel cells with your own specs and pricing.
                 </p>
               </div>
-              <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
+              <div className="rounded-xl p-6 border border-blue-500/20 bg-blue-500/[0.04]">
+                <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-3">
+                  <TrendingUp className="w-5 h-5 text-blue-400" />
                 </div>
-                <h3 className="font-bold text-gray-800 mb-2">Advanced Financial Analysis</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-bold text-white mb-2">Advanced Financial Analysis</h3>
+                <p className="text-sm text-slate-400">
                   Monte Carlo P10/P50/P90, 8760 hourly dispatch, NPV/IRR, DSCR — ready for bank review.
                 </p>
               </div>
-              <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-purple-500">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
-                  <FileText className="w-5 h-5 text-purple-600" />
+              <div className="rounded-xl p-6 border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
+                <div className="w-10 h-10 bg-white/[0.06] rounded-lg flex items-center justify-center mb-3">
+                  <FileText className="w-5 h-5 text-slate-300" />
                 </div>
-                <h3 className="font-bold text-gray-800 mb-2">Branded Exports</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-bold text-white mb-2">Branded Exports</h3>
+                <p className="text-sm text-slate-400">
                   Export Word, Excel, and PDF proposals with TrueQuote™ source attribution — your client sees the rigor.
                 </p>
               </div>
             </div>
 
             {/* How It Works */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">How It Works</h3>
+            <div className="rounded-xl p-6 border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
+              <h3 className="text-xl font-bold text-white mb-4">How It Works</h3>
               <div className="grid md:grid-cols-4 gap-4">
                 {[
                   { step: "1", title: "Enter Project Specs", desc: "System size, location, use case, and customer requirements" },
@@ -1205,28 +1228,28 @@ const VendorPortal: React.FC = () => {
                   { step: "4", title: "Export Proposal", desc: "Bank-ready PDF/Word with TrueQuote™ attribution" },
                 ].map((item) => (
                   <div key={item.step} className="text-center">
-                    <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mx-auto mb-2">
+                    <div className="w-10 h-10 bg-[#3ECF8E] text-[#0f1117] rounded-full flex items-center justify-center font-bold mx-auto mb-2">
                       {item.step}
                     </div>
-                    <h4 className="font-semibold text-gray-800 text-sm mb-1">{item.title}</h4>
-                    <p className="text-xs text-gray-500">{item.desc}</p>
+                    <h4 className="font-semibold text-white text-sm mb-1">{item.title}</h4>
+                    <p className="text-xs text-slate-400">{item.desc}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Pricing Tiers Preview */}
-            <div className="bg-gradient-to-r from-blue-50 to-emerald-50 rounded-xl p-6 border border-blue-200/50">
+            <div className="rounded-xl p-6 border border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.04]">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-gray-800 mb-1">Vendor Quoting Plans</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className="font-bold text-white mb-1">Vendor Quoting Plans</h3>
+                  <p className="text-sm text-slate-400">
                     Free: 3 quotes/month with Merlin watermark • Pro: Unlimited quotes, white-label exports
                   </p>
                 </div>
                 <a
                   href="/quote-builder"
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors text-sm no-underline"
+                  className="inline-flex items-center gap-2 bg-[#3ECF8E] hover:bg-[#35b87a] text-[#0f1117] px-5 py-2.5 rounded-lg font-bold transition-colors text-sm no-underline"
                 >
                   Start Building →
                 </a>
@@ -1237,18 +1260,18 @@ const VendorPortal: React.FC = () => {
 
         {/* Profile Tab */}
         {activeTab === "profile" && currentVendor && (
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Vendor Profile</h2>
+          <div className="rounded-xl p-8 border border-white/[0.06] bg-[rgba(255,255,255,0.03)]">
+            <h2 className="text-2xl font-bold text-white mb-6">Vendor Profile</h2>
 
             {/* Status Badge */}
             <div className="mb-6">
               <span
                 className={`px-4 py-2 rounded-full text-sm font-semibold ${
                   currentVendor.status === "approved"
-                    ? "bg-green-100 text-green-700"
+                    ? "bg-[#3ECF8E]/10 text-[#3ECF8E] border border-[#3ECF8E]/20"
                     : currentVendor.status === "pending"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-red-100 text-red-700"
+                      ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+                      : "bg-red-500/10 text-red-400 border border-red-500/20"
                 }`}
               >
                 Account Status: {currentVendor.status.toUpperCase()}
@@ -1258,25 +1281,25 @@ const VendorPortal: React.FC = () => {
             <div className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Company Name
                   </label>
                   <input
                     type="text"
                     value={currentVendor.company_name}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-lg text-slate-300"
                     readOnly
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Contact Name
                   </label>
                   <input
                     type="text"
                     value={currentVendor.contact_name}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-lg text-slate-300"
                     readOnly
                   />
                 </div>
@@ -1284,21 +1307,21 @@ const VendorPortal: React.FC = () => {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
                   <input
                     type="email"
                     value={currentVendor.email}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-lg text-slate-300"
                     readOnly
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Phone</label>
                   <input
                     type="tel"
                     value={currentVendor.phone || "Not provided"}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-lg text-slate-300"
                     readOnly
                   />
                 </div>
@@ -1306,21 +1329,21 @@ const VendorPortal: React.FC = () => {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Specialty</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Specialty</label>
                   <input
                     type="text"
                     value={currentVendor.specialty.replace("_", " ").toUpperCase()}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-lg text-slate-300"
                     readOnly
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Website</label>
                   <input
                     type="text"
                     value={currentVendor.website || "Not provided"}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-lg text-slate-300"
                     readOnly
                   />
                 </div>
@@ -1328,30 +1351,30 @@ const VendorPortal: React.FC = () => {
 
               {currentVendor.description && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Company Description
                   </label>
                   <textarea
                     value={currentVendor.description}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-lg text-slate-300"
                     rows={4}
                     readOnly
                   />
                 </div>
               )}
 
-              <div className="pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-500">
+              <div className="pt-4 border-t border-white/[0.06]">
+                <p className="text-sm text-slate-500">
                   Member since: {new Date(currentVendor.created_at).toLocaleDateString()}
                 </p>
                 {currentVendor.last_login && (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-slate-500">
                     Last login: {new Date(currentVendor.last_login).toLocaleString()}
                   </p>
                 )}
               </div>
 
-              <p className="text-sm text-gray-500 italic">
+              <p className="text-sm text-slate-500 italic">
                 To update your profile information, please contact support at vendors@merlin.energy
               </p>
             </div>
