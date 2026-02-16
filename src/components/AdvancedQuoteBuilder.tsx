@@ -1180,24 +1180,41 @@ export default function AdvancedQuoteBuilder({
                       </div>
                     </div>
 
-                    {/* Large Launch button - emerald to match brand */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setViewMode("custom-config");
-                        if (hasWizardConfig) {
-                          loadWizardConfig();
-                        }
-                      }}
-                      className="group/btn w-full md:w-auto px-8 py-3.5 font-semibold text-base rounded-lg flex items-center justify-center gap-3 transition-all duration-200"
-                      style={{ background: 'transparent', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(16,185,129,0.08)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      <Sliders className="w-5 h-5" />
-                      <span>Launch Configuration Tool</span>
-                      <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
-                    </button>
+                    {/* Action row: Launch + Vendor Partner CTA */}
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+                      {/* Large Launch button - emerald to match brand */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewMode("custom-config");
+                          if (hasWizardConfig) {
+                            loadWizardConfig();
+                          }
+                        }}
+                        className="group/btn w-full md:w-auto px-8 py-3.5 font-semibold text-base rounded-lg flex items-center justify-center gap-3 transition-all duration-200"
+                        style={{ background: 'transparent', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(16,185,129,0.08)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <Sliders className="w-5 h-5" />
+                        <span>Launch Configuration Tool</span>
+                        <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                      </button>
+
+                      {/* Vendor & EPC CTA — compact, same row */}
+                      <a
+                        href="/vendor"
+                        className="group/vnd w-full md:w-auto px-5 py-3.5 rounded-lg flex items-center justify-center gap-2.5 text-sm font-semibold transition-all duration-200 no-underline"
+                        style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', color: '#60a5fa' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(59,130,246,0.16)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(59,130,246,0.08)'; }}
+                      >
+                        <Building2 className="w-4 h-4" />
+                        <span>Vendor & EPC Portal</span>
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ background: 'rgba(59,130,246,0.12)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.2)' }}>NREL</span>
+                        <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover/vnd:translate-x-0.5 transition-transform" />
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1475,42 +1492,7 @@ export default function AdvancedQuoteBuilder({
                 </div>
               </div>
 
-              {/* ── Vendor & EPC Partners ── */}
-              <div className="mt-10 mb-6">
-                <div className="rounded-xl p-6 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(16,185,129,0.04) 100%)', border: '1px solid rgba(59, 130, 246, 0.18)' }}>
-                  <div className="flex items-center gap-5">
-                    <div className="shrink-0 w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: 'rgba(59, 130, 246, 0.12)' }}>
-                      <Building2 className="w-7 h-7 text-blue-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2.5 mb-1">
-                        <h4 className="text-base font-bold text-white">
-                          Vendor & EPC Partners
-                        </h4>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ color: '#93c5fd', background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)' }}>
-                          NREL ATB 2024 · IRA 2022
-                        </span>
-                      </div>
-                      <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                        Build NREL-compliant proposals for your customers — every line item traced to authoritative sources.
-                        List products, bid on RFQs, and export bank-ready quotes under your own brand.
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-2 shrink-0">
-                      <a
-                        href="/vendor"
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all no-underline"
-                        style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#60a5fa' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.25)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)'; }}
-                      >
-                        <Calculator className="w-4 h-4" />
-                        Build a Quote →
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* Vendor CTA moved to System Configuration hero panel above */}
             </div>
           </>
         )}
