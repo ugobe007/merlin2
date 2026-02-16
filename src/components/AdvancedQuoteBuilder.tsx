@@ -599,7 +599,7 @@ export default function AdvancedQuoteBuilder({
       description: "3-Statement pro-forma with DSCR, LCOS, IRR, MACRS, and revenue stacking",
       color: "from-emerald-400 via-teal-500 to-green-600",
       action: () => setViewMode("professional-model"),
-      tier: "professional",
+      tier: "pro",
       badge: "NEW",
     },
     {
@@ -609,7 +609,7 @@ export default function AdvancedQuoteBuilder({
       description: "Generate professional quotes in Word and Excel formats",
       color: "from-blue-400 via-teal-500 to-emerald-600",
       action: () => setShowQuotePreview(true),
-      tier: "professional",
+      tier: "pro",
     },
     {
       id: "custom-reports",
@@ -621,7 +621,7 @@ export default function AdvancedQuoteBuilder({
         onClose();
         onOpenQuoteTemplates?.();
       },
-      tier: "professional",
+      tier: "pro",
     },
     // === PREMIUM TOOLS (Row 3 - Teased/Locked) ===
     {
@@ -1420,7 +1420,7 @@ export default function AdvancedQuoteBuilder({
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {tools
-                    .filter((t) => t.tier === "professional")
+                    .filter((t) => t.tier === "pro")
                     .map((tool) => (
                       <button
                         key={tool.id}

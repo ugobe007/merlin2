@@ -15,7 +15,7 @@ export interface User {
   lastName: string;
   company?: string;
   jobTitle?: string;
-  tier: "free" | "professional" | "enterprise_pro" | "business";
+  tier: "starter" | "pro" | "advanced" | "business";
   createdAt: string;
 
   // Account type
@@ -60,8 +60,8 @@ export interface Company {
   name: string;
   ownerId: string;
   createdAt: string;
-  tier: "free" | "professional" | "enterprise_pro" | "business";
-  seatLimit: number; // 5 for free, more for paid
+  tier: "starter" | "pro" | "advanced" | "business";
+  seatLimit: number; // 5 for starter, more for paid
   seatsUsed: number;
   memberIds: string[];
 }
@@ -120,7 +120,7 @@ class LocalStorageAuthService {
         firstName,
         lastName,
         company,
-        tier: "free",
+        tier: "starter",
         createdAt: new Date().toISOString(),
         accountType,
         profileCompleted: false,
@@ -138,7 +138,7 @@ class LocalStorageAuthService {
           name: company,
           ownerId: user.id,
           createdAt: new Date().toISOString(),
-          tier: "free",
+          tier: "starter",
           seatLimit: 5, // Free tier gets 5 seats
           seatsUsed: 1,
           memberIds: [user.id],

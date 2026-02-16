@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 interface PricingPlansProps {
   onClose: () => void;
   onSignUp?: () => void;
-  currentTier?: "free" | "professional" | "enterprise_pro" | "business";
+  currentTier?: "starter" | "pro" | "advanced" | "business";
 }
 
 const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentTier }) => {
@@ -25,7 +25,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
   }, [onClose, showLearnMore]);
 
   const handleSelectPlan = (tier: string) => {
-    if (tier === "free") {
+    if (tier === "starter") {
       // Allow free signup
       if (onSignUp) {
         onClose();

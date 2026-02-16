@@ -19,7 +19,7 @@ interface ProfessionalFinancialModelingProps {
     batteryLifeYears?: number;
     discountRate?: number;
   };
-  userTier?: "free" | "professional" | "enterprise"; // For freemium gating
+  userTier?: "starter" | "pro" | "advanced" | "business"; // For freemium gating
   onUpgradeClick?: () => void; // Callback when user clicks upgrade
 }
 
@@ -37,7 +37,7 @@ const ProfessionalFinancialModeling: React.FC<ProfessionalFinancialModelingProps
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isPaidUser = userTier === "professional" || userTier === "enterprise";
+  const isPaidUser = userTier === "pro" || userTier === "advanced" || userTier === "business";
 
   // Fetch advanced metrics when modal opens
   useEffect(() => {

@@ -10,7 +10,7 @@
 // USER SUBSCRIPTION TIERS
 // =====================================================
 
-export type SubscriptionTier = 'free' | 'professional' | 'enterprise_pro' | 'business';
+export type SubscriptionTier = 'starter' | 'pro' | 'advanced' | 'business';
 
 export interface SubscriptionPlan {
   id: string;
