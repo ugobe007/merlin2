@@ -12,6 +12,7 @@ import WizardV7Page from "./pages/WizardV7Page"; // V7: Clean SSOT page
 import WizardVNextPage from "./pages/WizardVNextPage"; // vNext: luminous HUD scaffold
 import MetaCalculationsPage from "./pages/MetaCalculationsPage";
 import SupportFAQ from "./components/SupportFAQ";
+import PricingPage from "./components/pricing/PricingPage";
 // import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder'; // Unused
 import { QuoteProvider } from "./contexts/QuoteContext";
 
@@ -130,6 +131,11 @@ function App() {
   // Access via /support - Support & FAQ page
   if (pathname === "/support" || pathname === "/faq" || pathname === "/help") {
     return <SupportFAQ standalone />;
+  }
+
+  // Access via /pricing - Pricing & Vendor API page
+  if (pathname === "/pricing") {
+    return <PricingPage />;
   }
 
   // Access via /wizard or /wizard-v7 - V7 SSOT Wizard (Feb 1, 2026 - NOW THE DEFAULT)
