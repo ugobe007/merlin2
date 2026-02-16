@@ -29,6 +29,7 @@ import badgeGoldIcon from '@/assets/images/badge_gold_icon.jpg';
 import { calculateQuote } from '@/services/unifiedQuoteCalculator';
 import { applyMarginToQuote } from '@/wizard/v7/pricing/pricingBridge';
 import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
+import { checkQuotaStandalone } from '@/hooks/useQuotaEnforcement';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 
 interface Props {
@@ -260,6 +261,22 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Quote calculation timed out after 15s')), 15000)
       );
+
+      // ── QUOTA ENFORCEMENT (Feb 2026) ──
+      // MagicFit generates 3 tier quotes. Check quota before all 3.
+      try {
+        const quotaCheck = checkQuotaStandalone("quote");
+        if (!quotaCheck.allowed) {
+          setLoadError(
+            `Quote limit reached (${quotaCheck.limit}/${quotaCheck.limit} on your plan). ` +
+            `Upgrade at /pricing for unlimited quotes.`
+          );
+          setIsLoading(false);
+          return;
+        }
+      } catch {
+        // Non-blocking — allow tiers if quota check fails
+      }
 
       try {
         const tierPromises = (['starter', 'perfectFit', 'beastMode'] as const).map(async (tierKey) => {
