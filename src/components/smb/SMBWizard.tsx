@@ -147,12 +147,12 @@ export const SMBWizard: React.FC<SMBWizardProps> = ({ industrySlug, onComplete }
         
         if (siteData) {
           setSiteConfig({
-            slug: siteData.slug,
-            name: siteData.name,
-            tagline: siteData.tagline,
-            primary_color: siteData.primary_color,
-            secondary_color: siteData.secondary_color,
-            features: siteData.features || {},
+            slug: siteData.slug ?? '',
+            name: siteData.name ?? '',
+            tagline: siteData.tagline ?? '',
+            primary_color: siteData.primary_color ?? '',
+            secondary_color: siteData.secondary_color ?? '',
+            features: (siteData.features || {}) as any,
           });
         } else {
           // Fallback config

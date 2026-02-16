@@ -15,6 +15,7 @@
  * @date 2026-02-01
  */
 
+// @ts-expect-error uuid has no declaration file in this project
 import { v4 as uuidv4 } from "uuid";
 import { calculateQuote, type QuoteInput, type QuoteResult } from "./unifiedQuoteCalculator";
 import { CURRENT_BENCHMARK_VERSION } from "./benchmarkSources";
@@ -505,7 +506,7 @@ function extractAssumptions(
   const equipment = legacyResult.equipment;
   
   // Get sizing metadata from equipment breakdown (NEW - uses SizingPolicy)
-  const sizingMeta = equipment.batteries.sizingPolicy;
+  const sizingMeta = (equipment.batteries as Record<string, unknown>).sizingPolicy as { mode: string; actualMWh: number; oversizeFactor: number; moduleId?: string; rounding?: string } | undefined;
   const actualKWh = sizingMeta 
     ? sizingMeta.actualMWh * 1000 
     : equipment.batteries.unitEnergyMWh * equipment.batteries.quantity * 1000;
@@ -597,7 +598,7 @@ function extractAssumptions(
     modularUnitMWh: sizingMode === "modular"
       ? createAssumption(modularUnitMWh, "benchmark", "high", { sourceDetail: moduleId ?? "Module specification" })
       : undefined,
-  };
+  } as any;
 
   return {
     electricityRate,
@@ -656,7 +657,7 @@ function buildConfig(input: QuoteInputV2, legacyResult: QuoteResult): QuoteConfi
   const lineItems: QuoteConfigLineItem[] = [];
 
   // Extract sizing mode for pricing basis determination
-  const sizingMode = equipment.batteries.sizingPolicy?.mode ?? "continuous";
+  const sizingMode = ((equipment.batteries as Record<string, unknown>).sizingPolicy as Record<string, unknown> | undefined)?.mode as string ?? "continuous";
   const isModular = sizingMode === "modular";
 
   // Calculate derived values from actual interface
@@ -668,8 +669,8 @@ function buildConfig(input: QuoteInputV2, legacyResult: QuoteResult): QuoteConfi
   // ─────────────────────────────────────────────────────────────────────────
   if (equipment.batteries.totalCost > 0) {
     // Determine SKU: generic for continuous, vendor-specific for modular
-    const batterySku = isModular && equipment.batteries.sizingPolicy?.moduleId
-      ? `BESS-${equipment.batteries.sizingPolicy.moduleId}`
+    const batterySku = isModular && ((equipment.batteries as Record<string, unknown>).sizingPolicy as Record<string, unknown> | undefined)?.moduleId
+      ? `BESS-${((equipment.batteries as Record<string, unknown>).sizingPolicy as Record<string, unknown>)!.moduleId}`
       : `BESS-generic-${legacyResult.metadata.systemCategory}`;
 
     // Determine pricing basis
@@ -857,17 +858,17 @@ function buildConfig(input: QuoteInputV2, legacyResult: QuoteResult): QuoteConfi
   }
 
   // Extract sizing policy from equipment breakdown
-  const sizingMeta = equipment.batteries.sizingPolicy;
+  const sizingMeta = (equipment.batteries as Record<string, unknown>).sizingPolicy as Record<string, unknown> | undefined;
   const sizingPolicySnapshot: import("../contracts/truequote.v2").SizingPolicySnapshot = {
-    mode: sizingMeta?.mode ?? "continuous",
-    moduleId: sizingMeta?.mode === "modular" ? sizingMeta.moduleId : undefined,
+    mode: (sizingMeta?.mode as "continuous" | "modular") ?? "continuous",
+    moduleId: sizingMeta?.mode === "modular" ? sizingMeta.moduleId as string | undefined : undefined,
     unitPowerMW: sizingMeta?.mode === "modular" && sizingMeta.moduleId 
       ? (equipment.batteries.unitPowerMW || undefined) 
       : undefined,
     unitEnergyMWh: sizingMeta?.mode === "modular" && sizingMeta.moduleId 
       ? (equipment.batteries.unitEnergyMWh || undefined) 
       : undefined,
-    rounding: sizingMeta?.rounding ?? "ceil",
+    rounding: (sizingMeta?.rounding as "round" | "ceil" | "floor") ?? "ceil",
     continuousThresholdMW: 1.0, // Default threshold
     manufacturer: sizingMeta?.mode === "modular" ? equipment.batteries.manufacturer : undefined,
     model: sizingMeta?.mode === "modular" ? equipment.batteries.model : undefined,
@@ -1090,12 +1091,13 @@ export async function generateTrueQuoteV2(
       wasClampedCeiling: item.wasClampedCeiling,
     })),
     clampEvents: marginResult.clampEvents.map(e => ({
-      reason: e.reason,
+      reason: e.reason as import('@/contracts/truequote.v2').MarginClampEvent['reason'],
       originalValue: e.originalValue,
       clampedValue: e.clampedValue,
       guardName: e.guardName,
     })),
     policyVersion: marginResult.policyVersion,
+    pricingAsOf: new Date().toISOString(),
     maxMarginCapApplied: marginResult.clampEvents.some(
       e => e.guardName.includes('hard cap') || e.guardName.includes('maxMarginPercent')
     ),

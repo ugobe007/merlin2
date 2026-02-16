@@ -149,7 +149,7 @@ async function aggregateMarketData(timeframeDays: number = 90): Promise<{
   const quoteTables = ["quotes", "quote_history", "user_quotes", "saved_quotes"];
   for (const table of quoteTables) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from(table)
         .select("*")
         .gte("created_at", cutoffDate.toISOString())
@@ -171,7 +171,7 @@ async function aggregateMarketData(timeframeDays: number = 90): Promise<{
   const installationTables = ["installations", "projects", "deployments"];
   for (const table of installationTables) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from(table)
         .select("*")
         .gte("created_at", cutoffDate.toISOString())
@@ -927,7 +927,7 @@ export async function runMarketInference(timeframeDays: number = 90): Promise<Ma
  * Save inference results to database
  */
 async function saveInference(inference: MarketInference): Promise<void> {
-  const { error } = await supabase.from("market_inferences").upsert(
+  const { error } = await (supabase as any).from("market_inferences").upsert(
     {
       analysis_date: inference.analysisDate,
       market_trends: inference.marketTrends,
@@ -963,7 +963,7 @@ async function saveInference(inference: MarketInference): Promise<void> {
  */
 async function feedToMLEngine(inference: MarketInference): Promise<void> {
   // Store inference data for ML processing
-  const { error } = await supabase.from("ml_training_data").insert({
+  const { error } = await (supabase as any).from("ml_training_data").insert({
     data_type: "market_inference",
     data: inference,
     processed: false,

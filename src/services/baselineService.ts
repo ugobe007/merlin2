@@ -422,7 +422,7 @@ export async function calculateDatabaseBaseline(
       const actualRooms = numericScale * 100; // Convert scale back to actual rooms
 
       // Calculate per-room kW, then multiply by actual rooms
-      const kWPerRoom = defaultConfig.typical_load_kw / referenceRooms;
+      const kWPerRoom = (defaultConfig.typical_load_kw ?? 0) / referenceRooms;
       basePowerMW = (kWPerRoom * actualRooms) / 1000;
 
       if (import.meta.env.DEV) {
@@ -447,7 +447,7 @@ export async function calculateDatabaseBaseline(
       } else {
         // Parse scale to handle both numeric and string values (e.g., "50,000 - 100,000 sq ft")
         const numericScale = parseScaleToNumber(scale);
-        basePowerMW = (defaultConfig.typical_load_kw / 1000) * numericScale;
+        basePowerMW = ((defaultConfig.typical_load_kw ?? 0) / 1000) * numericScale;
         if (import.meta.env.DEV) {
           console.log(
             `📊 [Generic Calculation] ${defaultConfig.typical_load_kw} kW × ${numericScale.toFixed(2)} scale (from: ${scale}) = ${basePowerMW.toFixed(3)} MW`
@@ -484,7 +484,9 @@ export async function calculateDatabaseBaseline(
           if (question.impact_type !== "additionalLoad") continue;
 
           // Use question_key (DB column) to look up user value
-          const userValue = useCaseData[question.question_key];
+          const qKey = question.question_key ?? '';
+          if (!qKey) continue;
+          const userValue = useCaseData[qKey];
           if (!userValue) continue;
 
           // Handle select questions with powerKw in select_options

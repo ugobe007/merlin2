@@ -62,7 +62,7 @@ export async function runPricingQuoteCore(layerA: ContractQuoteResult): Promise<
   const roiYears = quote?.financials?.paybackYears ?? 0;
   const npvUSD = quote?.financials?.npv;
   const irr = quote?.financials?.irr;
-  const demandChargeSavings = quote?.financials?.demandChargeSavings;
+  const demandChargeSavings = (quote as any)?.financials?.demandChargeSavings;
 
   // Sanity checks on pricing outputs
   if (!Number.isFinite(capexUSD) || capexUSD <= 0) warnings.push("⚠️ Capex is zero/invalid");

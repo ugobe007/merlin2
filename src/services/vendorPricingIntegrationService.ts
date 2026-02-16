@@ -102,9 +102,9 @@ export async function syncApprovedVendorProducts(): Promise<{
       try {
         // Map vendor product to equipment_pricing format
         const equipmentPricing: EquipmentPricingRecord = {
-          equipment_type: mapProductCategoryToEquipmentType(product.product_category),
-          manufacturer: product.manufacturer,
-          model: product.model,
+          equipment_type: mapProductCategoryToEquipmentType(product.product_category as "battery" | "inverter" | "ems" | "bos" | "container"),
+          manufacturer: product.manufacturer ?? '',
+          model: product.model ?? '',
           price_per_kwh: product.price_per_kwh ? Number(product.price_per_kwh) : undefined,
           price_per_kw: product.price_per_kw ? Number(product.price_per_kw) : undefined,
           capacity_kwh: product.capacity_kwh ? Number(product.capacity_kwh) : undefined,
@@ -115,8 +115,8 @@ export async function syncApprovedVendorProducts(): Promise<{
           vendor_id: product.vendor_id,
           source: "vendor_submission",
           confidence_score: 0.9, // High confidence for approved vendor data
-          effective_date: product.approved_at || product.created_at,
-          expires_at: getExpirationDate(product.approved_at || product.created_at), // 90 days
+          effective_date: product.approved_at || product.created_at || new Date().toISOString(),
+          expires_at: getExpirationDate(product.approved_at || product.created_at || new Date().toISOString()), // 90 days
         };
 
         // Check if record already exists (by manufacturer + model + vendor_id)
@@ -125,7 +125,7 @@ export async function syncApprovedVendorProducts(): Promise<{
           .select("id")
           .eq("manufacturer", equipmentPricing.manufacturer)
           .eq("model", equipmentPricing.model)
-          .eq("vendor_id", equipmentPricing.vendor_id)
+          .eq("vendor_id", equipmentPricing.vendor_id ?? '')
           .eq("source", "vendor_submission")
           .single();
 
@@ -299,7 +299,7 @@ export async function getVendorPricing(
     return {
       id: product.id,
       vendorId: product.vendor_id,
-      productCategory: product.product_category,
+      productCategory: product.product_category as "battery" | "inverter" | "ems" | "bos" | "container",
       manufacturer: product.manufacturer,
       model: product.model,
       capacityKwh: product.capacity_kwh ? Number(product.capacity_kwh) : undefined,
@@ -309,7 +309,7 @@ export async function getVendorPricing(
       leadTimeWeeks: product.lead_time_weeks,
       warrantyYears: product.warranty_years,
       certifications: product.certifications || [],
-      approvedAt: new Date(product.approved_at || product.created_at),
+      approvedAt: new Date(product.approved_at || product.created_at || new Date().toISOString()),
     };
   } catch (error) {
     console.error("❌ Error fetching vendor pricing:", error);

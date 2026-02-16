@@ -114,10 +114,10 @@ export async function getUseCaseWithCalculations(
       }
 
       return {
-        ...cached.calculation_results,
+        ...(cached.calculation_results as Record<string, unknown>),
         fromCache: true,
         executionTimeMs: executionTime,
-      };
+      } as UseCaseWithCalculations;
     }
 
     // STEP 2: Fetch template from database
@@ -186,7 +186,9 @@ export async function getUseCaseWithCalculations(
     }
 
     // ✅ SINGLE SOURCE OF TRUTH: Use centralizedCalculations.calculateFinancialMetrics()
-    const powerRatingMW = template.powerProfile.peakLoadKw / 1000;
+    const profile = template.powerProfile as Record<string, number> | null;
+    const solarCompat = template.solarCompatibility as Record<string, unknown> | null;
+    const powerRatingMW = (profile?.peakLoadKw ?? 500) / 1000;
     const durationHours = 4; // Default, can be customized
 
     // Use centralized financial metrics calculator (database-driven)
@@ -200,28 +202,28 @@ export async function getUseCaseWithCalculations(
     });
 
     const sizing = calculateBESSSize({
-      peakDemandkW: template.powerProfile.peakLoadKw,
-      averageDemandkW: template.powerProfile.avgLoadKw || template.powerProfile.peakLoadKw * 0.5,
+      peakDemandkW: profile?.peakLoadKw ?? 500,
+      averageDemandkW: profile?.avgLoadKw || (profile?.peakLoadKw ?? 500) * 0.5,
       dailyEnergyConsumptionkWh:
-        template.powerProfile.dailyLoadkWh ||
-        template.powerProfile.peakLoadKw * template.powerProfile.dailyOperatingHours,
+        profile?.dailyLoadkWh ||
+        (profile?.peakLoadKw ?? 500) * (profile?.dailyOperatingHours ?? 12),
       useCase: template.slug,
       primaryObjective: "all",
     });
 
     // STEP 5: Add solar if enabled
     let solarCalculations = null;
-    if (solarEnabled && template.solarCompatibility?.recommended) {
+    if (solarEnabled && solarCompat?.recommended) {
       if (import.meta.env.DEV) {
         console.log("☀️  Calculating solar integration...");
       }
 
       solarCalculations = calculateSolarBESSSystem({
         dailyLoadkWh:
-          (sizing.recommendedCapacityMWh * 1000) / template.powerProfile.dailyOperatingHours,
+          (sizing.recommendedCapacityMWh * 1000) / (profile?.dailyOperatingHours ?? 12),
         peakLoadkW: sizing.recommendedPowerMW * 1000,
         location,
-        autonomyDays: autonomyDays || template.solarCompatibility.autonomyDays || 3,
+        autonomyDays: autonomyDays || (solarCompat?.autonomyDays as number) || 3,
         systemVoltage: 480,
         temperatureC: 20,
       });
@@ -257,7 +259,7 @@ export async function getUseCaseWithCalculations(
       },
       fromCache: false,
       executionTimeMs: Date.now() - startTime,
-    } as UseCaseWithCalculations;
+    } as unknown as UseCaseWithCalculations;
 
     // STEP 6: Cache results
     await saveToCalculationCache(cacheKey, results, Date.now() - startTime);
@@ -531,7 +533,7 @@ async function fetchFromStaticTemplates(
 async function incrementTemplateUsage(templateId: string) {
   try {
     await supabase.rpc("increment_template_usage", {
-      template_id: templateId,
+      template_slug: templateId,
     });
   } catch (error) {
     console.error("Error incrementing usage:", error);

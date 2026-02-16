@@ -307,13 +307,19 @@ export default function WizardHealthDashboard() {
         <h3 style={{ marginBottom: 10 }}>📊 Metrics Snapshot</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 15 }}>
           <div style={{ padding: 15, background: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>
-            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 5 }}>Total Sessions</div>
-            <div style={{ fontSize: 24, fontWeight: 'bold' }}>{report.metricsSnapshot.totalSessions}</div>
+            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 5 }}>Total Errors</div>
+            <div style={{ fontSize: 24, fontWeight: 'bold' }}>{report.metricsSnapshot.totalErrors}</div>
           </div>
           <div style={{ padding: 15, background: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>
-            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 5 }}>Error Rate</div>
-            <div style={{ fontSize: 24, fontWeight: 'bold', color: report.metricsSnapshot.errorRate > 0.1 ? '#ef4444' : '#22c55e' }}>
-              {(report.metricsSnapshot.errorRate * 100).toFixed(1)}%
+            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 5 }}>Validation Mismatches</div>
+            <div style={{ fontSize: 24, fontWeight: 'bold', color: report.metricsSnapshot.validationMismatches > 0 ? '#ef4444' : '#22c55e' }}>
+              {report.metricsSnapshot.validationMismatches}
+            </div>
+          </div>
+          <div style={{ padding: 15, background: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>
+            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 5 }}>Avg Completion</div>
+            <div style={{ fontSize: 24, fontWeight: 'bold' }}>
+              {report.metricsSnapshot.avgCompletionTime.toFixed(1)}s
             </div>
           </div>
           <div style={{ padding: 15, background: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>

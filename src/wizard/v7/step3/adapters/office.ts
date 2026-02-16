@@ -74,9 +74,9 @@ function mapAnswers(
   // ── Schedule ──
   const hoursRaw = String(answers.operatingHours || "business");
   const schedule = hoursRaw === "24-7"
-    ? { hoursPerDay: 24, daysPerWeek: 7, profileType: "24-7" as const }
+    ? { hoursPerDay: 24, daysPerWeek: 7, profileType: "flat" as const }
     : hoursRaw === "extended"
-      ? { hoursPerDay: 16, daysPerWeek: 6, profileType: "extended" as const }
+      ? { hoursPerDay: 16, daysPerWeek: 6, profileType: "commercial" as const }
       : { ...SCHEDULE_PRESETS["office"] };
 
   // ── HVAC ──

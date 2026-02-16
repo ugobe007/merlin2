@@ -65,14 +65,10 @@ export type CalcValidation = {
   /** Percentage shares of each contributor */
   kWContributorShares?: Record<string, number>;
 
-  /** Industry-specific forensic details (sub-breakdowns) */
-  details?: {
-    car_wash?: { dryers?: number; pumps?: number; vacuums?: number };
-    hotel?: { rooms?: number; kitchen?: number; laundry?: number; pool?: number };
-    data_center?: { upsLosses?: number; pdus?: number; fans?: number };
-    ev_charging?: { chargers?: number; siteAux?: number };
-    [industry: string]: Record<string, number> | undefined;
-  };
+  /** Industry-specific forensic details (sub-breakdowns).
+   *  Values are opaque — each industry puts its own mix of numbers, strings, booleans.
+   *  Consumers should narrow before using. */
+  details?: Record<string, Record<string, unknown> | undefined>;
 
   /** Validation notes (non-blocking observations) */
   notes?: string[];

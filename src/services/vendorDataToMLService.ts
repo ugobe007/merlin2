@@ -66,7 +66,7 @@ export async function addVendorDataToMLTraining(productId: string): Promise<bool
     }
 
     // Map product category to product type for ML
-    const productType = mapProductCategoryToMLType(product.product_category);
+    const productType = mapProductCategoryToMLType(product.product_category as "battery" | "inverter" | "ems" | "bos" | "container");
     if (!productType) {
       if (import.meta.env.DEV) {
         console.warn(
@@ -91,8 +91,8 @@ export async function addVendorDataToMLTraining(productId: string): Promise<bool
       capacityUnit = "kW";
     } else {
       // For other categories, use available pricing
-      pricePerUnit = product.price_per_kwh || product.price_per_kw;
-      capacity = product.capacity_kwh || product.power_kw;
+      pricePerUnit = (product.price_per_kwh || product.price_per_kw) ?? undefined;
+      capacity = (product.capacity_kwh || product.power_kw) ?? undefined;
     }
 
     if (!pricePerUnit) {

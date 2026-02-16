@@ -114,14 +114,14 @@ export async function getMarketDataSources(): Promise<MarketDataSource[]> {
       id: row.id,
       name: row.name,
       url: row.url,
-      feedUrl: row.feed_url,
+      feedUrl: row.feed_url ?? undefined,
       sourceType: row.source_type,
       equipmentCategories: row.equipment_categories || [],
       contentType: row.content_type,
       reliabilityScore: row.reliability_score || 3,
       isActive: row.is_active,
       lastFetchAt: row.last_fetch_at ? new Date(row.last_fetch_at) : undefined,
-    }));
+    })) as MarketDataSource[];
 
     marketCache.sources = sources;
     marketCache.lastCacheUpdate = new Date();
@@ -212,13 +212,13 @@ export async function getMarketPrices(
         continue;
 
       results.push({
-        equipmentType: row.equipment_type,
+        equipmentType: row.equipment_type as MarketPriceData["equipmentType"],
         pricePerUnit: row.price_per_unit,
         unitType: `$/${row.unit}` as MarketPriceData["unitType"],
         dataSource: `scraped:${row.source_id?.slice(0, 8) || "unknown"}`,
         dataDate: new Date(row.price_date),
         confidence:
-          row.confidence_score >= 0.7 ? "high" : row.confidence_score >= 0.4 ? "medium" : "low",
+          (row.confidence_score ?? 0) >= 0.7 ? "high" : (row.confidence_score ?? 0) >= 0.4 ? "medium" : "low",
         region: row.region || region,
         systemScale: row.technology === "utility" ? "utility" : "commercial",
         metadata: { sourceTable: "collected_market_prices", isVerified: row.is_verified },
@@ -227,16 +227,17 @@ export async function getMarketPrices(
 
     // Map legacy pricing data (lower confidence since it may be stale)
     for (const row of legacyData || []) {
+      const meta = row.metadata as Record<string, unknown> | null;
       results.push({
-        equipmentType: row.equipment_type,
+        equipmentType: row.equipment_type as MarketPriceData["equipmentType"],
         pricePerUnit: row.price_per_unit,
         unitType: `$/${row.unit_type}` as MarketPriceData["unitType"],
         dataSource: row.data_source,
         dataDate: new Date(row.data_date),
-        confidence: row.confidence_level || "low",
+        confidence: (row.confidence_level || "low") as MarketPriceData["confidence"],
         region: row.region,
-        systemScale: row.metadata?.scale,
-        metadata: { ...row.metadata, sourceTable: "market_pricing_data" },
+        systemScale: (meta?.scale as MarketPriceData["systemScale"]) ?? undefined,
+        metadata: { ...(meta ?? {}), sourceTable: "market_pricing_data" },
       });
     }
 
@@ -379,16 +380,25 @@ export async function updateSourceFetchStatus(
   dataPointCount?: number
 ): Promise<void> {
   try {
+    // Fetch current values so we can increment locally
+    const { data: current } = await supabase
+      .from("market_data_sources")
+      .select("fetch_error_count, total_data_points")
+      .eq("id", sourceId)
+      .single();
+
+    const currentErrorCount = (current?.fetch_error_count as number) ?? 0;
+    const currentDataPoints = (current?.total_data_points as number) ?? 0;
+
     await supabase
       .from("market_data_sources")
       .update({
         last_fetch_at: new Date().toISOString(),
         last_fetch_status: status,
-        fetch_error_count:
-          status === "failed" ? supabase.rpc("increment_error_count", { source_id: sourceId }) : 0,
+        fetch_error_count: status === "failed" ? currentErrorCount + 1 : 0,
         total_data_points: dataPointCount
-          ? supabase.rpc("add_data_points", { source_id: sourceId, count: dataPointCount })
-          : undefined,
+          ? currentDataPoints + dataPointCount
+          : currentDataPoints,
       })
       .eq("id", sourceId);
   } catch (error) {
@@ -626,21 +636,21 @@ export async function getPricingPolicies(equipmentType?: string): Promise<Pricin
     return (data || []).map((row) => ({
       id: row.id,
       name: row.name,
-      description: row.description,
+      description: row.description ?? undefined,
       equipmentType: row.equipment_type,
       sourceWeights: row.source_weights || {},
       frequencyWeights: row.frequency_weights || {},
       reliabilityMultiplier: row.reliability_multiplier || 1.0,
       ageDecayFactor: row.age_decay_factor || 0.02,
-      industryFloor: row.industry_floor,
-      industryCeiling: row.industry_ceiling,
+      industryFloor: row.industry_floor ?? undefined,
+      industryCeiling: row.industry_ceiling ?? undefined,
       industryGuidanceWeight: row.industry_guidance_weight || 0.4,
       outlierStdThreshold: row.outlier_std_threshold || 2.0,
       minDataPoints: row.min_data_points || 3,
       regionalMultipliers: row.regional_multipliers || {},
       isActive: row.is_active,
       priority: row.priority || 0,
-    }));
+    })) as PricingPolicy[];
   } catch (error) {
     console.error("Error fetching pricing policies:", error);
     return [];
@@ -682,7 +692,7 @@ export async function calculateWeightedPrice(
       p_equipment_type: equipmentType,
       p_region: region,
       p_capacity_mw: capacityMW,
-      p_technology: technology || null,
+      p_technology: technology ?? undefined,
     });
 
     if (error) {
@@ -696,13 +706,13 @@ export async function calculateWeightedPrice(
 
     const result = data[0];
     return {
-      weightedPrice: parseFloat(result.weighted_price) || 0,
+      weightedPrice: parseFloat(String(result.weighted_price)) || 0,
       sampleCount: result.sample_count || 0,
-      confidence: parseFloat(result.confidence) || 0,
-      floorPrice: parseFloat(result.floor_price) || 0,
-      ceilingPrice: parseFloat(result.ceiling_price) || 0,
-      priceRangeLow: parseFloat(result.price_range_low) || 0,
-      priceRangeHigh: parseFloat(result.price_range_high) || 0,
+      confidence: parseFloat(String(result.confidence)) || 0,
+      floorPrice: parseFloat(String(result.floor_price)) || 0,
+      ceilingPrice: parseFloat(String(result.ceiling_price)) || 0,
+      priceRangeLow: parseFloat(String(result.price_range_low)) || 0,
+      priceRangeHigh: parseFloat(String(result.price_range_high)) || 0,
     };
   } catch (error) {
     console.error("Error calculating weighted price:", error);
@@ -820,17 +830,17 @@ export async function getCollectedPrices(
 
     return (data || []).map((row) => ({
       id: row.id,
-      sourceId: row.source_id,
+      sourceId: row.source_id ?? '',
       equipmentType: row.equipment_type,
       pricePerUnit: row.price_per_unit,
       unit: row.unit,
-      region: row.region,
-      technology: row.technology,
-      productName: row.product_name,
+      region: row.region ?? undefined,
+      technology: row.technology ?? undefined,
+      productName: row.product_name ?? undefined,
       confidenceScore: row.confidence_score || 0.5,
       isVerified: row.is_verified || false,
       priceDate: new Date(row.price_date),
-      extractedAt: new Date(row.extracted_at),
+      extractedAt: new Date(row.extracted_at ?? row.price_date),
     }));
   } catch (error) {
     console.error("Error fetching collected prices:", error);

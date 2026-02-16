@@ -33,7 +33,7 @@
 import { resolveIndustryContext } from "../industry/resolveIndustryContext";
 import { CALCULATORS_BY_ID } from "../calculators/registry";
 import { getTier1Blockers } from "../schema/curatedFieldsResolver";
-import type { CalcRunResult, CalcValidation, ContributorKeys } from "../calculators/contract";
+import type { CalcInputs, CalcRunResult, CalcValidation, ContributorKeys } from "../calculators/contract";
 import type {
   LoadProfileEnvelope,
   LoadContributor,
@@ -226,14 +226,14 @@ export function step3Compute(input: Step3ComputeInput): LoadProfileEnvelope {
 
   let calcResult: CalcRunResult;
   try {
-    calcResult = calc.compute(calcInputs);
+    calcResult = calc.compute(calcInputs as CalcInputs);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     // Self-healing: calculator threw → try generic SSOT adapter as backup
     const genericCalc = CALCULATORS_BY_ID["generic_ssot_v1"];
     if (genericCalc && genericCalc !== calc) {
       try {
-        calcResult = genericCalc.compute(calcInputs);
+        calcResult = genericCalc.compute(calcInputs as CalcInputs);
         policy.calculatorFallback(ctx.calculatorId, errMsg);
         adapterWarning = (adapterWarning ?? "") +
           ` Calculator "${ctx.calculatorId}" threw: ${errMsg}. Used generic fallback.`;
@@ -300,6 +300,8 @@ export function step3Compute(input: Step3ComputeInput): LoadProfileEnvelope {
 
     // Will be filled by invariant check
     schedule: normalizedInputs.schedule,
+    conflicts,
+    policyEvents: [],
   };
 
   // ── 9. Run invariant checks ──────────────────────────────────────────

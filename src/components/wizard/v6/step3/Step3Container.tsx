@@ -6,7 +6,8 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/services/supabaseClient';
-import { SectionHeader, SmartQuestion, getColorScheme } from './inputs';
+import { SectionHeader, SmartQuestion } from './inputs';
+import { getColorScheme } from './inputs/registry';
 import { Loader2 } from 'lucide-react';
 
 // ============================================
@@ -95,7 +96,7 @@ export const Step3Container: React.FC<Step3ContainerProps> = ({
         if (fetchError) throw fetchError;
 
         console.log(`[Step3] Loaded ${data?.length || 0} questions for ${industry}`);
-        setQuestions(data || []);
+        setQuestions((data || []) as unknown as Question[]);
         setError(null);
       } catch (err) {
         console.error('[Step3] Error fetching questions:', err);
@@ -252,7 +253,7 @@ export const Step3Container: React.FC<Step3ContainerProps> = ({
                 {section.questions.map((question) => (
                   <SmartQuestion
                     key={question.id}
-                    question={question}
+                    question={question as any}
                     value={values[question.field_name]}
                     onChange={onChange}
                     colorScheme={colorScheme}

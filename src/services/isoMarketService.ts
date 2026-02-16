@@ -96,7 +96,7 @@ export async function getAllISOPrices(): Promise<ISOMarketPrice[]> {
       return [];
     }
 
-    const prices = data as ISOMarketPrice[];
+    const prices = data as unknown as ISOMarketPrice[];
     setCache(cacheKey, prices);
     return prices;
   } catch (err) {
@@ -127,7 +127,7 @@ export async function getISOPrices(
       return [];
     }
 
-    const prices = data as ISOMarketPrice[];
+    const prices = data as unknown as ISOMarketPrice[];
     setCache(cacheKey, prices);
     return prices;
   } catch (err) {
@@ -158,7 +158,7 @@ export async function getServicePrices(
       return [];
     }
 
-    const prices = data as ISOMarketPrice[];
+    const prices = data as unknown as ISOMarketPrice[];
     setCache(cacheKey, prices);
     return prices;
   } catch (err) {

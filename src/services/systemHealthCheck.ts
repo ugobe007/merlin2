@@ -381,7 +381,7 @@ async function checkDatabaseSchemas(): Promise<HealthCheckResult> {
     const schemaIssues: string[] = [];
 
     for (const table of criticalTables) {
-      const { error } = await supabase.from(table).select("*").limit(1);
+      const { error } = await (supabase as any).from(table).select("*").limit(1);
 
       if (error) {
         if (error.code === "42P01") {

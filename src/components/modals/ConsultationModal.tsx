@@ -29,7 +29,7 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
 
     try {
       // Save to Supabase customer_leads table
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('customer_leads')
         .insert([
           {

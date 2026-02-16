@@ -372,7 +372,7 @@ function transformDatabaseQuestion(
   return {
     id: fieldName, // CRITICAL: Use field_name so calculations can find the value
     type: mapQuestionType((dbQuestion.input_type || dbQuestion.question_type || "text") as string, fieldName),
-    section,
+    section: section as Question["section"],
     title: (dbQuestion.question_text || dbQuestion.label || "Question") as string,
     subtitle:
       (dbQuestion.help_text as string | undefined) ||
@@ -793,10 +793,11 @@ export function CompleteStep3Component({
         // - heavy_duty_truck_stop (underscores)
         // - data-center (hyphens)
         // - hotel (no separator)
+        const industryStr = String(industry);
         const slugVariants = [
-          industry, // Original: heavy_duty_truck_stop
-          industry.replace(/_/g, "-"), // With hyphens: heavy-duty-truck-stop
-          industry.replace(/-/g, "_"), // With underscores: data_center
+          industryStr, // Original: heavy_duty_truck_stop
+          industryStr.replace(/_/g, "-"), // With hyphens: heavy-duty-truck-stop
+          industryStr.replace(/-/g, "_"), // With underscores: data_center
         ].filter((s, i, arr) => arr.indexOf(s) === i); // Remove duplicates
 
         console.log(`📋 Loading questions for industry: ${industry}, trying slugs:`, slugVariants);
@@ -857,7 +858,7 @@ export function CompleteStep3Component({
 
           setQuestions(dedupedQuestions);
           setSections(createSectionsFromQuestions(dedupedQuestions));
-          setIndustryTitle(useCase.name || state.industryName || industry);
+          setIndustryTitle(useCase.name || state.industryName || String(industry));
           
           // ✅ CRITICAL (Jan 24, 2026): Apply smart defaults from database
           // This ensures pre-filled values count as "answered"
@@ -913,7 +914,7 @@ export function CompleteStep3Component({
             setSections([]);
             setIndustryTitle(
               state.industryName ||
-                industry.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+                String(industry).replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
             );
           }
         }

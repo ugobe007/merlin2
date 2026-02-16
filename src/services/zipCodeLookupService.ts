@@ -158,8 +158,8 @@ export async function lookupZipCode(zipCode: string): Promise<ZipCodeResult | nu
         city: data.city,
         state: data.state_code,
         stateName: data.state_name,
-        latitude: data.latitude,
-        longitude: data.longitude,
+        latitude: data.latitude ?? undefined,
+        longitude: data.longitude ?? undefined,
         source: 'database',
       };
     }
@@ -181,9 +181,9 @@ export async function lookupZipCode(zipCode: string): Promise<ZipCodeResult | nu
 
       const result: ZipCodeResult = {
         zipCode,
-        city: geocoded.city,
-        state: geocoded.stateCode!,
-        stateName: geocoded.state || geocoded.stateCode!,
+        city: geocoded.city ?? '',
+        state: geocoded.stateCode ?? '',
+        stateName: ((geocoded.state || geocoded.stateCode) ?? '') as string,
         latitude: geocoded.lat,
         longitude: geocoded.lon,
         source: 'google-maps',

@@ -127,7 +127,7 @@ async function loadConstantsFromDB(): Promise<boolean> {
 
     if (data && data.length > 0) {
       constantsCache.data.clear();
-      data.forEach((row: CalculationConstant) => {
+      (data as any[]).forEach((row: CalculationConstant) => {
         constantsCache.data.set(row.key, row);
       });
       constantsCache.lastUpdated = new Date();

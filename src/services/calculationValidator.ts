@@ -723,7 +723,7 @@ export class CalculationValidator {
         session_id: sessionId,
       };
 
-      const { error } = await supabase.from("calculation_audit_log").insert(entry);
+      const { error } = await (supabase as any).from("calculation_audit_log").insert(entry);
 
       if (error) {
         console.warn("Failed to log validation to database:", error);

@@ -131,9 +131,9 @@ export class UseCaseService {
           ...useCase,
           question_count: 0,
           equipment_count: 0,
-          default_configuration: null,
-        })) || []
-      );
+          default_configuration: undefined,
+        })) ?? []
+      ) as unknown as UseCaseWithConfiguration[];
     } catch (error) {
       console.error("Error fetching use cases:", error);
       // Return empty array instead of throwing to prevent UI crash
@@ -159,7 +159,7 @@ export class UseCaseService {
         .order("display_order");
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as UseCaseWithConfiguration[];
     } catch (error) {
       console.error("Error fetching use cases by category:", error);
       throw error;
@@ -184,7 +184,7 @@ export class UseCaseService {
         .order("display_order");
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as UseCaseWithConfiguration[];
     } catch (error) {
       console.error("Error fetching use cases by tier:", error);
       throw error;
@@ -268,7 +268,6 @@ export class UseCaseService {
         configurations:
           configurationsResult.status === "fulfilled" ? configurationsResult.value : [],
         custom_questions: transformedQuestions,
-        customQuestions: transformedQuestions, // Add both formats for compatibility
         recommended_applications:
           applicationsResult.status === "fulfilled" ? applicationsResult.value : [],
       };
@@ -491,7 +490,7 @@ export class UseCaseService {
         // Note: Removed .order("load_priority") - column may not exist in all deployments
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as Array<ConfigurationEquipmentRow & { equipment_template: EquipmentTemplateRow }>;
     } catch (error) {
       console.error("Error fetching configuration equipment:", error);
       // Return empty array instead of throwing - allows Step 3 to continue
@@ -774,13 +773,15 @@ export class UseCaseService {
       if (!configuration) throw new Error("Configuration not found");
 
       // Apply custom question impacts to configuration
-      const modifiedConfig = { ...configuration };
-      let totalLoadKw = configuration.typical_load_kw;
-      let totalPeakKw = configuration.peak_load_kw;
+      const modifiedConfig = { ...configuration } as any;
+      let totalLoadKw = configuration.typical_load_kw ?? 0;
+      let totalPeakKw = configuration.peak_load_kw ?? 0;
 
       // Process each custom question response
       for (const question of questions) {
-        const response = userResponses[question.question_key];
+        const qKey = question.question_key || question.field_name;
+        if (!qKey) continue;
+        const response = userResponses[qKey];
         if (response === undefined || response === null) continue;
 
         switch (question.impact_type) {
@@ -807,7 +808,7 @@ export class UseCaseService {
 
           case "factor":
             if (question.impacts_field === "energyCostMultiplier") {
-              modifiedConfig.energy_cost_multiplier *= Number(response) / 100 || 1;
+              modifiedConfig.energy_cost_multiplier = (modifiedConfig.energy_cost_multiplier ?? 1) * (Number(response) / 100 || 1);
             }
             break;
 
@@ -825,8 +826,8 @@ export class UseCaseService {
 
       // Select best pricing scenario (highest savings)
       const bestPricingScenario = pricingScenarios.reduce(
-        (best, current) =>
-          !best || (current.annual_savings || 0) > (best.annual_savings || 0) ? current : best,
+        (best: any, current: any) =>
+          !best || ((current as any).annual_savings || 0) > ((best as any).annual_savings || 0) ? current : best,
         pricingScenarios[0]
       );
 
@@ -849,8 +850,8 @@ export class UseCaseService {
       // Use centralized results or fallback to scenario savings
       const projectedSavings =
         financials.annualSavings ||
-        bestPricingScenario?.annual_savings ||
-        estimatedCost * (modifiedConfig.typical_savings_percent / 100) * 0.4;
+        (bestPricingScenario as any)?.annual_savings ||
+        estimatedCost * ((modifiedConfig.typical_savings_percent ?? 0) / 100) * 0.4;
 
       // ✅ Use centralized payback/ROI instead of manual calculation
       const paybackYears = financials.paybackYears;
@@ -872,15 +873,17 @@ export class UseCaseService {
       // Log analytics event
       await this.logAnalyticsEvent({
         use_case_id: useCaseId,
-        configuration_id: configurationId,
         user_id: userId,
-        event_type: "configured",
-        answers: userResponses,
-        calculated_load_kw: totalLoadKw,
         recommended_size_mw: recommendedSizeMw,
         estimated_cost: estimatedCost,
-        projected_savings: projectedSavings,
-        calculated_roi: roiPercentage,
+        estimated_savings: projectedSavings,
+        roi_percentage: roiPercentage,
+        input_data: userResponses as any,
+        calculated_results: {
+          configuration_id: configurationId,
+          event_type: "configured",
+          calculated_load_kw: totalLoadKw,
+        } as any,
       });
 
       return result;
@@ -893,13 +896,13 @@ export class UseCaseService {
   /**
    * Log analytics event
    */
-  async logAnalyticsEvent(eventData: Partial<UseCaseAnalyticsRow>): Promise<void> {
+  async logAnalyticsEvent(eventData: Partial<UseCaseAnalyticsRow> & Record<string, any>): Promise<void> {
     try {
       const { error } = await supabase.from("use_case_analytics").insert([
         {
           ...eventData,
           created_at: new Date().toISOString(),
-        },
+        } as any,
       ]);
 
       if (error) throw error;
@@ -958,7 +961,7 @@ export class UseCaseService {
       const { data, error } = await query.order("usage_count", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as UseCaseWithConfiguration[];
     } catch (error) {
       console.error("Error searching use cases:", error);
       throw error;
@@ -984,7 +987,7 @@ export class UseCaseService {
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as UseCaseWithConfiguration[];
     } catch (error) {
       console.error("Error fetching popular use cases:", error);
       throw error;
@@ -1002,7 +1005,7 @@ export class UseCaseService {
     try {
       const { data, error } = await supabase
         .from("use_cases")
-        .insert([useCaseData])
+        .insert([useCaseData as any])
         .select()
         .single();
 
@@ -1043,7 +1046,7 @@ export class UseCaseService {
     try {
       const { data, error } = await supabase
         .from("use_case_configurations")
-        .insert([configData])
+        .insert([configData as any])
         .select()
         .single();
 
@@ -1079,7 +1082,7 @@ export class UseCaseService {
         supabase.from("equipment_templates").select("id", { count: "exact" }),
       ]);
 
-      const activeUseCases = useCases.data?.filter((uc) => uc.usage_count > 0) || [];
+      const activeUseCases = useCases.data?.filter((uc) => (uc.usage_count ?? 0) > 0) || [];
       const totalUsageCount =
         useCases.data?.reduce((sum, uc) => sum + (uc.usage_count || 0), 0) || 0;
       const averageRoi =
@@ -1312,7 +1315,7 @@ export class UseCaseService {
       const { data: useCase, error: useCaseError } = await supabase
         .from("use_cases")
         .select("slug")
-        .eq("id", config.use_case_id)
+        .eq("id", config.use_case_id ?? '')
         .single();
 
       if (useCaseError) throw useCaseError;

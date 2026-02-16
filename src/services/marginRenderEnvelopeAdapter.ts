@@ -11,7 +11,7 @@
  */
 
 import type { MarginQuoteResult } from '@/services/marginPolicyEngine';
-import type { MarginRenderEnvelope } from '@/types/marginRenderEnvelope';
+import type { MarginRenderEnvelope, RenderLineItem, RenderReviewEvent, RenderClampEvent } from '@/types/marginRenderEnvelope';
 
 type BadgeLevel = 'high' | 'medium' | 'low';
 
@@ -53,11 +53,11 @@ export function toMarginRenderEnvelope(result: MarginQuoteResult): MarginRenderE
     confidenceBadge,
     // Map engine events → render events (UI contract stability)
     reviewEvents: (result.reviewEvents ?? []).map((e) => ({
-      type: e.type ?? 'unknown',
+      type: (e as any).type ?? e.reason ?? 'unknown',
       message: e.message ?? '',
-      productClass: e.productClass,
-      unitPrice: e.unitPrice,
-      threshold: e.threshold,
+      productClass: e.productClass as string | undefined,
+      unitPrice: ((e as any).unitPrice ?? e.marketUnitCost) as number | undefined,
+      threshold: ((e as any).threshold ?? e.reviewThreshold) as number | undefined,
     })),
     clampEvents: (result.clampEvents ?? []).map((e) => ({
       reason: e.reason ?? 'unknown',
@@ -69,19 +69,19 @@ export function toMarginRenderEnvelope(result: MarginQuoteResult): MarginRenderE
     // line items (render-only)
     lineItems: (result.lineItems ?? []).map((li) => ({
       sku: li.sku,
-      category: li.category,
+      category: li.category as string,
       description: li.description,
       quantity: li.quantity,
       unit: li.unit,
 
       // show the 3 layers, but UI never recalculates them
-      marketCost: (li.marketCost ?? li.baseCost),
-      obtainableCost: (li.obtainableCost ?? li.baseCost),
+      marketCost: (li as any).marketCost ?? li.baseCost ?? 0,
+      obtainableCost: (li as any).obtainableCost ?? li.baseCost ?? 0,
       sellPrice: li.sellPrice,
 
-      reviewEvents: li.reviewEvents ?? [],
-      clampEvents: li.clampEvents ?? [],
-    })),
+      reviewEvents: (li.reviewEvents ?? []) as unknown as RenderReviewEvent[],
+      clampEvents: (li.clampEvents ?? []) as unknown as RenderClampEvent[],
+    })) as RenderLineItem[],
 
     // metadata
     marginBandId: result.marginBandId,

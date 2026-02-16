@@ -121,6 +121,8 @@ export function getSupportedRendererTypes(): readonly RendererType[] {
     "compact_grid",
     "select",
     "number",
+    "number_stepper",
+    "range_buttons",
     "slider",
     "toggle",
     "text",

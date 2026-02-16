@@ -308,7 +308,7 @@ async function fetchBatteryPricingFromDB(
         cycleLife: 4000,
         efficiency: 0.85,
         dataSource: "database",
-        lastUpdated: new Date(data.updated_at),
+        lastUpdated: new Date(data.updated_at ?? Date.now()),
         confidence: "high",
       };
     }
@@ -404,7 +404,7 @@ async function fetchInverterPricingFromDB(powerMW: number): Promise<InverterPric
         efficiency: 0.97,
         warrantyYears: 10,
         dataSource: "database",
-        lastUpdated: new Date(data.updated_at),
+        lastUpdated: new Date(data.updated_at ?? Date.now()),
       };
     }
 
@@ -488,7 +488,7 @@ async function fetchSolarPricingFromDB(solarMW?: number): Promise<SolarPricing> 
         efficiency: 0.2,
         warrantyYears: 25,
         dataSource: "database",
-        lastUpdated: new Date(data.updated_at),
+        lastUpdated: new Date(data.updated_at ?? Date.now()),
       };
     }
 
@@ -534,7 +534,7 @@ async function fetchWindPricingFromDB(): Promise<WindPricing> {
       model: data.model || "Land-Based Wind",
       capacityFactor: 0.35,
       dataSource: "database",
-      lastUpdated: new Date(data.updated_at),
+      lastUpdated: new Date(data.updated_at ?? Date.now()),
     };
   } catch (error) {
     return NREL_WIND_PRICING;
@@ -566,7 +566,7 @@ async function fetchGeneratorPricingFromDB(): Promise<GeneratorPricing> {
       fuelType: "natural-gas",
       efficiency: 0.4,
       dataSource: "database",
-      lastUpdated: new Date(data.updated_at),
+      lastUpdated: new Date(data.updated_at ?? Date.now()),
     };
   } catch (error) {
     return NREL_GENERATOR_PRICING;
@@ -594,10 +594,10 @@ async function fetchTransformerPricingFromDB(): Promise<TransformerPricing> {
     return {
       pricePerMVA: data.price_per_mva || 50000,
       manufacturer: data.manufacturer || "Various",
-      voltage: data.voltage || "34.5kV",
+      voltage: (data as Record<string, unknown>).voltage as string || "34.5kV",
       efficiency: 0.99,
       dataSource: "database",
-      lastUpdated: new Date(data.updated_at),
+      lastUpdated: new Date(data.updated_at ?? Date.now()),
     };
   } catch (error) {
     return NREL_TRANSFORMER_PRICING;

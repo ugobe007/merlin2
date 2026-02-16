@@ -44,7 +44,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
       } = await supabase.auth.getUser();
       if (user) {
         // User is logged in, pre-fill email and name
-        const { data: profile } = await supabase
+        const { data: profile } = await (supabase as any)
           .from("users")
           .select("email, full_name")
           .eq("id", user.id)
@@ -53,8 +53,8 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
         if (profile) {
           setFormData((prev) => ({
             ...prev,
-            email: profile.email || user.email || "",
-            userName: profile.full_name || user.user_metadata?.full_name || "",
+            email: (profile as any).email || user.email || "",
+            userName: (profile as any).full_name || user.user_metadata?.full_name || "",
           }));
         }
       }
@@ -110,7 +110,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
         userId = currentUser.id;
 
         // Update user profile if needed
-        await supabase
+        await (supabase as any)
           .from("users")
           .update({
             full_name: formData.userName,
@@ -139,14 +139,14 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
             signUpError.message.includes("already exists")
           ) {
             // Try to sign in (they'll need to reset password, but we can still create the account record)
-            const { data: existingUser } = await supabase
+            const { data: existingUser } = await (supabase as any)
               .from("users")
               .select("id")
               .eq("email", formData.email)
               .single();
 
             if (existingUser) {
-              userId = existingUser.id;
+              userId = (existingUser as any).id;
             } else {
               throw new Error("Account exists but profile not found. Please sign in first.");
             }
@@ -157,7 +157,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
           userId = authData.user.id;
 
           // Create user profile
-          await supabase.from("users").upsert(
+          await (supabase as any).from("users").upsert(
             {
               id: authData.user.id,
               email: formData.email,

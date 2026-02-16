@@ -103,7 +103,7 @@ class IntelligenceEventsService {
    */
   private async logEvent(event: Omit<IntelligenceEvent, "user_session_id">): Promise<void> {
     try {
-      const { error } = await supabase.from("intelligence_events").insert({
+      const { error } = await (supabase as any).from("intelligence_events").insert({
         ...event,
         user_session_id: this.getSessionId(),
       });

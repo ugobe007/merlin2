@@ -118,7 +118,7 @@ export function buildTelemetryPayload(
     .map((c) => ({ key: c.key, kW: round2(c.kW), share: round2(c.share) }));
 
   return {
-    traceId: envelope.trace?.slug ?? `${envelope.industrySlug}-${Date.now()}`,
+    traceId: (envelope.trace as any)?.slug ?? envelope.trace?.canonicalSlug ?? `${envelope.industrySlug}-${Date.now()}`,
     sessionId,
 
     schemaVersion: SCHEMA_VERSION,
@@ -183,7 +183,7 @@ export async function persistEnvelopeTelemetry(
     const { supabase } = await import("@/services/supabaseClient");
     if (!supabase) return;
 
-    const { error } = await supabase.from("step3_envelopes_log").insert({
+    const { error } = await (supabase as any).from("step3_envelopes_log").insert({
       trace_id: payload.traceId,
       session_id: payload.sessionId,
       schema_version: payload.schemaVersion,

@@ -590,7 +590,7 @@ export function Step3Integration({
 
       // ✅ BRIDGE (Jan 25, 2026): Enhanced contract fields from pricing-dependent calculations
       // This runs AFTER pricingConfig check, so it writes the most accurate loadAnchor
-      const loadAnchorKW = normalized?.peakKW || normalized?.peakDemandKW;
+      const loadAnchorKW = normalized?.peakKW || (normalized as any)?.peakDemandKW;
       const hasEnhancedLoadAnchor = Number.isFinite(loadAnchorKW) && loadAnchorKW! > 0;
 
       if (import.meta.env.DEV && hasEnhancedLoadAnchor) {

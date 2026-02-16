@@ -64,10 +64,10 @@ export default function UseCaseConfigManager() {
 
     try {
       await useCaseService.updateUseCaseConfiguration(config.id, {
-        typical_load_kw: config.typical_load_kw,
-        peak_load_kw: config.peak_load_kw,
-        preferred_duration_hours: config.preferred_duration_hours,
-        is_default: config.is_default
+        typical_load_kw: config.typical_load_kw ?? undefined,
+        peak_load_kw: config.peak_load_kw ?? undefined,
+        preferred_duration_hours: config.preferred_duration_hours ?? undefined,
+        is_default: config.is_default ?? undefined
       });
 
       setSuccess(`Configuration updated successfully`);
@@ -297,13 +297,13 @@ export default function UseCaseConfigManager() {
                               {isEditing ? (
                                 <input
                                   type="number"
-                                  value={config.typical_load_kw}
+                                  value={config.typical_load_kw ?? 0}
                                   onChange={(e) => updateLocalConfig(useCase.id, config.id, 'typical_load_kw', parseInt(e.target.value) || 0)}
                                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                               ) : (
                                 <div className="text-2xl font-bold text-gray-900">
-                                  {config.typical_load_kw.toLocaleString()}
+                                  {(config.typical_load_kw ?? 0).toLocaleString()}
                                 </div>
                               )}
                               <div className="text-xs text-gray-500 mt-1">
@@ -319,13 +319,13 @@ export default function UseCaseConfigManager() {
                               {isEditing ? (
                                 <input
                                   type="number"
-                                  value={config.peak_load_kw}
+                                  value={config.peak_load_kw ?? 0}
                                   onChange={(e) => updateLocalConfig(useCase.id, config.id, 'peak_load_kw', parseInt(e.target.value) || 0)}
                                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                               ) : (
                                 <div className="text-2xl font-bold text-gray-900">
-                                  {config.peak_load_kw.toLocaleString()}
+                                  {(config.peak_load_kw ?? 0).toLocaleString()}
                                 </div>
                               )}
                               <div className="text-xs text-gray-500 mt-1">
@@ -342,7 +342,7 @@ export default function UseCaseConfigManager() {
                                 <input
                                   type="number"
                                   step="0.5"
-                                  value={config.preferred_duration_hours}
+                                  value={config.preferred_duration_hours ?? 0}
                                   onChange={(e) => updateLocalConfig(useCase.id, config.id, 'preferred_duration_hours', parseFloat(e.target.value) || 0)}
                                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
@@ -363,19 +363,19 @@ export default function UseCaseConfigManager() {
                               <div>
                                 <div className="text-gray-600">Base Power (MW)</div>
                                 <div className="font-bold text-blue-600">
-                                  {(config.typical_load_kw / 1000).toFixed(2)}
+                                  {((config.typical_load_kw ?? 0) / 1000).toFixed(2)}
                                 </div>
                               </div>
                               <div>
                                 <div className="text-gray-600">Energy (MWh)</div>
                                 <div className="font-bold text-purple-600">
-                                  {((config.typical_load_kw / 1000) * config.preferred_duration_hours).toFixed(2)}
+                                  {(((config.typical_load_kw ?? 0) / 1000) * (config.preferred_duration_hours ?? 0)).toFixed(2)}
                                 </div>
                               </div>
                               <div>
                                 <div className="text-gray-600">Peak Factor</div>
                                 <div className="font-bold text-orange-600">
-                                  {(config.peak_load_kw / config.typical_load_kw).toFixed(2)}x
+                                  {((config.peak_load_kw ?? 0) / (config.typical_load_kw || 1)).toFixed(2)}x
                                 </div>
                               </div>
                               <div>

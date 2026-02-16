@@ -804,7 +804,7 @@ function runContractQuote(params: {
       if (inputsUsed.demandCharge === 15) {
         quoteSanityWarnings.push("ℹ️ Using default demand charge (15 $/kW)");
       }
-      if (inputsUsed.location === "unknown") {
+      if (inputsUsed.location.state === "unknown") {
         quoteSanityWarnings.push("⚠️ Location unknown - using generic pricing");
       }
 
@@ -1904,7 +1904,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
         debug: {
           ...state.debug,
           lastAction: "SUBMIT_STEP3_STARTED",
-          notes: "Submitting Step 3 answers with retry logic"
+          notes: ["Submitting Step 3 answers with retry logic"]
         }
       };
 
@@ -1924,7 +1924,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
           ...state.debug,
           lastAction: "SUBMIT_STEP3_SUCCESS",
           lastTransition: "profile → options (step3_complete)",
-          notes: "Step 3 submission successful, advanced to options step"
+          notes: ["Step 3 submission successful, advanced to options step"]
         }
       };
 
@@ -1933,14 +1933,14 @@ function reduce(state: WizardState, intent: Intent): WizardState {
         ...state,
         isBusy: false,
         error: {
+          code: "UNKNOWN",
           message: intent.error.message,
-          timestamp: new Date().toISOString(),
-          retries: intent.error.retries
+          detail: { retries: intent.error.retries }
         },
         debug: {
           ...state.debug,
           lastAction: "SUBMIT_STEP3_FAILED",
-          notes: `Step 3 submission failed after ${intent.error.retries || 0} retries: ${intent.error.message}`
+          notes: [`Step 3 submission failed after ${intent.error.retries || 0} retries: ${intent.error.message}`]
         }
       };
 
@@ -3058,7 +3058,7 @@ export function useWizardV7() {
               dispatch({ type: "SET_STEP3_TEMPLATE", template });
               dispatch({
                 type: "SET_TEMPLATE_MODE",
-                mode: template.industry === "generic" ? "fallback" : "industry",
+                mode: (template.industry as string) === "generic" ? "fallback" : "industry",
               });
 
               const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
@@ -3132,7 +3132,7 @@ export function useWizardV7() {
           dispatch({ type: "SET_STEP3_TEMPLATE", template });
           dispatch({
             type: "SET_TEMPLATE_MODE",
-            mode: template.industry === "generic" ? "fallback" : "industry",
+            mode: (template.industry as string) === "generic" ? "fallback" : "industry",
           });
 
           // ✅ PROVENANCE: Apply baseline defaults (template + question defaults)
@@ -3247,7 +3247,7 @@ export function useWizardV7() {
           dispatch({ type: "SET_STEP3_TEMPLATE", template });
           dispatch({
             type: "SET_TEMPLATE_MODE",
-            mode: template.industry === "generic" ? "fallback" : "industry",
+            mode: (template.industry as string) === "generic" ? "fallback" : "industry",
           });
 
           // ✅ PROVENANCE: Apply baseline defaults (template + question defaults)
@@ -3344,7 +3344,7 @@ export function useWizardV7() {
         // Merge ensures no question ID is left undefined
         
         const effectiveIndustry =
-          template.effectiveIndustry ||
+          (template as Record<string, unknown>).effectiveIndustry ||
           template.selectedIndustry ||
           industry;
         
@@ -3353,8 +3353,8 @@ export function useWizardV7() {
         // 1) Schema defaults (all questions get some value)
         const schemaDefaults: Record<string, unknown> = {};
         schema.questions.forEach((q) => {
-          if (q.default !== undefined) {
-            schemaDefaults[q.id] = q.default;
+          if (q.smartDefault !== undefined) {
+            schemaDefaults[q.id] = q.smartDefault;
           } else if (q.type === "select" || q.type === "button_cards") {
             // Default to first option if no explicit default
             if (q.options && q.options.length > 0) {
@@ -3888,13 +3888,13 @@ export function useWizardV7() {
         const locationIntel = args.locationIntel;
         if (!locationIntel?.utilityRate) {
           inputFallbacks.electricityRate = {
-            value: inputsUsed.electricityRate,
+            value: inputsUsed.electricityRate ?? 0,
             reason: "Default rate (no utility data)",
           };
         }
         if (!locationIntel?.demandCharge) {
           inputFallbacks.demandCharge = {
-            value: inputsUsed.demandCharge,
+            value: inputsUsed.demandCharge ?? 0,
             reason: "Default demand charge (no utility data)",
           };
         }
@@ -3992,7 +3992,7 @@ export function useWizardV7() {
 
           // Industry template quality
           const industryConf: "v1" | "fallback" =
-            template?.industry === "generic" || template?._effectiveTemplate === "generic"
+            (template?.industry as string) === "generic" || (template?._effectiveTemplate as string) === "generic"
               ? "fallback"
               : "v1";
 
@@ -4212,7 +4212,7 @@ export function useWizardV7() {
       dispatch({ type: "SET_STEP3_TEMPLATE", template });
       dispatch({
         type: "SET_TEMPLATE_MODE",
-        mode: template.industry === "generic" ? "fallback" : "industry",
+        mode: (template.industry as string) === "generic" ? "fallback" : "industry",
       });
 
       // Re-apply defaults from the new template without stomping user answers
@@ -4230,7 +4230,7 @@ export function useWizardV7() {
 
       console.log(
         "[V7] Template retry result:",
-        template.industry === "generic" ? "fallback" : "industry"
+        (template.industry as string) === "generic" ? "fallback" : "industry"
       );
     } catch (err) {
       console.warn("[V7] Template retry failed:", err instanceof Error ? err.message : err);
@@ -4417,9 +4417,11 @@ export function useWizardV7() {
       try {
         // Optional: Submit answers to backend with retry logic
         // If api.submitStep3Answers exists, use it; otherwise skip
-        if (typeof api?.submitStep3Answers === "function") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (typeof (api as any)?.submitStep3Answers === "function") {
           await retry(
-            () => api.submitStep3Answers({ industry: state.industry, answers }),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            () => (api as any).submitStep3Answers({ industry: state.industry, answers }),
             { attempts: 3, baseDelayMs: 250, timeoutMs: 9000 }
           );
         }
@@ -4436,7 +4438,7 @@ export function useWizardV7() {
         const quoteOutput = state.quote;
         merlinMemory.set("profile", {
           answers: answers as Record<string, unknown>,
-          peakLoadKW: quoteOutput?.peakLoadKW || undefined,
+          peakLoadKW: quoteOutput?.peakLoadKW ?? 0,
           avgLoadKW: quoteOutput?.baseLoadKW || undefined,
           energyKWhPerDay: quoteOutput?.energyKWhPerDay || undefined,
         });
@@ -4618,7 +4620,7 @@ export function useWizardV7() {
             dispatch({ type: "SET_STEP3_TEMPLATE", template });
             dispatch({
               type: "SET_TEMPLATE_MODE",
-              mode: template.industry === "generic" ? "fallback" : "industry",
+              mode: (template.industry as string) === "generic" ? "fallback" : "industry",
             });
 
             // ✅ PROVENANCE: Apply baseline defaults on navigation too
@@ -5099,10 +5101,11 @@ function validateStep3(
   answers: Step3Answers
 ): { ok: boolean; reason?: string } {
   // Get industry from template metadata
-  const industry =
+  const industry = String(
     (template as Record<string, unknown>).industry ??
     (template as Record<string, unknown>).industryId ??
-    "";
+    ""
+  );
 
   // Get Tier 1 blockers for this industry (if configured)
   const blockerIds = getTier1Blockers(industry);

@@ -947,7 +947,7 @@ export async function loadMarginConfig(): Promise<{
         marginMax: row.margin_max,
         marginTarget: row.margin_target,
         description: row.description,
-      }));
+      })) as unknown as MarginBand[];
     } else {
       cachedMarginBands = DEFAULT_MARGIN_BANDS;
     }
@@ -964,7 +964,7 @@ export async function loadMarginConfig(): Promise<{
         isAdditive: row.is_additive,
         fixedAdder: row.fixed_adder,
         description: row.description,
-      }));
+      })) as unknown as ProductMarginConfig[];
     } else {
       cachedProductMargins = DEFAULT_PRODUCT_MARGINS;
     }

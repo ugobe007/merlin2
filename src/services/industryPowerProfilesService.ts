@@ -150,7 +150,7 @@ async function loadProfilesFromDB(): Promise<boolean> {
 
     if (data && data.length > 0) {
       profilesCache.clear();
-      data.forEach((row: IndustryPowerProfile) => {
+      (data as any[]).forEach((row: IndustryPowerProfile) => {
         profilesCache.set(row.industry_slug, row);
       });
       cacheLastUpdated = new Date();
