@@ -703,15 +703,6 @@ export default function BessQuoteBuilder() {
               {/* Primary links */}
               <div className="flex items-center justify-center gap-6 mb-4 flex-wrap">
                 <button
-                  onClick={() => setShowStatusPage(true)}
-                  className="text-sm transition-colors inline-flex items-center gap-1.5"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
-                >
-                  System Status
-                </button>
-                <button
                   onClick={() => setShowPrivacyPolicy(true)}
                   className="text-sm transition-colors"
                   style={{ color: "rgba(255,255,255,0.4)" }}
@@ -738,15 +729,15 @@ export default function BessQuoteBuilder() {
                 >
                   Security
                 </button>
-                <button
-                  onClick={() => setShowSystemHealth(true)}
-                  className="text-sm transition-colors"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
+                <a
+                  href="/support"
+                  className="text-sm transition-colors no-underline"
+                  style={{ color: "rgba(62,207,142,0.5)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(62,207,142,0.9)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(62,207,142,0.5)"; }}
                 >
-                  Health
-                </button>
+                  Support & FAQ
+                </a>
                 <button
                   onClick={() => setShowVendorManager(true)}
                   className="text-sm transition-colors"

@@ -11,6 +11,7 @@ import WizardV6 from "./components/wizard/v6/WizardV6";
 import WizardV7Page from "./pages/WizardV7Page"; // V7: Clean SSOT page
 import WizardVNextPage from "./pages/WizardVNextPage"; // vNext: luminous HUD scaffold
 import MetaCalculationsPage from "./pages/MetaCalculationsPage";
+import SupportFAQ from "./components/SupportFAQ";
 // import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder'; // Unused
 import { QuoteProvider } from "./contexts/QuoteContext";
 
@@ -124,6 +125,11 @@ function App() {
   // Access via /meta or /meta-calculations - TrueQuote Meta Calculations Dashboard
   if (pathname === "/meta" || pathname === "/meta-calculations" || pathname === "/ssot") {
     return <MetaCalculationsPage />;
+  }
+
+  // Access via /support - Support & FAQ page
+  if (pathname === "/support" || pathname === "/faq" || pathname === "/help") {
+    return <SupportFAQ standalone />;
   }
 
   // Access via /wizard or /wizard-v7 - V7 SSOT Wizard (Feb 1, 2026 - NOW THE DEFAULT)
