@@ -701,12 +701,12 @@ export default function BessQuoteBuilder() {
           >
             <div className="max-w-5xl mx-auto">
               {/* Primary links */}
-              <div className="flex items-center justify-center gap-6 mb-4 flex-wrap">
+              <div className="flex items-center justify-center gap-5 mb-4 flex-wrap">
                 <button
                   onClick={() => setShowPrivacyPolicy(true)}
                   className="text-sm transition-colors"
                   style={{ color: "rgba(255,255,255,0.4)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
                   Privacy
@@ -715,7 +715,7 @@ export default function BessQuoteBuilder() {
                   onClick={() => setShowTermsOfService(true)}
                   className="text-sm transition-colors"
                   style={{ color: "rgba(255,255,255,0.4)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
                   Terms
@@ -724,7 +724,7 @@ export default function BessQuoteBuilder() {
                   onClick={() => setShowSecuritySettings(true)}
                   className="text-sm transition-colors"
                   style={{ color: "rgba(255,255,255,0.4)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
                   Security
@@ -732,9 +732,9 @@ export default function BessQuoteBuilder() {
                 <a
                   href="/support"
                   className="text-sm transition-colors no-underline"
-                  style={{ color: "rgba(62,207,142,0.5)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(62,207,142,0.9)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(62,207,142,0.5)"; }}
+                  style={{ color: "rgba(52,211,153,0.5)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.8)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.5)"; }}
                 >
                   Support & FAQ
                 </a>
@@ -742,7 +742,7 @@ export default function BessQuoteBuilder() {
                   onClick={() => setShowVendorManager(true)}
                   className="text-sm transition-colors"
                   style={{ color: "rgba(255,255,255,0.4)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
                   Admin
@@ -750,37 +750,32 @@ export default function BessQuoteBuilder() {
                 <a
                   href="/pricing"
                   className="text-sm transition-colors no-underline"
-                  style={{ color: "rgba(52,211,153,0.6)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.9)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.6)"; }}
+                  style={{ color: "rgba(52,211,153,0.5)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.8)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.5)"; }}
                 >
                   Pricing
                 </a>
                 <a
                   href="/vendor"
-                  className="text-sm font-semibold no-underline transition-all duration-300 px-3 py-1 rounded-full border"
+                  className="text-[13px] font-medium no-underline transition-all duration-200 px-4 py-1.5 rounded-md border"
                   style={{
-                    color: "rgba(56,189,248,0.85)",
-                    borderColor: "rgba(56,189,248,0.35)",
-                    textShadow: "0 0 12px rgba(56,189,248,0.4)",
-                    boxShadow: "0 0 8px rgba(56,189,248,0.08), inset 0 0 8px rgba(56,189,248,0.04)",
+                    color: "rgba(56,189,248,0.7)",
+                    borderColor: "rgba(56,189,248,0.25)",
+                    background: "transparent",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = "rgba(56,189,248,1)";
-                    e.currentTarget.style.borderColor = "rgba(56,189,248,0.6)";
-                    e.currentTarget.style.textShadow = "0 0 20px rgba(56,189,248,0.6)";
-                    e.currentTarget.style.boxShadow = "0 0 16px rgba(56,189,248,0.2), inset 0 0 12px rgba(56,189,248,0.06)";
+                    e.currentTarget.style.borderColor = "rgba(56,189,248,0.5)";
                     e.currentTarget.style.background = "rgba(56,189,248,0.06)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "rgba(56,189,248,0.85)";
-                    e.currentTarget.style.borderColor = "rgba(56,189,248,0.35)";
-                    e.currentTarget.style.textShadow = "0 0 12px rgba(56,189,248,0.4)";
-                    e.currentTarget.style.boxShadow = "0 0 8px rgba(56,189,248,0.08), inset 0 0 8px rgba(56,189,248,0.04)";
+                    e.currentTarget.style.color = "rgba(56,189,248,0.7)";
+                    e.currentTarget.style.borderColor = "rgba(56,189,248,0.25)";
                     e.currentTarget.style.background = "transparent";
                   }}
                 >
-                  ⚡ For Vendors
+                  For Vendors
                 </a>
                 {isLoggedIn && (
                   <button
@@ -790,7 +785,7 @@ export default function BessQuoteBuilder() {
                     }}
                     className="text-sm transition-colors"
                     style={{ color: "rgba(255,255,255,0.4)" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                   >
                     Sign Out
@@ -800,7 +795,7 @@ export default function BessQuoteBuilder() {
               {/* Copyright */}
               <p
                 className="text-center text-xs"
-                style={{ color: "rgba(255,255,255,0.25)" }}
+                style={{ color: "rgba(255,255,255,0.2)" }}
               >
                 © 2026 Merlin Energy. All rights reserved.
               </p>
