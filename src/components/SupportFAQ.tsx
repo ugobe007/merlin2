@@ -16,6 +16,8 @@ import {
   BookOpen,
   ExternalLink,
   Sparkles,
+  Home,
+  ArrowLeft,
 } from "lucide-react";
 
 interface SupportFAQProps {
@@ -173,6 +175,31 @@ const SupportFAQ: React.FC<SupportFAQProps> = ({
           : "fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       }
     >
+      {/* Standalone Navigation Bar */}
+      {standalone && (
+        <div className="sticky top-0 z-50 bg-[#0f1117]/90 backdrop-blur-md border-b border-white/[0.06]">
+          <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+            <a
+              href="/"
+              className="flex items-center gap-2 text-white/50 hover:text-emerald-400 transition-colors no-underline text-sm"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Home
+            </a>
+            <div className="flex items-center gap-4">
+              <a href="/wizard" className="text-white/40 hover:text-white/70 transition-colors no-underline text-sm">Wizard</a>
+              <a href="/vendor" className="text-white/40 hover:text-white/70 transition-colors no-underline text-sm">Vendors</a>
+              <a
+                href="/"
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500/30 text-emerald-400 rounded-lg text-sm hover:bg-emerald-500/10 transition-colors no-underline"
+              >
+                <Home className="w-3.5 h-3.5" />
+                Home
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
       <div
         className={
           standalone

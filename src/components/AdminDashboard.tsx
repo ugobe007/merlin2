@@ -52,7 +52,7 @@ import merlinImage from "@/assets/images/new_profile_merlin.png";
  * Access: Currently accessible to anyone (will be protected by Supabase Auth later)
  * Features: User management, use case manager, system settings, analytics
  *
- * DESIGN: Matches Merlin Wizard aesthetic - light purple theme, rounded cards
+ * DESIGN: Matches Merlin Wizard aesthetic - Supabase dark theme, rounded cards
  */
 
 interface AdminStats {
@@ -314,26 +314,15 @@ const AdminDashboard: React.FC = () => {
   }, [selectedPremiumUseCase]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 relative overflow-hidden">
-      {/* Animated Background with deeper purple, light blue, and slate blue */}
+    <div className="min-h-screen bg-[#0f1117] relative overflow-hidden">
+      {/* Subtle dark ambient glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-40 right-20 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/3 w-80 h-80 bg-slate-300/15 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-        <div
-          className="absolute -bottom-10 right-10 w-64 h-64 bg-blue-400/15 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "0.5s" }}
-        ></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/[0.03] rounded-full blur-3xl"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-blue-500/[0.02] rounded-full blur-3xl"></div>
       </div>
 
       {/* Header - Wizard-like styling */}
-      <div className="relative bg-white/70 backdrop-blur-md border-b border-purple-300/50 shadow-sm">
+      <div className="relative bg-white/[0.04] backdrop-blur-md border-b border-white/[0.08] shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -343,22 +332,22 @@ const AdminDashboard: React.FC = () => {
                   alt="Merlin"
                   className="w-14 h-14 object-contain drop-shadow-lg"
                 />
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-purple-700 to-slate-600 rounded-full flex items-center justify-center">
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-full flex items-center justify-center">
                   <Shield className="w-3 h-3 text-white" />
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-800 via-slate-600 to-purple-800">
+                <h1 className="text-2xl font-bold text-white">
                   Merlin Admin Panel
                 </h1>
-                <p className="text-sm text-gray-500">System Administration & Control</p>
+                <p className="text-sm text-white/50">System Administration & Control</p>
               </div>
             </div>
 
             {/* Exit to Home Button - Smaller, professional */}
             <button
               onClick={() => (window.location.href = "/")}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-700 to-slate-600 hover:from-purple-800 hover:to-slate-700 text-white text-sm rounded-lg font-medium shadow-md shadow-purple-700/30 hover:shadow-lg hover:shadow-purple-800/40 transition-all duration-200"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-sm rounded-lg font-medium transition-all duration-200"
             >
               <Home className="w-3.5 h-3.5" />
               <span>Exit</span>
@@ -369,7 +358,7 @@ const AdminDashboard: React.FC = () => {
 
       {/* Navigation Panels - Organized by category */}
       {activeTab === "dashboard" && (
-        <div className="relative bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 border-b border-blue-200/50">
+        <div className="relative bg-white/[0.02] border-b border-white/[0.06]">
           <div className="max-w-7xl mx-auto px-6 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {navigationPanels.map((panel, panelIndex) => {
@@ -377,11 +366,11 @@ const AdminDashboard: React.FC = () => {
                 return (
                   <div
                     key={panelIndex}
-                    className="bg-white/80 backdrop-blur-md rounded-xl border border-purple-200/50 shadow-lg shadow-purple-500/5 p-4"
+                    className="bg-white/[0.03] backdrop-blur-md rounded-xl border border-white/[0.08] shadow-lg shadow-black/10 p-4"
                   >
-                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
-                      <PanelIcon className="w-5 h-5 text-purple-700" />
-                      <h3 className="font-semibold text-gray-900 text-sm">{panel.title}</h3>
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/[0.08]">
+                      <PanelIcon className="w-5 h-5 text-emerald-400" />
+                      <h3 className="font-semibold text-white text-sm">{panel.title}</h3>
                     </div>
                     <div className="space-y-2">
                       {panel.items.map((item) => {
@@ -392,10 +381,10 @@ const AdminDashboard: React.FC = () => {
                             onClick={() => setActiveTab(item.key as typeof activeTab)}
                             className={`w-full flex items-start gap-3 p-3 rounded-lg text-left transition-all duration-200 ${
                               activeTab === item.key
-                                ? "bg-gradient-to-r from-purple-700 to-slate-600 text-white shadow-md"
+                                ? "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md"
                                 : item.highlight
-                                  ? "bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 hover:border-purple-300 hover:shadow-md"
-                                  : "bg-gray-50 hover:bg-gray-100 border border-transparent hover:border-gray-200"
+                                  ? "bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.12] hover:shadow-md"
+                                  : "bg-white/[0.03] hover:bg-white/[0.05] border border-transparent hover:border-white/[0.12]"
                             }`}
                           >
                             <ItemIcon
@@ -403,26 +392,26 @@ const AdminDashboard: React.FC = () => {
                                 activeTab === item.key
                                   ? "text-white"
                                   : item.highlight
-                                    ? "text-purple-700"
-                                    : "text-gray-600"
+                                    ? "text-emerald-400"
+                                    : "text-white/60"
                               }`}
                             />
                             <div className="flex-1 min-w-0">
                               <div
                                 className={`font-medium text-sm ${
-                                  activeTab === item.key ? "text-white" : "text-gray-900"
+                                  activeTab === item.key ? "text-white" : "text-white"
                                 }`}
                               >
                                 {item.label}
                                 {item.highlight && (
-                                  <span className="ml-2 px-1.5 py-0.5 bg-purple-200 text-purple-800 text-xs rounded-full font-semibold">
+                                  <span className="ml-2 px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-full font-semibold">
                                     NEW
                                   </span>
                                 )}
                               </div>
                               <div
                                 className={`text-xs mt-0.5 ${
-                                  activeTab === item.key ? "text-white/80" : "text-gray-500"
+                                  activeTab === item.key ? "text-white/80" : "text-white/50"
                                 }`}
                               >
                                 {item.description}
@@ -442,11 +431,11 @@ const AdminDashboard: React.FC = () => {
 
       {/* Back to Dashboard Button - Show when not on dashboard */}
       {activeTab !== "dashboard" && (
-        <div className="relative bg-white/50 backdrop-blur-md border-b border-blue-200/50">
+        <div className="relative bg-white/[0.03] backdrop-blur-md border-b border-white/[0.08]">
           <div className="max-w-7xl mx-auto px-6 py-3">
             <button
               onClick={() => setActiveTab("dashboard")}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-700 to-slate-600 text-white rounded-lg hover:from-purple-800 hover:to-slate-700 shadow-md transition-all duration-200"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg hover:from-emerald-700 hover:to-emerald-800 shadow-md transition-all duration-200"
             >
               <Home className="w-4 h-4" />
               <span className="font-medium">Back to Dashboard</span>
@@ -469,13 +458,13 @@ const AdminDashboard: React.FC = () => {
             {/* Section Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-700 to-slate-600 rounded-lg flex items-center justify-center shadow-md shadow-purple-700/30">
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center shadow-md shadow-emerald-500/10">
                   <BarChart3 className="w-4 h-4 text-white" />
                 </div>
-                <h2 className="text-lg font-bold text-gray-800">System Overview</h2>
+                <h2 className="text-lg font-bold text-white">System Overview</h2>
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+              <div className="flex items-center gap-2 text-xs text-white/50">
+                <div className="w-1.5 h-1.5 bg-emerald-500/50 rounded-full animate-pulse"></div>
                 Live
               </div>
             </div>
@@ -483,25 +472,25 @@ const AdminDashboard: React.FC = () => {
             {/* Stats Grid - Compact cards */}
             <div className="grid md:grid-cols-4 gap-4">
               {/* Total Users */}
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-purple-200/50 shadow-lg shadow-purple-500/5 hover:shadow-xl transition-all duration-200">
+              <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-4 border border-white/[0.08] shadow-lg shadow-black/10 hover:shadow-xl transition-all duration-200">
                 <div className="flex items-center justify-between mb-2">
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-sky-400 rounded-lg flex items-center justify-center">
                     <Users className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">
                     +12%
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-800">
+                <p className="text-2xl font-bold text-white">
                   {stats.totalUsers.toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">Total Users</p>
+                <p className="text-xs text-white/50 mt-0.5">Total Users</p>
                 {/* Mini chart placeholder */}
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[40, 65, 45, 70, 55, 80, 60].map((h, i) => (
                     <div
                       key={i}
-                      className="flex-1 bg-gradient-to-t from-blue-400/50 to-blue-300/20 rounded-sm"
+                      className="flex-1 bg-gradient-to-t from-blue-500/40 to-blue-500/10 rounded-sm"
                       style={{ height: `${h}%` }}
                     ></div>
                   ))}
@@ -509,17 +498,17 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Quotes Today */}
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-emerald-100/50 shadow-lg shadow-emerald-500/5 hover:shadow-xl transition-all duration-200">
+              <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-4 border border-emerald-500/10 shadow-lg shadow-emerald-500/5 hover:shadow-xl transition-all duration-200">
                 <div className="flex items-center justify-between mb-2">
                   <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
                     <TrendingUp className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium text-emerald-400 bg-emerald-500/5 px-2 py-0.5 rounded-full">
                     +8%
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-800">{stats.quotesGeneratedToday}</p>
-                <p className="text-xs text-gray-500 mt-0.5">Quotes Today</p>
+                <p className="text-2xl font-bold text-white">{stats.quotesGeneratedToday}</p>
+                <p className="text-xs text-white/50 mt-0.5">Quotes Today</p>
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[30, 50, 40, 75, 60, 85, 70].map((h, i) => (
                     <div
@@ -532,24 +521,24 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Monthly Revenue */}
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-purple-200/50 shadow-lg shadow-purple-500/5 hover:shadow-xl transition-all duration-200">
+              <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-4 border border-white/[0.08] shadow-lg shadow-black/10 hover:shadow-xl transition-all duration-200">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-700 to-slate-600 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center">
                     <DollarSign className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-xs font-medium text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                     +15%
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-800">
+                <p className="text-2xl font-bold text-white">
                   ${stats.monthlyRevenue.toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">Monthly Revenue</p>
+                <p className="text-xs text-white/50 mt-0.5">Monthly Revenue</p>
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[45, 55, 50, 65, 70, 80, 90].map((h, i) => (
                     <div
                       key={i}
-                      className="flex-1 bg-gradient-to-t from-purple-600/50 to-purple-500/20 rounded-sm"
+                      className="flex-1 bg-gradient-to-t from-emerald-600/50 to-emerald-500/20 rounded-sm"
                       style={{ height: `${h}%` }}
                     ></div>
                   ))}
@@ -557,18 +546,18 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Active Sessions */}
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-orange-100/50 shadow-lg shadow-orange-500/5 hover:shadow-xl transition-all duration-200">
+              <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-4 border border-orange-500/10 shadow-lg shadow-orange-500/5 hover:shadow-xl transition-all duration-200">
                 <div className="flex items-center justify-between mb-2">
                   <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
                     <Activity className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-gray-500">Live</span>
+                    <div className="w-1.5 h-1.5 bg-emerald-500/50 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-white/50">Live</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-800">{stats.activeSessions}</p>
-                <p className="text-xs text-gray-500 mt-0.5">Active Sessions</p>
+                <p className="text-2xl font-bold text-white">{stats.activeSessions}</p>
+                <p className="text-xs text-white/50 mt-0.5">Active Sessions</p>
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[60, 45, 70, 55, 80, 65, 75].map((h, i) => (
                     <div
@@ -582,54 +571,54 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Quick Actions - Compact professional buttons */}
-            <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-purple-100/50 shadow-lg shadow-purple-500/5">
+            <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-white/[0.08] shadow-lg shadow-black/10">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-6 h-6 bg-gradient-to-br from-amber-500 to-orange-500 rounded-md flex items-center justify-center">
                   <Zap className="w-3 h-3 text-white" />
                 </div>
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                <h3 className="text-sm font-bold text-white/80 uppercase tracking-wide">
                   Quick Actions
                 </h3>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <button
                   onClick={() => setActiveTab("useCases")}
-                  className="group flex items-center gap-2 p-3 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 border border-blue-200/50 hover:border-blue-300 rounded-xl transition-all duration-200 hover:shadow-md"
+                  className="group flex items-center gap-2 p-3 bg-blue-500/5 hover:bg-white/[0.06] border border-white/[0.08] hover:border-white/[0.12] rounded-xl transition-all duration-200 hover:shadow-md"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-[1.02] transition-transform">
                     <FileText className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">Use Cases</span>
+                  <span className="text-sm font-medium text-white/80">Use Cases</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("users")}
-                  className="group flex items-center gap-2 p-3 bg-gradient-to-br from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border border-emerald-200/50 hover:border-emerald-300 rounded-xl transition-all duration-200 hover:shadow-md"
+                  className="group flex items-center gap-2 p-3 bg-emerald-500/5 hover:bg-white/[0.06] border border-emerald-500/20 hover:border-emerald-500/30 rounded-xl transition-all duration-200 hover:shadow-md"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-[1.02] transition-transform">
                     <Users className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">Users</span>
+                  <span className="text-sm font-medium text-white/80">Users</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("analytics")}
-                  className="group flex items-center gap-2 p-3 bg-gradient-to-br from-purple-100 to-slate-100 hover:from-purple-200 hover:to-slate-200 border border-purple-300/50 hover:border-purple-400 rounded-xl transition-all duration-200 hover:shadow-md"
+                  className="group flex items-center gap-2 p-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-emerald-500/30 rounded-xl transition-all duration-200 hover:shadow-md"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-700 to-slate-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-[1.02] transition-transform">
                     <TrendingUp className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">Analytics</span>
+                  <span className="text-sm font-medium text-white/80">Analytics</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("settings")}
-                  className="group flex items-center gap-2 p-3 bg-gradient-to-br from-orange-50 to-amber-50 hover:from-orange-100 hover:to-amber-100 border border-orange-200/50 hover:border-orange-300 rounded-xl transition-all duration-200 hover:shadow-md"
+                  className="group flex items-center gap-2 p-3 bg-orange-500/5 hover:bg-white/[0.06] border border-orange-500/20 hover:border-orange-500/30 rounded-xl transition-all duration-200 hover:shadow-md"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-[1.02] transition-transform">
                     <Settings className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">Settings</span>
+                  <span className="text-sm font-medium text-white/80">Settings</span>
                 </button>
               </div>
             </div>
@@ -638,36 +627,36 @@ const AdminDashboard: React.FC = () => {
             <div
               className={`rounded-xl p-3 flex items-center justify-between ${
                 stats.systemHealth === "operational"
-                  ? "bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/50"
+                  ? "bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-500/20"
                   : stats.systemHealth === "degraded"
-                    ? "bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50"
-                    : "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/50"
+                    ? "bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-500/20/50"
+                    : "bg-gradient-to-r from-red-50 to-rose-50 border border-red-500/20/50"
               }`}
             >
               <div className="flex items-center gap-2">
                 <div
                   className={`w-2 h-2 rounded-full animate-pulse ${
                     stats.systemHealth === "operational"
-                      ? "bg-emerald-500"
+                      ? "bg-emerald-500/50"
                       : stats.systemHealth === "degraded"
-                        ? "bg-amber-500"
-                        : "bg-red-500"
+                        ? "bg-amber-500/50"
+                        : "bg-red-500/50"
                   }`}
                 ></div>
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-white/80">
                   All systems {stats.systemHealth}
                 </span>
               </div>
-              <div className="flex items-center gap-6 text-sm text-gray-600">
+              <div className="flex items-center gap-6 text-sm text-white/60">
                 <span>
-                  Uptime: <span className="font-semibold text-emerald-600">{stats.uptime}%</span>
+                  Uptime: <span className="font-semibold text-emerald-400">{stats.uptime}%</span>
                 </span>
                 <span>
                   API:{" "}
-                  <span className="font-semibold text-blue-600">{stats.apiResponseTime}ms</span>
+                  <span className="font-semibold text-blue-400">{stats.apiResponseTime}ms</span>
                 </span>
                 <span>
-                  Errors: <span className="font-semibold text-gray-700">{stats.errorRate}%</span>
+                  Errors: <span className="font-semibold text-white/80">{stats.errorRate}%</span>
                 </span>
               </div>
             </div>
@@ -683,16 +672,16 @@ const AdminDashboard: React.FC = () => {
                 <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
                   <Zap className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">Active Workflows</h2>
+                <h2 className="text-xl font-bold text-white">Active Workflows</h2>
               </div>
               <div className="flex gap-3">
-                <select className="bg-white border border-purple-200 text-gray-700 px-4 py-2 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 transition-all">
+                <select className="bg-white/[0.05] border border-white/[0.08] text-white/80 px-4 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition-all">
                   <option>All Workflows</option>
                   <option>Running</option>
                   <option>Completed</option>
                   <option>Failed</option>
                 </select>
-                <button className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-xl font-medium shadow-lg shadow-emerald-500/25 transition-all hover:scale-105">
+                <button className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-xl font-medium shadow-lg shadow-emerald-500/10 transition-all hover:scale-[1.02]">
                   <Activity className="w-4 h-4" />
                   Refresh
                 </button>
@@ -701,23 +690,23 @@ const AdminDashboard: React.FC = () => {
 
             {/* Workflow Stats */}
             <div className="grid md:grid-cols-4 gap-4">
-              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-blue-300 shadow-lg">
-                <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-1">
+              <div className="bg-white/[0.03] backdrop-blur-sm p-5 rounded-2xl border border-white/[0.08] shadow-lg">
+                <p className="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-1">
                   Active
                 </p>
                 <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-sky-500">
                   {stats.activeWorkflows}
                 </p>
               </div>
-              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-emerald-200 shadow-lg">
-                <p className="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-1">
+              <div className="bg-white/[0.03] backdrop-blur-sm p-5 rounded-2xl border border-emerald-500/20 shadow-lg">
+                <p className="text-sm font-semibold text-emerald-400 uppercase tracking-wide mb-1">
                   Completed
                 </p>
                 <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
                   {stats.completedWorkflows}
                 </p>
               </div>
-              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-red-200 shadow-lg">
+              <div className="bg-white/[0.03] backdrop-blur-sm p-5 rounded-2xl border border-red-500/20 shadow-lg">
                 <p className="text-sm font-semibold text-red-600 uppercase tracking-wide mb-1">
                   Failed
                 </p>
@@ -725,11 +714,11 @@ const AdminDashboard: React.FC = () => {
                   {stats.failedWorkflows}
                 </p>
               </div>
-              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-purple-200 shadow-lg">
-                <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-1">
+              <div className="bg-white/[0.03] backdrop-blur-sm p-5 rounded-2xl border border-white/[0.08] shadow-lg">
+                <p className="text-sm font-semibold text-emerald-400 uppercase tracking-wide mb-1">
                   Success Rate
                 </p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-slate-600">
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-700">
                   {(
                     (stats.completedWorkflows /
                       (stats.completedWorkflows + stats.failedWorkflows)) *
@@ -741,10 +730,10 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Active Workflows List */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-purple-200 shadow-xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-purple-200 bg-gradient-to-r from-purple-100 to-slate-100">
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-purple-700" />
+            <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-white/[0.08] bg-white/[0.03]">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-emerald-400" />
                   Currently Running
                 </h3>
               </div>
@@ -774,23 +763,23 @@ const AdminDashboard: React.FC = () => {
                 ].map((workflow) => (
                   <div
                     key={workflow.id}
-                    className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-100/50 to-slate-100/50 rounded-xl border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all"
+                    className="flex items-center justify-between p-4 bg-white/[0.03] rounded-xl border border-white/[0.08] hover:border-white/[0.12] hover:shadow-md transition-all"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
                       <div>
-                        <p className="text-gray-800 font-semibold">{workflow.name}</p>
-                        <p className="text-gray-500 text-sm">
+                        <p className="text-white font-semibold">{workflow.name}</p>
+                        <p className="text-white/50 text-sm">
                           ID: {workflow.id} • User: {workflow.user}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-500 flex items-center gap-1">
+                      <span className="text-sm text-white/50 flex items-center gap-1">
                         <Clock className="w-4 h-4" />
                         {workflow.started}
                       </span>
-                      <button className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-red-500/25 transition-all hover:scale-105">
+                      <button className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-red-500/25 transition-all hover:scale-[1.02]">
                         Stop
                       </button>
                     </div>
@@ -807,27 +796,27 @@ const AdminDashboard: React.FC = () => {
             {/* Section Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/10">
                   <Activity className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">System Health Monitor</h2>
+                <h2 className="text-xl font-bold text-white">System Health Monitor</h2>
               </div>
               <div
                 className={`flex items-center gap-2 px-4 py-2 rounded-full ${
                   stats.systemHealth === "operational"
-                    ? "bg-emerald-100 text-emerald-700"
+                    ? "bg-emerald-500/10 text-emerald-400"
                     : stats.systemHealth === "degraded"
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-red-100 text-red-700"
+                      ? "bg-amber-100 text-amber-400"
+                      : "bg-red-500/10 text-red-400"
                 }`}
               >
                 <div
                   className={`w-2 h-2 rounded-full animate-pulse ${
                     stats.systemHealth === "operational"
-                      ? "bg-emerald-500"
+                      ? "bg-emerald-500/50"
                       : stats.systemHealth === "degraded"
-                        ? "bg-amber-500"
-                        : "bg-red-500"
+                        ? "bg-amber-500/50"
+                        : "bg-red-500/50"
                   }`}
                 ></div>
                 <span className="font-semibold capitalize">{stats.systemHealth}</span>
@@ -836,49 +825,49 @@ const AdminDashboard: React.FC = () => {
 
             {/* Health Overview */}
             <div className="grid md:grid-cols-4 gap-4">
-              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-emerald-200 shadow-lg">
-                <p className="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-1">
+              <div className="bg-white/[0.03] backdrop-blur-sm p-5 rounded-2xl border border-emerald-500/20 shadow-lg">
+                <p className="text-sm font-semibold text-emerald-400 uppercase tracking-wide mb-1">
                   Uptime
                 </p>
                 <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
                   {stats.uptime}%
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Last 30 days</p>
+                <p className="text-xs text-white/50 mt-1">Last 30 days</p>
               </div>
-              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-blue-300 shadow-lg">
-                <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-1">
+              <div className="bg-white/[0.03] backdrop-blur-sm p-5 rounded-2xl border border-white/[0.08] shadow-lg">
+                <p className="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-1">
                   API Response
                 </p>
                 <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">
                   {stats.apiResponseTime}ms
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Average</p>
+                <p className="text-xs text-white/50 mt-1">Average</p>
               </div>
-              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-purple-200 shadow-lg">
-                <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-1">
+              <div className="bg-white/[0.03] backdrop-blur-sm p-5 rounded-2xl border border-white/[0.08] shadow-lg">
+                <p className="text-sm font-semibold text-emerald-400 uppercase tracking-wide mb-1">
                   Error Rate
                 </p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-slate-600">
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-700">
                   {stats.errorRate}%
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Last 24 hours</p>
+                <p className="text-xs text-white/50 mt-1">Last 24 hours</p>
               </div>
-              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-orange-200 shadow-lg">
-                <p className="text-sm font-semibold text-orange-600 uppercase tracking-wide mb-1">
+              <div className="bg-white/[0.03] backdrop-blur-sm p-5 rounded-2xl border border-orange-500/20 shadow-lg">
+                <p className="text-sm font-semibold text-orange-400 uppercase tracking-wide mb-1">
                   Active Sessions
                 </p>
                 <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600">
                   {stats.activeSessions}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Current</p>
+                <p className="text-xs text-white/50 mt-1">Current</p>
               </div>
             </div>
 
             {/* System Components Health */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-purple-200 shadow-xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-purple-200 bg-gradient-to-r from-purple-100 to-slate-100">
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <Server className="w-5 h-5 text-purple-700" />
+            <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-white/[0.08] bg-white/[0.03]">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Server className="w-5 h-5 text-emerald-400" />
                   Component Status
                 </h3>
               </div>
@@ -920,10 +909,10 @@ const AdminDashboard: React.FC = () => {
                     key={component.name}
                     className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:shadow-md ${
                       component.status === "healthy"
-                        ? "bg-emerald-50/50 border-emerald-200"
+                        ? "bg-emerald-500/5 border-emerald-500/20"
                         : component.status === "warning"
-                          ? "bg-amber-50/50 border-amber-200"
-                          : "bg-red-50/50 border-red-200"
+                          ? "bg-amber-500/50/5 border-amber-500/20"
+                          : "bg-red-500/50/5 border-red-500/20"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -932,14 +921,14 @@ const AdminDashboard: React.FC = () => {
                       ) : component.status === "warning" ? (
                         <AlertTriangle className="w-5 h-5 text-amber-500" />
                       ) : (
-                        <AlertTriangle className="w-5 h-5 text-red-500" />
+                        <AlertTriangle className="w-5 h-5 text-red-400" />
                       )}
                       <div>
-                        <p className="text-gray-800 font-semibold">{component.name}</p>
-                        <p className="text-gray-500 text-sm">Latency: {component.latency}</p>
+                        <p className="text-white font-semibold">{component.name}</p>
+                        <p className="text-white/50 text-sm">Latency: {component.latency}</p>
                       </div>
                     </div>
-                    <span className="text-sm text-gray-400">{component.last_check}</span>
+                    <span className="text-sm text-white/40">{component.last_check}</span>
                   </div>
                 ))}
               </div>
@@ -952,73 +941,73 @@ const AdminDashboard: React.FC = () => {
           <div className="space-y-6">
             {/* Section Header */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/10">
                 <TrendingUp className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-gray-800">Site Analytics</h2>
+              <h2 className="text-xl font-bold text-white">Site Analytics</h2>
             </div>
 
             {/* Performance Metrics */}
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-blue-200 shadow-lg">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <div className="bg-white/[0.03] backdrop-blur-sm p-6 rounded-2xl border border-white/[0.08] shadow-lg">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                   <Users className="w-5 h-5 text-blue-500" />
                   User Engagement
                 </h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Daily Active Users</span>
-                    <span className="text-gray-900 font-bold">342</span>
+                    <span className="text-white/60">Daily Active Users</span>
+                    <span className="text-white font-bold">342</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Avg. Session Duration</span>
-                    <span className="text-gray-900 font-bold">12m 34s</span>
+                    <span className="text-white/60">Avg. Session Duration</span>
+                    <span className="text-white font-bold">12m 34s</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Bounce Rate</span>
-                    <span className="text-gray-900 font-bold">23.5%</span>
+                    <span className="text-white/60">Bounce Rate</span>
+                    <span className="text-white font-bold">23.5%</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-emerald-200 shadow-lg">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-emerald-600" />
+              <div className="bg-white/[0.03] backdrop-blur-sm p-6 rounded-2xl border border-emerald-500/20 shadow-lg">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-emerald-400" />
                   Revenue Metrics
                 </h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Conversion Rate</span>
-                    <span className="text-gray-900 font-bold">8.7%</span>
+                    <span className="text-white/60">Conversion Rate</span>
+                    <span className="text-white font-bold">8.7%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Avg. Quote Value</span>
-                    <span className="text-gray-900 font-bold">$847K</span>
+                    <span className="text-white/60">Avg. Quote Value</span>
+                    <span className="text-white font-bold">$847K</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Customer LTV</span>
-                    <span className="text-gray-900 font-bold">$1,240</span>
+                    <span className="text-white/60">Customer LTV</span>
+                    <span className="text-white font-bold">$1,240</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-purple-200 shadow-lg">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-purple-600" />
+              <div className="bg-white/[0.03] backdrop-blur-sm p-6 rounded-2xl border border-white/[0.08] shadow-lg">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-emerald-400" />
                   Performance
                 </h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Page Load Time</span>
-                    <span className="text-gray-900 font-bold">1.2s</span>
+                    <span className="text-white/60">Page Load Time</span>
+                    <span className="text-white font-bold">1.2s</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Core Web Vitals</span>
-                    <span className="text-emerald-600 font-bold">Good</span>
+                    <span className="text-white/60">Core Web Vitals</span>
+                    <span className="text-emerald-400 font-bold">Good</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Error Rate</span>
-                    <span className="text-gray-900 font-bold">0.08%</span>
+                    <span className="text-white/60">Error Rate</span>
+                    <span className="text-white font-bold">0.08%</span>
                   </div>
                 </div>
               </div>
@@ -1035,22 +1024,22 @@ const AdminDashboard: React.FC = () => {
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
                   <Users className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">User Management</h2>
+                <h2 className="text-xl font-bold text-white">User Management</h2>
               </div>
-              <button className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-xl font-semibold shadow-lg shadow-emerald-500/25 transition-all hover:scale-105">
+              <button className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-xl font-semibold shadow-lg shadow-emerald-500/10 transition-all hover:scale-[1.02]">
                 + Add User
               </button>
             </div>
 
             {/* Search & Filters */}
-            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-purple-200 shadow-lg">
+            <div className="bg-white/[0.03] backdrop-blur-sm p-4 rounded-2xl border border-white/[0.08] shadow-lg">
               <div className="flex gap-4">
                 <input
                   type="text"
                   placeholder="Search by email or name..."
-                  className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                  className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                 />
-                <select className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-gray-800 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all">
+                <select className="bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2 text-white focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all">
                   <option>All Tiers</option>
                   <option>Free</option>
                   <option>Semi-Premium</option>
@@ -1080,37 +1069,37 @@ const AdminDashboard: React.FC = () => {
               ].map((user, idx) => (
                 <div
                   key={idx}
-                  className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all"
+                  className="bg-white/[0.03] backdrop-blur-sm p-4 rounded-2xl border border-white/[0.08] hover:border-white/[0.12] hover:shadow-md transition-all"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-800 font-semibold">{user.email}</p>
+                      <p className="text-white font-semibold">{user.email}</p>
                       <div className="flex gap-4 mt-2 text-sm">
                         <span
                           className={`px-2 py-1 rounded-lg ${
                             user.tier === "premium"
-                              ? "bg-purple-100 text-purple-700"
+                              ? "bg-emerald-500/20 text-emerald-400"
                               : user.tier === "semi_premium"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-gray-100 text-gray-700"
+                                ? "bg-blue-500/10 text-blue-400"
+                                : "bg-white/[0.05] text-white/80"
                           }`}
                         >
                           {user.tier === "semi_premium"
                             ? "Semi-Premium"
                             : user.tier.charAt(0).toUpperCase() + user.tier.slice(1)}
                         </span>
-                        <span className="text-gray-500">Joined: {user.joined}</span>
-                        <span className="text-gray-500">Quotes: {user.quotesUsed}</span>
+                        <span className="text-white/50">Joined: {user.joined}</span>
+                        <span className="text-white/50">Quotes: {user.quotesUsed}</span>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-blue-500/25 transition-all hover:scale-105">
+                      <button className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02]">
                         Change Tier
                       </button>
-                      <button className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-purple-500/25 transition-all hover:scale-105">
+                      <button className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-emerald-500/10 transition-all hover:scale-[1.02]">
                         View Activity
                       </button>
-                      <button className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-red-500/25 transition-all hover:scale-105">
+                      <button className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-red-500/25 transition-all hover:scale-[1.02]">
                         Disable
                       </button>
                     </div>
@@ -1120,8 +1109,8 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Coming Soon Notice */}
-            <div className="bg-blue-50 border border-blue-200 p-4 rounded-2xl">
-              <p className="text-blue-700 text-sm">
+            <div className="bg-blue-500/5 border border-blue-500/15 p-4 rounded-2xl">
+              <p className="text-blue-400 text-sm">
                 💡 <strong>Coming Soon:</strong> Full user management with Supabase integration.
                 You'll be able to change tiers, reset quote limits, view detailed activity, and
                 manage subscriptions.
@@ -1139,9 +1128,9 @@ const AdminDashboard: React.FC = () => {
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/25">
                   <FileText className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">Use Case Manager</h2>
+                <h2 className="text-xl font-bold text-white">Use Case Manager</h2>
               </div>
-              <button className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-xl font-semibold shadow-lg shadow-emerald-500/25 transition-all hover:scale-105">
+              <button className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-xl font-semibold shadow-lg shadow-emerald-500/10 transition-all hover:scale-[1.02]">
                 + Create New Use Case
               </button>
             </div>
@@ -1169,21 +1158,21 @@ const AdminDashboard: React.FC = () => {
               ].map((useCase, idx) => (
                 <div
                   key={idx}
-                  className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all"
+                  className="bg-white/[0.03] backdrop-blur-sm p-4 rounded-2xl border border-white/[0.08] hover:border-white/[0.12] hover:shadow-md transition-all"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <span className="text-4xl">{useCase.icon}</span>
                       <div>
-                        <p className="text-gray-800 font-semibold text-lg">{useCase.name}</p>
+                        <p className="text-white font-semibold text-lg">{useCase.name}</p>
                         <div className="flex gap-3 mt-2 text-sm">
                           <span
                             className={`px-2 py-1 rounded-lg ${
                               useCase.tier === "premium"
-                                ? "bg-purple-100 text-purple-700"
+                                ? "bg-emerald-500/20 text-emerald-400"
                                 : useCase.tier === "semi_premium"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : "bg-emerald-100 text-emerald-700"
+                                  ? "bg-blue-500/10 text-blue-400"
+                                  : "bg-emerald-500/10 text-emerald-400"
                             }`}
                           >
                             {useCase.tier === "semi_premium"
@@ -1193,26 +1182,26 @@ const AdminDashboard: React.FC = () => {
                           <span
                             className={`px-2 py-1 rounded-lg ${
                               useCase.active
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-red-100 text-red-700"
+                                ? "bg-emerald-500/10 text-emerald-400"
+                                : "bg-red-500/10 text-red-400"
                             }`}
                           >
                             {useCase.active ? "Active" : "Inactive"}
                           </span>
-                          <span className="text-gray-500">
+                          <span className="text-white/50">
                             {useCase.quotesGenerated} quotes generated
                           </span>
                         </div>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-blue-500/25 transition-all hover:scale-105">
+                      <button className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02]">
                         Edit
                       </button>
-                      <button className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-purple-500/25 transition-all hover:scale-105">
+                      <button className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-emerald-500/10 transition-all hover:scale-[1.02]">
                         Test
                       </button>
-                      <button className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-red-500/25 transition-all hover:scale-105">
+                      <button className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg shadow-red-500/25 transition-all hover:scale-[1.02]">
                         Delete
                       </button>
                     </div>
@@ -1222,10 +1211,10 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Info Notice */}
-            <div className="bg-purple-50 border border-purple-200 p-4 rounded-2xl">
-              <p className="text-purple-700 text-sm">
+            <div className="bg-emerald-500/5 border border-white/[0.08] p-4 rounded-2xl">
+              <p className="text-emerald-400 text-sm">
                 📚 <strong>Current Templates:</strong> These use cases are defined in{" "}
-                <code className="bg-purple-100 px-2 py-1 rounded">
+                <code className="bg-emerald-500/10 px-2 py-1 rounded">
                   src/data/useCaseTemplates.ts
                 </code>
                 . After Supabase integration, you'll create and edit them directly in this
@@ -1240,58 +1229,58 @@ const AdminDashboard: React.FC = () => {
           <div className="space-y-6">
             {/* Section Header */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/10">
                 <DollarSign className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-gray-800">Pricing Configuration</h2>
+              <h2 className="text-xl font-bold text-white">Pricing Configuration</h2>
             </div>
 
-            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-purple-200 shadow-xl">
+            <div className="bg-white/[0.03] backdrop-blur-sm p-6 rounded-2xl border border-white/[0.08] shadow-xl">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">Equipment Pricing Management</h3>
-                  <p className="text-gray-500">
+                  <h3 className="text-xl font-bold text-white">Equipment Pricing Management</h3>
+                  <p className="text-white/50">
                     Manage all equipment pricing assumptions based on real vendor quotes
                   </p>
                 </div>
                 <button
                   onClick={() => setShowPricingAdmin(true)}
-                  className="bg-gradient-to-r from-blue-400 to-sky-400 hover:from-blue-500 hover:to-sky-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/25 transition-all hover:scale-105"
+                  className="bg-gradient-to-r from-blue-400 to-sky-400 hover:from-blue-500 hover:to-sky-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02]"
                 >
                   Open Pricing Dashboard
                 </button>
               </div>
 
               <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-xl border border-purple-200">
-                  <h4 className="font-semibold text-gray-800 mb-2">🔋 BESS Systems</h4>
-                  <p className="text-gray-600 text-sm">Small (&lt;1MWh): ~$200/kWh</p>
-                  <p className="text-gray-600 text-sm">Medium (1-10MWh): ~$155/kWh</p>
-                  <p className="text-gray-600 text-sm">Utility (10+MWh): ~$140/kWh</p>
-                  <p className="text-blue-600 text-xs mt-2">
+                <div className="bg-white/[0.03] p-4 rounded-xl border border-white/[0.08]">
+                  <h4 className="font-semibold text-white mb-2">🔋 BESS Systems</h4>
+                  <p className="text-white/60 text-sm">Small (&lt;1MWh): ~$200/kWh</p>
+                  <p className="text-white/60 text-sm">Medium (1-10MWh): ~$155/kWh</p>
+                  <p className="text-white/60 text-sm">Utility (10+MWh): ~$140/kWh</p>
+                  <p className="text-blue-400 text-xs mt-2">
                     NREL ATB 2024 via unifiedPricingService
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200">
-                  <h4 className="font-semibold text-gray-800 mb-2">⚡ Generators</h4>
-                  <p className="text-gray-600 text-sm">Natural Gas: ~$700/kW</p>
-                  <p className="text-gray-600 text-sm">Diesel: ~$500/kW</p>
-                  <p className="text-blue-600 text-xs mt-2">
+                <div className="bg-orange-500/5 p-4 rounded-xl border border-orange-500/20">
+                  <h4 className="font-semibold text-white mb-2">⚡ Generators</h4>
+                  <p className="text-white/60 text-sm">Natural Gas: ~$700/kW</p>
+                  <p className="text-white/60 text-sm">Diesel: ~$500/kW</p>
+                  <p className="text-blue-400 text-xs mt-2">
                     NREL ATB 2024 via unifiedPricingService
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-xl border border-emerald-200">
-                  <h4 className="font-semibold text-gray-800 mb-2">🚗 EV Charging</h4>
-                  <p className="text-gray-600 text-sm">Level 2: $2-8k/unit</p>
-                  <p className="text-gray-600 text-sm">DCFC: $35-85k/unit</p>
-                  <p className="text-blue-600 text-xs mt-2">evChargingCalculations.ts SSOT</p>
+                <div className="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/20">
+                  <h4 className="font-semibold text-white mb-2">🚗 EV Charging</h4>
+                  <p className="text-white/60 text-sm">Level 2: $2-8k/unit</p>
+                  <p className="text-white/60 text-sm">DCFC: $35-85k/unit</p>
+                  <p className="text-blue-400 text-xs mt-2">evChargingCalculations.ts SSOT</p>
                 </div>
               </div>
 
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-red-700 text-sm">
+              <div className="mt-4 p-4 bg-red-500/5 border border-red-500/20 rounded-xl">
+                <p className="text-red-400 text-sm">
                   ⚠️ <strong>Important:</strong> Balance of Plant configured under 15% guideline:
                   12% BOP + 8% EPC + 5% Contingency = 25% total installation costs. Daily pricing
                   validation active.
@@ -1300,15 +1289,15 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Real-time Pricing Status */}
-            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-purple-200 shadow-xl">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-purple-600" />
+            <div className="bg-white/[0.03] backdrop-blur-sm p-6 rounded-2xl border border-white/[0.08] shadow-xl">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-emerald-400" />
                 Pricing Data Sources
               </h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-gray-800">Vendor Quotes</h4>
-                  <ul className="text-gray-600 text-sm space-y-1">
+                  <h4 className="font-semibold text-white">Vendor Quotes</h4>
+                  <ul className="text-white/60 text-sm space-y-1">
                     <li>✅ Great Power (BESS) - Confidential NDA pricing</li>
                     <li>✅ Eaton Power Equipment - $64.2k/200kW generator</li>
                     <li>✅ Market-verified EV charger pricing</li>
@@ -1316,8 +1305,8 @@ const AdminDashboard: React.FC = () => {
                   </ul>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-gray-800">Market Intelligence</h4>
-                  <ul className="text-gray-600 text-sm space-y-1">
+                  <h4 className="font-semibold text-white">Market Intelligence</h4>
+                  <ul className="text-white/60 text-sm space-y-1">
                     <li>✅ NREL ATB 2024 integration</li>
                     <li>✅ GridStatus.io real-time data</li>
                     <li>✅ Industry-standard BOP guidelines</li>
@@ -1339,22 +1328,22 @@ const AdminDashboard: React.FC = () => {
                   <Shield className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-800">GOD Settings</h2>
-                  <p className="text-xs text-red-500 font-medium">
+                  <h2 className="text-xl font-bold text-white">GOD Settings</h2>
+                  <p className="text-xs text-red-400 font-medium">
                     ⚠️ Master Control - Changes affect entire system
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">Last modified: 2 hours ago</span>
-                <button className="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded-lg hover:bg-red-200 transition-all">
+                <span className="text-xs text-white/50">Last modified: 2 hours ago</span>
+                <button className="px-3 py-1.5 bg-red-500/10 text-red-400 text-xs font-medium rounded-lg hover:bg-red-200 transition-all">
                   View Audit Log
                 </button>
               </div>
             </div>
 
             {/* Master Switches */}
-            <div className="bg-gradient-to-br from-red-50 to-rose-50 backdrop-blur-md rounded-xl p-5 border border-red-200/50 shadow-lg">
+            <div className="bg-red-500/50/5 backdrop-blur-md rounded-xl p-5 border border-red-500/20/50 shadow-lg">
               <h3 className="text-sm font-bold text-red-800 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <Zap className="w-4 h-4" />
                 Master System Switches
@@ -1406,17 +1395,17 @@ const AdminDashboard: React.FC = () => {
                 ].map((sw) => (
                   <div
                     key={sw.id}
-                    className={`flex items-center justify-between p-3 rounded-lg ${sw.critical ? "bg-red-100/50 border border-red-200" : "bg-white/80 border border-gray-200"}`}
+                    className={`flex items-center justify-between p-3 rounded-lg ${sw.critical ? "bg-red-500/10 border border-red-500/20" : "bg-white/[0.03] border border-white/[0.08]"}`}
                   >
                     <div>
-                      <p className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+                      <p className="text-sm font-semibold text-white flex items-center gap-1">
                         {sw.label}
-                        {sw.critical && <span className="text-red-500 text-xs">●</span>}
+                        {sw.critical && <span className="text-red-400 text-xs">●</span>}
                       </p>
-                      <p className="text-xs text-gray-500">{sw.desc}</p>
+                      <p className="text-xs text-white/50">{sw.desc}</p>
                     </div>
                     <button
-                      className={`relative w-12 h-6 rounded-full transition-all ${sw.enabled ? "bg-emerald-500" : "bg-gray-300"}`}
+                      className={`relative w-12 h-6 rounded-full transition-all ${sw.enabled ? "bg-emerald-500/50" : "bg-gray-300"}`}
                     >
                       <div
                         className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-all ${sw.enabled ? "left-6" : "left-0.5"}`}
@@ -1428,8 +1417,8 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Global Multipliers */}
-            <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-purple-100/50 shadow-lg">
-              <h3 className="text-sm font-bold text-purple-800 uppercase tracking-wide mb-4 flex items-center gap-2">
+            <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-white/[0.08] shadow-lg">
+              <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
                 Global Pricing Multipliers
               </h3>
@@ -1480,9 +1469,9 @@ const AdminDashboard: React.FC = () => {
                 ].map((param) => (
                   <div
                     key={param.id}
-                    className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3 rounded-lg border border-purple-200/50"
+                    className="bg-white/[0.03] p-3 rounded-lg border border-white/[0.08]"
                   >
-                    <label className="text-xs font-medium text-gray-600 block mb-1">
+                    <label className="text-xs font-medium text-white/60 block mb-1">
                       {param.label}
                     </label>
                     <div className="flex items-center gap-2">
@@ -1490,22 +1479,22 @@ const AdminDashboard: React.FC = () => {
                         type="number"
                         defaultValue={param.value}
                         step={param.unit === "x" ? 0.01 : 0.1}
-                        className="w-full bg-white border border-purple-200 rounded-lg px-3 py-1.5 text-gray-800 text-sm font-semibold focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none"
+                        className="w-full bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-1.5 text-white text-sm font-semibold focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 outline-none"
                       />
-                      <span className="text-xs text-gray-500 w-10">{param.unit}</span>
+                      <span className="text-xs text-white/50 w-10">{param.unit}</span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">{param.desc}</p>
+                    <p className="text-xs text-white/40 mt-1">{param.desc}</p>
                   </div>
                 ))}
               </div>
-              <button className="mt-4 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium rounded-lg shadow-md shadow-purple-500/20 hover:shadow-lg transition-all">
+              <button className="mt-4 px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white text-sm font-medium rounded-lg shadow-md shadow-emerald-500/10 hover:shadow-lg transition-all">
                 Save Multipliers
               </button>
             </div>
 
             {/* Activity Log */}
-            <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-gray-200/50 shadow-lg">
-              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
+            <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-white/[0.08]/50 shadow-lg">
+              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 Recent GOD Activities
               </h3>
@@ -1538,23 +1527,23 @@ const AdminDashboard: React.FC = () => {
                 ].map((log, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm"
+                    className="flex items-center justify-between p-2 bg-white/[0.03] rounded-lg text-sm"
                   >
                     <div className="flex items-center gap-3">
                       <span
                         className={`w-2 h-2 rounded-full ${
                           log.type === "critical"
-                            ? "bg-red-500"
+                            ? "bg-red-500/50"
                             : log.type === "pricing"
-                              ? "bg-purple-500"
+                              ? "bg-emerald-500/50"
                               : log.type === "feature"
-                                ? "bg-blue-500"
+                                ? "bg-blue-500/50"
                                 : "bg-gray-400"
                         }`}
                       ></span>
-                      <span className="text-gray-700">{log.action}</span>
+                      <span className="text-white/80">{log.action}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <div className="flex items-center gap-3 text-xs text-white/50">
                       <span>{log.user}</span>
                       <span>{log.time}</span>
                     </div>
@@ -1571,22 +1560,22 @@ const AdminDashboard: React.FC = () => {
             {/* Section Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/10">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-800">Matching Engine</h2>
-                  <p className="text-xs text-purple-600 font-medium">
+                  <h2 className="text-xl font-bold text-white">Matching Engine</h2>
+                  <p className="text-xs text-emerald-400 font-medium">
                     AI-powered vendor & equipment matching
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                <div className="flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/5 px-2 py-1 rounded-full">
+                  <div className="w-1.5 h-1.5 bg-emerald-500/50 rounded-full animate-pulse"></div>
                   Engine Active
                 </div>
-                <button className="px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-lg hover:bg-purple-200 transition-all">
+                <button className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg hover:bg-emerald-500/50/15 transition-all">
                   Run Manual Match
                 </button>
               </div>
@@ -1595,23 +1584,23 @@ const AdminDashboard: React.FC = () => {
             {/* Matching Stats */}
             <div className="grid md:grid-cols-4 gap-4">
               {[
-                { label: "Active Vendors", value: "24", change: "+3", color: "blue" },
-                { label: "Match Rate", value: "94.2%", change: "+2.1%", color: "emerald" },
-                { label: "Avg Match Time", value: "1.2s", change: "-0.3s", color: "purple" },
-                { label: "Pending Matches", value: "7", change: "", color: "orange" },
+                { label: "Active Vendors", value: "24", change: "+3", borderClass: "border-blue-500/20" },
+                { label: "Match Rate", value: "94.2%", change: "+2.1%", borderClass: "border-emerald-500/20" },
+                { label: "Avg Match Time", value: "1.2s", change: "-0.3s", borderClass: "border-emerald-500/20" },
+                { label: "Pending Matches", value: "7", change: "", borderClass: "border-orange-500/20" },
               ].map((stat, idx) => (
                 <div
                   key={idx}
-                  className={`bg-white/80 backdrop-blur-md rounded-xl p-4 border border-${stat.color}-100/50 shadow-lg`}
+                  className={`bg-white/[0.03] backdrop-blur-md rounded-xl p-4 border ${stat.borderClass} shadow-lg`}
                 >
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <p className="text-xs font-medium text-white/50 uppercase tracking-wide">
                     {stat.label}
                   </p>
                   <div className="flex items-end justify-between mt-1">
-                    <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+                    <p className="text-2xl font-bold text-white">{stat.value}</p>
                     {stat.change && (
                       <span
-                        className={`text-xs font-medium ${stat.change.startsWith("+") ? "text-emerald-600" : "text-blue-600"}`}
+                        className={`text-xs font-medium ${stat.change.startsWith("+") ? "text-emerald-400" : "text-blue-400"}`}
                       >
                         {stat.change}
                       </span>
@@ -1622,8 +1611,8 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Match Rules */}
-            <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-purple-100/50 shadow-lg">
-              <h3 className="text-sm font-bold text-purple-800 uppercase tracking-wide mb-4 flex items-center gap-2">
+            <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-white/[0.08] shadow-lg">
+              <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <Settings className="w-4 h-4" />
                 Matching Rules Configuration
               </h3>
@@ -1637,11 +1626,11 @@ const AdminDashboard: React.FC = () => {
                 ].map((rule, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg"
+                    className="flex items-center gap-4 p-3 bg-white/[0.03] rounded-lg"
                   >
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-gray-800">{rule.rule}</p>
-                      <p className="text-xs text-gray-500">{rule.desc}</p>
+                      <p className="text-sm font-semibold text-white">{rule.rule}</p>
+                      <p className="text-xs text-white/50">{rule.desc}</p>
                     </div>
                     <div className="flex items-center gap-2 w-48">
                       <input
@@ -1649,9 +1638,9 @@ const AdminDashboard: React.FC = () => {
                         min="0"
                         max="100"
                         defaultValue={rule.weight}
-                        className="flex-1 h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                        className="flex-1 h-2 bg-emerald-500/50/15 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                       />
-                      <span className="text-sm font-bold text-purple-700 w-12 text-right">
+                      <span className="text-sm font-bold text-emerald-400 w-12 text-right">
                         {rule.weight}%
                       </span>
                     </div>
@@ -1661,16 +1650,16 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Recent Matches - NOW LIVE */}
-            <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-gray-200/50 shadow-lg">
+            <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-white/[0.08]/50 shadow-lg">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                <h3 className="text-sm font-bold text-white/80 uppercase tracking-wide flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-emerald-500" />
                   Live Match Feed
                 </h3>
                 <button
                   onClick={() => setMatchingLive(!matchingLive)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                    matchingLive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"
+                    matchingLive ? "bg-emerald-500/10 text-emerald-400" : "bg-white/[0.05] text-white/60"
                   }`}
                 >
                   {matchingLive ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
@@ -1682,50 +1671,50 @@ const AdminDashboard: React.FC = () => {
                   liveMatches.map((match) => (
                     <div
                       key={match.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all cursor-pointer animate-fade-in"
+                      className="flex items-center justify-between p-3 bg-white/[0.03] hover:bg-white/[0.05] rounded-lg transition-all cursor-pointer animate-fade-in"
                     >
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold ${
                             match.score >= 95
-                              ? "bg-emerald-500"
+                              ? "bg-emerald-500/50"
                               : match.score >= 90
-                                ? "bg-blue-500"
-                                : "bg-orange-500"
+                                ? "bg-blue-500/50"
+                                : "bg-orange-500/50"
                           }`}
                         >
                           {match.score}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-semibold text-gray-800">{match.quoteId}</p>
+                            <p className="text-sm font-semibold text-white">{match.quoteId}</p>
                             <span
                               className={`px-1.5 py-0.5 text-xs rounded ${
                                 match.tier === "premium"
-                                  ? "bg-purple-100 text-purple-700"
+                                  ? "bg-emerald-500/20 text-emerald-400"
                                   : match.tier === "enterprise"
-                                    ? "bg-amber-100 text-amber-700"
-                                    : "bg-gray-100 text-gray-600"
+                                    ? "bg-amber-100 text-amber-400"
+                                    : "bg-white/[0.05] text-white/60"
                               }`}
                             >
                               {match.tier}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-white/50">
                             {match.equipment} • {match.powerMW} MW
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-purple-700">{match.vendor}</p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-sm font-medium text-emerald-400">{match.vendor}</p>
+                        <p className="text-xs text-white/40">
                           {match.useCase} • {match.time}
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-white/40">
                     <Sparkles className="w-8 h-8 mx-auto mb-2 animate-pulse" />
                     <p className="text-sm">Waiting for matches...</p>
                   </div>
@@ -1745,8 +1734,8 @@ const AdminDashboard: React.FC = () => {
                   <Crown className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-800">MERLIN Premium Benchmarks</h2>
-                  <p className="text-xs text-amber-600 font-medium">
+                  <h2 className="text-xl font-bold text-white">MERLIN Premium Benchmarks</h2>
+                  <p className="text-xs text-amber-400 font-medium">
                     Premium equipment configurations for each use case
                   </p>
                 </div>
@@ -1755,7 +1744,7 @@ const AdminDashboard: React.FC = () => {
                 <select
                   value={selectedPremiumUseCase}
                   onChange={(e) => setSelectedPremiumUseCase(e.target.value)}
-                  className="text-sm bg-white border border-amber-200 rounded-lg px-3 py-1.5 text-gray-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none"
+                  className="text-sm bg-[#1a1a2e] border border-amber-500/20 rounded-lg px-3 py-1.5 text-white/80 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none"
                 >
                   {Object.keys(getUseCaseProfiles()).map((uc) => (
                     <option key={uc} value={uc}>
@@ -1773,23 +1762,23 @@ const AdminDashboard: React.FC = () => {
             {premiumComparison && (
               <div className="grid md:grid-cols-2 gap-5">
                 {/* Standard */}
-                <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-gray-200 shadow-lg">
+                <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-white/[0.08] shadow-lg">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <BarChart3 className="w-4 h-4 text-gray-500" />
+                    <div className="w-8 h-8 bg-white/[0.05] rounded-lg flex items-center justify-center">
+                      <BarChart3 className="w-4 h-4 text-white/50" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-gray-700 uppercase">Standard Quote</h3>
-                      <p className="text-xs text-gray-400">Basic equipment tier</p>
+                      <h3 className="text-sm font-bold text-white/80 uppercase">Standard Quote</h3>
+                      <p className="text-xs text-white/40">Basic equipment tier</p>
                     </div>
                   </div>
-                  <div className="text-3xl font-bold text-gray-800 mb-4">
+                  <div className="text-3xl font-bold text-white mb-4">
                     ${Math.round(premiumComparison.standard.totalCost).toLocaleString()}
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Batteries</span>
-                      <span className="text-gray-700">
+                      <span className="text-white/50">Batteries</span>
+                      <span className="text-white/80">
                         $
                         {Math.round(
                           premiumComparison.standard.breakdown.batteries
@@ -1797,8 +1786,8 @@ const AdminDashboard: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Inverters</span>
-                      <span className="text-gray-700">
+                      <span className="text-white/50">Inverters</span>
+                      <span className="text-white/80">
                         $
                         {Math.round(
                           premiumComparison.standard.breakdown.inverters
@@ -1806,8 +1795,8 @@ const AdminDashboard: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Transformer</span>
-                      <span className="text-gray-700">
+                      <span className="text-white/50">Transformer</span>
+                      <span className="text-white/80">
                         $
                         {Math.round(
                           premiumComparison.standard.breakdown.transformer
@@ -1815,8 +1804,8 @@ const AdminDashboard: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Controller</span>
-                      <span className="text-gray-700">
+                      <span className="text-white/50">Controller</span>
+                      <span className="text-white/80">
                         $
                         {Math.round(
                           premiumComparison.standard.breakdown.microgridController
@@ -1827,9 +1816,9 @@ const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* Premium */}
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-5 border-2 border-amber-300 shadow-lg relative overflow-hidden">
+                <div className="bg-amber-500/50/5 rounded-xl p-5 border-2 border-amber-300 shadow-lg relative overflow-hidden">
                   <div className="absolute top-2 right-2">
-                    <span className="px-2 py-1 bg-amber-500 text-white text-xs font-bold rounded-full">
+                    <span className="px-2 py-1 bg-amber-500/50 text-white text-xs font-bold rounded-full">
                       RECOMMENDED
                     </span>
                   </div>
@@ -1838,36 +1827,36 @@ const AdminDashboard: React.FC = () => {
                       <Crown className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-amber-800 uppercase">MERLIN Premium</h3>
-                      <p className="text-xs text-amber-600">
+                      <h3 className="text-sm font-bold text-amber-400 uppercase">MERLIN Premium</h3>
+                      <p className="text-xs text-amber-400">
                         Optimized for {selectedPremiumUseCase}
                       </p>
                     </div>
                   </div>
-                  <div className="text-3xl font-bold text-amber-800 mb-4">
+                  <div className="text-3xl font-bold text-amber-400 mb-4">
                     ${Math.round(premiumComparison.premium.totalCost).toLocaleString()}
-                    <span className="text-sm font-normal text-amber-600 ml-2">
+                    <span className="text-sm font-normal text-amber-400 ml-2">
                       (+{premiumComparison.delta.percentage.toFixed(0)}%)
                     </span>
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-amber-700">Premium Batteries</span>
-                      <span className="text-amber-800 font-medium">
+                      <span className="text-amber-400">Premium Batteries</span>
+                      <span className="text-amber-400 font-medium">
                         $
                         {Math.round(premiumComparison.premium.breakdown.batteries).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-amber-700">Advanced Inverters</span>
-                      <span className="text-amber-800 font-medium">
+                      <span className="text-amber-400">Advanced Inverters</span>
+                      <span className="text-amber-400 font-medium">
                         $
                         {Math.round(premiumComparison.premium.breakdown.inverters).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-amber-700">Smart Transformer</span>
-                      <span className="text-amber-800 font-medium">
+                      <span className="text-amber-400">Smart Transformer</span>
+                      <span className="text-amber-400 font-medium">
                         $
                         {Math.round(
                           premiumComparison.premium.breakdown.transformer
@@ -1875,8 +1864,8 @@ const AdminDashboard: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-amber-700">AI Controller</span>
-                      <span className="text-amber-800 font-medium">
+                      <span className="text-amber-400">AI Controller</span>
+                      <span className="text-amber-400 font-medium">
                         $
                         {Math.round(
                           premiumComparison.premium.breakdown.microgridController
@@ -1890,15 +1879,15 @@ const AdminDashboard: React.FC = () => {
 
             {/* Value Proposition */}
             {premiumComparison && (
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-emerald-200 shadow-lg">
+              <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-emerald-500/20 shadow-lg">
                 <h3 className="text-sm font-bold text-emerald-800 uppercase tracking-wide mb-4 flex items-center gap-2">
                   <Star className="w-4 h-4" />
                   Premium Value Proposition
                 </h3>
                 <div className="grid md:grid-cols-5 gap-3">
                   {premiumComparison.valueProposition.map((value: string, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2 p-3 bg-emerald-50 rounded-lg">
-                      <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                    <div key={idx} className="flex items-center gap-2 p-3 bg-emerald-500/5 rounded-lg">
+                      <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                       <span className="text-sm text-emerald-800">{value}</span>
                     </div>
                   ))}
@@ -1907,16 +1896,16 @@ const AdminDashboard: React.FC = () => {
             )}
 
             {/* Equipment Catalog */}
-            <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-purple-100/50 shadow-lg">
-              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <Database className="w-4 h-4 text-purple-500" />
+            <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-white/[0.08] shadow-lg">
+              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wide mb-4 flex items-center gap-2">
+                <Database className="w-4 h-4 text-emerald-400" />
                 Premium Equipment Catalog
               </h3>
               <div className="grid md:grid-cols-3 gap-4">
                 {/* Batteries */}
-                <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
-                  <h4 className="text-sm font-bold text-blue-800 mb-2">🔋 Premium Batteries</h4>
-                  <div className="text-xs text-blue-700 space-y-1">
+                <div className="p-4 bg-blue-500/5 rounded-lg border border-white/[0.08]">
+                  <h4 className="text-sm font-bold text-blue-400 mb-2">🔋 Premium Batteries</h4>
+                  <div className="text-xs text-blue-400 space-y-1">
                     <p>• Tesla Megapack 2XL</p>
                     <p>• 7,500 cycle life</p>
                     <p>• 15-year warranty</p>
@@ -1926,9 +1915,9 @@ const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* Inverters */}
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg border border-purple-200">
-                  <h4 className="text-sm font-bold text-purple-800 mb-2">⚡ Premium Inverters</h4>
-                  <div className="text-xs text-purple-700 space-y-1">
+                <div className="p-4 bg-white/[0.03] rounded-lg border border-white/[0.08]">
+                  <h4 className="text-sm font-bold text-emerald-400 mb-2">⚡ Premium Inverters</h4>
+                  <div className="text-xs text-emerald-400 space-y-1">
                     <p>• SMA Sunny Central Storage UP</p>
                     <p>• Grid-forming capable</p>
                     <p>• 4-quadrant operation</p>
@@ -1938,11 +1927,11 @@ const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* Controllers */}
-                <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200">
-                  <h4 className="text-sm font-bold text-amber-800 mb-2">
+                <div className="p-4 bg-amber-500/50/5 rounded-lg border border-amber-500/20">
+                  <h4 className="text-sm font-bold text-amber-400 mb-2">
                     🎛️ Microgrid Controllers
                   </h4>
-                  <div className="text-xs text-amber-700 space-y-1">
+                  <div className="text-xs text-amber-400 space-y-1">
                     <p>• Schneider EcoStruxure Advisor</p>
                     <p>• AI-based optimization</p>
                     <p>• Weather-aware forecasting</p>
@@ -1952,7 +1941,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* AC Patch Panels */}
-                <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
+                <div className="p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/20">
                   <h4 className="text-sm font-bold text-emerald-800 mb-2">🔌 AC Patch Panels</h4>
                   <div className="text-xs text-emerald-700 space-y-1">
                     <p>• Schneider Galaxy VM</p>
@@ -1964,8 +1953,8 @@ const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* DC Patch Panels */}
-                <div className="p-4 bg-gradient-to-br from-rose-50 to-pink-50 rounded-lg border border-rose-200">
-                  <h4 className="text-sm font-bold text-rose-800 mb-2">🔋 DC Patch Panels</h4>
+                <div className="p-4 bg-rose-500/5 rounded-lg border border-rose-500/20">
+                  <h4 className="text-sm font-bold text-rose-400 mb-2">🔋 DC Patch Panels</h4>
                   <div className="text-xs text-rose-700 space-y-1">
                     <p>• OutBack FLEXware 500</p>
                     <p>• 1000VDC rating</p>
@@ -1976,9 +1965,9 @@ const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* Transformers */}
-                <div className="p-4 bg-gradient-to-br from-indigo-50 to-violet-50 rounded-lg border border-indigo-200">
-                  <h4 className="text-sm font-bold text-indigo-800 mb-2">⚙️ Smart Transformers</h4>
-                  <div className="text-xs text-indigo-700 space-y-1">
+                <div className="p-4 bg-indigo-500/5 rounded-lg border border-indigo-500/20">
+                  <h4 className="text-sm font-bold text-indigo-400 mb-2">⚙️ Smart Transformers</h4>
+                  <div className="text-xs text-indigo-400 space-y-1">
                     <p>• Siemens Digital</p>
                     <p>• 98.5% efficiency</p>
                     <p>• Real-time monitoring</p>
@@ -2001,19 +1990,19 @@ const AdminDashboard: React.FC = () => {
                   <Activity className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-800">Real-Time Monitoring</h2>
-                  <p className="text-xs text-emerald-600 font-medium">
+                  <h2 className="text-xl font-bold text-white">Real-Time Monitoring</h2>
+                  <p className="text-xs text-emerald-400 font-medium">
                     Live system metrics & user activity
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <select className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1 text-gray-700">
+                <select className="text-xs bg-white/[0.05] border border-white/[0.08] rounded-lg px-2 py-1 text-white/80">
                   <option>Last 1 hour</option>
                   <option>Last 24 hours</option>
                   <option>Last 7 days</option>
                 </select>
-                <button className="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-lg hover:bg-emerald-200 transition-all flex items-center gap-1">
+                <button className="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 text-xs font-medium rounded-lg hover:bg-emerald-200 transition-all flex items-center gap-1">
                   <RefreshCw className="w-3 h-3" />
                   Refresh
                 </button>
@@ -2023,32 +2012,32 @@ const AdminDashboard: React.FC = () => {
             {/* Live Metrics */}
             <div className="grid md:grid-cols-5 gap-3">
               {[
-                { label: "Active Users", value: "23", icon: Users, color: "blue", live: true },
-                { label: "Quotes/Min", value: "4.2", icon: FileText, color: "purple", live: true },
-                { label: "API Latency", value: "142ms", icon: Zap, color: "emerald", live: true },
+                { label: "Active Users", value: "23", icon: Users, iconClass: "text-blue-400", live: true },
+                { label: "Quotes/Min", value: "4.2", icon: FileText, iconClass: "text-emerald-400", live: true },
+                { label: "API Latency", value: "142ms", icon: Zap, iconClass: "text-emerald-400", live: true },
                 {
                   label: "Error Rate",
                   value: "0.08%",
                   icon: AlertTriangle,
-                  color: "orange",
+                  iconClass: "text-orange-400",
                   live: false,
                 },
-                { label: "CPU Usage", value: "34%", icon: Cpu, color: "gray", live: true },
+                { label: "CPU Usage", value: "34%", icon: Cpu, iconClass: "text-white/50", live: true },
               ].map((metric, idx) => {
                 const Icon = metric.icon;
                 return (
                   <div
                     key={idx}
-                    className="bg-white/80 backdrop-blur-md rounded-xl p-3 border border-gray-100/50 shadow-md"
+                    className="bg-white/[0.03] backdrop-blur-md rounded-xl p-3 border border-white/[0.08] shadow-md"
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <Icon className={`w-4 h-4 text-${metric.color}-500`} />
+                      <Icon className={`w-4 h-4 ${metric.iconClass}`} />
                       {metric.live && (
-                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <div className="w-1.5 h-1.5 bg-emerald-500/50 rounded-full animate-pulse"></div>
                       )}
                     </div>
-                    <p className="text-xl font-bold text-gray-800">{metric.value}</p>
-                    <p className="text-xs text-gray-500">{metric.label}</p>
+                    <p className="text-xl font-bold text-white">{metric.value}</p>
+                    <p className="text-xs text-white/50">{metric.label}</p>
                   </div>
                 );
               })}
@@ -2057,8 +2046,8 @@ const AdminDashboard: React.FC = () => {
             {/* Live Activity Feed */}
             <div className="grid md:grid-cols-2 gap-5">
               {/* User Activity */}
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-blue-100/50 shadow-lg">
-                <h3 className="text-sm font-bold text-blue-800 uppercase tracking-wide mb-4 flex items-center gap-2">
+              <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-blue-500/20 shadow-lg">
+                <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wide mb-4 flex items-center gap-2">
                   <Users className="w-4 h-4" />
                   Live User Activity
                 </h3>
@@ -2103,25 +2092,25 @@ const AdminDashboard: React.FC = () => {
                   ].map((activity, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-2 bg-blue-50/50 rounded-lg text-sm"
+                      className="flex items-center justify-between p-2 bg-blue-500/5 rounded-lg text-sm"
                     >
                       <div className="flex items-center gap-2">
                         <div
                           className={`w-2 h-2 rounded-full ${
                             activity.type === "quote"
-                              ? "bg-purple-500"
+                              ? "bg-emerald-500/50"
                               : activity.type === "export"
-                                ? "bg-emerald-500"
+                                ? "bg-emerald-500/50"
                                 : activity.type === "save"
-                                  ? "bg-blue-500"
+                                  ? "bg-blue-500/50"
                                   : "bg-gray-400"
                           }`}
                         ></div>
-                        <span className="text-gray-800 font-medium">{activity.user}</span>
+                        <span className="text-white font-medium">{activity.user}</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-gray-600">{activity.action}</span>
-                        <span className="text-gray-400">{activity.time}</span>
+                        <span className="text-white/60">{activity.action}</span>
+                        <span className="text-white/40">{activity.time}</span>
                       </div>
                     </div>
                   ))}
@@ -2129,7 +2118,7 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* System Events */}
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-emerald-100/50 shadow-lg">
+              <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-emerald-500/10 shadow-lg">
                 <h3 className="text-sm font-bold text-emerald-800 uppercase tracking-wide mb-4 flex items-center gap-2">
                   <Server className="w-4 h-4" />
                   System Events
@@ -2145,7 +2134,7 @@ const AdminDashboard: React.FC = () => {
                   ].map((event, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-2 bg-emerald-50/50 rounded-lg text-sm"
+                      className="flex items-center justify-between p-2 bg-emerald-500/5 rounded-lg text-sm"
                     >
                       <div className="flex items-center gap-2">
                         {event.status === "success" ? (
@@ -2153,9 +2142,9 @@ const AdminDashboard: React.FC = () => {
                         ) : (
                           <AlertTriangle className="w-4 h-4 text-amber-500" />
                         )}
-                        <span className="text-gray-800">{event.event}</span>
+                        <span className="text-white">{event.event}</span>
                       </div>
-                      <span className="text-xs text-gray-400">{event.time}</span>
+                      <span className="text-xs text-white/40">{event.time}</span>
                     </div>
                   ))}
                 </div>
@@ -2163,8 +2152,8 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Performance Graph Placeholder */}
-            <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-purple-100/50 shadow-lg">
-              <h3 className="text-sm font-bold text-purple-800 uppercase tracking-wide mb-4">
+            <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-white/[0.08] shadow-lg">
+              <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wide mb-4">
                 📈 Request Volume (Last Hour)
               </h3>
               <div className="h-32 flex items-end gap-1">
@@ -2173,14 +2162,14 @@ const AdminDashboard: React.FC = () => {
                   return (
                     <div
                       key={i}
-                      className="flex-1 bg-gradient-to-t from-purple-500/60 to-purple-500/20 rounded-t-sm hover:from-purple-500 hover:to-purple-400 transition-all cursor-pointer"
+                      className="flex-1 bg-gradient-to-t from-emerald-500/60 to-emerald-500/20 rounded-t-sm hover:from-emerald-500 hover:to-emerald-400 transition-all cursor-pointer"
                       style={{ height: `${height}%` }}
                       title={`${Math.floor(height / 10)} requests`}
                     ></div>
                   );
                 })}
               </div>
-              <div className="flex justify-between mt-2 text-xs text-gray-400">
+              <div className="flex justify-between mt-2 text-xs text-white/40">
                 <span>60 min ago</span>
                 <span>30 min ago</span>
                 <span>Now</span>
@@ -2205,13 +2194,13 @@ const AdminDashboard: React.FC = () => {
 
         {/* Migration Tab */}
         {activeTab === "migration" && (
-          <div className="bg-white/90 backdrop-blur-sm border border-purple-200 rounded-2xl p-8 shadow-xl">
+          <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-8 shadow-xl">
             <div className="text-center py-12">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">Migration Manager</h3>
-              <p className="text-gray-500 mb-4">
+              <h3 className="text-2xl font-bold text-white mb-4">Migration Manager</h3>
+              <p className="text-white/50 mb-4">
                 MigrationManager component is temporarily disabled.
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-white/40">
                 To enable: Create /src/components/admin/MigrationManager.tsx
               </p>
             </div>
@@ -2227,24 +2216,24 @@ const AdminDashboard: React.FC = () => {
               <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-slate-500 rounded-xl flex items-center justify-center shadow-lg shadow-gray-500/25">
                 <Settings className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-gray-800">System Settings</h2>
+              <h2 className="text-xl font-bold text-white">System Settings</h2>
             </div>
 
             {/* Access Control */}
-            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-purple-200 shadow-xl">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-purple-600" />
+            <div className="bg-white/[0.03] backdrop-blur-sm p-6 rounded-2xl border border-white/[0.08] shadow-xl">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-emerald-400" />
                 Access Control
               </h3>
               <div className="space-y-4">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                    className="w-5 h-5 rounded border-white/20 text-emerald-400 focus:ring-emerald-500"
                   />
                   <div>
-                    <span className="text-gray-800 font-semibold">Require Login</span>
-                    <p className="text-gray-500 text-sm">
+                    <span className="text-white font-semibold">Require Login</span>
+                    <p className="text-white/50 text-sm">
                       Make the app private - users must create an account
                     </p>
                   </div>
@@ -2252,11 +2241,11 @@ const AdminDashboard: React.FC = () => {
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                    className="w-5 h-5 rounded border-white/20 text-emerald-400 focus:ring-emerald-500"
                   />
                   <div>
-                    <span className="text-gray-800 font-semibold">Maintenance Mode</span>
-                    <p className="text-gray-500 text-sm">
+                    <span className="text-white font-semibold">Maintenance Mode</span>
+                    <p className="text-white/50 text-sm">
                       Temporarily disable public access for maintenance
                     </p>
                   </div>
@@ -2265,111 +2254,111 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Tier Limits */}
-            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-purple-200 shadow-xl">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-purple-600" />
+            <div className="bg-white/[0.03] backdrop-blur-sm p-6 rounded-2xl border border-white/[0.08] shadow-xl">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-emerald-400" />
                 Tier Limits
               </h3>
 
               <div className="space-y-6">
                 {/* Free Tier */}
-                <div className="bg-gradient-to-br from-gray-50 to-slate-50 p-4 rounded-xl border border-gray-200">
-                  <h4 className="text-gray-800 font-semibold mb-3">Free Tier</h4>
+                <div className="bg-white/[0.03] p-4 rounded-xl border border-white/[0.08]">
+                  <h4 className="text-white font-semibold mb-3">Free Tier</h4>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-gray-600 text-sm">Quotes per user</label>
+                      <label className="text-white/60 text-sm">Quotes per user</label>
                       <input
                         type="number"
                         defaultValue={3}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                        className="w-full bg-[#1a1a2e] border border-white/[0.08] rounded-xl px-4 py-2 text-white mt-1 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                       />
                     </div>
                     <div>
-                      <label className="text-gray-600 text-sm">Quote validity (days)</label>
+                      <label className="text-white/60 text-sm">Quote validity (days)</label>
                       <input
                         type="number"
                         defaultValue={30}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                        className="w-full bg-[#1a1a2e] border border-white/[0.08] rounded-xl px-4 py-2 text-white mt-1 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Semi-Premium Tier */}
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-200">
-                  <h4 className="text-gray-800 font-semibold mb-3">Semi-Premium Tier</h4>
+                <div className="bg-blue-500/5 p-4 rounded-xl border border-white/[0.08]">
+                  <h4 className="text-white font-semibold mb-3">Semi-Premium Tier</h4>
                   <div className="grid md:grid-cols-3 gap-4">
                     <div>
-                      <label className="text-gray-600 text-sm">Monthly quotes</label>
+                      <label className="text-white/60 text-sm">Monthly quotes</label>
                       <input
                         type="number"
                         defaultValue={25}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                        className="w-full bg-[#1a1a2e] border border-white/[0.08] rounded-xl px-4 py-2 text-white mt-1 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                       />
                     </div>
                     <div>
-                      <label className="text-gray-600 text-sm">Saved quotes</label>
+                      <label className="text-white/60 text-sm">Saved quotes</label>
                       <input
                         type="number"
                         defaultValue={5}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                        className="w-full bg-[#1a1a2e] border border-white/[0.08] rounded-xl px-4 py-2 text-white mt-1 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                       />
                     </div>
                     <div>
-                      <label className="text-gray-600 text-sm">Price (USD/month)</label>
+                      <label className="text-white/60 text-sm">Price (USD/month)</label>
                       <input
                         type="number"
                         defaultValue={19}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                        className="w-full bg-[#1a1a2e] border border-white/[0.08] rounded-xl px-4 py-2 text-white mt-1 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Premium Tier */}
-                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-xl border border-purple-200">
-                  <h4 className="text-gray-800 font-semibold mb-3">Premium Tier</h4>
+                <div className="bg-white/[0.03] p-4 rounded-xl border border-white/[0.08]">
+                  <h4 className="text-white font-semibold mb-3">Premium Tier</h4>
                   <div className="grid md:grid-cols-3 gap-4">
                     <div>
-                      <label className="text-gray-600 text-sm">Monthly quotes</label>
+                      <label className="text-white/60 text-sm">Monthly quotes</label>
                       <input
                         type="text"
                         defaultValue="Unlimited"
                         disabled
-                        className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2 text-gray-400 mt-1"
+                        className="w-full bg-[#1a1a2e] border border-white/[0.08] rounded-xl px-4 py-2 text-white/40 mt-1"
                       />
                     </div>
                     <div>
-                      <label className="text-gray-600 text-sm">Saved quotes</label>
+                      <label className="text-white/60 text-sm">Saved quotes</label>
                       <input
                         type="text"
                         defaultValue="Unlimited"
                         disabled
-                        className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2 text-gray-400 mt-1"
+                        className="w-full bg-[#1a1a2e] border border-white/[0.08] rounded-xl px-4 py-2 text-white/40 mt-1"
                       />
                     </div>
                     <div>
-                      <label className="text-gray-600 text-sm">Price (USD/month)</label>
+                      <label className="text-white/60 text-sm">Price (USD/month)</label>
                       <input
                         type="number"
                         defaultValue={49}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                        className="w-full bg-[#1a1a2e] border border-white/[0.08] rounded-xl px-4 py-2 text-white mt-1 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                       />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <button className="mt-6 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-2 rounded-xl font-semibold shadow-lg shadow-emerald-500/25 transition-all hover:scale-105">
+              <button className="mt-6 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-2 rounded-xl font-semibold shadow-lg shadow-emerald-500/10 transition-all hover:scale-[1.02]">
                 Save Changes
               </button>
             </div>
 
             {/* Info Notice */}
-            <div className="bg-orange-50 border border-orange-200 p-4 rounded-2xl">
-              <p className="text-orange-700 text-sm">
+            <div className="bg-orange-500/5 border border-orange-500/15 p-4 rounded-2xl">
+              <p className="text-orange-400 text-sm">
                 🔧 <strong>Configuration:</strong> These settings will be stored in the{" "}
-                <code className="bg-orange-100 px-2 py-1 rounded">system_settings</code> table once
+                <code className="bg-orange-500/10 px-2 py-1 rounded">system_settings</code> table once
                 Supabase is connected.
               </p>
             </div>
