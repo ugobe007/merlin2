@@ -71,8 +71,19 @@ export default function TopNavBar({ currentStep, goToStep }: TopNavBarProps) {
         })}
       </div>
 
-      {/* Right: Step Counter */}
-      <span className="text-xs text-slate-500">Step {currentStep} of 7</span>
+      {/* Right: Step Counter + Vendor Link */}
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-slate-500">Step {currentStep} of 7</span>
+        <div className="w-px h-4 bg-white/10" />
+        <a
+          href="/vendor"
+          className="flex items-center gap-1.5 text-xs font-medium text-blue-400/70 hover:text-blue-300 transition-colors"
+          title="Vendor & EPC Partner Portal"
+        >
+          <span>🏭</span>
+          <span>For Vendors</span>
+        </a>
+      </div>
     </div>
   );
 }

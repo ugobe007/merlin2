@@ -756,6 +756,15 @@ export default function BessQuoteBuilder() {
                 >
                   Admin
                 </button>
+                <a
+                  href="/vendor"
+                  className="text-sm transition-colors no-underline"
+                  style={{ color: "rgba(96,165,250,0.5)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(96,165,250,0.9)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(96,165,250,0.5)"; }}
+                >
+                  For Vendors
+                </a>
                 {isLoggedIn && (
                   <button
                     onClick={() => {
