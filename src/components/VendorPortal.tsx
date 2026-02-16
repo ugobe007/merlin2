@@ -681,6 +681,71 @@ const VendorPortal: React.FC = () => {
               Welcome Back{currentVendor ? `, ${currentVendor.contact_name}` : ""}!
             </h2>
 
+            {/* ── HERO: NREL-Compliant Quote Builder CTA ── */}
+            <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)' }}>
+              <div className="absolute inset-0 opacity-[0.07]">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-400 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
+                <div className="absolute bottom-0 left-0 w-60 h-60 bg-blue-400 rounded-full blur-3xl translate-y-1/4 -translate-x-1/4" />
+              </div>
+              <div className="relative z-10 p-8 flex items-center gap-8">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-[11px] font-bold text-emerald-400 tracking-wider uppercase">New</span>
+                    </div>
+                    <div className="px-2.5 py-1 rounded-full bg-blue-500/15 border border-blue-500/25">
+                      <span className="text-[11px] font-semibold text-blue-300 tracking-wide">NREL ATB 2024 Validated</span>
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-black text-white mb-2">
+                    Build NREL-Compliant Quotes for Your Customers
+                  </h3>
+                  <p className="text-blue-200/70 text-sm leading-relaxed max-w-xl mb-5">
+                    Every number backed by NREL ATB 2024, IRA 2022 tax credits, and IEEE standards.
+                    Monte Carlo P10/P50/P90 risk analysis. Bank-ready exports. Your logo, our engine.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <a
+                      href="/quote-builder"
+                      className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-xl font-bold transition-colors no-underline shadow-lg shadow-emerald-500/20"
+                    >
+                      <Calculator className="w-5 h-5" />
+                      Open ProQuote™ Builder
+                    </a>
+                    <a
+                      href="/wizard"
+                      className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-5 py-3 rounded-xl font-semibold transition-colors border border-white/20 no-underline"
+                    >
+                      Quick Estimate →
+                    </a>
+                  </div>
+                </div>
+                <div className="hidden lg:flex flex-col gap-2 text-right shrink-0">
+                  <div className="flex items-center gap-2 text-xs text-blue-200/60">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>NREL ATB 2024 pricing benchmarks</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-blue-200/60">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>IRA 2022 ITC/PTC dynamic calculator</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-blue-200/60">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>IEEE/ASHRAE engineering standards</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-blue-200/60">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>10,000-iteration Monte Carlo analysis</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-blue-200/60">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>8,760-hour dispatch simulation</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Stats */}
             <div className="grid md:grid-cols-4 gap-6">
               <div className="bg-white rounded-xl shadow-lg p-6">
@@ -1064,16 +1129,21 @@ const VendorPortal: React.FC = () => {
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
               </div>
               <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-5 h-5 text-emerald-400" />
-                  <span className="text-xs font-bold text-emerald-400 tracking-wider uppercase">ProQuote™ for Vendors</span>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-[11px] font-bold text-emerald-400 tracking-wider uppercase">ProQuote™ for Vendors</span>
+                  </div>
+                  <div className="px-2.5 py-1 rounded-full bg-blue-400/15 border border-blue-400/25">
+                    <span className="text-[11px] font-semibold text-blue-300 tracking-wide">NREL ATB 2024 · IRA 2022 · IEEE</span>
+                  </div>
                 </div>
                 <h2 className="text-3xl font-black mb-3">
-                  Build Professional Proposals
+                  Build NREL-Compliant Proposals — Your Logo, Our Engine
                 </h2>
                 <p className="text-blue-200/80 text-lg mb-6 max-w-2xl">
-                  Use Merlin's TrueQuote™ engine to build bank-ready quotes for your customers —
-                  complete with Monte Carlo risk analysis, 8760 hourly modeling, and IRA 2022 tax credit optimization.
+                  Every line item traced to NREL, DOE, or IEEE sources. Monte Carlo P10/P50/P90 risk analysis,
+                  8,760-hour dispatch modeling, IRA 2022 ITC optimization — ready for bank due diligence.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <a
