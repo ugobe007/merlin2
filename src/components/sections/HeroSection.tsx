@@ -561,7 +561,7 @@ export default function HeroSection({
                   </span>
                 </div>
 
-                {/* CTA Button - Solid Amber */}
+                {/* CTA Button - Emerald Ghost */}
                 <button
                   onClick={() => {
                     try {
@@ -704,7 +704,7 @@ export default function HeroSection({
                         className="w-full h-full object-cover"
                       />
 
-                      {/* Purple overlay */}
+                      {/* Color overlay */}
                       <div
                         className="absolute inset-0"
                         style={{
@@ -959,9 +959,9 @@ export default function HeroSection({
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Real-World <span className="text-amber-400">Success Stories</span>
+              Real-World <span className="text-[#3ECF8E]">Success Stories</span>
             </h3>
-            <p className="text-purple-200/70 text-lg">
+            <p className="text-slate-400 text-lg">
               See how businesses like yours are saving with Merlin
             </p>
           </div>
@@ -986,39 +986,39 @@ export default function HeroSection({
                     alt="Car Wash Success Story"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-purple-900 via-purple-900/50 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117] via-[#0f1117]/60 to-transparent" />
 
                   {/* Savings Badge */}
-                  <div className="absolute top-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+                  <div className="absolute top-4 right-4 bg-[#3ECF8E] text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
                     $127K/yr savings
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="bg-gradient-to-br from-purple-900 to-indigo-900 p-6">
+                <div className="p-6" style={{ background: '#0f1117' }}>
                   <h4 className="text-xl font-bold text-white mb-2">Multi-Bay Car Wash</h4>
-                  <p className="text-purple-200/70 text-sm mb-4">
+                  <p className="text-slate-400 text-sm mb-4">
                     500 kW peak demand • 32% energy savings
                   </p>
 
                   <div className="grid grid-cols-3 gap-2 mb-4">
-                    <div className="text-center bg-white/10 rounded-xl py-2">
-                      <div className="text-lg font-bold text-amber-400">1.2yr</div>
-                      <div className="text-xs text-purple-300">Payback</div>
+                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="text-lg font-bold text-[#3ECF8E]">1.2yr</div>
+                      <div className="text-xs text-slate-500">Payback</div>
                     </div>
-                    <div className="text-center bg-white/10 rounded-xl py-2">
-                      <div className="text-lg font-bold text-cyan-400">840%</div>
-                      <div className="text-xs text-purple-300">ROI</div>
+                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="text-lg font-bold text-[#3ECF8E]">840%</div>
+                      <div className="text-xs text-slate-500">ROI</div>
                     </div>
-                    <div className="text-center bg-white/10 rounded-xl py-2">
+                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
                       <div className="text-lg font-bold text-white">20 MWh</div>
-                      <div className="text-xs text-purple-300">System</div>
+                      <div className="text-xs text-slate-500">System</div>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-purple-300">Click for similar quote</span>
-                    <span className="text-amber-400 group-hover:translate-x-2 transition-transform">
+                    <span className="text-slate-500">Click for similar quote</span>
+                    <span className="text-[#3ECF8E] group-hover:translate-x-2 transition-transform">
                       →
                     </span>
                   </div>
@@ -1044,34 +1044,34 @@ export default function HeroSection({
                     alt="Luxury Hotel"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-purple-900 via-purple-900/50 to-transparent" />
-                  <div className="absolute top-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117] via-[#0f1117]/60 to-transparent" />
+                  <div className="absolute top-4 right-4 bg-[#3ECF8E] text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
                     $89K/yr savings
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-900 to-indigo-900 p-6">
+                <div className="p-6" style={{ background: '#0f1117' }}>
                   <h4 className="text-xl font-bold text-white mb-2">Luxury Hotel</h4>
-                  <p className="text-purple-200/70 text-sm mb-4">350 rooms • High HVAC demand</p>
+                  <p className="text-slate-400 text-sm mb-4">350 rooms • High HVAC demand</p>
 
                   <div className="grid grid-cols-3 gap-2 mb-4">
-                    <div className="text-center bg-white/10 rounded-xl py-2">
-                      <div className="text-lg font-bold text-amber-400">3.2yr</div>
-                      <div className="text-xs text-purple-300">Payback</div>
+                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="text-lg font-bold text-[#3ECF8E]">3.2yr</div>
+                      <div className="text-xs text-slate-500">Payback</div>
                     </div>
-                    <div className="text-center bg-white/10 rounded-xl py-2">
-                      <div className="text-lg font-bold text-cyan-400">312%</div>
-                      <div className="text-xs text-purple-300">ROI</div>
+                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="text-lg font-bold text-[#3ECF8E]">312%</div>
+                      <div className="text-xs text-slate-500">ROI</div>
                     </div>
-                    <div className="text-center bg-white/10 rounded-xl py-2">
+                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
                       <div className="text-lg font-bold text-white">1.5 MWh</div>
-                      <div className="text-xs text-purple-300">System</div>
+                      <div className="text-xs text-slate-500">System</div>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-purple-300">Click for similar quote</span>
-                    <span className="text-amber-400 group-hover:translate-x-2 transition-transform">
+                    <span className="text-slate-500">Click for similar quote</span>
+                    <span className="text-[#3ECF8E] group-hover:translate-x-2 transition-transform">
                       →
                     </span>
                   </div>
@@ -1097,36 +1097,36 @@ export default function HeroSection({
                     alt="EV Charging Hub"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-purple-900 via-purple-900/50 to-transparent" />
-                  <div className="absolute top-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117] via-[#0f1117]/60 to-transparent" />
+                  <div className="absolute top-4 right-4 bg-[#3ECF8E] text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
                     $215K/yr savings
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-900 to-indigo-900 p-6">
+                <div className="p-6" style={{ background: '#0f1117' }}>
                   <h4 className="text-xl font-bold text-white mb-2">EV Charging Hub</h4>
-                  <p className="text-purple-200/70 text-sm mb-4">
+                  <p className="text-slate-400 text-sm mb-4">
                     12 DCFC chargers • High demand spikes
                   </p>
 
                   <div className="grid grid-cols-3 gap-2 mb-4">
-                    <div className="text-center bg-white/10 rounded-xl py-2">
-                      <div className="text-lg font-bold text-amber-400">2.8yr</div>
-                      <div className="text-xs text-purple-300">Payback</div>
+                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="text-lg font-bold text-[#3ECF8E]">2.8yr</div>
+                      <div className="text-xs text-slate-500">Payback</div>
                     </div>
-                    <div className="text-center bg-white/10 rounded-xl py-2">
-                      <div className="text-lg font-bold text-cyan-400">428%</div>
-                      <div className="text-xs text-purple-300">ROI</div>
+                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="text-lg font-bold text-[#3ECF8E]">428%</div>
+                      <div className="text-xs text-slate-500">ROI</div>
                     </div>
-                    <div className="text-center bg-white/10 rounded-xl py-2">
+                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
                       <div className="text-lg font-bold text-white">3 MWh</div>
-                      <div className="text-xs text-purple-300">System</div>
+                      <div className="text-xs text-slate-500">System</div>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-purple-300">Click for similar quote</span>
-                    <span className="text-amber-400 group-hover:translate-x-2 transition-transform">
+                    <span className="text-slate-500">Click for similar quote</span>
+                    <span className="text-[#3ECF8E] group-hover:translate-x-2 transition-transform">
                       →
                     </span>
                   </div>
@@ -1144,7 +1144,8 @@ export default function HeroSection({
           onClick={() => setShowHowItWorks(false)}
         >
           <div
-            className="bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950 rounded-3xl max-w-2xl w-full p-8 shadow-2xl border border-purple-500/30"
+            className="rounded-3xl max-w-2xl w-full p-8 shadow-2xl"
+            style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.08)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -1154,7 +1155,7 @@ export default function HeroSection({
               </div>
               <button
                 onClick={() => setShowHowItWorks(false)}
-                className="text-purple-300 hover:text-white text-2xl"
+                className="text-slate-400 hover:text-white text-2xl"
               >
                 ×
               </button>
@@ -1162,24 +1163,24 @@ export default function HeroSection({
 
             <div className="space-y-6">
               <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#3ECF8E]/20 border border-[#3ECF8E]/30 flex items-center justify-center text-[#3ECF8E] font-bold shrink-0">
                   1
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-lg">Tell Us About Your Business</h3>
-                  <p className="text-purple-200/70">
+                  <p className="text-slate-400">
                     Answer a few quick questions about your facility, energy usage, and goals.
                   </p>
                 </div>
               </div>
 
               <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#3ECF8E]/20 border border-[#3ECF8E]/30 flex items-center justify-center text-[#3ECF8E] font-bold shrink-0">
                   2
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-lg">Merlin Analyzes Your Needs</h3>
-                  <p className="text-purple-200/70">
+                  <p className="text-slate-400">
                     Our AI uses NREL ATB 2024 pricing and DOE-aligned methodology to design the
                     optimal energy solution.
                   </p>
@@ -1187,12 +1188,12 @@ export default function HeroSection({
               </div>
 
               <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#3ECF8E]/20 border border-[#3ECF8E]/30 flex items-center justify-center text-[#3ECF8E] font-bold shrink-0">
                   3
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-lg">Get Your Custom Quote</h3>
-                  <p className="text-purple-200/70">
+                  <p className="text-slate-400">
                     Receive a detailed, bank-ready proposal with ROI projections and equipment
                     specs—all with traceable sources.
                   </p>
@@ -1200,12 +1201,12 @@ export default function HeroSection({
               </div>
 
               <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#3ECF8E]/20 border border-[#3ECF8E]/30 flex items-center justify-center text-[#3ECF8E] font-bold shrink-0">
                   4
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-lg">Start Saving Money</h3>
-                  <p className="text-purple-200/70">
+                  <p className="text-slate-400">
                     Connect with certified installers and start cutting your energy costs.
                   </p>
                 </div>
@@ -1213,7 +1214,7 @@ export default function HeroSection({
             </div>
 
             {/* Industry Compliance Statement */}
-            <div className="mt-6 pt-4 border-t border-purple-500/30">
+            <div className="mt-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <MethodologyStatement
                 variant="compact"
                 darkMode={true}
@@ -1226,7 +1227,10 @@ export default function HeroSection({
                 setShowHowItWorks(false);
                 setShowSmartWizard(true);
               }}
-              className="w-full mt-6 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-purple-900 py-4 rounded-full font-bold text-lg hover:shadow-lg hover:shadow-amber-500/30 transition-all"
+              className="w-full mt-6 py-4 rounded-full font-bold text-lg transition-all"
+              style={{ background: 'rgba(62,207,142,0.15)', border: '2px solid rgba(62,207,142,0.3)', color: '#3ECF8E' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.25)'; e.currentTarget.style.borderColor = 'rgba(62,207,142,0.5)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.15)'; e.currentTarget.style.borderColor = 'rgba(62,207,142,0.3)'; }}
             >
               🪄 Start My Free Quote →
             </button>
@@ -1241,11 +1245,12 @@ export default function HeroSection({
           onClick={() => setShowMerlinVideo(false)}
         >
           <div
-            className="bg-gradient-to-br from-slate-900 via-purple-900/90 to-indigo-950 rounded-3xl max-w-5xl w-full overflow-hidden shadow-2xl border border-purple-500/30"
+            className="rounded-3xl max-w-5xl w-full overflow-hidden shadow-2xl"
+            style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.08)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - More Compact */}
-            <div className="p-4 border-b border-purple-500/20 flex items-center justify-between">
+            <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="flex items-center gap-3">
                 <img
                   src={merlinImage}
@@ -1254,12 +1259,15 @@ export default function HeroSection({
                 />
                 <div>
                   <h2 className="text-xl font-bold text-white">The Power of Merlin AI</h2>
-                  <p className="text-purple-300/60 text-xs">Your energy savings journey</p>
+                  <p className="text-slate-500 text-xs">Your energy savings journey</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowMerlinVideo(false)}
-                className="w-8 h-8 bg-purple-800/50 hover:bg-purple-700/50 rounded-full flex items-center justify-center text-white text-lg transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-lg transition-colors"
+                style={{ background: 'rgba(255,255,255,0.06)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
               >
                 ×
               </button>
@@ -1271,9 +1279,9 @@ export default function HeroSection({
               <div className="relative mb-8">
                 {/* Connection Line - Animated */}
                 <div className="absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2 z-0 hidden md:block">
-                  <div className="absolute inset-0 bg-purple-900 rounded-full" />
+                  <div className="absolute inset-0 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }} />
                   <div
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 via-amber-500 to-emerald-500 rounded-full"
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 via-[#3ECF8E] to-emerald-500 rounded-full"
                     style={{
                       animation: "flowLine 3s ease-in-out infinite",
                       width: "100%",
@@ -1285,11 +1293,11 @@ export default function HeroSection({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
                   {/* STAGE 1: YOUR INPUTS */}
                   <div
-                    className="bg-gradient-to-br from-purple-800/60 to-purple-900/60 backdrop-blur-xl rounded-2xl p-5 border border-purple-500/40 transform transition-all hover:scale-[1.02]"
-                    style={{ animation: "slideInLeft 0.5s ease-out" }}
+                    className="backdrop-blur-xl rounded-2xl p-5 transform transition-all hover:scale-[1.02]"
+                    style={{ animation: "slideInLeft 0.5s ease-out", background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
                   >
                     <div className="text-center mb-4">
-                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-purple-600/50 mb-3">
+                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-3" style={{ background: 'rgba(255,255,255,0.06)' }}>
                         <span className="text-3xl">📊</span>
                       </div>
                       <h3 className="text-lg font-bold text-white">Your Inputs</h3>
@@ -1298,34 +1306,34 @@ export default function HeroSection({
                     {/* Animated Input Items */}
                     <div className="space-y-2">
                       <div
-                        className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg"
-                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.2s both" }}
+                        className="flex items-center gap-2 p-2 rounded-lg"
+                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.2s both", background: 'rgba(255,255,255,0.04)' }}
                       >
                         <span className="text-lg">🏢</span>
                         <div>
-                          <div className="text-xs text-purple-300">Industry</div>
+                          <div className="text-xs text-slate-500">Industry</div>
                           <div className="text-sm text-white font-medium">Hotel • 350 rooms</div>
                         </div>
                       </div>
                       <div
-                        className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg"
-                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.4s both" }}
+                        className="flex items-center gap-2 p-2 rounded-lg"
+                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.4s both", background: 'rgba(255,255,255,0.04)' }}
                       >
                         <span className="text-lg">📍</span>
                         <div>
-                          <div className="text-xs text-purple-300">Location</div>
+                          <div className="text-xs text-slate-500">Location</div>
                           <div className="text-sm text-white font-medium">
                             California • $0.24/kWh
                           </div>
                         </div>
                       </div>
                       <div
-                        className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg"
-                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.6s both" }}
+                        className="flex items-center gap-2 p-2 rounded-lg"
+                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.6s both", background: 'rgba(255,255,255,0.04)' }}
                       >
                         <span className="text-lg">🎯</span>
                         <div>
-                          <div className="text-xs text-purple-300">Goals</div>
+                          <div className="text-xs text-slate-500">Goals</div>
                           <div className="text-sm text-white font-medium">
                             Cost savings + EV charging
                           </div>
@@ -1334,22 +1342,24 @@ export default function HeroSection({
                     </div>
 
                     {/* Arrow indicator (mobile) */}
-                    <div className="md:hidden flex justify-center mt-4 text-purple-400 animate-bounce">
+                    <div className="md:hidden flex justify-center mt-4 text-slate-400 animate-bounce">
                       <span className="text-2xl">↓</span>
                     </div>
                   </div>
 
                   {/* STAGE 2: MERLIN MAGIC - Central, highlighted */}
                   <div
-                    className="bg-gradient-to-br from-amber-500/20 via-amber-600/15 to-orange-600/20 backdrop-blur-xl rounded-2xl p-5 border-2 border-amber-500/50 transform transition-all hover:scale-[1.02] relative"
+                    className="backdrop-blur-xl rounded-2xl p-5 transform transition-all hover:scale-[1.02] relative"
                     style={{
                       animation: "pulseGlow 2s ease-in-out infinite",
-                      boxShadow: "0 0 40px rgba(251,191,36,0.2)",
+                      background: 'rgba(62,207,142,0.06)',
+                      border: '2px solid rgba(62,207,142,0.25)',
+                      boxShadow: "0 0 40px rgba(62,207,142,0.1)",
                     }}
                   >
                     {/* Processing Badge */}
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-purple-900 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                      <div className="w-2 h-2 bg-purple-900 rounded-full animate-pulse" />
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3ECF8E] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
                       AI Processing
                     </div>
 
@@ -1380,25 +1390,25 @@ export default function HeroSection({
                           🔮
                         </div>
                       </div>
-                      <h3 className="text-lg font-bold text-amber-400 mt-2">Merlin Analyzes</h3>
+                      <h3 className="text-lg font-bold text-[#3ECF8E] mt-2">Merlin Analyzes</h3>
                     </div>
 
                     {/* Processing Indicators */}
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 p-2 bg-purple-950/40 rounded-lg">
-                        <div className="w-4 h-4 bg-emerald-400 rounded-full animate-pulse" />
+                      <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                        <div className="w-4 h-4 bg-[#3ECF8E] rounded-full animate-pulse" />
                         <span className="text-xs text-white">Industry power profile matched</span>
                       </div>
-                      <div className="flex items-center gap-2 p-2 bg-purple-950/40 rounded-lg">
+                      <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
                         <div
-                          className="w-4 h-4 bg-cyan-400 rounded-full animate-pulse"
+                          className="w-4 h-4 bg-[#3ECF8E] rounded-full animate-pulse"
                           style={{ animationDelay: "0.2s" }}
                         />
                         <span className="text-xs text-white">NREL ATB 2024 pricing applied</span>
                       </div>
-                      <div className="flex items-center gap-2 p-2 bg-purple-950/40 rounded-lg">
+                      <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
                         <div
-                          className="w-4 h-4 bg-amber-400 rounded-full animate-pulse"
+                          className="w-4 h-4 bg-[#3ECF8E] rounded-full animate-pulse"
                           style={{ animationDelay: "0.4s" }}
                         />
                         <span className="text-xs text-white">Optimal configuration found!</span>
@@ -1406,7 +1416,7 @@ export default function HeroSection({
                     </div>
 
                     {/* Arrow indicator (mobile) */}
-                    <div className="md:hidden flex justify-center mt-4 text-amber-400 animate-bounce">
+                    <div className="md:hidden flex justify-center mt-4 text-[#3ECF8E] animate-bounce">
                       <span className="text-2xl">↓</span>
                     </div>
                   </div>
@@ -1434,24 +1444,24 @@ export default function HeroSection({
 
                     {/* BIG SAVINGS NUMBERS - Animated counter effect */}
                     <div className="space-y-3 relative z-10">
-                      <div className="text-center p-3 bg-purple-950/50 rounded-xl">
+                      <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
                         <div
-                          className="text-3xl md:text-4xl font-black text-amber-400"
-                          style={{ textShadow: "0 0 20px rgba(251,191,36,0.5)" }}
+                          className="text-3xl md:text-4xl font-black text-[#3ECF8E]"
+                          style={{ textShadow: "0 0 20px rgba(62,207,142,0.3)" }}
                         >
                           $127,500
                         </div>
-                        <div className="text-xs text-emerald-300/80">Annual Savings</div>
+                        <div className="text-xs text-slate-400">Annual Savings</div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="text-center p-2 bg-purple-950/50 rounded-lg">
-                          <div className="text-xl font-bold text-purple-300">2.1 yrs</div>
-                          <div className="text-xs text-purple-300/60">Payback</div>
+                        <div className="text-center p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                          <div className="text-xl font-bold text-white">2.1 yrs</div>
+                          <div className="text-xs text-slate-500">Payback</div>
                         </div>
-                        <div className="text-center p-2 bg-purple-950/50 rounded-lg">
-                          <div className="text-xl font-bold text-cyan-400">485%</div>
-                          <div className="text-xs text-cyan-300/60">25-yr ROI</div>
+                        <div className="text-center p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                          <div className="text-xl font-bold text-[#3ECF8E]">485%</div>
+                          <div className="text-xs text-slate-500">25-yr ROI</div>
                         </div>
                       </div>
 
@@ -1465,31 +1475,31 @@ export default function HeroSection({
               </div>
 
               {/* System Configuration Preview */}
-              <div className="bg-purple-900/40 backdrop-blur-sm rounded-2xl p-4 mb-6 border border-purple-500/20">
+              <div className="backdrop-blur-sm rounded-2xl p-4 mb-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-4">
                     <div className="text-center">
                       <div className="text-2xl mb-1">🔋</div>
                       <div className="text-lg font-bold text-white">2.0 MW</div>
-                      <div className="text-xs text-purple-300/60">Battery</div>
+                      <div className="text-xs text-slate-500">Battery</div>
                     </div>
-                    <div className="text-purple-400">+</div>
+                    <div className="text-slate-600">+</div>
                     <div className="text-center">
                       <div className="text-2xl mb-1">☀️</div>
                       <div className="text-lg font-bold text-white">500 kWp</div>
-                      <div className="text-xs text-purple-300/60">Solar</div>
+                      <div className="text-xs text-slate-500">Solar</div>
                     </div>
-                    <div className="text-purple-400">+</div>
+                    <div className="text-slate-600">+</div>
                     <div className="text-center">
                       <div className="text-2xl mb-1">⚡</div>
                       <div className="text-lg font-bold text-white">8 Ports</div>
-                      <div className="text-xs text-purple-300/60">EV Charging</div>
+                      <div className="text-xs text-slate-500">EV Charging</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-purple-300/60">Net System Cost</div>
+                    <div className="text-xs text-slate-500">Net System Cost</div>
                     <div className="text-xl font-bold text-white">$485,000</div>
-                    <div className="text-xs text-emerald-400">After 30% ITC</div>
+                    <div className="text-xs text-[#3ECF8E]">After 30% ITC</div>
                   </div>
                 </div>
               </div>
@@ -1500,13 +1510,16 @@ export default function HeroSection({
                   setShowMerlinVideo(false);
                   setShowSmartWizard(true);
                 }}
-                className="w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-purple-900 py-5 rounded-full font-bold text-xl hover:shadow-xl hover:shadow-amber-500/40 transition-all flex items-center justify-center gap-3 group"
+                className="w-full py-5 rounded-full font-bold text-xl transition-all flex items-center justify-center gap-3 group"
+                style={{ background: 'rgba(62,207,142,0.15)', border: '2px solid rgba(62,207,142,0.3)', color: '#3ECF8E' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.25)'; e.currentTarget.style.borderColor = 'rgba(62,207,142,0.5)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.15)'; e.currentTarget.style.borderColor = 'rgba(62,207,142,0.3)'; }}
               >
                 <span className="text-2xl group-hover:animate-bounce">🪄</span>
                 <span>Get Your Personalized Quote</span>
                 <span className="group-hover:translate-x-2 transition-transform">→</span>
               </button>
-              <p className="text-center text-purple-300/40 text-sm mt-3">
+              <p className="text-center text-slate-500 text-sm mt-3">
                 No signup required • 5 easy steps
               </p>
             </div>
@@ -1521,7 +1534,8 @@ export default function HeroSection({
           onClick={() => setShowUseCaseDetail(false)}
         >
           <div
-            className="bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-purple-500/30"
+            className="rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl"
+            style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.08)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Hero Image */}
@@ -1531,7 +1545,7 @@ export default function HeroSection({
                 alt={selectedHeroUseCase.name}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-purple-900 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117] to-transparent" />
               <button
                 onClick={() => setShowUseCaseDetail(false)}
                 className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white text-xl transition-colors"
@@ -1539,7 +1553,7 @@ export default function HeroSection({
                 ×
               </button>
               <div className="absolute bottom-4 left-6">
-                <span className="bg-amber-400 text-purple-900 px-3 py-1 rounded-full text-sm font-bold">
+                <span className="bg-[#3ECF8E] text-white px-3 py-1 rounded-full text-sm font-bold">
                   {selectedHeroUseCase.systemSize}
                 </span>
               </div>
@@ -1551,28 +1565,28 @@ export default function HeroSection({
 
               {/* Financial Metrics */}
               <div className="grid grid-cols-3 gap-6 mb-8">
-                <div className="bg-purple-800/30 rounded-2xl p-5 text-center border border-purple-500/20">
-                  <div className="text-4xl font-black text-amber-400 mb-1">
+                <div className="rounded-2xl p-5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="text-4xl font-black text-[#3ECF8E] mb-1">
                     {selectedHeroUseCase.savings}
                   </div>
-                  <div className="text-sm text-purple-300/70">Annual Savings</div>
+                  <div className="text-sm text-slate-500">Annual Savings</div>
                 </div>
-                <div className="bg-purple-800/30 rounded-2xl p-5 text-center border border-purple-500/20">
-                  <div className="text-4xl font-black text-purple-300 mb-1">
+                <div className="rounded-2xl p-5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="text-4xl font-black text-white mb-1">
                     {selectedHeroUseCase.payback}
                   </div>
-                  <div className="text-sm text-purple-300/70">Payback Period</div>
+                  <div className="text-sm text-slate-500">Payback Period</div>
                 </div>
-                <div className="bg-purple-800/30 rounded-2xl p-5 text-center border border-purple-500/20">
-                  <div className="text-4xl font-black text-cyan-400 mb-1">
+                <div className="rounded-2xl p-5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="text-4xl font-black text-[#3ECF8E] mb-1">
                     {selectedHeroUseCase.roi}
                   </div>
-                  <div className="text-sm text-purple-300/70">25-Year ROI</div>
+                  <div className="text-sm text-slate-500">25-Year ROI</div>
                 </div>
               </div>
 
               {/* Description */}
-              <p className="text-purple-200/80 mb-8 leading-relaxed">
+              <p className="text-slate-400 mb-8 leading-relaxed">
                 This {selectedHeroUseCase.name.toLowerCase()} installation demonstrates the power of
                 battery storage for energy cost reduction. With a {selectedHeroUseCase.systemSize}{" "}
                 system, businesses in this sector typically see dramatic reductions in peak demand
@@ -1586,13 +1600,19 @@ export default function HeroSection({
                     setShowUseCaseDetail(false);
                     setShowSmartWizard(true);
                   }}
-                  className="flex-1 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-purple-900 py-4 rounded-full font-bold text-lg hover:shadow-lg hover:shadow-amber-500/30 transition-all"
+                  className="flex-1 py-4 rounded-full font-bold text-lg transition-all"
+                  style={{ background: 'rgba(62,207,142,0.15)', border: '2px solid rgba(62,207,142,0.3)', color: '#3ECF8E' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.25)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.15)'; }}
                 >
                   🪄 Get a Quote Like This
                 </button>
                 <button
                   onClick={() => setShowUseCaseDetail(false)}
-                  className="px-6 py-4 border border-purple-400/50 text-purple-200 rounded-full font-semibold hover:bg-purple-800/30 transition-all"
+                  className="px-6 py-4 rounded-full font-semibold text-slate-400 transition-all"
+                  style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   Close
                 </button>
