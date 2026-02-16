@@ -16,7 +16,7 @@ import { authService } from "./authService";
 // Types
 // ============================================================================
 
-export type PricingTier = "free" | "professional" | "enterprise_pro" | "business";
+export type PricingTier = "starter" | "pro" | "advanced" | "business";
 
 export interface FeatureAccess {
   available: boolean;
@@ -65,14 +65,15 @@ export interface UserCapabilities {
 // ============================================================================
 
 const TIER_CAPABILITIES: Record<PricingTier, UserCapabilities> = {
-  free: {
-    quotesPerMonth: 3,
-    maxProjects: 2,
+  // $29/mo — Professional BESS quotes + basic financials
+  starter: {
+    quotesPerMonth: 10,
+    maxProjects: 10,
     maxTeamMembers: 1,
-    maxPowerProfileLevel: 3, // Can only see levels 1-3
+    maxPowerProfileLevel: 4, // Levels 1-4
     features: {
       basicEstimate: true,
-      detailedEquipment: false,
+      detailedEquipment: true,
       equipmentAlternatives: false,
       simpleROI: true,
       npvIrr: false,
@@ -82,7 +83,7 @@ const TIER_CAPABILITIES: Record<PricingTier, UserCapabilities> = {
       aiRecommendations: false, // Teaser only
       marketIntelligence: false,
       pdfExport: true,
-      pdfWatermark: true, // Watermarked with Merlin branding
+      pdfWatermark: true, // Merlin branded
       wordExcelExport: false,
       whiteLabelBranding: false,
       customLogo: false,
@@ -90,15 +91,16 @@ const TIER_CAPABILITIES: Record<PricingTier, UserCapabilities> = {
       vendorQuoteManagement: false,
       apiAccess: false,
       dedicatedSupport: false,
-      officialQuoteRequest: true, // This is the lead gen hook!
+      officialQuoteRequest: true, // Lead gen hook
     },
   },
 
-  professional: {
+  // $49/mo — Advanced analytics + professional deliverables
+  pro: {
     quotesPerMonth: -1, // Unlimited
-    maxProjects: 25,
+    maxProjects: 50,
     maxTeamMembers: 1,
-    maxPowerProfileLevel: 6, // Can see levels 1-6
+    maxPowerProfileLevel: 6, // Levels 1-6
     features: {
       basicEstimate: true,
       detailedEquipment: true,
@@ -106,7 +108,7 @@ const TIER_CAPABILITIES: Record<PricingTier, UserCapabilities> = {
       simpleROI: true,
       npvIrr: true,
       dcfAnalysis: true,
-      sensitivityAnalysis: false,
+      sensitivityAnalysis: true,
       financingCalculator: true,
       aiRecommendations: true,
       marketIntelligence: false,
@@ -123,7 +125,8 @@ const TIER_CAPABILITIES: Record<PricingTier, UserCapabilities> = {
     },
   },
 
-  enterprise_pro: {
+  // $99/mo — Full platform with Monte Carlo, 8760, market intel, team workspace
+  advanced: {
     quotesPerMonth: -1, // Unlimited
     maxProjects: -1, // Unlimited
     maxTeamMembers: 5,
@@ -146,12 +149,13 @@ const TIER_CAPABILITIES: Record<PricingTier, UserCapabilities> = {
       customLogo: true,
       teamCollaboration: true,
       vendorQuoteManagement: true,
-      apiAccess: false,
+      apiAccess: true, // 1,000 calls/mo
       dedicatedSupport: false,
-      officialQuoteRequest: true, // Dedicated support
+      officialQuoteRequest: true,
     },
   },
 
+  // Custom — Enterprise-grade with unlimited everything + SLA
   business: {
     quotesPerMonth: -1, // Unlimited
     maxProjects: -1, // Unlimited
@@ -175,7 +179,7 @@ const TIER_CAPABILITIES: Record<PricingTier, UserCapabilities> = {
       customLogo: true,
       teamCollaboration: true,
       vendorQuoteManagement: true,
-      apiAccess: true,
+      apiAccess: true, // Unlimited
       dedicatedSupport: true,
       officialQuoteRequest: true,
     },
@@ -240,14 +244,14 @@ export const POWER_PROFILE_BENEFITS: Record<
  */
 export function getCurrentUserTier(): PricingTier {
   const user = authService.getCurrentUser();
-  return (user?.tier as PricingTier) || "free";
+  return (user?.tier as PricingTier) || "starter";
 }
 
 /**
  * Get capabilities for a specific tier
  */
 export function getTierCapabilities(tier: PricingTier): UserCapabilities {
-  return TIER_CAPABILITIES[tier] || TIER_CAPABILITIES.free;
+  return TIER_CAPABILITIES[tier] || TIER_CAPABILITIES.starter;
 }
 
 /**
@@ -333,7 +337,7 @@ function getFeatureLevelRequirement(featureKey: keyof UserCapabilities["features
  */
 function getRequiredTierForFeature(featureKey: keyof UserCapabilities["features"]): PricingTier {
   // Find the lowest tier that has this feature
-  const tiers: PricingTier[] = ["free", "professional", "enterprise_pro", "business"];
+  const tiers: PricingTier[] = ["starter", "pro", "advanced", "business"];
 
   for (const tier of tiers) {
     if (TIER_CAPABILITIES[tier].features[featureKey]) {
@@ -350,19 +354,19 @@ function getRequiredTierForFeature(featureKey: keyof UserCapabilities["features"
 function getUpgradeMessage(featureKey: keyof UserCapabilities["features"]): string {
   const messages: Partial<Record<keyof UserCapabilities["features"], string>> = {
     npvIrr:
-      "Unlock NPV & IRR analysis with Professional plan - see the true value of your investment",
-    dcfAnalysis: "Get detailed cash flow modeling with Professional plan",
-    sensitivityAnalysis: "Run what-if scenarios with Enterprise Pro",
-    financingCalculator: "Explore financing options with Professional plan",
-    aiRecommendations: "Get AI-powered recommendations with Professional plan",
-    marketIntelligence: "Access real-time market intelligence with Enterprise Pro",
-    detailedEquipment: "See detailed equipment specs with Professional plan",
-    equipmentAlternatives: "Compare equipment alternatives with Professional plan",
-    wordExcelExport: "Export to Word & Excel with Professional plan",
-    whiteLabelBranding: "Add your branding with Enterprise Pro",
-    teamCollaboration: "Collaborate with your team on Enterprise Pro",
-    vendorQuoteManagement: "Manage vendor quotes with Enterprise Pro",
-    apiAccess: "Get API access with Business plan",
+      "Unlock NPV & IRR analysis with Pro plan — see the true value of your investment",
+    dcfAnalysis: "Get detailed cash flow modeling with Pro plan",
+    sensitivityAnalysis: "Run what-if scenarios with Pro plan",
+    financingCalculator: "Explore financing options with Pro plan",
+    aiRecommendations: "Get AI-powered recommendations with Pro plan",
+    marketIntelligence: "Access real-time market intelligence with Advanced plan",
+    detailedEquipment: "See detailed equipment specs — included in Starter",
+    equipmentAlternatives: "Compare equipment alternatives with Pro plan",
+    wordExcelExport: "Export to Word & Excel with Pro plan",
+    whiteLabelBranding: "Add your branding with Advanced plan",
+    teamCollaboration: "Collaborate with your team on Advanced plan",
+    vendorQuoteManagement: "Manage vendor quotes with Advanced plan",
+    apiAccess: "Get API access with Advanced plan",
   };
 
   return messages[featureKey] || "Upgrade to unlock this feature";
@@ -397,8 +401,8 @@ export function canSaveProject(currentProjectCount: number): FeatureAccess {
     return {
       available: false,
       reason: `You've reached your limit of ${capabilities.maxProjects} projects`,
-      upgradeMessage: "Upgrade to Professional for 25 projects, or Enterprise Pro for unlimited",
-      requiredTier: "professional",
+      upgradeMessage: "Upgrade to Pro for 50 projects, or Advanced for unlimited",
+      requiredTier: "pro",
     };
   }
 
@@ -449,7 +453,7 @@ export function getTierComparison(): {
   const current = getCurrentUserTier();
   const currentCapabilities = getTierCapabilities(current);
 
-  const tierOrder: PricingTier[] = ["free", "professional", "enterprise_pro", "business"];
+  const tierOrder: PricingTier[] = ["starter", "pro", "advanced", "business"];
   const currentIndex = tierOrder.indexOf(current);
 
   if (currentIndex >= tierOrder.length - 1) {

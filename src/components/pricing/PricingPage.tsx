@@ -27,36 +27,38 @@ const COLOR_CLASSES: Record<string, { iconBg: string; iconBorder: string; iconTe
 
 const PLANS = [
   {
-    id: 'free',
+    id: 'starter',
     name: 'Starter',
     icon: Zap,
-    monthlyPrice: 0,
-    annualPrice: 0,
+    monthlyPrice: 29,
+    annualPrice: 290,
     badge: null,
-    description: 'Perfect for exploring BESS technology and small projects.',
+    description: 'Everything you need to build professional BESS quotes and win projects.',
     color: 'slate',
     borderColor: 'border-white/[0.08]',
     badgeBg: '',
-    ctaText: 'Get Started Free',
+    ctaText: 'Start 14-Day Trial',
     ctaStyle: 'border border-white/20 text-white hover:bg-white/[0.06]',
     features: [
-      '3 quotes per month',
-      'Basic BESS sizing',
-      'Simple ROI calculations',
+      '10 quotes per month',
+      'BESS sizing & configuration',
+      'ROI & simple payback analysis',
+      'TrueQuote™ verified calculations',
       'PDF export (Merlin branded)',
-      '5 saved projects',
+      '10 saved projects',
+      'Equipment comparison tool',
       'Email support',
     ],
-    limits: { quotes: 3, projects: 5, team: 1, api: 0 },
+    limits: { quotes: 10, projects: 10, team: 1, api: 0 },
   },
   {
-    id: 'professional',
-    name: 'Professional',
+    id: 'pro',
+    name: 'Pro',
     icon: Crown,
     monthlyPrice: 49,
     annualPrice: 490,
     badge: 'Most Popular',
-    description: 'For consultants and developers who need advanced analytics.',
+    description: 'Advanced analytics and professional deliverables for consultants and developers.',
     color: 'emerald',
     borderColor: 'border-emerald-500/30',
     badgeBg: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
@@ -68,35 +70,40 @@ const PLANS = [
       'TrueQuote™ source attribution',
       'AI-powered recommendations',
       'Export to Word, Excel, PDF',
-      '25 saved projects',
+      '50 saved projects',
       'Custom logo on quotes',
+      'Sensitivity analysis',
+      'Financing calculator',
       'Priority email support',
     ],
-    limits: { quotes: -1, projects: 25, team: 1, api: 100 },
+    limits: { quotes: -1, projects: 50, team: 1, api: 100 },
   },
   {
-    id: 'enterprise_pro',
-    name: 'Enterprise',
+    id: 'advanced',
+    name: 'Advanced',
     icon: Building2,
-    monthlyPrice: 149,
-    annualPrice: 1490,
+    monthlyPrice: 99,
+    annualPrice: 990,
     badge: 'Best Value',
-    description: 'Complete platform for firms and growing enterprises.',
+    description: 'Full platform with bank-ready models, team collaboration, and market intelligence.',
     color: 'cyan',
     borderColor: 'border-cyan-500/30',
     badgeBg: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20',
-    ctaText: 'Start Enterprise Trial',
+    ctaText: 'Start Advanced Trial',
     ctaStyle: 'border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50',
     features: [
-      'Everything in Professional',
+      'Everything in Pro',
       'Monte Carlo risk analysis',
       '8760 hourly dispatch simulation',
+      'Battery degradation modeling',
+      'Dynamic ITC calculator (IRA 2022)',
       'Real-time market intelligence',
       'Team workspace (5 members)',
       'Unlimited projects',
       'White-label branding',
-      'Phone + priority support',
+      'Bank-ready financial models',
       'API access (1,000 calls/mo)',
+      'Phone + priority support',
     ],
     limits: { quotes: -1, projects: -1, team: 5, api: 1000 },
   },
@@ -107,14 +114,14 @@ const PLANS = [
     monthlyPrice: -1, // Custom
     annualPrice: -1,
     badge: null,
-    description: 'Enterprise-grade solution with dedicated support and full API.',
+    description: 'Enterprise-grade solution with dedicated support, full API, and custom integrations.',
     color: 'blue',
     borderColor: 'border-blue-500/20',
     badgeBg: '',
     ctaText: 'Contact Sales',
     ctaStyle: 'border border-blue-500/30 text-blue-400 hover:bg-blue-500/10',
     features: [
-      'Everything in Enterprise',
+      'Everything in Advanced',
       'Unlimited team members',
       'Full API access (unlimited)',
       'Vendor API integration',
@@ -191,17 +198,14 @@ export default function PricingPage() {
   };
 
   const handleSelectPlan = (planId: string) => {
-    if (planId === 'free') {
-      window.location.href = '/wizard';
-      return;
-    }
     if (planId === 'business') {
       window.location.href = 'mailto:sales@merlin.energy?subject=Business Plan Inquiry';
       return;
     }
     // Future: Stripe checkout session
+    const planNames: Record<string, string> = { starter: 'Starter', pro: 'Pro', advanced: 'Advanced' };
     localStorage.setItem('pending_upgrade', JSON.stringify({ tier: planId, billing: billingCycle }));
-    alert(`🚀 ${planId === 'professional' ? 'Professional' : 'Enterprise'} Plan\n\nStripe checkout integration launching soon!\nWe'll notify you when payments go live.`);
+    alert(`🚀 ${planNames[planId] || planId} Plan\n\nStripe checkout integration launching soon!\nWe'll notify you when payments go live.`);
   };
 
   return (
@@ -238,7 +242,7 @@ export default function PricingPage() {
             Simple, transparent pricing
           </h1>
           <p className="text-xl text-white/50 max-w-2xl mx-auto mb-8">
-            From free exploration to enterprise-grade BESS analysis.
+            Professional BESS analysis starting at $29/mo.
             Every plan includes TrueQuote™ verified calculations.
           </p>
 
@@ -389,7 +393,7 @@ export default function PricingPage() {
           {/* Comparison note */}
           <div className="text-center mt-12">
             <p className="text-sm text-white/30">
-              All plans include NREL ATB 2024 benchmarks · IRA 2022 ITC calculations · TrueQuote™ audit trails
+              All plans include NREL ATB 2024 benchmarks · IRA 2022 ITC calculations · TrueQuote™ audit trails · 14-day free trial
             </p>
           </div>
         </div>
