@@ -739,11 +739,16 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             <Building2 className="w-7 h-7 text-blue-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-base font-bold text-slate-100 tracking-tight">
-              Are you a vendor or EPC?
+            <div className="flex items-center gap-2.5 mb-1">
+              <span className="text-base font-bold text-slate-100 tracking-tight">
+                Are you a vendor or EPC?
+              </span>
+              <span className="text-[10px] font-semibold text-blue-300 px-2 py-0.5 rounded-full bg-blue-400/10 border border-blue-400/20">
+                NREL · IRA · IEEE
+              </span>
             </div>
-            <div className="text-sm text-slate-400 mt-1 leading-relaxed">
-              Build professional proposals for your customers using Merlin's TrueQuote™ engine — Monte Carlo analysis, 8760 hourly modeling, and bank-ready exports.
+            <div className="text-sm text-slate-400 leading-relaxed">
+              Build NREL-compliant proposals for your customers — every number sourced, bank-ready exports, your brand.
             </div>
           </div>
           <a
@@ -751,7 +756,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             className="flex items-center gap-2.5 px-5 py-3 rounded-xl border-2 border-blue-400/30 bg-blue-400/[0.06] hover:border-blue-400/50 hover:bg-blue-400/[0.12] transition-all shrink-0 group no-underline"
           >
             <span className="text-sm font-bold text-blue-400 tracking-wide">
-              Vendor Portal →
+              Build a Quote →
             </span>
           </a>
         </div>

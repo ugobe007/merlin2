@@ -1477,30 +1477,35 @@ export default function AdvancedQuoteBuilder({
 
               {/* ── Vendor & EPC Partners ── */}
               <div className="mt-10 mb-6">
-                <div className="rounded-xl p-6 relative overflow-hidden" style={{ background: 'rgba(59, 130, 246, 0.04)', border: '1px solid rgba(59, 130, 246, 0.15)' }}>
+                <div className="rounded-xl p-6 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(16,185,129,0.04) 100%)', border: '1px solid rgba(59, 130, 246, 0.18)' }}>
                   <div className="flex items-center gap-5">
                     <div className="shrink-0 w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: 'rgba(59, 130, 246, 0.12)' }}>
                       <Building2 className="w-7 h-7 text-blue-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-base font-bold text-white mb-1">
-                        Vendor & EPC Partner Portal
-                      </h4>
+                      <div className="flex items-center gap-2.5 mb-1">
+                        <h4 className="text-base font-bold text-white">
+                          Vendor & EPC Partners
+                        </h4>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ color: '#93c5fd', background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)' }}>
+                          NREL ATB 2024 · IRA 2022
+                        </span>
+                      </div>
                       <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                        Are you a vendor or EPC? List your products, bid on RFQs, and build professional proposals
-                        for your customers using Merlin's TrueQuote™ engine.
+                        Build NREL-compliant proposals for your customers — every line item traced to authoritative sources.
+                        List products, bid on RFQs, and export bank-ready quotes under your own brand.
                       </p>
                     </div>
                     <div className="flex flex-col gap-2 shrink-0">
                       <a
                         href="/vendor"
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all no-underline"
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all no-underline"
                         style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#60a5fa' }}
                         onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.25)'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)'; }}
                       >
-                        <Building2 className="w-4 h-4" />
-                        Open Vendor Portal →
+                        <Calculator className="w-4 h-4" />
+                        Build a Quote →
                       </a>
                     </div>
                   </div>
