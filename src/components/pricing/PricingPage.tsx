@@ -13,9 +13,11 @@ import {
   Shield, Users, FileText, BarChart3, Globe, Code,
   Star, Sparkles, ChevronRight, Battery, Sun, Wind,
   Cpu, Settings, Plug, Atom, Wrench, TrendingUp,
-  Award, CircleDollarSign, Package,
+  Award, CircleDollarSign, Package, Loader2,
 } from 'lucide-react';
 import merlinIcon from '@/assets/images/new_small_profile_.png';
+import { createCheckoutSession, getEffectiveTier } from '@/services/subscriptionService';
+import type { SubscriptionTier } from '@/types/commerce';
 
 // Tailwind safelist: static class maps prevent dynamic class purging
 const COLOR_CLASSES: Record<string, { iconBg: string; iconBorder: string; iconText: string; checkText: string }> = {
@@ -183,6 +185,8 @@ const EQUIPMENT_CATEGORIES = [
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [activeSection, setActiveSection] = useState<'plans' | 'vendor-api'>('plans');
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const currentTier = getEffectiveTier();
 
   const getPrice = (plan: typeof PLANS[0]) => {
     if (plan.monthlyPrice === -1) return null;
@@ -197,15 +201,43 @@ export default function PricingPage() {
     return plan.monthlyPrice * 12 - plan.annualPrice;
   };
 
-  const handleSelectPlan = (planId: string) => {
+  const handleSelectPlan = async (planId: string) => {
     if (planId === 'business') {
       window.location.href = 'mailto:sales@merlin.energy?subject=Business Plan Inquiry';
       return;
     }
-    // Future: Stripe checkout session
-    const planNames: Record<string, string> = { starter: 'Starter', pro: 'Pro', advanced: 'Advanced' };
-    localStorage.setItem('pending_upgrade', JSON.stringify({ tier: planId, billing: billingCycle }));
-    alert(`🚀 ${planNames[planId] || planId} Plan\n\nStripe checkout integration launching soon!\nWe'll notify you when payments go live.`);
+
+    // Already on this tier
+    if (planId === currentTier) return;
+
+    setCheckoutLoading(planId);
+
+    try {
+      // Call checkout session — uses Stripe if price IDs configured, else local trial
+      const { url, sessionId } = await createCheckoutSession(
+        planId as SubscriptionTier,
+        billingCycle,
+      );
+
+      // Store pending upgrade for post-checkout verification
+      localStorage.setItem(
+        'pending_upgrade',
+        JSON.stringify({ tier: planId, billing: billingCycle, sessionId }),
+      );
+
+      // Navigate to checkout URL (Stripe hosted page or local redirect)
+      if (url.startsWith('http')) {
+        window.location.href = url;
+      } else {
+        // Local trial activated — redirect to wizard
+        window.location.href = url;
+      }
+    } catch (err) {
+      console.error('[PricingPage] Checkout error:', err);
+      alert('Something went wrong. Please try again or contact support.');
+    } finally {
+      setCheckoutLoading(null);
+    }
   };
 
   return (
@@ -366,9 +398,25 @@ export default function PricingPage() {
                   {/* CTA */}
                   <button
                     onClick={() => handleSelectPlan(plan.id)}
-                    className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-5 ${plan.ctaStyle}`}
+                    disabled={checkoutLoading !== null || plan.id === currentTier}
+                    className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-5 ${
+                      plan.id === currentTier
+                        ? 'border border-white/20 text-white/40 cursor-default'
+                        : checkoutLoading === plan.id
+                          ? 'border border-white/20 text-white/60 cursor-wait'
+                          : plan.ctaStyle
+                    }`}
                   >
-                    {plan.ctaText}
+                    {plan.id === currentTier ? (
+                      'Current Plan'
+                    ) : checkoutLoading === plan.id ? (
+                      <span className="inline-flex items-center gap-2">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Processing…
+                      </span>
+                    ) : (
+                      plan.ctaText
+                    )}
                   </button>
 
                   {/* Features */}

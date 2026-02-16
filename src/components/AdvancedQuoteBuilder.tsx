@@ -67,6 +67,7 @@ import ProQuoteFinancialModal, { type ProQuoteFinancialData } from "@/components
 // ProQuoteRunningCalculator removed — replaced by inline cost summary strip
 import { ProjectInfoForm } from "./ProjectInfoForm";
 import { supabase } from "../services/supabaseClient";
+import { checkQuotaStandalone } from "@/hooks/useQuotaEnforcement";
 import {
   createLabelValueRow,
   createLabelValueTable,
@@ -287,6 +288,20 @@ export default function AdvancedQuoteBuilder({
         setFinancialMetrics(null);
         return;
       }
+
+      // ── QUOTA ENFORCEMENT (Feb 2026) ──
+      try {
+        const quotaCheck = checkQuotaStandalone("quote");
+        if (!quotaCheck.allowed) {
+          console.warn("[AdvancedQuoteBuilder] Quote quota exceeded:", quotaCheck);
+          // Don't block the UI — just skip recalculation silently.
+          // The existing financials remain visible. User sees upgrade prompt on next explicit action.
+          return;
+        }
+      } catch {
+        // Non-blocking — allow calculation if quota check fails
+      }
+
       setIsCalculating(true);
       try {
         // Calculate solar/wind/generator MW from kW if included
