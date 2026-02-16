@@ -6,22 +6,22 @@ interface TermsOfServiceProps {
 
 export default function TermsOfService({ onClose }: TermsOfServiceProps) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full border-4 border-purple-300 max-h-[95vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-[#0f1117] rounded-2xl shadow-2xl max-w-4xl w-full border border-white/[0.08] max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex-shrink-0">
+        <div className="flex justify-between items-center p-6 border-b border-white/[0.08] flex-shrink-0">
           <div>
-            <h2 className="text-3xl font-bold flex items-center gap-3">
-              <Scale size={32} />
+            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+              <Scale size={28} className="text-emerald-400" />
               Terms of Service
             </h2>
-            <p className="text-purple-100 mt-1">Last Updated: October 22, 2025</p>
+            <p className="text-white/40 text-sm mt-1">Last Updated: October 22, 2025</p>
           </div>
           <button
             onClick={onClose}
-            className="text-purple-200 hover:text-white transition-colors p-2 rounded-lg hover:bg-purple-700"
+            className="text-white/40 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/[0.06]"
           >
-            <X size={28} />
+            <X size={24} />
           </button>
         </div>
 
@@ -30,10 +30,10 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
           <div className="space-y-8">
             {/* Introduction */}
             <section>
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border-2 border-purple-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Agreement to Terms</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  By accessing and using Merlin Energy ("the Platform"), you agree to be bound by
+              <div className="bg-white/[0.03] rounded-xl p-6 border border-white/[0.08]">
+                <h3 className="text-lg font-semibold text-white mb-3">Agreement to Terms</h3>
+                <p className="text-white/60 leading-relaxed">
+                  By accessing and using Merlin Energy (&ldquo;the Platform&rdquo;), you agree to be bound by
                   these Terms of Service. If you do not agree to these terms, please do not use the
                   Platform.
                 </p>
@@ -42,35 +42,68 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
 
             {/* Use of Platform */}
             <section>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">1. Use of Platform</h3>
+              <h3 className="text-xl font-bold text-white mb-4">1. Use of Platform</h3>
 
               <div className="space-y-4">
-                <div className="bg-green-50 border-l-4 border-green-500 p-4">
-                  <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                    <CheckCircle size={20} className="text-green-600" />
+                <div className="bg-emerald-500/[0.06] border border-emerald-500/20 rounded-xl p-5">
+                  <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
+                    <CheckCircle size={18} className="text-emerald-400" />
                     Permitted Uses
                   </h4>
-                  <ul className="list-disc list-inside text-gray-700 space-y-1">
-                    <li>Generate BESS quotes and project estimates</li>
-                    <li>Save and manage your project portfolio</li>
-                    <li>Access market intelligence data (per your tier)</li>
-                    <li>Upload pricing data for credit rewards (optional)</li>
-                    <li>Connect with vendors through our marketplace</li>
+                  <ul className="space-y-2 text-white/60 text-sm">
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-1">•</span>
+                      Generate BESS quotes and project estimates
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-1">•</span>
+                      Save and manage your project portfolio
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-1">•</span>
+                      Access market intelligence data (per your tier)
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-1">•</span>
+                      Upload pricing data for credit rewards (optional)
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-1">•</span>
+                      Connect with vendors through our marketplace
+                    </li>
                   </ul>
                 </div>
 
-                <div className="bg-red-50 border-l-4 border-red-500 p-4">
-                  <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                    <AlertTriangle size={20} className="text-red-600" />
+                <div className="bg-red-500/[0.06] border border-red-500/20 rounded-xl p-5">
+                  <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
+                    <AlertTriangle size={18} className="text-red-400" />
                     Prohibited Uses
                   </h4>
-                  <ul className="list-disc list-inside text-gray-700 space-y-1">
-                    <li>Scraping or automated data collection</li>
-                    <li>Sharing your account credentials</li>
-                    <li>Uploading malware or malicious code</li>
-                    <li>Impersonating others or providing false information</li>
-                    <li>Violating intellectual property rights</li>
-                    <li>Attempting to access unauthorized areas</li>
+                  <ul className="space-y-2 text-white/60 text-sm">
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-400 mt-1">•</span>
+                      Scraping or automated data collection
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-400 mt-1">•</span>
+                      Sharing your account credentials
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-400 mt-1">•</span>
+                      Uploading malware or malicious code
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-400 mt-1">•</span>
+                      Impersonating others or providing false information
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-400 mt-1">•</span>
+                      Violating intellectual property rights
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-400 mt-1">•</span>
+                      Attempting to access unauthorized areas
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -78,25 +111,25 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
 
             {/* Account Responsibilities */}
             <section>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">2. Account Responsibilities</h3>
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-                <ul className="space-y-3 text-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">2. Account Responsibilities</h3>
+              <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6">
+                <ul className="space-y-3 text-white/60 text-sm">
                   <li>
-                    <strong>Accurate Information:</strong> Provide truthful and complete
+                    <strong className="text-white/80">Accurate Information:</strong> Provide truthful and complete
                     registration details
                   </li>
                   <li>
-                    <strong>Security:</strong> Maintain confidentiality of your password and account
+                    <strong className="text-white/80">Security:</strong> Maintain confidentiality of your password and account
                   </li>
                   <li>
-                    <strong>Notifications:</strong> Promptly notify us of any unauthorized access
+                    <strong className="text-white/80">Notifications:</strong> Promptly notify us of any unauthorized access
                   </li>
                   <li>
-                    <strong>Responsibility:</strong> You are responsible for all activity under your
+                    <strong className="text-white/80">Responsibility:</strong> You are responsible for all activity under your
                     account
                   </li>
                   <li>
-                    <strong>Age Requirement:</strong> You must be 18+ to use this platform
+                    <strong className="text-white/80">Age Requirement:</strong> You must be 18+ to use this platform
                   </li>
                 </ul>
               </div>
@@ -104,21 +137,21 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
 
             {/* Subscription & Billing */}
             <section>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">3. Subscription & Billing</h3>
+              <h3 className="text-xl font-bold text-white mb-4">3. Subscription & Billing</h3>
               <div className="space-y-4">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <h4 className="font-bold text-gray-900 mb-2">Free Tier</h4>
-                  <p className="text-gray-700 text-sm">
+                <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
+                  <h4 className="font-semibold text-white mb-2">Free Tier</h4>
+                  <p className="text-white/50 text-sm">
                     Access to basic features with limitations. May include ads or promotional
                     content.
                   </p>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <h4 className="font-bold text-gray-900 mb-2">Paid Tiers</h4>
-                  <ul className="text-gray-700 text-sm space-y-1">
+                <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
+                  <h4 className="font-semibold text-white mb-2">Paid Tiers</h4>
+                  <ul className="text-white/50 text-sm space-y-1">
                     <li>• Billed monthly or annually as selected</li>
                     <li>• Automatically renews unless cancelled</li>
-                    <li>• Cancel anytime - no refunds for partial periods</li>
+                    <li>• Cancel anytime — no refunds for partial periods</li>
                     <li>• Price changes require 30 days notice</li>
                   </ul>
                 </div>
@@ -127,47 +160,45 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
 
             {/* Intellectual Property */}
             <section>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">4. Intellectual Property</h3>
-              <div className="bg-gray-50 rounded-lg p-6">
-                <div className="space-y-3 text-gray-700">
-                  <p>
-                    <strong>Our IP:</strong> The Platform, including all software, algorithms,
-                    designs, and content, is owned by Merlin Energy and protected by copyright and
-                    trademark laws.
-                  </p>
-                  <p>
-                    <strong>Your Content:</strong> You retain ownership of data you upload. By using
-                    the Platform, you grant us a license to use your content to provide services and
-                    improve the platform.
-                  </p>
-                  <p>
-                    <strong>Pricing Data:</strong> Data shared for market intelligence becomes part
-                    of our anonymized database. You cannot withdraw already-shared data.
-                  </p>
-                </div>
+              <h3 className="text-xl font-bold text-white mb-4">4. Intellectual Property</h3>
+              <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6 space-y-3 text-white/60 text-sm">
+                <p>
+                  <strong className="text-white/80">Our IP:</strong> The Platform, including all software, algorithms,
+                  designs, and content, is owned by Merlin Energy and protected by copyright and
+                  trademark laws.
+                </p>
+                <p>
+                  <strong className="text-white/80">Your Content:</strong> You retain ownership of data you upload. By using
+                  the Platform, you grant us a license to use your content to provide services and
+                  improve the platform.
+                </p>
+                <p>
+                  <strong className="text-white/80">Pricing Data:</strong> Data shared for market intelligence becomes part
+                  of our anonymized database. You cannot withdraw already-shared data.
+                </p>
               </div>
             </section>
 
             {/* Vendor Marketplace */}
             <section>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">5. Vendor Marketplace Terms</h3>
-              <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6">
-                <ul className="space-y-3 text-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">5. Vendor Marketplace Terms</h3>
+              <div className="bg-amber-500/[0.06] border border-amber-500/20 rounded-xl p-6">
+                <ul className="space-y-3 text-white/60 text-sm">
                   <li>
-                    <strong>Lead Fees:</strong> Vendors pay an 8% fee on successful project closes
+                    <strong className="text-white/80">Lead Fees:</strong> Vendors pay an 8% fee on successful project closes
                   </li>
                   <li>
-                    <strong>No Guarantee:</strong> We do not guarantee leads will convert to sales
+                    <strong className="text-white/80">No Guarantee:</strong> We do not guarantee leads will convert to sales
                   </li>
                   <li>
-                    <strong>Lead Quality:</strong> We match based on criteria provided, but cannot
+                    <strong className="text-white/80">Lead Quality:</strong> We match based on criteria provided, but cannot
                     verify customer intent
                   </li>
                   <li>
-                    <strong>Payment:</strong> Fees are due within 30 days of project close
+                    <strong className="text-white/80">Payment:</strong> Fees are due within 30 days of project close
                   </li>
                   <li>
-                    <strong>Disputes:</strong> Report any issues within 14 days for investigation
+                    <strong className="text-white/80">Disputes:</strong> Report any issues within 14 days for investigation
                   </li>
                 </ul>
               </div>
@@ -175,32 +206,32 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
 
             {/* Disclaimers */}
             <section>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              <h3 className="text-xl font-bold text-white mb-4">
                 6. Disclaimers & Limitations
               </h3>
-              <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6">
-                <p className="font-bold text-red-900 mb-3 uppercase">Important Legal Notice:</p>
-                <ul className="space-y-2 text-gray-700 text-sm">
+              <div className="bg-red-500/[0.06] border border-red-500/20 rounded-xl p-6">
+                <p className="font-semibold text-red-400 mb-3 text-xs uppercase tracking-wider">Important Legal Notice</p>
+                <ul className="space-y-2 text-white/60 text-sm">
                   <li>
-                    <strong>No Warranties:</strong> Platform provided "AS IS" without warranties of
+                    <strong className="text-white/80">No Warranties:</strong> Platform provided &ldquo;AS IS&rdquo; without warranties of
                     any kind
                   </li>
                   <li>
-                    <strong>Estimates Only:</strong> Quotes are estimates, not guaranteed prices
+                    <strong className="text-white/80">Estimates Only:</strong> Quotes are estimates, not guaranteed prices
                   </li>
                   <li>
-                    <strong>No Professional Advice:</strong> Not a substitute for engineering or
+                    <strong className="text-white/80">No Professional Advice:</strong> Not a substitute for engineering or
                     legal consultation
                   </li>
                   <li>
-                    <strong>Third-Party Data:</strong> Market data may be inaccurate or outdated
+                    <strong className="text-white/80">Third-Party Data:</strong> Market data may be inaccurate or outdated
                   </li>
                   <li>
-                    <strong>Availability:</strong> We do not guarantee uninterrupted or error-free
+                    <strong className="text-white/80">Availability:</strong> We do not guarantee uninterrupted or error-free
                     service
                   </li>
                   <li>
-                    <strong>Limitation of Liability:</strong> Our liability is limited to fees paid
+                    <strong className="text-white/80">Limitation of Liability:</strong> Our liability is limited to fees paid
                     in the last 12 months
                   </li>
                 </ul>
@@ -209,18 +240,18 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
 
             {/* Termination */}
             <section>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">7. Termination</h3>
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-                <p className="text-gray-700 mb-3">
+              <h3 className="text-xl font-bold text-white mb-4">7. Termination</h3>
+              <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6">
+                <p className="text-white/60 text-sm mb-3">
                   We reserve the right to suspend or terminate accounts that:
                 </p>
-                <ul className="list-disc list-inside text-gray-700 space-y-1">
-                  <li>Violate these Terms of Service</li>
-                  <li>Engage in fraudulent activity</li>
-                  <li>Fail to pay subscription fees</li>
-                  <li>Pose security risks to the platform</li>
+                <ul className="space-y-1 text-white/50 text-sm">
+                  <li>• Violate these Terms of Service</li>
+                  <li>• Engage in fraudulent activity</li>
+                  <li>• Fail to pay subscription fees</li>
+                  <li>• Pose security risks to the platform</li>
                 </ul>
-                <p className="text-gray-700 mt-3">
+                <p className="text-white/50 text-sm mt-3">
                   Upon termination, you lose access to the platform and your data may be deleted
                   after 30 days.
                 </p>
@@ -229,8 +260,8 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
 
             {/* Indemnification */}
             <section>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">8. Indemnification</h3>
-              <p className="text-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">8. Indemnification</h3>
+              <p className="text-white/60 text-sm">
                 You agree to indemnify and hold Merlin Energy harmless from any claims, damages, or
                 expenses arising from your use of the platform, violation of these terms, or
                 infringement of third-party rights.
@@ -239,8 +270,8 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
 
             {/* Governing Law */}
             <section>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">9. Governing Law</h3>
-              <p className="text-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">9. Governing Law</h3>
+              <p className="text-white/60 text-sm">
                 These terms are governed by the laws of the State of Delaware, USA. Any disputes
                 will be resolved through binding arbitration in Delaware.
               </p>
@@ -248,8 +279,8 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
 
             {/* Changes to Terms */}
             <section>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">10. Changes to Terms</h3>
-              <p className="text-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">10. Changes to Terms</h3>
+              <p className="text-white/60 text-sm">
                 We may modify these terms at any time. Material changes will be communicated via
                 email or platform notification. Continued use after changes constitutes acceptance.
               </p>
@@ -257,15 +288,15 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
 
             {/* Contact */}
             <section>
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Questions?</h3>
-                <p className="text-gray-700 mb-4">Contact us about these terms:</p>
-                <div className="space-y-2 text-gray-700">
+              <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Questions?</h3>
+                <p className="text-white/50 text-sm mb-4">Contact us about these terms:</p>
+                <div className="space-y-2 text-white/60 text-sm">
                   <p>
-                    <strong>Email:</strong> legal@merlinenergy.com
+                    <strong className="text-white/80">Email:</strong> legal@merlinenergy.com
                   </p>
                   <p>
-                    <strong>Address:</strong> Merlin Energy Inc., Delaware, USA
+                    <strong className="text-white/80">Address:</strong> Merlin Energy Inc., Delaware, USA
                   </p>
                 </div>
               </div>
@@ -274,10 +305,10 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 border-t border-gray-200 p-4 bg-gray-50">
+        <div className="flex-shrink-0 border-t border-white/[0.08] p-4">
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:from-purple-700 hover:to-indigo-700 transition-all"
+            className="w-full border border-emerald-500/30 text-emerald-400 px-6 py-3 rounded-xl font-semibold hover:bg-emerald-500/10 transition-all"
           >
             I Agree to Terms
           </button>
