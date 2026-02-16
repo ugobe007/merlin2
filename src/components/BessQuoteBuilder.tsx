@@ -748,13 +748,39 @@ export default function BessQuoteBuilder() {
                   Admin
                 </button>
                 <a
-                  href="/vendor"
+                  href="/pricing"
                   className="text-sm transition-colors no-underline"
-                  style={{ color: "rgba(96,165,250,0.5)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(96,165,250,0.9)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(96,165,250,0.5)"; }}
+                  style={{ color: "rgba(52,211,153,0.6)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.9)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.6)"; }}
                 >
-                  For Vendors
+                  Pricing
+                </a>
+                <a
+                  href="/vendor"
+                  className="text-sm font-semibold no-underline transition-all duration-300 px-3 py-1 rounded-full border"
+                  style={{
+                    color: "rgba(56,189,248,0.85)",
+                    borderColor: "rgba(56,189,248,0.35)",
+                    textShadow: "0 0 12px rgba(56,189,248,0.4)",
+                    boxShadow: "0 0 8px rgba(56,189,248,0.08), inset 0 0 8px rgba(56,189,248,0.04)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = "rgba(56,189,248,1)";
+                    e.currentTarget.style.borderColor = "rgba(56,189,248,0.6)";
+                    e.currentTarget.style.textShadow = "0 0 20px rgba(56,189,248,0.6)";
+                    e.currentTarget.style.boxShadow = "0 0 16px rgba(56,189,248,0.2), inset 0 0 12px rgba(56,189,248,0.06)";
+                    e.currentTarget.style.background = "rgba(56,189,248,0.06)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = "rgba(56,189,248,0.85)";
+                    e.currentTarget.style.borderColor = "rgba(56,189,248,0.35)";
+                    e.currentTarget.style.textShadow = "0 0 12px rgba(56,189,248,0.4)";
+                    e.currentTarget.style.boxShadow = "0 0 8px rgba(56,189,248,0.08), inset 0 0 8px rgba(56,189,248,0.04)";
+                    e.currentTarget.style.background = "transparent";
+                  }}
+                >
+                  ⚡ For Vendors
                 </a>
                 {isLoggedIn && (
                   <button
