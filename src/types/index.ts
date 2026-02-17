@@ -49,7 +49,7 @@ export interface User {
   website?: string;
   companyWebsite?: string;
   bio?: string;
-  tier?: "free" | "professional" | "enterprise_pro" | "business";
+  tier?: "free" | "starter" | "pro" | "advanced" | "business";
   accountType?: "individual" | "company";
   companyRole?: "owner" | "admin" | "member";
   profileVisibility?: "public" | "private";

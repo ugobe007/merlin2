@@ -13,6 +13,11 @@ import {
   AlertTriangle,
   ChevronDown,
   Check,
+  Lock,
+  BarChart3,
+  LineChart,
+  FileText,
+  Bookmark,
 } from "lucide-react";
 import type {
   WizardState as WizardV7State,
@@ -23,6 +28,7 @@ import type {
 import { sanitizeQuoteForDisplay, type DisplayQuote } from "@/wizard/v7/utils/pricingSanity";
 import { buildV7ExportData } from "@/utils/buildV7ExportData";
 import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
+import { trackQuoteGenerated, peekQuotaRemaining, isUserAuthenticated, getEffectiveTier } from "@/services/subscriptionService";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
@@ -698,6 +704,133 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       )}
 
       {/* ================================================================
+          PRO TEASER PANELS — Blurred previews of advanced analytics
+          Only shown for guests / free-tier users to drive upgrades.
+      ================================================================ */}
+      {quoteReady && quote.peakLoadKW != null && getEffectiveTier() !== 'advanced' && getEffectiveTier() !== 'business' && (
+        <div className="space-y-0">
+          <div className="flex items-center gap-2 mb-3">
+            <Lock className="w-4 h-4 text-amber-400/70" />
+            <span className="text-sm font-semibold text-white/60 tracking-wide uppercase">Advanced Analytics — Pro & Above</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            {/* Monte Carlo Risk Analysis */}
+            <div className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 overflow-hidden group hover:border-amber-500/20 transition-all">
+              {/* Blurred placeholder */}
+              <div className="select-none pointer-events-none">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <BarChart3 className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <span className="text-sm font-bold text-white/80">Monte Carlo Risk</span>
+                </div>
+                <div className="space-y-2 blur-[6px]">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-white/40">P10 (conservative)</span>
+                    <span className="text-red-400 font-mono">$1.2M</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-white/40">P50 (expected)</span>
+                    <span className="text-emerald-400 font-mono">$2.4M</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-white/40">P90 (optimistic)</span>
+                    <span className="text-emerald-400 font-mono">$3.1M</span>
+                  </div>
+                  <div className="h-16 mt-2 bg-gradient-to-r from-red-500/10 via-emerald-500/10 to-emerald-500/5 rounded-lg" />
+                </div>
+              </div>
+              {/* Lock overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117]/90 via-transparent to-transparent flex items-end justify-center pb-4">
+                <a
+                  href="/pricing"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-all no-underline"
+                >
+                  <Lock className="w-3 h-3" />
+                  Unlock with Pro
+                </a>
+              </div>
+            </div>
+
+            {/* 10-Year Cash Flow Projection */}
+            <div className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 overflow-hidden group hover:border-amber-500/20 transition-all">
+              <div className="select-none pointer-events-none">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                    <LineChart className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <span className="text-sm font-bold text-white/80">10-Year Cash Flow</span>
+                </div>
+                <div className="space-y-2 blur-[6px]">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-white/40">Yr 1 net cash flow</span>
+                    <span className="text-emerald-400 font-mono">$86,400</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-white/40">Cumulative yr 5</span>
+                    <span className="text-emerald-400 font-mono">$432,000</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-white/40">Cumulative yr 10</span>
+                    <span className="text-emerald-400 font-mono">$864,000</span>
+                  </div>
+                  <div className="h-16 mt-2 bg-gradient-to-r from-cyan-500/5 via-cyan-500/10 to-emerald-500/10 rounded-lg" />
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117]/90 via-transparent to-transparent flex items-end justify-center pb-4">
+                <a
+                  href="/pricing"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-all no-underline"
+                >
+                  <Lock className="w-3 h-3" />
+                  Unlock with Pro
+                </a>
+              </div>
+            </div>
+
+            {/* Bank-Ready Financial Model */}
+            <div className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 overflow-hidden group hover:border-amber-500/20 transition-all">
+              <div className="select-none pointer-events-none">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <span className="text-sm font-bold text-white/80">Bank-Ready Model</span>
+                </div>
+                <div className="space-y-2 blur-[6px]">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-white/40">Levered IRR</span>
+                    <span className="text-emerald-400 font-mono">14.2%</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-white/40">DSCR (min)</span>
+                    <span className="text-emerald-400 font-mono">1.35x</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-white/40">MACRS benefit</span>
+                    <span className="text-emerald-400 font-mono">$285,000</span>
+                  </div>
+                  <div className="h-16 mt-2 bg-gradient-to-r from-blue-500/5 via-blue-500/10 to-indigo-500/10 rounded-lg" />
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117]/90 via-transparent to-transparent flex items-end justify-center pb-4">
+                <a
+                  href="/pricing"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-all no-underline"
+                >
+                  <Lock className="w-3 h-3" />
+                  Unlock with Pro
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================
           PROQUOTE™ UPSELL — Merlin is the salesman
       ================================================================ */}
       <div className="rounded-xl border-2 border-white/[0.08] bg-white/[0.03] p-6 hover:border-white/[0.12] transition-all">
@@ -766,7 +899,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           EXPORT / DOWNLOAD — TrueQuote™ branded exports
           Available whenever we have at least a load profile (Layer A)
       ================================================================ */}
-      {quote && quote.peakLoadKW != null && <ExportBar state={state} onTrueQuoteClick={() => setShowTrueQuoteModal(true)} />}
+      {quote && quote.peakLoadKW != null && <ExportBar state={state} onTrueQuoteClick={() => setShowFinancialModal(true)} />}
 
       {/* ================================================================
           PROQUOTE™ EXPLAINER MODAL
@@ -1032,11 +1165,26 @@ type ExportFormat = "pdf" | "word" | "excel";
 function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQuoteClick?: () => void }) {
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [quotaBlocked, setQuotaBlocked] = useState(false);
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
 
   const handleExport = useCallback(
     async (format: ExportFormat) => {
-      setExporting(format);
       setError(null);
+      setQuotaBlocked(false);
+      setShowSavePrompt(false);
+
+      // ── QUOTA CHECK: Only exports count as "delivered quotes" ──
+      const quota = peekQuotaRemaining('quote');
+      if (!quota.allowed) {
+        setQuotaBlocked(true);
+        setError(
+          `You've used all ${quota.limit} free quote exports this session. Sign up for more!`
+        );
+        return;
+      }
+
+      setExporting(format);
 
       try {
         const data = buildV7ExportData(state);
@@ -1051,6 +1199,17 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
           case "excel":
             await exportQuoteAsExcel(data);
             break;
+        }
+
+        // ✅ Track AFTER successful export — this is a "delivered quote"
+        const result = trackQuoteGenerated();
+        if (!result.allowed) {
+          console.info('[QuotaTracking] Export allowed but quota now exhausted:', result);
+        }
+
+        // ✅ Show save prompt for guests / free-tier users after export
+        if (!isUserAuthenticated()) {
+          setShowSavePrompt(true);
         }
       } catch (err) {
         console.error(`Export ${format} failed:`, err);
@@ -1132,6 +1291,31 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
           }}
         >
           {error}
+        </div>
+      )}
+
+      {/* ── SAVE PROMPT: Appears after successful export for unauthenticated users ── */}
+      {showSavePrompt && (
+        <div
+          className="mt-3 rounded-xl border border-[#3ECF8E]/25 bg-[#3ECF8E]/[0.04] p-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 flex items-center justify-center shrink-0">
+              <Bookmark className="w-4 h-4 text-[#3ECF8E]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-[#3ECF8E]">Save this quote to your account</div>
+              <div className="text-xs text-slate-400 mt-0.5">
+                Create a free account to save, revisit, and compare your BESS quotes anytime.
+              </div>
+            </div>
+            <a
+              href="/signup"
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/25 text-[#3ECF8E] text-sm font-bold hover:bg-[#3ECF8E]/20 hover:border-[#3ECF8E]/40 transition-all no-underline"
+            >
+              Sign Up Free →
+            </a>
+          </div>
         </div>
       )}
     </div>

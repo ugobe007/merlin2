@@ -11,8 +11,11 @@ import WizardV6 from "./components/wizard/v6/WizardV6";
 import WizardV7Page from "./pages/WizardV7Page"; // V7: Clean SSOT page
 import WizardVNextPage from "./pages/WizardVNextPage"; // vNext: luminous HUD scaffold
 import MetaCalculationsPage from "./pages/MetaCalculationsPage";
+import MarketIntelligencePage from "./pages/MarketIntelligencePage";
+import QuoteTemplatePage from "./pages/QuoteTemplatePage";
 import SupportFAQ from "./components/SupportFAQ";
 import PricingPage from "./components/pricing/PricingPage";
+import CheckoutCallback from "./components/pricing/CheckoutCallback";
 // import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder'; // Unused
 import { QuoteProvider } from "./contexts/QuoteContext";
 
@@ -133,9 +136,24 @@ function App() {
     return <SupportFAQ standalone />;
   }
 
+  // Access via /checkout or any route with ?checkout= — Stripe return handling
+  if (pathname === "/checkout" || urlParams.get('checkout')) {
+    return <CheckoutCallback />;
+  }
+
   // Access via /pricing - Pricing & Vendor API page
   if (pathname === "/pricing") {
     return <PricingPage />;
+  }
+
+  // Access via /market-intelligence - Subscriber market reports
+  if (pathname === "/market-intelligence" || pathname === "/market" || pathname === "/intelligence") {
+    return <MarketIntelligencePage />;
+  }
+
+  // Access via /templates or /brand-kit - Quote Template Builder
+  if (pathname === "/templates" || pathname === "/brand-kit" || pathname === "/template-builder") {
+    return <QuoteTemplatePage />;
   }
 
   // Access via /wizard or /wizard-v7 - V7 SSOT Wizard (Feb 1, 2026 - NOW THE DEFAULT)

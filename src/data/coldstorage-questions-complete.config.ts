@@ -1,7 +1,7 @@
 /**
  * Complete Cold Storage Questionnaire Configuration
  *
- * 16 questions across 4 sections.
+ * 18 questions across 4 sections.
  * Calculator: generic_ssot_v1
  *
  * Created: Feb 2026
@@ -221,6 +221,34 @@ export const coldStorageQuestionsComplete: Question[] = [
   },
 
   // ── SECTION 4: SOLAR & GOALS ──
+  {
+    id: 'roofArea',
+    type: 'slider',
+    section: 'solar',
+    title: 'Approximate building roof area?',
+    subtitle: 'Building footprint / roof space — we\'ll calculate usable solar area',
+    range: { min: 0, max: 150000, step: 1000 },
+    smartDefault: 60000,
+    unit: ' sq ft',
+    helpText: 'Don\'t worry about exact numbers — industry-standard usability factors are applied automatically',
+    validation: { required: false, min: 0, max: 150000 },
+    impactsCalculations: ['roofSolar', 'solarCapacity'],
+  },
+  {
+    id: 'canopyInterest',
+    type: 'buttons',
+    section: 'solar',
+    title: 'Interested in solar canopy over yard/loading areas?',
+    subtitle: 'Loading dock or staging area canopy solar generation',
+    options: [
+      { value: 'yes', label: 'Yes, Interested', icon: '🏗️', description: 'Generates solar + provides shade' },
+      { value: 'learn_more', label: 'Tell Me More', icon: '💡', description: 'Want to learn the benefits' },
+      { value: 'no', label: 'Not Now', icon: '❌', description: 'Roof solar only for now' },
+    ],
+    smartDefault: 'learn_more',
+    validation: { required: false },
+    impactsCalculations: ['carportSolar', 'solarCapacity'],
+  },
   {
     id: 'existingSolar',
     type: 'buttons',

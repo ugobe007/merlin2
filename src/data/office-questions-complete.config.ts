@@ -8,7 +8,7 @@
  *   1. Facility (Q1-4)    — buildingClass, squareFootage, floors, buildingAge
  *   2. Operations (Q5-9)  — occupancyType, operatingHours, hvacSystem, tenantCount, parkingGarage
  *   3. Energy (Q10-13)    — gridConnection, gridReliability, existingGenerator, demandCharges
- *   4. Solar & Goals (Q14-16) — existingSolar, primaryGoal, budgetTimeline
+ *   4. Solar & Goals (Q14-18) — roofArea, canopyInterest, existingSolar, primaryGoal, budgetTimeline
  *
  * Created: Feb 2026
  */
@@ -237,7 +237,35 @@ export const officeQuestionsComplete: Question[] = [
     impactsCalculations: ['demandChargeSavings', 'payback'],
   },
 
-  // ── SECTION 4: SOLAR & GOALS (Q14-Q16) ──
+  // ── SECTION 4: SOLAR & GOALS (Q14-Q18) ──
+  {
+    id: 'roofArea',
+    type: 'slider',
+    section: 'solar',
+    title: 'Approximate building roof area?',
+    subtitle: 'Building footprint / roof space — we\'ll calculate usable solar area',
+    range: { min: 0, max: 50000, step: 500 },
+    smartDefault: 15000,
+    unit: ' sq ft',
+    helpText: 'Don\'t worry about exact numbers — industry-standard usability factors are applied automatically',
+    validation: { required: false, min: 0, max: 50000 },
+    impactsCalculations: ['roofSolar', 'solarCapacity'],
+  },
+  {
+    id: 'canopyInterest',
+    type: 'buttons',
+    section: 'solar',
+    title: 'Interested in solar canopy over parking?',
+    subtitle: 'Employee parking canopy generates power and provides weather protection',
+    options: [
+      { value: 'yes', label: 'Yes, Interested', icon: '🏗️', description: 'Generates solar + provides shade' },
+      { value: 'learn_more', label: 'Tell Me More', icon: '💡', description: 'Want to learn the benefits' },
+      { value: 'no', label: 'Not Now', icon: '❌', description: 'Roof solar only for now' },
+    ],
+    smartDefault: 'learn_more',
+    validation: { required: false },
+    impactsCalculations: ['carportSolar', 'solarCapacity'],
+  },
   {
     id: 'existingSolar',
     type: 'buttons',

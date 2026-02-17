@@ -123,6 +123,7 @@ export interface QuoteResult {
   financials: {
     annualSavings: number;
     paybackYears: number;
+    roi5Year?: number;
     roi10Year: number;
     roi25Year: number;
     npv: number;

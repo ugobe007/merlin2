@@ -90,27 +90,70 @@ const FALLBACK_STATE_DATA: Record<string, { sunHours: number; capacityFactor: nu
 };
 
 // Industry-specific solar configurations
+// TrueQuote™ Sources:
+// - NREL Commercial Rooftop PV Technical Potential (2016)
+// - ICA 2024 Industry Study (car wash footprints)
+// - ASHRAE 90.1 / CBECS 2018 (building sizes)
+// - SEIA Solar Means Business Report (2024)
+//
+// KEY: typicalFootprintSqFt is the BUILDING footprint (not total site).
+//      defaultRoofUtilization is % of that footprint usable for solar.
+//      Max rooftop kW ≈ footprint × roofUtil × 15 W/sqft / 1000.
+//      canopyPotentialKW is additional solar from parking/canopy structures.
 const INDUSTRY_SOLAR_CONFIG: Record<string, {
   recommended: boolean;
   targetCoveragePercent: number;
-  defaultRoofUtilization: number;  // Renamed for clarity - only used as fallback
+  defaultRoofUtilization: number;    // % of building footprint usable for solar
+  typicalFootprintSqFt: number;      // Typical building footprint (NOT total site)
+  canopyPotentialKW: number;         // Additional solar from parking canopies/carports
   rationale: string;
 }> = {
-  hotel: { recommended: true, targetCoveragePercent: 40, defaultRoofUtilization: 0.60, rationale: 'Excellent daytime load match with guest services' },
-  car_wash: { recommended: true, targetCoveragePercent: 50, defaultRoofUtilization: 0.30, rationale: 'Peak wash hours align with solar production' },
-  data_center: { recommended: true, targetCoveragePercent: 30, defaultRoofUtilization: 0.50, rationale: 'Consistent load benefits from solar + BESS' },
-  hospital: { recommended: true, targetCoveragePercent: 25, defaultRoofUtilization: 0.40, rationale: 'Reduces grid dependence for critical facility' },
-  manufacturing: { recommended: true, targetCoveragePercent: 35, defaultRoofUtilization: 0.70, rationale: 'Large roof area, daytime production shift' },
-  retail: { recommended: true, targetCoveragePercent: 50, defaultRoofUtilization: 0.65, rationale: 'Business hours match solar production' },
-  office: { recommended: true, targetCoveragePercent: 45, defaultRoofUtilization: 0.50, rationale: 'Daytime occupancy aligns with solar' },
-  warehouse: { recommended: true, targetCoveragePercent: 60, defaultRoofUtilization: 0.80, rationale: 'Excellent roof area for maximum solar' },
-  restaurant: { recommended: true, targetCoveragePercent: 30, defaultRoofUtilization: 0.40, rationale: 'Lunch peak matches solar production' },
-  college: { recommended: true, targetCoveragePercent: 35, defaultRoofUtilization: 0.45, rationale: 'Multiple buildings, educational showcase' },
-  university: { recommended: true, targetCoveragePercent: 35, defaultRoofUtilization: 0.45, rationale: 'Multiple buildings, educational showcase' },
-  ev_charging: { recommended: true, targetCoveragePercent: 70, defaultRoofUtilization: 0.80, rationale: 'Solar + storage + EV is optimal combination' },
-  cold_storage: { recommended: true, targetCoveragePercent: 40, defaultRoofUtilization: 0.75, rationale: 'Large flat roofs, consistent load' },
-  casino: { recommended: true, targetCoveragePercent: 35, defaultRoofUtilization: 0.55, rationale: '24/7 load pairs well with BESS' },
-  apartment: { recommended: true, targetCoveragePercent: 30, defaultRoofUtilization: 0.45, rationale: 'Common area and EV charging potential' },
+  // Car Wash: 5,500 sqft bldg × 45% usable = 2,475 sqft → ~37 kW rooftop max
+  // Vineet confirmed: 30-40 kW realistic roof; canopy solar is must-have for chains
+  car_wash:      { recommended: true, targetCoveragePercent: 50, defaultRoofUtilization: 0.45, typicalFootprintSqFt: 5500,   canopyPotentialKW: 50,  rationale: 'Peak wash hours align with solar production. ⚠️ Roof limited to ~37 kW — canopy solar recommended for additional capacity' },
+  // Hotel: 20,000 sqft footprint × 35% usable (HVAC, pools, penthouses) = 7,000 sqft → ~105 kW
+  hotel:         { recommended: true, targetCoveragePercent: 40, defaultRoofUtilization: 0.35, typicalFootprintSqFt: 20000,  canopyPotentialKW: 120, rationale: 'Excellent daytime load match with guest services. Parking canopy adds capacity' },
+  // Office: 15,000 sqft footprint × 40% (multi-story, HVAC) = 6,000 sqft → ~90 kW
+  office:        { recommended: true, targetCoveragePercent: 45, defaultRoofUtilization: 0.40, typicalFootprintSqFt: 15000,  canopyPotentialKW: 100, rationale: 'Daytime occupancy aligns with solar. Multi-story limits roof area' },
+  // Data Center: 40,000 sqft × 30% (heavy HVAC, generators, switchgear) = 12,000 → ~180 kW
+  data_center:   { recommended: true, targetCoveragePercent: 30, defaultRoofUtilization: 0.30, typicalFootprintSqFt: 40000,  canopyPotentialKW: 120, rationale: 'Consistent 24/7 load benefits from solar + BESS. Roof equipment limits capacity' },
+  // Hospital: 80,000 sqft × 25% (helipad, cooling towers, exhaust stacks) = 20,000 → ~300 kW
+  hospital:      { recommended: true, targetCoveragePercent: 25, defaultRoofUtilization: 0.25, typicalFootprintSqFt: 80000,  canopyPotentialKW: 200, rationale: 'Reduces grid dependence for critical facility. Roof limited by medical equipment' },
+  // Manufacturing: 75,000 sqft × 60% (large flat, some exhaust/cranes) = 45,000 → ~675 kW
+  manufacturing: { recommended: true, targetCoveragePercent: 35, defaultRoofUtilization: 0.60, typicalFootprintSqFt: 75000,  canopyPotentialKW: 150, rationale: 'Large roof area, daytime production shift. Excellent solar candidate' },
+  // Retail: 50,000 sqft × 70% (big box, clean roofs) = 35,000 → ~525 kW
+  retail:        { recommended: true, targetCoveragePercent: 50, defaultRoofUtilization: 0.70, typicalFootprintSqFt: 50000,  canopyPotentialKW: 250, rationale: 'Business hours match solar production. Large clean roofs + parking canopy' },
+  // Warehouse: 100,000 sqft × 80% (cleanest roofs in commercial) = 80,000 → ~1,200 kW
+  warehouse:     { recommended: true, targetCoveragePercent: 60, defaultRoofUtilization: 0.80, typicalFootprintSqFt: 100000, canopyPotentialKW: 50,  rationale: 'Excellent roof area for maximum solar. Best roof-to-load ratio' },
+  // Restaurant: 3,500 sqft × 45% (kitchen exhaust, grease traps) = 1,575 → ~24 kW
+  restaurant:    { recommended: true, targetCoveragePercent: 30, defaultRoofUtilization: 0.45, typicalFootprintSqFt: 3500,   canopyPotentialKW: 15,  rationale: 'Lunch peak matches solar production. Small roof limits capacity' },
+  // College: 50,000 sqft × 40% (multiple buildings) = 20,000 → ~300 kW
+  college:       { recommended: true, targetCoveragePercent: 35, defaultRoofUtilization: 0.40, typicalFootprintSqFt: 50000,  canopyPotentialKW: 300, rationale: 'Multiple buildings, educational showcase. Large parking canopy potential' },
+  university:    { recommended: true, targetCoveragePercent: 35, defaultRoofUtilization: 0.40, typicalFootprintSqFt: 50000,  canopyPotentialKW: 300, rationale: 'Multiple buildings, educational showcase. Large parking canopy potential' },
+  // EV Charging: 2,000 sqft building × 40% = 800 → ~12 kW rooftop. Canopy is PRIMARY!
+  ev_charging:   { recommended: true, targetCoveragePercent: 70, defaultRoofUtilization: 0.40, typicalFootprintSqFt: 2000,   canopyPotentialKW: 150, rationale: 'Solar canopy over charging stalls is primary. Roof is secondary' },
+  // Cold Storage: 60,000 sqft × 75% (large flat roofs) = 45,000 → ~675 kW
+  cold_storage:  { recommended: true, targetCoveragePercent: 40, defaultRoofUtilization: 0.75, typicalFootprintSqFt: 60000,  canopyPotentialKW: 50,  rationale: 'Large flat roofs, consistent refrigeration load' },
+  // Casino: 120,000 sqft × 50% (signage, HVAC, decorative) = 60,000 → ~900 kW
+  casino:        { recommended: true, targetCoveragePercent: 35, defaultRoofUtilization: 0.50, typicalFootprintSqFt: 120000, canopyPotentialKW: 400, rationale: '24/7 load pairs well with BESS. Large parking canopy potential' },
+  // Apartment: 12,000 sqft × 30% (multi-story) = 3,600 → ~54 kW
+  apartment:     { recommended: true, targetCoveragePercent: 30, defaultRoofUtilization: 0.30, typicalFootprintSqFt: 12000,  canopyPotentialKW: 80,  rationale: 'Common area and EV charging potential. Multi-story limits roof' },
+  // Gas Station: 3,000 sqft × 55% = 1,650 → ~25 kW. Pump canopy is key!
+  gas_station:   { recommended: true, targetCoveragePercent: 40, defaultRoofUtilization: 0.55, typicalFootprintSqFt: 3000,   canopyPotentialKW: 40,  rationale: 'Pump canopy solar provides shade + power. 24/7 lighting load' },
+  // Shopping Center: 200,000 sqft × 65% = 130,000 → ~1,950 kW
+  shopping_center: { recommended: true, targetCoveragePercent: 45, defaultRoofUtilization: 0.65, typicalFootprintSqFt: 200000, canopyPotentialKW: 500, rationale: 'Massive roof + parking. Among best commercial solar candidates' },
+  // Airport: 200,000 sqft × 20% (complex roofs, security) = 40,000 → ~600 kW
+  airport:       { recommended: true, targetCoveragePercent: 20, defaultRoofUtilization: 0.20, typicalFootprintSqFt: 200000, canopyPotentialKW: 500, rationale: 'Huge parking areas for canopy solar. Complex roof limits rooftop' },
+  // Indoor Farm: 40,000 sqft × 25% (may need natural light) = 10,000 → ~150 kW
+  indoor_farm:   { recommended: true, targetCoveragePercent: 30, defaultRoofUtilization: 0.25, typicalFootprintSqFt: 40000,  canopyPotentialKW: 30,  rationale: 'May need translucent roof sections for crops. BESS helps with grow lights' },
+  // Government: 30,000 sqft × 40% = 12,000 → ~180 kW
+  government:    { recommended: true, targetCoveragePercent: 35, defaultRoofUtilization: 0.40, typicalFootprintSqFt: 30000,  canopyPotentialKW: 120, rationale: 'Federal sustainability mandates. Executive Order 14057 net-zero by 2050' },
+  // Residential: 2,000 sqft × 60% = 1,200 → ~18 kW
+  residential:   { recommended: true, targetCoveragePercent: 80, defaultRoofUtilization: 0.60, typicalFootprintSqFt: 2000,   canopyPotentialKW: 5,   rationale: 'Rooftop solar offsets most residential consumption. Carport adds capacity' },
+  // Agricultural: 20,000 sqft (barn/shed) × 70% = 14,000 → ~210 kW
+  agricultural:  { recommended: true, targetCoveragePercent: 40, defaultRoofUtilization: 0.70, typicalFootprintSqFt: 20000,  canopyPotentialKW: 50,  rationale: 'Barn/shed roofs ideal for solar. Irrigation load alignment' },
+  // Microgrid: 10,000 sqft × 50% = 5,000 → ~75 kW
+  microgrid:     { recommended: true, targetCoveragePercent: 50, defaultRoofUtilization: 0.50, typicalFootprintSqFt: 10000,  canopyPotentialKW: 50,  rationale: 'Solar essential for islanded operation. Ground mount also common' },
 };
 
 /**
@@ -136,16 +179,33 @@ function extractRoofArea(useCaseData: Record<string, any>, industry: string): nu
 
 /**
  * Extract site/facility size from useCaseData
+ * Uses industry-specific building footprint as fallback (not generic 50,000 sqft)
  */
-function extractFacilitySize(useCaseData: Record<string, any>): number {
-  return (
-    useCaseData.siteSqFt ||           // Car wash uses this
-    useCaseData.squareFootage ||      // Generic
-    useCaseData.totalSqFt ||          // Alternative
-    useCaseData.facilitySize ||       // Descriptive
-    useCaseData.buildingSize ||       // Alternative
-    50000                             // Fallback
-  );
+function extractFacilitySize(useCaseData: Record<string, any>, industry?: string): number {
+  const explicit = 
+    useCaseData.siteSqFt ||             // Generic site area
+    useCaseData.squareFootage ||        // Generic
+    useCaseData.totalSqFt ||            // Alternative
+    useCaseData.totalSiteArea ||        // Car wash uses this field name
+    useCaseData.facilitySize ||         // Descriptive
+    useCaseData.buildingSize ||         // Alternative
+    useCaseData.buildingFootprint ||    // Explicit footprint
+    useCaseData.buildingSqFt;           // Alternative
+
+  if (explicit && explicit > 0) {
+    return explicit;
+  }
+
+  // Use industry-specific building footprint as fallback
+  if (industry) {
+    const config = INDUSTRY_SOLAR_CONFIG[industry];
+    if (config?.typicalFootprintSqFt) {
+      console.log(`🏠 [solarCalculator] Using industry footprint fallback for ${industry}: ${config.typicalFootprintSqFt} sq ft`);
+      return config.typicalFootprintSqFt;
+    }
+  }
+
+  return 15000; // Conservative generic fallback (was 50,000 — caused inflated solar sizing)
 }
 
 /**
@@ -253,9 +313,11 @@ function calculateSolarInternal(
 
   // ========================================================================
   // STEP 2: Calculate MAX solar that fits on available roof
+  // Uses industry-specific building footprint constraints (Feb 2026 fix)
+  // TrueQuote™: Every number traceable to building footprint × usable %
   // ========================================================================
   const explicitRoofArea = extractRoofArea(input.useCaseData, input.industry);
-  const facilitySize = extractFacilitySize(input.useCaseData);
+  const facilitySize = extractFacilitySize(input.useCaseData, input.industry);
   
   let availableRoofSqFt: number;
   let roofSource: string;
@@ -265,14 +327,18 @@ function calculateSolarInternal(
     availableRoofSqFt = explicitRoofArea * constants.USABLE_ROOF_PERCENT;
     roofSource = `explicit roof (${explicitRoofArea} × ${constants.USABLE_ROOF_PERCENT * 100}% usable)`;
   } else {
-    // Fallback: estimate roof from facility size × industry utilization factor
-    availableRoofSqFt = facilitySize * config.defaultRoofUtilization;
-    roofSource = `estimated from site (${facilitySize} × ${config.defaultRoofUtilization * 100}%)`;
+    // Fallback: use building footprint × industry-specific roof utilization
+    // typicalFootprintSqFt = building footprint, defaultRoofUtilization = % usable for solar
+    const buildingFootprint = config.typicalFootprintSqFt || facilitySize;
+    availableRoofSqFt = buildingFootprint * config.defaultRoofUtilization;
+    roofSource = `industry footprint (${buildingFootprint.toLocaleString()} sqft × ${(config.defaultRoofUtilization * 100).toFixed(0)}% usable)`;
   }
   
-  // Calculate max solar that fits on roof
+  // Calculate max solar that fits on ROOFTOP only
   // Formula: available sq ft ÷ sq ft per kW = max kW
   const maxRoofCapacityKW = Math.round(availableRoofSqFt / constants.SQFT_PER_KW);
+  // Additional solar possible from parking canopy/carport structures
+  const canopyPotentialKW = config.canopyPotentialKW || 0;
 
   console.log(`☀️ [solarCalculator] Roof constraint calculation:`, {
     industry: input.industry,
@@ -282,25 +348,38 @@ function calculateSolarInternal(
     roofSource,
     sqftPerKw: constants.SQFT_PER_KW,
     maxRoofCapacityKW,
+    canopyPotentialKW,
+    totalPotentialKW: maxRoofCapacityKW + canopyPotentialKW,
     idealCapacityKW,
   });
 
   // ========================================================================
   // STEP 3: Determine final capacity and gap
+  // Rooftop-only is the hard constraint; canopy is additional opportunity
   // ========================================================================
   const isRoofConstrained = maxRoofCapacityKW < idealCapacityKW;
   const finalCapacityKW = Math.min(idealCapacityKW, maxRoofCapacityKW);
   const solarGapKW = isRoofConstrained ? idealCapacityKW - maxRoofCapacityKW : 0;
+  // How much of the gap can be covered by canopy solar
+  const canopyRecommendedKW = Math.min(solarGapKW, canopyPotentialKW);
 
-  // If size is less than minimum, don't recommend
+  // If rooftop is less than minimum, check if canopy brings it over threshold
   if (finalCapacityKW < constants.MIN_SIZE_KW) {
-    return buildResult(0, idealCapacityKW, maxRoofCapacityKW, solarGapKW, true, effectiveCapacityFactor, input, config, constants, stateData, 'Roof area insufficient for commercial solar');
+    if (finalCapacityKW + canopyRecommendedKW >= constants.MIN_SIZE_KW) {
+      // Canopy can make it viable — note this in the rationale
+      const totalWithCanopy = finalCapacityKW + canopyRecommendedKW;
+      return buildResult(totalWithCanopy, idealCapacityKW, maxRoofCapacityKW, solarGapKW, true, effectiveCapacityFactor, input, config, constants, stateData, `Roof area alone insufficient (${maxRoofCapacityKW} kW). Adding ${canopyRecommendedKW} kW solar canopy to reach viable system size.`);
+    }
+    return buildResult(0, idealCapacityKW, maxRoofCapacityKW, solarGapKW, true, effectiveCapacityFactor, input, config, constants, stateData, `Roof area insufficient for commercial solar (${maxRoofCapacityKW} kW max). Consider ground-mount or canopy solar.`);
   }
 
   // Build rationale
   let rationale = config.rationale;
   if (isRoofConstrained) {
-    rationale = `${config.rationale}. ⚠️ Limited to ${maxRoofCapacityKW} kW by available roof area (${Math.round(availableRoofSqFt).toLocaleString()} usable sq ft). Ideal size would be ${idealCapacityKW} kW - consider carport solar for additional ${solarGapKW} kW.`;
+    const canopyNote = canopyPotentialKW > 0
+      ? ` Solar canopy/carport can add up to ${canopyPotentialKW} kW (covering ${Math.min(solarGapKW, canopyPotentialKW)} kW of the gap).`
+      : ` Consider ground-mount solar for additional ${solarGapKW} kW.`;
+    rationale = `⚠️ Rooftop limited to ${maxRoofCapacityKW} kW (${Math.round(availableRoofSqFt).toLocaleString()} usable sq ft). Ideal would be ${idealCapacityKW} kW.${canopyNote}`;
   }
 
   return buildResult(finalCapacityKW, idealCapacityKW, maxRoofCapacityKW, solarGapKW, isRoofConstrained, effectiveCapacityFactor, input, config, constants, stateData, rationale);

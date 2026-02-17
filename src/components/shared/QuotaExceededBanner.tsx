@@ -24,7 +24,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const TIER_LABELS: Record<string, string> = {
-  starter: 'Starter',
+  starter: 'Builder',
   pro: 'Pro',
   advanced: 'Advanced',
   business: 'Business',

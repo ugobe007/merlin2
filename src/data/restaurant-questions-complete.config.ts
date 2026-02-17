@@ -1,7 +1,7 @@
 /**
  * Complete Restaurant Questionnaire Configuration
  *
- * 16 questions across 4 sections — matching gold-standard format.
+ * 18 questions across 4 sections — matching gold-standard format.
  * All question IDs align with the RESTAURANT_LOAD_V1_SSOT calculator adapter
  * in registry.ts (requiredInputs: seatingCapacity).
  *
@@ -9,7 +9,7 @@
  *   1. Facility (Q1-5)    — restaurantType, seatingCapacity, squareFootage, kitchenType, operatingHours
  *   2. Equipment (Q6-10)  — cookingEquipment, refrigeration, exhaustHood, dishwasher, barArea
  *   3. Energy (Q11-13)    — gridConnection, gridReliability, existingGenerator
- *   4. Solar & Goals (Q14-16) — existingSolar, primaryGoal, budgetTimeline
+ *   4. Solar & Goals (Q14-18) — roofArea, canopyInterest, existingSolar, primaryGoal, budgetTimeline
  *
  * Calculator mapping:
  *   restaurantType → restaurantType (direct: full-service, fast-food, cafe, casual, fine-dining, buffet, food-hall)
@@ -470,9 +470,37 @@ export const restaurantQuestionsComplete: Question[] = [
   },
 
   // ============================================================================
-  // SECTION 4: SOLAR & GOALS (Q14-Q16)
+  // SECTION 4: SOLAR & GOALS (Q14-Q18)
   // ============================================================================
 
+  {
+    id: "roofArea",
+    type: "slider",
+    section: "solar",
+    title: "Approximate building roof area?",
+    subtitle: "Building footprint / roof space — we'll calculate usable solar area",
+    range: { min: 0, max: 10000, step: 100 },
+    smartDefault: 3500,
+    unit: " sq ft",
+    helpText: "Don't worry about exact numbers — industry-standard usability factors are applied automatically",
+    validation: { required: false, min: 0, max: 10000 },
+    impactsCalculations: ["roofSolar", "solarCapacity"],
+  },
+  {
+    id: "canopyInterest",
+    type: "buttons",
+    section: "solar",
+    title: "Interested in solar canopy over patio/parking?",
+    subtitle: "Outdoor dining shade + parking area canopy solar generation",
+    options: [
+      { value: "yes", label: "Yes, Interested", icon: "🏗️", description: "Generates solar + provides shade" },
+      { value: "learn_more", label: "Tell Me More", icon: "💡", description: "Want to learn the benefits" },
+      { value: "no", label: "Not Now", icon: "❌", description: "Roof solar only for now" },
+    ],
+    smartDefault: "learn_more",
+    validation: { required: false },
+    impactsCalculations: ["carportSolar", "solarCapacity"],
+  },
   {
     id: "existingSolar",
     type: "buttons",

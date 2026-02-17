@@ -13,7 +13,7 @@ import {
   Shield, Users, FileText, BarChart3, Globe, Code,
   Star, Sparkles, ChevronRight, Battery, Sun, Wind,
   Cpu, Settings, Plug, Atom, Wrench, TrendingUp,
-  Award, CircleDollarSign, Package, Loader2,
+  Award, CircleDollarSign, Package, Loader2, User,
 } from 'lucide-react';
 import merlinIcon from '@/assets/images/new_small_profile_.png';
 import { createCheckoutSession, getEffectiveTier } from '@/services/subscriptionService';
@@ -21,6 +21,7 @@ import type { SubscriptionTier } from '@/types/commerce';
 
 // Tailwind safelist: static class maps prevent dynamic class purging
 const COLOR_CLASSES: Record<string, { iconBg: string; iconBorder: string; iconText: string; checkText: string }> = {
+  green:   { iconBg: 'bg-green-500/10',   iconBorder: 'border-green-500/20',   iconText: 'text-green-400',   checkText: 'text-green-400' },
   slate:   { iconBg: 'bg-slate-500/10',   iconBorder: 'border-slate-500/20',   iconText: 'text-slate-400',   checkText: 'text-slate-400' },
   emerald: { iconBg: 'bg-emerald-500/10', iconBorder: 'border-emerald-500/20', iconText: 'text-emerald-400', checkText: 'text-emerald-400' },
   cyan:    { iconBg: 'bg-cyan-500/10',    iconBorder: 'border-cyan-500/20',    iconText: 'text-cyan-400',    checkText: 'text-cyan-400' },
@@ -29,8 +30,32 @@ const COLOR_CLASSES: Record<string, { iconBg: string; iconBorder: string; iconTe
 
 const PLANS = [
   {
+    id: 'free',
+    name: 'Free',
+    icon: User,
+    monthlyPrice: 0,
+    annualPrice: 0,
+    badge: null,
+    description: 'Create an account to save quotes, track projects, and explore BESS sizing.',
+    color: 'green',
+    borderColor: 'border-green-500/20',
+    badgeBg: '',
+    ctaText: 'Sign Up Free',
+    ctaStyle: 'border border-green-500/30 text-green-400 hover:bg-green-500/10 hover:border-green-500/50',
+    features: [
+      '5 quote exports per month',
+      'BESS sizing & configuration',
+      'TrueQuote™ verified calculations',
+      'MagicFit tier comparison',
+      'PDF export (Merlin branded)',
+      '3 saved projects',
+      'Email support',
+    ],
+    limits: { quotes: 5, projects: 3, team: 1, api: 0 },
+  },
+  {
     id: 'starter',
-    name: 'Starter',
+    name: 'Builder',
     icon: Zap,
     monthlyPrice: 29,
     annualPrice: 290,
@@ -42,16 +67,18 @@ const PLANS = [
     ctaText: 'Start 14-Day Trial',
     ctaStyle: 'border border-white/20 text-white hover:bg-white/[0.06]',
     features: [
-      '10 quotes per month',
+      '15 quotes per month',
       'BESS sizing & configuration',
       'ROI & simple payback analysis',
       'TrueQuote™ verified calculations',
       'PDF export (Merlin branded)',
       '10 saved projects',
       'Equipment comparison tool',
+      '2 advanced financial analyses/mo ✨',
+      '2 market intelligence reports/mo ✨',
       'Email support',
     ],
-    limits: { quotes: 10, projects: 10, team: 1, api: 0 },
+    limits: { quotes: 15, projects: 10, team: 1, api: 0 },
   },
   {
     id: 'pro',
@@ -67,7 +94,7 @@ const PLANS = [
     ctaText: 'Start Pro Trial',
     ctaStyle: 'border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50',
     features: [
-      'Unlimited quotes',
+      '100 quotes per month',
       'NPV, IRR & DCF analysis',
       'TrueQuote™ source attribution',
       'AI-powered recommendations',
@@ -76,9 +103,13 @@ const PLANS = [
       'Custom logo on quotes',
       'Sensitivity analysis',
       'Financing calculator',
+      '10 advanced financial analyses/mo',
+      '10 market intelligence reports/mo',
+      'Utility rate explorer',
+      'ITC incentive calculator',
       'Priority email support',
     ],
-    limits: { quotes: -1, projects: 50, team: 1, api: 100 },
+    limits: { quotes: 100, projects: 50, team: 1, api: 100 },
   },
   {
     id: 'advanced',
@@ -204,6 +235,12 @@ export default function PricingPage() {
   const handleSelectPlan = async (planId: string) => {
     if (planId === 'business') {
       window.location.href = 'mailto:sales@merlin.energy?subject=Business Plan Inquiry';
+      return;
+    }
+
+    // Free plan → route to signup
+    if (planId === 'free') {
+      window.location.href = '/signup';
       return;
     }
 
@@ -341,7 +378,7 @@ export default function PricingPage() {
       {/* PLANS SECTION */}
       {activeSection === 'plans' && (
         <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-5">
             {PLANS.map((plan) => {
               const price = getPrice(plan);
               const savings = getAnnualSavings(plan);

@@ -1,7 +1,7 @@
 /**
  * Complete Government & Public Facilities Questionnaire Configuration
  *
- * 16 questions across 4 sections.
+ * 18 questions across 4 sections.
  * Calculator: generic_ssot_v1
  *
  * Created: Feb 2026
@@ -209,6 +209,34 @@ export const governmentQuestionsComplete: Question[] = [
   },
 
   // ── SECTION 4: SOLAR & GOALS ──
+  {
+    id: 'roofArea',
+    type: 'slider',
+    section: 'solar',
+    title: 'Approximate building roof area?',
+    subtitle: 'Building footprint / roof space — we\'ll calculate usable solar area',
+    range: { min: 0, max: 100000, step: 1000 },
+    smartDefault: 30000,
+    unit: ' sq ft',
+    helpText: 'Don\'t worry about exact numbers — industry-standard usability factors are applied automatically',
+    validation: { required: false, min: 0, max: 100000 },
+    impactsCalculations: ['roofSolar', 'solarCapacity'],
+  },
+  {
+    id: 'canopyInterest',
+    type: 'buttons',
+    section: 'solar',
+    title: 'Interested in solar canopy over public parking?',
+    subtitle: 'Public parking shade structures with solar — common for government ESG goals',
+    options: [
+      { value: 'yes', label: 'Yes, Interested', icon: '🏗️', description: 'Generates solar + provides shade' },
+      { value: 'learn_more', label: 'Tell Me More', icon: '💡', description: 'Want to learn the benefits' },
+      { value: 'no', label: 'Not Now', icon: '❌', description: 'Roof solar only for now' },
+    ],
+    smartDefault: 'learn_more',
+    validation: { required: false },
+    impactsCalculations: ['carportSolar', 'solarCapacity'],
+  },
   {
     id: 'existingSolar',
     type: 'buttons',
