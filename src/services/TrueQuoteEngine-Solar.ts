@@ -148,7 +148,7 @@ export function calculateSolarCapacity(input: SolarCapacityInput): SolarCapacity
       },
       result: roofSolarKW,
       unit: 'kW',
-      notes: `Using ${template.solarDensity} kW per sq ft (modern 400W panels)`
+      notes: `Using ${(template.solarDensity * 1000).toFixed(0)} W per sq ft installed density (NREL commercial standard, 400W panels with spacing)`
     },
     ...(includeCarport && {
       carportUsable: {

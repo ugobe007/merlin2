@@ -174,11 +174,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
     annualSavings > 0 && data.systemCost > 0
       ? ((annualSavings * 10 - data.systemCost) / data.systemCost) * 100
       : 0;
-  const roi25Year =
-    annualSavings > 0 && data.systemCost > 0
-      ? ((annualSavings * 25 - data.systemCost) / data.systemCost) * 100
-      : 0;
-  const lifetimeSavings = annualSavings * 25;
+  const lifetimeSavings = annualSavings * 10;
   const itcRate = data.financialAnalysis ? 0.3 : 0;
   const itcAmount = data.systemCost * itcRate;
   const netCost = data.systemCost - itcAmount;
@@ -741,9 +737,9 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           ...(paybackYears > 0
             ? [metricBox("Simple Payback Period", `${paybackYears.toFixed(1)} years`)]
             : []),
-          ...(roi25Year > 0 ? [metricBox("25-Year Lifetime ROI", fmtPct(roi25Year))] : []),
+          ...(roi10Year > 0 ? [metricBox("10-Year Projected ROI", fmtPct(roi10Year))] : []),
           ...(lifetimeSavings > 0
-            ? [metricBox("Projected 25-Year Savings", fmt(lifetimeSavings))]
+            ? [metricBox("Projected 10-Year Savings", fmt(lifetimeSavings))]
             : []),
           spacer(200),
 
@@ -859,49 +855,61 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           // kW contributors from TrueQuote validation
           ...(data.trueQuoteValidation?.kWContributors &&
           Object.keys(data.trueQuoteValidation.kWContributors).length > 0
-            ? [
-                bodyParagraph(
-                  "Your facility's power demand was analyzed using industry-specific load modeling. Each contributor below has been independently sized using authoritative standards."
-                ),
-                subHeading("Load Breakdown — TrueQuote™ Verified"),
-                makeTable(
-                  ["Load Component", "Peak Demand (kW)", "Share of Total"],
-                  Object.entries(data.trueQuoteValidation.kWContributors)
-                    .filter(([, kw]) => kw > 0)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([key, kw]) => {
-                      const share = data.trueQuoteValidation?.kWContributorShares?.[key];
-                      const label = key
-                        .replace(/_/g, " ")
-                        .replace(/([A-Z])/g, " $1")
-                        .replace(/^./, (s) => s.toUpperCase())
-                        .trim();
-                      return [
-                        label,
-                        `${fmtNum(Math.round(kw))} kW`,
-                        share != null ? fmtPct(share * 100) : "—",
-                      ];
-                    }),
-                  2
-                ),
-                ...(data.trueQuoteValidation.dutyCycle != null
-                  ? [
-                      spacer(80),
-                      kvRow(
-                        "Facility Duty Cycle",
-                        fmtPct(data.trueQuoteValidation.dutyCycle * 100),
-                        C.emerald
-                      ),
-                    ]
-                  : []),
-                spacer(100),
-                ...(data.trueQuoteValidation.assumptions?.length
-                  ? [
-                      subHeading("Sizing Methodology & Sources"),
-                      ...data.trueQuoteValidation.assumptions.map((a) => bullet(a)),
-                    ]
-                  : []),
-              ]
+            ? (() => {
+                // Compute total kW for share-of-total percentages (on-the-fly)
+                const contributorEntries = Object.entries(data.trueQuoteValidation!.kWContributors!)
+                  .filter(([, kw]) => kw > 0)
+                  .sort(([, a], [, b]) => b - a);
+                const totalContributorKW = contributorEntries.reduce((sum, [, kw]) => sum + kw, 0);
+
+                const items: any[] = [
+                  bodyParagraph(
+                    "Your facility's power demand was analyzed using industry-specific load modeling. Each contributor below has been independently sized using authoritative standards."
+                  ),
+                  subHeading("Load Breakdown — TrueQuote™ Verified"),
+                  makeTable(
+                    ["Load Component", "Peak Demand (kW)", "Share of Total"],
+                    contributorEntries
+                      .map(([key, kw]) => {
+                        // Compute share directly from kW values (avoids key mismatch with kWContributorShares)
+                        const sharePct = totalContributorKW > 0 ? (kw / totalContributorKW) * 100 : 0;
+                        const label = key
+                          .replace(/_/g, " ")
+                          .replace(/([A-Z])/g, " $1")
+                          .replace(/^./, (s) => s.toUpperCase())
+                          .trim();
+                        return [
+                          label,
+                          `${fmtNum(Math.round(kw))} kW`,
+                          fmtPct(sharePct),
+                        ];
+                      }),
+                    2
+                  ),
+                ];
+
+                if (data.trueQuoteValidation!.dutyCycle != null) {
+                  items.push(
+                    spacer(80),
+                    kvRow(
+                      "Facility Duty Cycle",
+                      fmtPct(data.trueQuoteValidation!.dutyCycle * 100),
+                      C.emerald
+                    ),
+                  );
+                }
+
+                items.push(spacer(100));
+
+                if (data.trueQuoteValidation!.assumptions?.length) {
+                  items.push(
+                    subHeading("Sizing Methodology & Sources"),
+                    ...data.trueQuoteValidation!.assumptions.map((a) => bullet(a)),
+                  );
+                }
+
+                return items;
+              })()
             : [
                 bodyParagraph(
                   `The BESS is sized at ${data.storageSizeMW.toFixed(2)} MW / ${data.durationHours}hr based on your facility's estimated peak demand and operational requirements.`
@@ -979,11 +987,8 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
               ...(roi10Year !== 0
                 ? [["10-Year ROI", fmtPct(roi10Year), "Net of initial investment"]]
                 : []),
-              ...(roi25Year !== 0
-                ? [["25-Year Lifetime ROI", fmtPct(roi25Year), "Full system lifespan"]]
-                : []),
               ...(lifetimeSavings > 0
-                ? [["25-Year Cumulative Savings", fmt(lifetimeSavings), "Undiscounted"]]
+                ? [["10-Year Cumulative Savings", fmt(lifetimeSavings), "Undiscounted"]]
                 : []),
               ...(data.financialAnalysis?.npv != null
                 ? [["Net Present Value (NPV)", fmt(data.financialAnalysis.npv), "8% discount rate"]]

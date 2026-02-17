@@ -10,7 +10,7 @@
 // USER SUBSCRIPTION TIERS
 // =====================================================
 
-export type SubscriptionTier = 'starter' | 'pro' | 'advanced' | 'business';
+export type SubscriptionTier = 'free' | 'starter' | 'pro' | 'advanced' | 'business';
 
 export interface SubscriptionPlan {
   id: string;
@@ -27,6 +27,8 @@ export interface SubscriptionPlan {
     teamMembers: number;
     apiCallsPerMonth: number;
     exportFormats: string[];
+    advancedCalcsPerMonth: number;   // Monte Carlo, 8760, sensitivity (teaser for Builder)
+    marketReportsPerMonth: number;   // Market intelligence reports (teaser for Builder)
   };
   badge?: string;
   highlight?: boolean;

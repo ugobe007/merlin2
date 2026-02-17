@@ -6780,6 +6780,418 @@ export function validateCarWashSolarCapacity(
   };
 }
 
+// =============================================================================
+// INDUSTRY FACILITY SOLAR CONSTRAINTS (Feb 17, 2026)
+// =============================================================================
+/**
+ * INDUSTRY_FACILITY_CONSTRAINTS — SSOT for building footprint + roof solar limits
+ *
+ * Every industry's solar sizing MUST respect physical building constraints.
+ * Max rooftop solar ≈ footprint × usableRoofPercent × SOLAR_WATTS_PER_SQFT / 1000
+ *
+ * TrueQuote™ Sources:
+ * - NREL Commercial Rooftop Solar Technical Potential (2016)
+ * - CBECS 2018 Commercial Buildings Energy Survey
+ * - ASHRAE 90.1 building size references
+ * - ICA 2024 (car wash), Uptime Institute (data center), FAA (airport)
+ * - SEIA Solar Means Business Report (2024)
+ */
+export interface FacilitySolarConstraint {
+  /** Building footprint in sq ft (NOT total floor area for multi-story) */
+  typicalFootprintSqFt: number;
+  /** Range of building footprints [min, max] */
+  footprintRange: [number, number];
+  /** % of roof usable for solar (accounts for HVAC, setbacks, obstructions) */
+  usableRoofPercent: number;
+  /** Max realistic rooftop-only solar in kW (= footprint × usable% × 15W/sqft / 1000) */
+  maxRooftopSolarKW: number;
+  /** Whether solar canopy/carport is a common option for this industry */
+  canopyApplicable: boolean;
+  /** Typical canopy area in sq ft (parking, queue areas, etc.) */
+  typicalCanopyAreaSqFt: number;
+  /** Max solar from canopy structures in kW */
+  canopyPotentialKW: number;
+  /** Total realistic solar (roof + canopy) */
+  totalRealisticSolarKW: number;
+  /** TrueQuote™ source citations */
+  sources: string[];
+  /** Notes about constraints */
+  notes: string;
+}
+
+export const SOLAR_WATTS_PER_SQFT = 15; // 15 W/sqft installed (modern 400-500W panels with spacing)
+export const CANOPY_WATTS_PER_SQFT = 12; // 12 W/sqft (carport/canopy, slightly less dense)
+
+export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstraint> = {
+  car_wash: {
+    typicalFootprintSqFt: 5500,
+    footprintRange: [4000, 7000],
+    usableRoofPercent: 0.45,
+    maxRooftopSolarKW: 37,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 3500,
+    canopyPotentialKW: 42,
+    totalRealisticSolarKW: 79,
+    sources: ['ICA 2024 Industry Study', 'Professional Carwash & Detailing Magazine', 'NREL Rooftop PV'],
+    notes: 'Vineet confirmed: 30-40 kW realistic rooftop. Canopy over vacuum/queue areas is must-have for chains.',
+  },
+  hotel: {
+    typicalFootprintSqFt: 20000,
+    footprintRange: [10000, 50000],
+    usableRoofPercent: 0.35,
+    maxRooftopSolarKW: 105,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 10000,
+    canopyPotentialKW: 120,
+    totalRealisticSolarKW: 225,
+    sources: ['ASHRAE 90.1', 'CBECS 2018', 'NREL Rooftop PV'],
+    notes: 'Multi-story reduces roof/floor ratio. HVAC, pools, elevator penthouses limit roof. Guest parking canopy common.',
+  },
+  office: {
+    typicalFootprintSqFt: 15000,
+    footprintRange: [5000, 50000],
+    usableRoofPercent: 0.40,
+    maxRooftopSolarKW: 90,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 8000,
+    canopyPotentialKW: 96,
+    totalRealisticSolarKW: 186,
+    sources: ['CBECS 2018', 'NREL Rooftop PV', 'ASHRAE 90.1'],
+    notes: 'Multi-story buildings have large floor area but limited roof. Employee parking canopy helps.',
+  },
+  data_center: {
+    typicalFootprintSqFt: 40000,
+    footprintRange: [15000, 100000],
+    usableRoofPercent: 0.30,
+    maxRooftopSolarKW: 180,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 10000,
+    canopyPotentialKW: 120,
+    totalRealisticSolarKW: 300,
+    sources: ['Uptime Institute', 'ASHRAE TC 9.9', 'NREL Rooftop PV'],
+    notes: 'Heavy HVAC units, generators, switchgear on roof. Solar covers <5% of typical load.',
+  },
+  hospital: {
+    typicalFootprintSqFt: 80000,
+    footprintRange: [30000, 200000],
+    usableRoofPercent: 0.25,
+    maxRooftopSolarKW: 300,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 15000,
+    canopyPotentialKW: 180,
+    totalRealisticSolarKW: 480,
+    sources: ['NEC 517', 'NFPA 99', 'NREL Rooftop PV'],
+    notes: 'Helipad, cooling towers, exhaust stacks, medical gas vents severely limit usable roof.',
+  },
+  manufacturing: {
+    typicalFootprintSqFt: 75000,
+    footprintRange: [20000, 200000],
+    usableRoofPercent: 0.60,
+    maxRooftopSolarKW: 675,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 12000,
+    canopyPotentialKW: 144,
+    totalRealisticSolarKW: 819,
+    sources: ['EIA MECS 2018', 'NREL Rooftop PV', 'SEIA Solar Means Business'],
+    notes: 'Large flat roofs are excellent. Some exhaust/crane systems reduce usable area.',
+  },
+  retail: {
+    typicalFootprintSqFt: 50000,
+    footprintRange: [10000, 150000],
+    usableRoofPercent: 0.70,
+    maxRooftopSolarKW: 525,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 20000,
+    canopyPotentialKW: 240,
+    totalRealisticSolarKW: 765,
+    sources: ['CBECS 2018', 'SEIA Solar Means Business 2024', 'NREL Rooftop PV'],
+    notes: 'Big box retailers have cleanest roofs. Walmart, Target, IKEA leading commercial solar.',
+  },
+  warehouse: {
+    typicalFootprintSqFt: 100000,
+    footprintRange: [30000, 500000],
+    usableRoofPercent: 0.80,
+    maxRooftopSolarKW: 1200,
+    canopyApplicable: false,
+    typicalCanopyAreaSqFt: 5000,
+    canopyPotentialKW: 60,
+    totalRealisticSolarKW: 1260,
+    sources: ['CBECS 2018', 'NREL Rooftop PV', 'Prologis Solar Portfolio'],
+    notes: 'Best roof-to-load ratio in commercial. Prologis: 500+ MW deployed on warehouse roofs.',
+  },
+  restaurant: {
+    typicalFootprintSqFt: 3500,
+    footprintRange: [1500, 8000],
+    usableRoofPercent: 0.45,
+    maxRooftopSolarKW: 24,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 1200,
+    canopyPotentialKW: 14,
+    totalRealisticSolarKW: 38,
+    sources: ['ASHRAE 90.1', 'NREL Rooftop PV'],
+    notes: 'Kitchen exhaust hoods, grease traps, walk-in cooler condensers limit roof. Patio canopy helps.',
+  },
+  gas_station: {
+    typicalFootprintSqFt: 3000,
+    footprintRange: [2000, 5000],
+    usableRoofPercent: 0.55,
+    maxRooftopSolarKW: 25,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 3000,
+    canopyPotentialKW: 36,
+    totalRealisticSolarKW: 61,
+    sources: ['EIA', 'NREL Rooftop PV'],
+    notes: 'Pump canopy is key solar opportunity. Small convenience store roof is secondary.',
+  },
+  ev_charging: {
+    typicalFootprintSqFt: 2000,
+    footprintRange: [500, 5000],
+    usableRoofPercent: 0.40,
+    maxRooftopSolarKW: 12,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 8000,
+    canopyPotentialKW: 96,
+    totalRealisticSolarKW: 108,
+    sources: ['SAE J1772', 'NREL Solar-EV Integration', 'DOE Vehicle Technologies'],
+    notes: 'Canopy is PRIMARY solar source. Building roof is minimal. Solar canopy + EV is ideal combo.',
+  },
+  college: {
+    typicalFootprintSqFt: 50000,
+    footprintRange: [20000, 200000],
+    usableRoofPercent: 0.40,
+    maxRooftopSolarKW: 300,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 25000,
+    canopyPotentialKW: 300,
+    totalRealisticSolarKW: 600,
+    sources: ['CBECS 2018', 'AASHE STARS', 'NREL Rooftop PV'],
+    notes: 'Multiple buildings spread area. Parking lots provide large canopy opportunity.',
+  },
+  casino: {
+    typicalFootprintSqFt: 120000,
+    footprintRange: [50000, 300000],
+    usableRoofPercent: 0.50,
+    maxRooftopSolarKW: 900,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 30000,
+    canopyPotentialKW: 360,
+    totalRealisticSolarKW: 1260,
+    sources: ['ASHRAE 90.1', 'NREL Rooftop PV'],
+    notes: 'Large buildings with significant HVAC. Massive parking structures = canopy goldmine.',
+  },
+  apartment: {
+    typicalFootprintSqFt: 12000,
+    footprintRange: [5000, 30000],
+    usableRoofPercent: 0.30,
+    maxRooftopSolarKW: 54,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 5000,
+    canopyPotentialKW: 60,
+    totalRealisticSolarKW: 114,
+    sources: ['CBECS 2018', 'NREL Rooftop PV'],
+    notes: 'Multi-story severely limits roof per unit. Parking canopy with EV charging is key.',
+  },
+  cold_storage: {
+    typicalFootprintSqFt: 60000,
+    footprintRange: [20000, 200000],
+    usableRoofPercent: 0.75,
+    maxRooftopSolarKW: 675,
+    canopyApplicable: false,
+    typicalCanopyAreaSqFt: 5000,
+    canopyPotentialKW: 60,
+    totalRealisticSolarKW: 735,
+    sources: ['CBECS 2018', 'NREL Rooftop PV'],
+    notes: 'Large flat roofs similar to warehouse. Insulated roof panels can support solar well.',
+  },
+  indoor_farm: {
+    typicalFootprintSqFt: 40000,
+    footprintRange: [10000, 100000],
+    usableRoofPercent: 0.25,
+    maxRooftopSolarKW: 150,
+    canopyApplicable: false,
+    typicalCanopyAreaSqFt: 2000,
+    canopyPotentialKW: 24,
+    totalRealisticSolarKW: 174,
+    sources: ['USDA CEA Research', 'NREL Rooftop PV'],
+    notes: 'Some facilities need translucent/glass roofs for supplemental light. Limited solar area.',
+  },
+  airport: {
+    typicalFootprintSqFt: 200000,
+    footprintRange: [50000, 1000000],
+    usableRoofPercent: 0.20,
+    maxRooftopSolarKW: 600,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 50000,
+    canopyPotentialKW: 600,
+    totalRealisticSolarKW: 1200,
+    sources: ['FAA Advisory Circular', 'NREL Airport Solar', 'DEN 4MW case study'],
+    notes: 'Complex roofs, glare restrictions near runways. Massive parking for canopy. Denver has 4 MW.',
+  },
+  government: {
+    typicalFootprintSqFt: 30000,
+    footprintRange: [10000, 100000],
+    usableRoofPercent: 0.40,
+    maxRooftopSolarKW: 180,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 10000,
+    canopyPotentialKW: 120,
+    totalRealisticSolarKW: 300,
+    sources: ['EO 14057 Net-Zero by 2050', 'GSA Green Building', 'NREL Rooftop PV'],
+    notes: 'Federal mandates drive adoption. Historic buildings may have restrictions.',
+  },
+  residential: {
+    typicalFootprintSqFt: 2000,
+    footprintRange: [1000, 4000],
+    usableRoofPercent: 0.60,
+    maxRooftopSolarKW: 18,
+    canopyApplicable: false,
+    typicalCanopyAreaSqFt: 400,
+    canopyPotentialKW: 5,
+    totalRealisticSolarKW: 23,
+    sources: ['NREL Rooftop PV', 'EIA Residential Energy Survey'],
+    notes: 'Single-family home. South-facing roof section is primary constraint.',
+  },
+  agricultural: {
+    typicalFootprintSqFt: 20000,
+    footprintRange: [5000, 100000],
+    usableRoofPercent: 0.70,
+    maxRooftopSolarKW: 210,
+    canopyApplicable: false,
+    typicalCanopyAreaSqFt: 5000,
+    canopyPotentialKW: 60,
+    totalRealisticSolarKW: 270,
+    sources: ['USDA Rural Energy', 'NREL Rooftop PV'],
+    notes: 'Barn/shed roofs are excellent. Ground-mount often preferred for larger installations.',
+  },
+  shopping_center: {
+    typicalFootprintSqFt: 200000,
+    footprintRange: [50000, 500000],
+    usableRoofPercent: 0.65,
+    maxRooftopSolarKW: 1950,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 50000,
+    canopyPotentialKW: 600,
+    totalRealisticSolarKW: 2550,
+    sources: ['CBECS 2018', 'SEIA Solar Means Business', 'NREL Rooftop PV'],
+    notes: 'Among best commercial solar candidates. Massive flat roofs + parking.',
+  },
+  microgrid: {
+    typicalFootprintSqFt: 10000,
+    footprintRange: [2000, 50000],
+    usableRoofPercent: 0.50,
+    maxRooftopSolarKW: 75,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 5000,
+    canopyPotentialKW: 60,
+    totalRealisticSolarKW: 135,
+    sources: ['NREL Microgrid Standards', 'IEEE 1547'],
+    notes: 'Varies widely. Ground-mount common for larger microgrids. Solar essential for islanding.',
+  },
+};
+
+/**
+ * Validate solar capacity against ANY industry's physical building constraints
+ *
+ * TrueQuote™ compliant: Uses industry-specific building footprint data
+ * Generalized from validateCarWashSolarCapacity (Feb 17, 2026)
+ *
+ * @param industry - Industry slug (e.g., 'car_wash', 'hotel', 'office')
+ * @param solarKW - Requested solar capacity in kW
+ * @param buildingSqFt - Optional: override building footprint (from user input)
+ * @returns Validation result with max roof capacity, canopy potential, and warnings
+ */
+export function validateIndustrySolarCapacity(
+  industry: string,
+  solarKW: number,
+  buildingSqFt?: number
+): {
+  isValid: boolean;
+  maxRooftopSolarKW: number;
+  canopyPotentialKW: number;
+  totalPotentialKW: number;
+  usableRoofSqFt: number;
+  requiredRoofSqFt: number;
+  exceedsRoofBy?: number;
+  canopyCanCover: boolean;
+  warning?: string;
+  recommendation?: string;
+} {
+  // Normalize industry slug
+  const normalizedIndustry = industry.replace(/-/g, '_');
+  const constraints = INDUSTRY_FACILITY_CONSTRAINTS[normalizedIndustry];
+
+  if (!constraints) {
+    // Unknown industry — use conservative defaults
+    const defaultFootprint = buildingSqFt || 15000;
+    const usableRoof = defaultFootprint * 0.40;
+    const maxKW = Math.floor((usableRoof * SOLAR_WATTS_PER_SQFT) / 1000);
+    return {
+      isValid: solarKW <= maxKW,
+      maxRooftopSolarKW: maxKW,
+      canopyPotentialKW: 0,
+      totalPotentialKW: maxKW,
+      usableRoofSqFt: Math.round(usableRoof),
+      requiredRoofSqFt: Math.round((solarKW * 1000) / SOLAR_WATTS_PER_SQFT),
+      warning: `Unknown industry "${industry}". Using conservative 40% roof utilization on ${defaultFootprint.toLocaleString()} sqft.`,
+    };
+  }
+
+  const footprint = buildingSqFt || constraints.typicalFootprintSqFt;
+  const usableRoofSqFt = Math.round(footprint * constraints.usableRoofPercent);
+  const maxRooftopKW = Math.floor((usableRoofSqFt * SOLAR_WATTS_PER_SQFT) / 1000);
+  const requiredRoofSqFt = Math.round((solarKW * 1000) / SOLAR_WATTS_PER_SQFT);
+  const totalPotentialKW = maxRooftopKW + constraints.canopyPotentialKW;
+
+  if (solarKW <= maxRooftopKW) {
+    return {
+      isValid: true,
+      maxRooftopSolarKW: maxRooftopKW,
+      canopyPotentialKW: constraints.canopyPotentialKW,
+      totalPotentialKW,
+      usableRoofSqFt,
+      requiredRoofSqFt,
+      canopyCanCover: false,
+    };
+  }
+
+  // Solar exceeds roof capacity
+  const exceedsBy = Math.round(solarKW - maxRooftopKW);
+  const canopyCanCover = solarKW <= totalPotentialKW;
+
+  let warning = `⚠️ ${solarKW} kW solar exceeds ${maxRooftopKW} kW rooftop capacity (${usableRoofSqFt.toLocaleString()} usable sqft on ${footprint.toLocaleString()} sqft building).`;
+  let recommendation: string | undefined;
+
+  if (constraints.canopyApplicable && canopyCanCover) {
+    recommendation = `Add solar canopy/carport (up to ${constraints.canopyPotentialKW} kW available) to cover the ${exceedsBy} kW gap.`;
+  } else if (constraints.canopyApplicable) {
+    recommendation = `Even with ${constraints.canopyPotentialKW} kW canopy, total is ${totalPotentialKW} kW. Consider ground-mount for remaining ${solarKW - totalPotentialKW} kW.`;
+  } else {
+    recommendation = `Consider ground-mount solar for the additional ${exceedsBy} kW needed.`;
+  }
+
+  return {
+    isValid: false,
+    maxRooftopSolarKW: maxRooftopKW,
+    canopyPotentialKW: constraints.canopyPotentialKW,
+    totalPotentialKW,
+    usableRoofSqFt,
+    requiredRoofSqFt,
+    exceedsRoofBy: exceedsBy,
+    canopyCanCover,
+    warning,
+    recommendation,
+  };
+}
+
+/**
+ * Get facility constraints for an industry
+ * Returns null if industry not found
+ */
+export function getFacilityConstraints(industry: string): FacilitySolarConstraint | null {
+  const normalized = industry.replace(/-/g, '_');
+  return INDUSTRY_FACILITY_CONSTRAINTS[normalized] || null;
+}
+
 /**
  * GROUND-MOUNT SOLAR CONSTRAINTS - Industry Standards
  * Source: NREL Solar Land Use Requirements, SEIA Ground-Mount Best Practices

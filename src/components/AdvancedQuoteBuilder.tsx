@@ -67,7 +67,7 @@ import ProQuoteFinancialModal, { type ProQuoteFinancialData } from "@/components
 // ProQuoteRunningCalculator removed — replaced by inline cost summary strip
 import { ProjectInfoForm } from "./ProjectInfoForm";
 import { supabase } from "../services/supabaseClient";
-import { checkQuotaStandalone } from "@/hooks/useQuotaEnforcement";
+// checkQuotaStandalone removed — recalculations are previews, not deliveries (Feb 2026)
 import {
   createLabelValueRow,
   createLabelValueTable,
@@ -289,18 +289,8 @@ export default function AdvancedQuoteBuilder({
         return;
       }
 
-      // ── QUOTA ENFORCEMENT (Feb 2026) ──
-      try {
-        const quotaCheck = checkQuotaStandalone("quote");
-        if (!quotaCheck.allowed) {
-          console.warn("[AdvancedQuoteBuilder] Quote quota exceeded:", quotaCheck);
-          // Don't block the UI — just skip recalculation silently.
-          // The existing financials remain visible. User sees upgrade prompt on next explicit action.
-          return;
-        }
-      } catch {
-        // Non-blocking — allow calculation if quota check fails
-      }
+      // ── NOTE: No quota check here. Recalculations are previews, not deliveries.
+      // Quota is tracked on EXPORT only (PDF/Word/Excel download). ──
 
       setIsCalculating(true);
       try {

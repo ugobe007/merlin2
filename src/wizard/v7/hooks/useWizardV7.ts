@@ -27,8 +27,7 @@ import {
 // Steps are momentary — memory is persistent. No more cross-step flag dependencies.
 import { merlinMemory } from "@/wizard/v7/memory";
 
-// ✅ QUOTA ENFORCEMENT (Feb 2026): Check subscription limits before pricing
-import { checkQuotaStandalone } from "@/hooks/useQuotaEnforcement";
+// Quota enforcement moved to export-only (Step 6). Previews are never metered.
 
 /**
  * ============================================================
@@ -3749,28 +3748,11 @@ export function useWizardV7() {
       dispatch({ type: "PRICING_START", requestKey });
       dispatch({ type: "DEBUG_TAG", lastApi: "runPricingSafe" });
 
-      // ── QUOTA ENFORCEMENT (Feb 2026) ──
-      // Check subscription quota BEFORE doing expensive pricing work.
-      // If quota exceeded, dispatch error and bail early.
-      try {
-        const quotaCheck = checkQuotaStandalone("quote");
-        if (!quotaCheck.allowed) {
-          const tierLabel = { starter: "Starter", pro: "Pro", advanced: "Advanced", business: "Business" }[quotaCheck.tier] || quotaCheck.tier;
-          const upgradeTier = quotaCheck.recommendedTier
-            ? { starter: "Starter", pro: "Pro", advanced: "Advanced", business: "Business" }[quotaCheck.recommendedTier]
-            : "Pro";
-          dispatch({
-            type: "PRICING_ERROR",
-            requestKey,
-            error: `Quote limit reached (${quotaCheck.limit}/${quotaCheck.limit} on ${tierLabel} plan). Upgrade to ${upgradeTier} for unlimited quotes.`,
-            warnings: [`⚠️ Upgrade to ${upgradeTier} at /pricing to continue generating quotes.`],
-          });
-          return;
-        }
-      } catch (quotaErr) {
-        // Quota check failure is NON-BLOCKING — allow pricing to proceed
-        console.warn("[V7 Quota] Quota check failed (non-blocking):", quotaErr);
-      }
+      // ── NOTE (Feb 2026 redesign) ──
+      // Pricing is a PREVIEW, not a delivered quote. Quota is only
+      // tracked when the user actually EXPORTS (PDF/Word/Excel) in Step 6.
+      // Guest users get 3 exports per session; authenticated users follow plan limits.
+      // No quota check here — let pricing always proceed.
 
       // Timeout watchdog - prevents "pending forever" states
       const withTimeout = <T>(fn: () => T | Promise<T>, ms: number): Promise<T> =>

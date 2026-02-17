@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 interface PricingPlansProps {
   onClose: () => void;
   onSignUp?: () => void;
-  currentTier?: "starter" | "pro" | "advanced" | "business";
+  currentTier?: "free" | "starter" | "pro" | "advanced" | "business";
 }
 
 const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentTier }) => {

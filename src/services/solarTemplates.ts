@@ -37,75 +37,79 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     industry: 'car_wash',
     displayName: 'Car Wash',
     
-    roofUsableFactor: 0.65,
-    carportUsableFactor: 1.0,
-    solarDensity: 0.150,  // 150W per sq ft
+    roofUsableFactor: 0.45,
+    carportUsableFactor: 0.90,
+    solarDensity: 0.015,  // 15 W/sqft installed density (NREL commercial rooftop standard)
     
-    defaultSystemSize: 'medium',
+    defaultSystemSize: 'small',
     typicalRoofArea: {
       min: 3000,
       max: 8000,
-      typical: 5000
+      typical: 5500
     },
     typicalCarportArea: {
-      min: 1000,
-      max: 3000,
-      typical: 1500
+      min: 1500,
+      max: 4000,
+      typical: 2800
     },
     
     recommendedOrientation: 'south',
     tiltAngle: 15,
     
     assumptions: [
-      '65% roof usable - accounts for HVAC units, vents, access paths, and setback requirements',
-      '100% carport usable - purpose-built structure with no obstructions',
-      'Modern 400W panels at 150W per sq ft installed density',
+      '45% roof usable — car wash roofs have significant HVAC, water equipment, vents, and access paths',
+      '90% carport usable — purpose-built solar canopy over vacuum/queue areas, minor losses for columns',
+      '15 W/sqft installed density (NREL commercial rooftop standard, 400W panels with spacing)',
       'South-facing orientation preferred for maximum generation',
-      '15° tilt angle optimized for car wash latitudes and snow load'
+      '15° tilt angle optimized for car wash latitudes and snow load',
+      'Rooftop max: ~37 kW typical (5,500 sqft × 45% usable × 15 W/sqft)',
+      'Canopy adds: ~38 kW (2,800 sqft × 90% × 15 W/sqft) — essential for major operators'
     ],
-    notes: 'Car washes are ideal for solar due to high daytime energy usage coinciding with peak solar generation. Vacuum stations and water heating are the primary loads.'
+    notes: 'Car wash rooftops typically support only 30-40 kW of solar (constrained by building footprint and rooftop equipment). Canopy solar over vacuum/queue areas is a must-have for major operators, adding 30-50+ kW. Combined roof + canopy: 70-90 kW typical.'
   },
   
   hotel_hospitality: {
     industry: 'hotel_hospitality',
     displayName: 'Hotel & Hospitality',
     
-    roofUsableFactor: 0.55,
-    carportUsableFactor: 1.0,
-    solarDensity: 0.150,
+    roofUsableFactor: 0.35,
+    carportUsableFactor: 0.90,
+    solarDensity: 0.015,  // 15 W/sqft installed density (NREL standard)
     
     defaultSystemSize: 'large',
     typicalRoofArea: {
       min: 10000,
       max: 50000,
-      typical: 25000
+      typical: 20000
     },
     typicalCarportArea: {
       min: 5000,
-      max: 15000,
-      typical: 8000
+      max: 20000,
+      typical: 10000
     },
     
     recommendedOrientation: 'south',
     tiltAngle: 10,
     
     assumptions: [
-      '55% roof usable - cooling towers, elevator penthouses, and rooftop equipment reduce available space',
-      '100% carport usable - guest parking shade structures',
-      'Modern 400W panels at 150W per sq ft installed density',
+      '35% roof usable — multi-story hotels have cooling towers, elevator penthouses, pool equipment, and significant rooftop HVAC',
+      '90% carport usable — guest parking shade structures (purpose-built solar canopy)',
+      '15 W/sqft installed density (NREL commercial rooftop standard)',
       'South-facing orientation for consistent generation',
-      '10° tilt angle for hotel applications'
+      '10° tilt angle for hotel applications',
+      'Rooftop max: ~105 kW typical (20,000 sqft footprint × 35% usable × 15 W/sqft)',
+      'Parking canopy adds: ~135 kW (10,000 sqft × 90% × 15 W/sqft)'
     ],
-    notes: 'Hotels have high 24/7 energy demand. Solar paired with battery storage can reduce peak demand charges from HVAC and hot water systems.'
+    notes: 'Hotels have high 24/7 energy demand. Rooftop solar is limited by HVAC equipment and multi-story footprint constraints. Parking canopy solar is highly recommended for hotels with guest parking. Combined roof + canopy: 200-300 kW typical for mid-size hotels.'
   },
   
   retail: {
     industry: 'retail',
     displayName: 'Retail',
     
-    roofUsableFactor: 0.75,
-    carportUsableFactor: 1.0,
-    solarDensity: 0.150,
+    roofUsableFactor: 0.70,
+    carportUsableFactor: 0.90,
+    solarDensity: 0.015,  // 15 W/sqft installed density (NREL standard)
     
     defaultSystemSize: 'large',
     typicalRoofArea: {
@@ -123,13 +127,15 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     tiltAngle: 5,
     
     assumptions: [
-      '75% roof usable - big box stores typically have minimal rooftop equipment',
-      '100% carport usable - customer parking structures',
-      'Modern 400W panels at 150W per sq ft installed density',
+      '70% roof usable — big box stores have clean flat roofs with minimal equipment',
+      '90% carport usable — customer parking shade structures',
+      '15 W/sqft installed density (NREL commercial rooftop standard)',
       'South-facing for maximum generation',
-      '5° tilt angle minimizes wind load on large commercial roofs'
+      '5° tilt angle minimizes wind load on large commercial roofs',
+      'Rooftop max: ~525 kW typical (50,000 sqft × 70% × 15 W/sqft)',
+      'Parking canopy adds: ~270 kW (20,000 sqft × 90% × 15 W/sqft)'
     ],
-    notes: 'Large retail stores are excellent solar candidates with extensive roof area and high daytime energy demand for HVAC and refrigeration.'
+    notes: 'Large retail stores are excellent solar candidates with extensive flat roof area. Parking canopy solar provides customer shade while generating power. Combined roof + canopy: 500-800 kW typical.'
   },
   
   warehouse_logistics: {
@@ -137,8 +143,8 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     displayName: 'Warehouse & Logistics',
     
     roofUsableFactor: 0.80,
-    carportUsableFactor: 1.0,
-    solarDensity: 0.150,
+    carportUsableFactor: 0.90,
+    solarDensity: 0.015,  // 15 W/sqft installed density (NREL standard)
     
     defaultSystemSize: 'xlarge',
     typicalRoofArea: {
@@ -156,22 +162,24 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     tiltAngle: 5,
     
     assumptions: [
-      '80% roof usable - warehouses have the cleanest roofs of any commercial building type',
-      '100% carport usable - truck/trailer parking and loading dock covers',
-      'Modern 400W panels at 150W per sq ft installed density',
+      '80% roof usable — warehouses have the cleanest, flattest roofs of any commercial building',
+      '90% carport usable — truck/trailer parking and loading dock covers',
+      '15 W/sqft installed density (NREL commercial rooftop standard)',
       'South-facing for maximum generation',
-      '5° tilt angle for minimal wind resistance on massive roofs'
+      '5° tilt angle for minimal wind resistance on massive roofs',
+      'Rooftop max: ~1,200 kW typical (100,000 sqft × 80% × 15 W/sqft)',
+      'Dock canopy adds: ~540 kW (40,000 sqft × 90% × 15 W/sqft)'
     ],
-    notes: 'Warehouses offer the largest solar potential due to extensive roof area. Battery storage enables load shifting for material handling equipment.'
+    notes: 'Warehouses offer the largest rooftop solar potential in commercial real estate. 1+ MW rooftop systems are common. Battery storage enables load shifting for material handling equipment.'
   },
   
   manufacturing: {
     industry: 'manufacturing',
     displayName: 'Manufacturing',
     
-    roofUsableFactor: 0.60,
-    carportUsableFactor: 1.0,
-    solarDensity: 0.150,
+    roofUsableFactor: 0.55,
+    carportUsableFactor: 0.90,
+    solarDensity: 0.015,  // 15 W/sqft installed density (NREL standard)
     
     defaultSystemSize: 'large',
     typicalRoofArea: {
@@ -189,13 +197,15 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     tiltAngle: 10,
     
     assumptions: [
-      '60% roof usable - manufacturing facilities have significant rooftop HVAC, exhaust systems, and cranes',
-      '100% carport usable - employee and shipping/receiving parking',
-      'Modern 400W panels at 150W per sq ft installed density',
+      '55% roof usable — manufacturing facilities have exhaust stacks, cranes, overhead doors, and heavy HVAC',
+      '90% carport usable — employee and shipping/receiving parking',
+      '15 W/sqft installed density (NREL commercial rooftop standard)',
       'South-facing for maximum generation',
-      '10° tilt angle for manufacturing applications'
+      '10° tilt angle for manufacturing applications',
+      'Rooftop max: ~619 kW typical (75,000 sqft × 55% × 15 W/sqft)',
+      'Parking canopy adds: ~338 kW (25,000 sqft × 90% × 15 W/sqft)'
     ],
-    notes: 'Manufacturing facilities benefit from solar + storage to reduce demand charges from heavy machinery loads. Load shifting capabilities are critical.'
+    notes: 'Manufacturing facilities benefit from solar + storage to reduce demand charges from heavy machinery. Roof obstructions (exhaust, cranes) reduce usable area vs warehouse. Combined roof + canopy: 600-1,000 kW typical.'
   }
 };
 

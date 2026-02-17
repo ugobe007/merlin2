@@ -652,11 +652,12 @@ export default function ModalManager(props: ModalManagerProps) {
         <MarketIntelligenceDashboard
           onClose={() => setShowMarketIntelligence(false)}
           userTier={
-            authService.getCurrentUser()?.tier as
+            (authService.getCurrentUser()?.tier as
+              | "free"
               | "starter"
               | "pro"
               | "advanced"
-              | "business"
+              | "business") || "free"
           }
         />
       )}

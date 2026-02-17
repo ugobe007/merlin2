@@ -3,7 +3,7 @@ import { calculateRealWorldPrice } from "../utils/bessPricing";
 
 interface MarketIntelligenceDashboardProps {
   onClose: () => void;
-  userTier?: "free" | "professional" | "enterprise_pro" | "business";
+  userTier?: "free" | "starter" | "pro" | "advanced" | "business";
 }
 
 interface PricingTrend {

@@ -320,7 +320,7 @@ export default function MetaCalculationsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-blue-900 text-white">
+      <div className="bg-gradient-to-r from-[#1a103d] via-slate-900 to-[#3B5BDB]/80 text-white">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -344,7 +344,7 @@ export default function MetaCalculationsPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold">TrueQuote™ Meta Calculations</h1>
-                <p className="text-purple-200">Single Source of Truth Dashboard</p>
+                <p className="text-[#68BFFA]/70">Single Source of Truth Dashboard</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -354,7 +354,7 @@ export default function MetaCalculationsPage() {
                   <span className="flex items-center gap-1 px-3 py-1 bg-green-500/20 border border-green-400 rounded-full text-sm">
                     <Unlock className="w-4 h-4" /> {adminName}
                   </span>
-                  <button onClick={handleLogout} className="text-sm text-purple-300 hover:text-white">
+                  <button onClick={handleLogout} className="text-sm text-[#68BFFA]/70 hover:text-white">
                     Logout
                   </button>
                 </div>
@@ -367,7 +367,7 @@ export default function MetaCalculationsPage() {
                 </button>
               )}
               <div className="text-right text-sm">
-                <div className="text-purple-200">Last Refresh</div>
+                <div className="text-[#68BFFA]/70">Last Refresh</div>
                 <div className="font-mono">{lastRefresh.toLocaleTimeString()}</div>
               </div>
               <button
@@ -384,19 +384,19 @@ export default function MetaCalculationsPage() {
           <div className="grid grid-cols-4 gap-4 mt-6">
             <div className="bg-white/10 rounded-lg p-4">
               <div className="text-3xl font-bold">{constants.length}</div>
-              <div className="text-purple-200 text-sm">Total Constants</div>
+              <div className="text-[#68BFFA]/70 text-sm">Total Constants</div>
             </div>
             <div className="bg-white/10 rounded-lg p-4">
               <div className="text-3xl font-bold text-green-400">{dbCount}</div>
-              <div className="text-purple-200 text-sm">From Database</div>
+              <div className="text-[#68BFFA]/70 text-sm">From Database</div>
             </div>
             <div className="bg-white/10 rounded-lg p-4">
               <div className="text-3xl font-bold text-amber-400">{fallbackCount}</div>
-              <div className="text-purple-200 text-sm">Using Fallback</div>
+              <div className="text-[#68BFFA]/70 text-sm">Using Fallback</div>
             </div>
             <div className="bg-white/10 rounded-lg p-4">
               <div className="text-3xl font-bold">{stateSolarData.length || industries.length}</div>
-              <div className="text-purple-200 text-sm">States / Industries</div>
+              <div className="text-[#68BFFA]/70 text-sm">States / Industries</div>
             </div>
           </div>
         </div>
@@ -416,7 +416,7 @@ export default function MetaCalculationsPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex items-center gap-2 px-4 py-3 border-b-2 ${
-                activeTab === tab.id ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500'
+                activeTab === tab.id ? 'border-[#3B5BDB] text-[#3B5BDB]' : 'border-transparent text-gray-500'
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -438,7 +438,7 @@ export default function MetaCalculationsPage() {
                   {category === 'Generator' && <Fuel className="w-5 h-5 text-gray-600" />}
                   {category === 'EV' && <Zap className="w-5 h-5 text-green-600" />}
                   {category === 'Financial' && <DollarSign className="w-5 h-5 text-emerald-600" />}
-                  {category === 'Savings' && <TrendingUp className="w-5 h-5 text-purple-600" />}
+                  {category === 'Savings' && <TrendingUp className="w-5 h-5 text-[#3B5BDB]" />}
                   <h2 className="font-semibold">{category}</h2>
                 </div>
                 <table className="w-full">
@@ -464,7 +464,7 @@ export default function MetaCalculationsPage() {
                         </td>
                         {isAdmin && (
                           <td className="px-6 py-4 text-center">
-                            <button onClick={() => openEditModal(item)} className="p-1 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded">
+                            <button onClick={() => openEditModal(item)} className="p-1 text-gray-400 hover:text-[#3B5BDB] hover:bg-[#3B5BDB]/10 rounded">
                               <Edit3 className="w-4 h-4" />
                             </button>
                           </td>
@@ -656,7 +656,7 @@ export default function MetaCalculationsPage() {
                   type="email"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#3B5BDB] focus:border-[#3B5BDB]"
                   placeholder="bob@noahenergy.com"
                 />
               </div>
@@ -667,12 +667,12 @@ export default function MetaCalculationsPage() {
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#3B5BDB] focus:border-[#3B5BDB]"
                   placeholder="••••••••"
                 />
               </div>
               {loginError && <div className="text-red-600 text-sm">{loginError}</div>}
-              <button onClick={handleLogin} className="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+              <button onClick={handleLogin} className="w-full py-2 border border-[#3B5BDB] text-[#3B5BDB] rounded-lg hover:bg-[#3B5BDB]/10 font-medium">
                 Login
               </button>
               <div className="text-xs text-gray-500 text-center">
@@ -709,7 +709,7 @@ export default function MetaCalculationsPage() {
                   step="any"
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 font-mono"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#3B5BDB] focus:border-[#3B5BDB] font-mono"
                 />
                 <div className="text-xs text-gray-500 mt-1">Current: {formatValue(editModal.currentValue, editModal.unit)}</div>
               </div>
@@ -719,7 +719,7 @@ export default function MetaCalculationsPage() {
                 <button
                   onClick={saveConstant}
                   disabled={saving}
-                  className="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2"
+                  className="flex-1 py-2 border border-[#3B5BDB] text-[#3B5BDB] rounded-lg hover:bg-[#3B5BDB]/10 flex items-center justify-center gap-2"
                 >
                   {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save

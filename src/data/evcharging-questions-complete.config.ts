@@ -1,7 +1,7 @@
 /**
  * Complete EV Charging Station Questionnaire Configuration
  *
- * 16 questions across 4 sections — matching car wash gold-standard format.
+ * 18 questions across 4 sections — matching car wash gold-standard format.
  * All question IDs align with the EV_CHARGING_LOAD_V1_SSOT calculator adapter
  * in registry.ts (requiredInputs: level2Chargers, dcfcChargers).
  *
@@ -9,7 +9,7 @@
  *   1. Site (Q1-4)              — stationType, operatingHours, siteSize, parkingSpaces
  *   2. Chargers (Q5-10)         — level2Chargers, level2Power, dcFastChargers, dcFastPower, hpcChargers, utilizationProfile
  *   3. Grid & Demand (Q11-13)   — gridConnection, peakConcurrency, siteDemandCap
- *   4. Solar & Goals (Q14-16)   — existingSolar, primaryGoal, budgetTimeline
+ *   4. Solar & Goals (Q14-18)   — roofArea, canopyInterest, existingSolar, primaryGoal, budgetTimeline
  *
  * Calculator mapping:
  *   level2Chargers → level2Chargers (adapter) → numberOfLevel2Chargers (SSOT)
@@ -570,8 +570,36 @@ export const evChargingQuestionsComplete: Question[] = [
   },
 
   // ============================================================================
-  // SECTION 4: SOLAR & GOALS (Q14-Q16)
+  // SECTION 4: SOLAR & GOALS (Q14-Q18)
   // ============================================================================
+  {
+    id: 'roofArea',
+    type: 'slider',
+    section: 'solar',
+    title: 'Approximate building roof area?',
+    subtitle: 'Building footprint / roof space — we\'ll calculate usable solar area',
+    range: { min: 0, max: 15000, step: 100 },
+    smartDefault: 2000,
+    unit: ' sq ft',
+    helpText: 'Don\'t worry about exact numbers — industry-standard usability factors are applied automatically',
+    validation: { required: false, min: 0, max: 15000 },
+    impactsCalculations: ['roofSolar', 'solarCapacity'],
+  },
+  {
+    id: 'canopyInterest',
+    type: 'buttons',
+    section: 'solar',
+    title: 'Interested in solar canopy over charging stations?',
+    subtitle: 'Solar canopy is the primary generation source for EV stations — essential for net-zero charging',
+    options: [
+      { value: 'yes', label: 'Yes, Interested', icon: '🏗️', description: 'Generates solar + provides shade' },
+      { value: 'learn_more', label: 'Tell Me More', icon: '💡', description: 'Want to learn the benefits' },
+      { value: 'no', label: 'Not Now', icon: '❌', description: 'Roof solar only for now' },
+    ],
+    smartDefault: 'learn_more',
+    validation: { required: false },
+    impactsCalculations: ['carportSolar', 'solarCapacity'],
+  },
   {
     id: 'existingSolar',
     type: 'buttons',

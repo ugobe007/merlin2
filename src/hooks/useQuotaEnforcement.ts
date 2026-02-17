@@ -16,9 +16,7 @@
 
 import { useState, useCallback } from 'react';
 import {
-  trackQuoteGenerated,
-  trackProjectSaved,
-  trackApiCall,
+  peekQuotaRemaining,
   getEffectiveTier,
   getUsageSummary,
   getUpgradeRecommendation,
@@ -40,23 +38,13 @@ export function useQuotaEnforcement() {
   const [quotaInfo, setQuotaInfo] = useState<QuotaInfo | null>(null);
 
   /**
-   * Check and track quota usage. Returns true if allowed, false if blocked.
+   * Check quota usage (peek only — does NOT consume a slot).
+   * Returns true if allowed, false if blocked.
+   * ✅ FIX Feb 16: Uses peekQuotaRemaining instead of trackQuoteGenerated.
    */
   const checkQuota = useCallback((type: 'quote' | 'project' | 'api'): boolean => {
     const tier = getEffectiveTier();
-    let result: { allowed: boolean; remaining: number; limit: number };
-
-    switch (type) {
-      case 'quote':
-        result = trackQuoteGenerated();
-        break;
-      case 'project':
-        result = trackProjectSaved();
-        break;
-      case 'api':
-        result = trackApiCall();
-        break;
-    }
+    const result = peekQuotaRemaining(type);
 
     if (!result.allowed) {
       const recommendation = getUpgradeRecommendation();
@@ -110,23 +98,14 @@ export function useQuotaEnforcement() {
 
 /**
  * Standalone (non-hook) quota check for use outside React components.
- * Returns { allowed, remaining, limit, tier } without setting state.
+ * ✅ FIX Feb 16: Uses peekQuotaRemaining() — does NOT consume a quota slot.
+ * Only trackQuoteGenerated() should be called when a quote is actually delivered to the user.
  */
 export function checkQuotaStandalone(type: 'quote' | 'project' | 'api'): QuotaInfo {
   const tier = getEffectiveTier();
-  let result: { allowed: boolean; remaining: number; limit: number };
 
-  switch (type) {
-    case 'quote':
-      result = trackQuoteGenerated();
-      break;
-    case 'project':
-      result = trackProjectSaved();
-      break;
-    case 'api':
-      result = trackApiCall();
-      break;
-  }
+  // ✅ Peek without incrementing — pre-flight check only
+  const result = peekQuotaRemaining(type);
 
   if (!result.allowed) {
     const recommendation = getUpgradeRecommendation();

@@ -19,7 +19,7 @@ interface ProfessionalFinancialModelingProps {
     batteryLifeYears?: number;
     discountRate?: number;
   };
-  userTier?: "starter" | "pro" | "advanced" | "business"; // For freemium gating
+  userTier?: "free" | "starter" | "pro" | "advanced" | "business"; // For freemium gating
   onUpgradeClick?: () => void; // Callback when user clicks upgrade
 }
 

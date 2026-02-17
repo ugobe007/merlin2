@@ -2,34 +2,34 @@
  * Step 5: MagicFit V7 - 3-Tier System Recommendations
  * 
  * Created: February 10, 2026
- * Updated: February 11, 2026 — Card font fixes, no fuchsia, TrueQuote badge,
- *          equipment summary, improved spacing
- * 
- * Generates 3 optimized system tiers based on:
- * - User's goals from Step 1
- * - Facility profile from Step 3
- * - Add-on interests from Step 4 (solar/generator/ev)
- * 
- * Tiers:
- * - STARTER: Conservative sizing, fast payback
- * - PERFECT FIT ⭐: Balanced recommendation (default)
- * - BEAST MODE: Aggressive sizing, maximum savings
- * 
- * Uses TrueQuote SSOT for all calculations.
+ * Updated: February 18, 2026 — ZERO-DB-CALL refactor
+ *
+ * ─── KEY INSIGHT ───
+ * Step 4's pricing pipeline (`runPricingSafe`) already computed a full quote
+ * and stored it in `state.quote` with `pricingComplete: true`.  That quote
+ * is the **PerfectFit (1.0x)** base.  Starter and BeastMode are derived by
+ * pure-math scaling — no Supabase calls, no `calculateQuote()` calls.
+ *
+ * This eliminates:
+ * - 3 redundant `calculateQuote()` DB round-trips on mount
+ * - The double-render bug (handleSelectTier → updateQuote → useMerlinData
+ *   sees new bessKW → fingerprint changes → generateTiers fires AGAIN)
+ *
+ * Fallback: If `state.quote.pricingComplete` is false (Step 4 pricing failed),
+ * we make ONE `calculateQuote()` call for PerfectFit and derive the other two.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Check, Loader2, AlertTriangle, Battery, Sun, Fuel, Clock, TrendingUp, DollarSign, Shield } from 'lucide-react';
 import type { WizardState as WizardV7State, EnergyGoal, WizardStep, QuoteOutput } from '@/wizard/v7/hooks/useWizardV7';
 import { getIndustryMeta } from '@/wizard/v7/industryMeta';
 import TrueQuoteFinancialModal from '@/components/wizard/v7/shared/TrueQuoteFinancialModal';
 import badgeGoldIcon from '@/assets/images/badge_gold_icon.jpg';
 
-// SSOT calculation engine
+// SSOT calculation engine — only used as fallback when Step 4 pricing is missing
 import { calculateQuote } from '@/services/unifiedQuoteCalculator';
 import { applyMarginToQuote } from '@/wizard/v7/pricing/pricingBridge';
 import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
-import { checkQuotaStandalone } from '@/hooks/useQuotaEnforcement';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 
 interface Props {
@@ -197,6 +197,431 @@ function getGoalBasedMultipliers(goals: EnergyGoal[]) {
   return modifiers;
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// PURE-MATH TIER SCALING
+// ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Scale a base QuoteResult to a tier using pure math multipliers.
+ *
+ * Equipment sizes scale linearly by the tier multiplier.
+ * Costs scale linearly (BESS $/kWh is constant, solar $/W is constant, etc.)
+ * Savings scale linearly with system size.
+ * Payback = netCost / annualSavings (recalculated from scaled values).
+ * NPV and IRR are re-derived from the scaled cost/savings.
+ */
+function scaleTier(
+  base: QuoteResult,
+  tierKey: TierKey,
+  config: TierConfig,
+  baseDuration: number,
+  baseMargin: { sellPriceTotal: number; baseCostTotal: number; marginDollars: number; marginPercent: number; marginBand: string; itcRate: number; itcAmount: number; netCost: number } | null,
+): TierQuote {
+  // For perfectFit (1.0x multipliers), just return the base directly
+  if (config.multiplier === 1.0 && config.solarMultiplier === 1.0 && config.genMultiplier === 1.0) {
+    // Attach margin as-is
+    if (baseMargin) {
+      (base as any)._margin = { ...baseMargin };
+    }
+    return { tierKey, config, quote: base, loading: false, error: null };
+  }
+
+  // Composite cost-scaling factor:
+  // BESS dominates cost (~60-70%), solar is secondary (~15-25%), gen is minor (~10%)
+  // We use a weighted blend of the multipliers to scale total costs
+  const baseCosts = base.costs;
+  const baseFinancials = base.financials;
+  const baseEquipment = base.equipment;
+
+  // Scale equipment individually
+  const scaledBatteries = baseEquipment.batteries
+    ? {
+        ...baseEquipment.batteries,
+        unitPowerMW: baseEquipment.batteries.unitPowerMW * config.multiplier,
+        unitEnergyMWh: baseEquipment.batteries.unitEnergyMWh * config.multiplier,
+        totalCost: baseEquipment.batteries.totalCost * config.multiplier,
+      }
+    : baseEquipment.batteries;
+
+  const scaledInverters = {
+    ...baseEquipment.inverters,
+    unitPowerMW: baseEquipment.inverters.unitPowerMW * config.multiplier,
+    totalCost: baseEquipment.inverters.totalCost * config.multiplier,
+  };
+
+  const scaledTransformers = {
+    ...baseEquipment.transformers,
+    totalCost: baseEquipment.transformers.totalCost * config.multiplier,
+  };
+
+  const scaledSwitchgear = {
+    ...baseEquipment.switchgear,
+    totalCost: baseEquipment.switchgear.totalCost * config.multiplier,
+  };
+
+  const scaledSolar = baseEquipment.solar
+    ? {
+        ...baseEquipment.solar,
+        totalMW: baseEquipment.solar.totalMW * config.solarMultiplier,
+        panelQuantity: Math.ceil(baseEquipment.solar.panelQuantity * config.solarMultiplier),
+        totalCost: baseEquipment.solar.totalCost * config.solarMultiplier,
+      }
+    : undefined;
+
+  const scaledGenerators = baseEquipment.generators
+    ? {
+        ...baseEquipment.generators,
+        unitPowerMW: baseEquipment.generators.unitPowerMW * config.genMultiplier,
+        totalCost: baseEquipment.generators.totalCost * config.genMultiplier,
+      }
+    : undefined;
+
+  // Sum individual equipment costs for new total
+  const scaledEquipmentCost =
+    (scaledBatteries?.totalCost ?? 0) +
+    scaledInverters.totalCost +
+    scaledTransformers.totalCost +
+    scaledSwitchgear.totalCost +
+    (scaledSolar?.totalCost ?? 0) +
+    (scaledGenerators?.totalCost ?? 0);
+
+  // Installation scales with equipment cost (same ratio as base)
+  const installRatio = baseCosts.equipmentCost > 0
+    ? baseCosts.installationCost / baseCosts.equipmentCost
+    : 0.25; // sensible fallback: 25%
+  const scaledInstallCost = scaledEquipmentCost * installRatio;
+  const scaledTotalCost = scaledEquipmentCost + scaledInstallCost;
+
+  // ITC rate stays the same
+  const itcRate = baseMargin?.itcRate ?? (baseCosts.taxCredit / Math.max(baseCosts.totalProjectCost, 1));
+  const scaledTaxCredit = scaledTotalCost * itcRate;
+  const scaledNetCost = scaledTotalCost - scaledTaxCredit;
+
+  // Savings scale: BESS savings dominate (peak shaving, arbitrage), solar adds production savings
+  // Weighted: bessWeight = equipment cost share of BESS, solarWeight = solar share
+  const baseBESSCost = base.equipment.batteries?.totalCost ?? 0;
+  const baseSolarCost = base.equipment.solar?.totalCost ?? 0;
+  const baseGenCost = base.equipment.generators?.totalCost ?? 0;
+  const baseTotal = baseBESSCost + baseSolarCost + baseGenCost || 1;
+  const savingsMultiplier =
+    (baseBESSCost / baseTotal) * config.multiplier +
+    (baseSolarCost / baseTotal) * config.solarMultiplier +
+    (baseGenCost / baseTotal) * config.genMultiplier;
+  const scaledAnnualSavings = baseFinancials.annualSavings * savingsMultiplier;
+
+  // Payback recalculated from scaled values
+  const scaledPayback = scaledAnnualSavings > 0
+    ? Math.min(scaledNetCost / scaledAnnualSavings, 99)
+    : 99;
+
+  // ROI: (savings × years - cost) / cost × 100
+  const scaledROI10 = scaledNetCost > 0
+    ? ((scaledAnnualSavings * 10 - scaledNetCost) / scaledNetCost) * 100
+    : 0;
+  // NOTE: We keep roi25Year as a computed field for data completeness,
+  // but the UI shows a 5yr ROI instead (user-facing timeline = 5-10 years)
+  const scaledROI25 = scaledNetCost > 0
+    ? ((scaledAnnualSavings * 25 - scaledNetCost) / scaledNetCost) * 100
+    : 0;
+  const scaledROI5 = scaledNetCost > 0
+    ? ((scaledAnnualSavings * 5 - scaledNetCost) / scaledNetCost) * 100
+    : 0;
+
+  // NPV: scale proportionally (not exact but good enough for tier comparison)
+  const npvScaleFactor = baseCosts.netCost > 0 ? scaledNetCost / baseCosts.netCost : savingsMultiplier;
+  const scaledNPV = baseFinancials.npv * npvScaleFactor;
+
+  // IRR: stays roughly similar for scaled systems (same cost structure, same savings proportions)
+  // Small adjustment: larger systems have slightly lower IRR due to increased capital
+  const irrAdjust = config.multiplier > 1 ? 0.98 : config.multiplier < 1 ? 1.02 : 1.0;
+  const scaledIRR = baseFinancials.irr * irrAdjust;
+
+  // Overall cost scale factor for installation/commissioning/certification
+  const costScale = baseCosts.totalProjectCost > 0
+    ? scaledTotalCost / baseCosts.totalProjectCost
+    : config.multiplier;
+
+  const scaledQuote: QuoteResult = {
+    equipment: {
+      ...baseEquipment,
+      batteries: scaledBatteries,
+      inverters: scaledInverters,
+      transformers: scaledTransformers,
+      switchgear: scaledSwitchgear,
+      solar: scaledSolar,
+      generators: scaledGenerators,
+      // Scale required sub-objects proportionally
+      installation: {
+        bos: baseEquipment.installation.bos * costScale,
+        epc: baseEquipment.installation.epc * costScale,
+        contingency: baseEquipment.installation.contingency * costScale,
+        totalInstallation: baseEquipment.installation.totalInstallation * costScale,
+      },
+      commissioning: {
+        factoryAcceptanceTest: baseEquipment.commissioning.factoryAcceptanceTest * costScale,
+        siteAcceptanceTest: baseEquipment.commissioning.siteAcceptanceTest * costScale,
+        scadaIntegration: baseEquipment.commissioning.scadaIntegration * costScale,
+        functionalSafetyTest: baseEquipment.commissioning.functionalSafetyTest * costScale,
+        performanceTest: baseEquipment.commissioning.performanceTest * costScale,
+        totalCommissioning: baseEquipment.commissioning.totalCommissioning * costScale,
+      },
+      certification: {
+        interconnectionStudy: baseEquipment.certification.interconnectionStudy * costScale,
+        utilityUpgrades: baseEquipment.certification.utilityUpgrades * costScale,
+        environmentalPermits: baseEquipment.certification.environmentalPermits * costScale,
+        buildingPermits: baseEquipment.certification.buildingPermits * costScale,
+        fireCodeCompliance: baseEquipment.certification.fireCodeCompliance * costScale,
+        totalCertification: baseEquipment.certification.totalCertification * costScale,
+      },
+      annualCosts: {
+        operationsAndMaintenance: baseEquipment.annualCosts.operationsAndMaintenance * costScale,
+        extendedWarranty: baseEquipment.annualCosts.extendedWarranty * costScale,
+        capacityTesting: baseEquipment.annualCosts.capacityTesting * costScale,
+        insurancePremium: baseEquipment.annualCosts.insurancePremium * costScale,
+        softwareLicenses: baseEquipment.annualCosts.softwareLicenses * costScale,
+        totalAnnualCost: baseEquipment.annualCosts.totalAnnualCost * costScale,
+        year1Total: baseEquipment.annualCosts.year1Total * costScale,
+      },
+      totals: {
+        equipmentCost: scaledEquipmentCost,
+        installationCost: scaledInstallCost,
+        commissioningCost: baseEquipment.totals.commissioningCost * costScale,
+        certificationCost: baseEquipment.totals.certificationCost * costScale,
+        totalCapex: scaledTotalCost,
+        totalProjectCost: scaledTotalCost,
+        annualOpex: baseEquipment.totals.annualOpex * costScale,
+      },
+    },
+    costs: {
+      equipmentCost: scaledEquipmentCost,
+      installationCost: scaledInstallCost,
+      totalProjectCost: scaledTotalCost,
+      taxCredit: scaledTaxCredit,
+      netCost: scaledNetCost,
+    },
+    financials: {
+      annualSavings: scaledAnnualSavings,
+      paybackYears: scaledPayback,
+      roi5Year: scaledROI5,
+      roi10Year: scaledROI10,
+      roi25Year: scaledROI25,
+      npv: scaledNPV,
+      irr: scaledIRR,
+    },
+    metadata: { ...base.metadata },
+    benchmarkAudit: { ...base.benchmarkAudit },
+  };
+
+  // Apply margin scaling
+  if (baseMargin) {
+    const scaledSellPrice = scaledTotalCost * (1 + baseMargin.marginPercent);
+    const scaledMarginDollars = scaledSellPrice - scaledTotalCost;
+    const scaledITCOnSell = scaledSellPrice * baseMargin.itcRate;
+    const scaledNetAfterMargin = scaledSellPrice - scaledITCOnSell;
+
+    (scaledQuote as any)._margin = {
+      sellPriceTotal: scaledSellPrice,
+      baseCostTotal: scaledTotalCost,
+      marginDollars: scaledMarginDollars,
+      marginPercent: baseMargin.marginPercent,
+      marginBand: baseMargin.marginBand,
+      itcRate: baseMargin.itcRate,
+      itcAmount: scaledITCOnSell,
+      netCost: scaledNetAfterMargin,
+    };
+  }
+
+  return { tierKey, config, quote: scaledQuote, loading: false, error: null };
+}
+
+/**
+ * Build a synthetic QuoteResult from `state.quote` (QuoteOutput).
+ * This bridges the gap between what Step 4 stored and what the tier cards render.
+ */
+function buildQuoteResultFromState(q: QuoteOutput, data: ReturnType<typeof useMerlinData>): QuoteResult {
+  const bessKW = q.bessKW ?? 0;
+  const bessKWh = q.bessKWh ?? 0;
+  const solarKW = q.solarKW ?? 0;
+  const genKW = q.generatorKW ?? 0;
+  const duration = q.durationHours ?? 4;
+
+  // Reconstruct equipment from stored sizing
+  const grossCost = q.grossCost ?? q.capexUSD ?? 0;
+  const itcRate = q.itcRate ?? 0.3;
+  const itcAmount = q.itcAmount ?? grossCost * itcRate;
+  const netCost = q.capexUSD ?? (grossCost - itcAmount);
+
+  // Estimate equipment cost split (industry standard: equipment ~75%, install ~25%)
+  const equipmentCost = grossCost * 0.75;
+  const installationCost = grossCost * 0.25;
+
+  // Battery pricing: derive per-kWh cost from total
+  const batteryCostShare = 0.55; // Batteries typically 55% of equipment
+  const battTotalCost = equipmentCost * batteryCostShare;
+  const pricePerKWh = bessKWh > 0 ? battTotalCost / bessKWh : 125;
+
+  // Inverter cost share ~15%
+  const invTotalCost = equipmentCost * 0.15;
+
+  // Transformer/switchgear ~10%
+  const transTotalCost = equipmentCost * 0.05;
+  const sgTotalCost = equipmentCost * 0.05;
+
+  // Solar cost (if applicable)
+  const solarCostPerWatt = 0.85;
+  const solarTotalCost = solarKW > 0 ? solarKW * 1000 * solarCostPerWatt / 1000 : 0; // $/kW → total
+  const actualSolarCost = solarKW > 0 ? solarKW * solarCostPerWatt : 0;
+
+  // Generator cost
+  const genCostPerKW = 700;
+  const genTotalCost = genKW > 0 ? genKW * genCostPerKW : 0;
+
+  // Estimate sub-costs for required EquipmentBreakdown fields
+  const bosEpc = installationCost;
+  const commissioningTotal = grossCost * 0.02; // ~2% of project
+  const certificationTotal = grossCost * 0.015; // ~1.5%
+  const annualOMTotal = grossCost * 0.015; // ~1.5% annual
+
+  return {
+    equipment: {
+      batteries: {
+        quantity: 1,
+        unitPowerMW: bessKW / 1000,
+        unitEnergyMWh: bessKWh / 1000,
+        unitCost: battTotalCost,
+        totalCost: battTotalCost,
+        manufacturer: 'CATL/BYD',
+        model: 'LFP Commercial',
+        pricePerKWh,
+      },
+      inverters: {
+        quantity: Math.max(1, Math.ceil(bessKW / 500)),
+        unitPowerMW: Math.min(bessKW, 500) / 1000,
+        unitCost: invTotalCost / Math.max(1, Math.ceil(bessKW / 500)),
+        totalCost: invTotalCost,
+        manufacturer: 'SMA/Sungrow',
+        model: 'Commercial PCS',
+      },
+      transformers: {
+        quantity: 1,
+        unitPowerMVA: bessKW / 1000 * 1.1,
+        unitCost: transTotalCost,
+        totalCost: transTotalCost,
+        voltage: '480V/12.47kV',
+        manufacturer: 'ABB/Eaton',
+      },
+      switchgear: {
+        quantity: 1,
+        unitCost: sgTotalCost,
+        totalCost: sgTotalCost,
+        type: 'Metal-Enclosed',
+        voltage: '480V',
+      },
+      ...(solarKW > 0 ? {
+        solar: {
+          totalMW: solarKW / 1000,
+          panelQuantity: Math.ceil(solarKW / 0.4), // ~400W panels
+          inverterQuantity: Math.max(1, Math.ceil(solarKW / 100)),
+          totalCost: actualSolarCost,
+          costPerWatt: solarCostPerWatt,
+          priceCategory: solarKW >= 5000 ? 'utility' : 'commercial',
+          spaceRequirements: { rooftopAreaSqFt: 0, groundAreaSqFt: 0, rooftopAreaAcres: 0, groundAreaAcres: 0, isFeasible: true, constraints: [] },
+        },
+      } : {}),
+      ...(genKW > 0 ? {
+        generators: {
+          quantity: 1,
+          unitPowerMW: genKW / 1000,
+          unitCost: genTotalCost,
+          totalCost: genTotalCost,
+          costPerKW: genCostPerKW,
+          fuelType: (data.addOns.generatorFuelType || 'natural-gas'),
+          manufacturer: 'Caterpillar/Generac',
+        },
+      } : {}),
+      installation: {
+        bos: bosEpc * 0.4,
+        epc: bosEpc * 0.5,
+        contingency: bosEpc * 0.1,
+        totalInstallation: bosEpc,
+      },
+      commissioning: {
+        factoryAcceptanceTest: commissioningTotal * 0.2,
+        siteAcceptanceTest: commissioningTotal * 0.25,
+        scadaIntegration: commissioningTotal * 0.2,
+        functionalSafetyTest: commissioningTotal * 0.15,
+        performanceTest: commissioningTotal * 0.2,
+        totalCommissioning: commissioningTotal,
+      },
+      certification: {
+        interconnectionStudy: certificationTotal * 0.25,
+        utilityUpgrades: certificationTotal * 0.3,
+        environmentalPermits: certificationTotal * 0.15,
+        buildingPermits: certificationTotal * 0.15,
+        fireCodeCompliance: certificationTotal * 0.15,
+        totalCertification: certificationTotal,
+      },
+      annualCosts: {
+        operationsAndMaintenance: annualOMTotal * 0.5,
+        extendedWarranty: annualOMTotal * 0.15,
+        capacityTesting: annualOMTotal * 0.1,
+        insurancePremium: annualOMTotal * 0.15,
+        softwareLicenses: annualOMTotal * 0.1,
+        totalAnnualCost: annualOMTotal,
+        year1Total: annualOMTotal * 1.2,
+      },
+      totals: {
+        equipmentCost,
+        installationCost,
+        commissioningCost: commissioningTotal,
+        certificationCost: certificationTotal,
+        totalCapex: grossCost,
+        totalProjectCost: grossCost,
+        annualOpex: annualOMTotal,
+      },
+    },
+    costs: {
+      equipmentCost,
+      installationCost,
+      totalProjectCost: grossCost,
+      taxCredit: itcAmount,
+      netCost,
+    },
+    financials: {
+      annualSavings: q.annualSavingsUSD ?? 0,
+      paybackYears: q.paybackYears ?? q.roiYears ?? 0,
+      roi5Year: q.annualSavingsUSD && netCost > 0
+        ? ((q.annualSavingsUSD * 5 - netCost) / netCost) * 100
+        : 0,
+      roi10Year: q.annualSavingsUSD && netCost > 0
+        ? ((q.annualSavingsUSD * 10 - netCost) / netCost) * 100
+        : 0,
+      roi25Year: q.annualSavingsUSD && netCost > 0
+        ? ((q.annualSavingsUSD * 25 - netCost) / netCost) * 100
+        : 0,
+      npv: q.npv ?? 0,
+      irr: q.irr ?? 0,
+    },
+    metadata: {
+      calculatedAt: new Date(),
+      pricingSource: 'TrueQuote (Step 4 cached)',
+      systemCategory: (bessKW / 1000) >= 1 ? 'utility' : (bessKW / 1000) >= 0.05 ? 'commercial' : 'residential',
+    },
+    benchmarkAudit: {
+      version: '2.0',
+      methodology: 'TrueQuote SSOT (cached from Step 4 pricing pipeline)',
+      sources: [],
+      assumptions: {
+        discountRate: 0.08,
+        projectLifeYears: 25,
+        degradationRate: 0.015,
+        itcRate,
+      },
+      deviations: [],
+    },
+  };
+}
+
 export default function Step5MagicFitV7({ state, actions }: Props) {
   const [tiers, setTiers] = useState<TierQuote[]>([]);
   const [selectedTier, setSelectedTier] = useState<TierKey | null>(null);
@@ -207,177 +632,200 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   // ✅ MERLIN MEMORY: Read cross-step data from Memory first, fall back to state
   const data = useMerlinData(state);
 
-  // ✅ FIX (Feb 15, 2026): Use SSOT-computed BESS sizing from pricing pipeline.
-  // data.bessKW already has the industry sizing ratio applied (e.g., 0.4× for gas station peak shaving).
-  // Only fall back to raw peakLoadKW if pricing hasn't completed yet (bessKW = 0).
-  const rawBESSKW = data.bessKW > 0 ? data.bessKW : (data.peakLoadKW || state?.quote?.peakLoadKW || 200);
+  // ══════════════════════════════════════════════════════════════════════════
+  // SNAPSHOT: Freeze all sizing inputs at mount time.
+  // handleSelectTier → updateQuote changes state.quote.bessKW, which would
+  // change useMerlinData's return value → trigger re-render → re-generation.
+  // We snapshot once and use the ref for all tier derivation.
+  // ══════════════════════════════════════════════════════════════════════════
+  const snapshotRef = useRef<{
+    frozen: boolean;
+    rawBESSKW: number;
+    ssotDuration: number;
+    solarKW: number;
+    generatorKW: number;
+    windKW: number;
+    location: string;
+    utilityRate: number;
+    demandCharge: number;
+    industry: string;
+    goals: EnergyGoal[];
+    addOns: typeof data.addOns;
+    stateQuote: QuoteOutput | undefined;
+    stateQuoteMargin: QuoteOutput['margin'] | undefined;
+  }>({ frozen: false } as any);
 
-  // ✅ FIX: Use SSOT industry-specific duration (gas_station=2h, hotel=4h, data_center=4h, etc.)
-  // data.durationHours comes from state.quote.durationHours set by pricingBridge sizingHints.
-  const ssotDuration = data.durationHours > 0 ? data.durationHours : 4;
+  // Only capture on FIRST render (frozen === false)
+  if (!snapshotRef.current.frozen) {
+    const rawBESSKW = data.bessKW > 0 ? data.bessKW : (data.peakLoadKW || state?.quote?.peakLoadKW || 200);
+    const ssotDuration = data.durationHours > 0 ? data.durationHours : 4;
 
-  // Apply goal-based intelligence to sizing
-  const goalModifiers = getGoalBasedMultipliers(data.goals as EnergyGoal[]);
+    snapshotRef.current = {
+      frozen: true,
+      rawBESSKW,
+      ssotDuration,
+      solarKW: data.addOns.includeSolar
+        ? (data.addOns.solarKW > 0 ? data.addOns.solarKW : rawBESSKW * 0.5)
+        : 0,
+      generatorKW: data.addOns.includeGenerator
+        ? (data.addOns.generatorKW > 0 ? data.addOns.generatorKW : rawBESSKW * 0.75)
+        : 0,
+      windKW: data.addOns.includeWind
+        ? (data.addOns.windKW > 0 ? data.addOns.windKW : rawBESSKW * 0.3)
+        : 0,
+      location: data.location.state || 'CA',
+      utilityRate: data.utilityRate || 0.12,
+      demandCharge: data.demandCharge || 0,
+      industry: data.industry || 'commercial',
+      goals: data.goals as EnergyGoal[],
+      addOns: { ...data.addOns },
+      stateQuote: state?.quote ? { ...state.quote } : undefined,
+      stateQuoteMargin: state?.quote?.margin ? { ...state.quote.margin } : undefined,
+    };
+  }
 
-  const baseBESSKW = rawBESSKW * goalModifiers.bessMultiplier;
-  const baseDuration = ssotDuration * goalModifiers.durationMultiplier;
-  const baseBESSKWh = baseBESSKW * baseDuration;
-  // ✅ FIX: Use Step 4 user inputs when available, fall back to proportional sizing
-  const baseSolarKW = data.addOns.includeSolar
-    ? (data.addOns.solarKW > 0 ? data.addOns.solarKW : rawBESSKW * 0.5) * goalModifiers.solarMultiplier
-    : 0;
-  const baseGeneratorKW = data.addOns.includeGenerator
-    ? (data.addOns.generatorKW > 0 ? data.addOns.generatorKW : rawBESSKW * 0.75) * goalModifiers.generatorMultiplier
-    : 0;
-  const baseWindKW = data.addOns.includeWind
-    ? (data.addOns.windKW > 0 ? data.addOns.windKW : rawBESSKW * 0.3) * goalModifiers.solarMultiplier
-    : 0;
+  const snap = snapshotRef.current;
+
+  // Apply goal-based intelligence to sizing (from frozen snapshot)
+  const goalModifiers = useMemo(
+    () => getGoalBasedMultipliers(snap.goals),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [] // Never recompute — goals are frozen at mount
+  );
+
+  // ── Stabilize derived sizing from frozen snapshot ──
+  const baseBESSKW = snap.rawBESSKW * goalModifiers.bessMultiplier;
+  const baseDuration = snap.ssotDuration * goalModifiers.durationMultiplier;
+  const baseSolarKW = snap.solarKW * goalModifiers.solarMultiplier;
+  const baseGeneratorKW = snap.generatorKW * goalModifiers.generatorMultiplier;
+  const baseWindKW = snap.windKW * goalModifiers.solarMultiplier;
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TIER GENERATION — runs ONCE on mount, zero DB calls if Step 4 pricing exists
+  // ══════════════════════════════════════════════════════════════════════════
+  const hasRunRef = useRef(false);
 
   useEffect(() => {
+    // Run exactly ONCE
+    if (hasRunRef.current) return;
+    hasRunRef.current = true;
+
     let cancelled = false;
 
     async function generateTiers() {
       setIsLoading(true);
       setLoadError(null);
 
-      console.log('[Step5 MagicFit] generateTiers starting', {
-        rawBESSKW,
-        ssotBESSKW: data.bessKW,
-        ssotDuration: data.durationHours,
+      const sq = snap.stateQuote;
+      const hasPricing = sq?.pricingComplete === true && (sq.grossCost ?? 0) > 0;
+
+      console.log('[Step5 MagicFit] generateTiers starting (zero-DB-call path)', {
+        hasPricingFromStep4: hasPricing,
         baseBESSKW,
         baseDuration,
         baseSolarKW,
         baseGeneratorKW,
         baseWindKW,
-        location: data.location.state,
-        utilityRate: data.utilityRate,
-        demandCharge: data.demandCharge,
-        industry: data.industry,
-        goals: data.goals,
-        addOns: data.addOns,
+        location: snap.location,
+        utilityRate: snap.utilityRate,
+        demandCharge: snap.demandCharge,
+        industry: snap.industry,
+        goals: snap.goals,
+        stateQuote: sq ? { grossCost: sq.grossCost, annualSavingsUSD: sq.annualSavingsUSD, bessKW: sq.bessKW, pricingComplete: sq.pricingComplete } : null,
       });
-      
-      // Timeout safety: if calculateQuote hangs, fail after 15s
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Quote calculation timed out after 15s')), 15000)
-      );
 
-      // ── QUOTA ENFORCEMENT (Feb 2026) ──
-      // MagicFit generates 3 tier quotes. Check quota before all 3.
       try {
-        const quotaCheck = checkQuotaStandalone("quote");
-        if (!quotaCheck.allowed) {
-          setLoadError(
-            `Quote limit reached (${quotaCheck.limit}/${quotaCheck.limit} on your plan). ` +
-            `Upgrade at /pricing for unlimited quotes.`
-          );
-          setIsLoading(false);
-          return;
+        let baseQuoteResult: QuoteResult;
+        let baseMargin: TierQuote['quote'] extends infer Q ? any : never;
+
+        if (hasPricing && sq) {
+          // ═══════════════════════════════════════════════════════════════
+          // FAST PATH: Build QuoteResult from state.quote (no DB call!)
+          // Step 4's runPricingSafe already computed everything we need.
+          // ═══════════════════════════════════════════════════════════════
+          console.log('[Step5 MagicFit] ✅ Using Step 4 cached quote (zero DB calls)');
+          baseQuoteResult = buildQuoteResultFromState(sq, data);
+
+          // Reconstruct margin from state.quote.margin
+          const m = snap.stateQuoteMargin;
+          baseMargin = m ? {
+            sellPriceTotal: m.sellPriceTotal,
+            baseCostTotal: m.baseCostTotal,
+            marginDollars: m.marginDollars,
+            marginPercent: m.marginPercent,
+            marginBand: m.marginBand,
+            itcRate: sq.itcRate ?? 0.3,
+            itcAmount: sq.itcAmount ?? m.sellPriceTotal * (sq.itcRate ?? 0.3),
+            netCost: m.sellPriceTotal - (sq.itcAmount ?? m.sellPriceTotal * (sq.itcRate ?? 0.3)),
+          } : null;
+        } else {
+          // ═══════════════════════════════════════════════════════════════
+          // FALLBACK: Step 4 pricing missing — make ONE calculateQuote call
+          // for PerfectFit base, then derive others with pure math.
+          // ═══════════════════════════════════════════════════════════════
+          console.log('[Step5 MagicFit] ⚠️ No Step 4 pricing — falling back to single calculateQuote call');
+
+          const PER_TIER_TIMEOUT_MS = 20_000;
+          let timer: ReturnType<typeof setTimeout> | undefined;
+
+          const quotePromise = calculateQuote({
+            storageSizeMW: baseBESSKW / 1000,
+            durationHours: baseDuration,
+            location: snap.location,
+            zipCode: '',
+            electricityRate: snap.utilityRate,
+            demandCharge: snap.demandCharge || undefined,
+            useCase: snap.industry.replace(/_/g, '-'),
+            solarMW: baseSolarKW / 1000,
+            windMW: baseWindKW / 1000,
+            generatorMW: baseGeneratorKW / 1000,
+            generatorFuelType: (snap.addOns.generatorFuelType || 'natural-gas') as 'diesel' | 'natural-gas' | 'dual-fuel',
+            gridConnection: 'on-grid',
+            batteryChemistry: 'lfp',
+          });
+
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            timer = setTimeout(() => reject(new Error(`PerfectFit fallback timed out after ${PER_TIER_TIMEOUT_MS / 1000}s`)), PER_TIER_TIMEOUT_MS);
+          });
+
+          baseQuoteResult = await Promise.race([quotePromise, timeoutPromise]);
+          clearTimeout(timer);
+
+          // Apply margin to the fresh quote
+          const energyMWh = (baseBESSKW / 1000) * baseDuration;
+          const marginResult = applyMarginToQuote(baseQuoteResult, energyMWh);
+          const itcRate = baseQuoteResult.benchmarkAudit?.assumptions?.itcRate ?? 0.3;
+          const sellPriceTotal = marginResult.sellPriceTotal;
+          const itcAmount = sellPriceTotal * itcRate;
+
+          baseMargin = {
+            sellPriceTotal,
+            baseCostTotal: marginResult.baseCostTotal,
+            marginDollars: marginResult.totalMarginDollars,
+            marginPercent: marginResult.blendedMarginPercent,
+            marginBand: marginResult.marginBandDescription,
+            itcRate,
+            itcAmount,
+            netCost: sellPriceTotal - itcAmount,
+          };
         }
-      } catch {
-        // Non-blocking — allow tiers if quota check fails
-      }
 
-      try {
-        const tierPromises = (['starter', 'perfectFit', 'beastMode'] as const).map(async (tierKey) => {
-          const config = TIER_CONFIG[tierKey];
-          
-          try {
-            // Apply tier multipliers to base sizing
-            const bessKW = baseBESSKW * config.multiplier;
-            const solarKW = baseSolarKW * config.solarMultiplier;
-            const generatorKW = baseGeneratorKW * config.genMultiplier;
-            const windKW = baseWindKW * config.solarMultiplier;
+        if (cancelled) return;
 
-            console.log(`[Step5 MagicFit] Calling calculateQuote for ${tierKey}`, {
-              storageSizeMW: bessKW / 1000,
-              durationHours: baseDuration,
-              solarMW: solarKW / 1000,
-              windMW: windKW / 1000,
-              generatorMW: generatorKW / 1000,
-            });
-
-            // Call SSOT calculateQuote with tier-specific sizing
-            // ⚠️ Do NOT hardcode itcConfig — let calculateQuote use smart defaults:
-            //   - Systems < 1 MW get automatic 30% ITC
-            //   - Systems ≥ 1 MW auto-enable prevailing wage for 30% ITC
-            //   This prevents the 6% vs 30% ITC cliff between tiers.
-            const quote = await calculateQuote({
-              storageSizeMW: bessKW / 1000,
-              durationHours: baseDuration,
-              location: data.location.state || 'CA',
-              zipCode: data.location.zip || '',
-              electricityRate: data.utilityRate || 0.12,
-              demandCharge: data.demandCharge || undefined,
-              useCase: (data.industry || 'commercial').replace(/_/g, '-'),
-              solarMW: solarKW / 1000,
-              windMW: windKW / 1000,
-              generatorMW: generatorKW / 1000,
-              generatorFuelType: (data.addOns.generatorFuelType || 'natural-gas') as 'diesel' | 'natural-gas' | 'dual-fuel',
-              gridConnection: 'on-grid',
-              batteryChemistry: 'lfp',
-            });
-
-            // ═══════════════════════════════════════════════════════════
-            // Apply Margin Policy (Feb 2026)
-            // Every customer-facing quote must include Merlin margin.
-            // ═══════════════════════════════════════════════════════════
-            const energyMWh = (bessKW / 1000) * baseDuration;
-            const marginResult = applyMarginToQuote(quote, energyMWh);
-
-            // Attach margin-adjusted costs to quote for downstream use
-            const itcRate = quote.benchmarkAudit?.assumptions?.itcRate ?? 0.3;
-            const sellPriceTotal = marginResult.sellPriceTotal;
-            const itcAmount = sellPriceTotal * itcRate;
-            const netCost = sellPriceTotal - itcAmount;
-
-            // Augment quote.costs with margin so handleSelectTier gets sell prices
-            (quote as any)._margin = {
-              sellPriceTotal,
-              baseCostTotal: marginResult.baseCostTotal,
-              marginDollars: marginResult.totalMarginDollars,
-              marginPercent: marginResult.blendedMarginPercent,
-              marginBand: marginResult.marginBandDescription,
-              itcRate,
-              itcAmount,
-              netCost,
-            };
-
-            console.log(`[Step5 MagicFit] ${tierKey} quote result:`, {
-              annualSavings: quote?.financials?.annualSavings,
-              totalCost: quote?.costs?.totalProjectCost,
-              payback: quote?.financials?.paybackYears,
-            });
-
-            return {
-              tierKey,
-              config,
-              quote,
-              loading: false,
-              error: null,
-            };
-          } catch (err) {
-            console.error(`[Step5 MagicFit] ${tierKey} failed:`, err);
-            return {
-              tierKey,
-              config,
-              quote: null as unknown as QuoteResult,
-              loading: false,
-              error: err instanceof Error ? err.message : 'Failed to generate quote',
-            };
-          }
-        });
-
-        const results = await Promise.race([
-          Promise.all(tierPromises),
-          timeoutPromise,
-        ]) as TierQuote[];
+        // ═══════════════════════════════════════════════════════════════════
+        // DERIVE ALL 3 TIERS from the single base using pure math
+        // ═══════════════════════════════════════════════════════════════════
+        const results: TierQuote[] = [];
+        for (const tierKey of ['starter', 'perfectFit', 'beastMode'] as const) {
+          results.push(scaleTier(baseQuoteResult, tierKey, TIER_CONFIG[tierKey], baseDuration, baseMargin));
+        }
 
         if (!cancelled) {
-          console.log('[Step5 MagicFit] All tiers generated:', results.map(r => ({
+          console.log('[Step5 MagicFit] All 3 tiers derived (zero extra DB calls):', results.map(r => ({
             tier: r.tierKey,
-            hasQuote: !!r.quote,
-            error: r.error,
+            annualSavings: r.quote?.financials?.annualSavings,
+            totalCost: r.quote?.costs?.totalProjectCost,
+            payback: r.quote?.financials?.paybackYears,
           })));
           setTiers(results);
           setIsLoading(false);
@@ -394,7 +842,8 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
 
     generateTiers();
     return () => { cancelled = true; };
-  }, [baseBESSKW, baseBESSKWh, baseSolarKW, baseGeneratorKW, baseWindKW, baseDuration, data.location.state, data.utilityRate, data.demandCharge, data.industry]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run ONCE on mount — all inputs frozen in snapshotRef
 
   const handleSelectTier = (tierKey: TierKey) => {
     setSelectedTier(tierKey);
@@ -722,9 +1171,9 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                     </div>
                   </div>
                   <div className="text-center p-2 bg-white/[0.03] rounded-lg">
-                    <div className="text-[10px] text-slate-500 font-medium">25yr ROI</div>
+                    <div className="text-[10px] text-slate-500 font-medium">5yr ROI</div>
                     <div className={`text-sm font-bold ${tier.config.accentColor}`}>
-                      {safeFixed(quote.financials?.roi25Year, 0)}%
+                      {safeFixed(quote.financials?.roi5Year, 0)}%
                     </div>
                   </div>
                 </div>

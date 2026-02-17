@@ -1,7 +1,7 @@
 /**
  * Complete Hotel Questionnaire Configuration
  *
- * 16 questions across 4 sections — matching car wash gold-standard format.
+ * 18 questions across 4 sections — matching car wash gold-standard format.
  * All question IDs align with the HOTEL_LOAD_V1_SSOT calculator adapter
  * in registry.ts (requiredInputs: roomCount, hotelClass, occupancyRate).
  *
@@ -9,7 +9,7 @@
  *   1. Facility (Q1-5)   — hotelCategory, numRooms, squareFootage, occupancyRate, buildingAge
  *   2. Amenities (Q6-10) — poolOnSite, restaurantOnSite, spaOnSite, laundryOnSite, evChargingForGuests
  *   3. Energy (Q11-13)   — gridConnection, gridReliability, existingGenerator
- *   4. Solar & Goals (Q14-16) — existingSolar, primaryGoal, budgetTimeline
+ *   4. Solar & Goals (Q14-18) — roofArea, canopyInterest, existingSolar, primaryGoal, budgetTimeline
  *
  * Calculator mapping:
  *   hotelCategory → hotelClass (via option value mapping)
@@ -588,8 +588,36 @@ export const hotelQuestionsComplete: Question[] = [
   },
 
   // ============================================================================
-  // SECTION 4: SOLAR & GOALS (Q14-Q16)
+  // SECTION 4: SOLAR & GOALS (Q14-Q18)
   // ============================================================================
+  {
+    id: 'roofArea',
+    type: 'slider',
+    section: 'solar',
+    title: 'Approximate building roof area?',
+    subtitle: 'Building footprint / roof space — we\'ll calculate usable solar area',
+    range: { min: 0, max: 75000, step: 500 },
+    smartDefault: 20000,
+    unit: ' sq ft',
+    helpText: 'Don\'t worry about exact numbers — industry-standard usability factors are applied automatically',
+    validation: { required: false, min: 0, max: 75000 },
+    impactsCalculations: ['roofSolar', 'solarCapacity'],
+  },
+  {
+    id: 'canopyInterest',
+    type: 'buttons',
+    section: 'solar',
+    title: 'Interested in solar canopy over guest parking?',
+    subtitle: 'Guest parking shade structures generate solar power — perfect for hotels with large lots',
+    options: [
+      { value: 'yes', label: 'Yes, Interested', icon: '🏗️', description: 'Generates solar + provides shade' },
+      { value: 'learn_more', label: 'Tell Me More', icon: '💡', description: 'Want to learn the benefits' },
+      { value: 'no', label: 'Not Now', icon: '❌', description: 'Roof solar only for now' },
+    ],
+    smartDefault: 'learn_more',
+    validation: { required: false },
+    impactsCalculations: ['carportSolar', 'solarCapacity'],
+  },
   {
     id: 'existingSolar',
     type: 'buttons',

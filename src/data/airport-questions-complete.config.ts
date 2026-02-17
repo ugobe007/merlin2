@@ -1,14 +1,14 @@
 /**
  * Complete Airport Questionnaire Configuration
  *
- * 16 questions across 4 sections.
+ * 18 questions across 4 sections.
  * Calculator: generic_ssot_v1 (accepts any inputs)
  *
  * Sections:
  *   1. Facility (Q1-4)    — airportClass, annualPassengers, terminalSqFt, terminals
  *   2. Operations (Q5-9)  — jetBridges, parkingStructure, groundTransport, evChargers, cargoFacility
  *   3. Energy (Q10-13)    — gridConnection, gridReliability, existingGenerator, cogeneration
- *   4. Solar & Goals (Q14-16) — existingSolar, primaryGoal, budgetTimeline
+ *   4. Solar & Goals (Q14-18) — roofArea, canopyInterest, existingSolar, primaryGoal, budgetTimeline
  *
  * Created: Feb 2026
  */
@@ -223,6 +223,34 @@ export const airportQuestionsComplete: Question[] = [
   },
 
   // ── SECTION 4: SOLAR & GOALS ──
+  {
+    id: 'roofArea',
+    type: 'slider',
+    section: 'solar',
+    title: 'Approximate building roof area?',
+    subtitle: 'Building footprint / roof space — we\'ll calculate usable solar area',
+    range: { min: 0, max: 500000, step: 5000 },
+    smartDefault: 100000,
+    unit: ' sq ft',
+    helpText: 'Don\'t worry about exact numbers — industry-standard usability factors are applied automatically',
+    validation: { required: false, min: 0, max: 500000 },
+    impactsCalculations: ['roofSolar', 'solarCapacity'],
+  },
+  {
+    id: 'canopyInterest',
+    type: 'buttons',
+    section: 'solar',
+    title: 'Interested in solar canopy over parking structures?',
+    subtitle: 'Terminal parking canopy provides massive solar generation potential',
+    options: [
+      { value: 'yes', label: 'Yes, Interested', icon: '🏗️', description: 'Generates solar + provides shade' },
+      { value: 'learn_more', label: 'Tell Me More', icon: '💡', description: 'Want to learn the benefits' },
+      { value: 'no', label: 'Not Now', icon: '❌', description: 'Roof solar only for now' },
+    ],
+    smartDefault: 'learn_more',
+    validation: { required: false },
+    impactsCalculations: ['carportSolar', 'solarCapacity'],
+  },
   {
     id: 'existingSolar',
     type: 'buttons',

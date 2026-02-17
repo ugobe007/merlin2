@@ -67,7 +67,7 @@ export interface UserCapabilities {
 const TIER_CAPABILITIES: Record<PricingTier, UserCapabilities> = {
   // $29/mo — Professional BESS quotes + basic financials
   starter: {
-    quotesPerMonth: 10,
+    quotesPerMonth: 15,
     maxProjects: 10,
     maxTeamMembers: 1,
     maxPowerProfileLevel: 4, // Levels 1-4
@@ -97,7 +97,7 @@ const TIER_CAPABILITIES: Record<PricingTier, UserCapabilities> = {
 
   // $49/mo — Advanced analytics + professional deliverables
   pro: {
-    quotesPerMonth: -1, // Unlimited
+    quotesPerMonth: 100, // 100/month per plan
     maxProjects: 50,
     maxTeamMembers: 1,
     maxPowerProfileLevel: 6, // Levels 1-6
