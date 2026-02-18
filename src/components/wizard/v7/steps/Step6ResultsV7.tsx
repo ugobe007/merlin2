@@ -45,6 +45,7 @@ import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import { useMerlinData } from "@/wizard/v7/memory";
 import TrueQuoteFinancialModal from "../shared/TrueQuoteFinancialModal";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
+import AuthModal from "@/components/AuthModal";
 
 type Props = {
   state: WizardV7State;
@@ -231,6 +232,8 @@ export default function Step6ResultsV7({ state, actions }: Props) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   // ProQuote™ upsell modal state
   const [showProQuoteModal, setShowProQuoteModal] = useState(false);
+  // Auth modal state (for "Save your quote" CTA)
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -1744,15 +1747,23 @@ function ExportBar({
                 Create a free account to save, revisit, and compare your BESS quotes anytime.
               </div>
             </div>
-            <a
-              href="/signup"
-              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/25 text-[#3ECF8E] text-sm font-bold hover:bg-[#3ECF8E]/20 hover:border-[#3ECF8E]/40 transition-all no-underline"
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/25 text-[#3ECF8E] text-sm font-bold hover:bg-[#3ECF8E]/20 hover:border-[#3ECF8E]/40 transition-all cursor-pointer"
             >
               Sign Up Free →
-            </a>
+            </button>
           </div>
         </div>
       )}
+
+      {/* ── AUTH MODAL: Opens when user clicks "Sign Up Free" ── */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLoginSuccess={() => setShowAuthModal(false)}
+        defaultMode="signup"
+      />
     </div>
   );
 }
