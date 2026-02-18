@@ -473,8 +473,10 @@ function buildQuoteResultFromState(
 ): QuoteResult {
   const bessKW = q.bessKW ?? 0;
   const bessKWh = q.bessKWh ?? 0;
-  const solarKW = q.solarKW ?? 0;
-  const genKW = q.generatorKW ?? 0;
+  // ✅ FIX: Fall back to data.addOns.solarKW if quote didn't capture solar
+  // This ensures solar configured in Step 3 isn't lost even if pricing ran without addOns
+  const solarKW = q.solarKW ?? (data.addOns.includeSolar ? data.addOns.solarKW : 0);
+  const genKW = q.generatorKW ?? (data.addOns.includeGenerator ? data.addOns.generatorKW : 0);
   const _duration = q.durationHours ?? 4;
 
   // Reconstruct equipment from stored sizing
@@ -500,9 +502,10 @@ function buildQuoteResultFromState(
   const sgTotalCost = equipmentCost * 0.05;
 
   // Solar cost (if applicable)
-  const solarCostPerWatt = 0.85;
-  const _solarTotalCost = solarKW > 0 ? (solarKW * 1000 * solarCostPerWatt) / 1000 : 0; // $/kW → total
-  const actualSolarCost = solarKW > 0 ? solarKW * solarCostPerWatt : 0;
+  // SSOT: costPerWatt is $/W. Total = kW × 1000 (→ W) × $/W = total $
+  // Example: 500 kW × 1000 × $0.95/W = $475,000
+  const solarCostPerWatt = solarKW >= 5000 ? 0.75 : solarKW >= 100 ? 0.95 : 1.25; // SSOT tiered pricing (Q1 2026)
+  const actualSolarCost = solarKW > 0 ? solarKW * 1000 * solarCostPerWatt : 0;
 
   // Generator cost
   const genCostPerKW = 700;

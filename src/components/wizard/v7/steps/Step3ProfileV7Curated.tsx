@@ -145,6 +145,7 @@ const SOLAR_QUESTIONS_MOVED_TO_MODAL = new Set([
   "totalSiteArea",
   "solarCapacityKW",
   "existingSolar",
+  "sustainabilityMandate", // government config has this in solar section
 ]);
 
 // Questions wrongly categorized under 'solar' section — remap to 'goals'
@@ -1071,11 +1072,14 @@ export default function Step3ProfileV7Curated(props: Props) {
   const sections: CuratedSection[] = curatedSchema.sections;
 
   // Build ordered groups: section → questions[]
+  // ✅ Solar section is fully handled by SolarSizingModal — skip it here (Feb 2026)
   const sectionGroups = useMemo(() => {
     // Get unique section IDs in question order (preserves flow)
     const seenSections: string[] = [];
     for (const q of visibleQuestions) {
       const s = q.section || "general";
+      // Skip 'solar' section entirely — handled by SolarSizingModal
+      if (s === "solar") continue;
       if (!seenSections.includes(s)) seenSections.push(s);
     }
 
@@ -1093,7 +1097,8 @@ export default function Step3ProfileV7Curated(props: Props) {
       };
     });
 
-    return groups;
+    // Filter out empty sections (safety net)
+    return groups.filter((g) => g.questions.length > 0);
   }, [visibleQuestions, sections]);
 
   // Compute question index offsets per section for continuous numbering

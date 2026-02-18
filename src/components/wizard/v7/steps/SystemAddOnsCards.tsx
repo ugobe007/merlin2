@@ -194,7 +194,10 @@ export function SystemAddOnsCards({
     if (currentAddOns.includeGenerator) s.add("generator");
     return s;
   });
-  const [solarTier, setSolarTier] = useState<string>("recommended");
+  // ✅ If solar was sized in Step 3 modal, default to "custom" tier (Feb 2026)
+  const [solarTier, setSolarTier] = useState<string>(
+    currentAddOns.solarKW > 0 ? "custom" : "recommended"
+  );
   const [evTier, setEvTier] = useState<string>("standard");
   const [generatorTier, setGeneratorTier] = useState<string>("standard");
   // ✅ All cards start expanded by default
@@ -252,19 +255,45 @@ export function SystemAddOnsCards({
     || "Commercial";
 
   // ── Compute tiers ──
+  // ✅ Custom tier from Step 3 Solar Sizing Modal (Feb 2026)
+  const step3SolarKW = currentAddOns.solarKW;
+
   const solarOpts = useMemo(
-    () => ({
-      starter: calcSolar("Starter", 0.15, annualUsageKwh, sunHours),
-      recommended: {
-        ...calcSolar("Recommended", 0.3, annualUsageKwh, sunHours),
-        tag: "Best ROI",
-      },
-      maximum: {
-        ...calcSolar("Maximum", 0.5, annualUsageKwh, sunHours),
-        tag: "Max Savings",
-      },
-    }),
-    [annualUsageKwh, sunHours]
+    () => {
+      const opts: Record<string, SolarTier> = {
+        starter: calcSolar("Starter", 0.15, annualUsageKwh, sunHours),
+        recommended: {
+          ...calcSolar("Recommended", 0.3, annualUsageKwh, sunHours),
+          tag: "Best ROI",
+        },
+        maximum: {
+          ...calcSolar("Maximum", 0.5, annualUsageKwh, sunHours),
+          tag: "Max Savings",
+        },
+      };
+
+      // If solar was sized in Step 3 modal, create a custom tier using that exact value
+      if (step3SolarKW > 0) {
+        // Reverse-engineer coverage percent from the sized kW
+        const customCoverage = annualUsageKwh > 0
+          ? Math.min(1.0, (step3SolarKW * sunHours * 365 * 0.85) / annualUsageKwh)
+          : 0.3;
+        const customResult = calcSolar("Your Solar Sizing", customCoverage, annualUsageKwh, sunHours);
+        // Override sizeKw to match exact modal value (avoid rounding drift)
+        opts.custom = {
+          ...customResult,
+          sizeKw: step3SolarKW,
+          sizeLabel: `${step3SolarKW.toLocaleString()} kW`,
+          panelCount: Math.ceil((step3SolarKW * 1000) / 500),
+          annualProductionKwh: Math.round(step3SolarKW * sunHours * 365 * 0.85),
+          annualSavings: Math.round(step3SolarKW * sunHours * 365 * 0.85 * 0.12),
+          tag: "Sized in Step 3",
+        };
+      }
+
+      return opts;
+    },
+    [annualUsageKwh, sunHours, step3SolarKW]
   );
 
   const evOpts = useMemo(
@@ -304,13 +333,13 @@ export function SystemAddOnsCards({
     : null;
 
   // 10-year combined value
-  const tenYearValue = // eslint-disable-line @typescript-eslint/no-unused-vars
+  const _tenYearValue =
     (curSolar ? curSolar.annualSavings * 10 : 0) +
     (curEv ? curEv.tenYearRevenue : 0);
 
   // Max potential for stats
   const maxSolarSavings = solarOpts.maximum.annualSavings;
-  const maxEvRevenue = evOpts.premium.monthlyRevenue * 12; // eslint-disable-line @typescript-eslint/no-unused-vars
+  const _maxEvRevenue = evOpts.premium.monthlyRevenue * 12;
 
   // ── Toggle handler ──
   const toggleOption = useCallback(
@@ -331,7 +360,7 @@ export function SystemAddOnsCards({
   );
 
   // ── Apply selections → recalculateWithAddOns ──
-  const handleApply = useCallback(async () => { // eslint-disable-line @typescript-eslint/no-unused-vars
+  const _handleApply = useCallback(async () => {
     if (!onRecalculate || busy) return;
     setBusy(true);
 
@@ -356,7 +385,7 @@ export function SystemAddOnsCards({
   }, [onRecalculate, busy, selectedOptions, curSolar, curGen, curEv]);
 
   // Has changes that need applying?
-  const needsApply = // eslint-disable-line @typescript-eslint/no-unused-vars
+  const _needsApply =
     selectedOptions.has("solar") !== currentAddOns.includeSolar ||
     (curSolar?.sizeKw ?? 0) !== currentAddOns.solarKW ||
     selectedOptions.has("generator") !== currentAddOns.includeGenerator ||
@@ -402,7 +431,27 @@ export function SystemAddOnsCards({
             >
               📈 Choose configuration based on {(annualUsageKwh / 1e6).toFixed(2)}M kWh usage:
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: solarOpts.custom ? "1fr 1fr 1fr 1fr" : "1fr 1fr 1fr", gap: 10 }}>
+              {/* Show custom tier first when available (sized in Step 3 modal) */}
+              {solarOpts.custom && (
+                <TierCard
+                  tier={solarOpts.custom}
+                  isSelected={solarTier === "custom" && selectedOptions.has("solar")}
+                  onClick={() => {
+                    setSolarTier("custom");
+                    if (!selectedOptions.has("solar")) toggleOption("solar");
+                  }}
+                  accent="amber"
+                  metrics={[
+                    { label: "System", value: `${solarOpts.custom.sizeKw.toLocaleString()} kW` },
+                    { label: "Production", value: `${solarOpts.custom.annualProductionKwh.toLocaleString()} kWh` },
+                    { label: "Savings", value: fmtUSD(solarOpts.custom.annualSavings), highlight: true, color: "emerald" },
+                    { label: "Payback", value: `${solarOpts.custom.paybackYears} years` },
+                    { label: "Cost", value: fmtUSD(solarOpts.custom.installCost) },
+                    { label: "After ITC", value: fmtUSD(solarOpts.custom.netCostAfterITC), highlight: true, color: "amber" },
+                  ]}
+                />
+              )}
               {(["starter", "recommended", "maximum"] as const).map((k) => {
                 const o = solarOpts[k];
                 return (

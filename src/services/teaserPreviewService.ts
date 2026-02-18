@@ -270,7 +270,7 @@ export function calculateTeaserPreview(input: TeaserInput): TeaserPreview {
   const bessKWh = peakDemandKW * 0.4 * 4; // 40% of peak, 4 hours
   
   // Cost estimates (rough, not SSOT pricing)
-  const solarCost = solarKW * 850; // ~$0.85/W for commercial
+  const solarCost = solarKW * 950; // SSOT: $0.95/W commercial = $950/kW (Q1 2026)
   const bessCost = bessKWh * 125; // ~$125/kWh (Dec 2025 market)
   const solarBessCost = solarCost + bessCost;
   

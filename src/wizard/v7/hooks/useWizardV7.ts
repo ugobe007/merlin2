@@ -4529,11 +4529,13 @@ export function useWizardV7() {
 
         // ✅ Run pricing in background (non-blocking)
         // MagicFit will use these results to generate 3 tiers
+        // ✅ FIX: Pass step4AddOns so solar/wind/generator configured in Step 3 flows through
         runPricingSafe({
           industry: state.industry,
           answers,
           location: state.location ?? undefined,
           locationIntel: state.locationIntel ?? undefined,
+          addOns: state.step4AddOns,
         });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
@@ -4551,11 +4553,13 @@ export function useWizardV7() {
         setStep("options", "step3_complete_fallback");
 
         // ✅ Run pricing in background regardless
+        // ✅ FIX: Pass step4AddOns so solar/wind/generator configured in Step 3 flows through
         runPricingSafe({
           industry: state.industry,
           answers,
           location: state.location ?? undefined,
           locationIntel: state.locationIntel ?? undefined,
+          addOns: state.step4AddOns,
         });
       }
     },
@@ -4573,6 +4577,7 @@ export function useWizardV7() {
       state.step3Answers,
       state.step3AnswersMeta,
       state.pricingStatus,
+      state.step4AddOns,
     ]
   );
 
