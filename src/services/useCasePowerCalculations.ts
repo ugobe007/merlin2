@@ -7132,6 +7132,7 @@ export function validateIndustrySolarCapacity(
       totalPotentialKW: maxKW,
       usableRoofSqFt: Math.round(usableRoof),
       requiredRoofSqFt: Math.round((solarKW * 1000) / SOLAR_WATTS_PER_SQFT),
+      canopyCanCover: false,
       warning: `Unknown industry "${industry}". Using conservative 40% roof utilization on ${defaultFootprint.toLocaleString()} sqft.`,
     };
   }
