@@ -13,6 +13,7 @@ import WizardVNextPage from "./pages/WizardVNextPage"; // vNext: luminous HUD sc
 import MetaCalculationsPage from "./pages/MetaCalculationsPage";
 import MarketIntelligencePage from "./pages/MarketIntelligencePage";
 import QuoteTemplatePage from "./pages/QuoteTemplatePage";
+import AccountPage from "./pages/AccountPage";
 import SupportFAQ from "./components/SupportFAQ";
 import PricingPage from "./components/pricing/PricingPage";
 import CheckoutCallback from "./components/pricing/CheckoutCallback";
@@ -144,6 +145,11 @@ function App() {
   // Access via /pricing - Pricing & Vendor API page
   if (pathname === "/pricing") {
     return <PricingPage />;
+  }
+
+  // Access via /account - User subscription & billing management
+  if (pathname === "/account" || pathname === "/billing" || pathname === "/subscription") {
+    return <AccountPage />;
   }
 
   // Access via /market-intelligence - Subscriber market reports

@@ -291,6 +291,7 @@ export default function PricingPage() {
           </div>
           <div className="flex items-center gap-6">
             <a href="/wizard" className="text-sm text-white/50 hover:text-white transition-colors">Wizard</a>
+            <a href="/account" className="text-sm text-white/50 hover:text-white transition-colors">Account</a>
             <a href="/vendor" className="text-sm text-white/50 hover:text-white transition-colors">Vendors</a>
             <a href="/support" className="text-sm text-white/50 hover:text-white transition-colors">Support</a>
           </div>
