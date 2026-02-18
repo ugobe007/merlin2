@@ -270,7 +270,8 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
 
     // 1. Parse inputs — bridge curated config IDs → calculator field names
     // Curated sends: numRooms, hotelCategory, occupancyRate, poolOnSite, restaurantOnSite, spaOnSite, laundryOnSite
-    const roomCount = Number(inputs.roomCount ?? inputs.numRooms) || 150;
+    const _rawRoomCount = inputs.roomCount ?? inputs.numRooms;
+    const roomCount = _rawRoomCount != null ? Number(_rawRoomCount) || 150 : 150;
     // Map curated hotelCategory values (1-star..5-star) → calculator values (economy..luxury)
     const rawHotelClass = String(inputs.hotelClass ?? inputs.hotelCategory ?? "midscale");
     const HOTEL_CLASS_MAP: Record<string, string> = {
@@ -494,8 +495,10 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
     const rawBayTunnel = inputs.bayTunnelCount ?? inputs.tunnelOrBayCount;
     const bayTunnelStr = String(rawBayTunnel || "4 bays");
     const bayCount = parseBayTunnel(rawBayTunnel);
-    const carsPerDay = Number(inputs.averageWashesPerDay ?? inputs.dailyVehicles) || 200;
-    const operatingHours = Number(inputs.operatingHours) || 12;
+    const _rawCarsPerDay = inputs.averageWashesPerDay ?? inputs.dailyVehicles;
+    const carsPerDay = _rawCarsPerDay != null ? (Number(_rawCarsPerDay) || 200) : 200;
+    const _rawOpHours = inputs.operatingHours;
+    const operatingHours = _rawOpHours != null ? (Number(_rawOpHours) || 12) : 12;
     // Curated facilityType values: express_tunnel, mini_tunnel, in_bay_automatic, self_serve
     // Calculator expects: tunnel, automatic, selfService, fullService
     const rawWashType = String(inputs.carWashType ?? inputs.facilityType ?? "tunnel");
@@ -672,7 +675,7 @@ export const OFFICE_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     // --- Core input ---
-    const squareFootage = Number(inputs.squareFootage) || 50000;
+    const squareFootage = inputs.squareFootage != null ? (Number(inputs.squareFootage) || 50000) : 50000;
     if (!inputs.squareFootage) {
       assumptions.push("Default: 50,000 sq ft (no user input)");
     }
@@ -805,7 +808,16 @@ export const OFFICE_LOAD_V1_SSOT: CalculatorContract = {
       hvacPct *= 1.2;
     }
 
-    // Normalize base percentages so they sum to basePowerKW contribution
+    // Normalize base percentages so they always sum to exactly 1.0
+    // (tech office + aging HVAC can inflate sum to ~1.08 before normalization)
+    const rawBasePctSum = hvacPct + lightingPct + processPct + controlsPct;
+    if (rawBasePctSum > 1.0) {
+      const normFactor = 1.0 / rawBasePctSum;
+      hvacPct *= normFactor;
+      lightingPct *= normFactor;
+      processPct *= normFactor;
+      // controlsPct stays fixed at 0.05 (small enough to absorb)
+    }
     const basePctSum = hvacPct + lightingPct + processPct + controlsPct;
     const otherBasePct = Math.max(0, 1 - basePctSum); // Remainder
 
@@ -1029,7 +1041,7 @@ export const MANUFACTURING_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     // --- Core inputs (bridge curated config IDs → calculator field names) ---
-    const squareFootage = Number(inputs.squareFootage) || 100000;
+    const squareFootage = inputs.squareFootage != null ? (Number(inputs.squareFootage) || 100000) : 100000;
     // Curated: facilityType (light-assembly/heavy-industrial/electronics/food-processing/chemical/pharmaceutical/automotive)
     // Calculator expects: manufacturingType (light/medium/heavy/electronics/food)
     const rawMfgType = String(inputs.manufacturingType || inputs.facilityType || "light");
@@ -1272,7 +1284,7 @@ export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     // --- Core inputs (bridge curated config IDs → calculator field names) ---
-    const bedCount = Number(inputs.bedCount) || 200;
+    const bedCount = inputs.bedCount != null ? (Number(inputs.bedCount) || 200) : 200;
     // Curated config: facilityType (community-hospital/regional-medical/academic/specialty)
     // Calculator expects: hospitalType (community/regional/academic/specialty)
     const rawHospType = String(inputs.hospitalType || inputs.facilityType || "regional");
@@ -1390,11 +1402,22 @@ export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
 
     // 4. Contributor breakdown (percentages of total, not just base)
     // SSOT rule: HVAC + process/critical + IT should never smear equally
-    const hvacPct = 0.35;
-    const processPct = Math.min(0.3 + (equipmentLoadKW / peakLoadKW) * 0.5, 0.55); // process rises with equipment
-    const itPct = 0.1;
-    const lightingPct = 0.1;
+    let hvacPct = 0.35;
+    let processPct = Math.min(0.3 + (equipmentLoadKW / peakLoadKW) * 0.5, 0.55); // process rises with equipment
+    let itPct = 0.1;
+    let lightingPct = 0.1;
     const controlsPct = 0.05;
+
+    // Normalize: when processPct is high, total can exceed 1.0 (up to 1.15).
+    // Redistribute so all percentages sum to exactly 1.0.
+    const rawSum = hvacPct + processPct + itPct + lightingPct + controlsPct;
+    if (rawSum > 1.0) {
+      const normFactor = (1.0 - controlsPct) / (rawSum - controlsPct);
+      hvacPct *= normFactor;
+      processPct *= normFactor;
+      itPct *= normFactor;
+      lightingPct *= normFactor;
+    }
     const otherPct = Math.max(0.0, 1.0 - hvacPct - processPct - itPct - lightingPct - controlsPct);
 
     const hvacKW = peakLoadKW * hvacPct;
@@ -1416,7 +1439,7 @@ export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
     const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
 
     // Critical load (NEC 517 / NFPA 99)
-    const criticalLoadPct = Number(inputs.criticalLoadPct) || 0.85;
+    const criticalLoadPct = inputs.criticalLoadPct != null ? Number(inputs.criticalLoadPct) : 0.85;
 
     const validation: CalcValidation = {
       version: "v1",
@@ -1498,7 +1521,7 @@ export const WAREHOUSE_LOAD_V1_SSOT: CalculatorContract = {
     const warnings: string[] = [];
     const assumptions: string[] = [];
 
-    const squareFootage = Number(inputs.squareFootage) || 200000;
+    const squareFootage = inputs.squareFootage != null ? (Number(inputs.squareFootage) || 200000) : 200000;
     // Bridge curated: warehouseType (ambient/cold-storage/freezer/mixed) → isColdStorage
     let isColdStorage = inputs.isColdStorage === true || inputs.isColdStorage === "true";
     if (!isColdStorage && inputs.warehouseType != null) {
@@ -2427,7 +2450,8 @@ export const AIRPORT_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     // ── Bridge curated → SSOT fields ───────────────────────────────
-    const rawPassengers = Number(inputs.annualPassengers ?? inputs.annual_passengers) || 1000000;
+    const _rawPassengersVal = inputs.annualPassengers ?? inputs.annual_passengers;
+    const rawPassengers = _rawPassengersVal != null ? (Number(_rawPassengersVal) || 1000000) : 1000000;
     const annualPassengersMillions =
       rawPassengers >= 1000 ? rawPassengers / 1000000 : rawPassengers;
     const terminalSqFt = Number(inputs.terminalSqFt) || 500000;
@@ -2612,7 +2636,9 @@ export const CASINO_LOAD_V1_SSOT: CalculatorContract = {
     const hvacKW = peakLoadKW * hvacPct;
     const lightingKW = peakLoadKW * lightingPct;
     const controlsKW = peakLoadKW * controlsPct;
-    const otherKW = peakLoadKW * Math.max(0.05, otherPct);
+    // Include hotel + restaurant kW in 'other' so all power is accounted for
+    const hotelRestaurantPct = hotelLoadPct + restaurantLoadPct;
+    const otherKW = peakLoadKW * Math.max(0.05, otherPct + hotelRestaurantPct);
     const kWContributorsTotalKW = processKW + hvacKW + lightingKW + controlsKW + otherKW;
 
     const dutyCycle = 0.9; // Casinos run 24/7
@@ -2640,7 +2666,7 @@ export const CASINO_LOAD_V1_SSOT: CalculatorContract = {
         itLoadPct: 0,
         coolingPct: 0,
         chargingPct: 0,
-        otherPct: Math.max(5, otherPct * 100),
+        otherPct: peakLoadKW > 0 ? (otherKW / peakLoadKW) * 100 : Math.max(5, otherPct * 100),
       },
       details: {
         casino: { gamingFloorSqft, totalPropertySqFt, hotelRooms, restaurants, casinoType },
@@ -2681,7 +2707,8 @@ export const APARTMENT_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     // ── Bridge curated → SSOT fields ───────────────────────────────
-    const unitCount = Number(inputs.unitCount ?? inputs.numUnits ?? inputs.units) || 400;
+    const _rawUnitCount = inputs.unitCount ?? inputs.numUnits ?? inputs.units;
+    const unitCount = _rawUnitCount != null ? (Number(_rawUnitCount) || 400) : 400;
 
     // ✅ FIX (Feb 14, 2026): Map button string values → numeric sq ft
     // Curated buttons: 'studio'(<600)/'1br'(600-900)/'2br'(900-1200)/'large'(1200+)
@@ -2797,7 +2824,8 @@ export const COLLEGE_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     // ── Bridge curated → SSOT fields ───────────────────────────────
-    const enrollment = Number(inputs.enrollment ?? inputs.studentCount ?? inputs.students) || 15000;
+    const _rawEnrollment = inputs.enrollment ?? inputs.studentCount ?? inputs.students;
+    const enrollment = _rawEnrollment != null ? (Number(_rawEnrollment) || 15000) : 15000;
     const campusSqFt = Number(inputs.campusSqFt) || 0;
     const institutionType = String(inputs.institutionType ?? "university").toLowerCase();
     const hasResearchLabs =
