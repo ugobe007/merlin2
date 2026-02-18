@@ -30,23 +30,23 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // Map Stripe Price IDs → Merlin tier names
 const PRICE_TO_TIER: Record<string, string> = {
   // Builder (Starter)
-  'price_1T1o00DDikrZ8niOVKn08ILA': 'starter',  // monthly
-  'price_1T1oByDDikrZ8niOVx5OO12E': 'starter',  // annual
+  'price_1T22fNDoNSCVLvYPyEeYKW5y': 'starter',  // monthly
+  'price_1T22fNDoNSCVLvYPgIXNWuRe': 'starter',  // annual
   // Pro
-  'price_1T1o1lDDikrZ8niOIIb3Kjto': 'pro',      // monthly
-  'price_1T1oBADDikrZ8niO9IsHJ1Hv': 'pro',      // annual
+  'price_1T22fODoNSCVLvYPVYRKn72N': 'pro',      // monthly
+  'price_1T22fODoNSCVLvYPLOE4lTIc': 'pro',      // annual
   // Advanced
-  'price_1T1o2pDDikrZ8niOvh28FT4J': 'advanced',  // monthly
-  'price_1T1o9YDDikrZ8niOPfgW9rZE': 'advanced',  // annual
+  'price_1T22fPDoNSCVLvYPhoa8KgM4': 'advanced',  // monthly
+  'price_1T22fPDoNSCVLvYPrLnx5O4Y': 'advanced',  // annual
 };
 
 const PRICE_TO_BILLING: Record<string, string> = {
-  'price_1T1o00DDikrZ8niOVKn08ILA': 'monthly',
-  'price_1T1oByDDikrZ8niOVx5OO12E': 'annual',
-  'price_1T1o1lDDikrZ8niOIIb3Kjto': 'monthly',
-  'price_1T1oBADDikrZ8niO9IsHJ1Hv': 'annual',
-  'price_1T1o2pDDikrZ8niOvh28FT4J': 'monthly',
-  'price_1T1o9YDDikrZ8niOPfgW9rZE': 'annual',
+  'price_1T22fNDoNSCVLvYPyEeYKW5y': 'monthly',
+  'price_1T22fNDoNSCVLvYPgIXNWuRe': 'annual',
+  'price_1T22fODoNSCVLvYPVYRKn72N': 'monthly',
+  'price_1T22fODoNSCVLvYPLOE4lTIc': 'annual',
+  'price_1T22fPDoNSCVLvYPhoa8KgM4': 'monthly',
+  'price_1T22fPDoNSCVLvYPrLnx5O4Y': 'annual',
 };
 
 serve(async (req: Request) => {

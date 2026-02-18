@@ -133,6 +133,7 @@ export default function AccountPage() {
       const t = setTimeout(() => setActionMessage(null), 4000);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [actionMessage]);
 
   const handleCancel = () => {

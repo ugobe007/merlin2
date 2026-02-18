@@ -95,8 +95,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     name: 'Builder',
     priceMonthly: 29,
     priceAnnual: 290,
-    stripePriceIdMonthly: 'price_1T1o00DDikrZ8niOVKn08ILA',
-    stripePriceIdAnnual: 'price_1T1oByDDikrZ8niOVx5OO12E',
+    stripePriceIdMonthly: 'price_1T22fNDoNSCVLvYPyEeYKW5y',
+    stripePriceIdAnnual: 'price_1T22fNDoNSCVLvYPgIXNWuRe',
     features: [
       '15 quotes per month',
       'BESS sizing & configuration',
@@ -127,8 +127,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     name: 'Pro',
     priceMonthly: 49,
     priceAnnual: 490,
-    stripePriceIdMonthly: 'price_1T1o1lDDikrZ8niOIIb3Kjto',
-    stripePriceIdAnnual: 'price_1T1oBADDikrZ8niO9IsHJ1Hv',
+    stripePriceIdMonthly: 'price_1T22fODoNSCVLvYPVYRKn72N',
+    stripePriceIdAnnual: 'price_1T22fODoNSCVLvYPLOE4lTIc',
     features: [
       '100 quotes per month',
       'NPV, IRR & DCF analysis',
@@ -163,8 +163,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     name: 'Advanced',
     priceMonthly: 99,
     priceAnnual: 990,
-    stripePriceIdMonthly: 'price_1T1o2pDDikrZ8niOvh28FT4J',
-    stripePriceIdAnnual: 'price_1T1o9YDDikrZ8niOPfgW9rZE',
+    stripePriceIdMonthly: 'price_1T22fPDoNSCVLvYPhoa8KgM4',
+    stripePriceIdAnnual: 'price_1T22fPDoNSCVLvYPrLnx5O4Y',
     features: [
       'Everything in Pro',
       'Monte Carlo risk analysis',
