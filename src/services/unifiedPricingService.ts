@@ -128,22 +128,22 @@ const NREL_ATB_2024_BATTERY: BatteryPricing = {
 };
 
 const NREL_INVERTER_PRICING: InverterPricing = {
-  pricePerKW: 80, // $80/kW for utility-scale (NREL ATB 2024, may be updated)
+  pricePerKW: 100, // $100/kW harmonized midpoint (NREL ATB $80 + market intel $120, Feb 2026)
   manufacturer: "Various (Industry Standard)",
   model: "Grid-Scale Inverter",
   efficiency: 0.97,
   warrantyYears: 10,
   dataSource: "nrel",
-  lastUpdated: new Date("2024-11-01"), // TODO: Update to 2025/2026 if available
+  lastUpdated: new Date("2026-02-01"),
 };
 
 const NREL_TRANSFORMER_PRICING: TransformerPricing = {
-  pricePerMVA: 50000, // $50k per MVA (NREL ATB 2024, may be updated)
+  pricePerMVA: 65000, // $65k per MVA ($65/kVA) harmonized midpoint (NREL $50 + equipmentCalc $80, Feb 2026)
   manufacturer: "Various (Industry Standard)",
   voltage: "34.5kV",
   efficiency: 0.99,
   dataSource: "nrel",
-  lastUpdated: new Date("2024-11-01"), // TODO: Update to 2025/2026 if available
+  lastUpdated: new Date("2026-02-01"),
 };
 
 const NREL_SOLAR_PRICING: SolarPricing = {

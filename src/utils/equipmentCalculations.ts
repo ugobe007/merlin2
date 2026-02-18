@@ -370,9 +370,9 @@ export const calculateEquipmentBreakdown = async (
   // ✅ SINGLE SOURCE OF TRUTH: Fetch power electronics pricing
   // PRIORITY: 1) Market data, 2) equipment_pricing_tiers, 3) pricing_configurations, 4) fallback
   let powerElectronicsConfig: any = null;
-  let inverterPerKW = 120; // Default fallback
-  let transformerPerKVA = 80;
-  let switchgearPerKW = 50;
+  let inverterPerKW = 100; // Harmonized Feb 2026: midpoint of NREL $80 and market intel $120
+  let transformerPerKVA = 65; // Harmonized Feb 2026: midpoint of NREL $50 and market intel $80
+  let switchgearPerKW = 50;  // C&I standard (LV switchgear)
   
   try {
     // Try new equipment_pricing_tiers service first (market data integrated)
@@ -395,8 +395,8 @@ export const calculateEquipmentBreakdown = async (
       const legacyConfig = await useCaseService.getPricingConfig("power_electronics_2025");
       if (legacyConfig) {
         powerElectronicsConfig = legacyConfig;
-        inverterPerKW = legacyConfig.inverterPerKW || 120;
-        transformerPerKVA = legacyConfig.transformerPerKVA || 80;
+        inverterPerKW = legacyConfig.inverterPerKW || 100;
+        transformerPerKVA = legacyConfig.transformerPerKVA || 65;
         switchgearPerKW = legacyConfig.switchgearPerKW || 50;
       }
     } catch (legacyError) {

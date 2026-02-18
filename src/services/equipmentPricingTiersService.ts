@@ -297,6 +297,8 @@ export async function getAllMarkupConfigs(): Promise<Array<{
 // HARDCODED FALLBACKS (ONLY USED IF DATABASE UNAVAILABLE)
 // These are NOT the source of truth - just safety nets
 // ============================================================================
+// HARMONIZED Feb 2026 — aligned with equipmentCalculations.ts, marketIntelligence.ts, and NREL ATB 2024
+// See copilot-instructions.md §PRICING for authoritative source hierarchy
 const FALLBACK_PRICING: Partial<Record<EquipmentType, { price: number; unit: PriceUnit }>> = {
   microgrid_controller: { price: 15000, unit: 'per_unit' },
   dc_patch_panel: { price: 4500, unit: 'per_unit' },
@@ -305,10 +307,10 @@ const FALLBACK_PRICING: Partial<Record<EquipmentType, { price: number; unit: Pri
   ess_enclosure: { price: 35000, unit: 'per_unit' },
   scada: { price: 45000, unit: 'flat' },
   ems_software: { price: 15000, unit: 'per_unit' },
-  transformer: { price: 55, unit: 'per_kVA' },
-  inverter_pcs: { price: 95, unit: 'per_kW' },
-  switchgear: { price: 150, unit: 'per_kW' },
-  bess: { price: 125, unit: 'per_kWh' },
+  transformer: { price: 65, unit: 'per_kVA' },    // Harmonized: midpoint of NREL $50 and equipmentCalc $80
+  inverter_pcs: { price: 100, unit: 'per_kW' },    // Harmonized: midpoint of NREL $80 and market intel $120
+  switchgear: { price: 50, unit: 'per_kW' },        // Harmonized: matches equipmentCalculations.ts (C&I = $30, utility = $50)
+  bess: { price: 130, unit: 'per_kWh' },            // Harmonized: matches NREL ATB 2024 + BNEF Q1 2026 (C&I containerized)
   solar: { price: 0.85, unit: 'per_W' },
   ev_charger: { price: 35000, unit: 'per_unit' },
   generator: { price: 700, unit: 'per_kW' },

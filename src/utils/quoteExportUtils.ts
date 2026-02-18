@@ -127,6 +127,24 @@ export interface QuoteExportData {
 
   // Pricing Snapshot (audit trail)
   pricingSnapshotId?: string;
+
+  // Equipment Cost Breakdown (Feb 2026)
+  equipmentCosts?: {
+    batteryCost?: number;
+    batteryPerKWh?: number;
+    inverterCost?: number;
+    inverterPerKW?: number;
+    transformerCost?: number;
+    switchgearCost?: number;
+    solarCost?: number;
+    solarPerWatt?: number;
+    generatorCost?: number;
+    generatorPerKW?: number;
+    installationCost?: number;
+    totalEquipmentCost?: number;
+    allInPerKW?: number;
+    allInPerKWh?: number;
+  };
 }
 
 /**
@@ -953,6 +971,48 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             1
           ),
           spacer(200),
+
+          // Equipment Cost Breakdown (Feb 2026) — shows component-level + unit economics
+          ...(data.equipmentCosts && data.equipmentCosts.totalEquipmentCost
+            ? [
+                subHeading("Equipment Cost Breakdown"),
+                makeTable(
+                  ["Component", "Cost", "Unit Rate"],
+                  [
+                    ...(data.equipmentCosts.batteryCost
+                      ? [["Battery Storage (LFP)", fmt(data.equipmentCosts.batteryCost), data.equipmentCosts.batteryPerKWh ? `${fmt(data.equipmentCosts.batteryPerKWh)}/kWh` : "—"]]
+                      : []),
+                    ...(data.equipmentCosts.inverterCost
+                      ? [["Power Conversion System (PCS)", fmt(data.equipmentCosts.inverterCost), data.equipmentCosts.inverterPerKW ? `${fmt(data.equipmentCosts.inverterPerKW)}/kW` : "—"]]
+                      : []),
+                    ...(data.equipmentCosts.transformerCost
+                      ? [["Transformer", fmt(data.equipmentCosts.transformerCost), "—"]]
+                      : []),
+                    ...(data.equipmentCosts.switchgearCost
+                      ? [["Switchgear", fmt(data.equipmentCosts.switchgearCost), "—"]]
+                      : []),
+                    ...(data.equipmentCosts.solarCost
+                      ? [["Solar Array", fmt(data.equipmentCosts.solarCost), data.equipmentCosts.solarPerWatt ? `$${data.equipmentCosts.solarPerWatt.toFixed(2)}/W` : "—"]]
+                      : []),
+                    ...(data.equipmentCosts.generatorCost
+                      ? [["Backup Generator", fmt(data.equipmentCosts.generatorCost), data.equipmentCosts.generatorPerKW ? `${fmt(data.equipmentCosts.generatorPerKW)}/kW` : "—"]]
+                      : []),
+                    ...(data.equipmentCosts.installationCost
+                      ? [["Installation / BOS / EPC", fmt(data.equipmentCosts.installationCost), "—"]]
+                      : []),
+                    ["Base Equipment Total", fmt(data.equipmentCosts.totalEquipmentCost), "—"],
+                  ],
+                  1
+                ),
+                // Unit economics summary
+                ...(data.equipmentCosts.allInPerKWh || data.equipmentCosts.allInPerKW
+                  ? [bodyParagraph(
+                      `Unit Economics: ${data.equipmentCosts.allInPerKWh ? `${fmt(data.equipmentCosts.allInPerKWh)}/kWh (all-in)` : ""}${data.equipmentCosts.allInPerKWh && data.equipmentCosts.allInPerKW ? " | " : ""}${data.equipmentCosts.allInPerKW ? `${fmt(data.equipmentCosts.allInPerKW)}/kW (all-in)` : ""}`
+                    )]
+                  : []),
+                spacer(200),
+              ]
+            : []),
 
           subHeading("Savings & Returns"),
           makeTable(
@@ -1916,7 +1976,21 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
         ${data.financialAnalysis.npv != null ? `<tr><td class="label-cell">NPV (25 yr)</td><td class="value-cell green">${fmtCurrencyShort(data.financialAnalysis.npv)}</td></tr>` : ""}
         ${data.financialAnalysis.irr != null ? `<tr><td class="label-cell">IRR</td><td class="value-cell">${(data.financialAnalysis.irr * 100).toFixed(1)}%</td></tr>` : ""}
         ${data.financialAnalysis.demandChargeSavings != null ? `<tr><td class="label-cell">Demand Charge Savings</td><td class="value-cell green">${fmtCurrencyShort(data.financialAnalysis.demandChargeSavings)}/year</td></tr>` : ""}
+        ${data.equipmentCosts?.allInPerKWh ? `<tr><td class="label-cell">All-In Cost $/kWh</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.allInPerKWh)}/kWh</td></tr>` : ""}
+        ${data.equipmentCosts?.allInPerKW ? `<tr><td class="label-cell">All-In Cost $/kW</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.allInPerKW)}/kW</td></tr>` : ""}
       </table>
+      ${data.equipmentCosts?.totalEquipmentCost ? `
+      <div style="margin-top: 16px; font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Equipment Cost Breakdown</div>
+      <table class="financial-table" style="margin-top: 8px;">
+        ${data.equipmentCosts.batteryCost ? `<tr><td class="label-cell">Battery Storage (LFP)</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.batteryCost)}${data.equipmentCosts.batteryPerKWh ? ` <span style="color:#64748b;font-size:10px">(${fmtCurrencyShort(data.equipmentCosts.batteryPerKWh)}/kWh)</span>` : ""}</td></tr>` : ""}
+        ${data.equipmentCosts.inverterCost ? `<tr><td class="label-cell">Power Conversion (PCS)</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.inverterCost)}${data.equipmentCosts.inverterPerKW ? ` <span style="color:#64748b;font-size:10px">(${fmtCurrencyShort(data.equipmentCosts.inverterPerKW)}/kW)</span>` : ""}</td></tr>` : ""}
+        ${data.equipmentCosts.transformerCost ? `<tr><td class="label-cell">Transformer</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.transformerCost)}</td></tr>` : ""}
+        ${data.equipmentCosts.switchgearCost ? `<tr><td class="label-cell">Switchgear</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.switchgearCost)}</td></tr>` : ""}
+        ${data.equipmentCosts.solarCost ? `<tr><td class="label-cell">Solar Array</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.solarCost)}${data.equipmentCosts.solarPerWatt ? ` <span style="color:#64748b;font-size:10px">($${data.equipmentCosts.solarPerWatt.toFixed(2)}/W)</span>` : ""}</td></tr>` : ""}
+        ${data.equipmentCosts.generatorCost ? `<tr><td class="label-cell">Backup Generator</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.generatorCost)}${data.equipmentCosts.generatorPerKW ? ` <span style="color:#64748b;font-size:10px">(${fmtCurrencyShort(data.equipmentCosts.generatorPerKW)}/kW)</span>` : ""}</td></tr>` : ""}
+        ${data.equipmentCosts.installationCost ? `<tr><td class="label-cell">Installation / BOS / EPC</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.installationCost)}</td></tr>` : ""}
+        <tr style="border-top: 1px solid #334155;"><td class="label-cell" style="font-weight:700">Base Equipment Total</td><td class="value-cell" style="font-weight:700">${fmtCurrencyShort(data.equipmentCosts.totalEquipmentCost)}</td></tr>
+      </table>` : ""}
       `
           : ""
       }
@@ -2027,16 +2101,22 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
     ["Total System Cost ($)", data.systemCost],
     [
       "Cost per kW ($/kW)",
-      data.storageSizeMW > 0 ? Math.round(data.systemCost / (data.storageSizeMW * 1000)) : 0,
+      data.equipmentCosts?.allInPerKW
+        ? Math.round(data.equipmentCosts.allInPerKW)
+        : data.storageSizeMW > 0
+          ? Math.round(data.systemCost / (data.storageSizeMW * 1000))
+          : 0,
     ],
     [
       "Cost per kWh ($/kWh)",
-      (data.storageSizeMWh || data.storageSizeMW * data.durationHours) > 0
-        ? Math.round(
-            data.systemCost /
-              ((data.storageSizeMWh || data.storageSizeMW * data.durationHours) * 1000)
-          )
-        : 0,
+      data.equipmentCosts?.allInPerKWh
+        ? Math.round(data.equipmentCosts.allInPerKWh)
+        : (data.storageSizeMWh || data.storageSizeMW * data.durationHours) > 0
+          ? Math.round(
+              data.systemCost /
+                ((data.storageSizeMWh || data.storageSizeMW * data.durationHours) * 1000)
+            )
+          : 0,
     ],
   ];
 
@@ -2061,8 +2141,60 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
     summaryRows.push(["Solar PV (kW)", data.solarCapacityKW]);
   }
 
+  // ── Equipment Cost Breakdown (if available) ──
+  if (data.equipmentCosts?.totalEquipmentCost) {
+    summaryRows.push([], ["EQUIPMENT COST BREAKDOWN"], ["Component", "Cost ($)", "Unit Rate"]);
+    if (data.equipmentCosts.batteryCost)
+      summaryRows.push([
+        "Battery / BESS",
+        Math.round(data.equipmentCosts.batteryCost),
+        data.equipmentCosts.batteryPerKWh ? `$${Math.round(data.equipmentCosts.batteryPerKWh)}/kWh` : "—",
+      ]);
+    if (data.equipmentCosts.inverterCost)
+      summaryRows.push([
+        "Inverter / PCS",
+        Math.round(data.equipmentCosts.inverterCost),
+        data.equipmentCosts.inverterPerKW ? `$${Math.round(data.equipmentCosts.inverterPerKW)}/kW` : "—",
+      ]);
+    if (data.equipmentCosts.transformerCost)
+      summaryRows.push([
+        "Transformer",
+        Math.round(data.equipmentCosts.transformerCost),
+        "—",
+      ]);
+    if (data.equipmentCosts.switchgearCost)
+      summaryRows.push([
+        "Switchgear",
+        Math.round(data.equipmentCosts.switchgearCost),
+        "—",
+      ]);
+    if (data.equipmentCosts.solarCost)
+      summaryRows.push([
+        "Solar PV",
+        Math.round(data.equipmentCosts.solarCost),
+        data.equipmentCosts.solarPerWatt ? `$${data.equipmentCosts.solarPerWatt.toFixed(2)}/W` : "—",
+      ]);
+    if (data.equipmentCosts.generatorCost)
+      summaryRows.push([
+        "Generator",
+        Math.round(data.equipmentCosts.generatorCost),
+        data.equipmentCosts.generatorPerKW ? `$${Math.round(data.equipmentCosts.generatorPerKW)}/kW` : "—",
+      ]);
+    if (data.equipmentCosts.installationCost)
+      summaryRows.push([
+        "Installation / BOS / EPC",
+        Math.round(data.equipmentCosts.installationCost),
+        "—",
+      ]);
+    summaryRows.push([
+      "Total Equipment",
+      Math.round(data.equipmentCosts.totalEquipmentCost),
+      "—",
+    ]);
+  }
+
   const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
-  ws1["!cols"] = [{ wch: 28 }, { wch: 24 }];
+  ws1["!cols"] = [{ wch: 28 }, { wch: 24 }, { wch: 16 }];
   XLSX.utils.book_append_sheet(wb, ws1, "Executive Summary");
 
   // ── Sheet 2: System Specifications ──────────────────────────────

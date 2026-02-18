@@ -128,7 +128,7 @@ export function calculateMarketAlignedBESSPricing(
   } else {
     batteryCostPerKWh = 150;  // $130-160/kWh (small commercial, max $150)
   }
-  const pcsCostPerKW = 120; // $/kW - power conversion (validated from UK EV Hub quote)
+  const pcsCostPerKW = 100; // $/kW - power conversion (harmonized Feb 2026: NREL $80 + market $120 midpoint)
   const bosCostPerKW = 28.8; // $/kW - balance of system (12%)
   const epcCostPerKW = 36; // $/kW - installation/EPC (15%)
 
