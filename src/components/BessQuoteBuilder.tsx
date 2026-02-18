@@ -732,12 +732,13 @@ export default function BessQuoteBuilder() {
                 <a
                   href="/support"
                   className="text-sm transition-colors no-underline"
-                  style={{ color: "rgba(52,211,153,0.5)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.8)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.5)"; }}
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
                   Support & FAQ
                 </a>
+                {isLoggedIn && (
                 <button
                   onClick={() => setShowVendorManager(true)}
                   className="text-sm transition-colors"
@@ -747,12 +748,13 @@ export default function BessQuoteBuilder() {
                 >
                   Admin
                 </button>
+                )}
                 <a
                   href="/pricing"
                   className="text-sm transition-colors no-underline"
-                  style={{ color: "rgba(52,211,153,0.5)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.8)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(52,211,153,0.5)"; }}
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
                 >
                   Pricing
                 </a>
