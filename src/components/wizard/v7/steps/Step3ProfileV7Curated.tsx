@@ -15,12 +15,13 @@
  */
 
 import React, { useMemo, useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Sun, Zap, Building2, Settings, Target } from "lucide-react";
 import {
   resolveStep3Schema,
   CANONICAL_INDUSTRY_KEYS,
   type CuratedField,
   type CuratedSchema,
+  type CuratedSection,
   type CanonicalIndustryKey,
 } from "@/wizard/v7/schema/curatedFieldsResolver";
 import type { WizardState as WizardV7State } from "@/wizard/v7/hooks/useWizardV7";
@@ -109,6 +110,24 @@ function isAnswered(value: unknown): boolean {
 function isRequired(q: CuratedField): boolean {
   return q.required ?? q.validation?.required ?? false;
 }
+
+// Section icon mapping — Lucide icons for professional look
+const SECTION_ICONS: Record<string, React.ReactNode> = {
+  facility: <Building2 className="w-4 h-4" />,
+  operations: <Settings className="w-4 h-4" />,
+  energy: <Zap className="w-4 h-4" />,
+  solar: <Sun className="w-4 h-4" />,
+  goals: <Target className="w-4 h-4" />,
+};
+
+// Section descriptions for contextual guidance
+const SECTION_DESCRIPTIONS: Record<string, string> = {
+  facility: "Tell us about your building or site",
+  operations: "How your facility operates day-to-day",
+  energy: "Your current energy setup and grid connection",
+  solar: "Solar generation potential and existing installations",
+  goals: "What you want to achieve with energy storage",
+};
 
 // Normalize field type - delegates to extracted utility
 function normalizeFieldType(t?: string): string {
@@ -982,6 +1001,46 @@ export default function Step3ProfileV7Curated(props: Props) {
     if (badDepends) console.warn("[Step3Curated] conditionalLogic missing dependsOn", badDepends);
   }
 
+  // ============================================================================
+  // SECTION GROUPING — Group questions by section for visual hierarchy
+  // ============================================================================
+  const sections: CuratedSection[] = curatedSchema.sections;
+
+  // Build ordered groups: section → questions[]
+  const sectionGroups = useMemo(() => {
+    // Get unique section IDs in question order (preserves flow)
+    const seenSections: string[] = [];
+    for (const q of visibleQuestions) {
+      const s = q.section || "general";
+      if (!seenSections.includes(s)) seenSections.push(s);
+    }
+
+    return seenSections.map((sectionId) => {
+      const sectionMeta = sections.find((s) => s.id === sectionId);
+      const sectionQuestions = visibleQuestions.filter(
+        (q) => (q.section || "general") === sectionId
+      );
+      return {
+        id: sectionId,
+        label: sectionMeta?.label || sectionId.charAt(0).toUpperCase() + sectionId.slice(1),
+        icon: sectionMeta?.icon,
+        description: sectionMeta?.description || SECTION_DESCRIPTIONS[sectionId],
+        questions: sectionQuestions,
+      };
+    });
+  }, [visibleQuestions, sections]);
+
+  // Compute question index offsets per section for continuous numbering
+  const sectionStartIndexes = useMemo(() => {
+    const offsets: Record<string, number> = {};
+    let offset = 0;
+    for (const group of sectionGroups) {
+      offsets[group.id] = offset;
+      offset += group.questions.length;
+    }
+    return offsets;
+  }, [sectionGroups]);
+
   return (
     <div className="w-full">
       {/* Hero Header */}
@@ -1082,8 +1141,99 @@ export default function Step3ProfileV7Curated(props: Props) {
         </div>
       </div>
 
-      {/* Questions */}
-      <div className="space-y-4">{visibleQuestions.map((q, idx) => renderQuestion(q, idx))}</div>
+      {/* Questions — grouped by section with headers */}
+      <div className="space-y-6">
+        {sectionGroups.map((group) => {
+          const isSolarSection = group.id === "solar";
+          const sectionIcon = SECTION_ICONS[group.id];
+
+          // Render section header + questions
+          const sectionContent = (
+            <div
+              key={group.id}
+              className={`rounded-xl overflow-hidden ${
+                isSolarSection
+                  ? "border border-amber-500/20 bg-gradient-to-b from-amber-950/20 to-slate-950/60"
+                  : "border border-slate-700/30 bg-slate-950/40"
+              }`}
+            >
+              {/* Section Header */}
+              <div
+                className={`px-5 py-4 border-b ${
+                  isSolarSection
+                    ? "border-amber-500/20 bg-gradient-to-r from-amber-950/40 via-orange-950/20 to-transparent"
+                    : "border-slate-700/30 bg-slate-900/40"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {/* Section Icon */}
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      isSolarSection
+                        ? "bg-amber-500/15 text-amber-400"
+                        : "bg-slate-800 text-slate-400"
+                    }`}
+                  >
+                    {sectionIcon || <span className="text-base">{group.icon}</span>}
+                  </div>
+
+                  <div className="flex-1">
+                    <h3
+                      className={`text-sm font-bold tracking-tight ${
+                        isSolarSection ? "text-amber-200" : "text-slate-200"
+                      }`}
+                    >
+                      {group.label}
+                    </h3>
+                    {group.description && (
+                      <p className="text-xs text-slate-400 mt-0.5">{group.description}</p>
+                    )}
+                  </div>
+
+                  {/* Question count badge */}
+                  <span
+                    className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                      isSolarSection
+                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                        : "bg-slate-800 text-slate-500 border border-slate-700/50"
+                    }`}
+                  >
+                    {group.questions.length} {group.questions.length === 1 ? "question" : "questions"}
+                  </span>
+                </div>
+
+                {/* Solar section: info card about solar + BESS synergy */}
+                {isSolarSection && (
+                  <div className="mt-3 flex items-start gap-3 p-3 rounded-lg bg-amber-950/30 border border-amber-500/15">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/20">
+                      <Sun className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-amber-200">
+                        Solar + BESS = Maximum Savings
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                        Pairing solar with battery storage can reduce your energy costs by 40-70%.
+                        Store excess solar energy during the day and use it during peak rate hours.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Section Questions */}
+              <div className="p-4 space-y-4">
+                {group.questions.map((q, qIdx) => {
+                  const globalIdx = sectionStartIndexes[group.id] + qIdx;
+                  return renderQuestion(q, globalIdx);
+                })}
+              </div>
+            </div>
+          );
+
+          return sectionContent;
+        })}
+      </div>
 
       {/* Continue — single clean flow (Feb 11, 2026) */}
       <div className="mt-6 flex flex-col items-end gap-3">
