@@ -9,7 +9,7 @@
 
 import React, { useState } from 'react';
 import {
-  Check, ArrowLeft, Zap, Crown, Building2, Rocket,
+  Check, ArrowLeft, Zap, Crown, Building2,
   Shield, Users, FileText, BarChart3, Globe, Code,
   Star, Sparkles, ChevronRight, Battery, Sun, Wind,
   Cpu, Settings, Plug, Atom, Wrench, TrendingUp,
@@ -140,32 +140,6 @@ const PLANS = [
     ],
     limits: { quotes: -1, projects: -1, team: 5, api: 1000 },
   },
-  {
-    id: 'business',
-    name: 'Business',
-    icon: Rocket,
-    monthlyPrice: -1, // Custom
-    annualPrice: -1,
-    badge: null,
-    description: 'Enterprise-grade solution with dedicated support, full API, and custom integrations.',
-    color: 'blue',
-    borderColor: 'border-blue-500/20',
-    badgeBg: '',
-    ctaText: 'Contact Sales',
-    ctaStyle: 'border border-blue-500/30 text-blue-400 hover:bg-blue-500/10',
-    features: [
-      'Everything in Advanced',
-      'Unlimited team members',
-      'Full API access (unlimited)',
-      'Vendor API integration',
-      'Custom use case templates',
-      'Dedicated account manager',
-      'Custom integrations',
-      '99.9% SLA',
-      'Quarterly business reviews',
-    ],
-    limits: { quotes: -1, projects: -1, team: -1, api: -1 },
-  },
 ];
 
 const VENDOR_API_FEATURES = [
@@ -233,11 +207,6 @@ export default function PricingPage() {
   };
 
   const handleSelectPlan = async (planId: string) => {
-    if (planId === 'business') {
-      window.location.href = 'mailto:sales@merlin.energy?subject=Business Plan Inquiry';
-      return;
-    }
-
     // Free plan → route to signup
     if (planId === 'free') {
       window.location.href = '/signup';
@@ -379,7 +348,7 @@ export default function PricingPage() {
       {/* PLANS SECTION */}
       {activeSection === 'plans' && (
         <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-5">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
             {PLANS.map((plan) => {
               const price = getPrice(plan);
               const savings = getAnnualSavings(plan);
@@ -460,7 +429,7 @@ export default function PricingPage() {
                   {/* Features */}
                   <div className="flex-1">
                     <p className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-3">
-                      {plan.id === 'free' ? 'Includes' : plan.id === 'business' ? 'Everything in Enterprise, plus' : 'Key features'}
+                      {plan.id === 'free' ? 'Includes' : 'Key features'}
                     </p>
                     <ul className="space-y-2">
                       {plan.features.map((feature, i) => (
@@ -476,8 +445,27 @@ export default function PricingPage() {
             })}
           </div>
 
+          {/* Business / Enterprise CTA */}
+          <div className="mt-10 rounded-2xl border border-blue-500/20 bg-gradient-to-r from-blue-500/[0.04] to-cyan-500/[0.04] p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shrink-0">
+                <Building2 className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <h4 className="text-base font-bold text-white">Need a Business account?</h4>
+                <p className="text-sm text-white/40 mt-0.5">Unlimited API, custom integrations, dedicated support, and 99.9% SLA — tailored to your organization.</p>
+              </div>
+            </div>
+            <a
+              href="mailto:sales@merlin.energy?subject=Business Plan Inquiry"
+              className="shrink-0 px-6 py-2.5 rounded-lg text-sm font-semibold border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50 transition-all whitespace-nowrap"
+            >
+              Contact Us →
+            </a>
+          </div>
+
           {/* Comparison note */}
-          <div className="text-center mt-12">
+          <div className="text-center mt-8">
             <p className="text-sm text-white/30">
               All plans include NREL ATB 2024 benchmarks · IRA 2022 ITC calculations · TrueQuote™ audit trails · 14-day free trial
             </p>
