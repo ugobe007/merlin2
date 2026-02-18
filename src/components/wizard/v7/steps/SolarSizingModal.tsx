@@ -11,9 +11,19 @@
  * Part of TrueQuote™ Solar Sizing Assistant
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { X, Sun, Building2, Ruler, Zap, DollarSign, ArrowRight, Info, Sparkles } from 'lucide-react';
-import merlinIcon from '@/assets/images/new_small_profile_.png';
+import React, { useState, useMemo, useCallback } from "react";
+import {
+  X,
+  Sun,
+  Building2,
+  Ruler,
+  Zap,
+  DollarSign,
+  ArrowRight,
+  Info,
+  Sparkles,
+} from "lucide-react";
+import merlinIcon from "@/assets/images/new_small_profile_.png";
 import {
   estimateBuildingFootprint,
   calculateCustomSolarCapacity,
@@ -21,7 +31,7 @@ import {
   getSolarCostPerWatt,
   SOLAR_PANEL_CONSTANTS,
   INDUSTRY_FOOTPRINT_PROFILES,
-} from '@/services/solarFootprintLibrary';
+} from "@/services/solarFootprintLibrary";
 
 // ============================================================================
 // TYPES
@@ -54,7 +64,7 @@ interface SolarSizingModalProps {
   onApply: (result: SolarSizingResult) => void;
   industry: string;
   step3Answers: Record<string, unknown>;
-  state?: string;       // US state abbreviation
+  state?: string; // US state abbreviation
   electricityRate?: number; // $/kWh
 }
 
@@ -62,7 +72,7 @@ interface SolarSizingModalProps {
 // HELPER: Format number with commas
 // ============================================================================
 function fmt(n: number): string {
-  return n.toLocaleString('en-US');
+  return n.toLocaleString("en-US");
 }
 
 function fmtCurrency(n: number): string {
@@ -72,7 +82,7 @@ function fmtCurrency(n: number): string {
   if (n >= 1_000) {
     return `$${(n / 1_000).toFixed(0)}K`;
   }
-  return `$${n.toLocaleString('en-US')}`;
+  return `$${n.toLocaleString("en-US")}`;
 }
 
 // ============================================================================
@@ -132,7 +142,7 @@ export default function SolarSizingModal({
   const estimatedCost = Math.round(effectiveKW * 1000 * costPerWatt);
 
   // Profile lookup for display
-  const slug = industry.replace(/_/g, '-').toLowerCase();
+  const slug = industry.replace(/_/g, "-").toLowerCase();
   const profile = INDUSTRY_FOOTPRINT_PROFILES[slug];
 
   const handleApply = useCallback(() => {
@@ -141,7 +151,9 @@ export default function SolarSizingModal({
       : calculation.maxRoofSolarKW;
     const canopy = customKW
       ? Math.max(0, customKW - calculation.maxRoofSolarKW)
-      : includeCanopy ? canopyKW : 0;
+      : includeCanopy
+        ? canopyKW
+        : 0;
 
     onApply({
       solarKW: effectiveKW,
@@ -154,7 +166,19 @@ export default function SolarSizingModal({
       buildingSqFt,
       roofUtilization,
     });
-  }, [effectiveKW, includeCanopy, canopyKW, effectiveProduction, annualSavings, estimatedCost, buildingSqFt, roofUtilization, calculation, customKW, onApply]);
+  }, [
+    effectiveKW,
+    includeCanopy,
+    canopyKW,
+    effectiveProduction,
+    annualSavings,
+    estimatedCost,
+    buildingSqFt,
+    roofUtilization,
+    calculation,
+    customKW,
+    onApply,
+  ]);
 
   if (!isOpen) return null;
 
@@ -166,7 +190,7 @@ export default function SolarSizingModal({
       {/* Modal */}
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div
-          className="bg-slate-900 border border-amber-500/30 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-slate-900 border border-amber-500/30 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
@@ -185,9 +209,7 @@ export default function SolarSizingModal({
                 <Sun className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">
-                  Solar Sizing Assistant
-                </h2>
+                <h2 className="text-xl font-bold text-white">Solar Sizing Assistant</h2>
                 <p className="text-sm text-amber-200/70 mt-0.5">
                   {initialEstimate.industryLabel} • Based on your Step 3 answers
                 </p>
@@ -197,16 +219,26 @@ export default function SolarSizingModal({
 
           {/* ── Scrollable Content ── */}
           <div className="overflow-y-auto flex-1 p-6 space-y-5">
-
             {/* Auto-detected summary */}
             <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-800/60 border border-slate-700/50">
               <img src={merlinIcon} alt="Merlin" className="w-10 h-10 rounded-lg flex-shrink-0" />
               <div className="text-sm text-slate-300 leading-relaxed">
-                <span className="font-semibold text-white">Based on your {initialEstimate.sizeDriver}</span>
-                {' '}({fmt(initialEstimate.unitsUsed)} {initialEstimate.sizeDriver}),
-                I estimate your building is about <span className="font-semibold text-amber-300">{fmt(initialEstimate.buildingSqFt)} sq ft</span> with{' '}
-                <span className="font-semibold text-amber-300">{fmt(initialEstimate.usableRoofSqFt)} sq ft</span> of usable roof for solar.
-                <span className="block mt-1 text-xs text-slate-400 italic">{initialEstimate.roofNote}</span>
+                <span className="font-semibold text-white">
+                  Based on your {initialEstimate.sizeDriver}
+                </span>{" "}
+                ({fmt(initialEstimate.unitsUsed)} {initialEstimate.sizeDriver}), I estimate your
+                building is about{" "}
+                <span className="font-semibold text-amber-300">
+                  {fmt(initialEstimate.buildingSqFt)} sq ft
+                </span>{" "}
+                with{" "}
+                <span className="font-semibold text-amber-300">
+                  {fmt(initialEstimate.usableRoofSqFt)} sq ft
+                </span>{" "}
+                of usable roof for solar.
+                <span className="block mt-1 text-xs text-slate-400 italic">
+                  {initialEstimate.roofNote}
+                </span>
               </div>
             </div>
 
@@ -245,11 +277,14 @@ export default function SolarSizingModal({
                     <span className="group relative">
                       <Info className="w-3.5 h-3.5 text-slate-500 cursor-help" />
                       <span className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover:block w-48 p-2 bg-slate-700 text-xs text-slate-300 rounded-lg shadow-lg z-10">
-                        Percentage of roof usable for solar after accounting for HVAC, vents, skylights, setbacks, etc.
+                        Percentage of roof usable for solar after accounting for HVAC, vents,
+                        skylights, setbacks, etc.
                       </span>
                     </span>
                   </label>
-                  <span className="text-sm font-semibold text-amber-300">{Math.round(roofUtilization * 100)}%</span>
+                  <span className="text-sm font-semibold text-amber-300">
+                    {Math.round(roofUtilization * 100)}%
+                  </span>
                 </div>
                 <input
                   type="range"
@@ -273,11 +308,13 @@ export default function SolarSizingModal({
                 <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-700/50 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-sm font-medium text-slate-200">{initialEstimate.canopyLabel}</label>
+                      <label className="text-sm font-medium text-slate-200">
+                        {initialEstimate.canopyLabel}
+                      </label>
                       <p className="text-xs text-slate-400 mt-0.5">
                         {initialEstimate.canopyIsPrimary
-                          ? 'This is your primary solar option for this building type'
-                          : 'Additional solar capacity from parking/canopy structures'}
+                          ? "This is your primary solar option for this building type"
+                          : "Additional solar capacity from parking/canopy structures"}
                       </p>
                     </div>
                     <button
@@ -287,12 +324,12 @@ export default function SolarSizingModal({
                         setCustomKW(null);
                       }}
                       className={`relative w-12 h-6 rounded-full transition-colors ${
-                        includeCanopy ? 'bg-amber-500' : 'bg-slate-600'
+                        includeCanopy ? "bg-amber-500" : "bg-slate-600"
                       }`}
                     >
                       <span
                         className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
-                          includeCanopy ? 'translate-x-6' : ''
+                          includeCanopy ? "translate-x-6" : ""
                         }`}
                       />
                     </button>
@@ -338,9 +375,7 @@ export default function SolarSizingModal({
                     {includeCanopy && canopyKW > 0 && calculation.maxRoofSolarKW > 0 && (
                       <span> + </span>
                     )}
-                    {includeCanopy && canopyKW > 0 && (
-                      <span>{fmt(canopyKW)} kW canopy</span>
-                    )}
+                    {includeCanopy && canopyKW > 0 && <span>{fmt(canopyKW)} kW canopy</span>}
                   </p>
                 </div>
 
@@ -351,14 +386,18 @@ export default function SolarSizingModal({
                       <Zap className="w-3.5 h-3.5 text-amber-400" />
                       <span className="text-xs text-slate-400">Annual Production</span>
                     </div>
-                    <div className="text-sm font-bold text-white">{fmt(effectiveProduction)} kWh</div>
+                    <div className="text-sm font-bold text-white">
+                      {fmt(effectiveProduction)} kWh
+                    </div>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
                     <div className="flex items-center gap-2 mb-1">
                       <DollarSign className="w-3.5 h-3.5 text-green-400" />
                       <span className="text-xs text-slate-400">Annual Savings</span>
                     </div>
-                    <div className="text-sm font-bold text-green-400">{fmtCurrency(annualSavings)}/yr</div>
+                    <div className="text-sm font-bold text-green-400">
+                      {fmtCurrency(annualSavings)}/yr
+                    </div>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
                     <div className="flex items-center gap-2 mb-1">
@@ -373,8 +412,12 @@ export default function SolarSizingModal({
                       <Sun className="w-3.5 h-3.5 text-amber-400" />
                       <span className="text-xs text-slate-400">Panels Needed</span>
                     </div>
-                    <div className="text-sm font-bold text-white">{fmt(calculation.panelsNeeded)}</div>
-                    <div className="text-xs text-slate-500">{SOLAR_PANEL_CONSTANTS.PANEL_WATTS}W each</div>
+                    <div className="text-sm font-bold text-white">
+                      {fmt(calculation.panelsNeeded)}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {SOLAR_PANEL_CONSTANTS.PANEL_WATTS}W each
+                    </div>
                   </div>
                 </div>
 
@@ -383,7 +426,7 @@ export default function SolarSizingModal({
                   <span className="text-xs text-slate-400 whitespace-nowrap">Or enter custom:</span>
                   <input
                     type="number"
-                    value={customKW ?? ''}
+                    value={customKW ?? ""}
                     onChange={(e) => {
                       const v = e.target.value ? Math.max(1, Number(e.target.value)) : null;
                       setCustomKW(v);
@@ -396,7 +439,8 @@ export default function SolarSizingModal({
 
                 {/* Source citation */}
                 <p className="text-xs text-slate-500 text-center italic">
-                  Building estimates: {initialEstimate.source} • {SOLAR_PANEL_CONSTANTS.PANEL_WATTS}W panels at {SOLAR_PANEL_CONSTANTS.SQFT_PER_KW} sqft/kW
+                  Building estimates: {initialEstimate.source} • {SOLAR_PANEL_CONSTANTS.PANEL_WATTS}
+                  W panels at {SOLAR_PANEL_CONSTANTS.SQFT_PER_KW} sqft/kW
                 </p>
               </div>
             </div>
