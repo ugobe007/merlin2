@@ -19,7 +19,6 @@ import { Sparkles } from "lucide-react";
 import {
   resolveStep3Schema,
   CANONICAL_INDUSTRY_KEYS,
-  getTier1Blockers,
   type CuratedField,
   type CuratedSchema,
   type CanonicalIndustryKey,
@@ -129,7 +128,13 @@ export default function Step3ProfileV7Curated(props: Props) {
   // ✅ Alias for backward compatibility with existing code (Feb 10, 2026)
   const _industry = String(effectiveIndustry);
 
-  console.log("[Step3Curated] Using effectiveIndustry:", effectiveIndustry, "(selected:", state.industry, ")");
+  console.log(
+    "[Step3Curated] Using effectiveIndustry:",
+    effectiveIndustry,
+    "(selected:",
+    state.industry,
+    ")"
+  );
 
   // Get answers from state (wrapped in useMemo to prevent dep warnings)
   const answers: Step3Answers = useMemo(
@@ -144,13 +149,19 @@ export default function Step3ProfileV7Curated(props: Props) {
   }, [effectiveIndustry]);
 
   const { displayName, icon, source } = curatedSchema;
-  
+
   // ✅ Normalize schema questions into a single, safe shape
   // This guarantees: stable IDs (fixes React keys), normalized options (fixes blank cards), consistent types
   const questions: CuratedField[] = useMemo(() => {
     const raw: Record<string, unknown>[] =
-      (curatedSchema as unknown as Record<string, unknown>)?.questions as Record<string, unknown>[] ??
-      (curatedSchema as unknown as Record<string, unknown>)?.fields as Record<string, unknown>[] ??
+      ((curatedSchema as unknown as Record<string, unknown>)?.questions as Record<
+        string,
+        unknown
+      >[]) ??
+      ((curatedSchema as unknown as Record<string, unknown>)?.fields as Record<
+        string,
+        unknown
+      >[]) ??
       [];
 
     return (raw ?? []).map((q: Record<string, unknown>, idx: number) => {
@@ -158,20 +169,13 @@ export default function Step3ProfileV7Curated(props: Props) {
       // ✅ Filter out literal string "undefined" (common schema corruption)
       const rawId = q?.id ?? q?.key ?? q?.fieldId ?? q?.name;
       const id =
-        rawId && String(rawId) !== "undefined"
-          ? rawId
-          : `${String(effectiveIndustry)}_${idx}`;
+        rawId && String(rawId) !== "undefined" ? rawId : `${String(effectiveIndustry)}_${idx}`;
 
       // Normalize label/title
       const title = q?.title ?? q?.label ?? q?.prompt ?? q?.question ?? undefined;
 
       // Normalize options (common break: choices/values/items vs options)
-      const optionsRaw =
-        q?.options ??
-        q?.choices ??
-        q?.values ??
-        q?.items ??
-        undefined;
+      const optionsRaw = q?.options ?? q?.choices ?? q?.values ?? q?.items ?? undefined;
 
       return {
         ...q,
@@ -186,16 +190,18 @@ export default function Step3ProfileV7Curated(props: Props) {
       } as CuratedField;
     });
   }, [curatedSchema, effectiveIndustry]);
-  
+
   const questionCount = questions.length;
-  
+
   // DEV logging to confirm single source of truth
   if (import.meta.env.DEV) {
     console.log("[Step3Curated] Render source (CURATED SSOT)", {
       effectiveIndustry,
       curatedQuestions: questions.length,
-      templateQuestions: ((state.step3Template as Record<string, unknown>)?.questions as unknown[] | undefined)?.length,
-      undefinedIds: questions.filter(q => !q?.id).length,
+      templateQuestions: (
+        (state.step3Template as Record<string, unknown>)?.questions as unknown[] | undefined
+      )?.length,
+      undefinedIds: questions.filter((q) => !q?.id).length,
     });
   }
 
@@ -369,7 +375,7 @@ export default function Step3ProfileV7Curated(props: Props) {
 
   // Completion status (all required fields answered)
   const isComplete = missingRequired.length === 0;
-  
+
   console.log("[Step3Curated] Completion check (CURATED SSOT)", {
     totalQuestions: questionCount,
     requiredCount: requiredIds.length,
@@ -408,10 +414,16 @@ export default function Step3ProfileV7Curated(props: Props) {
 
     // Get options (applies modifyOptions if present - enables dynamic option mutation)
     const options = getOptions(q);
-    
+
     // ✅ Normalize options to prevent blank cards (with Array guard to prevent crash)
     // Preserves icon, description, disabled for rich button cards
-    type NormalizedOption = { label: string; value: string; icon?: string; description?: string; disabled?: boolean };
+    type NormalizedOption = {
+      label: string;
+      value: string;
+      icon?: string;
+      description?: string;
+      disabled?: boolean;
+    };
     const normalizedOptions: NormalizedOption[] = Array.isArray(options)
       ? options.map((o: Record<string, unknown> | string | number, i: number): NormalizedOption => {
           if (typeof o === "string" || typeof o === "number") {
@@ -941,18 +953,21 @@ export default function Step3ProfileV7Curated(props: Props) {
   // Filter visible questions (memoized to avoid render churn)
   // ✅ Also filter out questions with missing IDs (prevents React key errors)
   const visibleQuestions = useMemo(
-    () => questions.filter(q => q.id && q.id !== "undefined").filter(isQuestionVisible),
+    () => questions.filter((q) => q.id && q.id !== "undefined").filter(isQuestionVisible),
     [questions, isQuestionVisible]
   );
 
   // DEV invariants: catch broken schemas immediately
   if (import.meta.env.DEV) {
     // Check for undefined IDs that would cause React key errors
-    const undefinedIdQuestions = visibleQuestions.filter(q => !q.id || q.id === "undefined");
+    const undefinedIdQuestions = visibleQuestions.filter((q) => !q.id || q.id === "undefined");
     if (undefinedIdQuestions.length > 0) {
-      console.error("[Step3Curated] ❌ Questions with undefined IDs:", undefinedIdQuestions.map(q => ({ id: q.id, label: q.label, title: q.title })));
+      console.error(
+        "[Step3Curated] ❌ Questions with undefined IDs:",
+        undefinedIdQuestions.map((q) => ({ id: q.id, label: q.label, title: q.title }))
+      );
     }
-    
+
     // Check image map completeness
     for (const k of CANONICAL_INDUSTRY_KEYS) {
       if (!INDUSTRY_IMAGES[k]) {
@@ -984,7 +999,9 @@ export default function Step3ProfileV7Curated(props: Props) {
           <div className="absolute left-5 top-5">
             <div className="flex items-center gap-2">
               <span className="text-2xl">{icon}</span>
-              <div className="text-lg font-extrabold text-slate-50 tracking-tight">Step 3 — Profile</div>
+              <div className="text-lg font-extrabold text-slate-50 tracking-tight">
+                Step 3 — Profile
+              </div>
             </div>
             <div className="text-sm text-slate-300 mt-1">{displayName}</div>
           </div>
@@ -1084,7 +1101,8 @@ export default function Step3ProfileV7Curated(props: Props) {
                 </p>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                   These are typical values for your industry. You can scroll up to review and adjust
-                  anything that doesn't match your facility, or continue with these defaults for a fast estimate.
+                  anything that doesn't match your facility, or continue with these defaults for a
+                  fast estimate.
                 </p>
                 <div className="flex gap-3 mt-3">
                   <button

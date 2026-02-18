@@ -28,13 +28,18 @@ import type {
 import { sanitizeQuoteForDisplay, type DisplayQuote } from "@/wizard/v7/utils/pricingSanity";
 import { buildV7ExportData } from "@/utils/buildV7ExportData";
 import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
-import { trackQuoteGenerated, peekQuotaRemaining, isUserAuthenticated, getEffectiveTier } from "@/services/subscriptionService";
+import {
+  trackQuoteGenerated,
+  peekQuotaRemaining,
+  isUserAuthenticated,
+  getEffectiveTier,
+} from "@/services/subscriptionService";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
-import { Shield } from 'lucide-react';
-import badgeGoldIcon from '@/assets/images/badge_gold_icon.jpg';
-import badgeProQuoteIcon from '@/assets/images/badge_icon.jpg';
+import { Shield } from "lucide-react";
+import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
+import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import { useMerlinData } from "@/wizard/v7/memory";
 import TrueQuoteFinancialModal from "../shared/TrueQuoteFinancialModal";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
@@ -55,11 +60,23 @@ type Props = {
 };
 
 /** Stat item — compact inline readout with no card chrome */
-function StatItem({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent?: string }) {
+function StatItem({
+  icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  accent?: string;
+}) {
   return (
     <div className="flex items-center gap-2 whitespace-nowrap">
       <span className={accent || "text-slate-500"}>{icon}</span>
-      <span className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">{label}</span>
+      <span className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
+        {label}
+      </span>
       <span className="text-sm font-bold text-slate-100 tabular-nums">{value}</span>
     </div>
   );
@@ -108,10 +125,10 @@ function fmtNum(n?: number | null, fallback = "—"): string {
 type BadgeTier = "truequote" | "estimate" | "load-only";
 type BadgeResult = { tier: BadgeTier; label: string };
 
-function resolveBadge(
+function _resolveBadge(
   pricingStatus: PricingStatus,
   templateMode: "industry" | "fallback",
-  quote: Record<string, unknown> | null,
+  quote: Record<string, unknown> | null
 ): BadgeResult {
   // Gate 1: Pricing not ready → Load Profile Only
   if (pricingStatus !== "ok" || !quote?.pricingComplete) {
@@ -151,7 +168,7 @@ type ContributorEntry = { key: string; kW: number; pct: number };
 
 function getTopContributors(
   kWContributors: Record<string, number>,
-  count: number,
+  count: number
 ): ContributorEntry[] {
   const total = Object.values(kWContributors).reduce((s, v) => s + (v || 0), 0);
   if (total <= 0) return [];
@@ -196,16 +213,11 @@ export default function Step6ResultsV7({ state, actions }: Props) {
 
   // Sanitized quote — poison values replaced with null for safe rendering
   // Returns typed DisplayQuote (Move 8 contract)
-  const quote: DisplayQuote = useMemo(
-    () => sanitizeQuoteForDisplay(quoteRaw),
-    [quoteRaw]
-  );
+  const quote: DisplayQuote = useMemo(() => sanitizeQuoteForDisplay(quoteRaw), [quoteRaw]);
 
   const locLine = useMemo(() => {
     if (!data.location.city && !data.location.state && !data.location.zip) return "—";
-    const parts = [data.location.city, data.location.state, data.location.zip].filter(
-      Boolean
-    );
+    const parts = [data.location.city, data.location.state, data.location.zip].filter(Boolean);
     return parts.length ? parts.join(", ") : (state.location?.formattedAddress ?? "—");
   }, [data.location, state.location?.formattedAddress]);
 
@@ -227,7 +239,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
         <div>
           <div className="flex items-center gap-2 text-slate-400 mb-2">
             <Building2 className="w-4 h-4" />
-            <span className="text-sm font-medium">{getIndustryMeta(data.industry).label as string}</span>
+            <span className="text-sm font-medium">
+              {getIndustryMeta(data.industry).label as string}
+            </span>
             <span className="text-slate-600">•</span>
             <MapPin className="w-4 h-4" />
             <span className="text-sm">{locLine}</span>
@@ -274,14 +288,23 @@ export default function Step6ResultsV7({ state, actions }: Props) {
         <div className="flex-1 text-left">
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-xl font-bold text-amber-400 tracking-tight">TrueQuote™</span>
-            <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Verified</span>
+            <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+              Verified
+            </span>
           </div>
           <p className="text-sm text-slate-400 leading-snug">
-            Every number is sourced. Click to view full financial projection, ROI analysis, and payback timeline.
+            Every number is sourced. Click to view full financial projection, ROI analysis, and
+            payback timeline.
           </p>
         </div>
         <div className="shrink-0 text-amber-500/50 group-hover:text-amber-400 group-hover:translate-x-1 transition-all duration-300">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </div>
@@ -294,7 +317,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       {/* ================================================================
           PARTIAL RESULTS / FALLBACK / STATUS BANNERS
       ================================================================ */}
-      {!!(quote?._extra as Record<string,unknown>)?.isProvisional && (
+      {!!(quote?._extra as Record<string, unknown>)?.isProvisional && (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
           <div className="flex items-start gap-2.5">
             <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
@@ -305,7 +328,10 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                   ? `${quote.missingInputs.length} inputs missing — using defaults. `
                   : "Some inputs missing — using defaults. "}
                 Results may not reflect your actual load profile.
-                <button onClick={() => actions.goToStep?.("profile")} className="ml-1.5 underline font-bold text-amber-300 hover:text-amber-200">
+                <button
+                  onClick={() => actions.goToStep?.("profile")}
+                  className="ml-1.5 underline font-bold text-amber-300 hover:text-amber-200"
+                >
                   Complete Step 3 →
                 </button>
               </p>
@@ -318,11 +344,15 @@ export default function Step6ResultsV7({ state, actions }: Props) {
         <div className="rounded-xl border border-blue-500/25 bg-blue-500/[0.05] p-4">
           <div className="font-semibold text-blue-300 text-sm">Estimate Mode</div>
           <p className="text-blue-200/70 text-xs mt-1.5">
-            Using a general facility model. Numbers are directionally correct but won't carry TrueQuote™ attribution.
+            Using a general facility model. Numbers are directionally correct but won't carry
+            TrueQuote™ attribution.
           </p>
           {actions.retryTemplate && (
-            <button onClick={() => void actions.retryTemplate?.()} disabled={state.isBusy}
-              className="mt-2.5 px-3 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-300 font-bold text-xs hover:bg-blue-500/[0.15] disabled:opacity-40 transition-colors">
+            <button
+              onClick={() => void actions.retryTemplate?.()}
+              disabled={state.isBusy}
+              className="mt-2.5 px-3 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-300 font-bold text-xs hover:bg-blue-500/[0.15] disabled:opacity-40 transition-colors"
+            >
               {state.isBusy ? "Retrying\u2026" : "Retry industry profile \u2192"}
             </button>
           )}
@@ -343,9 +373,14 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       {pricingStatus === "error" && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/[0.06] p-4">
           <div className="font-semibold text-red-300 text-sm mb-1.5">Pricing engine error</div>
-          <pre className="text-red-300/70 text-xs font-mono whitespace-pre-wrap">{pricingError || "Unknown error"}</pre>
+          <pre className="text-red-300/70 text-xs font-mono whitespace-pre-wrap">
+            {pricingError || "Unknown error"}
+          </pre>
           {actions.retryPricing && (
-            <button onClick={() => actions.retryPricing?.()} className="mt-2.5 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 font-bold text-xs hover:bg-red-500/[0.15] transition-colors">
+            <button
+              onClick={() => actions.retryPricing?.()}
+              className="mt-2.5 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 font-bold text-xs hover:bg-red-500/[0.15] transition-colors"
+            >
               Retry pricing
             </button>
           )}
@@ -355,9 +390,14 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       {pricingStatus === "timed_out" && (
         <div className="rounded-xl border border-orange-500/25 bg-orange-500/[0.06] p-4">
           <div className="font-semibold text-orange-300 text-sm">Pricing timed out</div>
-          <p className="text-orange-200/70 text-xs mt-1.5">Your load profile is still available below.</p>
+          <p className="text-orange-200/70 text-xs mt-1.5">
+            Your load profile is still available below.
+          </p>
           {actions.retryPricing && (
-            <button onClick={() => actions.retryPricing?.()} className="mt-2.5 px-3 py-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 text-orange-300 font-bold text-xs hover:bg-orange-500/[0.15] transition-colors">
+            <button
+              onClick={() => actions.retryPricing?.()}
+              className="mt-2.5 px-3 py-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 text-orange-300 font-bold text-xs hover:bg-orange-500/[0.15] transition-colors"
+            >
               Retry pricing
             </button>
           )}
@@ -368,7 +408,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
           <div className="font-semibold text-amber-300 text-sm">Warnings detected</div>
           <ul className="mt-1.5 pl-4 text-amber-200/70 text-xs list-disc space-y-0.5">
-            {pricingWarnings.slice(0, 5).map(w => <li key={w}>{w}</li>)}
+            {pricingWarnings.slice(0, 5).map((w) => (
+              <li key={w}>{w}</li>
+            ))}
           </ul>
         </div>
       )}
@@ -384,7 +426,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             <div className="text-center">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 mb-4">
                 <div className="w-2 h-2 bg-[#3ECF8E] rounded-full animate-pulse" />
-                <span className="text-[#3ECF8E] font-semibold text-xs uppercase tracking-wider">Projected Annual Savings</span>
+                <span className="text-[#3ECF8E] font-semibold text-xs uppercase tracking-wider">
+                  Projected Annual Savings
+                </span>
               </div>
               <div className="text-5xl md:text-6xl font-bold text-[#3ECF8E] leading-none">
                 {fmtUSD(quote.annualSavingsUSD as number | null)}
@@ -396,22 +440,26 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                 <div className="mt-5 inline-flex items-center gap-4 px-5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                   <TrendingUp className="w-4 h-4 text-[#3ECF8E]" />
                   <span className="text-sm text-slate-300">
-                    Payback in <strong className="text-[#3ECF8E]">{parseFloat(Number(quote.roiYears).toFixed(1))} years</strong>
+                    Payback in{" "}
+                    <strong className="text-[#3ECF8E]">
+                      {parseFloat(Number(quote.roiYears).toFixed(1))} years
+                    </strong>
                   </span>
-                  {quote.irr != null && (() => {
-                    const raw = Number(quote.irr);
-                    if (!Number.isFinite(raw)) return null;
-                    const pct = raw > 1 ? raw : raw * 100;
-                    if (pct > 200 || pct <= 0) return null;
-                    return (
-                      <>
-                        <span className="text-slate-600">|</span>
-                        <span className="text-sm text-slate-300">
-                          IRR <strong className="text-[#3ECF8E]">{pct.toFixed(1)}%</strong>
-                        </span>
-                      </>
-                    );
-                  })()}
+                  {quote.irr != null &&
+                    (() => {
+                      const raw = Number(quote.irr);
+                      if (!Number.isFinite(raw)) return null;
+                      const pct = raw > 1 ? raw : raw * 100;
+                      if (pct > 200 || pct <= 0) return null;
+                      return (
+                        <>
+                          <span className="text-slate-600">|</span>
+                          <span className="text-sm text-slate-300">
+                            IRR <strong className="text-[#3ECF8E]">{pct.toFixed(1)}%</strong>
+                          </span>
+                        </>
+                      );
+                    })()}
                 </div>
               )}
             </div>
@@ -470,7 +518,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           <div className="p-3 border-b md:border-b-0 md:border-r border-white/[0.06]">
             <div className="flex items-center gap-1.5 mb-2">
               <Battery className="w-3.5 h-3.5 text-slate-500" />
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Equipment</span>
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Equipment
+              </span>
             </div>
             <div className="divide-y divide-white/[0.04]">
               {quote.bessKWh != null && (
@@ -478,31 +528,43 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                   <span className="text-xs text-slate-400">Battery Storage</span>
                   <span className="text-xs font-bold text-white tabular-nums">
                     {fmtNum(Math.round(quote.bessKWh))} kWh
-                    {quote.bessKW != null && <span className="text-slate-500 font-medium ml-1.5">{fmtNum(Math.round(quote.bessKW))} kW</span>}
+                    {quote.bessKW != null && (
+                      <span className="text-slate-500 font-medium ml-1.5">
+                        {fmtNum(Math.round(quote.bessKW))} kW
+                      </span>
+                    )}
                   </span>
                 </div>
               )}
               {quote.durationHours != null && (
                 <div className="flex items-baseline justify-between py-1.5">
                   <span className="text-xs text-slate-400">Duration</span>
-                  <span className="text-xs font-bold text-white tabular-nums">{fmtNum(quote.durationHours)} hours</span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {fmtNum(quote.durationHours)} hours
+                  </span>
                 </div>
               )}
               {(quote.solarKW as number) > 0 && (
                 <div className="flex items-baseline justify-between py-1.5">
                   <span className="text-xs text-slate-400">Solar Array</span>
-                  <span className="text-xs font-bold text-white tabular-nums">{fmtNum(Math.round(quote.solarKW as number))} kW</span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {fmtNum(Math.round(quote.solarKW as number))} kW
+                  </span>
                 </div>
               )}
               {(quote.generatorKW as number) > 0 && (
                 <div className="flex items-baseline justify-between py-1.5">
                   <span className="text-xs text-slate-400">Backup Generator</span>
-                  <span className="text-xs font-bold text-white tabular-nums">{fmtNum(Math.round(quote.generatorKW as number))} kW</span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {fmtNum(Math.round(quote.generatorKW as number))} kW
+                  </span>
                 </div>
               )}
               <div className="flex items-baseline justify-between py-1.5">
                 <span className="text-xs text-slate-400">Peak Demand</span>
-                <span className="text-xs font-bold text-white tabular-nums">{quote.peakLoadKW ? `${fmtNum(Math.round(quote.peakLoadKW))} kW` : "—"}</span>
+                <span className="text-xs font-bold text-white tabular-nums">
+                  {quote.peakLoadKW ? `${fmtNum(Math.round(quote.peakLoadKW))} kW` : "—"}
+                </span>
               </div>
             </div>
           </div>
@@ -512,7 +574,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5 text-slate-500" />
-                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Financials</span>
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  Financials
+                </span>
               </div>
               <div className="flex items-center gap-1 text-[10px]">
                 <Shield className="w-3 h-3 text-amber-500" />
@@ -522,88 +586,135 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             <div className="divide-y divide-white/[0.04]">
               <div className="flex justify-between py-1.5">
                 <span className="text-xs text-slate-400">Total Investment</span>
-                <span className="text-xs font-bold text-white tabular-nums">{fmtUSD((quote.grossCost ?? quote.capexUSD) as number | null)}</span>
+                <span className="text-xs font-bold text-white tabular-nums">
+                  {fmtUSD((quote.grossCost ?? quote.capexUSD) as number | null)}
+                </span>
               </div>
               {/* Federal ITC — use actual itcAmount from calculator, not hardcoded 30% */}
-              {(quote.grossCost ?? quote.capexUSD) != null && Number(quote.grossCost ?? quote.capexUSD) > 0 && (
-                <div className="flex justify-between py-1.5">
-                  <span className="text-xs text-slate-400">Federal ITC ({quote.itcRate != null ? `${Math.round(Number(quote.itcRate) * 100)}%` : '30%'})</span>
-                  <span className="text-xs font-bold text-emerald-400 tabular-nums">−{fmtUSD(quote.itcAmount != null ? Number(quote.itcAmount) : Number(quote.grossCost ?? quote.capexUSD ?? 0) * 0.30)}</span>
-                </div>
-              )}
+              {(quote.grossCost ?? quote.capexUSD) != null &&
+                Number(quote.grossCost ?? quote.capexUSD) > 0 && (
+                  <div className="flex justify-between py-1.5">
+                    <span className="text-xs text-slate-400">
+                      Federal ITC (
+                      {quote.itcRate != null
+                        ? `${Math.round(Number(quote.itcRate) * 100)}%`
+                        : "30%"}
+                      )
+                    </span>
+                    <span className="text-xs font-bold text-emerald-400 tabular-nums">
+                      −
+                      {fmtUSD(
+                        quote.itcAmount != null
+                          ? Number(quote.itcAmount)
+                          : Number(quote.grossCost ?? quote.capexUSD ?? 0) * 0.3
+                      )}
+                    </span>
+                  </div>
+                )}
               {/* Net cost after ITC — capexUSD IS already net of ITC */}
               {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
                 <div className="flex justify-between py-1.5 bg-white/[0.02] -mx-3 px-3">
                   <span className="text-xs font-semibold text-slate-200">Net Cost</span>
-                  <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(quote.capexUSD as number | null)}</span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {fmtUSD(quote.capexUSD as number | null)}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between py-1.5">
                 <span className="text-xs text-slate-400">Annual Savings</span>
-                <span className="text-xs font-bold text-emerald-400 tabular-nums">{fmtUSD(quote.annualSavingsUSD as number | null)}</span>
+                <span className="text-xs font-bold text-emerald-400 tabular-nums">
+                  {fmtUSD(quote.annualSavingsUSD as number | null)}
+                </span>
               </div>
               {quote.demandChargeSavings != null && Number(quote.demandChargeSavings) > 0 && (
                 <div className="flex justify-between py-1.5">
                   <span className="text-xs text-slate-400">Demand Charge Savings</span>
-                  <span className="text-xs font-bold text-cyan-400 tabular-nums">{fmtUSD(quote.demandChargeSavings as number | null)}</span>
+                  <span className="text-xs font-bold text-cyan-400 tabular-nums">
+                    {fmtUSD(quote.demandChargeSavings as number | null)}
+                  </span>
                 </div>
               )}
               {/* Monthly savings for quick reference */}
               {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
                 <div className="flex justify-between py-1.5">
                   <span className="text-xs text-slate-400">Monthly Savings</span>
-                  <span className="text-xs font-bold text-slate-300 tabular-nums">{fmtUSD(Number(quote.annualSavingsUSD) / 12)}</span>
+                  <span className="text-xs font-bold text-slate-300 tabular-nums">
+                    {fmtUSD(Number(quote.annualSavingsUSD) / 12)}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between py-1.5">
                 <span className="text-xs text-slate-400">Simple Payback</span>
                 <span className="text-xs font-bold text-white tabular-nums">
-                  {quote.roiYears != null && Number(quote.roiYears) > 0 ? `${parseFloat(Number(quote.roiYears).toFixed(1))} years` : "—"}
+                  {quote.roiYears != null && Number(quote.roiYears) > 0
+                    ? `${parseFloat(Number(quote.roiYears).toFixed(1))} years`
+                    : "—"}
                 </span>
               </div>
               {quote.npv != null && (
                 <div className="flex justify-between py-1.5">
                   <span className="text-xs text-slate-400">NPV (25yr)</span>
-                  <span className={`text-xs font-bold tabular-nums ${Number(quote.npv) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmtUSD(quote.npv as number | null)}</span>
+                  <span
+                    className={`text-xs font-bold tabular-nums ${Number(quote.npv) >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                  >
+                    {fmtUSD(quote.npv as number | null)}
+                  </span>
                 </div>
               )}
               {quote.irr != null && (
                 <div className="flex justify-between py-1.5">
                   <span className="text-xs text-slate-400">IRR</span>
-                  <span className={`text-xs font-bold tabular-nums ${(() => { const raw = Number(quote.irr); const pct = raw > 1 ? raw : raw * 100; return pct >= 8 ? 'text-emerald-400' : 'text-amber-400'; })()}`}>{(() => {
-                    const raw = Number(quote.irr);
-                    if (!Number.isFinite(raw)) return "—";
-                    const pct = raw > 1 ? raw : raw * 100;
-                    if (pct > 200) return ">200%";
-                    return `${pct.toFixed(1)}%`;
-                  })()}</span>
+                  <span
+                    className={`text-xs font-bold tabular-nums ${(() => {
+                      const raw = Number(quote.irr);
+                      const pct = raw > 1 ? raw : raw * 100;
+                      return pct >= 8 ? "text-emerald-400" : "text-amber-400";
+                    })()}`}
+                  >
+                    {(() => {
+                      const raw = Number(quote.irr);
+                      if (!Number.isFinite(raw)) return "—";
+                      const pct = raw > 1 ? raw : raw * 100;
+                      if (pct > 200) return ">200%";
+                      return `${pct.toFixed(1)}%`;
+                    })()}
+                  </span>
                 </div>
               )}
               {quote.paybackYears != null && Number(quote.paybackYears) > 0 && (
                 <div className="flex justify-between py-1.5">
                   <span className="text-xs text-slate-400">Discounted Payback</span>
-                  <span className="text-xs font-bold text-white tabular-nums">{parseFloat(Number(quote.paybackYears).toFixed(1))} years</span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {parseFloat(Number(quote.paybackYears).toFixed(1))} years
+                  </span>
                 </div>
               )}
               {/* 10yr cumulative savings */}
               {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
                 <div className="flex justify-between py-1.5">
                   <span className="text-xs text-slate-400">10yr Cumulative Savings</span>
-                  <span className="text-xs font-bold text-emerald-400 tabular-nums">{fmtUSD(Number(quote.annualSavingsUSD) * 10)}</span>
+                  <span className="text-xs font-bold text-emerald-400 tabular-nums">
+                    {fmtUSD(Number(quote.annualSavingsUSD) * 10)}
+                  </span>
                 </div>
               )}
             </div>
 
             {/* Financial projection CTA */}
-            {(quote.grossCost ?? quote.capexUSD) != null && Number(quote.grossCost ?? quote.capexUSD) > 0 && quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
-              <button
-                onClick={() => setShowFinancialModal(true)}
-                className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 rounded-md border border-amber-500/20 bg-amber-500/[0.04] hover:bg-amber-500/[0.08] transition-all group"
-              >
-                <TrendingUp className="w-3.5 h-3.5 text-amber-400 group-hover:text-amber-300" />
-                <span className="text-[11px] font-semibold text-amber-400 group-hover:text-amber-300">View 10-Year Financial Projection</span>
-              </button>
-            )}
+            {(quote.grossCost ?? quote.capexUSD) != null &&
+              Number(quote.grossCost ?? quote.capexUSD) > 0 &&
+              quote.annualSavingsUSD != null &&
+              Number(quote.annualSavingsUSD) > 0 && (
+                <button
+                  onClick={() => setShowFinancialModal(true)}
+                  className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 rounded-md border border-amber-500/20 bg-amber-500/[0.04] hover:bg-amber-500/[0.08] transition-all group"
+                >
+                  <TrendingUp className="w-3.5 h-3.5 text-amber-400 group-hover:text-amber-300" />
+                  <span className="text-[11px] font-semibold text-amber-400 group-hover:text-amber-300">
+                    View 10-Year Financial Projection
+                  </span>
+                </button>
+              )}
           </div>
         </div>
       )}
@@ -616,65 +727,79 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           FALLS BACK to getTopContributors if hints missing
           Reads quote.trueQuoteValidation (sealed envelope data)
       ================================================================ */}
-      {quoteReady && quote.trueQuoteValidation?.kWContributors && (() => {
-        // Graceful degradation: prefer _displayHints (stable, sanitized), fall back to live computation
-        const hints = quote._displayHints;
-        const contributors = hints?.topContributors?.length > 0
-          ? hints.topContributors.map((c) => ({ key: c.key, kW: c.kW, pct: c.pct }))
-          : getTopContributors(quote.trueQuoteValidation!.kWContributors!, 3);
+      {quoteReady &&
+        quote.trueQuoteValidation?.kWContributors &&
+        (() => {
+          // Graceful degradation: prefer _displayHints (stable, sanitized), fall back to live computation
+          const hints = quote._displayHints;
+          const contributors =
+            hints?.topContributors?.length > 0
+              ? hints.topContributors.map((c) => ({ key: c.key, kW: c.kW, pct: c.pct }))
+              : getTopContributors(quote.trueQuoteValidation!.kWContributors!, 3);
 
-        if (contributors.length === 0) return null;
+          if (contributors.length === 0) return null;
 
-        return (
-          <details className="group">
-            <summary className="cursor-pointer text-xs text-slate-400 hover:text-slate-300 transition-colors flex items-center gap-1.5 font-semibold">
-              <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" />
-              Why this size?
-            </summary>
-            <div className="mt-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
-              {/* Top kW contributors */}
-              <div>
-                <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Top Load Contributors</div>
-                <div className="space-y-1.5">
-                  {contributors.map((c) => (
-                    <div key={c.key} className="flex items-center gap-2">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-slate-300 capitalize">{formatContributorKey(c.key)}</span>
-                          <span className="text-xs font-bold text-slate-200 tabular-nums">{fmtNum(Math.round(c.kW))} kW</span>
-                        </div>
-                        {/* Proportion bar */}
-                        <div className="mt-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-[#3ECF8E]/40"
-                            style={{ width: `${Math.min(c.pct * 100, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-slate-500 tabular-nums w-10 text-right">{Math.round(c.pct * 100)}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Key assumptions from validation envelope */}
-              {quote.trueQuoteValidation?.assumptions && quote.trueQuoteValidation.assumptions.length > 0 && (
+          return (
+            <details className="group">
+              <summary className="cursor-pointer text-xs text-slate-400 hover:text-slate-300 transition-colors flex items-center gap-1.5 font-semibold">
+                <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" />
+                Why this size?
+              </summary>
+              <div className="mt-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+                {/* Top kW contributors */}
                 <div>
-                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Key Assumptions</div>
-                  <ul className="space-y-1">
-                    {quote.trueQuoteValidation.assumptions.slice(0, 5).map((a, i) => (
-                      <li key={i} className="text-xs text-slate-400 flex items-start gap-1.5">
-                        <span className="text-slate-600 mt-0.5">ⓘ</span>
-                        <span>{a}</span>
-                      </li>
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    Top Load Contributors
+                  </div>
+                  <div className="space-y-1.5">
+                    {contributors.map((c) => (
+                      <div key={c.key} className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-slate-300 capitalize">
+                              {formatContributorKey(c.key)}
+                            </span>
+                            <span className="text-xs font-bold text-slate-200 tabular-nums">
+                              {fmtNum(Math.round(c.kW))} kW
+                            </span>
+                          </div>
+                          {/* Proportion bar */}
+                          <div className="mt-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-[#3ECF8E]/40"
+                              style={{ width: `${Math.min(c.pct * 100, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-slate-500 tabular-nums w-10 text-right">
+                          {Math.round(c.pct * 100)}%
+                        </span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
-              )}
-            </div>
-          </details>
-        );
-      })()}
+
+                {/* Key assumptions from validation envelope */}
+                {quote.trueQuoteValidation?.assumptions &&
+                  quote.trueQuoteValidation.assumptions.length > 0 && (
+                    <div>
+                      <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                        Key Assumptions
+                      </div>
+                      <ul className="space-y-1">
+                        {quote.trueQuoteValidation.assumptions.slice(0, 5).map((a, i) => (
+                          <li key={i} className="text-xs text-slate-400 flex items-start gap-1.5">
+                            <span className="text-slate-600 mt-0.5">ⓘ</span>
+                            <span>{a}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+              </div>
+            </details>
+          );
+        })()}
 
       {/* Notes (collapsed by default) */}
       {quoteReady && quote.notes?.length > 0 && (
@@ -684,7 +809,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             Notes & Assumptions ({quote.notes.length})
           </summary>
           <ul className="mt-2 pl-5 text-xs text-slate-500 list-disc space-y-0.5">
-            {quote.notes.map((n: string, i: number) => <li key={i}>{n}</li>)}
+            {quote.notes.map((n: string, i: number) => (
+              <li key={i}>{n}</li>
+            ))}
           </ul>
         </details>
       )}
@@ -707,128 +834,131 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           PRO TEASER PANELS — Blurred previews of advanced analytics
           Only shown for guests / free-tier users to drive upgrades.
       ================================================================ */}
-      {quoteReady && quote.peakLoadKW != null && getEffectiveTier() !== 'advanced' && getEffectiveTier() !== 'business' && (
-        <div className="space-y-0">
-          <div className="flex items-center gap-2 mb-3">
-            <Lock className="w-4 h-4 text-amber-400/70" />
-            <span className="text-sm font-semibold text-white/60 tracking-wide uppercase">Advanced Analytics — Pro & Above</span>
+      {quoteReady &&
+        quote.peakLoadKW != null &&
+        getEffectiveTier() !== "advanced" &&
+        getEffectiveTier() !== "business" && (
+          <div className="space-y-0">
+            <div className="flex items-center gap-2 mb-3">
+              <Lock className="w-4 h-4 text-amber-400/70" />
+              <span className="text-sm font-semibold text-white/60 tracking-wide uppercase">
+                Advanced Analytics — Pro & Above
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Monte Carlo Risk Analysis */}
+              <div className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 overflow-hidden group hover:border-amber-500/20 transition-all">
+                {/* Blurred placeholder */}
+                <div className="select-none pointer-events-none">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                      <BarChart3 className="w-4 h-4 text-purple-400" />
+                    </div>
+                    <span className="text-sm font-bold text-white/80">Monte Carlo Risk</span>
+                  </div>
+                  <div className="space-y-2 blur-[6px]">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">P10 (conservative)</span>
+                      <span className="text-red-400 font-mono">$1.2M</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">P50 (expected)</span>
+                      <span className="text-emerald-400 font-mono">$2.4M</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">P90 (optimistic)</span>
+                      <span className="text-emerald-400 font-mono">$3.1M</span>
+                    </div>
+                    <div className="h-16 mt-2 bg-gradient-to-r from-red-500/10 via-emerald-500/10 to-emerald-500/5 rounded-lg" />
+                  </div>
+                </div>
+                {/* Lock overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117]/90 via-transparent to-transparent flex items-end justify-center pb-4">
+                  <a
+                    href="/pricing"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-all no-underline"
+                  >
+                    <Lock className="w-3 h-3" />
+                    Unlock with Pro
+                  </a>
+                </div>
+              </div>
+
+              {/* 10-Year Cash Flow Projection */}
+              <div className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 overflow-hidden group hover:border-amber-500/20 transition-all">
+                <div className="select-none pointer-events-none">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                      <LineChart className="w-4 h-4 text-cyan-400" />
+                    </div>
+                    <span className="text-sm font-bold text-white/80">10-Year Cash Flow</span>
+                  </div>
+                  <div className="space-y-2 blur-[6px]">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">Yr 1 net cash flow</span>
+                      <span className="text-emerald-400 font-mono">$86,400</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">Cumulative yr 5</span>
+                      <span className="text-emerald-400 font-mono">$432,000</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">Cumulative yr 10</span>
+                      <span className="text-emerald-400 font-mono">$864,000</span>
+                    </div>
+                    <div className="h-16 mt-2 bg-gradient-to-r from-cyan-500/5 via-cyan-500/10 to-emerald-500/10 rounded-lg" />
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117]/90 via-transparent to-transparent flex items-end justify-center pb-4">
+                  <a
+                    href="/pricing"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-all no-underline"
+                  >
+                    <Lock className="w-3 h-3" />
+                    Unlock with Pro
+                  </a>
+                </div>
+              </div>
+
+              {/* Bank-Ready Financial Model */}
+              <div className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 overflow-hidden group hover:border-amber-500/20 transition-all">
+                <div className="select-none pointer-events-none">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <span className="text-sm font-bold text-white/80">Bank-Ready Model</span>
+                  </div>
+                  <div className="space-y-2 blur-[6px]">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">Levered IRR</span>
+                      <span className="text-emerald-400 font-mono">14.2%</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">DSCR (min)</span>
+                      <span className="text-emerald-400 font-mono">1.35x</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">MACRS benefit</span>
+                      <span className="text-emerald-400 font-mono">$285,000</span>
+                    </div>
+                    <div className="h-16 mt-2 bg-gradient-to-r from-blue-500/5 via-blue-500/10 to-indigo-500/10 rounded-lg" />
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117]/90 via-transparent to-transparent flex items-end justify-center pb-4">
+                  <a
+                    href="/pricing"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-all no-underline"
+                  >
+                    <Lock className="w-3 h-3" />
+                    Unlock with Pro
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            {/* Monte Carlo Risk Analysis */}
-            <div className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 overflow-hidden group hover:border-amber-500/20 transition-all">
-              {/* Blurred placeholder */}
-              <div className="select-none pointer-events-none">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                    <BarChart3 className="w-4 h-4 text-purple-400" />
-                  </div>
-                  <span className="text-sm font-bold text-white/80">Monte Carlo Risk</span>
-                </div>
-                <div className="space-y-2 blur-[6px]">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/40">P10 (conservative)</span>
-                    <span className="text-red-400 font-mono">$1.2M</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/40">P50 (expected)</span>
-                    <span className="text-emerald-400 font-mono">$2.4M</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/40">P90 (optimistic)</span>
-                    <span className="text-emerald-400 font-mono">$3.1M</span>
-                  </div>
-                  <div className="h-16 mt-2 bg-gradient-to-r from-red-500/10 via-emerald-500/10 to-emerald-500/5 rounded-lg" />
-                </div>
-              </div>
-              {/* Lock overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117]/90 via-transparent to-transparent flex items-end justify-center pb-4">
-                <a
-                  href="/pricing"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-all no-underline"
-                >
-                  <Lock className="w-3 h-3" />
-                  Unlock with Pro
-                </a>
-              </div>
-            </div>
-
-            {/* 10-Year Cash Flow Projection */}
-            <div className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 overflow-hidden group hover:border-amber-500/20 transition-all">
-              <div className="select-none pointer-events-none">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                    <LineChart className="w-4 h-4 text-cyan-400" />
-                  </div>
-                  <span className="text-sm font-bold text-white/80">10-Year Cash Flow</span>
-                </div>
-                <div className="space-y-2 blur-[6px]">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/40">Yr 1 net cash flow</span>
-                    <span className="text-emerald-400 font-mono">$86,400</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/40">Cumulative yr 5</span>
-                    <span className="text-emerald-400 font-mono">$432,000</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/40">Cumulative yr 10</span>
-                    <span className="text-emerald-400 font-mono">$864,000</span>
-                  </div>
-                  <div className="h-16 mt-2 bg-gradient-to-r from-cyan-500/5 via-cyan-500/10 to-emerald-500/10 rounded-lg" />
-                </div>
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117]/90 via-transparent to-transparent flex items-end justify-center pb-4">
-                <a
-                  href="/pricing"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-all no-underline"
-                >
-                  <Lock className="w-3 h-3" />
-                  Unlock with Pro
-                </a>
-              </div>
-            </div>
-
-            {/* Bank-Ready Financial Model */}
-            <div className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 overflow-hidden group hover:border-amber-500/20 transition-all">
-              <div className="select-none pointer-events-none">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-blue-400" />
-                  </div>
-                  <span className="text-sm font-bold text-white/80">Bank-Ready Model</span>
-                </div>
-                <div className="space-y-2 blur-[6px]">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/40">Levered IRR</span>
-                    <span className="text-emerald-400 font-mono">14.2%</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/40">DSCR (min)</span>
-                    <span className="text-emerald-400 font-mono">1.35x</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/40">MACRS benefit</span>
-                    <span className="text-emerald-400 font-mono">$285,000</span>
-                  </div>
-                  <div className="h-16 mt-2 bg-gradient-to-r from-blue-500/5 via-blue-500/10 to-indigo-500/10 rounded-lg" />
-                </div>
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117]/90 via-transparent to-transparent flex items-end justify-center pb-4">
-                <a
-                  href="/pricing"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-all no-underline"
-                >
-                  <Lock className="w-3 h-3" />
-                  Unlock with Pro
-                </a>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
+        )}
 
       {/* ================================================================
           PROQUOTE™ UPSELL — Merlin is the salesman
@@ -836,18 +966,15 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       <div className="rounded-xl border-2 border-white/[0.08] bg-white/[0.03] p-6 hover:border-white/[0.12] transition-all">
         <div className="flex items-center gap-5">
           <div className="shrink-0">
-            <img
-              src={badgeProQuoteIcon}
-              alt="ProQuote"
-              className="w-14 h-14 object-contain"
-            />
+            <img src={badgeProQuoteIcon} alt="ProQuote" className="w-14 h-14 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-base font-bold text-slate-100 tracking-tight">
               Want to go deeper?
             </div>
             <div className="text-sm text-slate-400 mt-1 leading-relaxed">
-              ProQuote™ gives you full engineering control — custom equipment, fuel cells, financial modeling, and bank-ready exports.
+              ProQuote™ gives you full engineering control — custom equipment, fuel cells, financial
+              modeling, and bank-ready exports.
             </div>
           </div>
           <button
@@ -856,9 +983,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             className="flex items-center gap-2.5 px-5 py-3 rounded-xl border-2 border-[#3ECF8E]/30 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/50 hover:bg-[#3ECF8E]/[0.12] transition-all shrink-0 group"
           >
             <Sparkles className="w-4 h-4 text-[#3ECF8E]" />
-            <span className="text-sm font-bold text-[#3ECF8E] tracking-wide">
-              Open ProQuote™
-            </span>
+            <span className="text-sm font-bold text-[#3ECF8E] tracking-wide">Open ProQuote™</span>
           </button>
         </div>
       </div>
@@ -881,16 +1006,15 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               </span>
             </div>
             <div className="text-sm text-slate-400 leading-relaxed">
-              Build NREL-compliant proposals for your customers — every number sourced, bank-ready exports, your brand.
+              Build NREL-compliant proposals for your customers — every number sourced, bank-ready
+              exports, your brand.
             </div>
           </div>
           <a
             href="/vendor"
             className="flex items-center gap-2.5 px-5 py-3 rounded-xl border-2 border-blue-400/30 bg-blue-400/[0.06] hover:border-blue-400/50 hover:bg-blue-400/[0.12] transition-all shrink-0 group no-underline"
           >
-            <span className="text-sm font-bold text-blue-400 tracking-wide">
-              Build a Quote →
-            </span>
+            <span className="text-sm font-bold text-blue-400 tracking-wide">Build a Quote →</span>
           </a>
         </div>
       </div>
@@ -899,7 +1023,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           EXPORT / DOWNLOAD — TrueQuote™ branded exports
           Available whenever we have at least a load profile (Layer A)
       ================================================================ */}
-      {quote && quote.peakLoadKW != null && <ExportBar state={state} onTrueQuoteClick={() => setShowFinancialModal(true)} />}
+      {quote && quote.peakLoadKW != null && (
+        <ExportBar state={state} onTrueQuoteClick={() => setShowFinancialModal(true)} />
+      )}
 
       {/* ================================================================
           PROQUOTE™ EXPLAINER MODAL
@@ -916,10 +1042,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       {/* ================================================================
           TRUEQUOTE™ EXPLAINER MODAL
       ================================================================ */}
-      <TrueQuoteModal
-        isOpen={showTrueQuoteModal}
-        onClose={() => setShowTrueQuoteModal(false)}
-      />
+      <TrueQuoteModal isOpen={showTrueQuoteModal} onClose={() => setShowTrueQuoteModal(false)} />
 
       {/* ================================================================
           TRUEQUOTE™ FINANCIAL PROJECTION MODAL
@@ -928,7 +1051,10 @@ export default function Step6ResultsV7({ state, actions }: Props) {
         isOpen={showFinancialModal}
         onClose={() => setShowFinancialModal(false)}
         totalInvestment={Number(quote.grossCost ?? quote.capexUSD ?? 0)}
-        federalITC={Number(quote.itcAmount ?? 0) || Number(quote.grossCost ?? quote.capexUSD ?? 0) * (Number(quote.itcRate) || 0.30)}
+        federalITC={
+          Number(quote.itcAmount ?? 0) ||
+          Number(quote.grossCost ?? quote.capexUSD ?? 0) * (Number(quote.itcRate) || 0.3)
+        }
         netInvestment={Number(quote.capexUSD ?? 0)}
         annualSavings={Number(quote.annualSavingsUSD ?? 0)}
         bessKWh={Number(quote.bessKWh ?? 0) || undefined}
@@ -952,7 +1078,12 @@ export default function Step6ResultsV7({ state, actions }: Props) {
 // Each recommendation includes a reason and an action to configure it.
 // ============================================================================
 
-type RecommendationType = "power-gap" | "solar-opportunity" | "ev-revenue" | "resilience" | "cost-savings";
+type RecommendationType =
+  | "power-gap"
+  | "solar-opportunity"
+  | "ev-revenue"
+  | "resilience"
+  | "cost-savings";
 
 interface Recommendation {
   type: RecommendationType;
@@ -962,10 +1093,7 @@ interface Recommendation {
   accent: string; // Tailwind border/bg color class
 }
 
-function getAdvisorRecommendations(
-  state: WizardV7State,
-  quote: DisplayQuote,
-): Recommendation[] {
+function getAdvisorRecommendations(state: WizardV7State, quote: DisplayQuote): Recommendation[] {
   const recs: Recommendation[] = [];
   const peakKW = quote.peakLoadKW ?? 0;
   const bessKW = quote.bessKW ?? 0;
@@ -989,11 +1117,11 @@ function getAdvisorRecommendations(
     const stateAbbr = state.location?.state ?? ""; // state.location used in standalone fn (accepts WizardV7State)
     const highSolarStates = ["CA", "AZ", "NV", "NM", "TX", "FL", "CO", "UT", "HI"];
     const isHighSolar = highSolarStates.includes(stateAbbr);
-    
+
     recs.push({
       type: "solar-opportunity",
       icon: "☀️",
-      title: isHighSolar 
+      title: isHighSolar
         ? `Your area in ${stateAbbr} is great for solar`
         : "Add solar to offset daytime load",
       description: isHighSolar
@@ -1005,30 +1133,47 @@ function getAdvisorRecommendations(
 
   // 3. EV charging revenue — if not already an EV industry
   // Note: state.industry used here since getAdvisorRecommendations is a standalone function accepting WizardV7State
-  const isEVIndustry = state.industry === "ev_charging" || (state.industry as string) === "ev-charging";
+  const isEVIndustry =
+    state.industry === "ev_charging" || (state.industry as string) === "ev-charging";
   if (!isEVIndustry) {
-    const hasCustomerTraffic = ["hotel", "retail", "shopping-center", "car_wash", "car-wash", "restaurant", "gas_station", "gas-station", "casino"].includes(state.industry ?? "");
+    const hasCustomerTraffic = [
+      "hotel",
+      "retail",
+      "shopping-center",
+      "car_wash",
+      "car-wash",
+      "restaurant",
+      "gas_station",
+      "gas-station",
+      "casino",
+    ].includes(state.industry ?? "");
     if (hasCustomerTraffic) {
       recs.push({
         type: "ev-revenue",
         icon: "🔌",
         title: "Add EV charging as a revenue source",
-        description: "Your facility type sees regular customer traffic. Adding EV chargers creates a new revenue stream while your BESS handles peak demand from charging sessions — keeping your demand charges low.",
+        description:
+          "Your facility type sees regular customer traffic. Adding EV chargers creates a new revenue stream while your BESS handles peak demand from charging sessions — keeping your demand charges low.",
         accent: "cyan",
       });
     }
   }
 
   // 4. Resilience — if goals mention backup/resilience and no generator
-  const wantsResilience = goals.some(g => 
-    typeof g === "string" && (g.toLowerCase().includes("backup") || g.toLowerCase().includes("resilien") || g.toLowerCase().includes("outage"))
+  const wantsResilience = goals.some(
+    (g) =>
+      typeof g === "string" &&
+      (g.toLowerCase().includes("backup") ||
+        g.toLowerCase().includes("resilien") ||
+        g.toLowerCase().includes("outage"))
   );
   if (wantsResilience && !hasGenerator) {
     recs.push({
       type: "resilience",
       icon: "🛡️",
       title: "Strengthen your backup power",
-      description: "You mentioned power resilience as a goal. Adding a backup generator alongside your BESS ensures uninterrupted operations during extended outages beyond your battery duration.",
+      description:
+        "You mentioned power resilience as a goal. Adding a backup generator alongside your BESS ensures uninterrupted operations during extended outages beyond your battery duration.",
       accent: "red",
     });
   }
@@ -1049,11 +1194,36 @@ function getAdvisorRecommendations(
 }
 
 const ACCENT_STYLES: Record<string, { border: string; bg: string; text: string; glow: string }> = {
-  amber:   { border: "border-amber-500/25",   bg: "bg-amber-500/[0.06]",   text: "text-amber-300",   glow: "shadow-amber-500/10" },
-  yellow:  { border: "border-yellow-500/25",  bg: "bg-yellow-500/[0.06]",  text: "text-yellow-300",  glow: "shadow-yellow-500/10" },
-  cyan:    { border: "border-cyan-500/25",    bg: "bg-cyan-500/[0.06]",    text: "text-cyan-300",    glow: "shadow-cyan-500/10" },
-  red:     { border: "border-red-500/25",     bg: "bg-red-500/[0.06]",     text: "text-red-300",     glow: "shadow-red-500/10" },
-  emerald: { border: "border-emerald-500/25", bg: "bg-emerald-500/[0.06]", text: "text-emerald-300", glow: "shadow-emerald-500/10" },
+  amber: {
+    border: "border-amber-500/25",
+    bg: "bg-amber-500/[0.06]",
+    text: "text-amber-300",
+    glow: "shadow-amber-500/10",
+  },
+  yellow: {
+    border: "border-yellow-500/25",
+    bg: "bg-yellow-500/[0.06]",
+    text: "text-yellow-300",
+    glow: "shadow-yellow-500/10",
+  },
+  cyan: {
+    border: "border-cyan-500/25",
+    bg: "bg-cyan-500/[0.06]",
+    text: "text-cyan-300",
+    glow: "shadow-cyan-500/10",
+  },
+  red: {
+    border: "border-red-500/25",
+    bg: "bg-red-500/[0.06]",
+    text: "text-red-300",
+    glow: "shadow-red-500/10",
+  },
+  emerald: {
+    border: "border-emerald-500/25",
+    bg: "bg-emerald-500/[0.06]",
+    text: "text-emerald-300",
+    glow: "shadow-emerald-500/10",
+  },
 };
 
 function AdvisorRecommendations({
@@ -1067,10 +1237,7 @@ function AdvisorRecommendations({
   actions: { goToStep?: (step: WizardStep) => Promise<void> };
   onRecalculate?: (addOns: SystemAddOns) => Promise<{ ok: boolean; error?: string }>;
 }) {
-  const recommendations = useMemo(
-    () => getAdvisorRecommendations(state, quote),
-    [state, quote]
-  );
+  const recommendations = useMemo(() => getAdvisorRecommendations(state, quote), [state, quote]);
 
   const [expanded, setExpanded] = useState(true);
 
@@ -1096,26 +1263,23 @@ function AdvisorRecommendations({
   return (
     <div className="space-y-4">
       {/* Advisor header */}
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="w-full"
-      >
+      <button type="button" onClick={() => setExpanded(!expanded)} className="w-full">
         <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-center justify-between hover:bg-white/[0.05] transition-all cursor-pointer">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-[#3ECF8E]" />
             </div>
             <div className="text-left">
-              <div className="font-semibold text-sm text-slate-200">
-                Merlin's Recommendations
-              </div>
+              <div className="font-semibold text-sm text-slate-200">Merlin's Recommendations</div>
               <div className="text-xs text-slate-400 mt-0.5">
-                {recommendations.length} suggestion{recommendations.length !== 1 ? "s" : ""} to optimize your project
+                {recommendations.length} suggestion{recommendations.length !== 1 ? "s" : ""} to
+                optimize your project
               </div>
             </div>
           </div>
-          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`w-4 h-4 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`}
+          />
         </div>
       </button>
 
@@ -1162,10 +1326,16 @@ function AdvisorRecommendations({
 
 type ExportFormat = "pdf" | "word" | "excel";
 
-function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQuoteClick?: () => void }) {
+function ExportBar({
+  state,
+  onTrueQuoteClick,
+}: {
+  state: WizardV7State;
+  onTrueQuoteClick?: () => void;
+}) {
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [quotaBlocked, setQuotaBlocked] = useState(false);
+  const [_quotaBlocked, setQuotaBlocked] = useState(false);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
 
   const handleExport = useCallback(
@@ -1175,7 +1345,7 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
       setShowSavePrompt(false);
 
       // ── QUOTA CHECK: Only exports count as "delivered quotes" ──
-      const quota = peekQuotaRemaining('quote');
+      const quota = peekQuotaRemaining("quote");
       if (!quota.allowed) {
         setQuotaBlocked(true);
         setError(
@@ -1204,7 +1374,7 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
         // ✅ Track AFTER successful export — this is a "delivered quote"
         const result = trackQuoteGenerated();
         if (!result.allowed) {
-          console.info('[QuotaTracking] Export allowed but quota now exhausted:', result);
+          console.info("[QuotaTracking] Export allowed but quota now exhausted:", result);
         }
 
         // ✅ Show save prompt for guests / free-tier users after export
@@ -1237,13 +1407,40 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
     <div className="rounded-xl border-2 border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] p-6">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: "rgba(232,235,243,0.95)", letterSpacing: "-0.01em" }}>Download Quote</div>
-          <div style={{ fontSize: 14, color: "rgba(232,235,243,0.55)", marginTop: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
-            {isTrueQuote
-              ? <><TrueQuoteBadgeCanonical showTooltip={false} onClick={onTrueQuoteClick} /><span>kW breakdown, confidence score &amp; methodology included</span></>
-              : hasPricing
-                ? <span style={{ color: "rgba(232,235,243,0.6)" }}>Estimate — includes financial projections</span>
-                : <span style={{ color: "rgba(232,235,243,0.5)" }}>Load profile only — pricing pending</span>}
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 800,
+              color: "rgba(232,235,243,0.95)",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Download Quote
+          </div>
+          <div
+            style={{
+              fontSize: 14,
+              color: "rgba(232,235,243,0.55)",
+              marginTop: 6,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            {isTrueQuote ? (
+              <>
+                <TrueQuoteBadgeCanonical showTooltip={false} onClick={onTrueQuoteClick} />
+                <span>kW breakdown, confidence score &amp; methodology included</span>
+              </>
+            ) : hasPricing ? (
+              <span style={{ color: "rgba(232,235,243,0.6)" }}>
+                Estimate — includes financial projections
+              </span>
+            ) : (
+              <span style={{ color: "rgba(232,235,243,0.5)" }}>
+                Load profile only — pricing pending
+              </span>
+            )}
           </div>
         </div>
 
@@ -1264,7 +1461,10 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
                 border: "2px solid rgba(62,207,142,0.30)",
                 background:
                   exporting === format ? "rgba(62,207,142,0.15)" : "rgba(62,207,142,0.06)",
-                color: exporting !== null && exporting !== format ? "rgba(232,235,243,0.3)" : "rgba(62,207,142,0.9)",
+                color:
+                  exporting !== null && exporting !== format
+                    ? "rgba(232,235,243,0.3)"
+                    : "rgba(62,207,142,0.9)",
                 cursor: exporting !== null ? "not-allowed" : "pointer",
                 fontWeight: 700,
                 fontSize: 15,
@@ -1296,15 +1496,15 @@ function ExportBar({ state, onTrueQuoteClick }: { state: WizardV7State; onTrueQu
 
       {/* ── SAVE PROMPT: Appears after successful export for unauthenticated users ── */}
       {showSavePrompt && (
-        <div
-          className="mt-3 rounded-xl border border-[#3ECF8E]/25 bg-[#3ECF8E]/[0.04] p-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
-        >
+        <div className="mt-3 rounded-xl border border-[#3ECF8E]/25 bg-[#3ECF8E]/[0.04] p-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 flex items-center justify-center shrink-0">
               <Bookmark className="w-4 h-4 text-[#3ECF8E]" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-[#3ECF8E]">Save this quote to your account</div>
+              <div className="text-sm font-bold text-[#3ECF8E]">
+                Save this quote to your account
+              </div>
               <div className="text-xs text-slate-400 mt-0.5">
                 Create a free account to save, revisit, and compare your BESS quotes anytime.
               </div>

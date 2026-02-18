@@ -1,6 +1,6 @@
 /**
  * Step 5: MagicFit V7 - 3-Tier System Recommendations
- * 
+ *
  * Created: February 10, 2026
  * Updated: February 18, 2026 — ZERO-DB-CALL refactor
  *
@@ -19,18 +19,23 @@
  * we make ONE `calculateQuote()` call for PerfectFit and derive the other two.
  */
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Check, Loader2, AlertTriangle, Battery, Sun, Fuel, Clock, TrendingUp, DollarSign, Shield } from 'lucide-react';
-import type { WizardState as WizardV7State, EnergyGoal, WizardStep, QuoteOutput } from '@/wizard/v7/hooks/useWizardV7';
-import { getIndustryMeta } from '@/wizard/v7/industryMeta';
-import TrueQuoteFinancialModal from '@/components/wizard/v7/shared/TrueQuoteFinancialModal';
-import badgeGoldIcon from '@/assets/images/badge_gold_icon.jpg';
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Check, Loader2, AlertTriangle, Battery, Sun, Fuel, Clock, Shield } from "lucide-react";
+import type {
+  WizardState as WizardV7State,
+  EnergyGoal,
+  WizardStep,
+  QuoteOutput,
+} from "@/wizard/v7/hooks/useWizardV7";
+import { getIndustryMeta } from "@/wizard/v7/industryMeta";
+import TrueQuoteFinancialModal from "@/components/wizard/v7/shared/TrueQuoteFinancialModal";
+import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 
 // SSOT calculation engine — only used as fallback when Step 4 pricing is missing
-import { calculateQuote } from '@/services/unifiedQuoteCalculator';
-import { applyMarginToQuote } from '@/wizard/v7/pricing/pricingBridge';
+import { calculateQuote } from "@/services/unifiedQuoteCalculator";
+import { applyMarginToQuote } from "@/wizard/v7/pricing/pricingBridge";
 import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
-import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
+import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
 
 interface Props {
   state: WizardV7State;
@@ -41,7 +46,7 @@ interface Props {
   };
 }
 
-type TierKey = 'starter' | 'perfectFit' | 'beastMode';
+type TierKey = "starter" | "perfectFit" | "beastMode";
 
 interface TierConfig {
   name: string;
@@ -58,40 +63,42 @@ interface TierConfig {
 
 const TIER_CONFIG: Record<TierKey, TierConfig> = {
   starter: {
-    name: 'STARTER',
-    tagline: 'Save More',
+    name: "STARTER",
+    tagline: "Save More",
     multiplier: 0.75,
     solarMultiplier: 0.5,
     genMultiplier: 0.8,
-    headlineClass: 'text-2xl lg:text-3xl font-bold tracking-tight text-white',
-    cardBorder: 'border-white/[0.06]',
-    cardBg: 'bg-white/[0.02]',
-    accentColor: 'text-emerald-400',
-    buttonClass: 'text-slate-300 bg-transparent border border-white/[0.1] hover:border-white/[0.2] hover:bg-white/[0.04]',
+    headlineClass: "text-2xl lg:text-3xl font-bold tracking-tight text-white",
+    cardBorder: "border-white/[0.06]",
+    cardBg: "bg-white/[0.02]",
+    accentColor: "text-emerald-400",
+    buttonClass:
+      "text-slate-300 bg-transparent border border-white/[0.1] hover:border-white/[0.2] hover:bg-white/[0.04]",
   },
   perfectFit: {
-    name: 'PERFECT FIT',
-    tagline: 'Best Value',
+    name: "PERFECT FIT",
+    tagline: "Best Value",
     multiplier: 1.0,
     solarMultiplier: 1.0,
     genMultiplier: 1.0,
-    headlineClass: 'text-2xl lg:text-3xl font-bold tracking-tight text-white',
-    cardBorder: 'border-[#3ECF8E]/30',
-    cardBg: 'bg-white/[0.03]',
-    accentColor: 'text-[#3ECF8E]',
-    buttonClass: 'text-[#0D0D0D] bg-[#3ECF8E] hover:bg-[#3ECF8E]/90',
+    headlineClass: "text-2xl lg:text-3xl font-bold tracking-tight text-white",
+    cardBorder: "border-[#3ECF8E]/30",
+    cardBg: "bg-white/[0.03]",
+    accentColor: "text-[#3ECF8E]",
+    buttonClass: "text-[#0D0D0D] bg-[#3ECF8E] hover:bg-[#3ECF8E]/90",
   },
   beastMode: {
-    name: 'BEAST MODE',
-    tagline: 'Full Power',
+    name: "BEAST MODE",
+    tagline: "Full Power",
     multiplier: 1.4,
     solarMultiplier: 1.5,
     genMultiplier: 1.25,
-    headlineClass: 'text-2xl lg:text-3xl font-bold tracking-tight text-white',
-    cardBorder: 'border-white/[0.06]',
-    cardBg: 'bg-white/[0.02]',
-    accentColor: 'text-amber-400',
-    buttonClass: 'text-slate-300 bg-transparent border border-white/[0.1] hover:border-white/[0.2] hover:bg-white/[0.04]',
+    headlineClass: "text-2xl lg:text-3xl font-bold tracking-tight text-white",
+    cardBorder: "border-white/[0.06]",
+    cardBg: "bg-white/[0.02]",
+    accentColor: "text-amber-400",
+    buttonClass:
+      "text-slate-300 bg-transparent border border-white/[0.1] hover:border-white/[0.2] hover:bg-white/[0.04]",
   },
 };
 
@@ -103,8 +110,23 @@ interface TierQuote {
   error: string | null;
 }
 
+/** Margin data attached to QuoteResult at runtime by scaleTier() */
+interface MarginData {
+  sellPriceTotal: number;
+  baseCostTotal: number;
+  marginDollars: number;
+  marginPercent: number;
+  marginBand: string;
+  itcRate: number;
+  itcAmount: number;
+  netCost: number;
+}
+
+/** QuoteResult extended with optional margin overlay */
+type QuoteWithMargin = QuoteResult & { _margin?: MarginData };
+
 function formatCurrency(value: number | undefined | null): string {
-  if (value == null || !Number.isFinite(value)) return '$0';
+  if (value == null || !Number.isFinite(value)) return "$0";
   if (value >= 1000000) {
     return `$${(value / 1000000).toFixed(2)}M`;
   }
@@ -115,22 +137,22 @@ function formatCurrency(value: number | undefined | null): string {
 }
 
 function formatNumber(value: number | undefined | null): string {
-  if (value == null || !Number.isFinite(value)) return '0';
-  return value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  if (value == null || !Number.isFinite(value)) return "0";
+  return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
 }
 
 function safeFixed(value: number | undefined | null, digits: number): string {
-  if (value == null || !Number.isFinite(value)) return '—';
+  if (value == null || !Number.isFinite(value)) return "—";
   return value.toFixed(digits);
 }
 
 function getIndustryLabel(slug: string): string {
-  return getIndustryMeta(slug).label || slug.replace(/_/g, ' ');
+  return getIndustryMeta(slug).label || slug.replace(/_/g, " ");
 }
 
 /**
  * Analyze user's energy goals and return sizing multipliers
- * 
+ *
  * Goals influence:
  * - BESS capacity (backup_power, energy_independence → larger)
  * - Duration (backup_power → longer)
@@ -143,7 +165,7 @@ function getGoalBasedMultipliers(goals: EnergyGoal[]) {
     durationMultiplier: 1.0,
     solarMultiplier: 1.0,
     generatorMultiplier: 1.0,
-    recommendedTier: 'perfectFit' as TierKey,
+    recommendedTier: "perfectFit" as TierKey,
     goalHints: [] as string[],
   };
 
@@ -153,45 +175,45 @@ function getGoalBasedMultipliers(goals: EnergyGoal[]) {
   }
 
   // GOAL: Lower Bills → optimize for cost, smaller system
-  if (goals.includes('lower_bills')) {
+  if (goals.includes("lower_bills")) {
     modifiers.bessMultiplier *= 0.9; // Slightly smaller BESS
     modifiers.solarMultiplier *= 1.1; // More solar = more savings
-    modifiers.recommendedTier = 'starter';
-    modifiers.goalHints.push('Optimized for fast payback with solar self-consumption');
+    modifiers.recommendedTier = "starter";
+    modifiers.goalHints.push("Optimized for fast payback with solar self-consumption");
   }
 
   // GOAL: Backup Power → larger capacity, longer duration
-  if (goals.includes('backup_power')) {
+  if (goals.includes("backup_power")) {
     modifiers.bessMultiplier *= 1.15; // 15% larger BESS
     modifiers.durationMultiplier *= 1.5; // 6 hours instead of 4
     modifiers.generatorMultiplier *= 1.2; // Larger backup generator
-    modifiers.recommendedTier = 'perfectFit';
-    modifiers.goalHints.push('Extended duration for reliable backup power');
+    modifiers.recommendedTier = "perfectFit";
+    modifiers.goalHints.push("Extended duration for reliable backup power");
   }
 
   // GOAL: Reduce Carbon → maximize renewables
-  if (goals.includes('reduce_carbon')) {
+  if (goals.includes("reduce_carbon")) {
     modifiers.solarMultiplier *= 1.4; // Much more solar
     modifiers.bessMultiplier *= 1.1; // Larger battery to store solar
     modifiers.generatorMultiplier *= 0.7; // Smaller/no generator
-    modifiers.goalHints.push('Maximize solar + storage for zero-carbon operation');
+    modifiers.goalHints.push("Maximize solar + storage for zero-carbon operation");
   }
 
   // GOAL: Energy Independence → go big on everything
-  if (goals.includes('energy_independence')) {
+  if (goals.includes("energy_independence")) {
     modifiers.bessMultiplier *= 1.3; // Much larger BESS
     modifiers.solarMultiplier *= 1.5; // Maximum solar
     modifiers.generatorMultiplier *= 1.3; // Full backup capability
     modifiers.durationMultiplier *= 1.25; // 5 hours
-    modifiers.recommendedTier = 'beastMode';
-    modifiers.goalHints.push('Oversized system for true grid independence');
+    modifiers.recommendedTier = "beastMode";
+    modifiers.goalHints.push("Oversized system for true grid independence");
   }
 
   // GOAL: Reduce Demand Charges → optimize for peak shaving
-  if (goals.includes('reduce_demand_charges')) {
+  if (goals.includes("reduce_demand_charges")) {
     modifiers.bessMultiplier *= 1.05; // Slightly larger for peaks
     modifiers.solarMultiplier *= 0.9; // Less solar, more battery focus
-    modifiers.goalHints.push('Sized for aggressive peak demand reduction');
+    modifiers.goalHints.push("Sized for aggressive peak demand reduction");
   }
 
   return modifiers;
@@ -215,13 +237,22 @@ function scaleTier(
   tierKey: TierKey,
   config: TierConfig,
   baseDuration: number,
-  baseMargin: { sellPriceTotal: number; baseCostTotal: number; marginDollars: number; marginPercent: number; marginBand: string; itcRate: number; itcAmount: number; netCost: number } | null,
+  baseMargin: {
+    sellPriceTotal: number;
+    baseCostTotal: number;
+    marginDollars: number;
+    marginPercent: number;
+    marginBand: string;
+    itcRate: number;
+    itcAmount: number;
+    netCost: number;
+  } | null
 ): TierQuote {
   // For perfectFit (1.0x multipliers), just return the base directly
   if (config.multiplier === 1.0 && config.solarMultiplier === 1.0 && config.genMultiplier === 1.0) {
     // Attach margin as-is
     if (baseMargin) {
-      (base as any)._margin = { ...baseMargin };
+      (base as QuoteWithMargin)._margin = { ...baseMargin };
     }
     return { tierKey, config, quote: base, loading: false, error: null };
   }
@@ -286,14 +317,14 @@ function scaleTier(
     (scaledGenerators?.totalCost ?? 0);
 
   // Installation scales with equipment cost (same ratio as base)
-  const installRatio = baseCosts.equipmentCost > 0
-    ? baseCosts.installationCost / baseCosts.equipmentCost
-    : 0.25; // sensible fallback: 25%
+  const installRatio =
+    baseCosts.equipmentCost > 0 ? baseCosts.installationCost / baseCosts.equipmentCost : 0.25; // sensible fallback: 25%
   const scaledInstallCost = scaledEquipmentCost * installRatio;
   const scaledTotalCost = scaledEquipmentCost + scaledInstallCost;
 
   // ITC rate stays the same
-  const itcRate = baseMargin?.itcRate ?? (baseCosts.taxCredit / Math.max(baseCosts.totalProjectCost, 1));
+  const itcRate =
+    baseMargin?.itcRate ?? baseCosts.taxCredit / Math.max(baseCosts.totalProjectCost, 1);
   const scaledTaxCredit = scaledTotalCost * itcRate;
   const scaledNetCost = scaledTotalCost - scaledTaxCredit;
 
@@ -310,25 +341,22 @@ function scaleTier(
   const scaledAnnualSavings = baseFinancials.annualSavings * savingsMultiplier;
 
   // Payback recalculated from scaled values
-  const scaledPayback = scaledAnnualSavings > 0
-    ? Math.min(scaledNetCost / scaledAnnualSavings, 99)
-    : 99;
+  const scaledPayback =
+    scaledAnnualSavings > 0 ? Math.min(scaledNetCost / scaledAnnualSavings, 99) : 99;
 
   // ROI: (savings × years - cost) / cost × 100
-  const scaledROI10 = scaledNetCost > 0
-    ? ((scaledAnnualSavings * 10 - scaledNetCost) / scaledNetCost) * 100
-    : 0;
+  const scaledROI10 =
+    scaledNetCost > 0 ? ((scaledAnnualSavings * 10 - scaledNetCost) / scaledNetCost) * 100 : 0;
   // NOTE: We keep roi25Year as a computed field for data completeness,
   // but the UI shows a 5yr ROI instead (user-facing timeline = 5-10 years)
-  const scaledROI25 = scaledNetCost > 0
-    ? ((scaledAnnualSavings * 25 - scaledNetCost) / scaledNetCost) * 100
-    : 0;
-  const scaledROI5 = scaledNetCost > 0
-    ? ((scaledAnnualSavings * 5 - scaledNetCost) / scaledNetCost) * 100
-    : 0;
+  const scaledROI25 =
+    scaledNetCost > 0 ? ((scaledAnnualSavings * 25 - scaledNetCost) / scaledNetCost) * 100 : 0;
+  const scaledROI5 =
+    scaledNetCost > 0 ? ((scaledAnnualSavings * 5 - scaledNetCost) / scaledNetCost) * 100 : 0;
 
   // NPV: scale proportionally (not exact but good enough for tier comparison)
-  const npvScaleFactor = baseCosts.netCost > 0 ? scaledNetCost / baseCosts.netCost : savingsMultiplier;
+  const npvScaleFactor =
+    baseCosts.netCost > 0 ? scaledNetCost / baseCosts.netCost : savingsMultiplier;
   const scaledNPV = baseFinancials.npv * npvScaleFactor;
 
   // IRR: stays roughly similar for scaled systems (same cost structure, same savings proportions)
@@ -337,9 +365,10 @@ function scaleTier(
   const scaledIRR = baseFinancials.irr * irrAdjust;
 
   // Overall cost scale factor for installation/commissioning/certification
-  const costScale = baseCosts.totalProjectCost > 0
-    ? scaledTotalCost / baseCosts.totalProjectCost
-    : config.multiplier;
+  const costScale =
+    baseCosts.totalProjectCost > 0
+      ? scaledTotalCost / baseCosts.totalProjectCost
+      : config.multiplier;
 
   const scaledQuote: QuoteResult = {
     equipment: {
@@ -419,7 +448,7 @@ function scaleTier(
     const scaledITCOnSell = scaledSellPrice * baseMargin.itcRate;
     const scaledNetAfterMargin = scaledSellPrice - scaledITCOnSell;
 
-    (scaledQuote as any)._margin = {
+    (scaledQuote as QuoteWithMargin)._margin = {
       sellPriceTotal: scaledSellPrice,
       baseCostTotal: scaledTotalCost,
       marginDollars: scaledMarginDollars,
@@ -438,18 +467,21 @@ function scaleTier(
  * Build a synthetic QuoteResult from `state.quote` (QuoteOutput).
  * This bridges the gap between what Step 4 stored and what the tier cards render.
  */
-function buildQuoteResultFromState(q: QuoteOutput, data: ReturnType<typeof useMerlinData>): QuoteResult {
+function buildQuoteResultFromState(
+  q: QuoteOutput,
+  data: ReturnType<typeof useMerlinData>
+): QuoteResult {
   const bessKW = q.bessKW ?? 0;
   const bessKWh = q.bessKWh ?? 0;
   const solarKW = q.solarKW ?? 0;
   const genKW = q.generatorKW ?? 0;
-  const duration = q.durationHours ?? 4;
+  const _duration = q.durationHours ?? 4;
 
   // Reconstruct equipment from stored sizing
   const grossCost = q.grossCost ?? q.capexUSD ?? 0;
   const itcRate = q.itcRate ?? 0.3;
   const itcAmount = q.itcAmount ?? grossCost * itcRate;
-  const netCost = q.capexUSD ?? (grossCost - itcAmount);
+  const netCost = q.capexUSD ?? grossCost - itcAmount;
 
   // Estimate equipment cost split (industry standard: equipment ~75%, install ~25%)
   const equipmentCost = grossCost * 0.75;
@@ -469,7 +501,7 @@ function buildQuoteResultFromState(q: QuoteOutput, data: ReturnType<typeof useMe
 
   // Solar cost (if applicable)
   const solarCostPerWatt = 0.85;
-  const solarTotalCost = solarKW > 0 ? solarKW * 1000 * solarCostPerWatt / 1000 : 0; // $/kW → total
+  const _solarTotalCost = solarKW > 0 ? (solarKW * 1000 * solarCostPerWatt) / 1000 : 0; // $/kW → total
   const actualSolarCost = solarKW > 0 ? solarKW * solarCostPerWatt : 0;
 
   // Generator cost
@@ -490,8 +522,8 @@ function buildQuoteResultFromState(q: QuoteOutput, data: ReturnType<typeof useMe
         unitEnergyMWh: bessKWh / 1000,
         unitCost: battTotalCost,
         totalCost: battTotalCost,
-        manufacturer: 'CATL/BYD',
-        model: 'LFP Commercial',
+        manufacturer: "CATL/BYD",
+        model: "LFP Commercial",
         pricePerKWh,
       },
       inverters: {
@@ -499,46 +531,57 @@ function buildQuoteResultFromState(q: QuoteOutput, data: ReturnType<typeof useMe
         unitPowerMW: Math.min(bessKW, 500) / 1000,
         unitCost: invTotalCost / Math.max(1, Math.ceil(bessKW / 500)),
         totalCost: invTotalCost,
-        manufacturer: 'SMA/Sungrow',
-        model: 'Commercial PCS',
+        manufacturer: "SMA/Sungrow",
+        model: "Commercial PCS",
       },
       transformers: {
         quantity: 1,
-        unitPowerMVA: bessKW / 1000 * 1.1,
+        unitPowerMVA: (bessKW / 1000) * 1.1,
         unitCost: transTotalCost,
         totalCost: transTotalCost,
-        voltage: '480V/12.47kV',
-        manufacturer: 'ABB/Eaton',
+        voltage: "480V/12.47kV",
+        manufacturer: "ABB/Eaton",
       },
       switchgear: {
         quantity: 1,
         unitCost: sgTotalCost,
         totalCost: sgTotalCost,
-        type: 'Metal-Enclosed',
-        voltage: '480V',
+        type: "Metal-Enclosed",
+        voltage: "480V",
       },
-      ...(solarKW > 0 ? {
-        solar: {
-          totalMW: solarKW / 1000,
-          panelQuantity: Math.ceil(solarKW / 0.4), // ~400W panels
-          inverterQuantity: Math.max(1, Math.ceil(solarKW / 100)),
-          totalCost: actualSolarCost,
-          costPerWatt: solarCostPerWatt,
-          priceCategory: solarKW >= 5000 ? 'utility' : 'commercial',
-          spaceRequirements: { rooftopAreaSqFt: 0, groundAreaSqFt: 0, rooftopAreaAcres: 0, groundAreaAcres: 0, isFeasible: true, constraints: [] },
-        },
-      } : {}),
-      ...(genKW > 0 ? {
-        generators: {
-          quantity: 1,
-          unitPowerMW: genKW / 1000,
-          unitCost: genTotalCost,
-          totalCost: genTotalCost,
-          costPerKW: genCostPerKW,
-          fuelType: (data.addOns.generatorFuelType || 'natural-gas'),
-          manufacturer: 'Caterpillar/Generac',
-        },
-      } : {}),
+      ...(solarKW > 0
+        ? {
+            solar: {
+              totalMW: solarKW / 1000,
+              panelQuantity: Math.ceil(solarKW / 0.4), // ~400W panels
+              inverterQuantity: Math.max(1, Math.ceil(solarKW / 100)),
+              totalCost: actualSolarCost,
+              costPerWatt: solarCostPerWatt,
+              priceCategory: solarKW >= 5000 ? "utility" : "commercial",
+              spaceRequirements: {
+                rooftopAreaSqFt: 0,
+                groundAreaSqFt: 0,
+                rooftopAreaAcres: 0,
+                groundAreaAcres: 0,
+                isFeasible: true,
+                constraints: [],
+              },
+            },
+          }
+        : {}),
+      ...(genKW > 0
+        ? {
+            generators: {
+              quantity: 1,
+              unitPowerMW: genKW / 1000,
+              unitCost: genTotalCost,
+              totalCost: genTotalCost,
+              costPerKW: genCostPerKW,
+              fuelType: data.addOns.generatorFuelType || "natural-gas",
+              manufacturer: "Caterpillar/Generac",
+            },
+          }
+        : {}),
       installation: {
         bos: bosEpc * 0.4,
         epc: bosEpc * 0.5,
@@ -590,26 +633,30 @@ function buildQuoteResultFromState(q: QuoteOutput, data: ReturnType<typeof useMe
     financials: {
       annualSavings: q.annualSavingsUSD ?? 0,
       paybackYears: q.paybackYears ?? q.roiYears ?? 0,
-      roi5Year: q.annualSavingsUSD && netCost > 0
-        ? ((q.annualSavingsUSD * 5 - netCost) / netCost) * 100
-        : 0,
-      roi10Year: q.annualSavingsUSD && netCost > 0
-        ? ((q.annualSavingsUSD * 10 - netCost) / netCost) * 100
-        : 0,
-      roi25Year: q.annualSavingsUSD && netCost > 0
-        ? ((q.annualSavingsUSD * 25 - netCost) / netCost) * 100
-        : 0,
+      roi5Year:
+        q.annualSavingsUSD && netCost > 0
+          ? ((q.annualSavingsUSD * 5 - netCost) / netCost) * 100
+          : 0,
+      roi10Year:
+        q.annualSavingsUSD && netCost > 0
+          ? ((q.annualSavingsUSD * 10 - netCost) / netCost) * 100
+          : 0,
+      roi25Year:
+        q.annualSavingsUSD && netCost > 0
+          ? ((q.annualSavingsUSD * 25 - netCost) / netCost) * 100
+          : 0,
       npv: q.npv ?? 0,
       irr: q.irr ?? 0,
     },
     metadata: {
       calculatedAt: new Date(),
-      pricingSource: 'TrueQuote (Step 4 cached)',
-      systemCategory: (bessKW / 1000) >= 1 ? 'utility' : (bessKW / 1000) >= 0.05 ? 'commercial' : 'residential',
+      pricingSource: "TrueQuote (Step 4 cached)",
+      systemCategory:
+        bessKW / 1000 >= 1 ? "utility" : bessKW / 1000 >= 0.05 ? "commercial" : "residential",
     },
     benchmarkAudit: {
-      version: '2.0',
-      methodology: 'TrueQuote SSOT (cached from Step 4 pricing pipeline)',
+      version: "2.0",
+      methodology: "TrueQuote SSOT (cached from Step 4 pricing pipeline)",
       sources: [],
       assumptions: {
         discountRate: 0.08,
@@ -652,12 +699,14 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     goals: EnergyGoal[];
     addOns: typeof data.addOns;
     stateQuote: QuoteOutput | undefined;
-    stateQuoteMargin: QuoteOutput['margin'] | undefined;
+    stateQuoteMargin: QuoteOutput["margin"] | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }>({ frozen: false } as any);
 
   // Only capture on FIRST render (frozen === false)
   if (!snapshotRef.current.frozen) {
-    const rawBESSKW = data.bessKW > 0 ? data.bessKW : (data.peakLoadKW || state?.quote?.peakLoadKW || 200);
+    const rawBESSKW =
+      data.bessKW > 0 ? data.bessKW : data.peakLoadKW || state?.quote?.peakLoadKW || 200;
     const ssotDuration = data.durationHours > 0 ? data.durationHours : 4;
 
     snapshotRef.current = {
@@ -665,18 +714,24 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       rawBESSKW,
       ssotDuration,
       solarKW: data.addOns.includeSolar
-        ? (data.addOns.solarKW > 0 ? data.addOns.solarKW : rawBESSKW * 0.5)
+        ? data.addOns.solarKW > 0
+          ? data.addOns.solarKW
+          : rawBESSKW * 0.5
         : 0,
       generatorKW: data.addOns.includeGenerator
-        ? (data.addOns.generatorKW > 0 ? data.addOns.generatorKW : rawBESSKW * 0.75)
+        ? data.addOns.generatorKW > 0
+          ? data.addOns.generatorKW
+          : rawBESSKW * 0.75
         : 0,
       windKW: data.addOns.includeWind
-        ? (data.addOns.windKW > 0 ? data.addOns.windKW : rawBESSKW * 0.3)
+        ? data.addOns.windKW > 0
+          ? data.addOns.windKW
+          : rawBESSKW * 0.3
         : 0,
-      location: data.location.state || 'CA',
+      location: data.location.state || "CA",
       utilityRate: data.utilityRate || 0.12,
       demandCharge: data.demandCharge || 0,
-      industry: data.industry || 'commercial',
+      industry: data.industry || "commercial",
       goals: data.goals as EnergyGoal[],
       addOns: { ...data.addOns },
       stateQuote: state?.quote ? { ...state.quote } : undefined,
@@ -719,7 +774,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       const sq = snap.stateQuote;
       const hasPricing = sq?.pricingComplete === true && (sq.grossCost ?? 0) > 0;
 
-      console.log('[Step5 MagicFit] generateTiers starting (zero-DB-call path)', {
+      console.log("[Step5 MagicFit] generateTiers starting (zero-DB-call path)", {
         hasPricingFromStep4: hasPricing,
         baseBESSKW,
         baseDuration,
@@ -731,39 +786,60 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         demandCharge: snap.demandCharge,
         industry: snap.industry,
         goals: snap.goals,
-        stateQuote: sq ? { grossCost: sq.grossCost, annualSavingsUSD: sq.annualSavingsUSD, bessKW: sq.bessKW, pricingComplete: sq.pricingComplete } : null,
+        stateQuote: sq
+          ? {
+              grossCost: sq.grossCost,
+              annualSavingsUSD: sq.annualSavingsUSD,
+              bessKW: sq.bessKW,
+              pricingComplete: sq.pricingComplete,
+            }
+          : null,
       });
 
       try {
         let baseQuoteResult: QuoteResult;
-        let baseMargin: TierQuote['quote'] extends infer Q ? any : never;
+        let baseMargin: {
+          sellPriceTotal: number;
+          baseCostTotal: number;
+          marginDollars: number;
+          marginPercent: number;
+          marginBand: string;
+          itcRate: number;
+          itcAmount: number;
+          netCost: number;
+        } | null;
 
         if (hasPricing && sq) {
           // ═══════════════════════════════════════════════════════════════
           // FAST PATH: Build QuoteResult from state.quote (no DB call!)
           // Step 4's runPricingSafe already computed everything we need.
           // ═══════════════════════════════════════════════════════════════
-          console.log('[Step5 MagicFit] ✅ Using Step 4 cached quote (zero DB calls)');
+          console.log("[Step5 MagicFit] ✅ Using Step 4 cached quote (zero DB calls)");
           baseQuoteResult = buildQuoteResultFromState(sq, data);
 
           // Reconstruct margin from state.quote.margin
           const m = snap.stateQuoteMargin;
-          baseMargin = m ? {
-            sellPriceTotal: m.sellPriceTotal,
-            baseCostTotal: m.baseCostTotal,
-            marginDollars: m.marginDollars,
-            marginPercent: m.marginPercent,
-            marginBand: m.marginBand,
-            itcRate: sq.itcRate ?? 0.3,
-            itcAmount: sq.itcAmount ?? m.sellPriceTotal * (sq.itcRate ?? 0.3),
-            netCost: m.sellPriceTotal - (sq.itcAmount ?? m.sellPriceTotal * (sq.itcRate ?? 0.3)),
-          } : null;
+          baseMargin = m
+            ? {
+                sellPriceTotal: m.sellPriceTotal,
+                baseCostTotal: m.baseCostTotal,
+                marginDollars: m.marginDollars,
+                marginPercent: m.marginPercent,
+                marginBand: m.marginBand,
+                itcRate: sq.itcRate ?? 0.3,
+                itcAmount: sq.itcAmount ?? m.sellPriceTotal * (sq.itcRate ?? 0.3),
+                netCost:
+                  m.sellPriceTotal - (sq.itcAmount ?? m.sellPriceTotal * (sq.itcRate ?? 0.3)),
+              }
+            : null;
         } else {
           // ═══════════════════════════════════════════════════════════════
           // FALLBACK: Step 4 pricing missing — make ONE calculateQuote call
           // for PerfectFit base, then derive others with pure math.
           // ═══════════════════════════════════════════════════════════════
-          console.log('[Step5 MagicFit] ⚠️ No Step 4 pricing — falling back to single calculateQuote call');
+          console.log(
+            "[Step5 MagicFit] ⚠️ No Step 4 pricing — falling back to single calculateQuote call"
+          );
 
           const PER_TIER_TIMEOUT_MS = 20_000;
           let timer: ReturnType<typeof setTimeout> | undefined;
@@ -772,20 +848,29 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
             storageSizeMW: baseBESSKW / 1000,
             durationHours: baseDuration,
             location: snap.location,
-            zipCode: '',
+            zipCode: "",
             electricityRate: snap.utilityRate,
             demandCharge: snap.demandCharge || undefined,
-            useCase: snap.industry.replace(/_/g, '-'),
+            useCase: snap.industry.replace(/_/g, "-"),
             solarMW: baseSolarKW / 1000,
             windMW: baseWindKW / 1000,
             generatorMW: baseGeneratorKW / 1000,
-            generatorFuelType: (snap.addOns.generatorFuelType || 'natural-gas') as 'diesel' | 'natural-gas' | 'dual-fuel',
-            gridConnection: 'on-grid',
-            batteryChemistry: 'lfp',
+            generatorFuelType: (snap.addOns.generatorFuelType || "natural-gas") as
+              | "diesel"
+              | "natural-gas"
+              | "dual-fuel",
+            gridConnection: "on-grid",
+            batteryChemistry: "lfp",
           });
 
           const timeoutPromise = new Promise<never>((_, reject) => {
-            timer = setTimeout(() => reject(new Error(`PerfectFit fallback timed out after ${PER_TIER_TIMEOUT_MS / 1000}s`)), PER_TIER_TIMEOUT_MS);
+            timer = setTimeout(
+              () =>
+                reject(
+                  new Error(`PerfectFit fallback timed out after ${PER_TIER_TIMEOUT_MS / 1000}s`)
+                ),
+              PER_TIER_TIMEOUT_MS
+            );
           });
 
           baseQuoteResult = await Promise.race([quotePromise, timeoutPromise]);
@@ -816,24 +901,29 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         // DERIVE ALL 3 TIERS from the single base using pure math
         // ═══════════════════════════════════════════════════════════════════
         const results: TierQuote[] = [];
-        for (const tierKey of ['starter', 'perfectFit', 'beastMode'] as const) {
-          results.push(scaleTier(baseQuoteResult, tierKey, TIER_CONFIG[tierKey], baseDuration, baseMargin));
+        for (const tierKey of ["starter", "perfectFit", "beastMode"] as const) {
+          results.push(
+            scaleTier(baseQuoteResult, tierKey, TIER_CONFIG[tierKey], baseDuration, baseMargin)
+          );
         }
 
         if (!cancelled) {
-          console.log('[Step5 MagicFit] All 3 tiers derived (zero extra DB calls):', results.map(r => ({
-            tier: r.tierKey,
-            annualSavings: r.quote?.financials?.annualSavings,
-            totalCost: r.quote?.costs?.totalProjectCost,
-            payback: r.quote?.financials?.paybackYears,
-          })));
+          console.log(
+            "[Step5 MagicFit] All 3 tiers derived (zero extra DB calls):",
+            results.map((r) => ({
+              tier: r.tierKey,
+              annualSavings: r.quote?.financials?.annualSavings,
+              totalCost: r.quote?.costs?.totalProjectCost,
+              payback: r.quote?.financials?.paybackYears,
+            }))
+          );
           setTiers(results);
           setIsLoading(false);
         }
       } catch (err) {
         if (!cancelled) {
-          const msg = err instanceof Error ? err.message : 'Unknown error';
-          console.error('[Step5 MagicFit] generateTiers failed:', msg);
+          const msg = err instanceof Error ? err.message : "Unknown error";
+          console.error("[Step5 MagicFit] generateTiers failed:", msg);
           setLoadError(msg);
           setIsLoading(false);
         }
@@ -841,28 +931,32 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     }
 
     generateTiers();
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run ONCE on mount — all inputs frozen in snapshotRef
 
   const handleSelectTier = (tierKey: TierKey) => {
     setSelectedTier(tierKey);
-    
+
     // Store selected tier quote into wizard state so Step 6 Results shows correct numbers
-    const tierData = tiers.find(t => t.tierKey === tierKey);
+    const tierData = tiers.find((t) => t.tierKey === tierKey);
     if (tierData?.quote && actions?.updateQuote) {
       const eq = tierData.quote.equipment;
       const batt = eq?.batteries;
       const bessKWh = batt ? (batt.unitEnergyMWh ?? 0) * (batt.quantity ?? 0) * 1000 : 0;
       const bessKW = batt ? (batt.unitPowerMW ?? 0) * (batt.quantity ?? 0) * 1000 : 0;
       const solarKW = eq?.solar ? (eq.solar.totalMW ?? 0) * 1000 : 0;
-      const genKW = eq?.generators ? (eq.generators.unitPowerMW ?? 0) * (eq.generators.quantity ?? 0) * 1000 : 0;
+      const genKW = eq?.generators
+        ? (eq.generators.unitPowerMW ?? 0) * (eq.generators.quantity ?? 0) * 1000
+        : 0;
 
       // Use margin-adjusted pricing (sell price) when available
-      const margin = (tierData.quote as any)?._margin;
+      const margin = (tierData.quote as QuoteWithMargin)?._margin;
       const grossCost = margin?.sellPriceTotal ?? tierData.quote.costs?.totalProjectCost ?? 0;
       const itcAmount = margin?.itcAmount ?? grossCost * 0.3;
-      const netCost = margin?.netCost ?? (grossCost - itcAmount);
+      const netCost = margin?.netCost ?? grossCost - itcAmount;
       const itcRate = margin?.itcRate ?? 0.3;
 
       actions.updateQuote({
@@ -877,7 +971,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         annualSavingsUSD: tierData.quote.financials?.annualSavings ?? 0,
         roiYears: tierData.quote.financials?.annualSavings
           ? Math.min(netCost / tierData.quote.financials.annualSavings, 99)
-          : tierData.quote.financials?.paybackYears ?? 0,
+          : (tierData.quote.financials?.paybackYears ?? 0),
         npv: tierData.quote.financials?.npv ?? undefined,
         irr: tierData.quote.financials?.irr ?? undefined,
         paybackYears: tierData.quote.financials?.paybackYears ?? 0,
@@ -885,11 +979,13 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         pricingComplete: true,
         notes: [
           `MagicFit tier: ${TIER_CONFIG[tierKey].name} (${TIER_CONFIG[tierKey].multiplier}x)`,
-          ...(margin ? [`Margin: ${margin.marginBand} (${(margin.marginPercent * 100).toFixed(1)}%)`] : []),
+          ...(margin
+            ? [`Margin: ${margin.marginBand} (${(margin.marginPercent * 100).toFixed(1)}%)`]
+            : []),
         ],
       });
     }
-    
+
     // ✅ FEB 2026: No auto-advance — user confirms by clicking Next in bottom nav
   };
 
@@ -900,7 +996,9 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
           {loadError ? (
             <>
               <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto mb-4" />
-              <p className="text-slate-300 text-base font-semibold mb-2">Couldn't generate options</p>
+              <p className="text-slate-300 text-base font-semibold mb-2">
+                Couldn't generate options
+              </p>
               <p className="text-slate-500 text-sm mb-4">{loadError}</p>
               <button
                 onClick={actions?.goBack}
@@ -912,7 +1010,9 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
           ) : (
             <>
               <Loader2 className="w-10 h-10 text-slate-400 animate-spin mx-auto mb-4" />
-              <p className="text-slate-300 text-base font-medium">Generating your custom system options...</p>
+              <p className="text-slate-300 text-base font-medium">
+                Generating your custom system options...
+              </p>
               <p className="text-slate-500 text-sm mt-2">Analyzing facility profile and goals</p>
             </>
           )}
@@ -922,15 +1022,15 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   }
 
   // Build equipment summary for the selected tier (or perfectFit as default)
-  const _summaryTier = tiers.find(t => t.tierKey === (selectedTier || 'perfectFit'));
+  const _summaryTier = tiers.find((t) => t.tierKey === (selectedTier || "perfectFit"));
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* TrueQuote Financial Modal — full ROI, 10yr cashflow, sensitivity */}
       {(() => {
-        const modalTier = tiers.find(t => t.tierKey === (selectedTier || 'perfectFit'));
+        const modalTier = tiers.find((t) => t.tierKey === (selectedTier || "perfectFit"));
         const mq = modalTier?.quote;
-        const mm = (mq as any)?._margin;
+        const mm = (mq as QuoteWithMargin)?._margin;
         return (
           <TrueQuoteFinancialModal
             isOpen={showTrueQuoteModal}
@@ -939,7 +1039,13 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
             federalITC={mm?.itcAmount ?? mq?.costs?.taxCredit ?? 0}
             netInvestment={mm?.netCost ?? mq?.costs?.netCost ?? 0}
             annualSavings={mq?.financials?.annualSavings ?? 0}
-            bessKWh={mq?.equipment?.batteries ? (mq.equipment.batteries.unitEnergyMWh ?? 0) * (mq.equipment.batteries.quantity ?? 0) * 1000 : 0}
+            bessKWh={
+              mq?.equipment?.batteries
+                ? (mq.equipment.batteries.unitEnergyMWh ?? 0) *
+                  (mq.equipment.batteries.quantity ?? 0) *
+                  1000
+                : 0
+            }
             solarKW={mq?.equipment?.solar ? (mq.equipment.solar.totalMW ?? 0) * 1000 : 0}
             industry={getIndustryLabel(data.industry)}
             location={data.location.state}
@@ -967,16 +1073,25 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         <div className="flex-1 text-left">
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-xl font-bold text-amber-400 tracking-tight">TrueQuote™</span>
-            <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Verified</span>
+            <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+              Verified
+            </span>
           </div>
           <p className="text-sm text-slate-400 leading-snug">
-            Every number is sourced. Click to view full financial projection, ROI analysis, and payback timeline.
+            Every number is sourced. Click to view full financial projection, ROI analysis, and
+            payback timeline.
           </p>
         </div>
 
         {/* Arrow */}
         <div className="shrink-0 text-amber-500/50 group-hover:text-amber-400 group-hover:translate-x-1 transition-all duration-300">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </div>
@@ -986,8 +1101,9 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       <div className="space-y-2">
         <p className="text-sm leading-relaxed text-slate-400">
           Three system options for your{" "}
-          <span className="text-slate-200 font-medium">{getIndustryLabel(data.industry)}</span> facility
-          <span className="text-slate-500">{" "}· sized by Merlin based on your profile and goals</span>
+          <span className="text-slate-200 font-medium">{getIndustryLabel(data.industry)}</span>{" "}
+          facility
+          <span className="text-slate-500"> · sized by Merlin based on your profile and goals</span>
         </p>
 
         {/* Goal-based sizing hints */}
@@ -1006,11 +1122,14 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {tiers.map((tier) => {
           const isSelected = selectedTier === tier.tierKey;
-          const isRecommended = tier.tierKey === 'perfectFit';
-          
+          const isRecommended = tier.tierKey === "perfectFit";
+
           if (tier.error) {
             return (
-              <div key={tier.tierKey} className={`p-5 rounded-xl border ${tier.config.cardBorder} ${tier.config.cardBg}`}>
+              <div
+                key={tier.tierKey}
+                className={`p-5 rounded-xl border ${tier.config.cardBorder} ${tier.config.cardBg}`}
+              >
                 <h3 className={tier.config.headlineClass}>{tier.config.name}</h3>
                 <div className="flex items-center gap-2 text-red-400 mt-4 text-sm">
                   <AlertTriangle className="w-4 h-4" />
@@ -1024,19 +1143,27 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
 
           const quote = tier.quote;
           const batteries = quote.equipment?.batteries;
-          const bessKWh = batteries ? (batteries.unitEnergyMWh ?? 0) * (batteries.quantity ?? 0) * 1000 : 0;
-          const bessKW = batteries ? (batteries.unitPowerMW ?? 0) * (batteries.quantity ?? 0) * 1000 : 0;
+          const bessKWh = batteries
+            ? (batteries.unitEnergyMWh ?? 0) * (batteries.quantity ?? 0) * 1000
+            : 0;
+          const bessKW = batteries
+            ? (batteries.unitPowerMW ?? 0) * (batteries.quantity ?? 0) * 1000
+            : 0;
           const solarKW = quote.equipment?.solar ? (quote.equipment.solar.totalMW ?? 0) * 1000 : 0;
-          const genKW = quote.equipment?.generators ? (quote.equipment.generators.unitPowerMW ?? 0) * (quote.equipment.generators.quantity ?? 0) * 1000 : 0;
-          
+          const genKW = quote.equipment?.generators
+            ? (quote.equipment.generators.unitPowerMW ?? 0) *
+              (quote.equipment.generators.quantity ?? 0) *
+              1000
+            : 0;
+
           return (
             <div
               key={tier.tierKey}
               className={`
                 relative rounded-xl border-2 transition-all duration-300 cursor-pointer overflow-hidden
                 ${tier.config.cardBorder} ${tier.config.cardBg}
-                ${isSelected ? 'ring-2 ring-[#3ECF8E]/50' : ''}
-                ${isRecommended && !isSelected ? 'ring-1 ring-[#3ECF8E]/20' : ''}
+                ${isSelected ? "ring-2 ring-[#3ECF8E]/50" : ""}
+                ${isRecommended && !isSelected ? "ring-1 ring-[#3ECF8E]/20" : ""}
               `}
               onClick={() => handleSelectTier(tier.tierKey)}
             >
@@ -1075,8 +1202,12 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
 
                 {/* Annual Savings - HERO */}
                 <div className="mb-4 p-3 bg-white/[0.04] rounded-xl border border-white/[0.06]">
-                  <div className="text-slate-500 text-[11px] font-semibold uppercase tracking-widest mb-1">Annual Savings</div>
-                  <div className={`text-2xl lg:text-3xl font-bold ${tier.config.accentColor} leading-none`}>
+                  <div className="text-slate-500 text-[11px] font-semibold uppercase tracking-widest mb-1">
+                    Annual Savings
+                  </div>
+                  <div
+                    className={`text-2xl lg:text-3xl font-bold ${tier.config.accentColor} leading-none`}
+                  >
                     {formatCurrency(quote.financials?.annualSavings)}
                     <span className="text-sm text-slate-600 font-semibold ml-1">/yr</span>
                   </div>
@@ -1084,28 +1215,31 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
 
                 {/* Equipment Summary */}
                 <div className="space-y-1.5 mb-4">
-                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Equipment</div>
-                  
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    Equipment
+                  </div>
+
                   <div className="flex items-center justify-between text-xs">
                     <span className="flex items-center gap-1.5 text-slate-400">
                       <Battery className="w-3 h-3" /> Battery
                     </span>
                     <span className="text-white font-semibold tabular-nums">
-                      {formatNumber(Math.round(bessKWh))} kWh / {formatNumber(Math.round(bessKW))} kW
+                      {formatNumber(Math.round(bessKWh))} kWh / {formatNumber(Math.round(bessKW))}{" "}
+                      kW
                     </span>
                   </div>
-                  
+
                   {(batteries?.quantity ?? 0) > 0 && (
                     <div className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-1.5 text-slate-400">
                         <Clock className="w-3 h-3" /> Duration
                       </span>
                       <span className="text-white font-semibold tabular-nums">
-                      {safeFixed(baseDuration, 1)} hours
+                        {safeFixed(baseDuration, 1)} hours
                       </span>
                     </div>
                   )}
-                  
+
                   {solarKW > 0 && (
                     <div className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-1.5 text-slate-400">
@@ -1116,7 +1250,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                       </span>
                     </div>
                   )}
-                  
+
                   {genKW > 0 && (
                     <div className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-1.5 text-slate-400">
@@ -1131,9 +1265,11 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
 
                 {/* Financial Summary */}
                 <div className="space-y-1.5 mb-4 pb-4 border-b border-white/[0.06]">
-                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Financials</div>
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    Financials
+                  </div>
                   {(() => {
-                    const m = (quote as any)?._margin;
+                    const m = (quote as QuoteWithMargin)?._margin;
                     const investment = m?.sellPriceTotal ?? quote.costs?.totalProjectCost ?? 0;
                     const itc = m?.itcAmount ?? quote.costs?.taxCredit ?? 0;
                     const net = m?.netCost ?? quote.costs?.netCost ?? 0;
@@ -1141,11 +1277,15 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                       <>
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-400">Investment</span>
-                          <span className="text-white font-semibold tabular-nums">{formatCurrency(investment)}</span>
+                          <span className="text-white font-semibold tabular-nums">
+                            {formatCurrency(investment)}
+                          </span>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-400">Federal ITC</span>
-                          <span className="text-green-400 font-semibold tabular-nums">−{formatCurrency(itc)}</span>
+                          <span className="text-green-400 font-semibold tabular-nums">
+                            −{formatCurrency(itc)}
+                          </span>
                         </div>
                         <div className="flex justify-between text-xs font-bold">
                           <span className="text-white">Net Cost</span>
@@ -1183,7 +1323,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                   className={`
                     w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all
                     ${tier.config.buttonClass}
-                    ${isSelected ? 'opacity-100' : 'opacity-90 hover:opacity-100'}
+                    ${isSelected ? "opacity-100" : "opacity-90 hover:opacity-100"}
                   `}
                 >
                   {isSelected ? (
@@ -1204,9 +1344,19 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       {/* Equipment Legend */}
       <div className="flex justify-center">
         <div className="flex flex-wrap justify-center gap-4 text-[11px] text-slate-500">
-          <span className="flex items-center gap-1.5"><Battery className="w-3 h-3" /> BESS</span>
-          {data.addOns.includeSolar && <span className="flex items-center gap-1.5"><Sun className="w-3 h-3" /> Solar</span>}
-          {data.addOns.includeGenerator && <span className="flex items-center gap-1.5"><Fuel className="w-3 h-3" /> Generator</span>}
+          <span className="flex items-center gap-1.5">
+            <Battery className="w-3 h-3" /> BESS
+          </span>
+          {data.addOns.includeSolar && (
+            <span className="flex items-center gap-1.5">
+              <Sun className="w-3 h-3" /> Solar
+            </span>
+          )}
+          {data.addOns.includeGenerator && (
+            <span className="flex items-center gap-1.5">
+              <Fuel className="w-3 h-3" /> Generator
+            </span>
+          )}
         </div>
       </div>
 
