@@ -157,6 +157,26 @@ export function buildV7ExportData(state: WizardV7State): QuoteExportData {
     // Pricing Snapshot ID
     pricingSnapshotId: quote.pricingSnapshotId ?? undefined,
 
+    // Equipment Cost Breakdown (Feb 2026)
+    equipmentCosts: quote.equipmentCosts
+      ? {
+          batteryCost: quote.equipmentCosts.batteryCost,
+          batteryPerKWh: quote.equipmentCosts.batteryPerKWh,
+          inverterCost: quote.equipmentCosts.inverterCost,
+          inverterPerKW: quote.equipmentCosts.inverterPerKW,
+          transformerCost: quote.equipmentCosts.transformerCost,
+          switchgearCost: quote.equipmentCosts.switchgearCost,
+          solarCost: quote.equipmentCosts.solarCost,
+          solarPerWatt: quote.equipmentCosts.solarPerWatt,
+          generatorCost: quote.equipmentCosts.generatorCost,
+          generatorPerKW: quote.equipmentCosts.generatorPerKW,
+          installationCost: quote.equipmentCosts.installationCost,
+          totalEquipmentCost: quote.equipmentCosts.totalEquipmentCost,
+          allInPerKW: quote.equipmentCosts.allInPerKW,
+          allInPerKWh: quote.equipmentCosts.allInPerKWh,
+        }
+      : undefined,
+
     showAiNote: false,
   };
 }

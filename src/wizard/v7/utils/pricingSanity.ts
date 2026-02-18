@@ -221,6 +221,24 @@ export type DisplayQuote = {
   solarKW: number | null;
   generatorKW: number | null;
 
+  // --- Equipment cost breakdown for unit economics (Feb 2026) ---
+  equipmentCosts: {
+    batteryCost: number | null;
+    batteryPerKWh: number | null;
+    inverterCost: number | null;
+    inverterPerKW: number | null;
+    transformerCost: number | null;
+    switchgearCost: number | null;
+    solarCost: number | null;
+    solarPerWatt: number | null;
+    generatorCost: number | null;
+    generatorPerKW: number | null;
+    installationCost: number | null;
+    totalEquipmentCost: number | null;
+    allInPerKW: number | null;
+    allInPerKWh: number | null;
+  } | null;
+
   // --- Confidence + validation ---
   confidence: DisplayConfidence | null;
   trueQuoteValidation: DisplayTrueQuoteValidation | null;
@@ -305,6 +323,7 @@ function emptyDisplayQuote(): DisplayQuote {
     demandChargeSavings: null,
     solarKW: null,
     generatorKW: null,
+    equipmentCosts: null,
     confidence: null,
     trueQuoteValidation: null,
     notes: [],
@@ -395,6 +414,7 @@ export function sanitizeQuoteForDisplay(quote: unknown): DisplayQuote {
     "durationHours", "capexUSD", "grossCost", "itcAmount", "itcRate",
     "annualSavingsUSD", "roiYears", "npv",
     "irr", "paybackYears", "demandChargeSavings", "solarKW", "generatorKW",
+    "equipmentCosts",
     "confidence", "trueQuoteValidation", "notes", "missingInputs",
     "_displayHints",
   ]);
@@ -426,6 +446,29 @@ export function sanitizeQuoteForDisplay(quote: unknown): DisplayQuote {
     demandChargeSavings: sanitized.demandChargeSavings as number | null ?? null,
     solarKW: sanitized.solarKW as number | null ?? null,
     generatorKW: sanitized.generatorKW as number | null ?? null,
+    equipmentCosts: sanitized.equipmentCosts
+      ? (() => {
+          const ec = sanitized.equipmentCosts as Record<string, unknown>;
+          const safeNum = (v: unknown): number | null =>
+            typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null;
+          return {
+            batteryCost: safeNum(ec.batteryCost),
+            batteryPerKWh: safeNum(ec.batteryPerKWh),
+            inverterCost: safeNum(ec.inverterCost),
+            inverterPerKW: safeNum(ec.inverterPerKW),
+            transformerCost: safeNum(ec.transformerCost),
+            switchgearCost: safeNum(ec.switchgearCost),
+            solarCost: safeNum(ec.solarCost),
+            solarPerWatt: safeNum(ec.solarPerWatt),
+            generatorCost: safeNum(ec.generatorCost),
+            generatorPerKW: safeNum(ec.generatorPerKW),
+            installationCost: safeNum(ec.installationCost),
+            totalEquipmentCost: safeNum(ec.totalEquipmentCost),
+            allInPerKW: safeNum(ec.allInPerKW),
+            allInPerKWh: safeNum(ec.allInPerKWh),
+          };
+        })()
+      : null,
     confidence: (sanitized.confidence as DisplayConfidence) ?? null,
     trueQuoteValidation: (sanitized.trueQuoteValidation as DisplayTrueQuoteValidation) ?? null,
     notes: Array.isArray(sanitized.notes) ? sanitized.notes as string[] : [],

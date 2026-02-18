@@ -320,6 +320,24 @@ export type QuoteOutput = {
   solarKW?: number;
   generatorKW?: number;
 
+  // Equipment cost breakdown (from Layer B) — for unit economics display
+  equipmentCosts?: {
+    batteryCost?: number;       // Total battery cost
+    batteryPerKWh?: number;     // $/kWh for battery pack
+    inverterCost?: number;      // Total inverter/PCS cost
+    inverterPerKW?: number;     // $/kW for PCS
+    transformerCost?: number;   // Total transformer cost
+    switchgearCost?: number;    // Total switchgear cost
+    solarCost?: number;         // Total solar cost
+    solarPerWatt?: number;      // $/W for solar
+    generatorCost?: number;     // Total generator cost
+    generatorPerKW?: number;    // $/kW for generator
+    installationCost?: number;  // Total installation/BOS/EPC
+    totalEquipmentCost?: number; // Sum of all equipment (pre-margin)
+    allInPerKW?: number;        // Total $/kW (grossCost / powerKW)
+    allInPerKWh?: number;       // Total $/kWh (grossCost / energyKWh)
+  };
+
   // Audit / notes
   notes?: string[];
   pricingSnapshotId?: string;
@@ -3954,6 +3972,34 @@ export function useWizardV7() {
                     pricingResult.data.breakdown.generators.quantity *
                     1000
                   : undefined,
+                // Equipment cost breakdown for unit economics (Feb 2026)
+                equipmentCosts: (() => {
+                  const bd = pricingResult.data.breakdown;
+                  if (!bd) return undefined;
+                  const bessKWh = bd.batteries
+                    ? bd.batteries.unitEnergyMWh * bd.batteries.quantity * 1000
+                    : 0;
+                  const bessKW = bd.batteries
+                    ? bd.batteries.unitPowerMW * bd.batteries.quantity * 1000
+                    : 0;
+                  const gross = pricingResult.data.grossCost;
+                  return {
+                    batteryCost: bd.batteries?.totalCost,
+                    batteryPerKWh: bessKWh > 0 ? Math.round(bd.batteries.totalCost / bessKWh) : undefined,
+                    inverterCost: bd.inverters?.totalCost,
+                    inverterPerKW: bessKW > 0 ? Math.round(bd.inverters.totalCost / bessKW) : undefined,
+                    transformerCost: bd.transformers?.totalCost,
+                    switchgearCost: bd.switchgear?.totalCost,
+                    solarCost: bd.solar?.totalCost,
+                    solarPerWatt: bd.solar?.costPerWatt,
+                    generatorCost: bd.generators?.totalCost,
+                    generatorPerKW: bd.generators?.costPerKW,
+                    installationCost: (pricingResult.data as any).financials?.installationCost,
+                    totalEquipmentCost: pricingResult.data.baseCost,
+                    allInPerKW: bessKW > 0 ? Math.round(gross / bessKW) : undefined,
+                    allInPerKWh: bessKWh > 0 ? Math.round(gross / bessKWh) : undefined,
+                  };
+                })(),
                 pricingSnapshotId: pricingResult.data.pricingSnapshotId,
                 pricingComplete: true,
                 // Margin policy (Feb 2026)
