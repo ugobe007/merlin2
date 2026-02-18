@@ -183,8 +183,6 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
 
   const fmt = (v: number) =>
     `$${v.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-  const fmtDec = (v: number) =>
-    `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const fmtPct = (v: number) => `${v.toFixed(1)}%`;
   const fmtNum = (v: number) => v.toLocaleString("en-US");
 
@@ -493,7 +491,11 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
               }),
               new TextRun({ text: "  ", size: 10 }),
               new TextRun({ text: "TrueQuote™ Verified", size: 20, bold: true, color: "FFD700" }),
-              new TextRun({ text: "  —  Every estimate backed by published sources", size: 18, color: "94A3B8" }),
+              new TextRun({
+                text: "  —  Every estimate backed by published sources",
+                size: 18,
+                color: "94A3B8",
+              }),
             ],
           }),
           // Bottom padding
@@ -862,28 +864,23 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                   .sort(([, a], [, b]) => b - a);
                 const totalContributorKW = contributorEntries.reduce((sum, [, kw]) => sum + kw, 0);
 
-                const items: any[] = [
+                const items: unknown[] = [
                   bodyParagraph(
                     "Your facility's power demand was analyzed using industry-specific load modeling. Each contributor below has been independently sized using authoritative standards."
                   ),
                   subHeading("Load Breakdown — TrueQuote™ Verified"),
                   makeTable(
                     ["Load Component", "Peak Demand (kW)", "Share of Total"],
-                    contributorEntries
-                      .map(([key, kw]) => {
-                        // Compute share directly from kW values (avoids key mismatch with kWContributorShares)
-                        const sharePct = totalContributorKW > 0 ? (kw / totalContributorKW) * 100 : 0;
-                        const label = key
-                          .replace(/_/g, " ")
-                          .replace(/([A-Z])/g, " $1")
-                          .replace(/^./, (s) => s.toUpperCase())
-                          .trim();
-                        return [
-                          label,
-                          `${fmtNum(Math.round(kw))} kW`,
-                          fmtPct(sharePct),
-                        ];
-                      }),
+                    contributorEntries.map(([key, kw]) => {
+                      // Compute share directly from kW values (avoids key mismatch with kWContributorShares)
+                      const sharePct = totalContributorKW > 0 ? (kw / totalContributorKW) * 100 : 0;
+                      const label = key
+                        .replace(/_/g, " ")
+                        .replace(/([A-Z])/g, " $1")
+                        .replace(/^./, (s) => s.toUpperCase())
+                        .trim();
+                      return [label, `${fmtNum(Math.round(kw))} kW`, fmtPct(sharePct)];
+                    }),
                     2
                   ),
                 ];
@@ -895,7 +892,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                       "Facility Duty Cycle",
                       fmtPct(data.trueQuoteValidation!.dutyCycle * 100),
                       C.emerald
-                    ),
+                    )
                   );
                 }
 
@@ -904,7 +901,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                 if (data.trueQuoteValidation!.assumptions?.length) {
                   items.push(
                     subHeading("Sizing Methodology & Sources"),
-                    ...data.trueQuoteValidation!.assumptions.map((a) => bullet(a)),
+                    ...data.trueQuoteValidation!.assumptions.map((a) => bullet(a))
                   );
                 }
 
@@ -1387,7 +1384,12 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                 size: 18,
                 color: "94A3B8",
               }),
-              new TextRun({ text: "Upgrade to ProQuote™", size: 18, bold: true, color: C.emeraldLight }),
+              new TextRun({
+                text: "Upgrade to ProQuote™",
+                size: 18,
+                bold: true,
+                color: C.emeraldLight,
+              }),
             ],
           }),
           new Paragraph({
@@ -1992,103 +1994,234 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
 }
 
 /**
- * Export quote as Excel spreadsheet (.xlsx) with watermark
- * Note: We'll use a simple CSV approach since exceljs isn't installed yet
+ * Export quote as Excel workbook (.xlsx) — Multi-sheet professional workbook
+ * Sheet 1: Executive Summary (project info + financials)
+ * Sheet 2: System Specifications (BESS + electrical)
+ * Sheet 3: Load Profile & TrueQuote™ (kW contributors)
+ * Sheet 4: Financial Projections (5-year cash flow)
  */
 export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
-  const watermarkText = getWatermarkText();
+  const XLSX = await import("xlsx");
 
-  // Create CSV content with watermark in header
-  const csvContent = `
-⚡ MERLIN Energy - BESS Quote Summary
-${watermarkText}
-Quote #,${data.quoteNumber}
-Date,${data.quoteDate}
+  const wb = XLSX.utils.book_new();
 
-PROJECT INFORMATION
-Project Name,${data.projectName}
-Location,${data.location}
-Application,${data.applicationType}
-Use Case,${data.useCase}
+  // ── Sheet 1: Executive Summary ──────────────────────────────────
+  const summaryRows = [
+    ["MERLIN ENERGY — BESS Quote Summary"],
+    [],
+    ["Quote Reference", data.quoteNumber],
+    ["Date", data.quoteDate],
+    ["Project Name", data.projectName],
+    ["Location", data.location],
+    ["Application", data.applicationType],
+    ["Industry / Use Case", data.useCase],
+    [],
+    ["SYSTEM OVERVIEW"],
+    ["Power Rating (MW)", data.storageSizeMW],
+    ["Energy Capacity (MWh)", data.storageSizeMWh || data.storageSizeMW * data.durationHours],
+    ["Duration (hours)", data.durationHours],
+    ["Battery Chemistry", data.chemistry],
+    ["Grid Connection", data.gridConnection],
+    [],
+    ["FINANCIAL SUMMARY"],
+    ["Total System Cost ($)", data.systemCost],
+    [
+      "Cost per kW ($/kW)",
+      data.storageSizeMW > 0 ? Math.round(data.systemCost / (data.storageSizeMW * 1000)) : 0,
+    ],
+    [
+      "Cost per kWh ($/kWh)",
+      (data.storageSizeMWh || data.storageSizeMW * data.durationHours) > 0
+        ? Math.round(
+            data.systemCost /
+              ((data.storageSizeMWh || data.storageSizeMW * data.durationHours) * 1000)
+          )
+        : 0,
+    ],
+  ];
 
-SYSTEM SPECIFICATIONS
-Parameter,Value,Unit
-Power Rating,${data.storageSizeMW.toFixed(1)},MW
-Energy Capacity,${data.storageSizeMWh.toFixed(1)},MWh
-Duration,${data.durationHours.toFixed(1)},hours
-Battery Chemistry,${data.chemistry.toUpperCase()},-
-Round-Trip Efficiency,${data.roundTripEfficiency},%
-Installation Type,${data.installationType},-
-Grid Connection,${data.gridConnection.toUpperCase()},-
+  if (data.financialAnalysis) {
+    summaryRows.push(
+      ["Annual Savings ($)", Math.round(data.financialAnalysis.annualSavingsUSD)],
+      ["Simple Payback (years)", Number(data.financialAnalysis.paybackYears.toFixed(1))]
+    );
+    if (data.financialAnalysis.npv != null)
+      summaryRows.push(["NPV — 25 Year ($)", Math.round(data.financialAnalysis.npv)]);
+    if (data.financialAnalysis.irr != null)
+      summaryRows.push(["IRR (%)", Number((data.financialAnalysis.irr * 100).toFixed(1))]);
+    if (data.financialAnalysis.demandChargeSavings != null)
+      summaryRows.push([
+        "Demand Charge Savings ($/yr)",
+        Math.round(data.financialAnalysis.demandChargeSavings),
+      ]);
+  }
 
-ELECTRICAL SPECIFICATIONS
-System Voltage (AC),${data.systemVoltage},V
-DC Voltage,${data.dcVoltage},V
-Number of Inverters,${data.numberOfInverters},units
-Inverter Rating (each),${data.inverterRating},kW
-Inverter Efficiency,${data.inverterEfficiency},%
-Inverter Type,${data.inverterType},-
-Switchgear Type,${data.switchgearType},-
-Switchgear Rating,${data.switchgearRating},A
-BMS Type,${data.bmsType},-
+  if (data.solarPVIncluded && data.solarCapacityKW) {
+    summaryRows.push([], ["RENEWABLES"]);
+    summaryRows.push(["Solar PV (kW)", data.solarCapacityKW]);
+  }
 
-FINANCIAL SUMMARY
-Total System Cost,$${(data.systemCost / 1000000).toFixed(2)}M,USD
-Cost per kW,$${(data.systemCost / (data.storageSizeMW * 1000)).toFixed(0)},$/kW
-Cost per kWh,$${(data.systemCost / (data.storageSizeMWh * 1000)).toFixed(0)},$/kWh
-Warranty Period,${data.warrantyYears},years
-${
-  data.loadProfile
-    ? `
-LOAD PROFILE
-Base Load,${Math.round(data.loadProfile.baseLoadKW)},kW
-Peak Load,${Math.round(data.loadProfile.peakLoadKW)},kW
-Daily Energy,${Math.round(data.loadProfile.energyKWhPerDay)},kWh/day`
-    : ""
-}
-${
-  data.financialAnalysis
-    ? `
-FINANCIAL ANALYSIS
-Annual Savings,$${Math.round(data.financialAnalysis.annualSavingsUSD)},USD/yr
-Simple Payback,${data.financialAnalysis.paybackYears.toFixed(1)},years${data.financialAnalysis.npv != null ? `\nNPV (25 yr),$${Math.round(data.financialAnalysis.npv)},USD` : ""}${data.financialAnalysis.irr != null ? `\nIRR,${(data.financialAnalysis.irr * 100).toFixed(1)},%` : ""}${data.financialAnalysis.demandChargeSavings != null ? `\nDemand Charge Savings,$${Math.round(data.financialAnalysis.demandChargeSavings)},USD/yr` : ""}`
-    : ""
-}
-${
-  data.trueQuoteValidation?.kWContributors
-    ? `
-LOAD BREAKDOWN (TrueQuote Verified)
-Component,Load,Unit${Object.entries(data.trueQuoteValidation.kWContributors)
-        .filter(([, kw]) => kw > 0)
-        .sort(([, a], [, b]) => b - a)
-        .map(
-          ([key, kw]) =>
-            `\n${key.replace(/([A-Z])/g, " $1").replace(/^./, (s: string) => s.toUpperCase())},${Math.round(kw)},kW`
-        )
-        .join(
-          ""
-        )}${data.trueQuoteValidation.dutyCycle != null ? `\nDuty Cycle,${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)},%` : ""}`
-    : ""
-}
-${
-  data.trueQuoteConfidence
-    ? `
-TRUEQUOTE CONFIDENCE
-Overall,${data.trueQuoteConfidence.overall === "high" ? "High" : data.trueQuoteConfidence.overall === "medium" ? "Medium" : "Low"},-
-Profile Completeness,${data.trueQuoteConfidence.profileCompleteness},%
-User Inputs,${data.trueQuoteConfidence.userInputs},fields
-Defaults Used,${data.trueQuoteConfidence.defaultsUsed},fields
-Industry Model,${data.trueQuoteConfidence.industry === "v1" ? "Industry-Specific" : "General Estimate"},-${data.pricingSnapshotId ? `\nPricing Snapshot,${data.pricingSnapshotId.slice(0, 12)},-` : ""}`
-    : ""
-}
+  const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
+  ws1["!cols"] = [{ wch: 28 }, { wch: 24 }];
+  XLSX.utils.book_append_sheet(wb, ws1, "Executive Summary");
 
-Quote Valid: 30 days from issue date
-Payment Terms: 50% deposit upon contract signing, 50% upon commissioning
-`.trim();
+  // ── Sheet 2: System Specifications ──────────────────────────────
+  const specRows: (string | number)[][] = [
+    ["SYSTEM SPECIFICATIONS"],
+    [],
+    ["Parameter", "Value", "Unit"],
+    ["Power Rating", data.storageSizeMW, "MW"],
+    ["Energy Capacity", data.storageSizeMWh || data.storageSizeMW * data.durationHours, "MWh"],
+    ["Duration", data.durationHours, "hours"],
+    ["Chemistry", data.chemistry, "—"],
+    ["Round-Trip Efficiency", data.roundTripEfficiency, "%"],
+    ["Installation Type", data.installationType, "—"],
+    ["Grid Connection", data.gridConnection, "—"],
+    ["Warranty", data.warrantyYears, "years"],
+    ["Cycles per Year", data.cyclesPerYear, "—"],
+    [],
+    ["ELECTRICAL SPECIFICATIONS"],
+    [],
+    ["System Voltage (AC)", data.systemVoltage, "V"],
+    ["DC Bus Voltage", data.dcVoltage, "V"],
+    ["Inverter Type", data.inverterType, "—"],
+    ["Number of Inverters", data.numberOfInverters, "units"],
+    ["Inverter Rating", data.inverterRating, "kW"],
+    ["Inverter Efficiency", data.inverterEfficiency, "%"],
+    ["Switchgear Type", data.switchgearType, "—"],
+    ["Switchgear Rating", data.switchgearRating, "A"],
+    ["BMS Type", data.bmsType, "—"],
+    ["Transformer Required", data.transformerRequired ? "Yes" : "No", "—"],
+  ];
 
-  // Create blob and download
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  saveAs(blob, `Merlin_BESS_Quote_${data.quoteNumber}.csv`);
+  if (data.transformerRequired) {
+    specRows.push(
+      ["Transformer Rating", data.transformerRating ?? 0, "kVA"],
+      ["Transformer Voltage", data.transformerVoltage ?? "480V/13.8kV", "—"]
+    );
+  }
+
+  const ws2 = XLSX.utils.aoa_to_sheet(specRows);
+  ws2["!cols"] = [{ wch: 24 }, { wch: 18 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, ws2, "System Specs");
+
+  // ── Sheet 3: Load Profile & TrueQuote™ ──────────────────────────
+  const loadRows: (string | number)[][] = [["LOAD PROFILE & TRUEQUOTE™ ANALYSIS"], []];
+
+  if (data.loadProfile) {
+    loadRows.push(
+      ["Base Load (kW)", Math.round(data.loadProfile.baseLoadKW)],
+      ["Peak Load (kW)", Math.round(data.loadProfile.peakLoadKW)],
+      ["Daily Energy (kWh/day)", Math.round(data.loadProfile.energyKWhPerDay)],
+      []
+    );
+  }
+
+  if (data.trueQuoteValidation?.kWContributors) {
+    loadRows.push(
+      ["LOAD BREAKDOWN (TrueQuote™ Verified)"],
+      [],
+      ["Component", "Load (kW)", "Share (%)"]
+    );
+
+    const contributors = Object.entries(data.trueQuoteValidation.kWContributors)
+      .filter(([, kw]) => kw > 0)
+      .sort(([, a], [, b]) => b - a);
+    const totalKW = contributors.reduce((s, [, v]) => s + v, 0);
+
+    for (const [key, kw] of contributors) {
+      const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (s: string) => s.toUpperCase());
+      const share = totalKW > 0 ? Number(((kw / totalKW) * 100).toFixed(1)) : 0;
+      loadRows.push([label, Math.round(kw), share]);
+    }
+
+    loadRows.push(["TOTAL", Math.round(totalKW), 100]);
+
+    if (data.trueQuoteValidation.dutyCycle != null) {
+      loadRows.push(
+        [],
+        ["Duty Cycle (%)", Number((data.trueQuoteValidation.dutyCycle * 100).toFixed(0))]
+      );
+    }
+  }
+
+  if (data.trueQuoteValidation?.assumptions?.length) {
+    loadRows.push([], ["SIZING ASSUMPTIONS"]);
+    for (const a of data.trueQuoteValidation.assumptions) {
+      loadRows.push([a]);
+    }
+  }
+
+  if (data.trueQuoteConfidence) {
+    loadRows.push(
+      [],
+      ["TRUEQUOTE™ CONFIDENCE"],
+      [
+        "Overall Confidence",
+        data.trueQuoteConfidence.overall === "high"
+          ? "High"
+          : data.trueQuoteConfidence.overall === "medium"
+            ? "Medium"
+            : "Low",
+      ],
+      ["Profile Completeness (%)", data.trueQuoteConfidence.profileCompleteness],
+      ["User Inputs", data.trueQuoteConfidence.userInputs],
+      ["Defaults Used", data.trueQuoteConfidence.defaultsUsed],
+      [
+        "Industry Model",
+        data.trueQuoteConfidence.industry === "v1" ? "Industry-Specific" : "General Estimate",
+      ]
+    );
+  }
+
+  const ws3 = XLSX.utils.aoa_to_sheet(loadRows);
+  ws3["!cols"] = [{ wch: 30 }, { wch: 18 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, ws3, "Load Profile");
+
+  // ── Sheet 4: Financial Projections (5-year) ─────────────────────
+  if (data.financialAnalysis && data.financialAnalysis.annualSavingsUSD > 0) {
+    const annualSavings = data.financialAnalysis.annualSavingsUSD;
+    const itcRate = 0.3;
+    const itcAmount = data.systemCost * itcRate;
+    const netCost = data.systemCost - itcAmount;
+    const escalationRate = 0.03;
+
+    const finRows: (string | number)[][] = [
+      ["FINANCIAL PROJECTIONS"],
+      [],
+      ["Year", "Annual Savings ($)", "Cumulative Savings ($)", "Net Position ($)"],
+    ];
+
+    let cumulative = 0;
+    for (let yr = 1; yr <= 10; yr++) {
+      const yearSavings = Math.round(annualSavings * Math.pow(1 + escalationRate, yr - 1));
+      cumulative += yearSavings;
+      const netPosition = cumulative - netCost;
+      finRows.push([yr, yearSavings, cumulative, Math.round(netPosition)]);
+    }
+
+    finRows.push(
+      [],
+      ["KEY ASSUMPTIONS"],
+      ["Total System Cost ($)", data.systemCost],
+      ["Federal ITC (30%)", Math.round(itcAmount)],
+      ["Net Cost After ITC ($)", Math.round(netCost)],
+      ["Annual Savings Escalation", "3% per year"],
+      ["Utility Rate ($/kWh)", data.utilityRate],
+      ["Demand Charge ($/kW)", data.demandCharge]
+    );
+
+    const ws4 = XLSX.utils.aoa_to_sheet(finRows);
+    ws4["!cols"] = [{ wch: 26 }, { wch: 22 }, { wch: 24 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, ws4, "Financial Projections");
+  }
+
+  // ── Generate and download ───────────────────────────────────────
+  const wbOut = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([wbOut], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  saveAs(blob, `Merlin_BESS_Quote_${data.quoteNumber}.xlsx`);
 }
 
 // Re-export Packer for Word document generation

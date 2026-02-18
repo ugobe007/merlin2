@@ -1338,11 +1338,19 @@ function ExportBar({
   const [_quotaBlocked, setQuotaBlocked] = useState(false);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
 
+  const tier = getEffectiveTier();
+  const isPremium = tier === "pro" || tier === "advanced" || tier === "business";
   const handleExport = useCallback(
     async (format: ExportFormat) => {
       setError(null);
       setQuotaBlocked(false);
       setShowSavePrompt(false);
+
+      // ── TIER GATE: Word/Excel require Pro+ ──
+      if ((format === "word" || format === "excel") && !isPremium) {
+        setError("Word & Excel exports require a Pro plan. Upgrade at /pricing!");
+        return;
+      }
 
       // ── QUOTA CHECK: Only exports count as "delivered quotes" ──
       const quota = peekQuotaRemaining("quote");
@@ -1388,7 +1396,7 @@ function ExportBar({
         setExporting(null);
       }
     },
-    [state]
+    [state, isPremium]
   );
 
   const hasPricing = state.quote?.pricingComplete;
@@ -1397,10 +1405,10 @@ function ExportBar({
     state.templateMode !== "fallback" &&
     state.quote?.confidence?.industry !== "fallback";
 
-  const buttons: { format: ExportFormat; icon: string; label: string }[] = [
-    { format: "pdf", icon: "↓", label: "PDF" },
-    { format: "word", icon: "↓", label: "Word" },
-    { format: "excel", icon: "↓", label: "Excel" },
+  const buttons: { format: ExportFormat; icon: string; label: string; locked: boolean }[] = [
+    { format: "pdf", icon: "↓", label: "PDF", locked: false },
+    { format: "word", icon: "↓", label: "Word", locked: !isPremium },
+    { format: "excel", icon: "↓", label: "Excel", locked: !isPremium },
   ];
 
   return (
@@ -1445,11 +1453,17 @@ function ExportBar({
         </div>
 
         <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-          {buttons.map(({ format, icon, label }) => (
+          {buttons.map(({ format, icon, label, locked }) => (
             <button
               key={format}
               type="button"
-              onClick={() => void handleExport(format)}
+              onClick={() => {
+                if (locked) {
+                  setError("Word & Excel exports require a Pro plan. PDF is always free!");
+                  return;
+                }
+                void handleExport(format);
+              }}
               disabled={exporting !== null}
               style={{
                 display: "flex",
@@ -1458,21 +1472,29 @@ function ExportBar({
                 height: 44,
                 padding: "0 20px",
                 borderRadius: 12,
-                border: "2px solid rgba(62,207,142,0.30)",
-                background:
-                  exporting === format ? "rgba(62,207,142,0.15)" : "rgba(62,207,142,0.06)",
-                color:
-                  exporting !== null && exporting !== format
+                border: locked
+                  ? "2px solid rgba(148,163,184,0.15)"
+                  : "2px solid rgba(62,207,142,0.30)",
+                background: locked
+                  ? "rgba(148,163,184,0.04)"
+                  : exporting === format
+                    ? "rgba(62,207,142,0.15)"
+                    : "rgba(62,207,142,0.06)",
+                color: locked
+                  ? "rgba(148,163,184,0.45)"
+                  : exporting !== null && exporting !== format
                     ? "rgba(232,235,243,0.3)"
                     : "rgba(62,207,142,0.9)",
-                cursor: exporting !== null ? "not-allowed" : "pointer",
+                cursor: locked ? "pointer" : exporting !== null ? "not-allowed" : "pointer",
                 fontWeight: 700,
                 fontSize: 15,
                 transition: "all 0.15s",
+                position: "relative",
               }}
             >
-              <span>{exporting === format ? "⏳" : icon}</span>
+              <span>{exporting === format ? "⏳" : locked ? "" : icon}</span>
               <span>{label}</span>
+              {locked && <Lock className="w-3.5 h-3.5" style={{ opacity: 0.5 }} />}
             </button>
           ))}
         </div>
