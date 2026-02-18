@@ -137,10 +137,13 @@ function normalizeFieldType(t?: string): string {
 }
 
 // Solar questions now handled by SolarSizingModal popup (Feb 18, 2026)
-// Keep only existingSolar in the solar section; remove sizing-related ones
+// All solar-specific questions moved to modal; primaryGoal/budgetTimeline remapped to 'goals'
 const SOLAR_QUESTIONS_MOVED_TO_MODAL = new Set([
-  'roofArea', 'canopyInterest', 'carportInterest', 'totalSiteArea', 'solarCapacityKW',
+  'roofArea', 'canopyInterest', 'carportInterest', 'totalSiteArea', 'solarCapacityKW', 'existingSolar',
 ]);
+
+// Questions wrongly categorized under 'solar' section — remap to 'goals'
+const REMAP_TO_GOALS = new Set(['primaryGoal', 'budgetTimeline']);
 
 export default function Step3ProfileV7Curated(props: Props) {
   const { state, actions, updateState } = props;
@@ -980,11 +983,16 @@ export default function Step3ProfileV7Curated(props: Props) {
   // Filter visible questions (memoized to avoid render churn)
   // ✅ Also filter out questions with missing IDs (prevents React key errors)
   // ✅ Filter out solar sizing questions handled by SolarSizingModal (Feb 18, 2026)
+  // ✅ Remap primaryGoal/budgetTimeline from solar → goals section (Feb 18, 2026)
   const visibleQuestions = useMemo(
-    () => questions
-      .filter((q) => q.id && q.id !== "undefined")
-      .filter((q) => !SOLAR_QUESTIONS_MOVED_TO_MODAL.has(q.id))
-      .filter(isQuestionVisible),
+    () =>
+      questions
+        .filter((q) => q.id && q.id !== "undefined")
+        .filter((q) => !SOLAR_QUESTIONS_MOVED_TO_MODAL.has(q.id))
+        .filter(isQuestionVisible)
+        .map((q) =>
+          REMAP_TO_GOALS.has(q.id) ? { ...q, section: 'goals' } : q
+        ),
     [questions, isQuestionVisible]
   );
 
@@ -1064,7 +1072,7 @@ export default function Step3ProfileV7Curated(props: Props) {
       if (!seenSections.includes(s)) seenSections.push(s);
     }
 
-    return seenSections.map((sectionId) => {
+    const groups = seenSections.map((sectionId) => {
       const sectionMeta = sections.find((s) => s.id === sectionId);
       const sectionQuestions = visibleQuestions.filter(
         (q) => (q.section || "general") === sectionId
@@ -1077,6 +1085,21 @@ export default function Step3ProfileV7Curated(props: Props) {
         questions: sectionQuestions,
       };
     });
+
+    // ✅ Ensure solar section always exists (for Size My Solar button) even when all
+    // solar questions have been moved to the modal (Feb 18, 2026)
+    if (!groups.some((g) => g.id === 'solar')) {
+      const solarMeta = sections.find((s) => s.id === 'solar');
+      groups.push({
+        id: 'solar',
+        label: solarMeta?.label || 'Solar',
+        icon: solarMeta?.icon,
+        description: solarMeta?.description || SECTION_DESCRIPTIONS['solar'],
+        questions: [],
+      });
+    }
+
+    return groups;
   }, [visibleQuestions, sections]);
 
   // Compute question index offsets per section for continuous numbering
@@ -1247,7 +1270,9 @@ export default function Step3ProfileV7Curated(props: Props) {
                         : "bg-slate-800 text-slate-500 border border-slate-700/50"
                     }`}
                   >
-                    {group.questions.length} {group.questions.length === 1 ? "question" : "questions"}
+                    {isSolarSection && group.questions.length === 0
+                      ? 'Solar Assistant'
+                      : `${group.questions.length} ${group.questions.length === 1 ? 'question' : 'questions'}`}
                   </span>
                 </div>
 
