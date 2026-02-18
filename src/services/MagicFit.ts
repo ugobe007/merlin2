@@ -458,8 +458,11 @@ function createOption(
   // ═══════════════════════════════════════════════════════════════════════════
   // Financial Calculations
   // ═══════════════════════════════════════════════════════════════════════════
-  const roofSolarCost = solarKW * (base.solar.costPerWatt * 1000);
-  const carportSolarCost = carportSolarKW * (base.solar.costPerWatt * 1000 * 1.15);
+  // Solar cost: costPerWatt is $/W, × 1000 converts to $/kW, × solarKW = total $
+  // Example: $0.95/W × 1000 = $950/kW × 100 kW = $95,000
+  const solarCostPerKW = base.solar.costPerWatt * 1000;
+  const roofSolarCost = solarKW * solarCostPerKW;
+  const carportSolarCost = carportSolarKW * (solarCostPerKW * 1.15); // 15% carport structure premium
   const totalSolarCost = roofSolarCost + carportSolarCost;
 
   // SSOT: Use DEFAULTS for generator cost based on fuel type

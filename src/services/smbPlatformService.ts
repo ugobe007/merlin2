@@ -150,7 +150,7 @@ const DEFAULT_CONSTANTS: CalculationConstants = {
   batteryCostPerKwhSmall: 350,
   batteryCostPerKwhMedium: 300,
   batteryCostPerKwhLarge: 250,
-  solarCostPerWatt: 2.5,
+  solarCostPerWatt: 0.95, // SSOT: $0.95/W commercial (Q1 2026) — NOT $2.50/W SEIA rooftop
   inverterCostPerKw: 150,
   installationPercentage: 0.15,
   federalItcRate: 0.3,

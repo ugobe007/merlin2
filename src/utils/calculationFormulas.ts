@@ -188,13 +188,16 @@ export const generateCalculationBreakdown = (
   // Solar costs
   let solarSubtotal = 0;
   if (solarMW > 0) {
-    // NREL ATB 2024: Utility-scale solar $0.85/W, Commercial $1.00/W
-    const solarPricePerKWp = solarMW >= 5 ? 850 : 1000; // NREL ATB 2024 tiered pricing
-    solarSubtotal = solarMW * 1000 * (solarPricePerKWp / 1000);
+    // SSOT: Tiered solar pricing (Q1 2026)
+    // Utility-scale (≥5 MW): $0.75/W = $750/kWp
+    // Commercial (<5 MW):    $0.95/W = $950/kWp
+    const solarPricePerKWp = solarMW >= 5 ? 750 : 950; // SSOT tiered pricing
+    // Formula: MW × 1000 (→ kWp) × $/kWp = total $
+    solarSubtotal = solarMW * 1000 * solarPricePerKWp;
     calculations.push({
       section: "Equipment Costs",
       category: "Solar PV",
-      formula: "Solar Cost = Capacity (MW) × 1000 × Market Price ($/Wp)",
+      formula: "Solar Cost = Capacity (MW) × 1000 × Market Price ($/kWp)",
       variables: [
         { name: "Solar Capacity", value: solarMW, unit: "MWp" },
         { name: "System Type", value: solarMW >= 5 ? "Utility-Scale" : "Commercial", unit: "" },
