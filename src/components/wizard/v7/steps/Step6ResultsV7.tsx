@@ -726,76 +726,90 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       {/* ================================================================
           UNIT ECONOMICS — $/kW and $/kWh ground truth
       ================================================================ */}
-      {quoteReady && quote.equipmentCosts && (quote.equipmentCosts.allInPerKWh || quote.equipmentCosts.allInPerKW) && (
-        <div className="border border-white/[0.06] rounded-lg overflow-hidden">
-          <div className="p-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="text-[11px] font-semibold text-emerald-400/80 uppercase tracking-wider">
-                Unit Economics
-              </span>
-              <span className="ml-auto text-[10px] text-slate-600 font-medium">Ground Truth</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {quote.equipmentCosts.allInPerKWh && (
-                <div className="bg-white/[0.02] rounded-md p-2.5">
-                  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mb-1">
-                    All-In $/kWh
-                  </div>
-                  <div className="text-lg font-bold text-white tabular-nums">
-                    {fmtUSD(quote.equipmentCosts.allInPerKWh)}
-                    <span className="text-xs text-slate-500 font-normal ml-0.5">/kWh</span>
-                  </div>
-                  <div className="text-[10px] text-slate-600 mt-0.5">
-                    Total project ÷ energy capacity
-                  </div>
-                </div>
-              )}
-              {quote.equipmentCosts.allInPerKW && (
-                <div className="bg-white/[0.02] rounded-md p-2.5">
-                  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mb-1">
-                    All-In $/kW
-                  </div>
-                  <div className="text-lg font-bold text-white tabular-nums">
-                    {fmtUSD(quote.equipmentCosts.allInPerKW)}
-                    <span className="text-xs text-slate-500 font-normal ml-0.5">/kW</span>
-                  </div>
-                  <div className="text-[10px] text-slate-600 mt-0.5">
-                    Total project ÷ power rating
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* Component-level unit costs */}
-            {(quote.equipmentCosts.batteryPerKWh || quote.equipmentCosts.solarPerWatt) && (
-              <div className="mt-2 pt-2 border-t border-white/[0.04]">
-                <div className="flex flex-wrap gap-x-4 gap-y-1">
-                  {quote.equipmentCosts.batteryPerKWh && (
-                    <span className="text-[11px] text-slate-400">
-                      Battery: <span className="font-semibold text-slate-300">{fmtUSD(quote.equipmentCosts.batteryPerKWh)}/kWh</span>
-                    </span>
-                  )}
-                  {quote.equipmentCosts.inverterPerKW && (
-                    <span className="text-[11px] text-slate-400">
-                      PCS: <span className="font-semibold text-slate-300">{fmtUSD(quote.equipmentCosts.inverterPerKW)}/kW</span>
-                    </span>
-                  )}
-                  {quote.equipmentCosts.solarPerWatt && (
-                    <span className="text-[11px] text-slate-400">
-                      Solar: <span className="font-semibold text-slate-300">${Number(quote.equipmentCosts.solarPerWatt).toFixed(2)}/W</span>
-                    </span>
-                  )}
-                  {quote.equipmentCosts.generatorPerKW && (
-                    <span className="text-[11px] text-slate-400">
-                      Gen: <span className="font-semibold text-slate-300">{fmtUSD(quote.equipmentCosts.generatorPerKW)}/kW</span>
-                    </span>
-                  )}
-                </div>
+      {quoteReady &&
+        quote.equipmentCosts &&
+        (quote.equipmentCosts.allInPerKWh || quote.equipmentCosts.allInPerKW) && (
+          <div className="border border-white/[0.06] rounded-lg overflow-hidden">
+            <div className="p-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-[11px] font-semibold text-emerald-400/80 uppercase tracking-wider">
+                  Unit Economics
+                </span>
+                <span className="ml-auto text-[10px] text-slate-600 font-medium">Ground Truth</span>
               </div>
-            )}
+              <div className="grid grid-cols-2 gap-3">
+                {quote.equipmentCosts.allInPerKWh && (
+                  <div className="bg-white/[0.02] rounded-md p-2.5">
+                    <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mb-1">
+                      All-In $/kWh
+                    </div>
+                    <div className="text-lg font-bold text-white tabular-nums">
+                      {fmtUSD(quote.equipmentCosts.allInPerKWh)}
+                      <span className="text-xs text-slate-500 font-normal ml-0.5">/kWh</span>
+                    </div>
+                    <div className="text-[10px] text-slate-600 mt-0.5">
+                      Total project ÷ energy capacity
+                    </div>
+                  </div>
+                )}
+                {quote.equipmentCosts.allInPerKW && (
+                  <div className="bg-white/[0.02] rounded-md p-2.5">
+                    <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mb-1">
+                      All-In $/kW
+                    </div>
+                    <div className="text-lg font-bold text-white tabular-nums">
+                      {fmtUSD(quote.equipmentCosts.allInPerKW)}
+                      <span className="text-xs text-slate-500 font-normal ml-0.5">/kW</span>
+                    </div>
+                    <div className="text-[10px] text-slate-600 mt-0.5">
+                      Total project ÷ power rating
+                    </div>
+                  </div>
+                )}
+              </div>
+              {/* Component-level unit costs */}
+              {(quote.equipmentCosts.batteryPerKWh || quote.equipmentCosts.solarPerWatt) && (
+                <div className="mt-2 pt-2 border-t border-white/[0.04]">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {quote.equipmentCosts.batteryPerKWh && (
+                      <span className="text-[11px] text-slate-400">
+                        Battery:{" "}
+                        <span className="font-semibold text-slate-300">
+                          {fmtUSD(quote.equipmentCosts.batteryPerKWh)}/kWh
+                        </span>
+                      </span>
+                    )}
+                    {quote.equipmentCosts.inverterPerKW && (
+                      <span className="text-[11px] text-slate-400">
+                        PCS:{" "}
+                        <span className="font-semibold text-slate-300">
+                          {fmtUSD(quote.equipmentCosts.inverterPerKW)}/kW
+                        </span>
+                      </span>
+                    )}
+                    {quote.equipmentCosts.solarPerWatt && (
+                      <span className="text-[11px] text-slate-400">
+                        Solar:{" "}
+                        <span className="font-semibold text-slate-300">
+                          ${Number(quote.equipmentCosts.solarPerWatt).toFixed(2)}/W
+                        </span>
+                      </span>
+                    )}
+                    {quote.equipmentCosts.generatorPerKW && (
+                      <span className="text-[11px] text-slate-400">
+                        Gen:{" "}
+                        <span className="font-semibold text-slate-300">
+                          {fmtUSD(quote.equipmentCosts.generatorPerKW)}/kW
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* ================================================================
           EQUIPMENT COST BREAKDOWN — Component-level detail
@@ -816,9 +830,13 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                     <span className="text-xs text-slate-300">Battery Storage</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(quote.equipmentCosts.batteryCost)}</span>
+                    <span className="text-xs font-bold text-white tabular-nums">
+                      {fmtUSD(quote.equipmentCosts.batteryCost)}
+                    </span>
                     {quote.equipmentCosts.batteryPerKWh && (
-                      <span className="text-[10px] text-slate-500 ml-1.5">({fmtUSD(quote.equipmentCosts.batteryPerKWh)}/kWh)</span>
+                      <span className="text-[10px] text-slate-500 ml-1.5">
+                        ({fmtUSD(quote.equipmentCosts.batteryPerKWh)}/kWh)
+                      </span>
                     )}
                   </div>
                 </div>
@@ -830,9 +848,13 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                     <span className="text-xs text-slate-300">Inverter / PCS</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(quote.equipmentCosts.inverterCost)}</span>
+                    <span className="text-xs font-bold text-white tabular-nums">
+                      {fmtUSD(quote.equipmentCosts.inverterCost)}
+                    </span>
                     {quote.equipmentCosts.inverterPerKW && (
-                      <span className="text-[10px] text-slate-500 ml-1.5">({fmtUSD(quote.equipmentCosts.inverterPerKW)}/kW)</span>
+                      <span className="text-[10px] text-slate-500 ml-1.5">
+                        ({fmtUSD(quote.equipmentCosts.inverterPerKW)}/kW)
+                      </span>
                     )}
                   </div>
                 </div>
@@ -843,7 +865,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                     <Zap className="w-3.5 h-3.5 text-yellow-400" />
                     <span className="text-xs text-slate-300">Transformer</span>
                   </div>
-                  <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(quote.equipmentCosts.transformerCost)}</span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {fmtUSD(quote.equipmentCosts.transformerCost)}
+                  </span>
                 </div>
               )}
               {quote.equipmentCosts.switchgearCost != null && (
@@ -852,7 +876,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                     <Zap className="w-3.5 h-3.5 text-orange-400" />
                     <span className="text-xs text-slate-300">Switchgear</span>
                   </div>
-                  <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(quote.equipmentCosts.switchgearCost)}</span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {fmtUSD(quote.equipmentCosts.switchgearCost)}
+                  </span>
                 </div>
               )}
               {quote.equipmentCosts.solarCost != null && (
@@ -862,9 +888,13 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                     <span className="text-xs text-slate-300">Solar Array</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(quote.equipmentCosts.solarCost)}</span>
+                    <span className="text-xs font-bold text-white tabular-nums">
+                      {fmtUSD(quote.equipmentCosts.solarCost)}
+                    </span>
                     {quote.equipmentCosts.solarPerWatt && (
-                      <span className="text-[10px] text-slate-500 ml-1.5">(${Number(quote.equipmentCosts.solarPerWatt).toFixed(2)}/W)</span>
+                      <span className="text-[10px] text-slate-500 ml-1.5">
+                        (${Number(quote.equipmentCosts.solarPerWatt).toFixed(2)}/W)
+                      </span>
                     )}
                   </div>
                 </div>
@@ -876,9 +906,13 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                     <span className="text-xs text-slate-300">Backup Generator</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(quote.equipmentCosts.generatorCost)}</span>
+                    <span className="text-xs font-bold text-white tabular-nums">
+                      {fmtUSD(quote.equipmentCosts.generatorCost)}
+                    </span>
                     {quote.equipmentCosts.generatorPerKW && (
-                      <span className="text-[10px] text-slate-500 ml-1.5">({fmtUSD(quote.equipmentCosts.generatorPerKW)}/kW)</span>
+                      <span className="text-[10px] text-slate-500 ml-1.5">
+                        ({fmtUSD(quote.equipmentCosts.generatorPerKW)}/kW)
+                      </span>
                     )}
                   </div>
                 </div>
@@ -889,13 +923,17 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                     <Building2 className="w-3.5 h-3.5 text-slate-400" />
                     <span className="text-xs text-slate-300">Installation / BOS / EPC</span>
                   </div>
-                  <span className="text-xs font-bold text-white tabular-nums">{fmtUSD(quote.equipmentCosts.installationCost)}</span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {fmtUSD(quote.equipmentCosts.installationCost)}
+                  </span>
                 </div>
               )}
               {/* Total line */}
               <div className="flex items-center justify-between py-2 pt-3">
                 <span className="text-xs font-semibold text-slate-200">Base Equipment Total</span>
-                <span className="text-sm font-bold text-white tabular-nums">{fmtUSD(quote.equipmentCosts.totalEquipmentCost)}</span>
+                <span className="text-sm font-bold text-white tabular-nums">
+                  {fmtUSD(quote.equipmentCosts.totalEquipmentCost)}
+                </span>
               </div>
             </div>
           </div>
@@ -1527,12 +1565,6 @@ function ExportBar({
       setQuotaBlocked(false);
       setShowSavePrompt(false);
 
-      // ── TIER GATE: Word/Excel require Pro+ ──
-      if ((format === "word" || format === "excel") && !isPremium) {
-        setError("Word & Excel exports require a Pro plan. Upgrade at /pricing!");
-        return;
-      }
-
       // ── QUOTA CHECK: Only exports count as "delivered quotes" ──
       const quota = peekQuotaRemaining("quote");
       if (!quota.allowed) {
@@ -1588,8 +1620,8 @@ function ExportBar({
 
   const buttons: { format: ExportFormat; icon: string; label: string; locked: boolean }[] = [
     { format: "pdf", icon: "↓", label: "PDF", locked: false },
-    { format: "word", icon: "↓", label: "Word", locked: !isPremium },
-    { format: "excel", icon: "↓", label: "Excel", locked: !isPremium },
+    { format: "word", icon: "↓", label: "Word", locked: false },
+    { format: "excel", icon: "↓", label: "Excel", locked: false },
   ];
 
   return (
