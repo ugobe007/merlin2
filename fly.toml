@@ -10,6 +10,11 @@ app = 'merlin2'
 primary_region = 'lax'
 
 [build]
+  [build.args]
+    # Public Supabase credentials (anon key is designed to be public — shipped in browser JS)
+    VITE_SUPABASE_URL = "https://fvmpmozybmtzjvikrctq.supabase.co"
+    VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2bXBtb3p5Ym10emp2aWtyY3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyODIyOTAsImV4cCI6MjA3Nzg1ODI5MH0.ACqSuHx_-uvrK6-e0sXQO5AmHlA2K0BQUIT3dMRQS_0"
+    # Other VITE_ vars passed via --build-arg in CI (from GitHub secrets)
 
 [http_service]
   internal_port = 80
