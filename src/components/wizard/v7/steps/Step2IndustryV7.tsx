@@ -85,40 +85,6 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Button({
-  children,
-  onClick,
-  disabled,
-  subtle,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  disabled?: boolean;
-  subtle?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        width: "100%",
-        textAlign: "left",
-        padding: "12px 16px",
-        borderRadius: 8,
-        border: subtle ? `1px solid ${DARK.cardBorder}` : `1px solid ${DARK.buttonBorder}`,
-        background: subtle ? DARK.cardBg : DARK.buttonBg,
-        color: DARK.textPrimary,
-        cursor: disabled ? "not-allowed" : "pointer",
-        fontWeight: 600,
-        opacity: disabled ? 0.5 : 1,
-        transition: "all 0.2s ease",
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
 /**
  * Build the display list from INDUSTRY_META (SSOT).
  * Order is explicit — we control the grid position here, not in the registry.
@@ -183,25 +149,29 @@ export default function Step2IndustryV7({ state, actions }: Props) {
     >
       <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 20 }}>
         {/* Inline guidance */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 14, color: DARK.textSecondary, lineHeight: 1.6 }}>
-              Select your industry
-              <span style={{ color: "rgba(232,235,243,0.25)", margin: "0 8px" }}>·</span>
-              <span style={{ fontSize: 13, color: "rgba(232,235,243,0.35)" }}>📍 {locationLine}</span>
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(232,235,243,0.35)", marginTop: 4 }}>
-              This determines your facility's energy profile and custom questions.
-            </div>
+        <div>
+          <div style={{ fontSize: 14, color: DARK.textSecondary, lineHeight: 1.6 }}>
+            Select your industry
+            <span style={{ color: "rgba(232,235,243,0.25)", margin: "0 8px" }}>·</span>
+            <span style={{ fontSize: 13, color: "rgba(232,235,243,0.35)" }}>📍 {locationLine}</span>
           </div>
-          <Button onClick={actions.goBack} subtle>
-            ← Back
-          </Button>
+          <div style={{ fontSize: 12, color: "rgba(232,235,243,0.35)", marginTop: 4 }}>
+            This determines your facility's energy profile and custom questions.
+          </div>
         </div>
 
         {/* Industries Grid */}
         <Card>
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, color: DARK.textSecondary, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              marginBottom: 16,
+              color: DARK.textSecondary,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}
+          >
             Select Industry
           </div>
 
@@ -280,7 +250,16 @@ export default function Step2IndustryV7({ state, actions }: Props) {
                 )}
                 {/* Text Section */}
                 <div style={{ padding: 16 }}>
-                  <div style={{ fontSize: 16, fontWeight: 600, color: DARK.textPrimary, display: "flex", alignItems: "center", gap: 8 }}>
+                  <div
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 600,
+                      color: DARK.textPrimary,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
                     <span>{it.emoji}</span> {it.label}
                   </div>
                   <div style={{ marginTop: 6, fontSize: 13, color: DARK.textMuted }}>{it.desc}</div>

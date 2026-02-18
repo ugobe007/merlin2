@@ -9,7 +9,22 @@
  */
 
 import React from "react";
-import type { IntelData, FetchStatus } from "./IntelStrip";
+
+/** Fetch status for individual intel data points */
+type FetchStatus = "idle" | "fetching" | "ready" | "error";
+
+/** Location intelligence data used for inline display */
+interface IntelData {
+  utilityRate?: number;
+  demandCharge?: number;
+  peakSunHours?: number;
+  solarGrade?: string;
+  weatherProfile?: string;
+  utilityProvider?: string;
+  utilityStatus?: FetchStatus;
+  solarStatus?: FetchStatus;
+  weatherStatus?: FetchStatus;
+}
 
 interface Props {
   intel: IntelData | null;
@@ -52,7 +67,14 @@ function Datum({
         <span style={{ color, fontWeight: 600 }}>
           {typeof value === "number" ? value.toFixed(2) : value}
           {unit && (
-            <span style={{ color: "rgba(232, 235, 243, 0.3)", fontWeight: 400, marginLeft: 2, fontSize: "0.85em" }}>
+            <span
+              style={{
+                color: "rgba(232, 235, 243, 0.3)",
+                fontWeight: 400,
+                marginLeft: 2,
+                fontSize: "0.85em",
+              }}
+            >
               {unit}
             </span>
           )}
