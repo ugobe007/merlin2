@@ -1,21 +1,58 @@
-# See https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/
-# DISABLED: Deployments are done manually via `flyctl deploy` from local machine
-# To re-enable: uncomment the "on:" trigger below and add FLY_API_TOKEN to GitHub secrets
+# CI/CD Pipeline — Build, Typecheck, Deploy
+# Runs on every push to main and on PRs targeting main
+# Deploys to Fly.io only on main pushes (after checks pass)
+#
+# Required GitHub Secrets:
+#   FLY_API_TOKEN — from `flyctl tokens create deploy`
 
-name: Fly Deploy
+name: CI / Deploy
+
 on:
-  workflow_dispatch: # Only run manually, not on push
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  deploy:
-    name: Deploy app
+  # ── Job 1: Typecheck + Build ──────────────────────────
+  build:
+    name: Typecheck & Build
     runs-on: ubuntu-latest
-    concurrency: deploy-group    # optional: ensure only one action runs at a time
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Production build
+        run: npx vite build
+
+  # ── Job 2: Deploy to Fly (main only) ─────────────────
+  deploy:
+    name: Deploy to Fly.io
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    concurrency: deploy-group
+    steps:
+      - uses: actions/checkout@v4
+
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only
+
+      - name: Deploy
+        run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
