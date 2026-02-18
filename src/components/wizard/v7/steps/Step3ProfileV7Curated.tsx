@@ -139,11 +139,16 @@ function normalizeFieldType(t?: string): string {
 // Solar questions now handled by SolarSizingModal popup (Feb 18, 2026)
 // All solar-specific questions moved to modal; primaryGoal/budgetTimeline remapped to 'goals'
 const SOLAR_QUESTIONS_MOVED_TO_MODAL = new Set([
-  'roofArea', 'canopyInterest', 'carportInterest', 'totalSiteArea', 'solarCapacityKW', 'existingSolar',
+  "roofArea",
+  "canopyInterest",
+  "carportInterest",
+  "totalSiteArea",
+  "solarCapacityKW",
+  "existingSolar",
 ]);
 
 // Questions wrongly categorized under 'solar' section — remap to 'goals'
-const REMAP_TO_GOALS = new Set(['primaryGoal', 'budgetTimeline']);
+const REMAP_TO_GOALS = new Set(["primaryGoal", "budgetTimeline"]);
 
 export default function Step3ProfileV7Curated(props: Props) {
   const { state, actions, updateState } = props;
@@ -990,9 +995,7 @@ export default function Step3ProfileV7Curated(props: Props) {
         .filter((q) => q.id && q.id !== "undefined")
         .filter((q) => !SOLAR_QUESTIONS_MOVED_TO_MODAL.has(q.id))
         .filter(isQuestionVisible)
-        .map((q) =>
-          REMAP_TO_GOALS.has(q.id) ? { ...q, section: 'goals' } : q
-        ),
+        .map((q) => (REMAP_TO_GOALS.has(q.id) ? { ...q, section: "goals" } : q)),
     [questions, isQuestionVisible]
   );
 
@@ -1005,33 +1008,37 @@ export default function Step3ProfileV7Curated(props: Props) {
     const loc = state.location;
     if (!loc) return undefined;
     // Try to extract 2-letter state from location data
-    const stateStr = (loc as Record<string, unknown>).state ?? (loc as Record<string, unknown>).region;
+    const stateStr =
+      (loc as Record<string, unknown>).state ?? (loc as Record<string, unknown>).region;
     return stateStr ? String(stateStr).toUpperCase().slice(0, 2) : undefined;
   }, [state.location]);
 
   const electricityRate = useMemo(() => {
     const intel = state.locationIntel;
     if (!intel) return 0.12;
-    return (intel as Record<string, unknown>).electricityRate as number ?? 0.12;
+    return ((intel as Record<string, unknown>).electricityRate as number) ?? 0.12;
   }, [state.locationIntel]);
 
   // Check if user wants solar (from existingSolar answer or wantSolar answer)
-  const handleSolarSizingApply = useCallback((result: SolarSizingResult) => {
-    setSolarSizingResult(result);
-    setShowSolarModal(false);
+  const handleSolarSizingApply = useCallback(
+    (result: SolarSizingResult) => {
+      setSolarSizingResult(result);
+      setShowSolarModal(false);
 
-    // Update wizard state with solar sizing via dedicated action
-    if (actions?.setSolarSizing) {
-      actions.setSolarSizing(result.solarKW);
-    }
+      // Update wizard state with solar sizing via dedicated action
+      if (actions?.setSolarSizing) {
+        actions.setSolarSizing(result.solarKW);
+      }
 
-    // Also set the answer for solarCapacityKW so it flows through to the calculator
-    if (actions?.setStep3Answer) {
-      actions.setStep3Answer('solarCapacityKW', result.solarKW);
-      // If they used the modal, they want solar
-      actions.setStep3Answer('wantSolar', 'yes');
-    }
-  }, [actions]);
+      // Also set the answer for solarCapacityKW so it flows through to the calculator
+      if (actions?.setStep3Answer) {
+        actions.setStep3Answer("solarCapacityKW", result.solarKW);
+        // If they used the modal, they want solar
+        actions.setStep3Answer("wantSolar", "yes");
+      }
+    },
+    [actions]
+  );
 
   // DEV invariants: catch broken schemas immediately
   if (import.meta.env.DEV) {
@@ -1085,19 +1092,6 @@ export default function Step3ProfileV7Curated(props: Props) {
         questions: sectionQuestions,
       };
     });
-
-    // ✅ Ensure solar section always exists (for Size My Solar button) even when all
-    // solar questions have been moved to the modal (Feb 18, 2026)
-    if (!groups.some((g) => g.id === 'solar')) {
-      const solarMeta = sections.find((s) => s.id === 'solar');
-      groups.push({
-        id: 'solar',
-        label: solarMeta?.label || 'Solar',
-        icon: solarMeta?.icon,
-        description: solarMeta?.description || SECTION_DESCRIPTIONS['solar'],
-        questions: [],
-      });
-    }
 
     return groups;
   }, [visibleQuestions, sections]);
@@ -1216,45 +1210,24 @@ export default function Step3ProfileV7Curated(props: Props) {
       {/* Questions — grouped by section with headers */}
       <div className="space-y-6">
         {sectionGroups.map((group) => {
-          const isSolarSection = group.id === "solar";
           const sectionIcon = SECTION_ICONS[group.id];
 
           // Render section header + questions
           const sectionContent = (
             <div
               key={group.id}
-              className={`rounded-xl overflow-hidden ${
-                isSolarSection
-                  ? "border border-amber-500/20 bg-gradient-to-b from-amber-950/20 to-slate-950/60"
-                  : "border border-slate-700/30 bg-slate-950/40"
-              }`}
+              className="rounded-xl overflow-hidden border border-slate-700/30 bg-slate-950/40"
             >
               {/* Section Header */}
-              <div
-                className={`px-5 py-4 border-b ${
-                  isSolarSection
-                    ? "border-amber-500/20 bg-gradient-to-r from-amber-950/40 via-orange-950/20 to-transparent"
-                    : "border-slate-700/30 bg-slate-900/40"
-                }`}
-              >
+              <div className="px-5 py-4 border-b border-slate-700/30 bg-slate-900/40">
                 <div className="flex items-center gap-3">
                   {/* Section Icon */}
-                  <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      isSolarSection
-                        ? "bg-amber-500/15 text-amber-400"
-                        : "bg-slate-800 text-slate-400"
-                    }`}
-                  >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-800 text-slate-400">
                     {sectionIcon || <span className="text-base">{group.icon}</span>}
                   </div>
 
                   <div className="flex-1">
-                    <h3
-                      className={`text-sm font-bold tracking-tight ${
-                        isSolarSection ? "text-amber-200" : "text-slate-200"
-                      }`}
-                    >
+                    <h3 className="text-sm font-bold tracking-tight text-slate-200">
                       {group.label}
                     </h3>
                     {group.description && (
@@ -1263,36 +1236,11 @@ export default function Step3ProfileV7Curated(props: Props) {
                   </div>
 
                   {/* Question count badge */}
-                  <span
-                    className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                      isSolarSection
-                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                        : "bg-slate-800 text-slate-500 border border-slate-700/50"
-                    }`}
-                  >
-                    {isSolarSection && group.questions.length === 0
-                      ? 'Solar Assistant'
-                      : `${group.questions.length} ${group.questions.length === 1 ? 'question' : 'questions'}`}
+                  <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-800 text-slate-500 border border-slate-700/50">
+                    {group.questions.length}{" "}
+                    {group.questions.length === 1 ? "question" : "questions"}
                   </span>
                 </div>
-
-                {/* Solar section: info card about solar + BESS synergy */}
-                {isSolarSection && (
-                  <div className="mt-3 flex items-start gap-3 p-3 rounded-lg bg-amber-950/30 border border-amber-500/15">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/20">
-                      <Sun className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-amber-200">
-                        Solar + BESS = Maximum Savings
-                      </p>
-                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                        Pairing solar with battery storage can reduce your energy costs by 40-70%.
-                        Store excess solar energy during the day and use it during peak rate hours.
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Section Questions */}
@@ -1301,71 +1249,77 @@ export default function Step3ProfileV7Curated(props: Props) {
                   const globalIdx = sectionStartIndexes[group.id] + qIdx;
                   return renderQuestion(q, globalIdx);
                 })}
-
-                {/* ── Solar Sizing Assistant (Feb 18, 2026) ── */}
-                {isSolarSection && (
-                  <div className="space-y-3 mt-2">
-                    {/* Size My Solar button — always visible in solar section */}
-                    <button
-                      type="button"
-                      onClick={() => setShowSolarModal(true)}
-                      className="w-full p-4 rounded-xl border-2 border-dashed border-amber-500/30 bg-amber-950/20 hover:border-amber-500/50 hover:bg-amber-950/30 transition-all group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
-                          <Sun className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex-1 text-left">
-                          <p className="text-sm font-semibold text-amber-200 group-hover:text-amber-100">
-                            {solarSizingResult ? '☀️ Update Solar Sizing' : '☀️ Size My Solar'}
-                          </p>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            {solarSizingResult
-                              ? `Currently sized: ${solarSizingResult.solarKW.toLocaleString()} kW — click to adjust`
-                              : 'Calculate your optimal solar size based on your building and roof'
-                            }
-                          </p>
-                        </div>
-                        <span className="text-amber-400 text-lg group-hover:translate-x-1 transition-transform">→</span>
-                      </div>
-                    </button>
-
-                    {/* Show sizing result summary if user has sized solar */}
-                    {solarSizingResult && (
-                      <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/40 to-green-950/20 border border-amber-500/20">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Sparkles className="w-4 h-4 text-amber-400" />
-                          <span className="text-sm font-bold text-amber-200">Solar Sized ✓</span>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div className="text-center">
-                            <div className="text-lg font-bold text-amber-300">{solarSizingResult.solarKW.toLocaleString()}</div>
-                            <div className="text-xs text-slate-400">kW System</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-lg font-bold text-green-400">${(solarSizingResult.annualSavings / 1000).toFixed(0)}K</div>
-                            <div className="text-xs text-slate-400">/year savings</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-lg font-bold text-white">{(solarSizingResult.annualProductionKWh / 1000).toFixed(0)}K</div>
-                            <div className="text-xs text-slate-400">kWh/year</div>
-                          </div>
-                        </div>
-                        {solarSizingResult.includesCanopy && (
-                          <p className="text-xs text-amber-300/60 mt-2 text-center">
-                            Includes {solarSizingResult.canopySolarKW.toLocaleString()} kW canopy solar
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
           );
 
           return sectionContent;
         })}
+      </div>
+
+      {/* ── Solar Sizing Assistant — standalone card (Feb 18, 2026) ── */}
+      <div className="rounded-xl overflow-hidden border border-amber-500/20 bg-gradient-to-b from-amber-950/20 to-slate-950/60">
+        <div className="p-4 space-y-3">
+          <button
+            type="button"
+            onClick={() => setShowSolarModal(true)}
+            className="w-full p-4 rounded-xl border-2 border-dashed border-amber-500/30 bg-amber-950/20 hover:border-amber-500/50 hover:bg-amber-950/30 transition-all group cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
+                <Sun className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-semibold text-amber-200 group-hover:text-amber-100">
+                  {solarSizingResult ? "☀️ Update Solar Sizing" : "☀️ Size My Solar"}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {solarSizingResult
+                    ? `Currently sized: ${solarSizingResult.solarKW.toLocaleString()} kW — click to adjust`
+                    : "Calculate your optimal solar size based on your building and roof"}
+                </p>
+              </div>
+              <span className="text-amber-400 text-lg group-hover:translate-x-1 transition-transform">
+                →
+              </span>
+            </div>
+          </button>
+
+          {/* Show sizing result summary if user has sized solar */}
+          {solarSizingResult && (
+            <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/40 to-green-950/20 border border-amber-500/20">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span className="text-sm font-bold text-amber-200">Solar Sized ✓</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-amber-300">
+                    {solarSizingResult.solarKW.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-slate-400">kW System</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-green-400">
+                    ${(solarSizingResult.annualSavings / 1000).toFixed(0)}K
+                  </div>
+                  <div className="text-xs text-slate-400">/year savings</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-white">
+                    {(solarSizingResult.annualProductionKWh / 1000).toFixed(0)}K
+                  </div>
+                  <div className="text-xs text-slate-400">kWh/year</div>
+                </div>
+              </div>
+              {solarSizingResult.includesCanopy && (
+                <p className="text-xs text-amber-300/60 mt-2 text-center">
+                  Includes {solarSizingResult.canopySolarKW.toLocaleString()} kW canopy solar
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Continue — single clean flow (Feb 11, 2026) */}
