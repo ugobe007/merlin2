@@ -8,7 +8,6 @@ import merlinImage from "../../assets/images/new_profile_merlin.png";
 import badgeIcon from "../../assets/images/badge_icon.jpg";
 import { MethodologyStatement } from "../shared/IndustryComplianceBadges";
 import { TrueQuoteModal } from "../shared/TrueQuoteModal";
-import { TrueQuoteBadgeCanonical } from "../shared/TrueQuoteBadgeCanonical";
 
 // Marketing constants for display-only calculations (hero stats, not quotes)
 import { COST_MULTIPLIERS } from "@/constants/marketing";
@@ -560,18 +559,6 @@ export default function HeroSection({
                 >
                   Get your custom energy savings quote in 5 easy steps. See exactly how much you'll
                   save with battery storage.
-                </div>
-
-                {/* TrueQuote badge — standalone clickable block */}
-                <div
-                  className="mb-8"
-                  onClick={() => setShowTrueQuoteModal(true)}
-                  style={{ cursor: "pointer", width: "fit-content" }}
-                >
-                  <TrueQuoteBadgeCanonical
-                    showTooltip={false}
-                    onClick={() => setShowTrueQuoteModal(true)}
-                  />
                 </div>
 
                 {/* CTA Button - Emerald Ghost */}
