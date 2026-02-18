@@ -521,6 +521,7 @@ type Intent =
   | { type: "SET_GOALS_CONFIRMED"; confirmed: boolean }
   | { type: "REQUEST_GOALS_MODAL" }
   | { type: "TOGGLE_SOLAR" }
+  | { type: "SET_SOLAR_SIZING"; solarKW: number }
   | { type: "TOGGLE_GENERATOR" }
   | { type: "TOGGLE_EV" }
   | { type: "SET_ADDONS_CONFIRMED"; confirmed: boolean }
@@ -1690,6 +1691,17 @@ function reduce(state: WizardState, intent: Intent): WizardState {
     case "TOGGLE_SOLAR":
       return { ...state, includeSolar: !state.includeSolar };
 
+    case "SET_SOLAR_SIZING":
+      return {
+        ...state,
+        includeSolar: intent.solarKW > 0,
+        step4AddOns: {
+          ...state.step4AddOns,
+          includeSolar: intent.solarKW > 0,
+          solarKW: intent.solarKW,
+        },
+      };
+
     case "TOGGLE_GENERATOR":
       return { ...state, includeGenerator: !state.includeGenerator };
 
@@ -2721,6 +2733,15 @@ export function useWizardV7() {
    */
   const toggleSolar = useCallback(() => {
     dispatch({ type: "TOGGLE_SOLAR" });
+  }, []);
+
+  /**
+   * setSolarSizing - Apply solar sizing result from SolarSizingModal (Feb 18, 2026)
+   * Sets includeSolar=true and populates solarKW in step4AddOns
+   */
+  const setSolarSizing = useCallback((solarKW: number) => {
+    dispatch({ type: "SET_SOLAR_SIZING", solarKW });
+    dispatch({ type: "DEBUG_NOTE", note: `Solar sizing applied: ${solarKW} kW from SolarSizingModal` });
   }, []);
 
   /**
@@ -5034,6 +5055,7 @@ export function useWizardV7() {
 
     // step 3.5: add-ons
     toggleSolar,
+    setSolarSizing,
     toggleGenerator,
     toggleEV,
     confirmAddOns,

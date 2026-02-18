@@ -711,6 +711,7 @@ function WizardV7Page() {
             setStep3Answer: wizard.setStep3Answer,
             submitStep3: wizard.submitStep3,
             goBack: wizard.goBack,
+            setSolarSizing: wizard.setSolarSizing,
           }}
         />
       )}

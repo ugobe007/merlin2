@@ -16,6 +16,7 @@
 
 import React, { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import { Sparkles, Sun, Zap, Building2, Settings, Target } from "lucide-react";
+import SolarSizingModal, { type SolarSizingResult } from "./SolarSizingModal";
 import {
   resolveStep3Schema,
   CANONICAL_INDUSTRY_KEYS,
@@ -53,6 +54,7 @@ type Props = {
     submitStep3?: (answersOverride?: Step3Answers) => Promise<void>;
     goBack?: () => void;
     toggleSolar?: () => void;
+    setSolarSizing?: (solarKW: number) => void;
     toggleGenerator?: () => void;
     toggleEV?: () => void;
     confirmAddOns?: (value: boolean) => void;
@@ -133,6 +135,12 @@ const SECTION_DESCRIPTIONS: Record<string, string> = {
 function normalizeFieldType(t?: string): string {
   return normalizeFieldTypeUtil(t);
 }
+
+// Solar questions now handled by SolarSizingModal popup (Feb 18, 2026)
+// Keep only existingSolar in the solar section; remove sizing-related ones
+const SOLAR_QUESTIONS_MOVED_TO_MODAL = new Set([
+  'roofArea', 'canopyInterest', 'carportInterest', 'totalSiteArea', 'solarCapacityKW',
+]);
 
 export default function Step3ProfileV7Curated(props: Props) {
   const { state, actions, updateState } = props;
@@ -971,10 +979,51 @@ export default function Step3ProfileV7Curated(props: Props) {
 
   // Filter visible questions (memoized to avoid render churn)
   // ✅ Also filter out questions with missing IDs (prevents React key errors)
+  // ✅ Filter out solar sizing questions handled by SolarSizingModal (Feb 18, 2026)
   const visibleQuestions = useMemo(
-    () => questions.filter((q) => q.id && q.id !== "undefined").filter(isQuestionVisible),
+    () => questions
+      .filter((q) => q.id && q.id !== "undefined")
+      .filter((q) => !SOLAR_QUESTIONS_MOVED_TO_MODAL.has(q.id))
+      .filter(isQuestionVisible),
     [questions, isQuestionVisible]
   );
+
+  // ── Solar Sizing Modal state ──
+  const [showSolarModal, setShowSolarModal] = useState(false);
+  const [solarSizingResult, setSolarSizingResult] = useState<SolarSizingResult | null>(null);
+
+  // Extract location state for solar production estimates
+  const locationState = useMemo(() => {
+    const loc = state.location;
+    if (!loc) return undefined;
+    // Try to extract 2-letter state from location data
+    const stateStr = (loc as Record<string, unknown>).state ?? (loc as Record<string, unknown>).region;
+    return stateStr ? String(stateStr).toUpperCase().slice(0, 2) : undefined;
+  }, [state.location]);
+
+  const electricityRate = useMemo(() => {
+    const intel = state.locationIntel;
+    if (!intel) return 0.12;
+    return (intel as Record<string, unknown>).electricityRate as number ?? 0.12;
+  }, [state.locationIntel]);
+
+  // Check if user wants solar (from existingSolar answer or wantSolar answer)
+  const handleSolarSizingApply = useCallback((result: SolarSizingResult) => {
+    setSolarSizingResult(result);
+    setShowSolarModal(false);
+
+    // Update wizard state with solar sizing via dedicated action
+    if (actions?.setSolarSizing) {
+      actions.setSolarSizing(result.solarKW);
+    }
+
+    // Also set the answer for solarCapacityKW so it flows through to the calculator
+    if (actions?.setStep3Answer) {
+      actions.setStep3Answer('solarCapacityKW', result.solarKW);
+      // If they used the modal, they want solar
+      actions.setStep3Answer('wantSolar', 'yes');
+    }
+  }, [actions]);
 
   // DEV invariants: catch broken schemas immediately
   if (import.meta.env.DEV) {
@@ -1227,6 +1276,65 @@ export default function Step3ProfileV7Curated(props: Props) {
                   const globalIdx = sectionStartIndexes[group.id] + qIdx;
                   return renderQuestion(q, globalIdx);
                 })}
+
+                {/* ── Solar Sizing Assistant (Feb 18, 2026) ── */}
+                {isSolarSection && (
+                  <div className="space-y-3 mt-2">
+                    {/* Size My Solar button — always visible in solar section */}
+                    <button
+                      type="button"
+                      onClick={() => setShowSolarModal(true)}
+                      className="w-full p-4 rounded-xl border-2 border-dashed border-amber-500/30 bg-amber-950/20 hover:border-amber-500/50 hover:bg-amber-950/30 transition-all group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
+                          <Sun className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="text-sm font-semibold text-amber-200 group-hover:text-amber-100">
+                            {solarSizingResult ? '☀️ Update Solar Sizing' : '☀️ Size My Solar'}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {solarSizingResult
+                              ? `Currently sized: ${solarSizingResult.solarKW.toLocaleString()} kW — click to adjust`
+                              : 'Calculate your optimal solar size based on your building and roof'
+                            }
+                          </p>
+                        </div>
+                        <span className="text-amber-400 text-lg group-hover:translate-x-1 transition-transform">→</span>
+                      </div>
+                    </button>
+
+                    {/* Show sizing result summary if user has sized solar */}
+                    {solarSizingResult && (
+                      <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/40 to-green-950/20 border border-amber-500/20">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Sparkles className="w-4 h-4 text-amber-400" />
+                          <span className="text-sm font-bold text-amber-200">Solar Sized ✓</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-amber-300">{solarSizingResult.solarKW.toLocaleString()}</div>
+                            <div className="text-xs text-slate-400">kW System</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-green-400">${(solarSizingResult.annualSavings / 1000).toFixed(0)}K</div>
+                            <div className="text-xs text-slate-400">/year savings</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-white">{(solarSizingResult.annualProductionKWh / 1000).toFixed(0)}K</div>
+                            <div className="text-xs text-slate-400">kWh/year</div>
+                          </div>
+                        </div>
+                        {solarSizingResult.includesCanopy && (
+                          <p className="text-xs text-amber-300/60 mt-2 text-center">
+                            Includes {solarSizingResult.canopySolarKW.toLocaleString()} kW canopy solar
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -1307,6 +1415,17 @@ export default function Step3ProfileV7Curated(props: Props) {
           </button>
         )}
       </div>
+
+      {/* Solar Sizing Modal (Feb 18, 2026) */}
+      <SolarSizingModal
+        isOpen={showSolarModal}
+        onClose={() => setShowSolarModal(false)}
+        onApply={handleSolarSizingApply}
+        industry={_industry}
+        step3Answers={answers}
+        state={locationState}
+        electricityRate={electricityRate}
+      />
     </div>
   );
 }
