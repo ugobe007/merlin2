@@ -448,14 +448,13 @@ export default function HeroSection({
     <>
       {/* ========== MERLIN HERO - EDGE TO EDGE ========== */}
       <section className="relative">
-        <div
-          className="relative min-h-[85vh] overflow-hidden"
-        >
+        <div className="relative min-h-[85vh] overflow-hidden">
           {/* Deep dark blue background */}
           <div
             className="absolute inset-0"
             style={{
-              background: "linear-gradient(135deg, #060d1f 0%, #0c1631 40%, #091228 70%, #060d1f 100%)",
+              background:
+                "linear-gradient(135deg, #060d1f 0%, #0c1631 40%, #091228 70%, #060d1f 100%)",
             }}
           />
 
@@ -487,33 +486,46 @@ export default function HeroSection({
                   boxShadow: "20px 0 80px rgba(0,0,0,0.6)",
                 }}
               >
-                {/* AI Badge */}
-                <div
-                  className="inline-flex items-center gap-2 mb-8"
-                  style={{
-                    background: "transparent",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    padding: "8px 16px",
-                    borderRadius: "100px",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "rgba(255,255,255,0.7)",
-                    width: "fit-content",
-                    letterSpacing: "0.02em",
-                  }}
-                >
-                  <span className="font-semibold" style={{ color: "#F1F5F9" }}>TrueQuote™</span>
-                  <span
+                {/* TrueQuote Badge — rounded rect, centered, clickable */}
+                <div className="flex justify-center w-full" style={{ maxWidth: "480px" }}>
+                  <button
+                    onClick={() => setShowTrueQuoteModal(true)}
+                    className="inline-flex items-center gap-2 mb-8 transition-all duration-200 cursor-pointer"
                     style={{
-                      width: "6px",
-                      height: "6px",
-                      borderRadius: "50%",
-                      background: "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
-                      boxShadow: "0 0 6px rgba(242, 193, 79, 0.45)",
-                      flexShrink: 0,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      padding: "10px 20px",
+                      borderRadius: "10px",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "rgba(255,255,255,0.7)",
+                      letterSpacing: "0.02em",
                     }}
-                  />
-                  <span style={{ color: "#94A3B8" }}>Verified Energy Quotes</span>
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                    }}
+                  >
+                    <span className="font-semibold" style={{ color: "#F1F5F9" }}>
+                      TrueQuote™
+                    </span>
+                    <span
+                      style={{
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "50%",
+                        background:
+                          "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
+                        boxShadow: "0 0 6px rgba(242, 193, 79, 0.45)",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span style={{ color: "#94A3B8" }}>Verified Energy Quotes</span>
+                  </button>
                 </div>
 
                 {/* Main Headline */}
@@ -536,9 +548,9 @@ export default function HeroSection({
                   </span>
                 </h1>
 
-                {/* Subheadline with TrueQuote badge */}
+                {/* Subheadline */}
                 <div
-                  className="mb-8"
+                  className="mb-4"
                   style={{
                     fontSize: "20px",
                     color: "rgba(255,255,255,0.85)",
@@ -547,18 +559,19 @@ export default function HeroSection({
                   }}
                 >
                   Get your custom energy savings quote in 5 easy steps. See exactly how much you'll
-                  save with battery storage.{" "}
-                  <span
+                  save with battery storage.
+                </div>
+
+                {/* TrueQuote badge — standalone clickable block */}
+                <div
+                  className="mb-8"
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  style={{ cursor: "pointer", width: "fit-content" }}
+                >
+                  <TrueQuoteBadgeCanonical
+                    showTooltip={false}
                     onClick={() => setShowTrueQuoteModal(true)}
-                    style={{
-                      verticalAlign: "middle",
-                      display: "inline-flex",
-                      marginLeft: "4px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <TrueQuoteBadgeCanonical showTooltip={false} />
-                  </span>
+                  />
                 </div>
 
                 {/* CTA Button - Emerald Ghost */}
@@ -636,37 +649,53 @@ export default function HeroSection({
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  <img src={badgeIcon} alt="ProQuote" style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                  <img
+                    src={badgeIcon}
+                    alt="ProQuote"
+                    style={{ width: 24, height: 24, objectFit: "contain" }}
+                  />
                   <span>ProQuote™</span>
-                  <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "4px", background: "rgba(255,255,255,0.1)", fontWeight: 600 }}>PRO</span>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      padding: "2px 8px",
+                      borderRadius: "4px",
+                      background: "rgba(255,255,255,0.1)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    PRO
+                  </span>
                   <span style={{ fontSize: "20px", marginLeft: "4px" }}>→</span>
                 </button>
 
                 {/* Merlin Link */}
                 <div className="flex justify-center w-full" style={{ maxWidth: "480px" }}>
-                <button
-                  onClick={() => setShowAbout(true)}
-                  className="inline-flex items-center gap-2 transition-all"
-                  style={{
-                    color: "rgba(255,255,255,0.6)",
-                    fontSize: "15px",
-                    textDecoration: "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.9)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.6)";
-                  }}
-                >
-                  <img src={merlinImage} alt="Merlin" className="w-7 h-7 rounded-full" />
-                  <span>About Merlin AI →</span>
-                </button>
+                  <button
+                    onClick={() => setShowAbout(true)}
+                    className="inline-flex items-center gap-2 transition-all"
+                    style={{
+                      color: "rgba(255,255,255,0.6)",
+                      fontSize: "15px",
+                      textDecoration: "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "rgba(255,255,255,0.9)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "rgba(255,255,255,0.6)";
+                    }}
+                  >
+                    <img src={merlinImage} alt="Merlin" className="w-7 h-7 rounded-full" />
+                    <span>About Merlin AI →</span>
+                  </button>
                 </div>
 
                 {/* Trust Strip - Data Source Badges */}
                 <div className="mt-6 flex flex-wrap items-center gap-2">
-                  <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+                  <span
+                    style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}
+                  >
                     Powered by
                   </span>
                   {["NREL", "DOE", "Sandia", "UL", "IEEE", "EIA"].map((src) => (
@@ -731,7 +760,8 @@ export default function HeroSection({
                       border: "2px solid rgba(62,207,142,0.35)",
                       borderRadius: "16px",
                       padding: "28px 36px",
-                      boxShadow: "0 8px 40px rgba(0,0,0,0.3), 0 0 20px rgba(62,207,142,0.08), inset 0 1px 0 rgba(255,255,255,0.12)",
+                      boxShadow:
+                        "0 8px 40px rgba(0,0,0,0.3), 0 0 20px rgba(62,207,142,0.08), inset 0 1px 0 rgba(255,255,255,0.12)",
                     }}
                   >
                     <div className="flex items-center justify-between mb-5">
@@ -875,7 +905,6 @@ export default function HeroSection({
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
         <div className="max-w-5xl mx-auto relative z-10">
-
           {/* Section Header */}
           <div className="text-center mb-16">
             <p
@@ -888,8 +917,7 @@ export default function HeroSection({
               className="text-3xl md:text-4xl font-bold mb-4"
               style={{ color: "#fff", letterSpacing: "-0.02em" }}
             >
-              Get accurate quotes{" "}
-              <span style={{ color: "#fbbf24" }}>without the runaround</span>
+              Get accurate quotes <span style={{ color: "#fbbf24" }}>without the runaround</span>
             </h2>
             <p
               className="text-base max-w-2xl mx-auto"
@@ -905,17 +933,20 @@ export default function HeroSection({
             <p className="text-lg leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
               <span className="font-bold text-white text-xl">📐 Zero Guesswork</span>
               <span style={{ color: "rgba(255,255,255,0.3)" }}>{" — "}</span>
-              ASHRAE, CBECS, and Energy Star formulas calculate exactly what your facility needs. Every number is traceable.
+              ASHRAE, CBECS, and Energy Star formulas calculate exactly what your facility needs.
+              Every number is traceable.
             </p>
             <p className="text-lg leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
               <span className="font-bold text-white text-xl">⚡ Skip the Vendor Calls</span>
               <span style={{ color: "rgba(255,255,255,0.3)" }}>{" — "}</span>
-              Get accurate quotes in minutes, not weeks. Real NREL benchmark pricing instead of sales tactics.
+              Get accurate quotes in minutes, not weeks. Real NREL benchmark pricing instead of
+              sales tactics.
             </p>
             <p className="text-lg leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
               <span className="font-bold text-white text-xl">💰 Maximum Savings</span>
               <span style={{ color: "rgba(255,255,255,0.3)" }}>{" — "}</span>
-              AI optimizes peak shaving, demand reduction, and time-of-use arbitrage to maximize your ROI.
+              AI optimizes peak shaving, demand reduction, and time-of-use arbitrage to maximize
+              your ROI.
             </p>
           </div>
 
@@ -930,19 +961,27 @@ export default function HeroSection({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               <div>
                 <div className="text-2xl font-bold text-white mb-1">30+</div>
-                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Industry Templates</div>
+                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  Industry Templates
+                </div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-white mb-1">$2M+</div>
-                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Savings Calculated</div>
+                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  Savings Calculated
+                </div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-white mb-1">5 Steps</div>
-                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Easy Quote Process</div>
+                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  Easy Quote Process
+                </div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-white mb-1">30%</div>
-                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Federal Tax Credit</div>
+                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  Federal Tax Credit
+                </div>
               </div>
             </div>
           </div>
@@ -971,7 +1010,7 @@ export default function HeroSection({
             <div
               className="group cursor-pointer"
               onClick={() => {
-                setSelectedApplication('car-wash');
+                setSelectedApplication("car-wash");
                 setShowRealWorldModal(true);
               }}
             >
@@ -995,22 +1034,40 @@ export default function HeroSection({
                 </div>
 
                 {/* Content */}
-                <div className="p-6" style={{ background: '#0f1117' }}>
+                <div className="p-6" style={{ background: "#0f1117" }}>
                   <h4 className="text-xl font-bold text-white mb-2">Multi-Bay Car Wash</h4>
                   <p className="text-slate-400 text-sm mb-4">
                     500 kW peak demand • 32% energy savings
                   </p>
 
                   <div className="grid grid-cols-3 gap-2 mb-4">
-                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div
+                      className="text-center rounded-xl py-2"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
                       <div className="text-lg font-bold text-[#3ECF8E]">1.2yr</div>
                       <div className="text-xs text-slate-500">Payback</div>
                     </div>
-                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div
+                      className="text-center rounded-xl py-2"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
                       <div className="text-lg font-bold text-[#3ECF8E]">840%</div>
                       <div className="text-xs text-slate-500">ROI</div>
                     </div>
-                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div
+                      className="text-center rounded-xl py-2"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
                       <div className="text-lg font-bold text-white">20 MWh</div>
                       <div className="text-xs text-slate-500">System</div>
                     </div>
@@ -1030,7 +1087,7 @@ export default function HeroSection({
             <div
               className="group cursor-pointer"
               onClick={() => {
-                setSelectedApplication('hotel');
+                setSelectedApplication("hotel");
                 setShowRealWorldModal(true);
               }}
             >
@@ -1050,20 +1107,38 @@ export default function HeroSection({
                   </div>
                 </div>
 
-                <div className="p-6" style={{ background: '#0f1117' }}>
+                <div className="p-6" style={{ background: "#0f1117" }}>
                   <h4 className="text-xl font-bold text-white mb-2">Luxury Hotel</h4>
                   <p className="text-slate-400 text-sm mb-4">350 rooms • High HVAC demand</p>
 
                   <div className="grid grid-cols-3 gap-2 mb-4">
-                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div
+                      className="text-center rounded-xl py-2"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
                       <div className="text-lg font-bold text-[#3ECF8E]">3.2yr</div>
                       <div className="text-xs text-slate-500">Payback</div>
                     </div>
-                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div
+                      className="text-center rounded-xl py-2"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
                       <div className="text-lg font-bold text-[#3ECF8E]">312%</div>
                       <div className="text-xs text-slate-500">ROI</div>
                     </div>
-                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div
+                      className="text-center rounded-xl py-2"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
                       <div className="text-lg font-bold text-white">1.5 MWh</div>
                       <div className="text-xs text-slate-500">System</div>
                     </div>
@@ -1083,7 +1158,7 @@ export default function HeroSection({
             <div
               className="group cursor-pointer"
               onClick={() => {
-                setSelectedApplication('ev-charging');
+                setSelectedApplication("ev-charging");
                 setShowRealWorldModal(true);
               }}
             >
@@ -1103,22 +1178,40 @@ export default function HeroSection({
                   </div>
                 </div>
 
-                <div className="p-6" style={{ background: '#0f1117' }}>
+                <div className="p-6" style={{ background: "#0f1117" }}>
                   <h4 className="text-xl font-bold text-white mb-2">EV Charging Hub</h4>
                   <p className="text-slate-400 text-sm mb-4">
                     12 DCFC chargers • High demand spikes
                   </p>
 
                   <div className="grid grid-cols-3 gap-2 mb-4">
-                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div
+                      className="text-center rounded-xl py-2"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
                       <div className="text-lg font-bold text-[#3ECF8E]">2.8yr</div>
                       <div className="text-xs text-slate-500">Payback</div>
                     </div>
-                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div
+                      className="text-center rounded-xl py-2"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
                       <div className="text-lg font-bold text-[#3ECF8E]">428%</div>
                       <div className="text-xs text-slate-500">ROI</div>
                     </div>
-                    <div className="text-center rounded-xl py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div
+                      className="text-center rounded-xl py-2"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
                       <div className="text-lg font-bold text-white">3 MWh</div>
                       <div className="text-xs text-slate-500">System</div>
                     </div>
@@ -1145,7 +1238,7 @@ export default function HeroSection({
         >
           <div
             className="rounded-3xl max-w-2xl w-full p-8 shadow-2xl"
-            style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ background: "#0f1117", border: "1px solid rgba(255,255,255,0.08)" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -1214,7 +1307,7 @@ export default function HeroSection({
             </div>
 
             {/* Industry Compliance Statement */}
-            <div className="mt-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="mt-6 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
               <MethodologyStatement
                 variant="compact"
                 darkMode={true}
@@ -1228,9 +1321,19 @@ export default function HeroSection({
                 setShowSmartWizard(true);
               }}
               className="w-full mt-6 py-4 rounded-full font-bold text-lg transition-all"
-              style={{ background: 'rgba(62,207,142,0.15)', border: '2px solid rgba(62,207,142,0.3)', color: '#3ECF8E' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.25)'; e.currentTarget.style.borderColor = 'rgba(62,207,142,0.5)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.15)'; e.currentTarget.style.borderColor = 'rgba(62,207,142,0.3)'; }}
+              style={{
+                background: "rgba(62,207,142,0.15)",
+                border: "2px solid rgba(62,207,142,0.3)",
+                color: "#3ECF8E",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(62,207,142,0.25)";
+                e.currentTarget.style.borderColor = "rgba(62,207,142,0.5)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(62,207,142,0.15)";
+                e.currentTarget.style.borderColor = "rgba(62,207,142,0.3)";
+              }}
             >
               🪄 Start My Free Quote →
             </button>
@@ -1246,11 +1349,14 @@ export default function HeroSection({
         >
           <div
             className="rounded-3xl max-w-5xl w-full overflow-hidden shadow-2xl"
-            style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ background: "#0f1117", border: "1px solid rgba(255,255,255,0.08)" }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - More Compact */}
-            <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div
+              className="p-4 flex items-center justify-between"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+            >
               <div className="flex items-center gap-3">
                 <img
                   src={merlinImage}
@@ -1265,9 +1371,13 @@ export default function HeroSection({
               <button
                 onClick={() => setShowMerlinVideo(false)}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-white text-lg transition-colors"
-                style={{ background: 'rgba(255,255,255,0.06)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                style={{ background: "rgba(255,255,255,0.06)" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.12)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                }}
               >
                 ×
               </button>
@@ -1279,7 +1389,10 @@ export default function HeroSection({
               <div className="relative mb-8">
                 {/* Connection Line - Animated */}
                 <div className="absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2 z-0 hidden md:block">
-                  <div className="absolute inset-0 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                  <div
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: "rgba(255,255,255,0.06)" }}
+                  />
                   <div
                     className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 via-[#3ECF8E] to-emerald-500 rounded-full"
                     style={{
@@ -1294,10 +1407,17 @@ export default function HeroSection({
                   {/* STAGE 1: YOUR INPUTS */}
                   <div
                     className="backdrop-blur-xl rounded-2xl p-5 transform transition-all hover:scale-[1.02]"
-                    style={{ animation: "slideInLeft 0.5s ease-out", background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    style={{
+                      animation: "slideInLeft 0.5s ease-out",
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
                   >
                     <div className="text-center mb-4">
-                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-3" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-3"
+                        style={{ background: "rgba(255,255,255,0.06)" }}
+                      >
                         <span className="text-3xl">📊</span>
                       </div>
                       <h3 className="text-lg font-bold text-white">Your Inputs</h3>
@@ -1307,7 +1427,10 @@ export default function HeroSection({
                     <div className="space-y-2">
                       <div
                         className="flex items-center gap-2 p-2 rounded-lg"
-                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.2s both", background: 'rgba(255,255,255,0.04)' }}
+                        style={{
+                          animation: "fadeSlideIn 0.6s ease-out 0.2s both",
+                          background: "rgba(255,255,255,0.04)",
+                        }}
                       >
                         <span className="text-lg">🏢</span>
                         <div>
@@ -1317,7 +1440,10 @@ export default function HeroSection({
                       </div>
                       <div
                         className="flex items-center gap-2 p-2 rounded-lg"
-                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.4s both", background: 'rgba(255,255,255,0.04)' }}
+                        style={{
+                          animation: "fadeSlideIn 0.6s ease-out 0.4s both",
+                          background: "rgba(255,255,255,0.04)",
+                        }}
                       >
                         <span className="text-lg">📍</span>
                         <div>
@@ -1329,7 +1455,10 @@ export default function HeroSection({
                       </div>
                       <div
                         className="flex items-center gap-2 p-2 rounded-lg"
-                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.6s both", background: 'rgba(255,255,255,0.04)' }}
+                        style={{
+                          animation: "fadeSlideIn 0.6s ease-out 0.6s both",
+                          background: "rgba(255,255,255,0.04)",
+                        }}
                       >
                         <span className="text-lg">🎯</span>
                         <div>
@@ -1352,8 +1481,8 @@ export default function HeroSection({
                     className="backdrop-blur-xl rounded-2xl p-5 transform transition-all hover:scale-[1.02] relative"
                     style={{
                       animation: "pulseGlow 2s ease-in-out infinite",
-                      background: 'rgba(62,207,142,0.06)',
-                      border: '2px solid rgba(62,207,142,0.25)',
+                      background: "rgba(62,207,142,0.06)",
+                      border: "2px solid rgba(62,207,142,0.25)",
                       boxShadow: "0 0 40px rgba(62,207,142,0.1)",
                     }}
                   >
@@ -1395,18 +1524,27 @@ export default function HeroSection({
 
                     {/* Processing Indicators */}
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                      <div
+                        className="flex items-center gap-2 p-2 rounded-lg"
+                        style={{ background: "rgba(255,255,255,0.04)" }}
+                      >
                         <div className="w-4 h-4 bg-[#3ECF8E] rounded-full animate-pulse" />
                         <span className="text-xs text-white">Industry power profile matched</span>
                       </div>
-                      <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                      <div
+                        className="flex items-center gap-2 p-2 rounded-lg"
+                        style={{ background: "rgba(255,255,255,0.04)" }}
+                      >
                         <div
                           className="w-4 h-4 bg-[#3ECF8E] rounded-full animate-pulse"
                           style={{ animationDelay: "0.2s" }}
                         />
                         <span className="text-xs text-white">NREL ATB 2024 pricing applied</span>
                       </div>
-                      <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                      <div
+                        className="flex items-center gap-2 p-2 rounded-lg"
+                        style={{ background: "rgba(255,255,255,0.04)" }}
+                      >
                         <div
                           className="w-4 h-4 bg-[#3ECF8E] rounded-full animate-pulse"
                           style={{ animationDelay: "0.4s" }}
@@ -1444,7 +1582,10 @@ export default function HeroSection({
 
                     {/* BIG SAVINGS NUMBERS - Animated counter effect */}
                     <div className="space-y-3 relative z-10">
-                      <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                      <div
+                        className="text-center p-3 rounded-xl"
+                        style={{ background: "rgba(255,255,255,0.04)" }}
+                      >
                         <div
                           className="text-3xl md:text-4xl font-black text-[#3ECF8E]"
                           style={{ textShadow: "0 0 20px rgba(62,207,142,0.3)" }}
@@ -1455,11 +1596,17 @@ export default function HeroSection({
                       </div>
 
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="text-center p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                        <div
+                          className="text-center p-2 rounded-lg"
+                          style={{ background: "rgba(255,255,255,0.04)" }}
+                        >
                           <div className="text-xl font-bold text-white">2.1 yrs</div>
                           <div className="text-xs text-slate-500">Payback</div>
                         </div>
-                        <div className="text-center p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                        <div
+                          className="text-center p-2 rounded-lg"
+                          style={{ background: "rgba(255,255,255,0.04)" }}
+                        >
                           <div className="text-xl font-bold text-[#3ECF8E]">485%</div>
                           <div className="text-xs text-slate-500">25-yr ROI</div>
                         </div>
@@ -1475,7 +1622,13 @@ export default function HeroSection({
               </div>
 
               {/* System Configuration Preview */}
-              <div className="backdrop-blur-sm rounded-2xl p-4 mb-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div
+                className="backdrop-blur-sm rounded-2xl p-4 mb-6"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                }}
+              >
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-4">
                     <div className="text-center">
@@ -1511,9 +1664,19 @@ export default function HeroSection({
                   setShowSmartWizard(true);
                 }}
                 className="w-full py-5 rounded-full font-bold text-xl transition-all flex items-center justify-center gap-3 group"
-                style={{ background: 'rgba(62,207,142,0.15)', border: '2px solid rgba(62,207,142,0.3)', color: '#3ECF8E' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.25)'; e.currentTarget.style.borderColor = 'rgba(62,207,142,0.5)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.15)'; e.currentTarget.style.borderColor = 'rgba(62,207,142,0.3)'; }}
+                style={{
+                  background: "rgba(62,207,142,0.15)",
+                  border: "2px solid rgba(62,207,142,0.3)",
+                  color: "#3ECF8E",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(62,207,142,0.25)";
+                  e.currentTarget.style.borderColor = "rgba(62,207,142,0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(62,207,142,0.15)";
+                  e.currentTarget.style.borderColor = "rgba(62,207,142,0.3)";
+                }}
               >
                 <span className="text-2xl group-hover:animate-bounce">🪄</span>
                 <span>Get Your Personalized Quote</span>
@@ -1535,7 +1698,7 @@ export default function HeroSection({
         >
           <div
             className="rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl"
-            style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ background: "#0f1117", border: "1px solid rgba(255,255,255,0.08)" }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Hero Image */}
@@ -1565,19 +1728,37 @@ export default function HeroSection({
 
               {/* Financial Metrics */}
               <div className="grid grid-cols-3 gap-6 mb-8">
-                <div className="rounded-2xl p-5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div
+                  className="rounded-2xl p-5 text-center"
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
                   <div className="text-4xl font-black text-[#3ECF8E] mb-1">
                     {selectedHeroUseCase.savings}
                   </div>
                   <div className="text-sm text-slate-500">Annual Savings</div>
                 </div>
-                <div className="rounded-2xl p-5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div
+                  className="rounded-2xl p-5 text-center"
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
                   <div className="text-4xl font-black text-white mb-1">
                     {selectedHeroUseCase.payback}
                   </div>
                   <div className="text-sm text-slate-500">Payback Period</div>
                 </div>
-                <div className="rounded-2xl p-5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div
+                  className="rounded-2xl p-5 text-center"
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
                   <div className="text-4xl font-black text-[#3ECF8E] mb-1">
                     {selectedHeroUseCase.roi}
                   </div>
@@ -1601,18 +1782,30 @@ export default function HeroSection({
                     setShowSmartWizard(true);
                   }}
                   className="flex-1 py-4 rounded-full font-bold text-lg transition-all"
-                  style={{ background: 'rgba(62,207,142,0.15)', border: '2px solid rgba(62,207,142,0.3)', color: '#3ECF8E' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.25)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(62,207,142,0.15)'; }}
+                  style={{
+                    background: "rgba(62,207,142,0.15)",
+                    border: "2px solid rgba(62,207,142,0.3)",
+                    color: "#3ECF8E",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(62,207,142,0.25)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(62,207,142,0.15)";
+                  }}
                 >
                   🪄 Get a Quote Like This
                 </button>
                 <button
                   onClick={() => setShowUseCaseDetail(false)}
                   className="px-6 py-4 rounded-full font-semibold text-slate-400 transition-all"
-                  style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                  style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                  }}
                 >
                   Close
                 </button>
