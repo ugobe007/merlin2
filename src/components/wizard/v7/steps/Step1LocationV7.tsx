@@ -237,7 +237,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
 
         <h1
           style={{
-            fontSize: 56,
+            fontSize: "clamp(28px, 6vw, 56px)",
             fontWeight: 800,
             letterSpacing: "-1.8px",
             color: "rgba(255, 255, 255, 0.98)",
@@ -326,13 +326,14 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
       {/* ✅ Primary input block MUST be immediately after headline */}
       <div style={{ position: "relative", zIndex: 1 }}>
         {/* Country + ZIP row */}
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
             <button
               type="button"
               onClick={() => setCountry("US")}
               style={{
                 height: 44,
+                minWidth: 44,
                 padding: "0 14px",
                 borderRadius: 8,
                 border: country === "US" ? "1px solid rgba(62,207,142,0.45)" : "1px solid rgba(255,255,255,0.08)",
@@ -420,7 +421,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 />
               </div>
 
-              {/* Continue button — inline with ZIP row */}
+              {/* Continue button — inline with ZIP row, wraps on mobile */}
               <button
                 type="button"
                 onClick={() => submitLocation(normalizedZip)}
@@ -440,6 +441,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                   cursor: !isValidZip || state.isBusy ? "not-allowed" : "pointer",
                   whiteSpace: "nowrap",
                   flexShrink: 0,
+                  flex: "0 0 auto",
                   transition: "all 0.15s ease",
                 }}
               >

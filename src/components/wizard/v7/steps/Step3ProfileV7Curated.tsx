@@ -594,7 +594,7 @@ export default function Step3ProfileV7Curated(props: Props) {
 
           {/* Buttons for medium option sets (7-18 options: compact grid for hours/ranges) */}
           {renderer === "compact_grid" && (
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
               {normalizedOptions.map((opt) => {
                 const optVal = String(opt.value);
                 const selected = asString(value) === optVal;
@@ -604,7 +604,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                     type="button"
                     onClick={() => setAnswer(q.id, optVal)}
                     className={`
-                      px-2 py-2.5 rounded-lg border text-center transition-colors relative
+                      px-2 py-2.5 rounded-lg border text-center transition-colors relative min-h-[44px]
                       ${
                         selected
                           ? "border-emerald-400 text-emerald-300 font-bold bg-transparent"
@@ -1297,7 +1297,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 <span className="text-sm font-bold text-amber-200">Solar Sized ✓</span>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <div className="text-center">
                   <div className="text-lg font-bold text-amber-300">
                     {solarSizingResult.solarKW.toLocaleString()}

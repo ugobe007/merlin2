@@ -1300,7 +1300,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                 </div>
 
                 {/* ROI Metrics */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-4">
                   <div className="text-center p-2 bg-white/[0.03] rounded-lg">
                     <div className="text-[10px] text-slate-500 font-medium">Payback</div>
                     <div className={`text-sm font-bold ${tier.config.accentColor}`}>
