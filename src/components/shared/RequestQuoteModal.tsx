@@ -164,7 +164,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
 
             <div className="relative z-10 flex justify-between items-start">
               <div className="flex items-center gap-4">
-                <div className="text-5xl">🧙‍♂️</div>
+                <img src="/images/new_profile_merlin.png" alt="Merlin" className="w-14 h-14 rounded-xl" />
                 <div>
                   <h2 className="text-2xl font-bold text-white">Request Official Quote</h2>
                   <p className="text-purple-200 text-sm mt-1">

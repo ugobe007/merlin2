@@ -147,13 +147,13 @@ export default function Step2IndustryV7({ state, actions }: Props) {
         color: DARK.textPrimary,
       }}
     >
-      <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 20 }}>
+      <div style={{ maxWidth: 900, margin: "0 auto" }} className="grid gap-4 sm:gap-5 px-1 sm:px-0">
         {/* Inline guidance */}
         <div>
           <div style={{ fontSize: 14, color: DARK.textSecondary, lineHeight: 1.6 }}>
             Select your industry
-            <span style={{ color: "rgba(232,235,243,0.25)", margin: "0 8px" }}>·</span>
-            <span style={{ fontSize: 13, color: "rgba(232,235,243,0.35)" }}>📍 {locationLine}</span>
+            <span style={{ color: "rgba(232,235,243,0.25)", margin: "0 8px" }} className="hidden sm:inline">·</span>
+            <span style={{ fontSize: 13, color: "rgba(232,235,243,0.35)" }} className="hidden sm:inline">📍 {locationLine}</span>
           </div>
           <div style={{ fontSize: 12, color: "rgba(232,235,243,0.35)", marginTop: 4 }}>
             This determines your facility's energy profile and custom questions.
@@ -175,13 +175,7 @@ export default function Step2IndustryV7({ state, actions }: Props) {
             Select Industry
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 16,
-            }}
-          >
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {INDUSTRIES.map((it) => (
               <button
                 key={it.slug}
@@ -192,16 +186,13 @@ export default function Step2IndustryV7({ state, actions }: Props) {
                     actions.selectIndustry(it.slug);
                   }
                 }}
+                className="rounded-xl text-left overflow-hidden transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                 style={{
-                  borderRadius: 12,
                   border: `1px solid ${DARK.cardBorder}`,
                   padding: 0,
                   background: DARK.cardBg,
                   cursor: disabled ? "not-allowed" : "pointer",
                   opacity: disabled ? 0.5 : 1,
-                  textAlign: "left",
-                  transition: "all 0.15s ease",
-                  overflow: "hidden",
                 }}
                 onMouseEnter={(e) => {
                   if (!disabled) {
@@ -217,31 +208,22 @@ export default function Step2IndustryV7({ state, actions }: Props) {
                 {/* Image Section */}
                 {it.image ? (
                   <div
+                    className="h-20 sm:h-28 md:h-[120px] overflow-hidden"
                     style={{
-                      height: 120,
-                      overflow: "hidden",
                       borderBottom: `1px solid ${DARK.cardBorder}`,
                     }}
                   >
                     <img
                       src={it.image}
                       alt={it.label}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
+                      className="w-full h-full object-cover"
                     />
                   </div>
                 ) : (
                   <div
+                    className="h-20 sm:h-28 md:h-[120px] flex items-center justify-center text-3xl sm:text-5xl"
                     style={{
-                      height: 120,
                       background: `linear-gradient(135deg, ${DARK.accent}33 0%, ${DARK.cardBg} 100%)`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 48,
                       borderBottom: `1px solid ${DARK.cardBorder}`,
                     }}
                   >
@@ -249,20 +231,16 @@ export default function Step2IndustryV7({ state, actions }: Props) {
                   </div>
                 )}
                 {/* Text Section */}
-                <div style={{ padding: 16 }}>
+                <div className="p-2.5 sm:p-4">
                   <div
+                    className="text-xs sm:text-sm md:text-base font-semibold flex items-center gap-1.5 sm:gap-2"
                     style={{
-                      fontSize: 16,
-                      fontWeight: 600,
                       color: DARK.textPrimary,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
                     }}
                   >
-                    <span>{it.emoji}</span> {it.label}
+                    <span className="text-sm sm:text-base">{it.emoji}</span> {it.label}
                   </div>
-                  <div style={{ marginTop: 6, fontSize: 13, color: DARK.textMuted }}>{it.desc}</div>
+                  <div className="mt-1 sm:mt-1.5 text-[11px] sm:text-xs md:text-[13px] line-clamp-2" style={{ color: DARK.textMuted }}>{it.desc}</div>
                 </div>
               </button>
             ))}

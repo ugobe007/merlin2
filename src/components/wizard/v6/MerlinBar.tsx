@@ -801,7 +801,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
               {isExpanded ? (
                 <>Hide <ChevronUp className="w-4 h-4" /></>
               ) : (
-                <>{hasPendingSuggestion ? '🧙‍♂️ See Tips!' : 'Suggestions'} <ChevronDown className="w-4 h-4" /></>
+                <>{hasPendingSuggestion ? '✨ See Tips!' : 'Suggestions'} <ChevronDown className="w-4 h-4" /></>
               )}
             </button>
           </div>

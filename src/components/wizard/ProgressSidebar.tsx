@@ -274,9 +274,7 @@ function MerlinAssistant({
       <div className="flex gap-3">
         {/* Merlin Avatar */}
         <div className="flex-shrink-0">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/30">
-            🧙‍♂️
-          </div>
+          <img src="/images/new_profile_merlin.png" alt="Merlin" className="w-12 h-12 rounded-full shadow-lg shadow-purple-500/30" />
         </div>
 
         {/* Tip Content */}

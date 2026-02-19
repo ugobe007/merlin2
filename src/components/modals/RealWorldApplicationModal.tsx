@@ -557,7 +557,7 @@ const RealWorldApplicationModal: React.FC<RealWorldApplicationModalProps> = ({
           {/* CTA Button */}
           <div className="rounded-xl p-8 text-center" style={{ background: 'rgba(62,207,142,0.06)', border: '1px solid rgba(62,207,142,0.15)' }}>
             <h3 className="text-2xl font-bold text-white mb-3">
-              🧙‍♂️ Get Your Custom Quote
+              ✨ Get Your Custom Quote
             </h3>
             <p className="mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
               Merlin can calculate a personalized BESS solution for your facility in under 3 minutes

@@ -768,10 +768,11 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                               new Paragraph({
                                 children: [
                                   new TextRun({
-                                    text: "🧙‍♂️",
+                                    text: "MERLIN",
                                     bold: true,
-                                    size: 100,
+                                    size: 56,
                                     font: "Helvetica",
+                                    color: "3ECF8E",
                                   }),
                                 ],
                                 alignment: AlignmentType.CENTER,
