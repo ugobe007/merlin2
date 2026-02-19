@@ -188,7 +188,7 @@ export default function SolarSizingModal({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9998]" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9998]" onClick={onClose} role="button" aria-label="Close modal" tabIndex={-1} />
 
       {/* Modal */}
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4">

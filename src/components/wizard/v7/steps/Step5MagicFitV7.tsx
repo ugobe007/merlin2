@@ -30,6 +30,7 @@ import type {
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 import TrueQuoteFinancialModal from "@/components/wizard/v7/shared/TrueQuoteFinancialModal";
 import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
+import { devLog, devError } from '@/wizard/v7/debug/devLog';
 
 // SSOT calculation engine — only used as fallback when Step 4 pricing is missing
 import { calculateQuote } from "@/services/unifiedQuoteCalculator";
@@ -796,7 +797,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       const sq = snap.stateQuote;
       const hasPricing = sq?.pricingComplete === true && (sq.grossCost ?? 0) > 0;
 
-      console.log("[Step5 MagicFit] generateTiers starting (zero-DB-call path)", {
+      devLog("[Step5 MagicFit] generateTiers starting (zero-DB-call path)", {
         hasPricingFromStep4: hasPricing,
         baseBESSKW,
         baseDuration,
@@ -836,7 +837,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
           // FAST PATH: Build QuoteResult from state.quote (no DB call!)
           // Step 4's runPricingSafe already computed everything we need.
           // ═══════════════════════════════════════════════════════════════
-          console.log("[Step5 MagicFit] ✅ Using Step 4 cached quote (zero DB calls)");
+          devLog("[Step5 MagicFit] ✅ Using Step 4 cached quote (zero DB calls)");
           baseQuoteResult = buildQuoteResultFromState(sq, data);
 
           // Reconstruct margin from state.quote.margin
@@ -859,7 +860,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
           // FALLBACK: Step 4 pricing missing — make ONE calculateQuote call
           // for PerfectFit base, then derive others with pure math.
           // ═══════════════════════════════════════════════════════════════
-          console.log(
+          devLog(
             "[Step5 MagicFit] ⚠️ No Step 4 pricing — falling back to single calculateQuote call"
           );
 
@@ -931,7 +932,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         }
 
         if (!cancelled) {
-          console.log(
+          devLog(
             "[Step5 MagicFit] All 3 tiers derived (zero extra DB calls):",
             results.map((r) => ({
               tier: r.tierKey,
@@ -946,7 +947,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       } catch (err) {
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : "Unknown error";
-          console.error("[Step5 MagicFit] generateTiers failed:", msg);
+          devError("[Step5 MagicFit] generateTiers failed:", msg);
           setLoadError(msg);
           setIsLoading(false);
         }

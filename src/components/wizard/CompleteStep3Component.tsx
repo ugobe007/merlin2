@@ -46,7 +46,7 @@ import collegeImg from "@/assets/images/college_1.jpg";
 import warehouseImg from "@/assets/images/logistics_1.jpg";
 import restaurantImg from "@/assets/images/restaurant_1.jpg";
 import agricultureImg from "@/assets/images/agriculture_1.jpg";
-import truckStopImg from "@/assets/images/truck_stop.png";
+import truckStopImg from "@/assets/images/truck_stop.jpg";
 import airportImg from "@/assets/images/airport_11.jpeg";
 import shoppingCenterImg from "@/assets/images/shopping_center.jpg";
 import coldStorageImg from "@/assets/images/cold_storage.jpg";

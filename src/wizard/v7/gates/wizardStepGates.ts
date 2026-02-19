@@ -27,7 +27,7 @@
  * - Any cross-step dependencies
  */
 
-import { devLog } from "@/wizard/v7/debug/devLog";
+import { devLog, devWarn } from "@/wizard/v7/debug/devLog";
 
 export type WizardStepId = "location" | "industry" | "profile" | "options" | "magicfit" | "results";
 
@@ -129,7 +129,7 @@ export function gateLocation(state: WizardGateState): WizardGateResult {
     const expiry = Number(localStorage.getItem("wizardRelaxedGatesExpiry"));
     if (relaxed === "true" && expiry > Date.now()) {
       if (import.meta.env.DEV) {
-        console.warn("[gateLocation] ⚠️ Relaxed gates override active");
+        devWarn("[gateLocation] ⚠️ Relaxed gates override active");
       }
       return { canContinue: true };
     }

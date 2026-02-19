@@ -18,6 +18,8 @@
  * - Default values (handled by calculator, not transforms)
  */
 
+import { devWarn } from '../debug/devLog';
+
 import type { TemplateQuestion } from "./types";
 
 export type TransformFn = (
@@ -297,7 +299,7 @@ export function applyTransform(
 ): unknown {
   const fn = TRANSFORMS[transformName];
   if (!fn) {
-    console.warn(`[transforms] Unknown transform: ${transformName}`);
+    devWarn(`[transforms] Unknown transform: ${transformName}`);
     return value;
   }
   return fn(value, ctx);

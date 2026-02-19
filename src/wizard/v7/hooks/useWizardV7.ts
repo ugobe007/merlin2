@@ -26,7 +26,7 @@ import {
 // ✅ MERLIN MEMORY (Feb 11, 2026): Persistent store for cross-step data
 // Steps are momentary — memory is persistent. No more cross-step flag dependencies.
 import { merlinMemory } from "@/wizard/v7/memory";
-import { devLog } from "@/wizard/v7/debug/devLog";
+import { devLog, devWarn, devError } from "@/wizard/v7/debug/devLog";
 
 // Quota enforcement moved to export-only (Step 6). Previews are never metered.
 
@@ -712,7 +712,7 @@ function runContractQuote(params: {
       }
 
       if (warnings.length > 0) {
-        console.warn("Load Profile Sanity Issues:", warnings);
+        devWarn("Load Profile Sanity Issues:", warnings);
       } else {
         devLog("✅ Load profile passes sanity checks");
       }
@@ -832,7 +832,7 @@ function runContractQuote(params: {
 
       if (quoteSanityWarnings.length > 0) {
         console.group("[TrueQuote] Quote Sanity Warnings");
-        quoteSanityWarnings.forEach((w) => console.warn(w));
+        quoteSanityWarnings.forEach((w) => devWarn(w));
         devLog("Sizing Hints:", sizingHints);
         devLog("Inputs Used:", inputsUsed);
         console.groupEnd();
@@ -923,7 +923,7 @@ const api = {
 
     // Soft-gate: Warn about low confidence but allow through
     if (confidence < 0.7) {
-      console.warn(
+      devWarn(
         `[V7 SSOT] Low confidence location (${confidence}): ${response.location?.formattedAddress}`
       );
     }
@@ -970,7 +970,7 @@ const api = {
       const data = await getCommercialRateByZip(zip);
 
       if (!data) {
-        console.warn("[V7] No utility data for ZIP:", zip);
+        devWarn("[V7] No utility data for ZIP:", zip);
         return { rate: undefined, demandCharge: undefined, provider: undefined };
       }
 
@@ -980,7 +980,7 @@ const api = {
         provider: data.utilityName,
       };
     } catch (e) {
-      console.error("[V7] Utility rate fetch error:", e);
+      devError("[V7] Utility rate fetch error:", e);
       throw e;
     }
   },
@@ -1020,7 +1020,7 @@ const api = {
         grade,
       };
     } catch (e) {
-      console.error("[V7] Solar data fetch error:", e);
+      devError("[V7] Solar data fetch error:", e);
       throw e;
     }
   },
@@ -1038,7 +1038,7 @@ const api = {
       const data = await getWeatherData(zip);
 
       if (!data) {
-        console.warn("[V7] No weather data for ZIP:", zip);
+        devWarn("[V7] No weather data for ZIP:", zip);
         return { risk: undefined, profile: undefined };
       }
 
@@ -1047,7 +1047,7 @@ const api = {
         profile: data.profile, // "Hot & Humid", "Cold & Dry", "Temperate", etc.
       };
     } catch (e) {
-      console.error("[V7] Weather fetch error:", e);
+      devError("[V7] Weather fetch error:", e);
       throw e;
     }
   },
@@ -1261,7 +1261,7 @@ const api = {
         };
 
         if (import.meta.env.DEV) {
-          console.warn(
+          devWarn(
             `[V7 SSOT] Template API returned {ok:false}:`,
             `reason=${response.reason}`,
             `industry=${response.requestedIndustry ?? effective}`,
@@ -1275,7 +1275,7 @@ const api = {
         throw err;
       }
       _apiError = err;
-      console.warn(
+      devWarn(
         `[V7 SSOT] Template API failed (will try local fallback):`,
         err instanceof Error ? err.message : err
       );
@@ -1295,7 +1295,7 @@ const api = {
       if (!localTpl) {
         // Fallback 2: Universal generic template (works for ANY facility)
         // Recovery Strategy: Never hard-fail — always give user a path forward
-        console.warn(`[V7 SSOT] No template for "${effective}" — using generic facility fallback`);
+        devWarn(`[V7 SSOT] No template for "${effective}" — using generic facility fallback`);
         const genericTpl = getFallbackTemplate();
 
         remoteTemplate = {
@@ -1352,7 +1352,7 @@ const api = {
       }
 
       if (import.meta.env.DEV) {
-        console.warn(
+        devWarn(
           `[V7 SSOT] ⚠ Using ${sourceLabel.toUpperCase()} template for "${effective}" (API unavailable)`
         );
       }
@@ -1394,7 +1394,7 @@ const api = {
 
     if (!validation.ok) {
       // Log detailed validation failure
-      console.error("[V7 SSOT] Template validation FAILED:", formatValidationResult(validation));
+      devError("[V7 SSOT] Template validation FAILED:", formatValidationResult(validation));
 
       // Hard fail - don't return a broken template that would produce garbage quotes
       throw {
@@ -1409,7 +1409,7 @@ const api = {
 
     // Log warnings in DEV (non-blocking)
     if (validation.summary.warnings > 0 && import.meta.env.DEV) {
-      console.warn("[V7 SSOT] Template validation warnings:", formatValidationResult(validation));
+      devWarn("[V7 SSOT] Template validation warnings:", formatValidationResult(validation));
     }
 
     devLog(
@@ -1789,7 +1789,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
       // Safety check: warn if overwriting user edits (indicates misuse)
       const hasUserEdits = Object.values(state.step3AnswersMeta).some((m) => m.source === "user");
       if (hasUserEdits && source !== "user" && import.meta.env.DEV) {
-        console.warn(
+        devWarn(
           "[V7 SSOT] ⚠️ SET_STEP3_ANSWERS called with existing user edits. " +
             "Consider using PATCH_STEP3_ANSWERS or RESET_STEP3_TO_DEFAULTS instead."
         );
@@ -2016,7 +2016,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
     case "STEP3_PART_NEXT": {
       // Guard: can only advance from part_active
       if (state.step3Status !== "part_active") {
-        console.warn(`[V7 FSM] Cannot advance part from status: ${state.step3Status}`);
+        devWarn(`[V7 FSM] Cannot advance part from status: ${state.step3Status}`);
         return state;
       }
       return {
@@ -2043,7 +2043,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
     case "STEP3_QUOTE_REQUESTED": {
       // Guard: can only request quote from part_active when on final part
       if (state.step3Status !== "part_active") {
-        console.warn(`[V7 FSM] Cannot request quote from status: ${state.step3Status}`);
+        devWarn(`[V7 FSM] Cannot request quote from status: ${state.step3Status}`);
         return state;
       }
       return {
@@ -2086,7 +2086,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
     case "PRICING_SUCCESS": {
       // STALE-WRITE GUARD: Only accept if requestKey matches current request
       if (state.pricingRequestKey !== intent.requestKey) {
-        console.warn(
+        devWarn(
           `[V7 Pricing] Ignoring stale success: expected ${state.pricingRequestKey?.slice(0, 8)}, got ${intent.requestKey.slice(0, 8)}`
         );
         return {
@@ -2121,7 +2121,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
     case "PRICING_ERROR": {
       // STALE-WRITE GUARD: Only accept if requestKey matches current request
       if (state.pricingRequestKey !== intent.requestKey) {
-        console.warn(
+        devWarn(
           `[V7 Pricing] Ignoring stale error: expected ${state.pricingRequestKey?.slice(0, 8)}, got ${intent.requestKey.slice(0, 8)}`
         );
         return {
@@ -2944,7 +2944,7 @@ export function useWizardV7() {
           location = await api.resolveLocation(input, controller.signal);
         } catch (resolveErr) {
           // ✅ Non-blocking fallback: proceed with ZIP-only location card
-          console.warn("[V7 SSOT] resolveLocation failed, using ZIP fallback:", resolveErr);
+          devWarn("[V7 SSOT] resolveLocation failed, using ZIP fallback:", resolveErr);
           const minCard = buildMinimalLocationFromZip(state);
           if (!minCard) throw resolveErr;
 
@@ -3042,7 +3042,7 @@ export function useWizardV7() {
           }
         } catch (enrichErr) {
           // Enrichment failure is NEVER fatal — proceed with empty intel
-          console.warn("[V7 Step1] primeLocationIntel failed (non-blocking):", enrichErr);
+          devWarn("[V7 Step1] primeLocationIntel failed (non-blocking):", enrichErr);
           dispatch({
             type: "DEBUG_NOTE",
             note: `Location intel failed (non-blocking): ${(enrichErr as { message?: string })?.message ?? enrichErr}`,
@@ -3123,7 +3123,7 @@ export function useWizardV7() {
               dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
             }
           } catch (inferErr) {
-            console.warn("[V7] Industry inference failed (non-blocking):", inferErr);
+            devWarn("[V7] Industry inference failed (non-blocking):", inferErr);
             dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
           }
         }
@@ -3445,7 +3445,7 @@ export function useWizardV7() {
         setStep("profile", "industry_selected");
         devLog("[V7 SSOT] selectIndustry: transitioned to profile step");
       } catch (err: unknown) {
-        console.error("[V7 SSOT] selectIndustry ERROR:", err);
+        devError("[V7 SSOT] selectIndustry ERROR:", err);
 
         // AbortError = user navigated away — just surface it
         if (isAbort(err)) {
@@ -3457,7 +3457,7 @@ export function useWizardV7() {
         // RECOVERY: Template load failed → load generic fallback and
         // navigate to Step 3 anyway. Merlin never gets stuck.
         // ──────────────────────────────────────────────────────────
-        console.warn("[V7 SSOT] selectIndustry: template load failed — activating fallback path");
+        devWarn("[V7 SSOT] selectIndustry: template load failed — activating fallback path");
         try {
           const { getFallbackTemplate } = await import("@/wizard/v7/templates/templateIndex");
           const genericTpl = getFallbackTemplate();
@@ -3507,7 +3507,7 @@ export function useWizardV7() {
           setStep("profile", "industry_selected_fallback");
         } catch (fallbackErr: unknown) {
           // Even the fallback import failed — surface the original error
-          console.error("[V7 SSOT] selectIndustry: fallback also failed", fallbackErr);
+          devError("[V7 SSOT] selectIndustry: fallback also failed", fallbackErr);
           setError(err);
         }
       } finally {
@@ -3925,7 +3925,7 @@ export function useWizardV7() {
           const errMsg =
             (pricingErr as { message?: string })?.message ?? "Pricing calculation failed";
           allWarnings.push(`⚠️ Pricing failed: ${errMsg}`);
-          console.warn("[V7 Pricing] Layer B error (non-blocking):", errMsg);
+          devWarn("[V7 Pricing] Layer B error (non-blocking):", errMsg);
         }
 
         // 4. Merge Layer A + Layer B into final QuoteOutput (MONOTONIC: never partial populate)
@@ -4110,7 +4110,7 @@ export function useWizardV7() {
         const sanity: PricingSanity = sanityCheckQuote(mergedQuote);
 
         if (sanity.warnings.length > 0) {
-          console.warn(
+          devWarn(
             `[V7 Pricing] Quote has ${sanity.warnings.length} sanity warnings:`,
             sanity.warnings
           );
@@ -4188,7 +4188,7 @@ export function useWizardV7() {
         // 7. Error path - capture but DON'T block (with stale-write key)
         const errMsg = (err as { message?: string })?.message ?? "Pricing calculation failed";
 
-        console.error("[V7 Pricing] Error:", errMsg, err);
+        devError("[V7 Pricing] Error:", errMsg, err);
 
         dispatch({ type: "PRICING_ERROR", error: errMsg, requestKey });
 
@@ -4207,7 +4207,7 @@ export function useWizardV7() {
    */
   const retryPricing = useCallback(async () => {
     if (state.industry === "auto") {
-      console.warn("[V7] Cannot retry pricing: industry not set");
+      devWarn("[V7] Cannot retry pricing: industry not set");
       return { ok: false as const, error: "Industry not set" };
     }
     dispatch({ type: "PRICING_RETRY" });
@@ -4228,7 +4228,7 @@ export function useWizardV7() {
    */
   const recalculateWithAddOns = useCallback(async (addOns: SystemAddOns) => {
     if (state.industry === "auto") {
-      console.warn("[V7] Cannot recalculate: industry not set");
+      devWarn("[V7] Cannot recalculate: industry not set");
       return { ok: false as const, error: "Industry not set" };
     }
     // 1. Persist add-ons to state
@@ -4271,7 +4271,7 @@ export function useWizardV7() {
    */
   const retryTemplate = useCallback(async () => {
     if (state.industry === "auto") {
-      console.warn("[V7] Cannot retry template: industry not set");
+      devWarn("[V7] Cannot retry template: industry not set");
       return;
     }
     if (state.templateMode === "industry") {
@@ -4309,7 +4309,7 @@ export function useWizardV7() {
         (template.industry as string) === "generic" ? "fallback" : "industry"
       );
     } catch (err) {
-      console.warn("[V7] Template retry failed:", err instanceof Error ? err.message : err);
+      devWarn("[V7] Template retry failed:", err instanceof Error ? err.message : err);
     } finally {
       setBusy(false);
     }
@@ -4350,7 +4350,7 @@ export function useWizardV7() {
         return await withTimeout(fn(), timeoutMs);
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
-        console.warn(`[V7 SSOT] Attempt ${i + 1} failed:`, lastError.message);
+        devWarn(`[V7 SSOT] Attempt ${i + 1} failed:`, lastError.message);
 
         if (i < attempts - 1) {
           const delay = baseDelayMs * Math.pow(2, i); // Exponential backoff: 250ms, 500ms, 1000ms
@@ -4375,7 +4375,7 @@ export function useWizardV7() {
       
       // ✅ FIX (Feb 10, 2026): Check prerequisites and guide user to fix missing steps
       if (!state.locationConfirmed) {
-        console.error("[submitStep3] ❌ Blocked: Location not confirmed");
+        devError("[submitStep3] ❌ Blocked: Location not confirmed");
         setError({
           code: "PREREQUISITE",
           message: "Please confirm your location on Step 1 first.",
@@ -4385,7 +4385,7 @@ export function useWizardV7() {
       }
       
       if (!state.goalsConfirmed) {
-        console.error("[submitStep3] ❌ Blocked: Goals not confirmed");
+        devError("[submitStep3] ❌ Blocked: Goals not confirmed");
         setError({
           code: "PREREQUISITE",
           message: "Please complete the goals section on Step 1 first.",
@@ -4427,7 +4427,7 @@ export function useWizardV7() {
       
       // Guard: prevent double-submission while pricing is in flight
       if (state.pricingStatus === "pending") {
-        console.warn("[V7] submitStep3 blocked: pricing already pending");
+        devWarn("[V7] submitStep3 blocked: pricing already pending");
         return;
       }
       
@@ -4461,7 +4461,7 @@ export function useWizardV7() {
       
       if (missingIds.length > 0) {
         // ✅ ENHANCED DEBUG: Log complete validation context
-        console.warn("[V7] submitStep3 blocked (TEMPLATE validation)", {
+        devWarn("[V7] submitStep3 blocked (TEMPLATE validation)", {
           effectiveIndustry,
           reason: "Missing required fields",
           missingIds,
@@ -4540,7 +4540,7 @@ export function useWizardV7() {
         });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
-        console.error("[V7 SSOT] submitStep3 failed after retries:", errorMessage);
+        devError("[V7 SSOT] submitStep3 failed after retries:", errorMessage);
         
         // ✅ Dispatch FAILED but still allow progression (non-blocking)
         dispatch({ 
@@ -4600,7 +4600,7 @@ export function useWizardV7() {
 
       // Guard: prevent double-submission while pricing is in flight
       if (state.pricingStatus === "pending") {
-        console.warn("[V7] submitStep3Partial blocked: pricing already pending");
+        devWarn("[V7] submitStep3Partial blocked: pricing already pending");
         return;
       }
 

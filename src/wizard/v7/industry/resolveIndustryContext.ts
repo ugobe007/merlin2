@@ -36,6 +36,7 @@ import {
   type IndustryContext,
   type ResolutionTrace,
 } from "./industryCatalog";
+import { devWarn } from '../debug/devLog';
 
 // ============================================================================
 // INDEX CONSTRUCTION (built once at module load)
@@ -176,7 +177,7 @@ export function resolveIndustryContext(rawIndustry: string): IndustryContext {
   if (import.meta.env?.DEV) {
     // Warn if input resolved to fallback (might indicate missing catalog entry)
     if (entry === FALLBACK_ENTRY && normalized !== "other" && normalized !== "") {
-      console.warn(
+      devWarn(
         `[IndustryContext] ⚠️ "${rawIndustry}" resolved to fallback "other" — consider adding a catalog entry`
       );
     }

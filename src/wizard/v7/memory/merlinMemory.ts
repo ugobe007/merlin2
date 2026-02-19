@@ -44,7 +44,7 @@
  * Created: Feb 11, 2026
  */
 
-import { devLog } from "@/wizard/v7/debug/devLog";
+import { devLog, devWarn, devInfo, devError } from "@/wizard/v7/debug/devLog";
 
 // ============================================================================
 // MEMORY SLOT TYPES
@@ -335,9 +335,9 @@ class MerlinMemoryStore {
         const errors = violations.filter(v => v.severity === "error");
         const warnings = violations.filter(v => v.severity === "warning");
         if (errors.length > 0) {
-          console.warn(`[TrueQuote™] 🔴 ${errors.length} error(s) on ${key}:\n${mod.formatViolations(violations)}`);
+          devWarn(`[TrueQuote™] 🔴 ${errors.length} error(s) on ${key}:\n${mod.formatViolations(violations)}`);
         } else if (warnings.length > 0) {
-          console.info(`[TrueQuote™] 🟡 ${warnings.length} warning(s) on ${key}:\n${mod.formatViolations(violations)}`);
+          devInfo(`[TrueQuote™] 🟡 ${warnings.length} warning(s) on ${key}:\n${mod.formatViolations(violations)}`);
         }
       }
     } catch {
@@ -443,7 +443,7 @@ class MerlinMemoryStore {
         try {
           listener(value);
         } catch (err) {
-          console.error(`[MerlinMemory] Listener error on ${key}:`, err);
+          devError(`[MerlinMemory] Listener error on ${key}:`, err);
         }
       }
     }
@@ -452,7 +452,7 @@ class MerlinMemoryStore {
       try {
         listener(key);
       } catch (err) {
-        console.error("[MerlinMemory] Global listener error:", err);
+        devError("[MerlinMemory] Global listener error:", err);
       }
     }
   }

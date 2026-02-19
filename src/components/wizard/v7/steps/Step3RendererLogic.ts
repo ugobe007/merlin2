@@ -8,6 +8,7 @@
  */
 
 import type { CuratedField } from "@/wizard/v7/schema/curatedFieldsResolver";
+import { devWarn } from '@/wizard/v7/debug/devLog';
 
 /**
  * Renderer types for Step 3 questions
@@ -67,7 +68,7 @@ export function normalizeFieldType(t?: string): string {
       "multiselect",
     ].includes(x)
   ) {
-    console.warn(`[Step3Curated] Unknown field type "${t}" → using "text". Add mapping if needed.`);
+    devWarn(`[Step3Curated] Unknown field type "${t}" → using "text". Add mapping if needed.`);
   }
 
   return x || "text";

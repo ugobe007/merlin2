@@ -9,6 +9,7 @@
 
 import React, { useEffect } from 'react';
 import { X, Check } from 'lucide-react';
+import { devLog, devError } from '@/wizard/v7/debug/devLog';
 import merlinIcon from '@/assets/images/new_small_profile_.png';
 
 export type EnergyGoal = 
@@ -82,7 +83,7 @@ export default function GoalsModal({
 
   // Trace wrapper to debug who is calling onSkip
   const handleSkip = () => {
-    console.trace('[GoalsModal] onSkip fired');
+    devLog('[GoalsModal] onSkip fired');
     onSkip();
   };
 
@@ -136,7 +137,7 @@ export default function GoalsModal({
                   type="button"
                   onClick={() => {
                     if (typeof onToggleGoal !== "function") {
-                      console.error("[GoalsModal] onToggleGoal missing", { onToggleGoal });
+                      devError("[GoalsModal] onToggleGoal missing", { onToggleGoal });
                       return;
                     }
                     onToggleGoal(option.id);

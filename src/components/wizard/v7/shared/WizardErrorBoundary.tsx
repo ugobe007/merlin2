@@ -5,6 +5,7 @@
  * Shows crash info instead of white screen of death.
  */
 import React from "react";
+import { devError } from '@/wizard/v7/debug/devLog';
 
 interface Props {
   children: React.ReactNode;
@@ -27,7 +28,7 @@ export default class WizardErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("[WizardV7] Crash caught:", error, errorInfo);
+    devError("[WizardV7] Crash caught:", error, errorInfo);
     this.setState({ error, errorInfo });
   }
 

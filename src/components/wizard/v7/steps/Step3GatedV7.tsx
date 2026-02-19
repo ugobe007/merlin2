@@ -30,6 +30,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import type { IndustryTemplateV1, TemplatePart, TemplateQuestion, OptionItem } from "@/wizard/v7/templates/types";
 import type { WizardV7LifeSignals } from "@/wizard/v7/hooks/useWizardV7";
 import Step3SystemAssist from "@/components/wizard/v7/shared/Step3SystemAssist";
+import { devLog, devWarn } from '@/wizard/v7/debug/devLog';
 
 // =============================================================================
 // TYPES
@@ -307,7 +308,7 @@ export default function Step3GatedV7({
     // When template identity changes, reset to first part
     setPartIndex(0);
     if (import.meta.env.DEV) {
-      console.log("[Step3Gated] Template changed, reset to part 0:", templateIdentity);
+      devLog("[Step3Gated] Template changed, reset to part 0:", templateIdentity);
     }
   }, [templateIdentity]);
 
@@ -325,7 +326,7 @@ export default function Step3GatedV7({
     }
     // Derive 4 parts from flat question list
     if (import.meta.env.DEV) {
-      console.log("[Step3Gated] Template has no parts, deriving from questions");
+      devLog("[Step3Gated] Template has no parts, deriving from questions");
     }
     return deriveParts(template.questions);
   }, [template]);
@@ -411,7 +412,7 @@ export default function Step3GatedV7({
     if (anyApplied) {
       onDefaultsApplied(currentPart.id);
       if (import.meta.env.DEV) {
-        console.log(`[Step3Gated] Applied defaults for Part ${partIndex + 1} (${currentPart.id}):`, applied);
+        devLog(`[Step3Gated] Applied defaults for Part ${partIndex + 1} (${currentPart.id}):`, applied);
       }
     }
   }, [partIndex, currentPart, template, getPartQuestions, defaults, answers, hasDefaultsApplied, onAnswerChange, onDefaultsApplied, isFieldTouched]);
@@ -433,7 +434,7 @@ export default function Step3GatedV7({
     // Delegate to SSOT callback - ALWAYS use { partId } scope, NEVER "all"
     onResetPart(currentPart.id);
     if (import.meta.env.DEV) {
-      console.log(`[Step3Gated] Reset Part ${partIndex + 1} to defaults (via SSOT)`);
+      devLog(`[Step3Gated] Reset Part ${partIndex + 1} to defaults (via SSOT)`);
     }
   }, [currentPart, onResetPart, partIndex]);
 
@@ -448,7 +449,7 @@ export default function Step3GatedV7({
       onResetPart(currentPart.id);
     }
     if (import.meta.env.DEV) {
-      console.log(`[Step3Gated] Apply defaults for Part ${partIndex + 1} (via SSOT)`);
+      devLog(`[Step3Gated] Apply defaults for Part ${partIndex + 1} (via SSOT)`);
     }
   }, [currentPart, applyStep3Defaults, onResetPart, partIndex]);
 
@@ -499,7 +500,7 @@ export default function Step3GatedV7({
     if (!template || !selectedIndustrySlug) return;
 
     if (template.industry !== selectedIndustrySlug) {
-      console.warn("[Step3Gated] TEMPLATE MISMATCH:", {
+      devWarn("[Step3Gated] TEMPLATE MISMATCH:", {
         selected: selectedIndustrySlug,
         template: template.industry,
         templateVersion: template.version,

@@ -1,26 +1,25 @@
-import { useState, useEffect } from "react";
-import BessQuoteBuilder from "./components/BessQuoteBuilder";
-import AdminDashboard from "./components/AdminDashboard";
-import VendorPortal from "./components/VendorPortal";
-import CarWashEnergy from "./components/verticals/CarWashEnergy";
-import EVChargingEnergy from "./components/verticals/EVChargingEnergy";
-import HotelEnergy from "./components/verticals/HotelEnergy";
-import DataCenterEnergy from "./components/verticals/DataCenterEnergy";
-import HospitalEnergy from "./components/verticals/HospitalEnergy";
-import ManufacturingEnergy from "./components/verticals/ManufacturingEnergy";
-// DEPRECATED: import { WizardV5 } from './components/wizard/_deprecated/v5';
-import WizardV6 from "./components/wizard/v6/WizardV6";
-// DEPRECATED: Old WizardV7 moved to _deprecated/ (Jan 26, 2026)
-import WizardV7Page from "./pages/WizardV7Page"; // V7: Clean SSOT page
-import WizardVNextPage from "./pages/WizardVNextPage"; // vNext: luminous HUD scaffold
-import MetaCalculationsPage from "./pages/MetaCalculationsPage";
-import MarketIntelligencePage from "./pages/MarketIntelligencePage";
-import QuoteTemplatePage from "./pages/QuoteTemplatePage";
-import AccountPage from "./pages/AccountPage";
-import SupportFAQ from "./components/SupportFAQ";
-import PricingPage from "./components/pricing/PricingPage";
-import CheckoutCallback from "./components/pricing/CheckoutCallback";
-// import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder'; // Unused
+import { useState, useEffect, lazy, Suspense } from "react";
+
+// ─── Lazy-loaded routes (code-split per page) ───
+const BessQuoteBuilder = lazy(() => import("./components/BessQuoteBuilder"));
+const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
+const VendorPortal = lazy(() => import("./components/VendorPortal"));
+const CarWashEnergy = lazy(() => import("./components/verticals/CarWashEnergy"));
+const EVChargingEnergy = lazy(() => import("./components/verticals/EVChargingEnergy"));
+const HotelEnergy = lazy(() => import("./components/verticals/HotelEnergy"));
+const DataCenterEnergy = lazy(() => import("./components/verticals/DataCenterEnergy"));
+const HospitalEnergy = lazy(() => import("./components/verticals/HospitalEnergy"));
+const ManufacturingEnergy = lazy(() => import("./components/verticals/ManufacturingEnergy"));
+const WizardV6 = lazy(() => import("./components/wizard/v6/WizardV6"));
+const WizardV7Page = lazy(() => import("./pages/WizardV7Page"));
+const WizardVNextPage = lazy(() => import("./pages/WizardVNextPage"));
+const MetaCalculationsPage = lazy(() => import("./pages/MetaCalculationsPage"));
+const MarketIntelligencePage = lazy(() => import("./pages/MarketIntelligencePage"));
+const QuoteTemplatePage = lazy(() => import("./pages/QuoteTemplatePage"));
+const AccountPage = lazy(() => import("./pages/AccountPage"));
+const SupportFAQ = lazy(() => import("./components/SupportFAQ"));
+const PricingPage = lazy(() => import("./components/pricing/PricingPage"));
+const CheckoutCallback = lazy(() => import("./components/pricing/CheckoutCallback"));
 import { QuoteProvider } from "./contexts/QuoteContext";
 
 // Test calculations temporarily disabled for production build
@@ -28,6 +27,18 @@ import { QuoteProvider } from "./contexts/QuoteContext";
 // if (typeof window !== 'undefined') {
 //   (window as any).testCalculations = testCalculations;
 // }
+
+/** Minimal full-page spinner shown while lazy chunks download */
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+        <p className="text-slate-400 text-sm">Loading…</p>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   // Check for admin access via URL parameter
@@ -109,96 +120,96 @@ function App() {
 
   if (showAdmin) {
     return (
-      <div>
+      <Suspense fallback={<PageLoader />}>
         <AdminDashboard />
-      </div>
+      </Suspense>
     );
   }
 
   // Access via /vendor-portal or /vendor - Vendor Portal
   if (showVendorPortal) {
-    return <VendorPortal />;
+    return <Suspense fallback={<PageLoader />}><VendorPortal /></Suspense>;
   }
 
   // White-label verticals
   // Access via ?vertical=carwash or eventually carwashenergy.com
   if (activeVertical === "carwash") {
-    return <CarWashEnergy />;
+    return <Suspense fallback={<PageLoader />}><CarWashEnergy /></Suspense>;
   }
 
   // Access via ?vertical=evcharging or /evchargingenergy
   if (activeVertical === "evcharging") {
-    return <EVChargingEnergy />;
+    return <Suspense fallback={<PageLoader />}><EVChargingEnergy /></Suspense>;
   }
 
   // Access via ?vertical=hotel or /hotelenergy
   if (activeVertical === "hotel") {
-    return <HotelEnergy />;
+    return <Suspense fallback={<PageLoader />}><HotelEnergy /></Suspense>;
   }
 
   // Access via ?vertical=datacenter or /data-center or /data-center-energy
   if (activeVertical === "datacenter") {
-    return <DataCenterEnergy />;
+    return <Suspense fallback={<PageLoader />}><DataCenterEnergy /></Suspense>;
   }
 
   // Access via ?vertical=hospital or /hospital or /hospital-energy
   if (activeVertical === "hospital") {
-    return <HospitalEnergy />;
+    return <Suspense fallback={<PageLoader />}><HospitalEnergy /></Suspense>;
   }
 
   // Access via ?vertical=manufacturing or /manufacturing or /manufacturing-energy
   if (activeVertical === "manufacturing") {
-    return <ManufacturingEnergy />;
+    return <Suspense fallback={<PageLoader />}><ManufacturingEnergy /></Suspense>;
   }
 
   // Access via /meta or /meta-calculations - TrueQuote Meta Calculations Dashboard
   if (pathname === "/meta" || pathname === "/meta-calculations" || pathname === "/ssot") {
-    return <MetaCalculationsPage />;
+    return <Suspense fallback={<PageLoader />}><MetaCalculationsPage /></Suspense>;
   }
 
   // Access via /support - Support & FAQ page
   if (pathname === "/support" || pathname === "/faq" || pathname === "/help") {
-    return <SupportFAQ standalone />;
+    return <Suspense fallback={<PageLoader />}><SupportFAQ standalone /></Suspense>;
   }
 
   // Access via /checkout or any route with ?checkout= — Stripe return handling
   if (pathname === "/checkout" || urlParams.get('checkout')) {
-    return <CheckoutCallback />;
+    return <Suspense fallback={<PageLoader />}><CheckoutCallback /></Suspense>;
   }
 
   // Access via /pricing - Pricing & Vendor API page
   if (pathname === "/pricing") {
-    return <PricingPage />;
+    return <Suspense fallback={<PageLoader />}><PricingPage /></Suspense>;
   }
 
   // Access via /account - User subscription & billing management
   if (pathname === "/account" || pathname === "/billing" || pathname === "/subscription") {
-    return <AccountPage />;
+    return <Suspense fallback={<PageLoader />}><AccountPage /></Suspense>;
   }
 
   // Access via /market-intelligence - Subscriber market reports
   if (pathname === "/market-intelligence" || pathname === "/market" || pathname === "/intelligence") {
-    return <MarketIntelligencePage />;
+    return <Suspense fallback={<PageLoader />}><MarketIntelligencePage /></Suspense>;
   }
 
   // Access via /templates or /brand-kit - Quote Template Builder
   if (pathname === "/templates" || pathname === "/brand-kit" || pathname === "/template-builder") {
-    return <QuoteTemplatePage />;
+    return <Suspense fallback={<PageLoader />}><QuoteTemplatePage /></Suspense>;
   }
 
   // Access via /wizard or /wizard-v7 - V7 SSOT Wizard (Feb 1, 2026 - NOW THE DEFAULT)
   if (pathname === "/wizard" || pathname === "/wizard-v7" || pathname === "/v7" || pathname === "/wizard/v7") {
-    return <WizardV7Page />;
+    return <Suspense fallback={<PageLoader />}><WizardV7Page /></Suspense>;
   }
 
   // Access via /wizard-v6 ONLY - V6 Legacy (kept for testing)
   if (pathname === "/wizard-v6") {
-    return <WizardV6 />;
+    return <Suspense fallback={<PageLoader />}><WizardV6 /></Suspense>;
   }
 
   // Access via /wizard-vnext or /vnext - vNext luminous HUD scaffold (Jan 30, 2026)
   if (pathname === "/wizard-vnext" || pathname === "/vnext") {
-    return <WizardVNextPage />;
+    return <Suspense fallback={<PageLoader />}><WizardVNextPage /></Suspense>;
   }
 
   // Access via /quote-builder or advanced=true - Show Advanced Quote Builder
@@ -206,6 +217,7 @@ function App() {
 
   return (
     <QuoteProvider>
+      <Suspense fallback={<PageLoader />}>
       <div>
         <BessQuoteBuilder />
 
@@ -218,6 +230,7 @@ function App() {
           <span className="text-xl">⚙️</span>
         </button>
       </div>
+      </Suspense>
     </QuoteProvider>
   );
 }

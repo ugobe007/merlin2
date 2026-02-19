@@ -13,7 +13,7 @@ import manufacturingImg from "@/assets/images/manufacturing_1.jpg";
 import officeImg from "@/assets/images/office_building1.jpg";
 import healthcareImg from "@/assets/images/hospital_1.jpg";
 import dataCenterImg from "@/assets/images/data-center-1.jpg";
-import gasStationImg from "@/assets/images/truck_stop.png";
+import gasStationImg from "@/assets/images/truck_stop.jpg";
 import airportImg from "@/assets/images/airport_1.jpg";
 import casinoImg from "@/assets/images/casino_gaming1.jpg";
 import collegeImg from "@/assets/images/college_1.jpg";

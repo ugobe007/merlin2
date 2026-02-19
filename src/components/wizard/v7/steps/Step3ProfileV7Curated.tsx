@@ -30,6 +30,7 @@ import {
   normalizeFieldType as normalizeFieldTypeUtil,
   chooseRendererForQuestion,
 } from "./Step3RendererLogic";
+import { devLog, devWarn, devError } from '@/wizard/v7/debug/devLog';
 
 // Industry images (same as original)
 import hotelImg from "@/assets/images/hotel_motel_holidayinn_1.jpg";
@@ -44,7 +45,7 @@ import dataCenterImg from "@/assets/images/data-center-1.jpg";
 import evChargingImg from "@/assets/images/ev_charging_station.jpg";
 import airportImg from "@/assets/images/airport_11.jpeg";
 import casinoImg from "@/assets/images/casino_gaming1.jpg";
-import gasStationImg from "@/assets/images/truck_stop.png";
+import gasStationImg from "@/assets/images/truck_stop.jpg";
 import collegeImg from "@/assets/images/college_1.jpg";
 import agricultureImg from "@/assets/images/agriculture_1.jpg";
 import apartmentImg from "@/assets/images/apartment_building.jpg";
@@ -171,7 +172,7 @@ export default function Step3ProfileV7Curated(props: Props) {
   // ✅ Alias for backward compatibility with existing code (Feb 10, 2026)
   const _industry = String(effectiveIndustry);
 
-  console.log(
+  devLog(
     "[Step3Curated] Using effectiveIndustry:",
     effectiveIndustry,
     "(selected:",
@@ -238,7 +239,7 @@ export default function Step3ProfileV7Curated(props: Props) {
 
   // DEV logging to confirm single source of truth
   if (import.meta.env.DEV) {
-    console.log("[Step3Curated] Render source (CURATED SSOT)", {
+    devLog("[Step3Curated] Render source (CURATED SSOT)", {
       effectiveIndustry,
       curatedQuestions: questions.length,
       templateQuestions: (
@@ -294,7 +295,7 @@ export default function Step3ProfileV7Curated(props: Props) {
       appliedSchemaRef.current = templateKey;
 
       if (import.meta.env.DEV) {
-        console.log(
+        devLog(
           `[Step3Curated] ✅ Auto-filled ${Object.keys(toApply).length} fields with industry defaults:`,
           Object.keys(toApply)
         );
@@ -345,7 +346,7 @@ export default function Step3ProfileV7Curated(props: Props) {
       } catch (e) {
         // Fail-open: show question if conditional throws (prevents UI deadlocks)
         if (import.meta.env.DEV) {
-          console.warn("[Step3Curated] conditionalLogic threw", {
+          devWarn("[Step3Curated] conditionalLogic threw", {
             id: q.id,
             dependsOn: c.dependsOn,
             e,
@@ -369,7 +370,7 @@ export default function Step3ProfileV7Curated(props: Props) {
         return Array.isArray(next) ? next : base;
       } catch (e) {
         if (import.meta.env.DEV) {
-          console.warn("[Step3Curated] modifyOptions threw", {
+          devWarn("[Step3Curated] modifyOptions threw", {
             id: q.id,
             dependsOn: c.dependsOn,
             e,
@@ -419,7 +420,7 @@ export default function Step3ProfileV7Curated(props: Props) {
   // Completion status (all required fields answered)
   const isComplete = missingRequired.length === 0;
 
-  console.log("[Step3Curated] Completion check (CURATED SSOT)", {
+  devLog("[Step3Curated] Completion check (CURATED SSOT)", {
     totalQuestions: questionCount,
     requiredCount: requiredIds.length,
     visibleRequiredCount,
@@ -434,13 +435,13 @@ export default function Step3ProfileV7Curated(props: Props) {
   if (import.meta.env.DEV) {
     const ids = questions.map((q) => q.id);
     const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
-    if (dupes.length) console.error("[Step3Curated] Duplicate question ids:", dupes);
+    if (dupes.length) devError("[Step3Curated] Duplicate question ids:", dupes);
 
     for (const q of questions) {
       const t = normalizeFieldType(q.type);
-      if (!t) console.error("[Step3Curated] Missing type:", q);
+      if (!t) devError("[Step3Curated] Missing type:", q);
       if (isRequired(q) && !(q.title || q.label)) {
-        console.error("[Step3Curated] Required question missing label/title:", q.id);
+        devError("[Step3Curated] Required question missing label/title:", q.id);
       }
     }
   }
@@ -1061,7 +1062,7 @@ export default function Step3ProfileV7Curated(props: Props) {
     // Check for undefined IDs that would cause React key errors
     const undefinedIdQuestions = visibleQuestions.filter((q) => !q.id || q.id === "undefined");
     if (undefinedIdQuestions.length > 0) {
-      console.error(
+      devError(
         "[Step3Curated] ❌ Questions with undefined IDs:",
         undefinedIdQuestions.map((q) => ({ id: q.id, label: q.label, title: q.title }))
       );
@@ -1070,15 +1071,15 @@ export default function Step3ProfileV7Curated(props: Props) {
     // Check image map completeness
     for (const k of CANONICAL_INDUSTRY_KEYS) {
       if (!INDUSTRY_IMAGES[k]) {
-        console.error("[Step3Curated] Missing hero image for industry:", k);
+        devError("[Step3Curated] Missing hero image for industry:", k);
       }
     }
 
     const missingId = questions.find((q) => !q.id);
-    if (missingId) console.warn("[Step3Curated] question missing id", missingId);
+    if (missingId) devWarn("[Step3Curated] question missing id", missingId);
 
     const badDepends = questions.find((q) => q.conditionalLogic && !q.conditionalLogic.dependsOn);
-    if (badDepends) console.warn("[Step3Curated] conditionalLogic missing dependsOn", badDepends);
+    if (badDepends) devWarn("[Step3Curated] conditionalLogic missing dependsOn", badDepends);
   }
 
   // ============================================================================
