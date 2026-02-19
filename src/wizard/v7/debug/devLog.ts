@@ -18,3 +18,13 @@ export const devLog: (...args: any[]) => void = import.meta.env.DEV
 export const devWarn: (...args: any[]) => void = import.meta.env.DEV
   ? (...args) => console.warn(...args)
   : () => {};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const devError: (...args: any[]) => void = import.meta.env.DEV
+  ? (...args) => console.error(...args)
+  : () => {};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const devInfo: (...args: any[]) => void = import.meta.env.DEV
+  ? (...args) => console.info(...args)
+  : () => {};

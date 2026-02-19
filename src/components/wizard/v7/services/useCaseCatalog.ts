@@ -10,6 +10,8 @@
  *   FALLBACK_USE_CASES (always renders)
  */
 
+import { devLog, devWarn, devError } from '@/wizard/v7/debug/devLog';
+
 export type UseCase = {
   slug: string;          // 'car-wash', 'hotel', etc
   title: string;         // 'Car Wash', 'Hotel / Motel', etc
@@ -50,23 +52,23 @@ export async function getUseCases(): Promise<UseCase[]> {
     const res = await fetch("/api/use-cases");
     
     if (!res.ok) {
-      console.warn(`⚠️ /api/use-cases returned ${res.status}, using fallback`);
+      devWarn(`⚠️ /api/use-cases returned ${res.status}, using fallback`);
       return FALLBACK_USE_CASES;
     }
     
     const data = await res.json();
     
     if (Array.isArray(data?.useCases) && data.useCases.length > 0) {
-      console.log(`✅ Loaded ${data.useCases.length} use cases from API`);
+      devLog(`✅ Loaded ${data.useCases.length} use cases from API`);
       return data.useCases;
     }
     
-    console.warn("⚠️ /api/use-cases returned empty, using fallback");
+    devWarn("⚠️ /api/use-cases returned empty, using fallback");
     return FALLBACK_USE_CASES;
     
   } catch (error) {
-    console.error("❌ Failed to fetch use cases from API:", error);
-    console.log("✅ Using fallback use cases");
+    devError("❌ Failed to fetch use cases from API:", error);
+    devLog("✅ Using fallback use cases");
     return FALLBACK_USE_CASES;
   }
 }

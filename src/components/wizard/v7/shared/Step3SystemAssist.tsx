@@ -29,6 +29,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { devError } from '@/wizard/v7/debug/devLog';
 
 // =============================================================================
 // TYPES (LOCKED CONTRACT - pure UI props only)
@@ -247,7 +248,7 @@ export default function Step3SystemAssist({
       await onApply();
       setToast({ message: `Applied suggested defaults to ${partLabel}.`, type: "success" });
     } catch (err) {
-      console.error("[Step3SystemAssist] Apply failed:", err);
+      devError("[Step3SystemAssist] Apply failed:", err);
       setToast({ message: `Couldn't apply defaults to ${partLabel}. Try again.`, type: "info" });
     } finally {
       setIsBusy(false);
@@ -269,7 +270,7 @@ export default function Step3SystemAssist({
         await onReset();
         setToast({ message: `Reset ${partLabel} to defaults.`, type: "info" });
       } catch (err) {
-        console.error("[Step3SystemAssist] Reset failed:", err);
+        devError("[Step3SystemAssist] Reset failed:", err);
         setToast({ message: `Couldn't reset ${partLabel}. Try again.`, type: "info" });
       } finally {
         setIsBusy(false);
@@ -284,7 +285,7 @@ export default function Step3SystemAssist({
       await onReset();
       setToast({ message: `Reset ${partLabel} to defaults.`, type: "info" });
     } catch (err) {
-      console.error("[Step3SystemAssist] Reset failed:", err);
+      devError("[Step3SystemAssist] Reset failed:", err);
       setToast({ message: `Couldn't reset ${partLabel}. Try again.`, type: "info" });
     } finally {
       setIsBusy(false);

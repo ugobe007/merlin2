@@ -34,6 +34,7 @@ import {
 import type { EquipmentBreakdown } from "@/utils/equipmentCalculations";
 import { getMockBehavior, delay, logMockMode } from "./mockPricingControl";
 import { estimateITC } from "@/services/itcCalculator";
+import { devLog, devWarn } from '../debug/devLog';
 
 // ─── MARGIN POLICY ENGINE (Feb 2026) ───
 // This is how Merlin makes money. Every quote must include margin.
@@ -44,7 +45,6 @@ import {
   type ProductClass,
 } from "@/services/marginPolicyEngine";
 import { supabase } from "@/services/supabaseClient";
-import { devLog } from "@/wizard/v7/debug/devLog";
 
 // ============================================================================
 // TYPES — Layer A (Load Profile)
@@ -741,7 +741,7 @@ async function logMarginAudit(
     });
   } catch (err) {
     // Non-blocking — log failure but don't break the quote
-    console.warn("[MarginAudit] Failed to log audit:", (err as Error)?.message);
+    devWarn("[MarginAudit] Failed to log audit:", (err as Error)?.message);
   }
 }
 

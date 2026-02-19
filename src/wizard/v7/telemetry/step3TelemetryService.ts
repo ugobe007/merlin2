@@ -31,6 +31,7 @@
 import type { LoadProfileEnvelope } from "../step3/loadProfile";
 import type { PolicyEvent, PolicyCodeType } from "../step3/policyTaxonomy";
 import { summarizePolicyEvents } from "../step3/policyTaxonomy";
+import { devInfo, devWarn } from '../debug/devLog';
 
 // ============================================================================
 // Types
@@ -168,7 +169,7 @@ export async function persistEnvelopeTelemetry(
   try {
     // Development: log to console
     if (import.meta.env.DEV) {
-      console.info("[Step3 Telemetry]", {
+      devInfo("[Step3 Telemetry]", {
         industry: payload.industry,
         peakKW: payload.peakKW,
         confidence: payload.confidence,
@@ -212,7 +213,7 @@ export async function persistEnvelopeTelemetry(
 
     if (error) {
       // Silently fail — telemetry should never break UX
-      console.warn("[Step3 Telemetry] Insert failed:", error.message);
+      devWarn("[Step3 Telemetry] Insert failed:", error.message);
     }
   } catch {
     // Swallow all errors

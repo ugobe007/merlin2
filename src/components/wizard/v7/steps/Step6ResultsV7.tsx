@@ -47,6 +47,7 @@ import TrueQuoteFinancialModal from "../shared/TrueQuoteFinancialModal";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
 import { supabase } from "@/services/supabaseClient";
 import AuthModal from "@/components/AuthModal";
+import { devInfo, devError } from '@/wizard/v7/debug/devLog';
 
 type Props = {
   state: WizardV7State;
@@ -1641,7 +1642,7 @@ function ExportBar({
         // ✅ Track AFTER successful export — this is a "delivered quote"
         const result = trackQuoteGenerated();
         if (!result.allowed) {
-          console.info("[QuotaTracking] Export allowed but quota now exhausted:", result);
+          devInfo("[QuotaTracking] Export allowed but quota now exhausted:", result);
         }
 
         // ✅ Show save prompt for guests / free-tier users after export
@@ -1649,7 +1650,7 @@ function ExportBar({
           setShowSavePrompt(true);
         }
       } catch (err) {
-        console.error(`Export ${format} failed:`, err);
+        devError(`Export ${format} failed:`, err);
         setError(`Export failed — ${(err as Error).message || "please try again"}`);
       } finally {
         setExporting(null);

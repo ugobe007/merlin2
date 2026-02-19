@@ -15,6 +15,8 @@
  * Created: January 26, 2026
  */
 
+import { devInfo, devWarn } from '../debug/devLog';
+
 export interface ContractTelemetryEvent {
   event: 
     | 'v7_contract_run_started'
@@ -69,7 +71,7 @@ export async function sendContractTelemetry(event: ContractTelemetryEvent): Prom
   try {
     // Development: log to console
     if (import.meta.env.DEV) {
-      console.info(`[V7 Telemetry] ${event.event}`, event);
+      devInfo(`[V7 Telemetry] ${event.event}`, event);
       return;
     }
 
@@ -86,7 +88,7 @@ export async function sendContractTelemetry(event: ContractTelemetryEvent): Prom
     }).catch((err) => {
       // Silently fail (telemetry should never break user experience)
       if (import.meta.env.DEV) {
-        console.warn('[V7 Telemetry] Failed to send:', err.message);
+        devWarn('[V7 Telemetry] Failed to send:', err.message);
       }
     });
   } catch (err) {

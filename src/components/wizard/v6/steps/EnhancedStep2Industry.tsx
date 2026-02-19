@@ -33,7 +33,7 @@ import officeImg from "@/assets/images/office_building1.jpg";
 import collegeImg from "@/assets/images/college_1.jpg";
 import warehouseImg from "@/assets/images/logistics_1.jpg";
 import agricultureImg from "@/assets/images/agriculture_1.jpg";
-import truckStopImg from "@/assets/images/truck_stop.png";
+import truckStopImg from "@/assets/images/truck_stop.jpg";
 import airportImg from "@/assets/images/airport_11.jpeg";
 import indoorFarmImg from "@/assets/images/indoor_farm1.jpg";
 import shoppingCenterImg from "@/assets/images/shopping_center.jpg";

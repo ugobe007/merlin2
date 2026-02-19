@@ -18,6 +18,8 @@
  * - Type safety: Returns Record<string, unknown> (validators downstream)
  */
 
+import { devWarn } from '../debug/devLog';
+
 import type { IndustryTemplateV1, TemplateQuestion } from "./types";
 import { TRANSFORMS } from "./transforms";
 
@@ -60,7 +62,7 @@ export function applyTemplateMapping(
         inputs[inputKey] = fn(raw, { answers, question });
       } else {
         // Unknown transform - log warning and use raw value
-        console.warn(`[applyMapping] Unknown transform: ${rule.transform} for input ${inputKey}`);
+        devWarn(`[applyMapping] Unknown transform: ${rule.transform} for input ${inputKey}`);
         inputs[inputKey] = raw;
       }
     } else {

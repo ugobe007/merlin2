@@ -39,7 +39,8 @@ export default defineConfig({
           // Vendor chunk - external dependencies
           'vendor-react': ['react', 'react-dom'],
           'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-ui': ['lucide-react'],
+          // Note: lucide-react NOT chunked manually — tree-shaking only
+          // bundles actually-used icons into each lazy chunk
           
           // App chunks - split by functionality
           'wizard': [
