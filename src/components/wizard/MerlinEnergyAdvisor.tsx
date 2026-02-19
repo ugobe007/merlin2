@@ -119,9 +119,7 @@ export function MerlinEnergyAdvisor({
     <div className="bg-gradient-to-br from-purple-600/20 to-indigo-600/20 border-2 border-purple-500/30 rounded-xl p-4 mb-4 shadow-lg shadow-purple-500/10">
       {/* Compact Header with Wizard Icon */}
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-purple-500/20 border border-purple-400/30 flex items-center justify-center flex-shrink-0">
-          <span className="text-2xl">🧙‍♂️</span>
-        </div>
+        <img src="/images/new_profile_merlin.png" alt="Merlin" className="w-10 h-10 rounded-full border border-purple-400/30 flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-bold text-purple-300 uppercase tracking-wider">

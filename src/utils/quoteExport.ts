@@ -54,7 +54,7 @@ const POWER_LEVELS = [
     name: "Grand Wizard",
     minKWh: 10000,
     maxKWh: Infinity,
-    icon: "🧙‍♂️",
+    icon: "⚡",
     gradient: "linear-gradient(135deg, #0c1631 0%, #040a14 100%)",
     description: "Supreme energy sovereign",
   },
@@ -418,7 +418,7 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
         <span class="corner-decoration corner-bl">✦</span>
         
         <div class="header">
-          <div class="merlin-badge">🧙‍♂️</div>
+          <div class="merlin-badge">⚡</div>
           <div class="title">Merlin Energy Solutions</div>
           <div class="certificate-title">Power Profile Certificate</div>
           <div class="subtitle">Official Achievement Recognition</div>
@@ -497,7 +497,7 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
           </div>
           
           <div class="merlin-logo">
-            <div class="logo-text">🧙‍♂️ MERLIN</div>
+            <div class="logo-text">⚡ MERLIN</div>
             <div class="logo-tagline">ENERGY SOLUTIONS</div>
           </div>
         </div>
@@ -897,7 +897,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
         <!-- Header -->
         <div class="header">
           <div class="merlin-logo">
-            <span class="merlin-icon">🧙‍♂️</span>
+            <span class="merlin-icon">⚡</span>
             <span>MERLIN</span>
           </div>
           <h1>⚡ Energy Storage Quote</h1>
@@ -1425,7 +1425,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
         
         <!-- Footer -->
         <div class="footer">
-          <div class="company">🧙‍♂️ MERLIN Energy Solutions</div>
+          <div class="company">⚡ MERLIN Energy Solutions</div>
           <div>Professional Battery Energy Storage Systems</div>
           <div style="margin-top: 10px;">Quote Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
           <div style="margin-top: 5px; font-size: 12px; font-style: italic;">Your trusted energy storage advisor</div>
@@ -2744,7 +2744,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
   </div>
   
   <div class="footer">
-    <strong>🧙‍♂️ MERLIN Energy Solutions</strong><br>
+    <strong>⚡ MERLIN Energy Solutions</strong><br>
     Professional Battery Energy Storage Systems<br>
     Quote Generated: ${today}<br><br>
     <em>Your trusted energy storage advisor | This quote is valid for 30 days from the date of issue.</em>

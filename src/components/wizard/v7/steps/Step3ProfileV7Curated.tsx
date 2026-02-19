@@ -44,6 +44,12 @@ import dataCenterImg from "@/assets/images/data-center-1.jpg";
 import evChargingImg from "@/assets/images/ev_charging_station.jpg";
 import airportImg from "@/assets/images/airport_11.jpeg";
 import casinoImg from "@/assets/images/casino_gaming1.jpg";
+import gasStationImg from "@/assets/images/truck_stop.png";
+import collegeImg from "@/assets/images/college_1.jpg";
+import agricultureImg from "@/assets/images/agriculture_1.jpg";
+import apartmentImg from "@/assets/images/apartment_building.jpg";
+import residentialImg from "@/assets/images/Residential1.jpg";
+import indoorFarmImg from "@/assets/images/indoor_farm1.jpg";
 import merlinIcon from "@/assets/images/new_small_profile_.png";
 
 type Step3Answers = Record<string, unknown>;
@@ -74,17 +80,17 @@ const INDUSTRY_IMAGES: Record<CanonicalIndustryKey, string> = {
   casino: casinoImg,
   warehouse: warehouseImg,
   retail: retailImg,
-  "gas-station": hotelImg, // TODO: add gas station image
+  "gas-station": gasStationImg,
   office: officeImg,
   manufacturing: manufacturingImg,
   restaurant: restaurantImg,
-  college: hotelImg, // TODO: add college image
-  agriculture: hotelImg, // TODO: add agriculture image
+  college: collegeImg,
+  agriculture: agricultureImg,
   "cold-storage": warehouseImg, // uses warehouse as fallback
-  apartment: hotelImg, // TODO: add apartment image
-  residential: hotelImg, // TODO: add residential image
-  "indoor-farm": hotelImg, // TODO: add indoor farm image
-  government: hotelImg, // TODO: add government image
+  apartment: apartmentImg,
+  residential: residentialImg,
+  "indoor-farm": indoorFarmImg,
+  government: officeImg, // office building as proxy for government
   other: hotelImg,
   auto: hotelImg,
 };

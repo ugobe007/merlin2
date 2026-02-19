@@ -534,7 +534,7 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
                 {/* Text with speech bubble feel */}
                 <div className="text-left">
                   <span className={`font-bold text-sm block ${hasPendingSuggestion ? 'text-amber-300' : 'text-purple-300'}`}>
-                    {hasPendingSuggestion ? '🧙‍♂️ Need help?' : 'Ask for Help'}
+                    {hasPendingSuggestion ? '✨ Need help?' : 'Ask for Help'}
                   </span>
                   <span className="text-xs text-slate-400">
                     {hasPendingSuggestion ? 'Click for tips!' : `${suggestions.length} tip${suggestions.length > 1 ? 's' : ''} available`}

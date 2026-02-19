@@ -4151,8 +4151,8 @@ export function useWizardV7() {
                 )
               : pd.capexUSD,
             installationCost: 0, // included in capexUSD
-            totalProjectCost: pd.capexUSD / (1 - 0.30), // gross before ITC
-            taxCredit: pd.capexUSD / (1 - 0.30) * 0.30, // estimated ITC
+            totalProjectCost: pd.grossCost, // gross before ITC (from pricingBridge)
+            taxCredit: pd.itcAmount, // dynamic ITC from IRA 2022 calculator
             netCost: pd.capexUSD,
             annualSavings: pd.annualSavingsUSD,
             demandChargeSavings: mergedQuote.demandChargeSavings,
@@ -4161,8 +4161,8 @@ export function useWizardV7() {
             roi25Year: fin?.roi25Year ?? 0,
             npv: fin?.npv ?? 0,
             irr: fin?.irr ?? 0,
-            itcRate: 0.30, // TODO: pull from metadata.itcDetails when available
-            itcAmount: pd.capexUSD / (1 - 0.30) * 0.30,
+            itcRate: pd.itcRate, // dynamic ITC rate from IRA 2022 calculator
+            itcAmount: pd.itcAmount,
             pricingSnapshotId: pd.pricingSnapshotId,
             calculatedAt: Date.now(),
           });

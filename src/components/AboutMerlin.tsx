@@ -27,7 +27,7 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-3 mb-6">
-            <div className="text-6xl">🧙‍♂️</div>
+            <img src="/images/new_profile_merlin.png" alt="Merlin" className="w-16 h-16 rounded-xl" />
             <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               About Merlin Energy Solutions
             </h1>
@@ -393,7 +393,7 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
             }}
             className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-xl transition-all transform hover:scale-105"
           >
-            Start Your Smart Wizard 🧙‍♂️
+            Start Your Smart Wizard ✨
           </button>
         </div>
 

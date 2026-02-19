@@ -33,6 +33,7 @@ import {
 } from "@/services/unifiedQuoteCalculator";
 import type { EquipmentBreakdown } from "@/utils/equipmentCalculations";
 import { getMockBehavior, delay, logMockMode } from "./mockPricingControl";
+import { estimateITC } from "@/services/itcCalculator";
 
 // ─── MARGIN POLICY ENGINE (Feb 2026) ───
 // This is how Merlin makes money. Every quote must include margin.
@@ -395,6 +396,19 @@ export async function runPricingQuote(
     // ═══════════════════════════════════════════════════════════════════════
     const marginResult = applyMarginToQuote(quoteResult, energyMWh);
 
+    // Adjust costs with margin applied
+    const sellPriceTotal = marginResult.sellPriceTotal;
+    const baseCostTotal = marginResult.baseCostTotal;
+
+    // Dynamic ITC calculation per IRA 2022 (replaces hardcoded 0.30)
+    const hasSolar = (contract.inputsUsed.solarMW ?? 0) > 0;
+    const itcProjectType = hasSolar ? "hybrid" as const : "bess" as const;
+    const itcEstimate = estimateITC(itcProjectType, sellPriceTotal, storageSizeMW, true);
+    const itcRate = itcEstimate.totalRate;
+    const itcAmount = sellPriceTotal * itcRate;
+    const grossCost = sellPriceTotal;
+    const netCost = grossCost - itcAmount;
+
     // 5. Build notes from assumptions + warnings
     const notes: string[] = [
       ...(contract.assumptions ?? []),
@@ -402,15 +416,8 @@ export async function runPricingQuote(
       `Sizing: ${ratio.toFixed(2)}x peak × ${hours}h = ${energyMWh.toFixed(2)} MWh`,
       `Pricing snapshot: ${config.snapshotId}`,
       `Margin: ${marginResult.marginBandDescription} (${(marginResult.blendedMarginPercent * 100).toFixed(1)}%)`,
+      `ITC: ${(itcRate * 100).toFixed(0)}% (${itcEstimate.notes.join('; ')})`,
     ];
-
-    // Adjust costs with margin applied
-    const sellPriceTotal = marginResult.sellPriceTotal;
-    const baseCostTotal = marginResult.baseCostTotal;
-    const itcRate = quoteResult.benchmarkAudit?.assumptions?.itcRate ?? 0.3;
-    const itcAmount = sellPriceTotal * itcRate;
-    const grossCost = sellPriceTotal;
-    const netCost = grossCost - itcAmount;
 
     // Recalculate payback with sell price
     const annualSavings = quoteResult.financials.annualSavings;
