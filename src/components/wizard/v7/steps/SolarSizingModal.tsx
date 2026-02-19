@@ -22,6 +22,7 @@ import {
   ArrowRight,
   Info,
   Sparkles,
+  ChevronDown,
 } from "lucide-react";
 import merlinIcon from "@/assets/images/new_small_profile_.png";
 import {
@@ -190,11 +191,11 @@ export default function SolarSizingModal({
       {/* Modal */}
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div
-          className="bg-slate-900 border border-amber-500/30 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-slate-900 border border-emerald-500/30 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
-          <div className="relative px-6 pt-6 pb-4 border-b border-amber-500/20 bg-gradient-to-r from-amber-950/40 via-orange-950/20 to-transparent">
+          <div className="relative px-6 pt-6 pb-4 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-950/40 via-teal-950/20 to-transparent">
             <button
               onClick={onClose}
               type="button"
@@ -205,12 +206,12 @@ export default function SolarSizingModal({
             </button>
 
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                 <Sun className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Solar Sizing Assistant</h2>
-                <p className="text-sm text-amber-200/70 mt-0.5">
+                <p className="text-sm text-emerald-200/70 mt-0.5">
                   {initialEstimate.industryLabel} • Based on your Step 3 answers
                 </p>
               </div>
@@ -245,14 +246,44 @@ export default function SolarSizingModal({
             {/* ── Adjustable Inputs ── */}
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                <Ruler className="w-4 h-4 text-amber-400" />
+                <Ruler className="w-4 h-4 text-emerald-400" />
                 Adjust Your Building
               </h3>
 
+              {/* Scroll hint */}
+              <div className="flex items-center justify-center gap-2 text-xs text-slate-500 animate-pulse">
+                <ChevronDown className="w-3.5 h-3.5" />
+                <span>Scroll down to configure &amp; apply</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </div>
+
               {/* Building Sqft */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm text-slate-300">Building Footprint</label>
+                <div className="flex items-center flex-wrap gap-2">
+                  <label className="text-sm text-slate-300 mr-auto">Building Footprint</label>
+                  {/* Quick-set range buttons — derived from profile sqftPerUnit */}
+                  {profile && (() => {
+                    const units = initialEstimate.unitsUsed;
+                    const ranges: { label: string; sqft: number }[] = [
+                      { label: `${fmt(Math.round(units * profile.sqftPerUnit.small))}-${fmt(Math.round(units * profile.sqftPerUnit.medium))} feet`, sqft: Math.round(units * profile.sqftPerUnit.small) },
+                      { label: `${fmt(Math.round(units * profile.sqftPerUnit.medium))}-${fmt(Math.round(units * (profile.sqftPerUnit.medium + profile.sqftPerUnit.large) / 2))} feet`, sqft: Math.round(units * profile.sqftPerUnit.medium) },
+                      { label: `${fmt(Math.round(units * (profile.sqftPerUnit.medium + profile.sqftPerUnit.large) / 2))}-${fmt(Math.round(units * profile.sqftPerUnit.large))} feet`, sqft: Math.round(units * profile.sqftPerUnit.large) },
+                    ];
+                    return ranges.map((r) => (
+                      <button
+                        key={r.label}
+                        type="button"
+                        onClick={() => { setBuildingSqFt(r.sqft); setCustomKW(null); }}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                          buildingSqFt === r.sqft
+                            ? 'border-emerald-400 text-emerald-400 bg-emerald-500/10'
+                            : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50'
+                        }`}
+                      >
+                        {r.label}
+                      </button>
+                    ));
+                  })()}
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
@@ -262,7 +293,7 @@ export default function SolarSizingModal({
                         setBuildingSqFt(v);
                         setCustomKW(null); // Reset custom override
                       }}
-                      className="w-28 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                      className="w-28 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none"
                     />
                     <span className="text-xs text-slate-400 w-10">sq ft</span>
                   </div>
@@ -282,7 +313,7 @@ export default function SolarSizingModal({
                       </span>
                     </span>
                   </label>
-                  <span className="text-sm font-semibold text-amber-300">
+                  <span className="text-sm font-semibold text-emerald-300">
                     {Math.round(roofUtilization * 100)}%
                   </span>
                 </div>
@@ -295,7 +326,7 @@ export default function SolarSizingModal({
                     setRoofUtilization(Number(e.target.value) / 100);
                     setCustomKW(null);
                   }}
-                  className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-amber-500"
+                  className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-emerald-500"
                 />
                 <div className="flex justify-between text-xs text-slate-500">
                   <span>10% (obstructed)</span>
@@ -324,7 +355,7 @@ export default function SolarSizingModal({
                         setCustomKW(null);
                       }}
                       className={`relative w-12 h-6 rounded-full transition-colors ${
-                        includeCanopy ? "bg-amber-500" : "bg-slate-600"
+                        includeCanopy ? "bg-emerald-500" : "bg-slate-600"
                       }`}
                     >
                       <span
@@ -344,7 +375,7 @@ export default function SolarSizingModal({
                           setCanopyKW(Math.max(0, Number(e.target.value) || 0));
                           setCustomKW(null);
                         }}
-                        className="w-20 px-2 py-1 bg-slate-800 border border-slate-600 rounded text-white text-sm text-right focus:border-amber-500 outline-none"
+                        className="w-20 px-2 py-1 bg-slate-800 border border-slate-600 rounded text-white text-sm text-right focus:border-emerald-500 outline-none"
                       />
                       <span className="text-xs text-slate-400">kW</span>
                     </div>
@@ -354,9 +385,9 @@ export default function SolarSizingModal({
             </div>
 
             {/* ── Results Panel ── */}
-            <div className="rounded-xl border border-amber-500/30 bg-gradient-to-b from-amber-950/30 to-slate-950/60 overflow-hidden">
-              <div className="px-5 py-3 border-b border-amber-500/20 bg-amber-950/40">
-                <h3 className="text-sm font-bold text-amber-200 flex items-center gap-2">
+            <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-b from-emerald-950/30 to-slate-950/60 overflow-hidden">
+              <div className="px-5 py-3 border-b border-emerald-500/20 bg-emerald-950/40">
+                <h3 className="text-sm font-bold text-emerald-200 flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   Solar Estimate
                 </h3>
@@ -365,8 +396,8 @@ export default function SolarSizingModal({
               <div className="p-5 space-y-4">
                 {/* Main number */}
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-amber-300">
-                    {fmt(effectiveKW)} <span className="text-lg text-amber-400/60">kW</span>
+                  <div className="text-4xl font-bold text-emerald-300">
+                    {fmt(effectiveKW)} <span className="text-lg text-emerald-400/60">kW</span>
                   </div>
                   <p className="text-xs text-slate-400 mt-1">
                     {calculation.maxRoofSolarKW > 0 && (
@@ -383,7 +414,7 @@ export default function SolarSizingModal({
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
                     <div className="flex items-center gap-2 mb-1">
-                      <Zap className="w-3.5 h-3.5 text-amber-400" />
+                      <Zap className="w-3.5 h-3.5 text-emerald-400" />
                       <span className="text-xs text-slate-400">Annual Production</span>
                     </div>
                     <div className="text-sm font-bold text-white">
@@ -409,7 +440,7 @@ export default function SolarSizingModal({
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
                     <div className="flex items-center gap-2 mb-1">
-                      <Sun className="w-3.5 h-3.5 text-amber-400" />
+                      <Sun className="w-3.5 h-3.5 text-emerald-400" />
                       <span className="text-xs text-slate-400">Panels Needed</span>
                     </div>
                     <div className="text-sm font-bold text-white">
@@ -432,7 +463,7 @@ export default function SolarSizingModal({
                       setCustomKW(v);
                     }}
                     placeholder={`${calculation.totalSolarKW} kW`}
-                    className="flex-1 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none placeholder:text-slate-600"
+                    className="flex-1 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none placeholder:text-slate-600"
                   />
                   <span className="text-xs text-slate-400">kW</span>
                 </div>
@@ -451,7 +482,7 @@ export default function SolarSizingModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-slate-400 hover:text-white transition-colors text-sm"
+              className="px-4 py-2.5 rounded-lg text-sm font-semibold border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all"
             >
               Cancel
             </button>
@@ -459,7 +490,7 @@ export default function SolarSizingModal({
             <button
               type="button"
               onClick={handleApply}
-              className="px-6 py-2.5 rounded-lg font-semibold text-sm bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-400 hover:to-orange-400 transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2"
+              className="px-6 py-2.5 rounded-lg font-semibold text-sm border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/60 transition-all flex items-center gap-2"
             >
               <Sun className="w-4 h-4" />
               Use {fmt(effectiveKW)} kW Solar
