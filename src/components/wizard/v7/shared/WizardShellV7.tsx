@@ -379,7 +379,7 @@ export default function WizardShellV7({
                 padding: 36,
                 border: "1px solid rgba(255, 255, 255, 0.05)",
                 borderTop: "none",
-                minHeight: 500,
+                minHeight: 400,
                 animation: "merlin-step-fadein 0.3s ease-out",
               }}
             >
@@ -398,20 +398,29 @@ export default function WizardShellV7({
             @media (max-width: 900px) {
               .merlin-shell-grid {
                 grid-template-columns: 1fr !important;
-                padding: 12px 16px !important;
-                gap: 16px !important;
+                padding: 8px 12px !important;
+                gap: 12px !important;
               }
               .merlin-shell-rail {
                 display: none !important;
               }
               .merlin-shell-bottomnav {
-                padding: 12px 16px 20px !important;
+                padding: 12px 12px 20px !important;
               }
               .merlin-progress-bar {
-                gap: 2px !important;
-                padding: 10px 12px !important;
+                gap: 0px !important;
+                padding: 8px 8px !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
               }
               .merlin-progress-label {
+                display: none !important;
+              }
+              .merlin-step {
+                padding: 16px !important;
+                min-height: 300px !important;
+              }
+              .merlin-nexthint {
                 display: none !important;
               }
             }
@@ -452,8 +461,9 @@ export default function WizardShellV7({
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "10px 18px",
+              padding: "12px 18px",
               borderRadius: 8,
+              minHeight: 44,
               background: canGoBack ? "rgba(255, 255, 255, 0.04)" : "transparent",
               border: canGoBack ? "1px solid rgba(255, 255, 255, 0.06)" : "1px solid transparent",
               color: canGoBack ? "rgba(232, 235, 243, 0.6)" : "rgba(232, 235, 243, 0.20)",
@@ -467,8 +477,8 @@ export default function WizardShellV7({
             <span>‹</span> Back
           </button>
 
-          {/* Hint */}
-          <div style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.4)" }}>
+          {/* Hint — hidden on mobile */}
+          <div className="merlin-nexthint" style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.4)" }}>
             {nextHint && `Next: ${nextHint}`}
           </div>
 
@@ -480,8 +490,9 @@ export default function WizardShellV7({
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "10px 20px",
+              padding: "12px 20px",
               borderRadius: 8,
+              minHeight: 44,
               background:
                 canGoNext && !isNextLoading
                   ? "#3ECF8E"

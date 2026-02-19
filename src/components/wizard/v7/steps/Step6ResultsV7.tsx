@@ -1183,9 +1183,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       {/* ================================================================
           PROQUOTE™ UPSELL — Merlin is the salesman
       ================================================================ */}
-      <div className="rounded-xl border-2 border-white/[0.08] bg-white/[0.03] p-6 hover:border-white/[0.12] transition-all">
-        <div className="flex items-center gap-5">
-          <div className="shrink-0">
+      <div className="rounded-xl border-2 border-white/[0.08] bg-white/[0.03] p-4 sm:p-6 hover:border-white/[0.12] transition-all">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
+          <div className="shrink-0 hidden sm:block">
             <img src={badgeProQuoteIcon} alt="ProQuote" className="w-14 h-14 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
@@ -1200,7 +1200,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           <button
             type="button"
             onClick={() => setShowProQuoteModal(true)}
-            className="flex items-center gap-2.5 px-5 py-3 rounded-xl border-2 border-[#3ECF8E]/30 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/50 hover:bg-[#3ECF8E]/[0.12] transition-all shrink-0 group"
+            className="flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl border-2 border-[#3ECF8E]/30 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/50 hover:bg-[#3ECF8E]/[0.12] transition-all w-full sm:w-auto sm:shrink-0 group"
           >
             <Sparkles className="w-4 h-4 text-[#3ECF8E]" />
             <span className="text-sm font-bold text-[#3ECF8E] tracking-wide">Open ProQuote™</span>
@@ -1211,13 +1211,13 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       {/* ================================================================
           VENDOR / EPC PORTAL CTA — Bring vendors into the platform
       ================================================================ */}
-      <div className="rounded-xl border-2 border-blue-500/[0.12] bg-blue-500/[0.03] p-6 hover:border-blue-500/[0.20] transition-all">
-        <div className="flex items-center gap-5">
-          <div className="shrink-0 w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center">
+      <div className="rounded-xl border-2 border-blue-500/[0.12] bg-blue-500/[0.03] p-4 sm:p-6 hover:border-blue-500/[0.20] transition-all">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
+          <div className="shrink-0 w-14 h-14 rounded-xl bg-blue-500/10 items-center justify-center hidden sm:flex">
             <Building2 className="w-7 h-7 text-blue-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2.5 mb-1">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mb-1">
               <span className="text-base font-bold text-slate-100 tracking-tight">
                 Are you a vendor or EPC?
               </span>
@@ -1232,7 +1232,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           </div>
           <a
             href="/vendor"
-            className="flex items-center gap-2.5 px-5 py-3 rounded-xl border-2 border-blue-400/30 bg-blue-400/[0.06] hover:border-blue-400/50 hover:bg-blue-400/[0.12] transition-all shrink-0 group no-underline"
+            className="flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl border-2 border-blue-400/30 bg-blue-400/[0.06] hover:border-blue-400/50 hover:bg-blue-400/[0.12] transition-all w-full sm:w-auto sm:shrink-0 group no-underline"
           >
             <span className="text-sm font-bold text-blue-400 tracking-wide">Build a Quote →</span>
           </a>
@@ -1627,9 +1627,9 @@ function ExportBar({
   ];
 
   return (
-    <div className="rounded-xl border-2 border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] p-6">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
+    <div className="rounded-xl border-2 border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] p-4 sm:p-6">
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+        <div style={{ flex: "1 1 200px", minWidth: 0 }}>
           <div
             style={{
               fontSize: 18,
@@ -1642,10 +1642,11 @@ function ExportBar({
           </div>
           <div
             style={{
-              fontSize: 14,
+              fontSize: 13,
               color: "rgba(232,235,243,0.55)",
               marginTop: 6,
               display: "flex",
+              flexWrap: "wrap",
               alignItems: "center",
               gap: 10,
             }}
@@ -1667,7 +1668,7 @@ function ExportBar({
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap", flex: "0 0 auto" }}>
           {buttons.map(({ format, icon, label, locked }) => (
             <button
               key={format}
@@ -1683,10 +1684,12 @@ function ExportBar({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
+                justifyContent: "center",
+                gap: 6,
                 height: 44,
-                padding: "0 20px",
+                padding: "0 14px",
                 borderRadius: 12,
+                minWidth: 0,
                 border: locked
                   ? "2px solid rgba(148,163,184,0.15)"
                   : "2px solid rgba(62,207,142,0.30)",
@@ -1733,8 +1736,8 @@ function ExportBar({
 
       {/* ── SAVE PROMPT: Appears after successful export for unauthenticated users ── */}
       {showSavePrompt && (
-        <div className="mt-3 rounded-xl border border-[#3ECF8E]/25 bg-[#3ECF8E]/[0.04] p-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="flex items-center gap-3">
+        <div className="mt-3 rounded-xl border border-[#3ECF8E]/25 bg-[#3ECF8E]/[0.04] p-3 sm:p-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 flex items-center justify-center shrink-0">
               <Bookmark className="w-4 h-4 text-[#3ECF8E]" />
             </div>
