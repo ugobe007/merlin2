@@ -232,8 +232,6 @@ export default function Step6ResultsV7({ state, actions }: Props) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   // ProQuote™ upsell modal state
   const [showProQuoteModal, setShowProQuoteModal] = useState(false);
-  // Auth modal state (for "Save your quote" CTA)
-  const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -1559,6 +1557,7 @@ function ExportBar({
   const [error, setError] = useState<string | null>(null);
   const [_quotaBlocked, setQuotaBlocked] = useState(false);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const tier = getEffectiveTier();
   const isPremium = tier === "pro" || tier === "advanced" || tier === "business";
