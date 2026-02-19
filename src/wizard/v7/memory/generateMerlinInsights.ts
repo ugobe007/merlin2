@@ -206,13 +206,14 @@ function financialLeverInsights(data: MerlinData, step: WizardStep): MerlinInsig
     });
   }
 
-  // Annual savings relative to investment
-  if (fin.annualSavings > 0 && fin.totalProjectCost > 0) {
-    const savingsRatio = fin.annualSavings / fin.totalProjectCost;
-    if (savingsRatio > 0.20) {
+  // Annual savings relative to net investment (after ITC)
+  const effectiveInvestment = fin.netCost > 0 ? fin.netCost : fin.totalProjectCost;
+  if (fin.annualSavings > 0 && effectiveInvestment > 0) {
+    const savingsRatio = fin.annualSavings / effectiveInvestment;
+    if (savingsRatio > 0.15) {
       out.push({
         id: "fin-great-roi",
-        text: `${fmtUSD(fin.annualSavings)}/yr savings on a ${fmtUSD(fin.totalProjectCost)} investment — that's a ${fmtPct(savingsRatio * 100)} annual return.`,
+        text: `${fmtUSD(fin.annualSavings)}/yr savings on a ${fmtUSD(effectiveInvestment)} net investment — that's a ${fmtPct(savingsRatio * 100)} annual return.`,
         relevance: step === "results" ? 90 : step === "magicfit" ? 80 : 50,
         slots: ["financials"],
       });
