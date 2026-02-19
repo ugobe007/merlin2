@@ -1,13 +1,18 @@
 /**
- * SOLAR SIZING MODAL
- * ==================
+ * SOLAR SIZING MODAL — Two-Panel Layout
+ * ======================================
  * Interactive popup that helps users size their solar installation
  * based on their industry and building characteristics.
+ *
+ * Layout: LEFT (configure) ↔ RIGHT (live results)
+ * No scrolling required — everything visible at once.
+ * Mobile: stacks vertically (configure on top, results below).
  *
  * Triggered from Step 3's solar section via "☀️ Size My Solar" button.
  * Uses solarFootprintLibrary.ts as the calculation engine.
  *
  * Created: February 18, 2026
+ * Redesigned: February 18, 2026 — Two-panel layout
  * Part of TrueQuote™ Solar Sizing Assistant
  */
 
@@ -16,13 +21,10 @@ import {
   X,
   Sun,
   Building2,
-  Ruler,
   Zap,
   DollarSign,
   ArrowRight,
   Info,
-  Sparkles,
-  ChevronDown,
 } from "lucide-react";
 import merlinIcon from "@/assets/images/new_small_profile_.png";
 import {
@@ -191,129 +193,101 @@ export default function SolarSizingModal({
       {/* Modal */}
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div
-          className="bg-slate-900 border border-emerald-500/30 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-slate-900 border border-slate-700/60 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
-          <div className="relative px-6 pt-6 pb-4 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-950/40 via-teal-950/20 to-transparent">
-            <button
-              onClick={onClose}
-              type="button"
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-              aria-label="Close solar sizing"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <Sun className="w-6 h-6 text-white" />
+          <div className="px-6 py-4 border-b border-slate-700/50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <Sun className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Solar Sizing Assistant</h2>
-                <p className="text-sm text-emerald-200/70 mt-0.5">
+                <h2 className="text-lg font-bold text-white">Solar Sizing Assistant</h2>
+                <p className="text-xs text-slate-400">
                   {initialEstimate.industryLabel} • Based on your Step 3 answers
                 </p>
               </div>
             </div>
+            <button
+              onClick={onClose}
+              type="button"
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              aria-label="Close solar sizing"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* ── Scrollable Content ── */}
-          <div className="overflow-y-auto flex-1 p-6 space-y-5">
-            {/* Auto-detected summary */}
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-800/60 border border-slate-700/50">
-              <img src={merlinIcon} alt="Merlin" className="w-10 h-10 rounded-lg flex-shrink-0" />
-              <div className="text-sm text-slate-300 leading-relaxed">
-                <span className="font-semibold text-white">
-                  Based on your {initialEstimate.sizeDriver}
-                </span>{" "}
-                ({fmt(initialEstimate.unitsUsed)} {initialEstimate.sizeDriver}), I estimate your
-                building is about{" "}
-                <span className="font-semibold text-amber-300">
-                  {fmt(initialEstimate.buildingSqFt)} sq ft
-                </span>{" "}
-                with{" "}
-                <span className="font-semibold text-amber-300">
-                  {fmt(initialEstimate.usableRoofSqFt)} sq ft
-                </span>{" "}
-                of usable roof for solar.
-                <span className="block mt-1 text-xs text-slate-400 italic">
-                  {initialEstimate.roofNote}
-                </span>
-              </div>
-            </div>
-
-            {/* ── Adjustable Inputs ── */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                <Ruler className="w-4 h-4 text-emerald-400" />
-                Adjust Your Building
-              </h3>
-
-              {/* Scroll hint */}
-              <div className="flex items-center justify-center gap-2 text-xs text-slate-500 animate-pulse">
-                <ChevronDown className="w-3.5 h-3.5" />
-                <span>Scroll down to configure &amp; apply</span>
-                <ChevronDown className="w-3.5 h-3.5" />
+          {/* ── Two-Panel Body ── */}
+          <div className="flex flex-col md:flex-row flex-1 min-h-0">
+            {/* ════════ LEFT: Configure ════════ */}
+            <div className="flex-1 p-6 space-y-5 overflow-y-auto md:border-r border-slate-700/30">
+              {/* Auto-detected summary */}
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700/40">
+                <img
+                  src={merlinIcon}
+                  alt="Merlin"
+                  className="w-9 h-9 rounded-lg flex-shrink-0 mt-0.5"
+                />
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Based on your{" "}
+                  <span className="font-semibold text-white">
+                    {initialEstimate.sizeDriver}
+                  </span>{" "}
+                  ({fmt(initialEstimate.unitsUsed)} {initialEstimate.sizeDriver}), your
+                  building is ~{" "}
+                  <span className="font-semibold text-emerald-300">
+                    {fmt(initialEstimate.buildingSqFt)} sq ft
+                  </span>{" "}
+                  with{" "}
+                  <span className="font-semibold text-emerald-300">
+                    {fmt(initialEstimate.usableRoofSqFt)} sq ft
+                  </span>{" "}
+                  usable roof.
+                  {initialEstimate.roofNote && (
+                    <span className="block mt-1 text-xs text-slate-500 italic">
+                      {initialEstimate.roofNote}
+                    </span>
+                  )}
+                </p>
               </div>
 
-              {/* Building Sqft */}
-              <div className="space-y-2">
-                <div className="flex items-center flex-wrap gap-2">
-                  <label className="text-sm text-slate-300 mr-auto">Building Footprint</label>
-                  {/* Quick-set range buttons — derived from profile sqftPerUnit */}
-                  {profile && (() => {
-                    const units = initialEstimate.unitsUsed;
-                    const ranges: { label: string; sqft: number }[] = [
-                      { label: `${fmt(Math.round(units * profile.sqftPerUnit.small))}-${fmt(Math.round(units * profile.sqftPerUnit.medium))} feet`, sqft: Math.round(units * profile.sqftPerUnit.small) },
-                      { label: `${fmt(Math.round(units * profile.sqftPerUnit.medium))}-${fmt(Math.round(units * (profile.sqftPerUnit.medium + profile.sqftPerUnit.large) / 2))} feet`, sqft: Math.round(units * profile.sqftPerUnit.medium) },
-                      { label: `${fmt(Math.round(units * (profile.sqftPerUnit.medium + profile.sqftPerUnit.large) / 2))}-${fmt(Math.round(units * profile.sqftPerUnit.large))} feet`, sqft: Math.round(units * profile.sqftPerUnit.large) },
-                    ];
-                    return ranges.map((r) => (
-                      <button
-                        key={r.label}
-                        type="button"
-                        onClick={() => { setBuildingSqFt(r.sqft); setCustomKW(null); }}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
-                          buildingSqFt === r.sqft
-                            ? 'border-emerald-400 text-emerald-400 bg-emerald-500/10'
-                            : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50'
-                        }`}
-                      >
-                        {r.label}
-                      </button>
-                    ));
-                  })()}
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={buildingSqFt}
-                      onChange={(e) => {
-                        const v = Math.max(100, Math.min(1000000, Number(e.target.value) || 0));
-                        setBuildingSqFt(v);
-                        setCustomKW(null); // Reset custom override
-                      }}
-                      className="w-28 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none"
-                    />
-                    <span className="text-xs text-slate-400 w-10">sq ft</span>
-                  </div>
+              {/* Building Footprint */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  Building Footprint
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={buildingSqFt}
+                    onChange={(e) => {
+                      const v = Math.max(100, Math.min(1000000, Number(e.target.value) || 0));
+                      setBuildingSqFt(v);
+                      setCustomKW(null);
+                    }}
+                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm pr-14 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+                    sq ft
+                  </span>
                 </div>
               </div>
 
               {/* Roof Utilization Slider */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm text-slate-300 flex items-center gap-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                     Usable Roof Area
                     <span className="group relative">
-                      <Info className="w-3.5 h-3.5 text-slate-500 cursor-help" />
-                      <span className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover:block w-48 p-2 bg-slate-700 text-xs text-slate-300 rounded-lg shadow-lg z-10">
-                        Percentage of roof usable for solar after accounting for HVAC, vents,
-                        skylights, setbacks, etc.
+                      <Info className="w-3 h-3 text-slate-600 cursor-help" />
+                      <span className="absolute bottom-5 left-1/2 -translate-x-1/2 hidden group-hover:block w-44 p-2 bg-slate-700 text-xs text-slate-300 rounded-lg shadow-lg z-10">
+                        Roof % usable for solar after HVAC, vents, skylights, setbacks
                       </span>
                     </span>
                   </label>
-                  <span className="text-sm font-semibold text-emerald-300">
+                  <span className="text-sm font-bold text-emerald-400">
                     {Math.round(roofUtilization * 100)}%
                   </span>
                 </div>
@@ -328,24 +302,24 @@ export default function SolarSizingModal({
                   }}
                   className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-emerald-500"
                 />
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>10% (obstructed)</span>
-                  <span>90% (clear flat roof)</span>
+                <div className="flex justify-between text-[10px] text-slate-600">
+                  <span>10% obstructed</span>
+                  <span>90% clear flat roof</span>
                 </div>
               </div>
 
               {/* Canopy Solar Toggle */}
               {profile && profile.canopyKWPerUnit > 0 && (
-                <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-700/50 space-y-3">
+                <div className="p-3.5 rounded-xl bg-slate-800/30 border border-slate-700/40 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <label className="text-sm font-medium text-slate-200">
                         {initialEstimate.canopyLabel}
                       </label>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-slate-500 mt-0.5">
                         {initialEstimate.canopyIsPrimary
-                          ? "This is your primary solar option for this building type"
-                          : "Additional solar capacity from parking/canopy structures"}
+                          ? "Primary solar option for this building"
+                          : "Additional solar from parking/canopy"}
                       </p>
                     </div>
                     <button
@@ -354,107 +328,117 @@ export default function SolarSizingModal({
                         setIncludeCanopy(!includeCanopy);
                         setCustomKW(null);
                       }}
-                      className={`relative w-12 h-6 rounded-full transition-colors ${
+                      className={`relative w-11 h-6 rounded-full transition-colors ${
                         includeCanopy ? "bg-emerald-500" : "bg-slate-600"
                       }`}
                     >
                       <span
                         className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
-                          includeCanopy ? "translate-x-6" : ""
+                          includeCanopy ? "translate-x-5" : ""
                         }`}
                       />
                     </button>
                   </div>
                   {includeCanopy && (
                     <div className="flex items-center gap-2">
-                      <label className="text-xs text-slate-400">Canopy capacity:</label>
-                      <input
-                        type="number"
-                        value={canopyKW}
-                        onChange={(e) => {
-                          setCanopyKW(Math.max(0, Number(e.target.value) || 0));
-                          setCustomKW(null);
-                        }}
-                        className="w-20 px-2 py-1 bg-slate-800 border border-slate-600 rounded text-white text-sm text-right focus:border-emerald-500 outline-none"
-                      />
-                      <span className="text-xs text-slate-400">kW</span>
+                      <label className="text-xs text-slate-500">Capacity:</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={canopyKW}
+                          onChange={(e) => {
+                            setCanopyKW(Math.max(0, Number(e.target.value) || 0));
+                            setCustomKW(null);
+                          }}
+                          className="w-24 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right pr-9 focus:border-emerald-500 outline-none"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+                          kW
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* ── Results Panel ── */}
-            <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-b from-emerald-950/30 to-slate-950/60 overflow-hidden">
-              <div className="px-5 py-3 border-b border-emerald-500/20 bg-emerald-950/40">
-                <h3 className="text-sm font-bold text-emerald-200 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Solar Estimate
-                </h3>
+            {/* ════════ RIGHT: Live Results ════════ */}
+            <div className="flex-1 p-6 bg-gradient-to-br from-emerald-950/20 via-slate-900 to-slate-900 flex flex-col justify-center">
+              {/* Hero kW */}
+              <div className="text-center mb-6">
+                <div className="text-5xl font-black text-emerald-400 tabular-nums">
+                  {fmt(effectiveKW)}
+                  <span className="text-xl font-semibold text-emerald-500/50 ml-1">kW</span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1.5">
+                  {calculation.maxRoofSolarKW > 0 && (
+                    <span>{fmt(calculation.maxRoofSolarKW)} kW roof</span>
+                  )}
+                  {includeCanopy && canopyKW > 0 && calculation.maxRoofSolarKW > 0 && (
+                    <span> + </span>
+                  )}
+                  {includeCanopy && canopyKW > 0 && (
+                    <span>{fmt(canopyKW)} kW canopy</span>
+                  )}
+                </p>
               </div>
 
-              <div className="p-5 space-y-4">
-                {/* Main number */}
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-emerald-300">
-                    {fmt(effectiveKW)} <span className="text-lg text-emerald-400/60">kW</span>
+              {/* 2×2 Stats Grid */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Zap className="w-3.5 h-3.5 text-yellow-400" />
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                      Production
+                    </span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1">
-                    {calculation.maxRoofSolarKW > 0 && (
-                      <span>{fmt(calculation.maxRoofSolarKW)} kW rooftop</span>
-                    )}
-                    {includeCanopy && canopyKW > 0 && calculation.maxRoofSolarKW > 0 && (
-                      <span> + </span>
-                    )}
-                    {includeCanopy && canopyKW > 0 && <span>{fmt(canopyKW)} kW canopy</span>}
-                  </p>
-                </div>
-
-                {/* Stats grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Zap className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-xs text-slate-400">Annual Production</span>
-                    </div>
-                    <div className="text-sm font-bold text-white">
-                      {fmt(effectiveProduction)} kWh
-                    </div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
-                    <div className="flex items-center gap-2 mb-1">
-                      <DollarSign className="w-3.5 h-3.5 text-green-400" />
-                      <span className="text-xs text-slate-400">Annual Savings</span>
-                    </div>
-                    <div className="text-sm font-bold text-green-400">
-                      {fmtCurrency(annualSavings)}/yr
-                    </div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Building2 className="w-3.5 h-3.5 text-blue-400" />
-                      <span className="text-xs text-slate-400">System Cost</span>
-                    </div>
-                    <div className="text-sm font-bold text-white">{fmtCurrency(estimatedCost)}</div>
-                    <div className="text-xs text-slate-500">${costPerWatt.toFixed(2)}/W</div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Sun className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-xs text-slate-400">Panels Needed</span>
-                    </div>
-                    <div className="text-sm font-bold text-white">
-                      {fmt(calculation.panelsNeeded)}
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      {SOLAR_PANEL_CONSTANTS.PANEL_WATTS}W each
-                    </div>
+                  <div className="text-sm font-bold text-white">
+                    {fmt(effectiveProduction)}{" "}
+                    <span className="text-xs font-normal text-slate-500">kWh/yr</span>
                   </div>
                 </div>
+                <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <DollarSign className="w-3.5 h-3.5 text-green-400" />
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                      Savings
+                    </span>
+                  </div>
+                  <div className="text-sm font-bold text-green-400">
+                    {fmtCurrency(annualSavings)}
+                    <span className="text-xs font-normal text-green-500/50">/yr</span>
+                  </div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Building2 className="w-3.5 h-3.5 text-blue-400" />
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                      System Cost
+                    </span>
+                  </div>
+                  <div className="text-sm font-bold text-white">{fmtCurrency(estimatedCost)}</div>
+                  <div className="text-[10px] text-slate-600">${costPerWatt.toFixed(2)}/W</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Sun className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                      Panels
+                    </span>
+                  </div>
+                  <div className="text-sm font-bold text-white">
+                    {fmt(calculation.panelsNeeded)}
+                  </div>
+                  <div className="text-[10px] text-slate-600">
+                    {SOLAR_PANEL_CONSTANTS.PANEL_WATTS}W each
+                  </div>
+                </div>
+              </div>
 
-                {/* Custom kW override */}
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-                  <span className="text-xs text-slate-400 whitespace-nowrap">Or enter custom:</span>
+              {/* Custom kW override */}
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-slate-800/30 border border-slate-700/30">
+                <span className="text-xs text-slate-500 whitespace-nowrap">Or set custom:</span>
+                <div className="relative flex-1">
                   <input
                     type="number"
                     value={customKW ?? ""}
@@ -462,40 +446,41 @@ export default function SolarSizingModal({
                       const v = e.target.value ? Math.max(1, Number(e.target.value)) : null;
                       setCustomKW(v);
                     }}
-                    placeholder={`${calculation.totalSolarKW} kW`}
-                    className="flex-1 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none placeholder:text-slate-600"
+                    placeholder={`${calculation.totalSolarKW}`}
+                    className="w-full px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right pr-9 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none placeholder:text-slate-700"
                   />
-                  <span className="text-xs text-slate-400">kW</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+                    kW
+                  </span>
                 </div>
-
-                {/* Source citation */}
-                <p className="text-xs text-slate-500 text-center italic">
-                  Building estimates: {initialEstimate.source} • {SOLAR_PANEL_CONSTANTS.PANEL_WATTS}
-                  W panels at {SOLAR_PANEL_CONSTANTS.SQFT_PER_KW} sqft/kW
-                </p>
               </div>
             </div>
           </div>
 
           {/* ── Footer ── */}
-          <div className="p-5 border-t border-slate-800 flex items-center justify-between gap-3 bg-slate-900">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-lg text-sm font-semibold border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              onClick={handleApply}
-              className="px-6 py-2.5 rounded-lg font-semibold text-sm border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/60 transition-all flex items-center gap-2"
-            >
-              <Sun className="w-4 h-4" />
-              Use {fmt(effectiveKW)} kW Solar
-              <ArrowRight className="w-4 h-4" />
-            </button>
+          <div className="px-6 py-4 border-t border-slate-700/50 flex items-center justify-between bg-slate-900/80">
+            <p className="text-[10px] text-slate-600 max-w-xs hidden sm:block">
+              {initialEstimate.source} • {SOLAR_PANEL_CONSTANTS.PANEL_WATTS}W panels at{" "}
+              {SOLAR_PANEL_CONSTANTS.SQFT_PER_KW} sqft/kW
+            </p>
+            <div className="flex items-center gap-3 ml-auto">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleApply}
+                className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2"
+              >
+                <Sun className="w-4 h-4" />
+                Use {fmt(effectiveKW)} kW Solar
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
