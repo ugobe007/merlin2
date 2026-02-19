@@ -44,6 +44,7 @@ import dataCenterImg from "@/assets/images/data-center-1.jpg";
 import evChargingImg from "@/assets/images/ev_charging_station.jpg";
 import airportImg from "@/assets/images/airport_11.jpeg";
 import casinoImg from "@/assets/images/casino_gaming1.jpg";
+import merlinIcon from "@/assets/images/new_small_profile_.png";
 
 type Step3Answers = Record<string, unknown>;
 
@@ -1336,7 +1337,7 @@ export default function Step3ProfileV7Curated(props: Props) {
             style={{ background: "rgba(6, 182, 212, 0.08)" }}
           >
             <div className="flex items-start gap-3">
-              <span className="text-lg flex-shrink-0">🧙‍♂️</span>
+              <img src={merlinIcon} alt="Merlin" className="w-7 h-7 rounded-lg flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-sm font-bold text-cyan-200">
                   Merlin pre-filled {defaultFilledIds.size} answers using industry defaults

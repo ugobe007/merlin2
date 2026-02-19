@@ -427,7 +427,7 @@ const WizardBottomAdvisorInner: React.FC<WizardBottomAdvisorProps> = ({
           onClick={handleToggle}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <div style={{ fontSize: "24px" }}>🧙‍♂️</div>
+            <img src="/images/new_profile_merlin.png" alt="Merlin" style={{ width: "28px", height: "28px", borderRadius: "8px" }} />
             <div style={{ fontSize: "14px", fontWeight: "600", color: "#ffffff" }}>
               Merlin Advisor
             </div>
@@ -484,7 +484,7 @@ const WizardBottomAdvisorInner: React.FC<WizardBottomAdvisorProps> = ({
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ fontSize: "28px" }}>🧙‍♂️</div>
+              <img src="/images/new_profile_merlin.png" alt="Merlin" style={{ width: "32px", height: "32px", borderRadius: "8px" }} />
               <div>
                 <div style={{ fontSize: "16px", fontWeight: "700", color: "#ffffff" }}>
                   Merlin Advisor

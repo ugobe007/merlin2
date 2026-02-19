@@ -191,20 +191,20 @@ export default function SolarSizingModal({
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9998]" onClick={onClose} />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4">
         <div
-          className="bg-slate-900 border border-slate-700/60 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-slate-900 border border-slate-700/60 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
-          <div className="px-6 py-4 border-b border-slate-700/50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                <Sun className="w-5 h-5 text-emerald-400" />
+          <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-700/50 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Solar Sizing Assistant</h2>
-                <p className="text-xs text-slate-400">
+                <h2 className="text-base sm:text-lg font-bold text-white">Solar Sizing Assistant</h2>
+                <p className="text-[10px] sm:text-xs text-slate-400">
                   {initialEstimate.industryLabel} • Based on your Step 3 answers
                 </p>
               </div>
@@ -221,16 +221,42 @@ export default function SolarSizingModal({
 
           {/* ── Two-Panel Body ── */}
           <div className="flex flex-col md:flex-row flex-1 min-h-0">
+
+            {/* ════════ MOBILE: Compact Results Strip (md:hidden) ════════ */}
+            <div className="md:hidden px-4 py-3 bg-gradient-to-r from-emerald-950/30 to-slate-900 border-b border-slate-700/30">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Sun className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <div>
+                    <div className="text-2xl font-black text-emerald-400 tabular-nums leading-none">
+                      {fmt(effectiveKW)}
+                      <span className="text-sm font-semibold text-emerald-500/50 ml-0.5">kW</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-xs">
+                  <div className="text-center">
+                    <div className="font-bold text-green-400">{fmtCurrency(annualSavings)}</div>
+                    <div className="text-[9px] text-slate-500">savings/yr</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-white">{fmtCurrency(estimatedCost)}</div>
+                    <div className="text-[9px] text-slate-500">est. cost</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* ════════ LEFT: Configure ════════ */}
-            <div className="flex-1 p-6 space-y-5 overflow-y-auto md:border-r border-slate-700/30">
+            <div className="flex-1 p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto md:border-r border-slate-700/30">
               {/* Auto-detected summary */}
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700/40">
+              <div className="flex items-start gap-2 sm:gap-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700/40">
                 <img
                   src={merlinIcon}
                   alt="Merlin"
-                  className="w-9 h-9 rounded-lg flex-shrink-0 mt-0.5"
+                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg flex-shrink-0 mt-0.5"
                 />
-                <p className="text-sm text-slate-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                   Based on your{" "}
                   <span className="font-semibold text-white">
                     {initialEstimate.sizeDriver}
@@ -362,8 +388,8 @@ export default function SolarSizingModal({
               )}
             </div>
 
-            {/* ════════ RIGHT: Live Results ════════ */}
-            <div className="flex-1 p-6 bg-gradient-to-br from-emerald-950/20 via-slate-900 to-slate-900 flex flex-col justify-center">
+            {/* ════════ RIGHT: Live Results (hidden on mobile — compact strip shown above) ════════ */}
+            <div className="hidden md:flex flex-1 p-6 bg-gradient-to-br from-emerald-950/20 via-slate-900 to-slate-900 flex-col justify-center">
               {/* Hero kW */}
               <div className="text-center mb-6">
                 <div className="text-5xl font-black text-emerald-400 tabular-nums">
@@ -458,12 +484,12 @@ export default function SolarSizingModal({
           </div>
 
           {/* ── Footer ── */}
-          <div className="px-6 py-4 border-t border-slate-700/50 flex items-center justify-between bg-slate-900/80">
+          <div className="px-4 py-3 sm:px-6 sm:py-4 border-t border-slate-700/50 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/80">
             <p className="text-[10px] text-slate-600 max-w-xs hidden sm:block">
               {initialEstimate.source} • {SOLAR_PANEL_CONSTANTS.PANEL_WATTS}W panels at{" "}
               {SOLAR_PANEL_CONSTANTS.SQFT_PER_KW} sqft/kW
             </p>
-            <div className="flex items-center gap-3 ml-auto">
+            <div className="flex items-center gap-3 w-full sm:w-auto sm:ml-auto">
               <button
                 type="button"
                 onClick={onClose}
@@ -474,10 +500,10 @@ export default function SolarSizingModal({
               <button
                 type="button"
                 onClick={handleApply}
-                className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2"
+                className="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
               >
                 <Sun className="w-4 h-4" />
-                Use {fmt(effectiveKW)} kW Solar
+                Use {fmt(effectiveKW)} kW
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
