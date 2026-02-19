@@ -6,6 +6,7 @@
  */
 
 import type { Step3Answers, Step3AnswersMeta, AnswerSource } from "../hooks/useWizardV7";
+import { devLog } from "@/wizard/v7/debug/devLog";
 
 /**
  * Summary of answer provenance by source
@@ -131,13 +132,13 @@ export function attachProvenanceDebugger(
       audit: () => {
         const { step3Answers, step3AnswersMeta } = getState();
         const summary = auditProvenance(step3Answers, step3AnswersMeta);
-        console.log(formatProvenanceAudit(summary));
+        devLog(formatProvenanceAudit(summary));
         return summary;
       },
       raw: () => getState(),
     };
 
-    console.log(
+    devLog(
       "[V7 Provenance] Debug attached. Use window.__MERLIN_PROVENANCE__.audit() in console."
     );
   }

@@ -8,6 +8,8 @@
  * Set via environment variables or localStorage for testing.
  */
 
+import { devLog } from "@/wizard/v7/debug/devLog";
+
 /**
  * Enable the 4-part gated Step 3 questionnaire (Step3GatedV7)
  * 
@@ -28,7 +30,7 @@ export const V7_ENABLE_GATED_STEP3 = (() => {
   if (typeof window !== 'undefined') {
     const override = localStorage.getItem('V7_ENABLE_GATED_STEP3');
     if (override === 'true') {
-      console.log('[V7 Flags] Step3GatedV7 enabled via localStorage');
+      devLog('[V7 Flags] Step3GatedV7 enabled via localStorage');
       return true;
     }
   }
@@ -60,7 +62,7 @@ export const V7_USE_CURATED_STEP3 = (() => {
   if (typeof window !== 'undefined') {
     const override = localStorage.getItem('V7_USE_CURATED_STEP3');
     if (override === 'true') {
-      console.log('[V7 Flags] Step3ProfileV7Curated enabled via localStorage');
+      devLog('[V7 Flags] Step3ProfileV7Curated enabled via localStorage');
       return true;
     }
     // Also check for explicit false
@@ -77,7 +79,7 @@ export const V7_USE_CURATED_STEP3 = (() => {
  * Helper to check flag status and log
  */
 export function logFeatureFlags(): void {
-  console.log('[V7 Feature Flags]', {
+  devLog('[V7 Feature Flags]', {
     V7_ENABLE_GATED_STEP3,
     V7_USE_CURATED_STEP3,
     gatedSource: import.meta.env.VITE_V7_ENABLE_GATED_STEP3 === 'true' 

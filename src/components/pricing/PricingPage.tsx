@@ -13,7 +13,7 @@ import {
   Shield, Users, FileText, BarChart3, Globe, Code,
   Star, Sparkles, ChevronRight, Battery, Sun, Wind,
   Cpu, Settings, Plug, Atom, Wrench, TrendingUp,
-  Award, CircleDollarSign, Package, Loader2, User,
+  Award, CircleDollarSign, Package, Loader2, User, Rocket,
 } from 'lucide-react';
 import merlinIcon from '@/assets/images/new_small_profile_.png';
 import { createCheckoutSession, getEffectiveTier } from '@/services/subscriptionService';

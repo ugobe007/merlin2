@@ -63,6 +63,7 @@ export interface Question {
   };
   unit?: string;
   suffix?: string;
+  placeholder?: string;
   smartDefault?: any;
   validation?: {
     required: boolean;
@@ -652,7 +653,7 @@ export const hotelQuestionsComplete: Question[] = [
   },
   {
     id: 'solarCapacityKW',
-    type: 'number',
+    type: 'number_input',
     section: 'solar',
     title: 'Existing solar system size',
     subtitle: 'Approximate capacity of your current solar installation',

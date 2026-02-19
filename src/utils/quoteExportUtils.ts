@@ -20,6 +20,7 @@ import {
   ShadingType,
   TabStopType,
   TabStopPosition,
+  type FileChild,
 } from "docx";
 import { saveAs } from "file-saver";
 import { loadWatermarkSettings } from "../components/AdminWatermarkSettings";
@@ -431,7 +432,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             ],
           }),
         },
-        children: [
+        children: ([
           // ═══════════════════════════════════════════════════════════
           // COVER / HEADER BLOCK — Dark panel (matches Merlin Wizard)
           // ═══════════════════════════════════════════════════════════
@@ -1465,7 +1466,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
               new TextRun({ text: "— End of Proposal —", size: 18, color: C.muted, italics: true }),
             ],
           }),
-        ],
+        ] as FileChild[]),
       },
     ],
   });

@@ -5,6 +5,9 @@ import VendorPortal from "./components/VendorPortal";
 import CarWashEnergy from "./components/verticals/CarWashEnergy";
 import EVChargingEnergy from "./components/verticals/EVChargingEnergy";
 import HotelEnergy from "./components/verticals/HotelEnergy";
+import DataCenterEnergy from "./components/verticals/DataCenterEnergy";
+import HospitalEnergy from "./components/verticals/HospitalEnergy";
+import ManufacturingEnergy from "./components/verticals/ManufacturingEnergy";
 // DEPRECATED: import { WizardV5 } from './components/wizard/_deprecated/v5';
 import WizardV6 from "./components/wizard/v6/WizardV6";
 // DEPRECATED: Old WizardV7 moved to _deprecated/ (Jan 26, 2026)
@@ -61,7 +64,13 @@ function App() {
               ? "evcharging"
               : pathname === "/hotelenergy" || pathname === "/hotel"
                 ? "hotel"
-                : null)
+                : pathname === "/data-center" || pathname === "/data-center-energy"
+                  ? "datacenter"
+                  : pathname === "/hospital" || pathname === "/hospital-energy"
+                    ? "hospital"
+                    : pathname === "/manufacturing" || pathname === "/manufacturing-energy"
+                      ? "manufacturing"
+                      : null)
   );
 
   // Keyboard shortcut: Ctrl+Shift+A for admin access
@@ -125,6 +134,21 @@ function App() {
   // Access via ?vertical=hotel or /hotelenergy
   if (activeVertical === "hotel") {
     return <HotelEnergy />;
+  }
+
+  // Access via ?vertical=datacenter or /data-center or /data-center-energy
+  if (activeVertical === "datacenter") {
+    return <DataCenterEnergy />;
+  }
+
+  // Access via ?vertical=hospital or /hospital or /hospital-energy
+  if (activeVertical === "hospital") {
+    return <HospitalEnergy />;
+  }
+
+  // Access via ?vertical=manufacturing or /manufacturing or /manufacturing-energy
+  if (activeVertical === "manufacturing") {
+    return <ManufacturingEnergy />;
   }
 
   // Access via /meta or /meta-calculations - TrueQuote Meta Calculations Dashboard

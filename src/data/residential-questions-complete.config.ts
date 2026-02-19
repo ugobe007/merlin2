@@ -268,7 +268,7 @@ export const residentialQuestionsComplete: Question[] = [
   },
   {
     id: 'solarCapacityKW',
-    type: 'number',
+    type: 'number_input',
     section: 'solar',
     title: 'Solar system size',
     subtitle: 'How large is your existing solar installation?',

@@ -27,6 +27,8 @@
  * - Any cross-step dependencies
  */
 
+import { devLog } from "@/wizard/v7/debug/devLog";
+
 export type WizardStepId = "location" | "industry" | "profile" | "options" | "magicfit" | "results";
 
 export type WizardGateResult = {
@@ -91,7 +93,7 @@ export function gateLocation(state: WizardGateState): WizardGateResult {
 
   // DEV logging only, but avoid WARN spam for "normal typing"
   if (import.meta.env.DEV) {
-    console.log("[gateLocation] Checking:", {
+    devLog("[gateLocation] Checking:", {
       locationRawInput: state.locationRawInput,
       postalCode: state.location?.postalCode,
       zip: state.location?.zip,
@@ -106,7 +108,7 @@ export function gateLocation(state: WizardGateState): WizardGateResult {
   if (normalizedZip.length >= 5) {
     if (!state.locationConfirmed) {
       if (import.meta.env.DEV) {
-        console.log("[gateLocation] ZIP valid but not confirmed");
+        devLog("[gateLocation] ZIP valid but not confirmed");
       }
       return { canContinue: false, reason: "zip-unconfirmed" };
     }

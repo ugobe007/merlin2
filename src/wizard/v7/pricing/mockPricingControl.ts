@@ -19,6 +19,8 @@
  * - No-op in production builds
  */
 
+import { devLog } from "@/wizard/v7/debug/devLog";
+
 export type MockPricingMode = "ok" | "fail" | "slow" | "slow_timeout";
 
 /**
@@ -96,6 +98,6 @@ export function logMockMode(): void {
   
   const mode = getMockPricingMode();
   if (mode !== "ok") {
-    console.log(`🧪 [V7 Mock] Pricing mode: ${mode}`);
+    devLog(`🧪 [V7 Mock] Pricing mode: ${mode}`);
   }
 }

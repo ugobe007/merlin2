@@ -44,6 +44,7 @@ import {
   type ProductClass,
 } from "@/services/marginPolicyEngine";
 import { supabase } from "@/services/supabaseClient";
+import { devLog } from "@/wizard/v7/debug/devLog";
 
 // ============================================================================
 // TYPES — Layer A (Load Profile)
@@ -340,13 +341,13 @@ export async function runPricingQuote(
 
     // Apply delay if configured
     if (mock.delayMs > 0) {
-      console.log(`🧪 [V7 Mock] Delaying pricing by ${mock.delayMs}ms (mode: ${mock.mode})`);
+      devLog(`🧪 [V7 Mock] Delaying pricing by ${mock.delayMs}ms (mode: ${mock.mode})`);
       await delay(mock.delayMs);
     }
 
     // Force failure if configured
     if (mock.shouldFail) {
-      console.log(`🧪 [V7 Mock] Forcing pricing failure (mode: ${mock.mode})`);
+      devLog(`🧪 [V7 Mock] Forcing pricing failure (mode: ${mock.mode})`);
       return {
         ok: false as const,
         error: `Mock pricing failure (mode: ${mock.mode})`,
@@ -394,7 +395,9 @@ export async function runPricingQuote(
     // This is how Merlin makes money. Every quote must include margin.
     // Market cost → Obtainable cost → Sell price (customer sees this)
     // ═══════════════════════════════════════════════════════════════════════
-    const marginResult = applyMarginToQuote(quoteResult, energyMWh);
+    const marginResult = applyMarginToQuote(quoteResult, energyMWh, {
+      gridMode: contract.inputsUsed.gridMode,
+    });
 
     // Adjust costs with margin applied
     const sellPriceTotal = marginResult.sellPriceTotal;
@@ -551,7 +554,16 @@ export function generatePricingRunId(): string {
  * Build margin policy line items from SSOT QuoteResult equipment breakdown
  * and apply the margin policy engine.
  */
-export function applyMarginToQuote(quoteResult: QuoteResult, energyMWh: number): MarginQuoteResult {
+export function applyMarginToQuote(
+  quoteResult: QuoteResult,
+  energyMWh: number,
+  context?: {
+    /** Grid reliability from wizard state — maps to risk level */
+    gridMode?: string;
+    /** User segment from auth — 'epc_partner', 'government', 'direct' */
+    customerSegment?: string;
+  }
+): MarginQuoteResult {
   const eq = quoteResult.equipment;
   const lineItems: MarginPolicyInput["lineItems"] = [];
 
@@ -676,11 +688,23 @@ export function applyMarginToQuote(quoteResult: QuoteResult, energyMWh: number):
   const totalBaseCost = lineItems.reduce((sum, item) => sum + item.baseCost, 0);
 
   // Apply margin policy
+  // Risk level: derived from grid mode (off-grid/islanded = higher risk)
+  const riskLevel = (() => {
+    const grid = context?.gridMode?.toLowerCase().replace(/_/g, "-") ?? "";
+    if (grid === "off-grid" || grid === "islanded") return "high_complexity" as const;
+    if (grid === "limited" || grid === "hybrid") return "elevated" as const;
+    return "standard" as const;
+  })();
+
+  // Customer segment: from user profile or default to 'direct'
+  const customerSegment = (context?.customerSegment ?? "direct") as
+    | "direct" | "epc_partner" | "government" | "strategic";
+
   const marginInput: MarginPolicyInput = {
     lineItems,
     totalBaseCost,
-    riskLevel: "standard",
-    customerSegment: "direct",
+    riskLevel,
+    customerSegment,
     quoteUnits: {
       bess: energyMWh * 1000, // kWh for quote-level guards
     },

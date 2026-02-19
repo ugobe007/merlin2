@@ -94,6 +94,7 @@ export interface Question {
     icon?: string | any;
     description?: string;
   }>;
+  placeholder?: string;
   impactsCalculations?: string[];
   questionTier?: string;
 }
@@ -640,7 +641,7 @@ export const evChargingQuestionsComplete: Question[] = [
   },
   {
     id: 'solarCapacityKW',
-    type: 'number',
+    type: 'number_input',
     section: 'solar',
     title: 'Existing solar system size',
     subtitle: 'Approximate capacity of your current solar or canopy installation',
