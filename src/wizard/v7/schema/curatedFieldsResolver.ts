@@ -96,6 +96,7 @@ import {
   type Question as LegacyQuestion,
 } from "@/data/industryQuestionnaires";
 import { resolveIndustryContext } from "@/wizard/v7/industry";
+import { devLog } from "@/wizard/v7/debug/devLog";
 
 // ============================================================================
 // TIER 1 BLOCKERS — Single Source of Truth for Step 3 Gating
@@ -1115,7 +1116,7 @@ export function resolveStep3Schema(industry: string): CuratedSchema {
     if (import.meta.env.DEV) {
       const borrowed =
         ctx.schemaKey !== ctx.canonicalSlug ? ` (borrowed from ${ctx.schemaKey})` : "";
-      console.log(
+      devLog(
         `[CuratedResolver] ✅ COMPLETE schema for "${industry}"${borrowed} (${schema.questionCount}Q)`
       );
     }
@@ -1126,7 +1127,7 @@ export function resolveStep3Schema(industry: string): CuratedSchema {
   const legacy = resolveLegacySchema(effectiveSchemaKey);
   if (legacy) {
     if (import.meta.env.DEV) {
-      console.log(
+      devLog(
         `[CuratedResolver] ✅ LEGACY schema for "${industry}" (${legacy.questionCount}Q)`
       );
     }
@@ -1135,7 +1136,7 @@ export function resolveStep3Schema(industry: string): CuratedSchema {
 
   // Priority 3: Fallback generic schema (always works)
   if (import.meta.env.DEV) {
-    console.log(`[CuratedResolver] ⚠️ FALLBACK schema for "${industry}"`);
+    devLog(`[CuratedResolver] ⚠️ FALLBACK schema for "${industry}"`);
   }
   return resolveFallbackSchema(effectiveSchemaKey);
 }
@@ -1178,9 +1179,9 @@ export function debugCuratedResolver(): void {
   const withCurated = allIndustries.filter(hasCuratedSchema);
   const withFallback = allIndustries.filter((i) => !hasCuratedSchema(i));
 
-  console.log("[CuratedResolver] Diagnostics:");
-  console.log(`  - Curated: ${withCurated.join(", ")}`);
-  console.log(`  - Fallback: ${withFallback.join(", ")}`);
+  devLog("[CuratedResolver] Diagnostics:");
+  devLog(`  - Curated: ${withCurated.join(", ")}`);
+  devLog(`  - Fallback: ${withFallback.join(", ")}`);
 }
 
 export default resolveStep3Schema;

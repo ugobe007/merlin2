@@ -26,6 +26,7 @@ import {
 // ✅ MERLIN MEMORY (Feb 11, 2026): Persistent store for cross-step data
 // Steps are momentary — memory is persistent. No more cross-step flag dependencies.
 import { merlinMemory } from "@/wizard/v7/memory";
+import { devLog } from "@/wizard/v7/debug/devLog";
 
 // Quota enforcement moved to export-only (Step 6). Previews are never metered.
 
@@ -687,15 +688,15 @@ function runContractQuote(params: {
     // ============================================================
     if (import.meta.env.DEV) {
       console.group(`[TrueQuote] Load Profile Consistency: ${tpl.industry}`);
-      console.log("Template:", {
+      devLog("Template:", {
         industry: tpl.industry,
         version: tpl.version,
         calculator: tpl.calculator.id,
       });
-      console.log("Inputs Used:", inputs);
-      console.log("Load Profile:", loadProfile);
-      console.log("Duty Cycle:", (computed as Record<string, unknown>).dutyCycle || "not provided");
-      console.log(
+      devLog("Inputs Used:", inputs);
+      devLog("Load Profile:", loadProfile);
+      devLog("Duty Cycle:", (computed as Record<string, unknown>).dutyCycle || "not provided");
+      devLog(
         "kW Contributors:",
         (computed as Record<string, unknown>).kWContributors || "not provided"
       );
@@ -713,7 +714,7 @@ function runContractQuote(params: {
       if (warnings.length > 0) {
         console.warn("Load Profile Sanity Issues:", warnings);
       } else {
-        console.log("✅ Load profile passes sanity checks");
+        devLog("✅ Load profile passes sanity checks");
       }
       console.groupEnd();
     }
@@ -832,8 +833,8 @@ function runContractQuote(params: {
       if (quoteSanityWarnings.length > 0) {
         console.group("[TrueQuote] Quote Sanity Warnings");
         quoteSanityWarnings.forEach((w) => console.warn(w));
-        console.log("Sizing Hints:", sizingHints);
-        console.log("Inputs Used:", inputsUsed);
+        devLog("Sizing Hints:", sizingHints);
+        devLog("Inputs Used:", inputsUsed);
         console.groupEnd();
       }
     }
@@ -902,7 +903,7 @@ const api = {
 
       // Log evidence for debugging if present
       if (response.evidence && import.meta.env.DEV) {
-        console.log("[V7 SSOT] Location rejection evidence:", response.evidence);
+        devLog("[V7 SSOT] Location rejection evidence:", response.evidence);
       }
 
       throw { code: "VALIDATION", message: errorMsg };
@@ -913,7 +914,7 @@ const api = {
     const evidence = response.evidence;
 
     if (import.meta.env.DEV) {
-      console.log(`[V7 SSOT] Location resolved with confidence: ${confidence}`, {
+      devLog(`[V7 SSOT] Location resolved with confidence: ${confidence}`, {
         source: evidence?.source,
         placeId: evidence?.placeId,
         components: evidence?.components,
@@ -943,7 +944,7 @@ const api = {
     if (zip5.length === 5 && /^\d{3,10}$/.test(trimmed) && !location.postalCode) {
       location = { ...location, postalCode: zip5 };
       if (import.meta.env.DEV) {
-        console.log(`[V7 SSOT] resolveLocation: injected postalCode=${zip5} (geocoder omitted it)`);
+        devLog(`[V7 SSOT] resolveLocation: injected postalCode=${zip5} (geocoder omitted it)`);
       }
     }
 
@@ -1060,7 +1061,7 @@ const api = {
     // If businessCard has inferred industry, use it
     if (businessCard?.inferredIndustry && businessCard.inferredIndustry !== "auto") {
       const confidence = businessCard.industryConfidence ?? 0.9;
-      console.log(
+      devLog(
         `[V7 SSOT] Using business card industry: ${businessCard.inferredIndustry} (${confidence})`
       );
       return { industry: businessCard.inferredIndustry, confidence };
@@ -1103,7 +1104,7 @@ const api = {
           (businessCard.name ?? "").toLowerCase().includes(kw)
         );
         const conf = fromBusiness ? 0.92 : 0.75;
-        console.log(`[V7 SSOT] Inferred industry from keywords: ${industry} (conf=${conf}, fromBusiness=${fromBusiness})`);
+        devLog(`[V7 SSOT] Inferred industry from keywords: ${industry} (conf=${conf}, fromBusiness=${fromBusiness})`);
         return { industry: industry as IndustrySlug, confidence: conf };
       }
     }
@@ -1153,7 +1154,7 @@ const api = {
       }
     }
 
-    console.log(
+    devLog(
       `[V7 SSOT] Computed baseline defaults: ${Object.keys(answers).length} fields from template.id=${template.id || "?"}`
     );
     return { answers, meta };
@@ -1183,7 +1184,7 @@ const api = {
     // Future: Add more mappings as needed (e.g., peak_sun_hours → solar questions)
 
     if (Object.keys(patch).length > 0) {
-      console.log(`[V7 SSOT] Built intel patch: ${Object.keys(patch).join(", ")}`);
+      devLog(`[V7 SSOT] Built intel patch: ${Object.keys(patch).join(", ")}`);
     }
 
     return patch;
@@ -1211,7 +1212,7 @@ const api = {
     // For now, this is a placeholder for future businessDetectionService integration
 
     if (Object.keys(patch).length > 0) {
-      console.log(`[V7 SSOT] Built business patch: ${Object.keys(patch).join(", ")}`);
+      devLog(`[V7 SSOT] Built business patch: ${Object.keys(patch).join(", ")}`);
     }
 
     return patch;
@@ -1226,7 +1227,7 @@ const api = {
     const selected = industry;
     const effective = ctx.templateKey as IndustrySlug;
 
-    console.log(`[V7 SSOT] Step3 template resolved: selected=${selected} effective=${effective} (via industryCatalog)`);
+    devLog(`[V7 SSOT] Step3 template resolved: selected=${selected} effective=${effective} (via industryCatalog)`);
 
     // ============================================================
     // Phase 1: Try remote API (preferred — freshest data)
@@ -1411,7 +1412,7 @@ const api = {
       console.warn("[V7 SSOT] Template validation warnings:", formatValidationResult(validation));
     }
 
-    console.log(
+    devLog(
       `[V7 SSOT] Loaded Step3 template: selected=${selected} effective=${effective} source=${sourceLabel} v=${remoteTemplate.version} id=${templateId} questions=${finalTemplate.questions.length} ✓`
     );
 
@@ -1536,7 +1537,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
       const reason = intent.reason || "unknown";
       
       // Diagnostic log (Step3→Step4 root cause analysis)
-      console.log("[Wizard] step transition", { from: prev, to: next, reason });
+      devLog("[Wizard] step transition", { from: prev, to: next, reason });
       
       return {
         ...state,
@@ -1826,7 +1827,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
 
         // Skip if user has already touched this field
         if (existingMeta?.source === "user") {
-          console.log(`[V7 Provenance] Skipping patch for ${id} - user already edited`);
+          devLog(`[V7 Provenance] Skipping patch for ${id} - user already edited`);
           continue;
         }
 
@@ -1913,7 +1914,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
         );
       }
 
-      console.log(
+      devLog(
         `[V7 FSM] Reset to defaults: scope=${JSON.stringify(intent.scope)}, fields=${Object.keys(resetAnswers).length}`
       );
 
@@ -1941,7 +1942,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
       };
 
     case "SUBMIT_STEP3_SUCCESS":
-      console.log("[V7 Reducer] SUBMIT_STEP3_SUCCESS → transitioning step='profile' to step='options'");
+      devLog("[V7 Reducer] SUBMIT_STEP3_SUCCESS → transitioning step='profile' to step='options'");
       return {
         ...state,
         isBusy: false,
@@ -2001,7 +2002,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
       const key = `${intent.templateId}.${intent.partId}`;
       // Guard: don't re-apply defaults for same template+part
       if (state.step3DefaultsAppliedParts.includes(key)) {
-        console.log(`[V7 FSM] Defaults already applied for ${key}, skipping`);
+        devLog(`[V7 FSM] Defaults already applied for ${key}, skipping`);
         return state;
       }
       return {
@@ -2436,11 +2437,11 @@ export function useWizardV7() {
         localStorage.removeItem(STORAGE_KEY);
         sessionStorage.setItem(didFreshStartKey, "1");
         if (import.meta.env.DEV) {
-          console.log("[V7 SSOT] Fresh start (once per tab) — cleared storage, starting at location");
+          devLog("[V7 SSOT] Fresh start (once per tab) — cleared storage, starting at location");
         }
       } else {
         if (import.meta.env.DEV) {
-          console.log("[V7 SSOT] Fresh start skipped (HMR remount) — keeping current storage, NOT hydrating");
+          devLog("[V7 SSOT] Fresh start skipped (HMR remount) — keeping current storage, NOT hydrating");
         }
         // ✅ CONTRACT: Do NOT read from LS here. The persist effect writes to LS
         // on every state change, so in-memory state is already correct.
@@ -2494,13 +2495,13 @@ export function useWizardV7() {
       !safePayload.businessConfirmed &&
       !safePayload.industryLocked
     ) {
-      console.log("[V7 SSOT] Resetting to location - incomplete session detected");
+      devLog("[V7 SSOT] Resetting to location - incomplete session detected");
       safePayload.step = "location";
       safePayload.stepHistory = ["location"];
     }
 
     if (import.meta.env.DEV) {
-      console.log("[V7 SSOT] Resume mode - hydrated state, step:", safePayload.step);
+      devLog("[V7 SSOT] Resume mode - hydrated state, step:", safePayload.step);
     }
 
     dispatch({ type: "HYDRATE_SUCCESS", payload: safePayload });
@@ -2609,7 +2610,7 @@ export function useWizardV7() {
       // false→true transition: lock in the confirmed ZIP
       confirmedZipRef.current = normalizeZip5(state.locationRawInput ?? "");
       if (import.meta.env.DEV) {
-        console.log(`[V7 SSOT] ZIP confirmed — snapshot locked: "${confirmedZipRef.current}"`);
+        devLog(`[V7 SSOT] ZIP confirmed — snapshot locked: "${confirmedZipRef.current}"`);
       }
     }
     wasConfirmedRef.current = state.locationConfirmed;
@@ -2623,7 +2624,7 @@ export function useWizardV7() {
     if (currentZip !== confirmedZipRef.current) {
       dispatch({ type: "SET_LOCATION_CONFIRMED", confirmed: false });
       if (import.meta.env.DEV) {
-        console.log(
+        devLog(
           `[V7 SSOT] ZIP diverged ("${confirmedZipRef.current}" → "${currentZip}") — auto-unconfirmed`
         );
       }
@@ -2880,7 +2881,7 @@ export function useWizardV7() {
 
     if (import.meta.env.DEV) {
       const ready = [intel.utilityStatus, intel.solarStatus, intel.weatherStatus].filter(s => s === "ready").length;
-      console.log(`[V7 SSOT] primeLocationIntel complete: ${ready}/3 services ready for "${input}"`);
+      devLog(`[V7 SSOT] primeLocationIntel complete: ${ready}/3 services ready for "${input}"`);
     }
 
     return intel;
@@ -2895,7 +2896,7 @@ export function useWizardV7() {
 
       const input = (rawInput ?? state.locationRawInput).trim();
       if (import.meta.env.DEV) {
-        console.log("[V7] submitLocation called", { rawInput, stateRaw: state.locationRawInput, input });
+        devLog("[V7] submitLocation called", { rawInput, stateRaw: state.locationRawInput, input });
       }
       dispatch({ type: "DEBUG_TAG", lastAction: "submitLocation" });
 
@@ -2909,7 +2910,7 @@ export function useWizardV7() {
         state.step !== "location"
       ) {
         if (import.meta.env.DEV) {
-          console.log("[V7] submitLocation: Already confirmed for this ZIP, skipping re-submit");
+          devLog("[V7] submitLocation: Already confirmed for this ZIP, skipping re-submit");
         }
         return;
       }
@@ -2926,7 +2927,7 @@ export function useWizardV7() {
       if (canConfirm) {
         dispatch({ type: "SET_LOCATION_CONFIRMED", confirmed: true });
         if (import.meta.env.DEV) {
-          console.log("[V7 SSOT] Location confirmed by user (Continue clicked)", { zip: normalizedZip });
+          devLog("[V7 SSOT] Location confirmed by user (Continue clicked)", { zip: normalizedZip });
         }
       }
 
@@ -3034,7 +3035,7 @@ export function useWizardV7() {
             const definedKeys = Object.keys(intel).filter(
               (k) => (intel as Record<string, unknown>)[k] !== undefined
             );
-            console.log(
+            devLog(
               `[V7 Step1] submitLocation intel keys: [${definedKeys.join(", ")}]`,
               `| utilityRate=${intel.utilityRate} | peakSunHours=${intel.peakSunHours} | solarGrade=${intel.solarGrade} | weatherRisk=${intel.weatherRisk}`
             );
@@ -3191,7 +3192,7 @@ export function useWizardV7() {
           }
 
           // ✅ FIX Feb 11: Goals already confirmed — advance to profile (skip industry, it's locked)
-          console.log("[V7 SSOT] Business + industry inferred + goals confirmed → profile");
+          devLog("[V7 SSOT] Business + industry inferred + goals confirmed → profile");
           setStep("profile", "industry_locked_goals_confirmed");
         } else {
           dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
@@ -3318,7 +3319,7 @@ export function useWizardV7() {
           // ✅ FIX (Feb 10, 2026): Do NOT auto-skip to Step 3
           // Stay on location step so goals modal can render
           // User will proceed to Step 3 after confirming goals
-          console.log("[V7 SSOT] Business confirmed, staying on location for goals modal");
+          devLog("[V7 SSOT] Business confirmed, staying on location for goals modal");
         } else {
           dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
           // ✅ FIX Feb 11: Don't jump to industry if goals aren't confirmed yet
@@ -3373,9 +3374,9 @@ export function useWizardV7() {
           inferred: false,
         });
 
-        console.log("[V7 SSOT] selectIndustry: calling loadStep3Template for", industry);
+        devLog("[V7 SSOT] selectIndustry: calling loadStep3Template for", industry);
         const template = await api.loadStep3Template(industry, controller.signal);
-        console.log("[V7 SSOT] selectIndustry: template loaded", template?.id);
+        devLog("[V7 SSOT] selectIndustry: template loaded", template?.id);
         dispatch({ type: "SET_STEP3_TEMPLATE", template });
         dispatch({ type: "SET_TEMPLATE_MODE", mode: "industry" });
 
@@ -3424,7 +3425,7 @@ export function useWizardV7() {
           ...businessPatch,
         };
         
-        console.log("[V7 SSOT] selectIndustry: applied baseline + intel + business patches (SCHEMA-aligned)", {
+        devLog("[V7 SSOT] selectIndustry: applied baseline + intel + business patches (SCHEMA-aligned)", {
           industry,
           effectiveIndustry,
           schemaQ: schema.questions.length,
@@ -3442,7 +3443,7 @@ export function useWizardV7() {
         });
 
         setStep("profile", "industry_selected");
-        console.log("[V7 SSOT] selectIndustry: transitioned to profile step");
+        devLog("[V7 SSOT] selectIndustry: transitioned to profile step");
       } catch (err: unknown) {
         console.error("[V7 SSOT] selectIndustry ERROR:", err);
 
@@ -3502,7 +3503,7 @@ export function useWizardV7() {
             source: "template_default",
           });
 
-          console.log("[V7 SSOT] selectIndustry: fallback template loaded, navigating to profile");
+          devLog("[V7 SSOT] selectIndustry: fallback template loaded, navigating to profile");
           setStep("profile", "industry_selected_fallback");
         } catch (fallbackErr: unknown) {
           // Even the fallback import failed — surface the original error
@@ -4274,7 +4275,7 @@ export function useWizardV7() {
       return;
     }
     if (state.templateMode === "industry") {
-      console.log("[V7] Already have industry template — skipping retry");
+      devLog("[V7] Already have industry template — skipping retry");
       return;
     }
 
@@ -4303,7 +4304,7 @@ export function useWizardV7() {
         dispatch({ type: "PATCH_STEP3_ANSWERS", patch, source: "template_default" });
       }
 
-      console.log(
+      devLog(
         "[V7] Template retry result:",
         (template.industry as string) === "generic" ? "fallback" : "industry"
       );
@@ -4345,7 +4346,7 @@ export function useWizardV7() {
 
     for (let i = 0; i < attempts; i++) {
       try {
-        console.log(`[V7 SSOT] Attempt ${i + 1}/${attempts}`);
+        devLog(`[V7 SSOT] Attempt ${i + 1}/${attempts}`);
         return await withTimeout(fn(), timeoutMs);
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
@@ -4353,7 +4354,7 @@ export function useWizardV7() {
 
         if (i < attempts - 1) {
           const delay = baseDelayMs * Math.pow(2, i); // Exponential backoff: 250ms, 500ms, 1000ms
-          console.log(`[V7 SSOT] Retrying in ${delay}ms...`);
+          devLog(`[V7 SSOT] Retrying in ${delay}ms...`);
           await sleep(delay);
         }
       }
@@ -4365,7 +4366,7 @@ export function useWizardV7() {
   const submitStep3 = useCallback(
     async (answersOverride?: Step3Answers) => {
       // Diagnostic log (Step3→Step4 root cause analysis)
-      console.log("[submitStep3] start", {
+      devLog("[submitStep3] start", {
         step: state.step,
         locationConfirmed: state.locationConfirmed,
         goalsConfirmed: state.goalsConfirmed,
@@ -4413,7 +4414,7 @@ export function useWizardV7() {
         .filter((q: { required?: boolean }) => q.required !== false) // Default to required unless explicitly false
         .map((q: { id: string }) => q.id);
       
-      console.log("[V7] submitStep3 called (TEMPLATE SSOT)", {
+      devLog("[V7] submitStep3 called (TEMPLATE SSOT)", {
         step: state.step,
         industry: state.industry,
         effectiveIndustry,
@@ -4480,7 +4481,7 @@ export function useWizardV7() {
         return;
       }
 
-      console.log("[V7] submitStep3 validation PASSED ✅", {
+      devLog("[V7] submitStep3 validation PASSED ✅", {
         effectiveIndustry,
         answersCount: Object.keys(answers ?? {}).length,
         willAdvanceTo: "results",
@@ -4503,8 +4504,8 @@ export function useWizardV7() {
 
         // ✅ Dispatch SUCCESS to transition to options step (6-step flow)
         dispatch({ type: "SUBMIT_STEP3_SUCCESS" });
-        console.log("[V7] submitStep3 SUCCESS dispatched → reducer sets step='options'");
-        console.log("[submitStep3] end -> setting step", { nextStep: "options" });
+        devLog("[V7] submitStep3 SUCCESS dispatched → reducer sets step='options'");
+        devLog("[submitStep3] end -> setting step", { nextStep: "options" });
 
         // ✅ MERLIN MEMORY (Feb 11, 2026): Persist profile + sizing for Steps 4-6
         // ⚠️ Use || undefined (not ?? 0) — state.quote may not have pricing yet
@@ -4636,7 +4637,7 @@ export function useWizardV7() {
       // For now, we navigate and show the warning banner.
       // The "Complete Step 3 →" link brings them back to finish.
 
-      console.log("[V7] Partial submit - Layer A only, pricing disabled");
+      devLog("[V7] Partial submit - Layer A only, pricing disabled");
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- state intentionally excluded (only uses specific fields)
     [

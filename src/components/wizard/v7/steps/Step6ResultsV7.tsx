@@ -45,6 +45,7 @@ import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import { useMerlinData } from "@/wizard/v7/memory";
 import TrueQuoteFinancialModal from "../shared/TrueQuoteFinancialModal";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
+import { supabase } from "@/services/supabaseClient";
 import AuthModal from "@/components/AuthModal";
 
 type Props = {
@@ -1559,13 +1560,56 @@ function ExportBar({
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
+  // ── LEAD CAPTURE GATE ────────────────────────────────────────────
+  const [showLeadGate, setShowLeadGate] = useState(false);
+  const [pendingFormat, setPendingFormat] = useState<ExportFormat | null>(null);
+  const [leadCaptured, setLeadCaptured] = useState(() => {
+    // Skip gate if already captured this session or user is authenticated
+    return isUserAuthenticated() || sessionStorage.getItem("merlin_lead_captured") === "true";
+  });
+  const [leadForm, setLeadForm] = useState({ name: "", email: "", company: "" });
+  const [leadSubmitting, setLeadSubmitting] = useState(false);
+
+  const handleLeadSubmit = useCallback(async () => {
+    if (!leadForm.email || !leadForm.name) return;
+    setLeadSubmitting(true);
+    try {
+      await supabase.from("leads").insert([{
+        name: leadForm.name,
+        email: leadForm.email,
+        company: leadForm.company || null,
+        source: `wizard-v7-${state.industry || "unknown"}`,
+        format: pendingFormat || "pdf",
+      }]);
+    } catch {
+      // Don't block UX on lead capture failure
+    }
+    setLeadCaptured(true);
+    sessionStorage.setItem("merlin_lead_captured", "true");
+    setShowLeadGate(false);
+    setLeadSubmitting(false);
+  }, [leadForm, pendingFormat, state.industry]);
+
+  const handleSkipLead = useCallback(() => {
+    setLeadCaptured(true);
+    sessionStorage.setItem("merlin_lead_captured", "true");
+    setShowLeadGate(false);
+  }, []);
+
   const tier = getEffectiveTier();
   const isPremium = tier === "pro" || tier === "advanced" || tier === "business";
   const handleExport = useCallback(
-    async (format: ExportFormat) => {
+    async (format: ExportFormat, bypassLeadGate = false) => {
       setError(null);
       setQuotaBlocked(false);
       setShowSavePrompt(false);
+
+      // ── LEAD CAPTURE GATE: Show form before first export for guests ──
+      if (!bypassLeadGate && !leadCaptured && !isUserAuthenticated()) {
+        setPendingFormat(format);
+        setShowLeadGate(true);
+        return;
+      }
 
       // ── QUOTA CHECK: Only exports count as "delivered quotes" ──
       const quota = peekQuotaRemaining("quote");
@@ -1611,8 +1655,17 @@ function ExportBar({
         setExporting(null);
       }
     },
-    [state, isPremium]
+    [state, isPremium, leadCaptured]
   );
+
+  // ── Auto-trigger pending export after lead capture completes ──
+  React.useEffect(() => {
+    if (leadCaptured && pendingFormat && !showLeadGate && !exporting) {
+      const fmt = pendingFormat;
+      setPendingFormat(null);
+      void handleExport(fmt, true);
+    }
+  }, [leadCaptured, pendingFormat, showLeadGate, exporting, handleExport]);
 
   const hasPricing = state.quote?.pricingComplete;
   const isTrueQuote =
@@ -1755,6 +1808,67 @@ function ExportBar({
             >
               Sign Up Free →
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── LEAD CAPTURE GATE: Name + Email before first export ── */}
+      {showLeadGate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 max-w-sm w-full border border-[#3ECF8E]/30 shadow-2xl shadow-[#3ECF8E]/10 animate-in fade-in zoom-in-95 duration-200">
+            <div className="text-center mb-5">
+              <div className="w-12 h-12 rounded-xl bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 flex items-center justify-center mx-auto mb-3">
+                <FileText className="w-6 h-6 text-[#3ECF8E]" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Get Your Quote</h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Enter your details to download your personalized BESS proposal
+              </p>
+            </div>
+            <div className="space-y-3">
+              <input
+                type="text"
+                required
+                value={leadForm.name}
+                onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/30 outline-none transition-all"
+                placeholder="Your name *"
+              />
+              <input
+                type="email"
+                required
+                value={leadForm.email}
+                onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/30 outline-none transition-all"
+                placeholder="Email address *"
+              />
+              <input
+                type="text"
+                value={leadForm.company}
+                onChange={(e) => setLeadForm({ ...leadForm, company: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/30 outline-none transition-all"
+                placeholder="Company (optional)"
+              />
+              <button
+                type="button"
+                onClick={() => void handleLeadSubmit()}
+                disabled={leadSubmitting || !leadForm.name.trim() || !leadForm.email.includes("@")}
+                className="w-full bg-[#3ECF8E] hover:bg-[#3ECF8E]/90 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2"
+              >
+                {leadSubmitting ? (
+                  <div className="w-4 h-4 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin" />
+                ) : (
+                  <>Download Quote</>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleSkipLead}
+                className="w-full text-xs text-slate-500 hover:text-slate-400 py-1 transition-colors"
+              >
+                Skip for now
+              </button>
+            </div>
           </div>
         </div>
       )}

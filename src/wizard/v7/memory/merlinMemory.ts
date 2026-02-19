@@ -44,6 +44,8 @@
  * Created: Feb 11, 2026
  */
 
+import { devLog } from "@/wizard/v7/debug/devLog";
+
 // ============================================================================
 // MEMORY SLOT TYPES
 // ============================================================================
@@ -312,7 +314,7 @@ class MerlinMemoryStore {
     this.runValidation(key, value);
 
     if (import.meta.env.DEV) {
-      console.log(`[MerlinMemory] 💾 ${key} =`, value);
+      devLog(`[MerlinMemory] 💾 ${key} =`, value);
     }
   }
 
@@ -351,7 +353,7 @@ class MerlinMemoryStore {
     this.notify(key);
 
     if (import.meta.env.DEV) {
-      console.log(`[MerlinMemory] 📝 ${key} patched:`, patch);
+      devLog(`[MerlinMemory] 📝 ${key} patched:`, patch);
     }
   }
 
@@ -362,7 +364,7 @@ class MerlinMemoryStore {
     this.notify(key);
 
     if (import.meta.env.DEV) {
-      console.log(`[MerlinMemory] 🗑️ ${key} cleared`);
+      devLog(`[MerlinMemory] 🗑️ ${key} cleared`);
     }
   }
 
@@ -382,7 +384,7 @@ class MerlinMemoryStore {
     }
 
     if (import.meta.env.DEV) {
-      console.log("[MerlinMemory] 🔄 Full reset");
+      devLog("[MerlinMemory] 🔄 Full reset");
     }
   }
 
@@ -478,7 +480,7 @@ class MerlinMemoryStore {
         this.sessionId = parsed.sessionId ?? this.sessionId;
         if (import.meta.env.DEV) {
           const slotKeys = Object.keys(this.slots);
-          console.log(`[MerlinMemory] 🔮 Hydrated ${slotKeys.length} slots:`, slotKeys);
+          devLog(`[MerlinMemory] 🔮 Hydrated ${slotKeys.length} slots:`, slotKeys);
         }
       }
     } catch {

@@ -13,6 +13,9 @@
 export { carWashConfig } from './carWash';
 export { hotelConfig } from './hotel';
 export { evChargingConfig } from './evCharging';
+export { dataCenterConfig } from './dataCenter';
+export { hospitalConfig } from './hospital';
+export { manufacturingConfig } from './manufacturing';
 
 // Re-export registry helpers
 export {

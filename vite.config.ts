@@ -45,6 +45,11 @@ export default defineConfig({
           'wizard': [
             './src/components/wizard/v6/WizardV6.tsx',
           ],
+          'wizard-v7': [
+            './src/wizard/v7/hooks/useWizardV7.ts',
+            './src/wizard/v7/calculators/registry.ts',
+            './src/wizard/v7/pricing/pricingBridge.ts',
+          ],
           'services': [
             './src/services/centralizedCalculations.ts',
             './src/services/baselineService.ts',

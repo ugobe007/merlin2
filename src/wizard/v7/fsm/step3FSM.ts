@@ -19,6 +19,8 @@
  * Guards prevent illegal transitions.
  */
 
+import { devLog } from "@/wizard/v7/debug/devLog";
+
 // ============================================================
 // State Types
 // ============================================================
@@ -368,7 +370,7 @@ export function logTransition(
   effects: SideEffect[]
 ): void {
   if (import.meta.env.DEV) {
-    console.log(
+    devLog(
       `[Step3 FSM] ${getStateName(from)} + ${event.type} → ${getStateName(to)}`,
       effects.length > 0 ? `[effects: ${effects.map(e => e.type).join(", ")}]` : ""
     );
