@@ -89,7 +89,7 @@ export default function AuthModal({
         </button>
 
         <div className="text-center mb-8">
-          <div className="text-4xl mb-4">🧙‍♂️</div>
+          <div className="mb-4"><img src="/images/new_profile_merlin.png" alt="Merlin" className="w-16 h-16 rounded-xl mx-auto" /></div>
           <h2 className="text-3xl font-bold text-purple-700 mb-2">
             {mode === "login" ? "Welcome Back!" : "Join Merlin Energy"}
           </h2>

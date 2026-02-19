@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { PanelButtonGroup, SliderWithButtons, CheckboxGrid, NumberInput, ToggleButtons, RangeButtonGroup } from './v6/step3/inputs';
 import { Info, Check } from 'lucide-react';
 import type { Question } from '@/data/carwash-questions-complete.config';
+import merlinIcon from '@/assets/images/new_small_profile_.png';
 
 interface CompleteQuestionRendererProps {
   question: Question;
@@ -122,9 +123,7 @@ export function CompleteQuestionRenderer({
         {/* Merlin's Tip - Compact */}
         {question.merlinTip && (
           <div className="flex items-start gap-2 p-2.5 bg-purple-950/40 border border-purple-500/20 rounded-lg">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-sm">
-              <span className="text-sm">🧙‍♂️</span>
-            </div>
+            <img src={merlinIcon} alt="Merlin" className="w-6 h-6 rounded-full flex-shrink-0 shadow-sm" />
             <div>
               <div className="font-semibold text-purple-200 text-xs mb-0.5">Merlin's Tip</div>
               <p className="text-xs text-purple-300/90 leading-relaxed">
