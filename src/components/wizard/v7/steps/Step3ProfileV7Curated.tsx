@@ -503,10 +503,10 @@ export default function Step3ProfileV7Curated(props: Props) {
           <div className="flex-1">
             {/* Question number + Section badge */}
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-[#3ECF8E]/15 flex items-center justify-center text-[#3ECF8E] text-xs font-semibold">
+              <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-[#3ECF8E]/15 flex items-center justify-center text-[#3ECF8E] text-xs lg:text-sm font-semibold">
                 {index + 1}
               </div>
-              <span className="px-2 py-0.5 text-slate-400 text-xs font-semibold tracking-wide rounded capitalize border border-white/[0.08]">
+              <span className="px-2 py-0.5 text-slate-400 text-xs lg:text-sm font-semibold tracking-wide rounded capitalize border border-white/[0.08]">
                 {q.section}
               </span>
               {required && !hasValue && (
@@ -529,10 +529,10 @@ export default function Step3ProfileV7Curated(props: Props) {
             </div>
 
             {/* Title */}
-            <div className="text-sm font-bold text-slate-100 tracking-tight">{label}</div>
+            <div className="text-sm lg:text-base font-bold text-slate-100 tracking-tight">{label}</div>
 
             {/* Subtitle */}
-            {q.subtitle && <div className="text-xs text-slate-400 mt-1">{q.subtitle}</div>}
+            {q.subtitle && <div className="text-xs lg:text-sm text-slate-400 mt-1">{q.subtitle}</div>}
           </div>
         </div>
 
@@ -540,7 +540,7 @@ export default function Step3ProfileV7Curated(props: Props) {
         {q.helpText && (
           <div className="flex items-start gap-2 p-2 bg-blue-950/40 border border-blue-500/20 rounded-lg mb-3">
             <span className="text-blue-400 text-sm">ℹ️</span>
-            <p className="text-xs text-blue-300/90">{q.helpText}</p>
+            <p className="text-xs lg:text-sm text-blue-300/90">{q.helpText}</p>
           </div>
         )}
 
@@ -551,8 +551,8 @@ export default function Step3ProfileV7Curated(props: Props) {
               <Sparkles className="w-3.5 h-3.5 text-[#3ECF8E]" />
             </div>
             <div>
-              <div className="font-semibold text-slate-300 text-xs mb-0.5">Merlin's Tip</div>
-              <p className="text-xs text-slate-400 leading-relaxed">{q.merlinTip}</p>
+              <div className="font-semibold text-slate-300 text-xs lg:text-sm mb-0.5">Merlin's Tip</div>
+              <p className="text-xs lg:text-sm text-slate-400 leading-relaxed">{q.merlinTip}</p>
             </div>
           </div>
         )}
@@ -588,10 +588,10 @@ export default function Step3ProfileV7Curated(props: Props) {
                     )}
                     <div className="flex items-center gap-2">
                       {opt.icon && <span className="text-lg">{opt.icon}</span>}
-                      <span className="font-medium text-sm">{opt.label}</span>
+                      <span className="font-medium text-sm lg:text-base">{opt.label}</span>
                     </div>
                     {opt.description && (
-                      <p className="text-xs text-slate-400 mt-1">{opt.description}</p>
+                      <p className="text-xs lg:text-sm text-slate-400 mt-1">{opt.description}</p>
                     )}
                   </button>
                 );
@@ -614,16 +614,21 @@ export default function Step3ProfileV7Curated(props: Props) {
                       px-2 py-2.5 rounded-lg border text-center transition-colors relative min-h-[44px]
                       ${
                         selected
-                          ? "border-emerald-400 text-emerald-300 font-bold bg-transparent"
+                          ? "border-emerald-400 text-emerald-300 font-bold bg-emerald-500/[0.08]"
                           : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
                       }
                       ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                     `}
                     disabled={opt.disabled}
                   >
-                    <div className="text-sm font-medium">{opt.icon || opt.label}</div>
+                    {selected && (
+                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-white text-[9px] font-bold shadow-sm">
+                        ✓
+                      </span>
+                    )}
+                    <div className="text-sm lg:text-base font-medium">{opt.icon || opt.label}</div>
                     {opt.description && (
-                      <div className="text-[10px] text-slate-500 mt-0.5">{opt.description}</div>
+                      <div className="text-[10px] lg:text-xs text-slate-500 mt-0.5">{opt.description}</div>
                     )}
                   </button>
                 );
@@ -835,9 +840,9 @@ export default function Step3ProfileV7Curated(props: Props) {
                       </span>
                     )}
                     {opt.icon && <div className="text-2xl mb-1.5">{opt.icon}</div>}
-                    <div className="font-semibold text-sm">{opt.label}</div>
+                    <div className="font-semibold text-sm lg:text-base">{opt.label}</div>
                     {opt.description && (
-                      <p className="text-xs text-slate-400 mt-1">{opt.description}</p>
+                      <p className="text-xs lg:text-sm text-slate-400 mt-1">{opt.description}</p>
                     )}
                   </button>
                 );
@@ -978,10 +983,10 @@ export default function Step3ProfileV7Curated(props: Props) {
                     )}
                     <div className="flex items-center gap-2">
                       {opt.icon && <span className="text-lg">{opt.icon}</span>}
-                      <span className="font-medium text-sm">{opt.label}</span>
+                      <span className="font-medium text-sm lg:text-base">{opt.label}</span>
                     </div>
                     {opt.description && (
-                      <p className="text-xs text-slate-400 mt-1">{opt.description}</p>
+                      <p className="text-xs lg:text-sm text-slate-400 mt-1">{opt.description}</p>
                     )}
                   </button>
                 );
@@ -1041,6 +1046,9 @@ export default function Step3ProfileV7Curated(props: Props) {
       // Also set the answer for solarCapacityKW so it flows through to the calculator
       if (actions?.setStep3Answer) {
         actions.setStep3Answer("solarCapacityKW", result.solarKW);
+        // Persist roof/canopy breakdown so Step 5 can cap Starter to roof-only
+        actions.setStep3Answer("roofSolarKW", result.roofSolarKW);
+        actions.setStep3Answer("canopySolarKW", result.canopySolarKW);
         // If they used the modal, they want solar
         actions.setStep3Answer("wantSolar", "yes");
       }
@@ -1234,16 +1242,16 @@ export default function Step3ProfileV7Curated(props: Props) {
               <div className="px-5 py-4 border-b border-slate-700/30 bg-slate-900/40">
                 <div className="flex items-center gap-3">
                   {/* Section Icon */}
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-800 text-slate-400">
-                    {sectionIcon || <span className="text-base">{group.icon}</span>}
+                  <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-lg flex items-center justify-center bg-slate-800 text-slate-400">
+                    {sectionIcon || <span className="text-base lg:text-lg">{group.icon}</span>}
                   </div>
 
                   <div className="flex-1">
-                    <h3 className="text-sm font-bold tracking-tight text-slate-200">
+                    <h3 className="text-sm lg:text-base font-bold tracking-tight text-slate-200">
                       {group.label}
                     </h3>
                     {group.description && (
-                      <p className="text-xs text-slate-400 mt-0.5">{group.description}</p>
+                      <p className="text-xs lg:text-sm text-slate-400 mt-0.5">{group.description}</p>
                     )}
                   </div>
 

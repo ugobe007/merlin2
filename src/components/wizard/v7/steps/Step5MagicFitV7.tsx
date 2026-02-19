@@ -246,7 +246,8 @@ function scaleTier(
     itcRate: number;
     itcAmount: number;
     netCost: number;
-  } | null
+  } | null,
+  maxRoofSolarMW?: number // Cap from solar sizing (roof-only, no canopy)
 ): TierQuote {
   // For perfectFit (1.0x multipliers), just return the base directly
   if (config.multiplier === 1.0 && config.solarMultiplier === 1.0 && config.genMultiplier === 1.0) {
@@ -290,12 +291,25 @@ function scaleTier(
     totalCost: baseEquipment.switchgear.totalCost * config.multiplier,
   };
 
+  // Solar scaling: for Starter (scale-down), cap to roof-only if solar sizing provided
+  let solarScale = config.solarMultiplier;
+  if (maxRoofSolarMW && maxRoofSolarMW > 0 && baseEquipment.solar && baseEquipment.solar.totalMW > 0) {
+    const rawScaledMW = baseEquipment.solar.totalMW * config.solarMultiplier;
+    if (config.solarMultiplier < 1.0) {
+      // Starter: use roof-only solar (physically meaningful, not arbitrary fraction)
+      solarScale = Math.min(maxRoofSolarMW, rawScaledMW) / baseEquipment.solar.totalMW;
+    } else if (config.solarMultiplier > 1.0) {
+      // BeastMode: allow scaling above base but not below roof-only
+      solarScale = Math.max(solarScale, maxRoofSolarMW / baseEquipment.solar.totalMW);
+    }
+  }
+
   const scaledSolar = baseEquipment.solar
     ? {
         ...baseEquipment.solar,
-        totalMW: baseEquipment.solar.totalMW * config.solarMultiplier,
-        panelQuantity: Math.ceil(baseEquipment.solar.panelQuantity * config.solarMultiplier),
-        totalCost: baseEquipment.solar.totalCost * config.solarMultiplier,
+        totalMW: baseEquipment.solar.totalMW * solarScale,
+        panelQuantity: Math.ceil(baseEquipment.solar.panelQuantity * solarScale),
+        totalCost: baseEquipment.solar.totalCost * solarScale,
       }
     : undefined;
 
@@ -701,6 +715,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     industry: string;
     goals: EnergyGoal[];
     addOns: typeof data.addOns;
+    roofSolarKW: number; // From solar sizing modal (roof-only portion)
     stateQuote: QuoteOutput | undefined;
     stateQuoteMargin: QuoteOutput["margin"] | undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -737,6 +752,10 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       industry: data.industry || "commercial",
       goals: data.goals as EnergyGoal[],
       addOns: { ...data.addOns },
+      roofSolarKW: Number(
+        (state as Record<string, unknown>)?.step3Answers &&
+        ((state as Record<string, unknown>).step3Answers as Record<string, unknown>)?.roofSolarKW
+      ) || 0,
       stateQuote: state?.quote ? { ...state.quote } : undefined,
       stateQuoteMargin: state?.quote?.margin ? { ...state.quote.margin } : undefined,
     };
@@ -904,9 +923,10 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         // DERIVE ALL 3 TIERS from the single base using pure math
         // ═══════════════════════════════════════════════════════════════════
         const results: TierQuote[] = [];
+        const maxRoofMW = snap.roofSolarKW > 0 ? snap.roofSolarKW / 1000 : undefined;
         for (const tierKey of ["starter", "perfectFit", "beastMode"] as const) {
           results.push(
-            scaleTier(baseQuoteResult, tierKey, TIER_CONFIG[tierKey], baseDuration, baseMargin)
+            scaleTier(baseQuoteResult, tierKey, TIER_CONFIG[tierKey], baseDuration, baseMargin, maxRoofMW)
           );
         }
 

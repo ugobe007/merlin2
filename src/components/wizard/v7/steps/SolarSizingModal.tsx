@@ -289,9 +289,13 @@ export default function SolarSizingModal({
                     type="number"
                     value={buildingSqFt}
                     onChange={(e) => {
-                      const v = Math.max(100, Math.min(1000000, Number(e.target.value) || 0));
-                      setBuildingSqFt(v);
-                      setCustomKW(null);
+                      const raw = e.target.value;
+                      if (raw === "") { setBuildingSqFt(0); setCustomKW(null); return; }
+                      const v = Number(raw);
+                      if (Number.isFinite(v) && v >= 0) { setBuildingSqFt(Math.min(v, 1000000)); setCustomKW(null); }
+                    }}
+                    onBlur={() => {
+                      if (buildingSqFt < 100) setBuildingSqFt(100);
                     }}
                     className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm pr-14 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none"
                   />
