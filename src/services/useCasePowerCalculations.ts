@@ -5960,7 +5960,7 @@ export function calculateUseCasePower(
       );
 
     case "hotel":
-    case "hotel-hospitality":
+    case "hotel-hospitality": {
       // Support multiple field names: roomCount, numberOfRooms, facilitySize (from wizard)
       // BUG FIX: wizard passes facilitySize for all industries, so accept it for hotels too
       const hotelRooms =
@@ -5971,6 +5971,7 @@ export function calculateUseCasePower(
             useCaseData.rooms
         ) || 150; // DB default: 150 rooms
       return calculateHotelPower(hotelRooms);
+    }
 
     case "hospital": {
       // Base calculation from bed count
@@ -6073,7 +6074,7 @@ export function calculateUseCasePower(
 
     case "ev-charging":
     case "ev-charging-station":
-    case "ev-charging-hub":
+    case "ev-charging-hub": {
       // =========================================================================
       // EV CHARGING - Uses evChargingCalculations.ts for full power tiers
       // Supports: Level 2 (7kW/11kW/19kW/22kW), DCFC (50kW/150kW), HPC (250kW/350kW)
@@ -6174,34 +6175,38 @@ export function calculateUseCasePower(
       }
 
       return calculateEVChargingPower(evLevel1, evLevel2, evDcFast);
+    }
 
-    case "airport":
+    case "airport": {
       // Convert raw passenger count to millions (user enters 1000000, we need 1.0)
       // DB default: 1 million passengers (small regional airport) - was 5M but too high for initial estimate
       const rawPassengers =
         parseFloat(useCaseData.annualPassengers || useCaseData.annual_passengers) || 1000000;
       const passengersInMillions = rawPassengers / 1000000;
       return calculateAirportPower(passengersInMillions);
+    }
 
-    case "manufacturing":
+    case "manufacturing": {
       // Database uses 'facilitySqFt', 'manufacturingType' (Dec 2025), legacy: squareFeet, industryType
       // DB default: 100,000 sqft
       return calculateManufacturingPower(
         parseInt(useCaseData.facilitySqFt || useCaseData.squareFeet || useCaseData.sqFt) || 100000,
         useCaseData.manufacturingType || useCaseData.industryType
       );
+    }
 
     case "warehouse":
     case "logistics":
-    case "logistics-center":
+    case "logistics-center": {
       // Database uses 'warehouseSqFt', code accepts multiple variants
       // DB default: 250,000 sqft
       return calculateWarehousePower(
         parseInt(useCaseData.warehouseSqFt || useCaseData.squareFeet || useCaseData.sqFt) || 250000,
         useCaseData.isColdStorage === true || useCaseData.warehouseType === "cold-storage"
       );
+    }
 
-    case "cold-storage":
+    case "cold-storage": {
       // Cold storage has multiple inputs:
       // 1. Direct peak demand (kW) - most accurate if user knows it
       // 2. Refrigeration load (kW) - compressor capacity
@@ -6247,6 +6252,7 @@ export function calculateUseCasePower(
       }
 
       return calculateWarehousePower(effectiveSqFt, true);
+    }
 
     case "retail":
     case "retail-commercial":
@@ -6321,7 +6327,7 @@ export function calculateUseCasePower(
       );
 
     case "gas-station":
-    case "fuel-station":
+    case "fuel-station": {
       // Database uses 'fuelDispensers' (Dec 2025), legacy: dispenserCount, pumpCount, numPumps
       return calculateGasStationPower(
         parseInt(
@@ -6333,15 +6339,17 @@ export function calculateUseCasePower(
         useCaseData.hasConvenienceStore !== false && useCaseData.stationType !== "gas-only",
         useCaseData.stationType || "with-cstore"
       );
+    }
 
     case "government":
-    case "public-building":
+    case "public-building": {
       // Database uses 'squareFeet', UI variants: 'buildingSqFt', 'sqFt'
       return calculateGovernmentPower(
         parseInt(useCaseData.squareFeet || useCaseData.buildingSqFt || useCaseData.sqFt) || 75000
       );
+    }
 
-    case "microgrid":
+    case "microgrid": {
       // Microgrid: Calculate based on total connected loads
       // If EV chargers specified, use EV calculation
       const mgLevel2 =
@@ -6367,6 +6375,7 @@ export function calculateUseCasePower(
         calculationMethod: "Microgrid mixed-load benchmark (8 W/sq ft)",
         inputs: { mgSqFt, mgWattsPerSqFt, mgLevel2, mgDcFast },
       };
+    }
 
     // =====================================================
     // SLUG ALIASES: Database slugs that alias to existing handlers
@@ -6389,15 +6398,16 @@ export function calculateUseCasePower(
         useCaseData.isColdStorage === true || useCaseData.warehouseType === "cold-storage"
       );
 
-    case "apartment-building":
+    case "apartment-building": {
       // Alias for apartment/apartments
       // DB default: 400 units
       return calculateApartmentPower(
         parseInt(useCaseData.unitCount || useCaseData.units) || 400,
         parseInt(useCaseData.commonAreaSqFt || useCaseData.sqFt) || 10000
       );
+    }
 
-    case "residential":
+    case "residential": {
       // Residential is different from commercial - use residential benchmark
       // Average US home: ~1.2 kW average, 5-10 kW peak
       // Database uses 'squareFeet', UI variants: 'sqFt', 'homeSize'
@@ -6415,8 +6425,9 @@ export function calculateUseCasePower(
         calculationMethod: "Residential benchmark (5 W/sq ft peak)",
         inputs: { homes, homeSqFt, resWattsPerSqFt },
       };
+    }
 
-    default:
+    default: {
       // Generic fallback - use square footage if available
       const genericSqFt = parseInt(useCaseData.sqFt || useCaseData.facilitySize) || 10000;
       const genericWattsPerSqFt = 5; // Conservative default
@@ -6437,6 +6448,7 @@ export function calculateUseCasePower(
         calculationMethod: "Generic commercial benchmark (5 W/sq ft)",
         inputs: { genericSqFt, genericWattsPerSqFt },
       };
+    }
   }
 }
 

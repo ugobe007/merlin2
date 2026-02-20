@@ -352,7 +352,9 @@ class PricingConfigService {
             const parsed = JSON.parse(savedConfig);
             this.config = this.validateConfig(parsed) ? parsed : DEFAULT_PRICING_CONFIG;
             return;
-          } catch {}
+          } catch {
+            // Invalid JSON - fall through to default config
+          }
         }
       }
       this.config = DEFAULT_PRICING_CONFIG;

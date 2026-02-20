@@ -103,6 +103,7 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
         setVendors(data);
       }
     } catch (_error) {
+      // Silently fail - vendors list remains empty
     } finally {
       setIsLoading(false);
     }

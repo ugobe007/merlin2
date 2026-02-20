@@ -544,7 +544,9 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
     try {
       const audio = new Audio(magicPoofSound);
       audio.volume = 0.5;
-    } catch (err) {}
+    } catch (err) {
+      // Sound playback failed - continue silently
+    }
   };
 
   const generateWordDocument = async () => {
