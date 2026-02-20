@@ -15,98 +15,33 @@
  * Part of: Bottom panel + smart detection initiative
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Check, Sparkles, Sun } from "lucide-react";
 import type { WizardState, BusinessSizeTier, QuestionnaireDepth } from "../types";
 import { INDUSTRY_NAMES } from "@/services/googlePlacesService";
 import { BusinessSizePanel } from "../components/BusinessSizePanel";
 
-// Lazy-loaded industry images (400-600KB savings!)
-import { getIndustryImage, preloadTopIndustries } from "../utils/lazyIndustryImages";
-
-// ============================================
-// LAZY INDUSTRY CARD COMPONENT
-// ============================================
-
-interface LazyIndustryCardProps {
-  imageSlug: string;
-  name: string;
-  isSelected: boolean;
-  onClick: () => void;
-  paybackYears: number;
-}
-
-const LazyIndustryCard: React.FC<LazyIndustryCardProps> = ({
-  imageSlug,
-  name,
-  isSelected,
-  onClick,
-  paybackYears,
-}) => {
-  const [loadedImageUrl, setLoadedImageUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    getIndustryImage(imageSlug as any).then((url) => {
-      if (mounted) setLoadedImageUrl(url);
-    });
-    return () => { mounted = false; };
-  }, [imageSlug]);
-
-  return (
-    <button
-      onClick={onClick}
-      className={`relative group overflow-hidden rounded-2xl transition-all duration-300 ${
-        isSelected
-          ? "ring-4 ring-purple-500 scale-105 shadow-xl shadow-purple-500/30"
-          : "hover:scale-102 hover:shadow-lg"
-      }`}
-    >
-      {/* Image or Placeholder */}
-      <div className="aspect-[4/3] overflow-hidden">
-        {loadedImageUrl ? (
-          <img
-            src={loadedImageUrl}
-            alt={name}
-            className={`w-full h-full object-cover transition-transform duration-300 ${
-              isSelected ? "scale-110" : "group-hover:scale-110"
-            }`}
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 animate-pulse" />
-        )}
-      </div>
-
-      {/* Gradient overlay */}
-      <div
-        className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent transition-opacity ${
-          isSelected ? "opacity-95" : "opacity-80 group-hover:opacity-90"
-        }`}
-      />
-
-      {/* Selected checkmark */}
-      {isSelected && (
-        <div className="absolute top-3 right-3 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center shadow-lg z-10">
-          <Check className="w-5 h-5 text-white" />
-        </div>
-      )}
-
-      {/* Label + Payback */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 space-y-1">
-        <p
-          className={`font-bold text-base sm:text-lg text-center leading-tight ${
-            isSelected ? "text-white" : "text-white/95"
-          }`}
-        >
-          {name}
-        </p>
-        <p className="text-emerald-300 text-xs text-center font-medium">
-          {paybackYears}yr payback
-        </p>
-      </div>
-    </button>
-  );
-};
+// Industry images
+import hotelImg from "@/assets/images/hotel_motel_holidayinn_1.jpg";
+import carWashImg from "@/assets/images/Car_Wash_PitStop.jpg";
+import evChargingImg from "@/assets/images/ev_charging_hub2.jpg";
+import manufacturingImg from "@/assets/images/manufacturing_1.jpg";
+import dataCenterImg from "@/assets/images/data-center-1.jpg";
+import hospitalImg from "@/assets/images/hospital_1.jpg";
+import retailImg from "@/assets/images/retail_2.jpg";
+import officeImg from "@/assets/images/office_building1.jpg";
+import collegeImg from "@/assets/images/college_1.jpg";
+import warehouseImg from "@/assets/images/logistics_1.jpg";
+import agricultureImg from "@/assets/images/agriculture_1.jpg";
+import truckStopImg from "@/assets/images/truck_stop.jpg";
+import airportImg from "@/assets/images/airport_11.jpeg";
+import indoorFarmImg from "@/assets/images/indoor_farm1.jpg";
+import shoppingCenterImg from "@/assets/images/shopping_center.jpg";
+import coldStorageImg from "@/assets/images/cold_storage.jpg";
+import apartmentImg from "@/assets/images/apartment_building.jpg";
+import residentialImg from "@/assets/images/residential.jpg";
+import restaurantImg from "@/assets/images/restaurant_1.jpg";
+import casinoImg from "@/assets/images/casino_gaming1.jpg";
 
 // ============================================
 // OPPORTUNITY DATA (for previews)
@@ -115,7 +50,7 @@ const LazyIndustryCard: React.FC<LazyIndustryCardProps> = ({
 interface IndustryOpportunity {
   slug: string;
   name: string;
-  imageSlug: string; // Changed from image: string (no longer imported)
+  image: string;
   savingsLow: number;
   savingsHigh: number;
   solarFit: 1 | 2 | 3 | 4 | 5; // Star rating
@@ -127,7 +62,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "hotel",
     name: "Hotel / Hospitality",
-    imageSlug: "hotel",
+    image: hotelImg,
     savingsLow: 150000,
     savingsHigh: 400000,
     solarFit: 5,
@@ -136,7 +71,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "car-wash",
     name: "Car Wash",
-    imageSlug: "car-wash",
+    image: carWashImg,
     savingsLow: 80000,
     savingsHigh: 200000,
     solarFit: 5,
@@ -145,7 +80,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "restaurant",
     name: "Restaurant",
-    imageSlug: "restaurant",
+    image: restaurantImg,
     savingsLow: 40000,
     savingsHigh: 120000,
     solarFit: 4,
@@ -154,7 +89,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "retail",
     name: "Retail / Commercial",
-    imageSlug: "retail",
+    image: retailImg,
     savingsLow: 80000,
     savingsHigh: 250000,
     solarFit: 5,
@@ -163,7 +98,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "shopping-center",
     name: "Shopping Center / Mall",
-    imageSlug: "shopping-center",
+    image: shoppingCenterImg,
     savingsLow: 200000,
     savingsHigh: 600000,
     solarFit: 5,
@@ -172,7 +107,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "office",
     name: "Office Building",
-    imageSlug: "office",
+    image: officeImg,
     savingsLow: 100000,
     savingsHigh: 300000,
     solarFit: 5,
@@ -181,7 +116,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "casino",
     name: "Casino & Gaming",
-    imageSlug: "casino",
+    image: casinoImg,
     savingsLow: 300000,
     savingsHigh: 900000,
     solarFit: 4,
@@ -192,7 +127,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "heavy_duty_truck_stop",
     name: "Truck Stop / Travel Center",
-    imageSlug: "truck-stop",
+    image: truckStopImg,
     savingsLow: 120000,
     savingsHigh: 350000,
     solarFit: 5,
@@ -201,7 +136,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "ev-charging",
     name: "EV Charging Hub",
-    imageSlug: "ev-charging",
+    image: evChargingImg,
     savingsLow: 50000,
     savingsHigh: 150000,
     solarFit: 5,
@@ -210,7 +145,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "warehouse",
     name: "Warehouse / Logistics",
-    imageSlug: "warehouse",
+    image: warehouseImg,
     savingsLow: 100000,
     savingsHigh: 300000,
     solarFit: 5,
@@ -219,7 +154,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "airport",
     name: "Airport",
-    imageSlug: "airport",
+    image: airportImg,
     savingsLow: 500000,
     savingsHigh: 1500000,
     solarFit: 4,
@@ -230,7 +165,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "manufacturing",
     name: "Manufacturing",
-    imageSlug: "manufacturing",
+    image: manufacturingImg,
     savingsLow: 200000,
     savingsHigh: 600000,
     solarFit: 4,
@@ -239,7 +174,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "data-center",
     name: "Data Center",
-    imageSlug: "data-center",
+    image: dataCenterImg,
     savingsLow: 500000,
     savingsHigh: 2000000,
     solarFit: 3,
@@ -248,7 +183,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "cold-storage",
     name: "Cold Storage",
-    imageSlug: "cold-storage",
+    image: coldStorageImg,
     savingsLow: 150000,
     savingsHigh: 450000,
     solarFit: 4,
@@ -259,7 +194,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "hospital",
     name: "Hospital / Healthcare",
-    imageSlug: "hospital",
+    image: hospitalImg,
     savingsLow: 300000,
     savingsHigh: 800000,
     solarFit: 4,
@@ -268,7 +203,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "college",
     name: "College / University",
-    imageSlug: "college",
+    image: collegeImg,
     savingsLow: 250000,
     savingsHigh: 700000,
     solarFit: 5,
@@ -279,7 +214,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "agricultural",
     name: "Agriculture",
-    imageSlug: "agriculture",
+    image: agricultureImg,
     savingsLow: 100000,
     savingsHigh: 300000,
     solarFit: 5,
@@ -288,7 +223,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "indoor-farm",
     name: "Indoor / Vertical Farm",
-    imageSlug: "indoor-farm",
+    image: indoorFarmImg,
     savingsLow: 150000,
     savingsHigh: 400000,
     solarFit: 5,
@@ -299,7 +234,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "apartment",
     name: "Apartment Complex",
-    imageSlug: "apartment",
+    image: apartmentImg,
     savingsLow: 80000,
     savingsHigh: 250000,
     solarFit: 5,
@@ -308,7 +243,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
   {
     slug: "residential",
     name: "Residential",
-    imageSlug: "residential",
+    image: residentialImg,
     savingsLow: 20000,
     savingsHigh: 60000,
     solarFit: 5,
@@ -352,14 +287,6 @@ export function EnhancedStep2Industry({ state, updateState, onNext }: Props) {
   );
 
   const hasPresetSize = state.businessName && state.businessSizeTier;
-
-  // Preload top industry images after 1 second (idle optimization)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      preloadTopIndustries().catch(console.error);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const selectIndustry = (slug: string, name: string) => {
     // ✅ FIX (Jan 25, 2026): Validate industry before allowing navigation
@@ -481,14 +408,54 @@ export function EnhancedStep2Industry({ state, updateState, onNext }: Props) {
             normalizeSlug(state.industry) === industry.slug ||
             state.industry === industry.slug.replace(/_/g, "-");
           return (
-            <LazyIndustryCard
+            <button
               key={industry.slug}
-              imageSlug={industry.imageSlug}
-              name={industry.name}
-              isSelected={isSelected}
               onClick={() => selectIndustry(industry.slug, industry.name)}
-              paybackYears={industry.paybackYears}
-            />
+              className={`relative group overflow-hidden rounded-2xl transition-all duration-300 ${
+                isSelected
+                  ? "ring-4 ring-purple-500 scale-105 shadow-xl shadow-purple-500/30"
+                  : "hover:scale-102 hover:shadow-lg"
+              }`}
+            >
+              {/* Image */}
+              <div className="aspect-[4/3] overflow-hidden">
+                <img
+                  src={industry.image}
+                  alt={industry.name}
+                  className={`w-full h-full object-cover transition-transform duration-300 ${
+                    isSelected ? "scale-110" : "group-hover:scale-110"
+                  }`}
+                />
+              </div>
+
+              {/* Gradient overlay */}
+              <div
+                className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent transition-opacity ${
+                  isSelected ? "opacity-95" : "opacity-80 group-hover:opacity-90"
+                }`}
+              />
+
+              {/* Selected checkmark */}
+              {isSelected && (
+                <div className="absolute top-3 right-3 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center shadow-lg z-10">
+                  <Check className="w-5 h-5 text-white" />
+                </div>
+              )}
+
+              {/* Label + Payback */}
+              <div className="absolute bottom-0 left-0 right-0 p-3 space-y-1">
+                <p
+                  className={`font-bold text-base sm:text-lg text-center leading-tight ${
+                    isSelected ? "text-white" : "text-white/95"
+                  }`}
+                >
+                  {industry.name}
+                </p>
+                <p className="text-emerald-300 text-xs text-center font-medium">
+                  {industry.paybackYears}yr payback
+                </p>
+              </div>
+            </button>
           );
         })}
       </div>
