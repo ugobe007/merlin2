@@ -728,7 +728,7 @@ test('Each step has required fields', () => {
   };
   const result = calculateTrueQuote(input);
   
-  const allValid = result.calculationSteps.every(step => 
+  const allValid = result.calculationSteps.every((step: any) => 
     step.stepNumber > 0 &&
     step.category &&
     step.name &&
@@ -754,13 +754,13 @@ test('Sources are provided for traceability', () => {
   const result = calculateTrueQuote(input);
   
   const hasSources = result.sources.length >= 3;
-  const hasNREL = result.sources.some(s => s.shortName.includes('NREL'));
-  const hasEIA = result.sources.some(s => s.shortName.includes('EIA'));
+  const hasNREL = result.sources.some((s: any) => s.shortName.includes('NREL'));
+  const hasEIA = result.sources.some((s: any) => s.shortName.includes('EIA'));
   
   return {
     passed: hasSources && hasNREL && hasEIA,
     expected: 'Sources include NREL and EIA',
-    actual: result.sources.map(s => s.shortName).join(', '),
+    actual: result.sources.map((s: any) => s.shortName).join(', '),
     message: 'Should cite authoritative sources',
   };
 });

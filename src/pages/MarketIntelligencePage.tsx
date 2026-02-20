@@ -168,7 +168,7 @@ function PriceTrendCard({ trend }: { trend: PriceTrend }) {
 }
 
 /** ITC scenario card */
-function ITCScenarioCard({ scenario, _projectCost }: { scenario: ITCScenario; projectCost: number }) {
+function ITCScenarioCard({ scenario, projectCost: _projectCost }: { scenario: ITCScenario; projectCost: number }) {
   return (
     <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-5">
       <div className="flex items-center justify-between mb-3">

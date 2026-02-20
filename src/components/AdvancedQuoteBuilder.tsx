@@ -182,7 +182,7 @@ export default function AdvancedQuoteBuilder({
 
   // NEW: Document Upload / Path A state
   const [extractedData, setExtractedData] = useState<ExtractedSpecsData | null>(null);
-  const [_uploadedDocuments, _setUploadedDocuments] = useState<ParsedDocument[]>([]);
+  const [_uploadedDocuments, __setUploadedDocuments] = useState<ParsedDocument[]>([]);
   const [showUploadSection, setShowUploadSection] = useState(true);
 
   // Extended configuration state
@@ -516,7 +516,7 @@ export default function AdvancedQuoteBuilder({
       }
 
       setExtractedData(data);
-      setUploadedDocuments(documents);
+      _setUploadedDocuments(documents);
 
       // Pre-populate form fields from extracted data
       if (data.location?.state) {
