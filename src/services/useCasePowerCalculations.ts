@@ -6845,7 +6845,7 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     canopyPotentialKW: 120,
     totalRealisticSolarKW: 225,
     sources: ['ASHRAE 90.1', 'CBECS 2018', 'NREL Rooftop PV'],
-    notes: 'Multi-story reduces roof/floor ratio. HVAC, pools, elevator penthouses limit roof. Guest parking canopy common.',
+    notes: 'Multi-story reduces roof/floor ratio. HVAC, pools, elevator penthouses limit roof. Guest parking canopy + porte-cochère common. Large resorts (50K sqft footprint) scale proportionally.',
   },
   office: {
     typicalFootprintSqFt: 15000,
@@ -6869,7 +6869,7 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     canopyPotentialKW: 120,
     totalRealisticSolarKW: 300,
     sources: ['Uptime Institute', 'ASHRAE TC 9.9', 'NREL Rooftop PV'],
-    notes: 'Heavy HVAC units, generators, switchgear on roof. Solar covers <5% of typical load.',
+    notes: 'Heavy HVAC units, generators, switchgear on roof. Solar covers <5% of typical load. Ground-mount preferred for meaningful renewable offset; campus designs may support larger arrays.',
   },
   hospital: {
     typicalFootprintSqFt: 80000,
@@ -6942,6 +6942,18 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     totalRealisticSolarKW: 61,
     sources: ['EIA', 'NREL Rooftop PV'],
     notes: 'Pump canopy is key solar opportunity. Small convenience store roof is secondary.',
+  },
+  truck_stop: {
+    typicalFootprintSqFt: 12000,
+    footprintRange: [6000, 20000],
+    usableRoofPercent: 0.40,
+    maxRooftopSolarKW: 72,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 18000,
+    canopyPotentialKW: 216,
+    totalRealisticSolarKW: 288,
+    sources: ['NATSO/SIGMA Travel Plaza Guide', 'NACS Convenience Store Industry', 'DOE AFDC', 'NREL Rooftop PV'],
+    notes: 'Large single-story c-store (8-15K sqft) with flat commercial roof. Fuel island canopy (~6K sqft diesel + 3K sqft gas) is primary solar opportunity. Truck parking canopy viable but requires 14ft+ clearance for semis. Car parking + fuel canopy = ~18K sqft realistic canopy area.',
   },
   ev_charging: {
     typicalFootprintSqFt: 2000,
