@@ -25,6 +25,10 @@ import { generateMerlinInsights } from "@/wizard/v7/memory/generateMerlinInsight
 import { QuickQuotePanel } from "@/components/wizard/v7/shared/QuickQuotePanel";
 import { QuickQuoteModal, type QuickQuoteParams } from "@/components/wizard/v7/shared/QuickQuoteModal";
 
+// 💾 Save & Resume Components (Feb 20, 2026)
+import { useAutoSave } from "@/wizard/v7/hooks/useAutoSave";
+import { ResumeProgressBanner } from "@/components/wizard/v7/shared/ResumeProgressBanner";
+
 // 🤖 AI Agent for self-healing monitoring
 import { wizardAIAgent } from "@/services/wizardAIAgentV2";
 import { wizardHealthMonitor } from "@/services/wizardHealthMonitor";
@@ -89,6 +93,16 @@ function WizardV7Page() {
   const [quickQuoteMode, setQuickQuoteMode] = useState<"panel" | "custom-modal" | "ballpark" | "guided">("panel");
   const [showQuickQuoteModal, setShowQuickQuoteModal] = useState(false);
 
+  // 💾 Auto-Save & Resume (Feb 20, 2026)
+  const autoSave = useAutoSave(state, {
+    goToStep: wizard.goToStep,
+    selectIndustry: wizard.selectIndustry,
+    setStep3Answers: wizard.setStep3Answers,
+    updateLocationRaw: wizard.updateLocationRaw,
+  });
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  const [hasCheckedSavedProgress, setHasCheckedSavedProgress] = useState(false);
+
   // 🤖 Start AI Agent for self-healing monitoring (Feb 4, 2026)
   useEffect(() => {
     wizardAIAgent.start();
@@ -123,6 +137,7 @@ function WizardV7Page() {
       locationConfirmed: state.locationConfirmed,
       industry: state.industry,
     }, sessionId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.step, state.location, state.locationRawInput, state.industry]);
 
   // ✅ Robust 0-index mapping — uses WIZARD_STEP_ORDER from gates SSOT
@@ -323,28 +338,106 @@ function WizardV7Page() {
     setShowQuickQuoteModal(false);
     setQuickQuoteMode("guided");
     
-    // Seed wizard with quick quote parameters
-    // Set location (minimal)
-    const locationData = {
-      formattedAddress: params.location || "California, USA",
-      state: params.location || "CA",
-      postalCode: "90001",
-    };
-    
-    // Set industry
-    wizard.selectIndustry(params.industry || "office");
-    
-    // Skip to MagicFit with pre-filled sizing
-    wizard.goToStep("magicfit");
-    
-    // For custom mode, we'd also inject the sizing params into state
-    // This is a simplified version - full implementation would need
-    // to properly integrate with the pricing bridge
+    // Generate full quote with pricing bridge
+    try {
+      // 1. Build contract result (Layer A - Load Profile)
+      const peakLoadKW = params.systemSizeKW || 1000;
+      const durationHours = params.durationHours || 4;
+      const storageToPeakRatio = 1.0; // Direct sizing (user specified exact kW)
+      
+      const contractResult = {
+        loadProfile: {
+          baseLoadKW: peakLoadKW * 0.7,
+          peakLoadKW: peakLoadKW,
+          energyKWhPerDay: peakLoadKW * durationHours * 0.4,
+        },
+        assumptions: [
+          `Quick Quote: ${params.mode === 'ballpark' ? 'Regional averages' : 'User-specified sizing'}`,
+          `System: ${peakLoadKW} kW × ${durationHours}h`,
+        ],
+        warnings: params.mode === 'ballpark' ? ['Using regional averages - for precise quotes, use guided wizard'] : [],
+        sizingHints: {
+          storageToPeakRatio,
+          durationHours,
+          source: 'user-config' as const,
+        },
+        inputsUsed: {
+          electricityRate: params.electricityRate || 0.15,
+          demandCharge: 15,
+          location: {
+            state: params.location || 'CA',
+            zip: '90001',
+            city: params.location || 'California',
+          },
+          industry: params.industry || 'office',
+          gridMode: 'grid_tied',
+        },
+      };
+      
+      // 2. Run pricing (Layer B)
+      const { runPricingQuote, generatePricingSnapshotId } = await import('@/wizard/v7/pricing/pricingBridge');
+      const snapshotId = generatePricingSnapshotId();
+      
+      const pricingResult = await runPricingQuote(contractResult, {
+        snapshotId,
+        includeAdvancedAnalysis: false, // Quick quote = fast, no advanced
+      });
+      
+      if (!pricingResult.ok) {
+        throw new Error(pricingResult.error);
+      }
+      
+      // 3. Seed wizard state with results
+      wizard.updateQuote({
+        peakLoadKW: contractResult.loadProfile.peakLoadKW,
+        bessKW: pricingResult.data.sizing.storageSizeMW * 1000,
+        bessKWh: pricingResult.data.sizing.energyMWh * 1000,
+        capexUSD: pricingResult.data.capexUSD,
+        annualSavingsUSD: pricingResult.data.annualSavingsUSD,
+        roiYears: pricingResult.data.roiYears,
+        paybackYears: pricingResult.data.roiYears,
+        npv: pricingResult.data.financials?.npv,
+        irr: pricingResult.data.financials?.irr,
+        pricingComplete: true,
+      });
+      
+      // 4. Set industry and location in memory
+      wizard.selectIndustry(params.industry || 'office');
+      
+      // 5. Jump to results
+      wizard.goToStep('results');
+      
+    } catch (error) {
+      console.error('[Quick Quote] Pricing failed:', error);
+      // Fallback: Start guided wizard at Step 1
+      wizard.goToStep('location');
+    }
   };
 
   const handleStartGuided = () => {
     setQuickQuoteMode("guided");
   };
+
+  // 💾 Auto-Save Handlers (Feb 20, 2026)
+  const handleResumeProgress = () => {
+    autoSave.restoreProgress();
+    setShowResumeBanner(false);
+    setQuickQuoteMode("guided");
+  };
+
+  const handleStartFresh = () => {
+    autoSave.clearProgress();
+    setShowResumeBanner(false);
+    setQuickQuoteMode("guided");
+  };
+
+  // Check for saved progress on mount (only once)
+  useEffect(() => {
+    if (!hasCheckedSavedProgress && autoSave.hasSavedProgress) {
+      setShowResumeBanner(true);
+      setHasCheckedSavedProgress(true);
+    }
+  }, [autoSave.hasSavedProgress, hasCheckedSavedProgress]);
 
   // TrueQuote verified status - true once we have results
   const isVerified = state.step === "results" && !state.isBusy;
@@ -356,6 +449,7 @@ function WizardV7Page() {
     if (state.step !== "profile") return null;
 
     // ✅ CRITICAL FIX (Feb 10, 2026): Use effectiveIndustry from template (retail → hotel mapping)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const effectiveIndustry =
       (state.step3Template as any)?.effectiveIndustry ||
       (state.step3Template as any)?.selectedIndustry ||
@@ -404,6 +498,7 @@ function WizardV7Page() {
       answeredCount,
       visibleRequiredCount: visibleRequired.length,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.step, state.industry, state.step3Answers]);
 
   // ============================================================================
@@ -662,10 +757,12 @@ function WizardV7Page() {
       <V7AdvisorPanel
         title="Merlin Advisor"
         subtitle={insights.subtitle}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         badges={insights.badges as any}
         bullets={fallbackBullets.slice(0, 5)}
       />
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.step, step3Advisor, step6Advisor, gate.canContinue, gate.reason, merlinData, state.locationRawInput, state.location, state.businessCard, state.businessConfirmed, state.locationIntel, state.industry, state.industryLocked, state.goals]);
 
   // ⚡ Quick Quote Mode - Show panel before wizard starts (Feb 20, 2026)
@@ -688,6 +785,16 @@ function WizardV7Page() {
 
   return (
     <div data-wizard-version="v7" className="w-full h-full">
+      {/* 💾 Resume Progress Banner (shows when saved progress exists) */}
+      {showResumeBanner && autoSave.savedProgress && (
+        <ResumeProgressBanner
+          progress={autoSave.savedProgress}
+          onResume={handleResumeProgress}
+          onStartFresh={handleStartFresh}
+          onDismiss={() => setShowResumeBanner(false)}
+        />
+      )}
+
       <WizardShellV7
         currentStep={currentStep}         // 0-index internal
         stepLabels={[...STEP_LABELS]}     // ✅ shell no longer has its own steps list

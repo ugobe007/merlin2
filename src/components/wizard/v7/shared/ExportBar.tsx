@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { Lock, FileText, Bookmark } from "lucide-react";
+import { Lock, FileText, Bookmark, Share2 } from "lucide-react";
 import type { WizardState as WizardV7State } from "@/wizard/v7/hooks/useWizardV7";
 import { buildV7ExportData } from "@/utils/buildV7ExportData";
 import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
@@ -26,6 +26,7 @@ import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanon
 import { supabase } from "@/services/supabaseClient";
 import AuthModal from "@/components/AuthModal";
 import { devInfo, devError } from "@/wizard/v7/debug/devLog";
+import { ShareQuoteModal } from "./ShareQuoteModal";
 
 type ExportFormat = "pdf" | "word" | "excel";
 
@@ -36,6 +37,7 @@ export default function ExportBar({
   state: WizardV7State;
   onTrueQuoteClick?: () => void;
 }) {
+  const [showShareModal, setShowShareModal] = useState(false);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [_quotaBlocked, setQuotaBlocked] = useState(false);
@@ -136,7 +138,8 @@ export default function ExportBar({
         setExporting(null);
       }
     },
-    [state, isPremium, leadCaptured]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state, leadCaptured]
   );
 
   // ── Auto-trigger pending export after lead capture completes ──
@@ -203,6 +206,7 @@ export default function ExportBar({
         </div>
 
         <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap", flex: "0 0 auto" }}>
+          {/* Export Buttons */}
           {buttons.map(({ format, icon, label, locked }) => (
             <button
               key={format}
@@ -249,6 +253,35 @@ export default function ExportBar({
               {locked && <Lock className="w-3.5 h-3.5" style={{ opacity: 0.5 }} />}
             </button>
           ))}
+          
+          {/* Share Button */}
+          {state.quote && (
+            <button
+              type="button"
+              onClick={() => setShowShareModal(true)}
+              disabled={exporting !== null}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                height: 44,
+                padding: "0 14px",
+                borderRadius: 12,
+                minWidth: 0,
+                border: "2px solid rgba(59,130,246,0.30)",
+                background: exporting !== null ? "rgba(59,130,246,0.06)" : "rgba(59,130,246,0.08)",
+                color: exporting !== null ? "rgba(232,235,243,0.3)" : "rgba(96,165,250,0.95)",
+                cursor: exporting !== null ? "not-allowed" : "pointer",
+                fontWeight: 700,
+                fontSize: 15,
+                transition: "all 0.15s",
+              }}
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Share</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -361,6 +394,14 @@ export default function ExportBar({
         onLoginSuccess={() => setShowAuthModal(false)}
         defaultMode="signup"
       />
+
+      {/* ── SHARE QUOTE MODAL ── */}
+      {showShareModal && state.quote && (
+        <ShareQuoteModal
+          quote={state.quote}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
     </div>
   );
 }
