@@ -146,6 +146,74 @@ export interface QuoteExportData {
     allInPerKW?: number;
     allInPerKWh?: number;
   };
+
+  // ─── Advanced Analytics (Feb 2026) ───────────────────────────────
+  /** Dynamic ITC breakdown from IRA 2022 calculator */
+  itcBreakdown?: {
+    totalRate: number;        // e.g. 0.40 = 40%
+    creditAmount: number;
+    baseRate: number;
+    prevailingWageBonus: number;
+    energyCommunityBonus: number;
+    domesticContentBonus: number;
+    lowIncomeBonus: number;
+    source: string;
+  };
+
+  /** 8760 hourly simulation savings breakdown */
+  hourlySavingsBreakdown?: {
+    annualSavings: number;
+    touArbitrageSavings: number;
+    peakShavingSavings: number;
+    demandChargeSavings: number;
+    solarSelfConsumptionSavings: number;
+    equivalentCycles: number;
+    capacityFactor: number;
+    source: string;
+  };
+
+  /** Risk analysis P10/P50/P90 */
+  riskAnalysis?: {
+    npvP10: number;
+    npvP50: number;
+    npvP90: number;
+    irrP10: number;
+    irrP50: number;
+    irrP90: number;
+    paybackP10: number;
+    paybackP50: number;
+    paybackP90: number;
+    probabilityPositiveNPV: number;
+    valueAtRisk95: number;
+    source: string;
+  };
+
+  /** Solar production from PVWatts */
+  solarProductionDetail?: {
+    annualProductionKWh: number;
+    capacityFactor: number;
+    monthlyProductionKWh?: number[];
+    source: string;
+  };
+
+  /** Battery degradation curve */
+  degradationDetail?: {
+    chemistry: string;
+    year10CapacityPct: number;
+    year25CapacityPct: number;
+    warrantyYears: number;
+    financialImpactPct: number;
+    source: string;
+  };
+
+  /** Utility rate attribution */
+  utilityRateDetail?: {
+    utilityName?: string;
+    electricityRate: number;
+    demandCharge: number;
+    source: string;
+    confidence: string;
+  };
 }
 
 /**
@@ -194,9 +262,10 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
       ? ((annualSavings * 10 - data.systemCost) / data.systemCost) * 100
       : 0;
   const lifetimeSavings = annualSavings * 10;
-  const itcRate = data.financialAnalysis ? 0.3 : 0;
-  const itcAmount = data.systemCost * itcRate;
+  const itcRate = data.itcBreakdown?.totalRate ?? (data.financialAnalysis ? 0.3 : 0);
+  const itcAmount = data.itcBreakdown?.creditAmount ?? (data.systemCost * itcRate);
   const netCost = data.systemCost - itcAmount;
+  const itcLabel = data.itcBreakdown ? `Federal ITC Credit (${Math.round(itcRate * 100)}%)` : "Federal ITC Credit (30%)";
   const demandChargeSavings =
     data.financialAnalysis?.demandChargeSavings ?? data.demandCharge * storageKW * 0.5 * 12;
 
@@ -750,7 +819,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
 
           // Hero metrics
           metricBox("Total System Investment", fmt(data.systemCost)),
-          ...(itcAmount > 0 ? [metricBox("Federal ITC Credit (30%)", `– ${fmt(itcAmount)}`)] : []),
+          ...(itcAmount > 0 ? [metricBox(itcLabel, `– ${fmt(itcAmount)}`)] : []),
           ...(netCost !== data.systemCost
             ? [metricBox("Net Investment After Incentives", fmt(netCost))]
             : []),
@@ -965,7 +1034,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             [
               ["Gross System Cost", fmt(data.systemCost)],
               ...(itcAmount > 0
-                ? [["Federal Investment Tax Credit (ITC — 30%)", `– ${fmt(itcAmount)}`]]
+                ? [["Federal Investment Tax Credit (ITC — " + Math.round(itcRate * 100) + "%)", `– ${fmt(itcAmount)}`]]
                 : []),
               ...(netCost !== data.systemCost ? [["Net Cost After Incentives", fmt(netCost)]] : []),
             ],
@@ -2314,9 +2383,9 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
   // ── Sheet 4: Financial Projections (5-year) ─────────────────────
   if (data.financialAnalysis && data.financialAnalysis.annualSavingsUSD > 0) {
     const annualSavings = data.financialAnalysis.annualSavingsUSD;
-    const itcRate = 0.3;
-    const itcAmount = data.systemCost * itcRate;
-    const netCost = data.systemCost - itcAmount;
+    const xlItcRate = data.itcBreakdown?.totalRate ?? 0.3;
+    const xlItcAmount = data.itcBreakdown?.creditAmount ?? (data.systemCost * xlItcRate);
+    const xlNetCost = data.systemCost - xlItcAmount;
     const escalationRate = 0.03;
 
     const finRows: (string | number)[][] = [
@@ -2329,7 +2398,7 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
     for (let yr = 1; yr <= 10; yr++) {
       const yearSavings = Math.round(annualSavings * Math.pow(1 + escalationRate, yr - 1));
       cumulative += yearSavings;
-      const netPosition = cumulative - netCost;
+      const netPosition = cumulative - xlNetCost;
       finRows.push([yr, yearSavings, cumulative, Math.round(netPosition)]);
     }
 
@@ -2337,16 +2406,135 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
       [],
       ["KEY ASSUMPTIONS"],
       ["Total System Cost ($)", data.systemCost],
-      ["Federal ITC (30%)", Math.round(itcAmount)],
-      ["Net Cost After ITC ($)", Math.round(netCost)],
+      [`Federal ITC (${Math.round(xlItcRate * 100)}%)`, Math.round(xlItcAmount)],
+      ["Net Cost After ITC ($)", Math.round(xlNetCost)],
       ["Annual Savings Escalation", "3% per year"],
       ["Utility Rate ($/kWh)", data.utilityRate],
       ["Demand Charge ($/kW)", data.demandCharge]
     );
 
+    // ITC Bonus Breakdown (if available)
+    if (data.itcBreakdown) {
+      finRows.push(
+        [],
+        ["ITC BREAKDOWN (IRA 2022)"],
+        ["Base Rate", `${Math.round(data.itcBreakdown.baseRate * 100)}%`],
+        ...(data.itcBreakdown.prevailingWageBonus > 0
+          ? [["Prevailing Wage Bonus" as string | number, `+${Math.round(data.itcBreakdown.prevailingWageBonus * 100)}%` as string | number]]
+          : []),
+        ...(data.itcBreakdown.energyCommunityBonus > 0
+          ? [["Energy Community Bonus" as string | number, `+${Math.round(data.itcBreakdown.energyCommunityBonus * 100)}%` as string | number]]
+          : []),
+        ...(data.itcBreakdown.domesticContentBonus > 0
+          ? [["Domestic Content Bonus" as string | number, `+${Math.round(data.itcBreakdown.domesticContentBonus * 100)}%` as string | number]]
+          : []),
+        ...(data.itcBreakdown.lowIncomeBonus > 0
+          ? [["Low-Income Bonus" as string | number, `+${Math.round(data.itcBreakdown.lowIncomeBonus * 100)}%` as string | number]]
+          : []),
+        ["Total ITC Rate", `${Math.round(data.itcBreakdown.totalRate * 100)}%`],
+        ["Credit Amount ($)", Math.round(data.itcBreakdown.creditAmount)]
+      );
+    }
+
     const ws4 = XLSX.utils.aoa_to_sheet(finRows);
     ws4["!cols"] = [{ wch: 26 }, { wch: 22 }, { wch: 24 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(wb, ws4, "Financial Projections");
+  }
+
+  // ── Sheet 5: Advanced Analytics (Feb 2026) ──────────────────────
+  const analyticsRows: (string | number)[][] = [["ADVANCED ANALYTICS"], []];
+  let hasAnalytics = false;
+
+  // 8760 Savings Breakdown
+  if (data.hourlySavingsBreakdown) {
+    hasAnalytics = true;
+    analyticsRows.push(
+      ["8760 HOURLY SIMULATION RESULTS"],
+      [],
+      ["Annual Savings ($)", Math.round(data.hourlySavingsBreakdown.annualSavings)],
+      ["TOU Arbitrage Savings ($)", Math.round(data.hourlySavingsBreakdown.touArbitrageSavings)],
+      ["Peak Shaving Savings ($)", Math.round(data.hourlySavingsBreakdown.peakShavingSavings)],
+      ["Demand Charge Savings ($)", Math.round(data.hourlySavingsBreakdown.demandChargeSavings)],
+      ["Solar Self-Consumption ($)", Math.round(data.hourlySavingsBreakdown.solarSelfConsumptionSavings)],
+      ["Equivalent Cycles/Year", data.hourlySavingsBreakdown.equivalentCycles],
+      ["Capacity Factor (%)", data.hourlySavingsBreakdown.capacityFactor],
+      ["Source", data.hourlySavingsBreakdown.source],
+      []
+    );
+  }
+
+  // Risk Analysis P10/P50/P90
+  if (data.riskAnalysis) {
+    hasAnalytics = true;
+    analyticsRows.push(
+      ["RISK ANALYSIS (P10 / P50 / P90)"],
+      [],
+      ["Metric", "P10 (Downside)", "P50 (Base)", "P90 (Upside)"],
+      ["NPV ($)", Math.round(data.riskAnalysis.npvP10), Math.round(data.riskAnalysis.npvP50), Math.round(data.riskAnalysis.npvP90)],
+      ["IRR (%)", data.riskAnalysis.irrP10, data.riskAnalysis.irrP50, data.riskAnalysis.irrP90],
+      ["Payback (years)", data.riskAnalysis.paybackP10, data.riskAnalysis.paybackP50, data.riskAnalysis.paybackP90],
+      [],
+      ["Probability of Positive NPV (%)", data.riskAnalysis.probabilityPositiveNPV],
+      ["Value at Risk — 95% ($)", Math.round(data.riskAnalysis.valueAtRisk95)],
+      ["Source", data.riskAnalysis.source],
+      []
+    );
+  }
+
+  // Battery Degradation
+  if (data.degradationDetail) {
+    hasAnalytics = true;
+    analyticsRows.push(
+      ["BATTERY DEGRADATION"],
+      [],
+      ["Chemistry", data.degradationDetail.chemistry],
+      ["Year 10 Capacity (%)", data.degradationDetail.year10CapacityPct],
+      ["Year 25 Capacity (%)", data.degradationDetail.year25CapacityPct],
+      ["Warranty Period (years)", data.degradationDetail.warrantyYears],
+      ["Financial Impact (%)", data.degradationDetail.financialImpactPct],
+      ["Source", data.degradationDetail.source],
+      []
+    );
+  }
+
+  // Solar Production
+  if (data.solarProductionDetail) {
+    hasAnalytics = true;
+    analyticsRows.push(
+      ["SOLAR PRODUCTION (PVWATTS)"],
+      [],
+      ["Annual Production (kWh)", Math.round(data.solarProductionDetail.annualProductionKWh)],
+      ["Capacity Factor (%)", data.solarProductionDetail.capacityFactor],
+      ["Source", data.solarProductionDetail.source]
+    );
+    if (data.solarProductionDetail.monthlyProductionKWh?.length) {
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      analyticsRows.push([], ["Month", "Production (kWh)"]);
+      data.solarProductionDetail.monthlyProductionKWh.forEach((kWh, i) => {
+        analyticsRows.push([months[i] || `M${i + 1}`, Math.round(kWh)]);
+      });
+    }
+    analyticsRows.push([]);
+  }
+
+  // Utility Rate Attribution
+  if (data.utilityRateDetail) {
+    hasAnalytics = true;
+    analyticsRows.push(
+      ["UTILITY RATE ATTRIBUTION"],
+      [],
+      ["Utility", data.utilityRateDetail.utilityName ?? "N/A"],
+      ["Electricity Rate ($/kWh)", data.utilityRateDetail.electricityRate],
+      ["Demand Charge ($/kW)", data.utilityRateDetail.demandCharge],
+      ["Source", data.utilityRateDetail.source],
+      ["Confidence", data.utilityRateDetail.confidence]
+    );
+  }
+
+  if (hasAnalytics) {
+    const ws5 = XLSX.utils.aoa_to_sheet(analyticsRows);
+    ws5["!cols"] = [{ wch: 32 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, ws5, "Advanced Analytics");
   }
 
   // ── Generate and download ───────────────────────────────────────

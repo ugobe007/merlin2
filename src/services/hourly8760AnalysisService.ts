@@ -293,6 +293,10 @@ export function run8760Analysis(input: HourlyAnalysisInput): HourlyAnalysisResul
   const loadProfileSum = loadProfile.reduce((a, b) => a + b, 0);
   const loadScaleFactor = dailyLoadKWh / (loadProfileSum * peakDemandKW / Math.max(...loadProfile));
   
+  // Seasonal load multipliers by month (CDD/HDD-based, DOE CBECS 2018)
+  // Accounts for HVAC-driven seasonal variation by region
+  const seasonalMultipliers = getSeasonalMultipliers(state, loadProfileType);
+  
   // Calculate solar production
   const solarDailyKWh = (annualSolarKWh || solarCapacityKW * 1600) / 365; // ~1600 kWh/kW/year
   const solarProfileSum = SOLAR_PROFILE.reduce((a, b) => a + b, 0);
@@ -319,8 +323,9 @@ export function run8760Analysis(input: HourlyAnalysisInput): HourlyAnalysisResul
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     const month = getMonthFromDayOfYear(dayOfYear);
     
-    // Get hourly values
-    const load = loadProfile[hourOfDay] * peakDemandKW * loadScaleFactor;
+    // Get hourly values — apply seasonal multiplier (P2a — Feb 2026)
+    const seasonalFactor = seasonalMultipliers[month - 1] ?? 1.0;
+    const load = loadProfile[hourOfDay] * peakDemandKW * loadScaleFactor * seasonalFactor;
     const solar = solarCapacityKW > 0 ? SOLAR_PROFILE[hourOfDay] * solarScaleFactor : 0;
     const rate = getHourlyRate(touRates, hourOfDay, isWeekend, month);
     
@@ -542,6 +547,42 @@ function getMonthFromDayOfYear(dayOfYear: number): number {
     if (dayOfYear < dayCount) return m + 1;
   }
   return 12;
+}
+
+/**
+ * Monthly seasonal load multipliers based on CDD/HDD climate data.
+ * Indexed Jan(0)–Dec(11). Values are multipliers on base daily load.
+ * Sources: DOE CBECS 2018, EIA Residential Energy Consumption Survey,
+ *          NOAA Monthly CDD/HDD Normals 1991-2020
+ */
+function getSeasonalMultipliers(state: string, loadProfile: LoadProfileType): number[] {
+  // Climate zone by state (simplified)
+  const stateUpper = state?.toUpperCase() || '';
+  const hotStates = ['AZ', 'NV', 'TX', 'FL', 'LA', 'MS', 'AL', 'GA', 'SC', 'HI', 'NM'];
+  const coldStates = ['MN', 'WI', 'MI', 'ND', 'SD', 'MT', 'VT', 'NH', 'ME', 'AK', 'WY'];
+  const mildStates = ['CA', 'OR', 'WA', 'CO', 'UT'];
+
+  // Data center and hospital have very flat profiles (no seasonal swing)
+  if (loadProfile === 'data-center' || loadProfile === 'hospital') {
+    return [0.97, 0.97, 0.98, 0.99, 1.0, 1.02, 1.03, 1.03, 1.02, 1.0, 0.98, 0.97];
+  }
+
+  if (hotStates.includes(stateUpper)) {
+    // Hot climate: summer cooling peak (Jul-Aug), mild winter dip
+    // Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec
+    return [0.80, 0.80, 0.85, 0.90, 1.00, 1.15, 1.25, 1.25, 1.15, 0.95, 0.85, 0.80];
+  }
+  if (coldStates.includes(stateUpper)) {
+    // Cold climate: winter heating peak (Dec-Feb), summer cooling moderate
+    return [1.20, 1.20, 1.10, 0.90, 0.85, 0.95, 1.05, 1.05, 0.95, 0.90, 1.05, 1.15];
+  }
+  if (mildStates.includes(stateUpper)) {
+    // Mild climate: minimal seasonal swing
+    return [0.92, 0.93, 0.95, 0.97, 1.00, 1.05, 1.08, 1.08, 1.05, 1.00, 0.95, 0.92];
+  }
+
+  // Default: moderate 4-season climate (Northeast, Mid-Atlantic, Midwest)
+  return [1.10, 1.08, 1.00, 0.92, 0.90, 1.02, 1.10, 1.10, 1.02, 0.92, 0.95, 1.05];
 }
 
 // ============================================================================

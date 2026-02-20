@@ -177,6 +177,86 @@ export function buildV7ExportData(state: WizardV7State): QuoteExportData {
         }
       : undefined,
 
+    // ─── Advanced Analytics from SSOT metadata (Feb 2026) ─────────
+    // Dynamic ITC breakdown (replaces hardcoded 30%)
+    itcBreakdown: quote.metadata?.itcDetails
+      ? {
+          totalRate: quote.metadata.itcDetails.totalRate,
+          creditAmount: quote.metadata.itcDetails.creditAmount,
+          baseRate: quote.metadata.itcDetails.baseRate,
+          prevailingWageBonus: quote.metadata.itcDetails.qualifications?.prevailingWage ? 0.24 : 0,
+          energyCommunityBonus: quote.metadata.itcDetails.qualifications?.energyCommunity ? 0.10 : 0,
+          domesticContentBonus: quote.metadata.itcDetails.qualifications?.domesticContent ? 0.10 : 0,
+          lowIncomeBonus: quote.metadata.itcDetails.qualifications?.lowIncome ? 0.10 : 0,
+          source: quote.metadata.itcDetails.source,
+        }
+      : undefined,
+
+    // 8760 hourly simulation savings
+    hourlySavingsBreakdown: quote.metadata?.advancedAnalysis?.hourlySimulation
+      ? {
+          annualSavings: quote.metadata.advancedAnalysis.hourlySimulation.annualSavings,
+          touArbitrageSavings: quote.metadata.advancedAnalysis.hourlySimulation.touArbitrageSavings,
+          peakShavingSavings: quote.metadata.advancedAnalysis.hourlySimulation.peakShavingSavings,
+          demandChargeSavings: quote.metadata.advancedAnalysis.hourlySimulation.demandChargeSavings,
+          solarSelfConsumptionSavings: quote.metadata.advancedAnalysis.hourlySimulation.solarSelfConsumptionSavings,
+          equivalentCycles: quote.metadata.advancedAnalysis.hourlySimulation.equivalentCycles,
+          capacityFactor: quote.metadata.advancedAnalysis.hourlySimulation.capacityFactor,
+          source: quote.metadata.advancedAnalysis.hourlySimulation.source,
+        }
+      : undefined,
+
+    // Risk analysis P10/P50/P90
+    riskAnalysis: quote.metadata?.advancedAnalysis?.riskAnalysis
+      ? {
+          npvP10: quote.metadata.advancedAnalysis.riskAnalysis.npvP10,
+          npvP50: quote.metadata.advancedAnalysis.riskAnalysis.npvP50,
+          npvP90: quote.metadata.advancedAnalysis.riskAnalysis.npvP90,
+          irrP10: quote.metadata.advancedAnalysis.riskAnalysis.irrP10,
+          irrP50: quote.metadata.advancedAnalysis.riskAnalysis.irrP50,
+          irrP90: quote.metadata.advancedAnalysis.riskAnalysis.irrP90,
+          paybackP10: quote.metadata.advancedAnalysis.riskAnalysis.paybackP10,
+          paybackP50: quote.metadata.advancedAnalysis.riskAnalysis.paybackP50,
+          paybackP90: quote.metadata.advancedAnalysis.riskAnalysis.paybackP90,
+          probabilityPositiveNPV: quote.metadata.advancedAnalysis.riskAnalysis.probabilityPositiveNPV,
+          valueAtRisk95: quote.metadata.advancedAnalysis.riskAnalysis.valueAtRisk95,
+          source: quote.metadata.advancedAnalysis.riskAnalysis.source,
+        }
+      : undefined,
+
+    // Solar production from PVWatts
+    solarProductionDetail: quote.metadata?.solarProduction
+      ? {
+          annualProductionKWh: quote.metadata.solarProduction.annualProductionKWh,
+          capacityFactor: quote.metadata.solarProduction.capacityFactorPct,
+          monthlyProductionKWh: quote.metadata.solarProduction.monthlyProductionKWh,
+          source: quote.metadata.solarProduction.source,
+        }
+      : undefined,
+
+    // Battery degradation curve
+    degradationDetail: quote.metadata?.degradation
+      ? {
+          chemistry: quote.metadata.degradation.chemistry,
+          year10CapacityPct: quote.metadata.degradation.year10CapacityPct,
+          year25CapacityPct: quote.metadata.degradation.year25CapacityPct,
+          warrantyYears: quote.metadata.degradation.warrantyPeriod,
+          financialImpactPct: quote.metadata.degradation.financialImpactPct,
+          source: quote.metadata.degradation.source,
+        }
+      : undefined,
+
+    // Utility rate attribution
+    utilityRateDetail: quote.metadata?.utilityRates
+      ? {
+          utilityName: quote.metadata.utilityRates.utilityName,
+          electricityRate: quote.metadata.utilityRates.electricityRate,
+          demandCharge: quote.metadata.utilityRates.demandCharge,
+          source: quote.metadata.utilityRates.source,
+          confidence: quote.metadata.utilityRates.confidence,
+        }
+      : undefined,
+
     showAiNote: false,
   };
 }

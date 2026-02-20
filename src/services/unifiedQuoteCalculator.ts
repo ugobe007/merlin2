@@ -32,7 +32,7 @@ import { calculateEquipmentBreakdown, type EquipmentBreakdown } from "@/utils/eq
 import { calculateFinancialMetrics } from "./centralizedCalculations";
 import { getBatteryPricing } from "./unifiedPricingService";
 import { AUTHORITATIVE_SOURCES, PRICING_BENCHMARKS, CURRENT_BENCHMARK_VERSION } from "./benchmarkSources";
-import { getUtilityRatesByZip, getCommercialRateByZip } from "./utilityRateService";
+import { getUtilityRatesByZip, getCommercialRateByZip, buildTOUPeriodsFromUtilityRate } from "./utilityRateService";
 import { estimateITC } from "./itcCalculator";
 import { estimateDegradation, type BatteryChemistry } from "./batteryDegradationService";
 import { estimateSolarProduction, getPVWattsEstimate } from "./pvWattsService";
@@ -294,6 +294,8 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   // Priority: 1) Manual input, 2) Zip code lookup, 3) Default
   let electricityRate = inputElectricityRate ?? 0.15;
   let demandCharge = inputDemandCharge ?? 15;
+  // Store resolved TOU data for 8760 analysis (Feb 2026)
+  let resolvedTOUData: { hasTOU?: boolean; peakRate?: number; offPeakRate?: number; peakHours?: string; commercialRate?: number } | null = null;
   let utilityRateInfo: QuoteResult['metadata']['utilityRates'] = {
     electricityRate,
     demandCharge,
@@ -327,6 +329,14 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
         if (rateData) {
           electricityRate = rateData.rate || electricityRate;
           demandCharge = rateData.demandCharge || demandCharge;
+          // Capture TOU data for 8760 analysis bridge (Feb 2026)
+          resolvedTOUData = {
+            hasTOU: rateData.hasTOU,
+            peakRate: rateData.peakRate,
+            offPeakRate: rateData.offPeakRate,
+            peakHours: rateData.peakHours,
+            commercialRate: rateData.rate,
+          };
           utilityRateInfo = {
             electricityRate,
             demandCharge,
@@ -740,6 +750,12 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
       const bessKW = storageSizeMW * 1000;
       
       // 8760 Hourly Simulation — use FULL simulation for accurate results (Feb 2026 upgrade)
+      // Build TOU periods from resolved utility rate data (P1a bridge — Feb 2026)
+      const resolvedTOU = resolvedTOUData ? buildTOUPeriodsFromUtilityRate(resolvedTOUData) : null;
+      const rateStructure = resolvedTOU && resolvedTOU.length > 0
+        ? { type: 'tou' as const, touPeriods: resolvedTOU }
+        : { type: 'tou' as const, touPeriods: [] }; // Falls back to state-based TOU in 8760 service
+      
       const annualLoadEstimate = input.annualLoadKWh || (bessKW * 8760 * 0.4); // Rough estimate if not provided
       const fullHourlyResults = run8760Analysis({
         bessCapacityKWh: bessKWh,
@@ -747,7 +763,7 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
         loadProfileType,
         annualLoadKWh: annualLoadEstimate,
         peakDemandKW: input.peakDemandKW || bessKW,
-        rateStructure: { type: 'tou' as const, touPeriods: [] }, // Uses default TOU rates
+        rateStructure,
         demandCharge,
         state: location,
         strategy: 'hybrid',
@@ -787,7 +803,7 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
           paybackP90: Math.round(Math.max(0.5, actualPayback - 1.28 * paybackStdDev) * 10) / 10, // P90 = shorter payback (better)
           probabilityPositiveNPV: riskResults.probabilityPositive,
           valueAtRisk95: Math.round(npv - 1.645 * npv * stdDevRatio), // 95% VaR
-          source: 'Monte Carlo simulation (10,000 iterations, NREL uncertainty ranges)',
+          source: 'Parametric risk estimate (NREL uncertainty ranges, ±25% std dev)',
         },
       };
       

@@ -542,7 +542,7 @@ function RiskAnalysisPanel({
         <div className="flex items-center gap-2 mb-3">
           <Activity className="w-4 h-4 text-indigo-400" />
           <span className="text-xs font-semibold text-indigo-300 uppercase tracking-wider">
-            Risk Analysis (Monte Carlo)
+            Risk Analysis (Parametric)
           </span>
         </div>
 
@@ -595,6 +595,83 @@ function RiskAnalysisPanel({
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ANALYTICS TEASER STRIP — Always visible above the fold (Feb 2026 P1b)
+// Shows key metrics at a glance without needing to expand
+// ═══════════════════════════════════════════════════════════════════════════
+
+function AnalyticsTeaserStrip({ metadata, hasSolar }: { metadata: Metadata; hasSolar?: boolean }) {
+  const risk = metadata.advancedAnalysis?.riskAnalysis;
+  const hourly = metadata.advancedAnalysis?.hourlySimulation;
+  const itc = metadata.itcDetails;
+  const utility = metadata.utilityRates;
+
+  const chips: { label: string; value: string; color: string }[] = [];
+
+  // NPV probability
+  if (risk?.probabilityPositiveNPV != null) {
+    const pct = risk.probabilityPositiveNPV;
+    chips.push({
+      label: "Positive NPV",
+      value: `${pct.toFixed(0)}%`,
+      color: pct >= 80 ? "text-emerald-400" : pct >= 50 ? "text-amber-400" : "text-red-400",
+    });
+  }
+
+  // 8760 savings
+  if (hourly?.annualSavings != null && hourly.annualSavings > 0) {
+    chips.push({
+      label: "8760 Savings",
+      value: fmtUSD(hourly.annualSavings) + "/yr",
+      color: "text-emerald-400",
+    });
+  }
+
+  // ITC rate
+  if (itc?.totalRate != null) {
+    chips.push({
+      label: "ITC Rate",
+      value: `${Math.round(itc.totalRate * 100)}%`,
+      color: itc.totalRate > 0.3 ? "text-indigo-400" : "text-slate-300",
+    });
+  }
+
+  // Utility name + rate
+  if (utility?.utilityName && utility.electricityRate) {
+    chips.push({
+      label: utility.utilityName,
+      value: `$${utility.electricityRate.toFixed(4)}/kWh`,
+      color: "text-sky-400",
+    });
+  }
+
+  // Solar capacity factor
+  if (hasSolar && metadata.solarProduction?.capacityFactor != null) {
+    chips.push({
+      label: "Solar CF",
+      value: `${metadata.solarProduction.capacityFactor.toFixed(1)}%`,
+      color: "text-amber-400",
+    });
+  }
+
+  if (chips.length === 0) return null;
+
+  return (
+    <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/[0.05] p-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+      <div className="flex items-center gap-1.5 mr-1">
+        <Activity className="w-3.5 h-3.5 text-indigo-400" />
+        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Analytics</span>
+      </div>
+      {chips.map((chip, i) => (
+        <div key={i} className="flex items-center gap-1.5">
+          <span className="text-[10px] text-slate-500 font-medium">{chip.label}</span>
+          <span className={`text-xs font-bold tabular-nums ${chip.color}`}>{chip.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MAIN EXPORT — Orchestrator component
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -617,57 +694,63 @@ export default function AdvancedAnalyticsPanels({ metadata, hasSolar }: Props) {
   if (!hasContent) return null;
 
   return (
-    <details
-      className="group"
-      open={expanded}
-      onToggle={(e) => setExpanded((e.target as HTMLDetailsElement).open)}
-    >
-      <summary className="cursor-pointer text-xs text-slate-400 hover:text-slate-300 transition-colors flex items-center gap-1.5 font-semibold">
-        <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" />
-        <Activity className="w-3.5 h-3.5 text-indigo-400" />
-        Advanced Analytics
-        <span className="text-[10px] text-indigo-400/60 ml-1 font-normal">
-          Degradation · ITC · Rates · 8760 · Risk
-        </span>
-      </summary>
+    <div className="space-y-2">
+      {/* Above-the-fold teaser strip — always visible (P1b — Feb 2026) */}
+      <AnalyticsTeaserStrip metadata={metadata} hasSolar={hasSolar} />
 
-      <div className="mt-3 space-y-3">
-        {/* Row 1: Utility Rate + Solar Production (side by side if both exist) */}
-        {(metadata.utilityRates || (metadata.solarProduction && hasSolar)) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {metadata.utilityRates && <UtilityRatePanel data={metadata.utilityRates} />}
-            {metadata.solarProduction && hasSolar && (
-              <SolarProductionPanel data={metadata.solarProduction} />
-            )}
-          </div>
-        )}
-
-        {/* Row 2: ITC Breakdown */}
-        {metadata.itcDetails && <ITCBreakdownPanel data={metadata.itcDetails} />}
-
-        {/* Row 3: Battery Degradation */}
-        {metadata.degradation && <DegradationPanel data={metadata.degradation} />}
-
-        {/* Row 4: 8760 Hourly Savings */}
-        {metadata.advancedAnalysis?.hourlySimulation && (
-          <HourlySavingsPanel data={metadata.advancedAnalysis.hourlySimulation} />
-        )}
-
-        {/* Row 5: Monte Carlo Risk */}
-        {metadata.advancedAnalysis?.riskAnalysis && (
-          <RiskAnalysisPanel data={metadata.advancedAnalysis.riskAnalysis} />
-        )}
-
-        {/* Source footnote */}
-        <div className="flex items-start gap-1.5 text-[10px] text-slate-600 pt-1">
-          <Info className="w-3 h-3 flex-shrink-0 mt-0.5" />
-          <span>
-            Analytics powered by NREL PVWatts, EIA utility data, DOE 8760 load profiles, and Monte
-            Carlo simulation with NREL uncertainty ranges. Battery degradation modeled per
-            NREL/PNNL cycle + calendar aging research.
+      {/* Full analytics panels — collapsed by default */}
+      <details
+        className="group"
+        open={expanded}
+        onToggle={(e) => setExpanded((e.target as HTMLDetailsElement).open)}
+      >
+        <summary className="cursor-pointer text-xs text-slate-400 hover:text-slate-300 transition-colors flex items-center gap-1.5 font-semibold">
+          <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" />
+          <Activity className="w-3.5 h-3.5 text-indigo-400" />
+          Advanced Analytics
+          <span className="text-[10px] text-indigo-400/60 ml-1 font-normal">
+            Degradation · ITC · Rates · 8760 · Risk
           </span>
+        </summary>
+
+        <div className="mt-3 space-y-3">
+          {/* Row 1: Utility Rate + Solar Production (side by side if both exist) */}
+          {(metadata.utilityRates || (metadata.solarProduction && hasSolar)) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {metadata.utilityRates && <UtilityRatePanel data={metadata.utilityRates} />}
+              {metadata.solarProduction && hasSolar && (
+                <SolarProductionPanel data={metadata.solarProduction} />
+              )}
+            </div>
+          )}
+
+          {/* Row 2: ITC Breakdown */}
+          {metadata.itcDetails && <ITCBreakdownPanel data={metadata.itcDetails} />}
+
+          {/* Row 3: Battery Degradation */}
+          {metadata.degradation && <DegradationPanel data={metadata.degradation} />}
+
+          {/* Row 4: 8760 Hourly Savings */}
+          {metadata.advancedAnalysis?.hourlySimulation && (
+            <HourlySavingsPanel data={metadata.advancedAnalysis.hourlySimulation} />
+          )}
+
+          {/* Row 5: Risk Analysis (Parametric) */}
+          {metadata.advancedAnalysis?.riskAnalysis && (
+            <RiskAnalysisPanel data={metadata.advancedAnalysis.riskAnalysis} />
+          )}
+
+          {/* Source footnote */}
+          <div className="flex items-start gap-1.5 text-[10px] text-slate-600 pt-1">
+            <Info className="w-3 h-3 flex-shrink-0 mt-0.5" />
+            <span>
+              Analytics powered by NREL PVWatts, EIA utility data, DOE 8760 load profiles, and
+              parametric risk modeling with NREL uncertainty ranges. Battery degradation modeled per
+              NREL/PNNL cycle + calendar aging research.
+            </span>
+          </div>
         </div>
-      </div>
-    </details>
+      </details>
+    </div>
   );
 }

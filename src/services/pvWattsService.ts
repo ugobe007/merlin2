@@ -115,6 +115,18 @@ const PVWATTS_API_BASE = 'https://developer.nrel.gov/api/pvwatts/v8.json';
 // Get a free key at: https://developer.nrel.gov/signup/
 const PVWATTS_API_KEY = import.meta.env.VITE_NREL_API_KEY || 'DEMO_KEY';
 
+// In-memory PVWatts result cache (keyed by lat/lon rounded to 2 decimals + capacity)
+// Avoids redundant API calls for the same location (P2b — Feb 2026)
+const pvWattsCache = new Map<string, { result: PVWattsResult; timestamp: number }>();
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function makeCacheKey(lat: number, lon: number, capacityKW: number, arrayType: number): string {
+  return `${lat.toFixed(2)},${lon.toFixed(2)},${capacityKW.toFixed(0)},${arrayType}`;
+}
+
+// Warn once about DEMO_KEY (rate-limited to 30 req/hr)
+let _demoKeyWarned = false;
+
 /**
  * Regional capacity factor estimates (fallback when API unavailable)
  * Based on NREL Solar Resource data
@@ -259,6 +271,27 @@ export async function getPVWattsEstimate(input: PVWattsInput): Promise<PVWattsRe
 
   // Build API request parameters
   const tilt = input.tilt ?? getOptimalTilt(lat);
+
+  // P2b — Check cache first (Feb 2026)
+  const cacheKey = makeCacheKey(lat, lon, input.systemCapacityKW, input.arrayType ?? DEFAULT_SYSTEM_PARAMS.arrayType);
+  const cached = pvWattsCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    if (import.meta.env.DEV) {
+      console.log(`☀️ [PVWatts] Cache hit for ${cacheKey}`);
+    }
+    return cached.result;
+  }
+
+  // P2b — Warn about DEMO_KEY rate limits (Feb 2026)
+  if (PVWATTS_API_KEY === 'DEMO_KEY' && !_demoKeyWarned) {
+    _demoKeyWarned = true;
+    console.warn(
+      '⚠️ [PVWatts] Using DEMO_KEY — limited to 30 requests/hour.\n' +
+      '   Get a free API key at: https://developer.nrel.gov/signup/\n' +
+      '   Set VITE_NREL_API_KEY in your .env file.'
+    );
+  }
+
   const params = new URLSearchParams({
     api_key: PVWATTS_API_KEY,
     lat: lat.toString(),
@@ -296,7 +329,7 @@ export async function getPVWattsEstimate(input: PVWattsInput): Promise<PVWattsRe
     const maxPossible = input.systemCapacityKW * 8760; // kW * hours/year
     const capacityFactor = annualProductionKWh / maxPossible;
 
-    return {
+    const result: PVWattsResult = {
       annualProductionKWh: Math.round(annualProductionKWh),
       capacityFactor: Math.round(capacityFactor * 1000) / 10, // As percentage
       monthlyProductionKWh: outputs.ac_monthly.map((v: number) => Math.round(v)),
@@ -329,6 +362,16 @@ export async function getPVWattsEstimate(input: PVWattsInput): Promise<PVWattsRe
         },
       },
     };
+
+    // P2b — Store in cache (Feb 2026)
+    pvWattsCache.set(cacheKey, { result, timestamp: Date.now() });
+    // Evict old entries if cache grows too large
+    if (pvWattsCache.size > 200) {
+      const oldest = [...pvWattsCache.entries()].sort((a, b) => a[1].timestamp - b[1].timestamp)[0];
+      if (oldest) pvWattsCache.delete(oldest[0]);
+    }
+
+    return result;
 
   } catch (error) {
     // Return estimate using regional data as fallback
