@@ -20,6 +20,7 @@ const AccountPage = lazy(() => import("./pages/AccountPage"));
 const SupportFAQ = lazy(() => import("./components/SupportFAQ"));
 const PricingPage = lazy(() => import("./components/pricing/PricingPage"));
 const CheckoutCallback = lazy(() => import("./components/pricing/CheckoutCallback"));
+const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage"));
 import { QuoteProvider } from "./contexts/QuoteContext";
 
 // Test calculations temporarily disabled for production build
@@ -210,6 +211,11 @@ function App() {
   // Access via /wizard-vnext or /vnext - vNext luminous HUD scaffold (Jan 30, 2026)
   if (pathname === "/wizard-vnext" || pathname === "/vnext") {
     return <Suspense fallback={<PageLoader />}><WizardVNextPage /></Suspense>;
+  }
+
+  // Access via /q/:shortCode - Shared quote viewer (public)
+  if (pathname.startsWith("/q/")) {
+    return <Suspense fallback={<PageLoader />}><SharedQuotePage /></Suspense>;
   }
 
   // Access via /quote-builder or advanced=true - Show Advanced Quote Builder
