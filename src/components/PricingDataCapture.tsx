@@ -70,7 +70,7 @@ interface ExtractedPricingData {
   };
 }
 
-const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, _userEmail }) => {
+const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEmail: _userEmail }) => {
   const [activeTab, setActiveTab] = useState<"upload" | "review" | "history">("upload");
   const [uploadedFiles, setUploadedFiles] = useState<ExtractedPricingData[]>([]);
   const [dragActive, setDragActive] = useState(false);

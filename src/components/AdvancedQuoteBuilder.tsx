@@ -516,7 +516,7 @@ export default function AdvancedQuoteBuilder({
       }
 
       setExtractedData(data);
-      _setUploadedDocuments(documents);
+      __setUploadedDocuments(documents);
 
       // Pre-populate form fields from extracted data
       if (data.location?.state) {

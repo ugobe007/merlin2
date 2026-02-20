@@ -45,7 +45,7 @@ interface VerticalLandingPageProps {
 
 export function VerticalLandingPage({
   config,
-  _disableRedirect = true,
+  disableRedirect: _disableRedirect = true,
   initialState = 'California',
   children,
 }: VerticalLandingPageProps) {

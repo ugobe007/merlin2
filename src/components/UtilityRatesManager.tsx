@@ -29,7 +29,7 @@ interface UtilityRatesManagerProps {
 const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({
   onClose,
   onSelectRate,
-  _currentRate,
+  currentRate: _currentRate,
 }) => {
   const [selectedState, setSelectedState] = useState("");
   const [selectedUtility, setSelectedUtility] = useState("");
