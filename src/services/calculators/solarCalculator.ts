@@ -170,7 +170,7 @@ function extractRoofArea(useCaseData: Record<string, any>, industry: string): nu
     useCaseData.roofSize;             // Simple
   
   if (explicitRoof && explicitRoof > 0) {
-    console.log(`🏠 [solarCalculator] Using explicit roof area: ${explicitRoof} sq ft`);
+    if (import.meta.env.DEV) console.log(`🏠 [solarCalculator] Using explicit roof area: ${explicitRoof} sq ft`);
     return explicitRoof;
   }
   
@@ -200,7 +200,7 @@ function extractFacilitySize(useCaseData: Record<string, any>, industry?: string
   if (industry) {
     const config = INDUSTRY_SOLAR_CONFIG[industry];
     if (config?.typicalFootprintSqFt) {
-      console.log(`🏠 [solarCalculator] Using industry footprint fallback for ${industry}: ${config.typicalFootprintSqFt} sq ft`);
+      if (import.meta.env.DEV) console.log(`🏠 [solarCalculator] Using industry footprint fallback for ${industry}: ${config.typicalFootprintSqFt} sq ft`);
       return config.typicalFootprintSqFt;
     }
   }
@@ -340,7 +340,7 @@ function calculateSolarInternal(
   // Additional solar possible from parking canopy/carport structures
   const canopyPotentialKW = config.canopyPotentialKW || 0;
 
-  console.log(`☀️ [solarCalculator] Roof constraint calculation:`, {
+  if (import.meta.env.DEV) console.log(`☀️ [solarCalculator] Roof constraint calculation:`, {
     industry: input.industry,
     explicitRoofArea,
     facilitySize,

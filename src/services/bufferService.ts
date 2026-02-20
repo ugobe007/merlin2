@@ -217,10 +217,10 @@ class BufferService {
         const useCaseData = buffer.state.useCaseData as Record<string, unknown>;
         // Remove old Step 3 computed values (they violate the new contract)
         if ('estimatedAnnualKwh' in useCaseData || 'peakDemandKw' in useCaseData) {
-          console.log('🔧 Migrating: Removing old Step 3 derived values from useCaseData');
+          if (import.meta.env.DEV) console.log('🔧 Migrating: Removing old Step 3 derived values from useCaseData');
           const { estimatedAnnualKwh: _e, peakDemandKw: _p, ...cleanUseCaseData } = useCaseData;
           buffer.state.useCaseData = cleanUseCaseData as typeof buffer.state.useCaseData;
-          console.log('✅ Migration complete: Derived values removed (TrueQuote is SSOT)');
+          if (import.meta.env.DEV) console.log('✅ Migration complete: Derived values removed (TrueQuote is SSOT)');
         }
       }
       return buffer;
@@ -245,7 +245,7 @@ class BufferService {
     if (buffer.state.useCaseData) {
       const useCaseData = buffer.state.useCaseData as Record<string, unknown>;
       if ('estimatedAnnualKwh' in useCaseData || 'peakDemandKw' in useCaseData) {
-        console.log('🔧 Migrating: Removing old Step 3 derived values from useCaseData');
+        if (import.meta.env.DEV) console.log('🔧 Migrating: Removing old Step 3 derived values from useCaseData');
         const { estimatedAnnualKwh: _e2, peakDemandKw: _p2, ...cleanUseCaseData } = useCaseData;
         buffer.state.useCaseData = cleanUseCaseData as typeof buffer.state.useCaseData;
       }

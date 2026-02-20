@@ -292,7 +292,7 @@ export function calculateIndustryBaseline(
     const totalDCFast = (dcFastCount * dcFastPower) / 1000; // MW
     const totalCharging = totalLevel2 + totalDCFast;
 
-    console.log("🔌 EV Charging Calculation:", {
+    if (import.meta.env.DEV) console.log("🔌 EV Charging Calculation:", {
       level2Count,
       level2Power,
       dcFastCount,
@@ -306,7 +306,7 @@ export function calculateIndustryBaseline(
     // Battery sized for demand management (60-70% of peak with concurrency)
     powerMW = Math.max(0.5, Math.min(totalCharging * concurrency * 0.7, totalCharging * 0.8));
 
-    console.log("🔋 Recommended Battery Size:", powerMW, "MW");
+    if (import.meta.env.DEV) console.log("🔋 Recommended Battery Size:", powerMW, "MW");
   } else {
     // Standard calculation: baseline * scale
     powerMW = baseline.powerMWPerUnit * scale;

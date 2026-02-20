@@ -2315,18 +2315,20 @@ export function calculateHotelPower(
   }
   description += ` = ${Math.round(peakDemandKW)} kW total`;
 
-  console.log("🏨 [calculateHotelPower] SSOT calculation with amenities:", {
-    roomCount,
-    hotelClass: effectiveClass,
-    peakKWPerRoom: profile.peakKWPerRoom,
-    diversityFactor,
-    basePeakKW: Math.round(basePeakKW),
-    amenities: amenityDetails,
-    amenityPeakKW,
-    diversifiedAmenityKW: Math.round(diversifiedAmenityKW),
-    totalPeakKW: Math.round(peakDemandKW),
-    powerMW: Math.round(powerMW * 100) / 100,
-  });
+  if (import.meta.env.DEV) {
+    console.log("🏨 [calculateHotelPower] SSOT calculation with amenities:", {
+      roomCount,
+      hotelClass: effectiveClass,
+      peakKWPerRoom: profile.peakKWPerRoom,
+      diversityFactor,
+      basePeakKW: Math.round(basePeakKW),
+      amenities: amenityDetails,
+      amenityPeakKW,
+      diversifiedAmenityKW: Math.round(diversifiedAmenityKW),
+      totalPeakKW: Math.round(peakDemandKW),
+      powerMW: Math.round(powerMW * 100) / 100,
+    });
+  }
 
   return {
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100),
@@ -3130,17 +3132,19 @@ export function calculateHotelPowerFromEquipment(
 
   const description = `${facility.name} Hotel (${roomCount} rooms): ${topConsumers} → ${validatedPeakKW} kW peak`;
 
-  console.log("🏨 [calculateHotelPowerFromEquipment] Detailed breakdown:", {
-    facilityType,
-    roomCount,
-    facilityName: facility.name,
-    breakdown,
-    totalConnectedKW,
-    diversityFactor,
-    peakDemandKW,
-    validatedPeakKW,
-    facilityBenchmark: facilityPeak,
-  });
+  if (import.meta.env.DEV) {
+    console.log("🏨 [calculateHotelPowerFromEquipment] Detailed breakdown:", {
+      facilityType,
+      roomCount,
+      facilityName: facility.name,
+      breakdown,
+      totalConnectedKW,
+      diversityFactor,
+      peakDemandKW,
+      validatedPeakKW,
+      facilityBenchmark: facilityPeak,
+    });
+  }
 
   return {
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100),
@@ -3860,7 +3864,9 @@ export function calculateDatacenterPower(
   rackCount?: number,
   rackDensityKW: number = 8
 ): PowerCalculationResult {
-  console.log("🏢 [calculateDatacenterPower] INPUTS:", { itLoadKW, rackCount, rackDensityKW });
+  if (import.meta.env.DEV) {
+    console.log("🏢 [calculateDatacenterPower] INPUTS:", { itLoadKW, rackCount, rackDensityKW });
+  }
 
   let powerKW: number;
   let method: string;
@@ -3869,33 +3875,41 @@ export function calculateDatacenterPower(
     // Direct IT load specified - add 50% for cooling (PUE ~1.5)
     powerKW = itLoadKW * 1.5;
     method = `Direct IT load ${itLoadKW}kW × 1.5 PUE`;
-    console.log("🏢 [calculateDatacenterPower] Using IT Load method:", {
-      itLoadKW,
-      powerKW,
-      method,
-    });
+    if (import.meta.env.DEV) {
+      console.log("🏢 [calculateDatacenterPower] Using IT Load method:", {
+        itLoadKW,
+        powerKW,
+        method,
+      });
+    }
   } else if (rackCount && rackCount > 0) {
     // Calculate from rack count
     const itPower = rackCount * rackDensityKW;
     powerKW = itPower * 1.5; // PUE ~1.5
     method = `${rackCount} racks × ${rackDensityKW}kW × 1.5 PUE`;
-    console.log("🏢 [calculateDatacenterPower] Using Rack Count method:", {
-      rackCount,
-      rackDensityKW,
-      itPower,
-      powerKW,
-      method,
-    });
+    if (import.meta.env.DEV) {
+      console.log("🏢 [calculateDatacenterPower] Using Rack Count method:", {
+        rackCount,
+        rackDensityKW,
+        itPower,
+        powerKW,
+        method,
+      });
+    }
   } else {
     // Default small datacenter
     powerKW = 2000; // 2 MW default
     method = "Default 2MW datacenter";
-    console.log("⚠️ [calculateDatacenterPower] USING DEFAULT - No itLoadKW or rackCount provided!");
+    if (import.meta.env.DEV) {
+      console.log("⚠️ [calculateDatacenterPower] USING DEFAULT - No itLoadKW or rackCount provided!");
+    }
   }
 
   const powerMW = powerKW / 1000;
 
-  console.log("🏢 [calculateDatacenterPower] FINAL OUTPUT:", { powerKW, powerMW, method });
+  if (import.meta.env.DEV) {
+    console.log("🏢 [calculateDatacenterPower] FINAL OUTPUT:", { powerKW, powerMW, method });
+  }
 
   return {
     powerMW: Math.max(0.5, Math.round(powerMW * 100) / 100), // Min 500kW
@@ -5755,16 +5769,18 @@ export function calculateCarWashPowerFromEquipment(
 
   const description = `${facilityType.name}: ${topConsumers} → ${validatedPeakKW} kW peak (${totalConnectedKW.toFixed(0)} kW connected)`;
 
-  console.log("🚗 [calculateCarWashPowerFromEquipment] Detailed breakdown:", {
-    washType,
-    bayCount,
-    facilityType: facilityType.name,
-    breakdown,
-    totalConnectedKW,
-    peakDemandKW,
-    validatedPeakKW,
-    facilityBenchmark: facilityPeak,
-  });
+  if (import.meta.env.DEV) {
+    console.log("🚗 [calculateCarWashPowerFromEquipment] Detailed breakdown:", {
+      washType,
+      bayCount,
+      facilityType: facilityType.name,
+      breakdown,
+      totalConnectedKW,
+      peakDemandKW,
+      validatedPeakKW,
+      facilityBenchmark: facilityPeak,
+    });
+  }
 
   return {
     powerMW: Math.max(0.05, Math.round((validatedPeakKW / 1000) * 100) / 100),
@@ -6017,13 +6033,15 @@ export function calculateUseCasePower(
         description += ` + Equipment: ${equipmentDetails.join(", ")}`;
       }
 
-      console.log("🏥 [Hospital Power] Calculation:", {
-        bedCount,
-        basePowerKW,
-        equipmentLoadKW,
-        totalPowerKW,
-        equipmentDetails,
-      });
+      if (import.meta.env.DEV) {
+        console.log("🏥 [Hospital Power] Calculation:", {
+          bedCount,
+          basePowerKW,
+          equipmentLoadKW,
+          totalPowerKW,
+          equipmentDetails,
+        });
+      }
 
       return {
         powerMW: Math.round(totalPowerMW * 100) / 100,
@@ -6038,13 +6056,15 @@ export function calculateUseCasePower(
     case "datacenter":
     case "data-center":
       // Database uses 'averageRackDensity' (Dec 2025), legacy: rackDensityKW
-      console.log("🏢🏢🏢 [calculateUseCasePower] DATA CENTER CASE - useCaseData:", {
-        itLoadKW: useCaseData.itLoadKW,
-        rackCount: useCaseData.rackCount,
-        averageRackDensity: useCaseData.averageRackDensity,
-        rackDensityKW: useCaseData.rackDensityKW,
-        allKeys: Object.keys(useCaseData),
-      });
+      if (import.meta.env.DEV) {
+        console.log("🏢🏢🏢 [calculateUseCasePower] DATA CENTER CASE - useCaseData:", {
+          itLoadKW: useCaseData.itLoadKW,
+          rackCount: useCaseData.rackCount,
+          averageRackDensity: useCaseData.averageRackDensity,
+          rackDensityKW: useCaseData.rackDensityKW,
+          allKeys: Object.keys(useCaseData),
+        });
+      }
       return calculateDatacenterPower(
         parseInt(useCaseData.itLoadKW) || undefined,
         parseInt(useCaseData.rackCount) || undefined,

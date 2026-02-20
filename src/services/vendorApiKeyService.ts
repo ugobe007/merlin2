@@ -368,8 +368,7 @@ export async function getApiUsageMetrics(
   const totalRequests = keys.reduce((sum, k) => sum + k.totalRequests, 0);
   const lastUsed = keys
     .filter((k) => k.lastUsedAt)
-    .sort((a, b) => (b.lastUsedAt ?? '').localeCompare(a.lastUsedAt ?? ''))
-    [0]?.lastUsedAt;
+    .sort((a, b) => (b.lastUsedAt ?? '').localeCompare(a.lastUsedAt ?? ''))[0]?.lastUsedAt;
 
   return {
     vendorId,

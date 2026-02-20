@@ -1935,7 +1935,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
   };
 
   // Log for debugging
-  console.log("generateWord called with:", safeData);
+  if (import.meta.env.DEV) console.log("generateWord called with:", safeData);
 
   const totalEnergyMWh = safeData.storageSizeMW * safeData.durationHours;
   const hasRenewables = safeData.solarMW > 0 || safeData.windMW > 0 || safeData.generatorMW > 0;

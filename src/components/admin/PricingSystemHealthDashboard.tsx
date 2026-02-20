@@ -112,7 +112,7 @@ export const PricingSystemHealthDashboard: React.FC = () => {
         setUtilityRates([]);
         return;
       }
-      console.log('✅ Utility rates loaded:', data?.length || 0, 'states');
+      if (import.meta.env.DEV) console.log('✅ Utility rates loaded:', data?.length || 0, 'states');
       setUtilityRates(data || []);
     } catch (error) {
       console.error('❌ Exception loading utility rates:', error);
@@ -126,7 +126,7 @@ export const PricingSystemHealthDashboard: React.FC = () => {
   const loadHealthMetrics = async () => {
     setRefreshing(true);
     try {
-      console.log('🔄 Refreshing pricing health metrics...');
+      if (import.meta.env.DEV) console.log('🔄 Refreshing pricing health metrics...');
       // Load all metrics in parallel
       const [
         mlData,
@@ -150,7 +150,7 @@ export const PricingSystemHealthDashboard: React.FC = () => {
       
       // Update last refresh timestamp
       setLastRefresh(new Date());
-      console.log('✅ Pricing health metrics refreshed');
+      if (import.meta.env.DEV) console.log('✅ Pricing health metrics refreshed');
 
       setMetrics({
         // Market Data
@@ -416,7 +416,7 @@ export const PricingSystemHealthDashboard: React.FC = () => {
     try {
       setRefreshing(true);
       const result = await runMLProcessing();
-      console.log('ML Processing Result:', result);
+      if (import.meta.env.DEV) console.log('ML Processing Result:', result);
       await loadHealthMetrics();
     } catch (error) {
       console.error('Error running ML processing:', error);
@@ -929,7 +929,7 @@ export const PricingSystemHealthDashboard: React.FC = () => {
           </h3>
           <button
             onClick={() => {
-              console.log('🔄 Refreshing utility rates...');
+              if (import.meta.env.DEV) console.log('🔄 Refreshing utility rates...');
               loadUtilityRates();
             }}
             disabled={utilityRatesLoading}

@@ -377,6 +377,7 @@ export function assertEngineOutputPopulatesCalculations({
  * Answers: "Is this a UI state problem, mapping problem, or engine problem?"
  */
 export function logWizardStateSchema(state: WizardState): void {
+  if (!import.meta.env.DEV) return;
   console.group("📋 Step 5 Preflight: WizardState Schema Validation");
 
   // Step name

@@ -135,6 +135,6 @@ export function logValidationResults(validation: ValidationResult) {
   }
 
   if (validation.isValid && validation.warnings.length === 0) {
-    console.log("✅ [SmartWizard Config Validation] All configs valid");
+    if (import.meta.env.DEV) console.log("✅ [SmartWizard Config Validation] All configs valid");
   }
 }

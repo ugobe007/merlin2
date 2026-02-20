@@ -547,7 +547,7 @@ export async function savePriceAlert(
       return { success: false, error: error.message };
     }
 
-    console.log("✅ Price alert saved:", data.id);
+    if (import.meta.env.DEV) console.log("✅ Price alert saved:", data.id);
     return { success: true, id: data.id };
   } catch (err) {
     console.error("Database error:", err);
@@ -687,6 +687,6 @@ export async function processNewsForPriceAlerts(articles: NewsArticle[]): Promis
     }
   }
 
-  console.log(`✅ Created ${alertsCreated} price alerts from ${articles.length} articles`);
+  if (import.meta.env.DEV) console.log(`✅ Created ${alertsCreated} price alerts from ${articles.length} articles`);
   return alertsCreated;
 }

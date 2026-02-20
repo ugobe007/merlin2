@@ -81,7 +81,7 @@ class WizardAIAgent {
       return;
     }
 
-    console.log('🤖 [Wizard AI Agent] Starting health monitoring with auto-fix enabled...');
+    if (import.meta.env.DEV) console.log('🤖 [Wizard AI Agent] Starting health monitoring with auto-fix enabled...');
     
     // Initial check
     this.runHealthCheck();
@@ -99,7 +99,7 @@ class WizardAIAgent {
     if (this.checkInterval !== null) {
       window.clearInterval(this.checkInterval);
       this.checkInterval = null;
-      console.log('🤖 [Wizard AI Agent] Stopped');
+      if (import.meta.env.DEV) console.log('🤖 [Wizard AI Agent] Stopped');
     }
   }
 
@@ -243,9 +243,9 @@ class WizardAIAgent {
     // Log issues
     if (issues.length > 0 || this.adminAlerts.length > 0) {
       console.warn(`🤖 [Wizard AI Agent] Found ${issues.length} issue(s), ${this.adminAlerts.length} admin alert(s)`);
-      console.log(this.getSummary());
+      if (import.meta.env.DEV) console.log(this.getSummary());
     } else {
-      console.log(`✅ [Wizard AI Agent] All systems healthy`);
+      if (import.meta.env.DEV) console.log(`✅ [Wizard AI Agent] All systems healthy`);
     }
   }
 
@@ -253,7 +253,7 @@ class WizardAIAgent {
    * AUTO-FIX: Attempt to fix issues automatically
    */
   private attemptAutoFix(issue: Issue): void {
-    console.log(`🤖 [Auto-Fix] Attempting to fix: ${issue.title}`);
+    if (import.meta.env.DEV) console.log(`🤖 [Auto-Fix] Attempting to fix: ${issue.title}`);
     
     issue.autoFixAttempted = true;
     
@@ -265,7 +265,7 @@ class WizardAIAgent {
         
         if (success) {
           this.autoFixCount++;
-          console.log(`✅ [Auto-Fix] Successfully relaxed gate validation`);
+          if (import.meta.env.DEV) console.log(`✅ [Auto-Fix] Successfully relaxed gate validation`);
         }
       } else if (issue.type === 'api_failure') {
         // Auto-fix: Enable retry with exponential backoff
@@ -274,12 +274,12 @@ class WizardAIAgent {
         
         if (success) {
           this.autoFixCount++;
-          console.log(`✅ [Auto-Fix] API retry enabled`);
+          if (import.meta.env.DEV) console.log(`✅ [Auto-Fix] API retry enabled`);
         }
       } else if (issue.type === 'dual_validation') {
         // Cannot auto-fix code issues
         issue.autoFixSuccess = false;
-        console.log(`⚠️ [Auto-Fix] Code changes required - flagged for developer`);
+        if (import.meta.env.DEV) console.log(`⚠️ [Auto-Fix] Code changes required - flagged for developer`);
       }
     } catch (error) {
       console.error(`❌ [Auto-Fix] Failed:`, error);
@@ -291,7 +291,7 @@ class WizardAIAgent {
    * Auto-fix implementation: Relax gate validation temporarily
    */
   private relaxGateValidation(issue: Issue): boolean {
-    console.log(`📊 [Auto-Fix] Relaxing gate validation temporarily`);
+    if (import.meta.env.DEV) console.log(`📊 [Auto-Fix] Relaxing gate validation temporarily`);
     
     // Runtime fix: Set flag in localStorage
     // useWizardV7 can check this flag and be less strict
@@ -309,7 +309,7 @@ class WizardAIAgent {
    * Auto-fix implementation: Enable API retry logic
    */
   private enableAPIRetry(): boolean {
-    console.log(`🔄 [Auto-Fix] Enabling API retry with exponential backoff`);
+    if (import.meta.env.DEV) console.log(`🔄 [Auto-Fix] Enabling API retry with exponential backoff`);
     
     if (typeof window !== 'undefined') {
       localStorage.setItem('wizardAPIRetryEnabled', 'true');
@@ -504,8 +504,10 @@ Generated: ${new Date().toISOString()}
         const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost';
         if (isDev) {
           const mailtoLink = `mailto:${ADMIN_CONFIG.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-          console.log(`📧 [Email Alert] Ready to send to ${ADMIN_CONFIG.email}`);
-          console.log(`   Click here to send: ${mailtoLink}`);
+          if (import.meta.env.DEV) {
+            console.log(`📧 [Email Alert] Ready to send to ${ADMIN_CONFIG.email}`);
+            console.log(`   Click here to send: ${mailtoLink}`);
+          }
           
           // Auto-open email client (optional - can be annoying in dev)
           // window.open(mailtoLink);
@@ -524,7 +526,7 @@ Generated: ${new Date().toISOString()}
               alert,
             }),
           });
-          console.log(`📧 [Email Alert] Sent to ${ADMIN_CONFIG.email}`);
+          if (import.meta.env.DEV) console.log(`📧 [Email Alert] Sent to ${ADMIN_CONFIG.email}`);
         }
       } catch (error) {
         console.error('❌ [Email Alert] Failed to send:', error);
@@ -555,7 +557,7 @@ Generated: ${new Date().toISOString()}
             }],
           }),
         });
-        console.log('📱 [Slack Alert] Sent successfully');
+        if (import.meta.env.DEV) console.log('📱 [Slack Alert] Sent successfully');
       } catch (error) {
         console.error('❌ [Slack Alert] Failed to send:', error);
       }
@@ -629,7 +631,7 @@ Generated: ${new Date().toISOString()}
    */
   clearAdminAlert(alertId: string): void {
     this.adminAlerts = this.adminAlerts.filter(a => a.id !== alertId);
-    console.log(`✅ [Admin Alert] Cleared: ${alertId}`);
+    if (import.meta.env.DEV) console.log(`✅ [Admin Alert] Cleared: ${alertId}`);
   }
 }
 

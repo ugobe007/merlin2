@@ -59,12 +59,14 @@ const ENGINE_VERSION = "2.0.0";
 export async function processQuote(
   request: MerlinRequest
 ): Promise<TrueQuoteAuthenticatedResult | TrueQuoteRejection> {
-  console.log("═══════════════════════════════════════════════════════");
-  console.log("🔷 TrueQuote v2: Processing quote request");
-  console.log("═══════════════════════════════════════════════════════");
-  console.log("📍 Location:", request.location.state, request.location.zipCode);
-  console.log("🏭 Industry:", request.facility.industry);
-  console.log("🎯 Goals:", request.goals);
+  if (import.meta.env.DEV) {
+    console.log("═══════════════════════════════════════════════════════");
+    console.log("🔷 TrueQuote v2: Processing quote request");
+    console.log("═══════════════════════════════════════════════════════");
+    console.log("📍 Location:", request.location.state, request.location.zipCode);
+    console.log("🏭 Industry:", request.facility.industry);
+    console.log("🎯 Goals:", request.goals);
+  }
 
   // ─────────────────────────────────────────────────────────────
   // STEP 1: Calculate Load
@@ -73,7 +75,7 @@ export async function processQuote(
     industry: request.facility.industry,
     useCaseData: request.facility.useCaseData,
   });
-  console.log("⚡ Load:", loadResult.peakDemandKW, "kW peak");
+  if (import.meta.env.DEV) console.log("⚡ Load:", loadResult.peakDemandKW, "kW peak");
 
   // ─────────────────────────────────────────────────────────────
   // STEP 2: Calculate BESS
@@ -85,7 +87,7 @@ export async function processQuote(
     useCaseData: request.facility.useCaseData,
     goals: request.goals,
   });
-  console.log("🔋 BESS:", bessResult.powerKW, "kW /", bessResult.energyKWh, "kWh");
+  if (import.meta.env.DEV) console.log("🔋 BESS:", bessResult.powerKW, "kW /", bessResult.energyKWh, "kWh");
 
   // ─────────────────────────────────────────────────────────────
   // STEP 3: Calculate Solar
@@ -101,18 +103,20 @@ export async function processQuote(
     userInterested: request.preferences.solar.interested,
     customSizeKw: request.preferences.solar.customSizeKw,
   });
-  console.log(
-    "☀️ Solar:",
-    solarResult.capacityKW,
-    "kW",
-    solarResult.recommended ? "(recommended)" : ""
-  );
-  if (solarResult.isRoofConstrained) {
-    console.log("⚠️ Solar ROOF CONSTRAINED:", {
-      ideal: solarResult.idealCapacityKW + " kW",
-      maxRoof: solarResult.maxRoofCapacityKW + " kW",
-      gap: solarResult.solarGapKW + " kW (consider carport)",
-    });
+  if (import.meta.env.DEV) {
+    console.log(
+      "☀️ Solar:",
+      solarResult.capacityKW,
+      "kW",
+      solarResult.recommended ? "(recommended)" : ""
+    );
+    if (solarResult.isRoofConstrained) {
+      console.log("⚠️ Solar ROOF CONSTRAINED:", {
+        ideal: solarResult.idealCapacityKW + " kW",
+        maxRoof: solarResult.maxRoofCapacityKW + " kW",
+        gap: solarResult.solarGapKW + " kW (consider carport)",
+      });
+    }
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -128,7 +132,7 @@ export async function processQuote(
     customSizeKw: request.preferences.generator.customSizeKw,
     fuelType: request.preferences.generator.fuelType,
   });
-  console.log(
+  if (import.meta.env.DEV) console.log(
     "⛽ Generator:",
     generatorResult.capacityKW,
     "kW",
@@ -146,7 +150,7 @@ export async function processQuote(
     dcfcCount: request.preferences.ev.dcfcCount,
     ultraFastCount: request.preferences.ev.ultraFastCount,
   });
-  console.log("🔌 EV:", evResult.totalChargers, "chargers /", evResult.totalPowerKW, "kW");
+  if (import.meta.env.DEV) console.log("🔌 EV:", evResult.totalChargers, "chargers /", evResult.totalPowerKW, "kW");
 
   // ─────────────────────────────────────────────────────────────
   // STEP 6: Calculate Financials
@@ -165,7 +169,7 @@ export async function processQuote(
     demandCharge: 15, // TODO: Get from utility service
     state: request.location.state,
   });
-  console.log(
+  if (import.meta.env.DEV) console.log(
     "💰 Financials: $" + financialResult.netCost.toLocaleString(),
     "net cost,",
     financialResult.simplePaybackYears,
@@ -259,8 +263,10 @@ export async function processQuote(
   // ─────────────────────────────────────────────────────────────
   // STEP 8: Delegate to Magic Fit
   // ─────────────────────────────────────────────────────────────
-  console.log("");
-  console.log("🪄 Delegating to Magic Fit...");
+  if (import.meta.env.DEV) {
+    console.log("");
+    console.log("🪄 Delegating to Magic Fit...");
+  }
 
   // Build user preferences from request
   const userPreferences: UserPreferences = {
@@ -279,7 +285,7 @@ export async function processQuote(
     hasNaturalGasLine: request.facility.useCaseData?.hasNaturalGasLine || false,
   };
 
-  console.log("🪄 User preferences:", {
+  if (import.meta.env.DEV) console.log("🪄 User preferences:", {
     solar: userPreferences.solar.interested,
     generator: userPreferences.generator.interested,
     ev: userPreferences.ev.interested,
@@ -295,8 +301,10 @@ export async function processQuote(
   // ─────────────────────────────────────────────────────────────
   // STEP 9: Authenticate Magic Fit's Proposal
   // ─────────────────────────────────────────────────────────────
-  console.log("");
-  console.log("🔐 Authenticating proposal...");
+  if (import.meta.env.DEV) {
+    console.log("");
+    console.log("🔐 Authenticating proposal...");
+  }
   const authResult = authenticateProposal(baseCalculation, magicFitProposal);
 
   if ("rejected" in authResult && authResult.rejected) {
@@ -315,8 +323,10 @@ export async function processQuote(
   // ─────────────────────────────────────────────────────────────
   // STEP 9.5: Apply Margin Policy to each tier (Feb 2026)
   // ─────────────────────────────────────────────────────────────
-  console.log("");
-  console.log("💰 Applying margin policy...");
+  if (import.meta.env.DEV) {
+    console.log("");
+    console.log("💰 Applying margin policy...");
+  }
   const tiers = ["starter", "perfectFit", "beastMode"] as const;
   for (const tier of tiers) {
     const opt = (authenticatedOptions as any)[tier];
@@ -329,7 +339,7 @@ export async function processQuote(
         customerSegment: "direct",
       });
       opt.marginRender = toMarginRenderEnvelope(marginResult);
-      console.log(`  ${tier}: base=$${baseCost.toLocaleString()} → sell=$${opt.marginRender.sellPriceTotal.toLocaleString()}`);
+      if (import.meta.env.DEV) console.log(`  ${tier}: base=$${baseCost.toLocaleString()} → sell=$${opt.marginRender.sellPriceTotal.toLocaleString()}`);
     } catch (err) {
       console.warn(`  ${tier}: margin policy failed, using baseCost as sellPrice`, err);
       // Fallback: sellPriceTotal = baseCost (no margin)
@@ -401,11 +411,13 @@ export async function processQuote(
     ],
   };
 
-  console.log("");
-  console.log("═══════════════════════════════════════════════════════");
-  console.log("✅ TrueQuote v2: Quote authenticated!");
-  console.log("📋 Quote ID:", quoteId);
-  console.log("═══════════════════════════════════════════════════════");
+  if (import.meta.env.DEV) {
+    console.log("");
+    console.log("═══════════════════════════════════════════════════════");
+    console.log("✅ TrueQuote v2: Quote authenticated!");
+    console.log("📋 Quote ID:", quoteId);
+    console.log("═══════════════════════════════════════════════════════");
+  }
 
   return result;
 }

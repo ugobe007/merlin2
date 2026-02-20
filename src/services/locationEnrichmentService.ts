@@ -114,7 +114,7 @@ export async function enrichLocationData(zipCode: string): Promise<EnrichedLocat
   }
 
   const startTime = Date.now();
-  console.log(`[LocationEnrichment] Starting enrichment for ZIP ${zipCode}`);
+  if (import.meta.env.DEV) console.log(`[LocationEnrichment] Starting enrichment for ZIP ${zipCode}`);
 
   // Initialize quality tracking
   const dataQuality: EnrichedLocationData['dataQuality'] = {
@@ -137,7 +137,7 @@ export async function enrichLocationData(zipCode: string): Promise<EnrichedLocat
     }
 
     dataQuality.geocoding = 'success';
-    console.log(`[LocationEnrichment] Geocoded: ${geocodeResult.city}, ${geocodeResult.stateCode}`);
+    if (import.meta.env.DEV) console.log(`[LocationEnrichment] Geocoded: ${geocodeResult.city}, ${geocodeResult.stateCode}`);
 
     const { lat, lon, city, stateCode, formattedAddress } = geocodeResult;
     const stateName = geocodeResult.state || stateCode;
@@ -172,7 +172,7 @@ export async function enrichLocationData(zipCode: string): Promise<EnrichedLocat
         offPeakRate: utilityData.value.peakRate ? utilityData.value.rate * 0.7 : undefined, // Estimate off-peak
         source: utilityData.value.source,
       };
-      console.log(`[LocationEnrichment] Utility: ${utility.name} - $${utility.rate}/kWh`);
+      if (import.meta.env.DEV) console.log(`[LocationEnrichment] Utility: ${utility.name} - $${utility.rate}/kWh`);
     } else {
       // Fallback to basic state average
       dataQuality.utility = 'fallback';
@@ -220,7 +220,7 @@ export async function enrichLocationData(zipCode: string): Promise<EnrichedLocat
         label,
         annualProductionPerKW: solarEstimate.value.productionPerKW,
       };
-      console.log(`[LocationEnrichment] Solar: ${solar.sunHours} hrs/day (${solar.label})`);
+      if (import.meta.env.DEV) console.log(`[LocationEnrichment] Solar: ${solar.sunHours} hrs/day (${solar.label})`);
     } else {
       // Fallback solar estimate
       dataQuality.solar = 'fallback';
@@ -250,7 +250,7 @@ export async function enrichLocationData(zipCode: string): Promise<EnrichedLocat
         heatingDegreeDays: weatherData.value.heatingDegreeDays || 2000,
         coolingDegreeDays: weatherData.value.coolingDegreeDays || 1500,
       };
-      console.log(`[LocationEnrichment] Weather: ${weather.profile} - ${weather.extremes}`);
+      if (import.meta.env.DEV) console.log(`[LocationEnrichment] Weather: ${weather.profile} - ${weather.extremes}`);
     } else {
       // Fallback weather estimate
       dataQuality.weather = 'fallback';
@@ -294,7 +294,7 @@ export async function enrichLocationData(zipCode: string): Promise<EnrichedLocat
       basis: `Based on typical commercial profiles in ${city}`,
     };
 
-    console.log(`[LocationEnrichment] Savings teaser: $${savingsTeaser.low}-$${savingsTeaser.high}/year`);
+    if (import.meta.env.DEV) console.log(`[LocationEnrichment] Savings teaser: $${savingsTeaser.low}-$${savingsTeaser.high}/year`);
 
     // ========================================================================
     // STEP 7: Determine overall data quality
@@ -315,7 +315,7 @@ export async function enrichLocationData(zipCode: string): Promise<EnrichedLocat
     }
 
     const elapsedTime = Date.now() - startTime;
-    console.log(`[LocationEnrichment] Complete in ${elapsedTime}ms - Quality: ${dataQuality.overall}`);
+    if (import.meta.env.DEV) console.log(`[LocationEnrichment] Complete in ${elapsedTime}ms - Quality: ${dataQuality.overall}`);
 
     // ========================================================================
     // STEP 8: Return enriched data

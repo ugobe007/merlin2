@@ -218,7 +218,7 @@ function getProgressiveEstimate(props: MerlinAdvisorProps): {
 // STEP-SPECIFIC MESSAGES
 // ============================================================================
 function getMerlinMessage(props: MerlinAdvisorProps): { title: string; message: string } {
-  const { currentStep, state, city, industry, industryName, goals, sunHours, electricityRate, hasSolar, hasGenerator, selectedTier } = props;
+  const { currentStep, state, city, industry, industryName, goals, sunHours: _sunHours, electricityRate: _electricityRate, hasSolar, hasGenerator, selectedTier } = props;
   
   const locationName = city || state || 'your area';
   const industryLabel = industryName || industry || 'your business';

@@ -242,7 +242,7 @@ export function mapHotelQuestionnaireToSSOT(answers: HotelQuestionnaireAnswers):
     }
   }
 
-  console.log("🗺️ [mapHotelQuestionnaireToSSOT] Mapping complete:", {
+  if (import.meta.env.DEV) console.log("🗺️ [mapHotelQuestionnaireToSSOT] Mapping complete:", {
     inputClassification: classification,
     outputClass: hotelClass,
     roomCount,
@@ -384,7 +384,7 @@ export function extractHotelQuestionnaireData(
     }
   }
 
-  console.log("🗺️ [extractHotelQuestionnaireData] Extraction complete:", {
+  if (import.meta.env.DEV) console.log("🗺️ [extractHotelQuestionnaireData] Extraction complete:", {
     existingSolarKW,
     wantsSolar,
     targetSolarKW,

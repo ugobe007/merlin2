@@ -36,8 +36,10 @@ export interface MigrationResult {
  * Main migration function - migrates all templates to database
  */
 export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
-  console.log("🔄 Starting template migration to database...");
-  console.log(`📊 Found ${USE_CASE_TEMPLATES.length} templates to migrate`);
+  if (import.meta.env.DEV) {
+    console.log("🔄 Starting template migration to database...");
+    console.log(`📊 Found ${USE_CASE_TEMPLATES.length} templates to migrate`);
+  }
 
   const result: MigrationResult = {
     success: true,
@@ -58,7 +60,7 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
   // Migrate each template
   for (const template of USE_CASE_TEMPLATES) {
     try {
-      console.log(`\n📝 Migrating: ${template.name} (${template.slug})`);
+      if (import.meta.env.DEV) console.log(`\n📝 Migrating: ${template.name} (${template.slug})`);
 
       // Check if template already exists
       const { data: existing } = await supabase
@@ -68,7 +70,7 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
         .single();
 
       if (existing) {
-        console.log(
+        if (import.meta.env.DEV) console.log(
           `⚠️  Template ${template.slug} already exists (version ${existing.version}). Skipping...`
         );
         result.errors.push(`Template ${template.slug} already exists`);
@@ -119,13 +121,13 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
         continue;
       }
 
-      console.log(`✅ Template created: ${templateData.id}`);
+      if (import.meta.env.DEV) console.log(`✅ Template created: ${templateData.id}`);
       result.templatesCreated++;
 
       // 2. Insert equipment (if exists)
       let equipmentCount = 0;
       if (template.equipment && template.equipment.length > 0) {
-        console.log(`   📦 Migrating ${template.equipment.length} equipment items...`);
+        if (import.meta.env.DEV) console.log(`   📦 Migrating ${template.equipment.length} equipment items...`);
 
         const equipmentRecords = template.equipment.map((eq, index) => ({
           use_case_template_id: templateData.id,
@@ -151,10 +153,10 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
         } else {
           equipmentCount = equipmentData?.length || 0;
           result.equipmentCreated += equipmentCount;
-          console.log(`   ✅ Created ${equipmentCount} equipment items`);
+          if (import.meta.env.DEV) console.log(`   ✅ Created ${equipmentCount} equipment items`);
         }
       } else {
-        console.log(`   ℹ️  No equipment items for this template`);
+        if (import.meta.env.DEV) console.log(`   ℹ️  No equipment items for this template`);
       }
 
       result.details.push({
@@ -170,19 +172,21 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
   }
 
   // Print summary
-  console.log("\n" + "=".repeat(60));
-  console.log("📊 MIGRATION SUMMARY");
-  console.log("=".repeat(60));
-  console.log(`✅ Templates created: ${result.templatesCreated}/${USE_CASE_TEMPLATES.length}`);
-  console.log(`✅ Equipment created: ${result.equipmentCreated}`);
-  console.log(`❌ Errors: ${result.errors.length}`);
+  if (import.meta.env.DEV) {
+    console.log("\n" + "=".repeat(60));
+    console.log("📊 MIGRATION SUMMARY");
+    console.log("=".repeat(60));
+    console.log(`✅ Templates created: ${result.templatesCreated}/${USE_CASE_TEMPLATES.length}`);
+    console.log(`✅ Equipment created: ${result.equipmentCreated}`);
+    console.log(`❌ Errors: ${result.errors.length}`);
 
-  if (result.errors.length > 0) {
-    console.log("\n⚠️  ERRORS:");
-    result.errors.forEach((err) => console.log(`   - ${err}`));
+    if (result.errors.length > 0) {
+      console.log("\n⚠️  ERRORS:");
+      result.errors.forEach((err) => console.log(`   - ${err}`));
+    }
+
+    console.log("=".repeat(60) + "\n");
   }
-
-  console.log("=".repeat(60) + "\n");
 
   return result;
 }
@@ -264,7 +268,7 @@ export async function validateMigration(): Promise<{
   valid: boolean;
   issues: string[];
 }> {
-  console.log("🔍 Validating migration...");
+  if (import.meta.env.DEV) console.log("🔍 Validating migration...");
 
   const issues: string[] = [];
 
@@ -315,7 +319,7 @@ export async function validateMigration(): Promise<{
       }
     }
 
-    console.log(`✅ Validation complete: ${issues.length} issues found`);
+    if (import.meta.env.DEV) console.log(`✅ Validation complete: ${issues.length} issues found`);
     return {
       valid: issues.length === 0,
       issues,
@@ -336,7 +340,7 @@ export async function rollbackMigration(): Promise<{
   equipmentDeleted: number;
   errors: string[];
 }> {
-  console.log("⚠️  ROLLBACK: Deleting all migrated templates...");
+  if (import.meta.env.DEV) console.log("⚠️  ROLLBACK: Deleting all migrated templates...");
 
   const result = {
     success: true,
@@ -357,7 +361,7 @@ export async function rollbackMigration(): Promise<{
     }
 
     if (!templates || templates.length === 0) {
-      console.log("ℹ️  No templates to delete");
+      if (import.meta.env.DEV) console.log("ℹ️  No templates to delete");
       return result;
     }
 
@@ -375,7 +379,7 @@ export async function rollbackMigration(): Promise<{
       result.errors.push(`Error deleting templates: ${deleteError.message}`);
     } else {
       result.templatesDeleted = templates.length;
-      console.log(`✅ Deleted ${templates.length} templates (equipment auto-deleted via CASCADE)`);
+      if (import.meta.env.DEV) console.log(`✅ Deleted ${templates.length} templates (equipment auto-deleted via CASCADE)`);
     }
   } catch (error) {
     result.success = false;

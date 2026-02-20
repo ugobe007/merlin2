@@ -293,7 +293,7 @@ export const detectBusinessFromAddress = async (
   query: string
 ): Promise<BusinessDetectionResult | null> => {
   try {
-    console.log("[BusinessDetection] Query:", query);
+    if (import.meta.env.DEV) console.log("[BusinessDetection] Query:", query);
 
     // Use canonical backend API for business lookup
     const { lookupBusiness, getPlaceDetails } = await import("@/config/api");
@@ -302,13 +302,13 @@ export const detectBusinessFromAddress = async (
     const lookupResult = await lookupBusiness(query);
 
     if (!lookupResult.results || lookupResult.results.length === 0) {
-      console.log("[BusinessDetection] No results found for query:", query);
+      if (import.meta.env.DEV) console.log("[BusinessDetection] No results found for query:", query);
       return null;
     }
 
     // Use the first (best) result
     const candidate = lookupResult.results[0];
-    console.log("[BusinessDetection] Best candidate:", candidate.name, candidate.formattedAddress);
+    if (import.meta.env.DEV) console.log("[BusinessDetection] Best candidate:", candidate.name, candidate.formattedAddress);
 
     // Get full place details for more information
     let placeDetails: GooglePlacesResult;

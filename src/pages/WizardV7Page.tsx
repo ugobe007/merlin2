@@ -84,17 +84,17 @@ function WizardV7Page() {
   // 🤖 Start AI Agent for self-healing monitoring (Feb 4, 2026)
   useEffect(() => {
     wizardAIAgent.start();
-    console.log('🤖 [WizardV7] AI Agent started');
+    if (import.meta.env.DEV) console.log('🤖 [WizardV7] AI Agent started');
     
     return () => {
       wizardAIAgent.stop();
-      console.log('🤖 [WizardV7] AI Agent stopped');
+      if (import.meta.env.DEV) console.log('🤖 [WizardV7] AI Agent stopped');
     };
   }, []);
 
   // ✅ DEBUG: Log step transitions to verify navigation (Feb 10, 2026)
   useEffect(() => {
-    console.log('[WizardV7] step =', state.step, 'locationConfirmed =', state.locationConfirmed, 'goalsConfirmed =', state.goalsConfirmed, 'isBusy =', state.isBusy);
+    if (import.meta.env.DEV) console.log('[WizardV7] step =', state.step, 'locationConfirmed =', state.locationConfirmed, 'goalsConfirmed =', state.goalsConfirmed, 'isBusy =', state.isBusy);
   }, [state.step, state.locationConfirmed, state.goalsConfirmed, state.isBusy]);
 
   // ─── MERLIN MEMORY NAVIGATOR ─────────────────────────────────────────────
@@ -273,7 +273,7 @@ function WizardV7Page() {
     }
 
     if (state.step === "profile") {
-      console.log("[WizardV7Page] handleNext: Calling wizard.submitStep3()");
+      if (import.meta.env.DEV) console.log("[WizardV7Page] handleNext: Calling wizard.submitStep3()");
       wizard.submitStep3();
       return;
     }

@@ -66,7 +66,7 @@ export function authenticateProposal(
   base: TrueQuoteBaseCalculation,
   proposal: MagicFitProposal
 ): AuthenticationResult | TrueQuoteRejection {
-  console.log('🔐 Validator: Authenticating Magic Fit proposal');
+  if (import.meta.env.DEV) console.log('🔐 Validator: Authenticating Magic Fit proposal');
 
   const validationResults: ValidationResult[] = [];
   const rejectionDetails: TrueQuoteRejection['details'] = [];
@@ -91,7 +91,7 @@ export function authenticateProposal(
 
   // If any validation failed, reject
   if (rejectionDetails.length > 0) {
-    console.log('🔐 Validator: REJECTED', rejectionDetails);
+    if (import.meta.env.DEV) console.log('🔐 Validator: REJECTED', rejectionDetails);
     return {
       rejected: true,
       reason: `${rejectionDetails.length} validation check(s) failed`,
@@ -101,7 +101,7 @@ export function authenticateProposal(
   }
 
   // All passed - create authenticated options
-  console.log('🔐 Validator: APPROVED ✓');
+  if (import.meta.env.DEV) console.log('🔐 Validator: APPROVED ✓');
   return {
     authenticated: true,
     options: {

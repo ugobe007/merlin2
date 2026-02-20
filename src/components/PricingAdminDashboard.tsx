@@ -239,21 +239,23 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   };
 
   const runValidation = async () => {
-    console.log("🔄 runValidation called");
+    if (import.meta.env.DEV) console.log("🔄 runValidation called");
     setIsValidating(true);
 
     try {
-      console.log("🔄 Starting pricing validation...");
+      if (import.meta.env.DEV) console.log("🔄 Starting pricing validation...");
 
       // Validate that the service is available
       if (!dailyPricingValidator) {
         throw new Error("dailyPricingValidator is not available");
       }
 
-      console.log("✅ dailyPricingValidator found, calling forceValidation()...");
+      if (import.meta.env.DEV) console.log("✅ dailyPricingValidator found, calling forceValidation()...");
       const results = await dailyPricingValidator.forceValidation();
-      console.log("✅ Validation complete:", results);
-      console.log("📊 Results count:", results?.length || 0);
+      if (import.meta.env.DEV) {
+        console.log("✅ Validation complete:", results);
+        console.log("📊 Results count:", results?.length || 0);
+      }
 
       if (!results || !Array.isArray(results)) {
         console.warn("⚠️ Validation returned invalid results:", results);
@@ -263,14 +265,14 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
       }
 
       setValidationAlerts(results);
-      console.log("✅ Validation alerts updated in state");
+      if (import.meta.env.DEV) console.log("✅ Validation alerts updated in state");
 
       // Show success message
       const criticalCount = results.filter((r) => r.severity === "critical").length;
       const warningCount = results.filter((r) => r.severity === "warning").length;
       const infoCount = results.filter((r) => r.severity === "info").length;
 
-      console.log(
+      if (import.meta.env.DEV) console.log(
         `📊 Validation summary: ${criticalCount} critical, ${warningCount} warnings, ${infoCount} info`
       );
 
@@ -293,7 +295,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
       );
     } finally {
       setIsValidating(false);
-      console.log("✅ Validation process completed (finally block)");
+      if (import.meta.env.DEV) console.log("✅ Validation process completed (finally block)");
     }
   };
 
@@ -500,7 +502,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log("🔘 Run Validation button clicked");
+              if (import.meta.env.DEV) console.log("🔘 Run Validation button clicked");
               runValidation();
             }}
             disabled={isValidating}

@@ -316,7 +316,7 @@ function calculateCarWashLoad(
   const peakFactor = 0.75;
   const peakDemandKW = Math.round(totalKW * peakFactor);
 
-  console.log("🚗 [loadCalculator] Car Wash Equipment Calculation:", {
+  if (import.meta.env.DEV) console.log("🚗 [loadCalculator] Car Wash Equipment Calculation:", {
     bayCount,
     washType,
     blowerCount,
@@ -438,7 +438,7 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
           breakdown.push({ category: "Base (sqft estimate)", kW: peakDemandKW, percentage: 100 });
         }
 
-        console.log("🖥️ [loadCalculator] Data Center Calculation:", {
+        if (import.meta.env.DEV) console.log("🖥️ [loadCalculator] Data Center Calculation:", {
           totalITLoad: input.useCaseData.totalITLoad,
           powerCapacity: input.useCaseData.powerCapacity,
           squareFootage: input.useCaseData.squareFootage,

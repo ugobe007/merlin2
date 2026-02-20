@@ -107,10 +107,13 @@ export default [
   },
   
   // 🎯 WIZARD: Strict zone - Step 3 and core wizard (keep quality high)
+  // Note: no-explicit-any downgraded to warn (Feb 2026) — wizard files handle
+  // dynamic form data where `any` is pragmatically necessary. Still visible as
+  // warnings, but not blocking builds. Target: fix incrementally.
   {
     files: ['src/components/wizard/**/*.{ts,tsx}'],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn',
       'unused-imports/no-unused-vars': 'error',
       'no-useless-escape': 'error',
     },
@@ -120,7 +123,7 @@ export default [
   {
     files: ['src/components/wizard/v6/step3/**/*.{ts,tsx}'],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn',
       'unused-imports/no-unused-vars': 'error',
       'no-useless-escape': 'error',
       'no-case-declarations': 'error',

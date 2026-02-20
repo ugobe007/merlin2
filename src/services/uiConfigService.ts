@@ -189,7 +189,7 @@ export async function getUILimits<T = Record<string, UIFieldLimit>>(configKey: s
 
     // Cache the result
     uiLimitsCache.set(configKey, { data: data.config_data, timestamp: Date.now() });
-    console.log(`✅ [UIConfigService] Loaded '${configKey}' from database`);
+    if (import.meta.env.DEV) console.log(`✅ [UIConfigService] Loaded '${configKey}' from database`);
 
     return data.config_data as T;
   } catch (error) {
@@ -282,7 +282,7 @@ export function useStateRates() {
  */
 export function clearUILimitsCache(): void {
   uiLimitsCache.clear();
-  console.log("[UIConfigService] Cache cleared");
+  if (import.meta.env.DEV) console.log("[UIConfigService] Cache cleared");
 }
 
 /**
@@ -290,7 +290,7 @@ export function clearUILimitsCache(): void {
  */
 export async function preloadUILimits(): Promise<void> {
   await Promise.all([getCarWashUILimits(), getBESSUILimits(), getStateElectricityRates()]);
-  console.log("[UIConfigService] Common limits preloaded");
+  if (import.meta.env.DEV) console.log("[UIConfigService] Common limits preloaded");
 }
 
 // ============================================================================

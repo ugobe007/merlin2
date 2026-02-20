@@ -142,13 +142,15 @@ export function generateMagicFitProposal(
   goals: EnergyGoal[],
   userPrefs?: UserPreferences // NEW: Optional to maintain backward compatibility
 ): MagicFitProposal {
-  console.log("✨ Magic Fit v1.1: Generating optimized options");
-  console.log("✨ Magic Fit: User goals:", goals);
-  console.log("✨ Magic Fit: Base calculation:", {
-    peakDemandKW: baseCalc.load.peakDemandKW,
-    bessKWh: baseCalc.bess.energyKWh,
-    solarKW: baseCalc.solar.capacityKW,
-  });
+  if (import.meta.env.DEV) {
+    console.log("✨ Magic Fit v1.1: Generating optimized options");
+    console.log("✨ Magic Fit: User goals:", goals);
+    console.log("✨ Magic Fit: Base calculation:", {
+      peakDemandKW: baseCalc.load.peakDemandKW,
+      bessKWh: baseCalc.bess.energyKWh,
+      solarKW: baseCalc.solar.capacityKW,
+    });
+  }
 
   // Default preferences if not provided (backward compatibility)
   const prefs: UserPreferences = userPrefs || {
@@ -161,8 +163,10 @@ export function generateMagicFitProposal(
   const scenario = getGenerationScenario(prefs);
   const bessConfig = BESS_UPSIZE_CONFIG[scenario];
 
-  console.log("✨ Magic Fit: Generation scenario:", scenario);
-  console.log("✨ Magic Fit: BESS upsize config:", bessConfig);
+  if (import.meta.env.DEV) {
+    console.log("✨ Magic Fit: Generation scenario:", scenario);
+    console.log("✨ Magic Fit: BESS upsize config:", bessConfig);
+  }
 
   // Adjust scales based on goals
   const adjustedScales = adjustScalesForGoals(goals);
@@ -203,7 +207,7 @@ export function generateMagicFitProposal(
     magicFitVersion: MAGIC_FIT_VERSION,
   };
 
-  console.log("✨ Magic Fit: Proposal generated", {
+  if (import.meta.env.DEV) console.log("✨ Magic Fit: Proposal generated", {
     scenario,
     starter: { bessKWh: starter.bess.energyKWh, netCost: starter.financials.netCost },
     perfectFit: { bessKWh: perfectFit.bess.energyKWh, netCost: perfectFit.financials.netCost },
