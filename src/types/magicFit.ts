@@ -141,6 +141,10 @@ export interface ScenarioInputs {
   electricityRate: number;
   demandChargePerKW: number;
   primaryApplication: string;
+  /** Industry slug for physical solar constraints (e.g., 'car_wash', 'hotel') */
+  industrySlug?: string;
+  /** Step 3 answers for building footprint estimation */
+  step3Answers?: Record<string, unknown>;
 }
 
 // ============================================================================

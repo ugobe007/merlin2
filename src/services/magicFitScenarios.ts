@@ -17,6 +17,8 @@
 
 import { calculateBESS } from "./gridSynkBESSCalculator";
 import { calculateFinancialsSync } from "./compareConfigFinancials";
+import { getFacilityConstraints } from "./useCasePowerCalculations";
+import { estimateBuildingFootprint } from "./solarFootprintLibrary";
 import type {
   ScenarioConfig,
   ScenarioInputs,
@@ -35,7 +37,35 @@ import type {
  * @returns Array of three optimized scenario configurations
  */
 export function generateMagicFitScenarios(inputs: ScenarioInputs): ScenarioConfig[] {
-  const { peakDemandKW, state, electricityRate, demandChargePerKW, primaryApplication } = inputs;
+  const { peakDemandKW, state, electricityRate, demandChargePerKW, primaryApplication: _primaryApplication } = inputs;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHYSICAL SOLAR CONSTRAINT: Cap solar to building's realistic capacity
+  // Uses INDUSTRY_FACILITY_CONSTRAINTS (SSOT) + solarFootprintLibrary
+  // ═══════════════════════════════════════════════════════════════════════════
+  let maxSolarCapKW = Infinity; // Default: no cap for unknown industries
+
+  if (inputs.industrySlug) {
+    // First try: use solarFootprintLibrary for precise estimate from Step 3 answers
+    if (inputs.step3Answers && Object.keys(inputs.step3Answers).length > 0) {
+      const footprint = estimateBuildingFootprint(
+        inputs.industrySlug,
+        inputs.step3Answers,
+        state
+      );
+      if (footprint.totalSolarPotentialKW > 0) {
+        maxSolarCapKW = footprint.totalSolarPotentialKW;
+      }
+    }
+
+    // Fallback: use static INDUSTRY_FACILITY_CONSTRAINTS
+    if (maxSolarCapKW === Infinity) {
+      const constraints = getFacilityConstraints(inputs.industrySlug);
+      if (constraints) {
+        maxSolarCapKW = constraints.totalRealisticSolarKW;
+      }
+    }
+  }
 
   const scenarios: ScenarioConfig[] = [];
 
@@ -97,7 +127,7 @@ export function generateMagicFitScenarios(inputs: ScenarioInputs): ScenarioConfi
     application: "backup", // Sized for backup + peak shaving
   });
 
-  const balancedSolarKW = Math.round(peakDemandKW * 0.5); // 50% of peak
+  const balancedSolarKW = Math.min(Math.round(peakDemandKW * 0.5), maxSolarCapKW); // 50% of peak, capped to building
   const balancedGeneratorKW = Math.round(peakDemandKW * 0.27); // ~27% for backup
 
   const balancedFinancials = calculateFinancialsSync({
@@ -148,7 +178,7 @@ export function generateMagicFitScenarios(inputs: ScenarioInputs): ScenarioConfi
     application: "grid-independence",
   });
 
-  const maxSolarKW = Math.round(peakDemandKW * 0.8); // 80% of peak
+  const maxSolarKW = Math.min(Math.round(peakDemandKW * 0.8), maxSolarCapKW); // 80% of peak, capped to building
   const maxWindKW = Math.round(peakDemandKW * 0.1); // 10% wind
   const maxGeneratorKW = Math.round(peakDemandKW * 0.36); // 36% for extended backup
 

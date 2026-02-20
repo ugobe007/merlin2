@@ -146,10 +146,10 @@ export const INDUSTRY_FOOTPRINT_PROFILES: Record<string, FootprintProfile> = {
     typicalRange: [1, 12],
     roofUtilization: 0.65,
     roofNote: 'Flat roof, minimal equipment — good solar candidate',
-    canopyKWPerUnit: 12,  // ~50 kW canopy for 4-bay wash
+    canopyKWPerUnit: 5.5,  // ~22 kW canopy for 4-bay wash (Vineet: max 20-25 kW canopy)
     canopyIsPrimary: false,
     canopyLabel: 'Vacuum area / exit canopy',
-    source: 'ICA 2024, CBECS 2018',
+    source: 'ICA 2024, CBECS 2018, Vineet (industry expert)',
   },
 
   'gas-station': {
