@@ -10,7 +10,7 @@
  * No cross-step dependencies. No pricing/DB/async blocking.
  */
 
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { useWizardV7 } from "@/wizard/v7/hooks/useWizardV7";
 import { V7_ENABLE_GATED_STEP3, V7_USE_CURATED_STEP3 } from "@/wizard/v7/featureFlags";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
@@ -20,6 +20,10 @@ import { resolveStep3Schema } from "@/wizard/v7/schema/curatedFieldsResolver";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
 import { generateMerlinInsights } from "@/wizard/v7/memory/generateMerlinInsights";
+
+// ⚡ Quick Quote Mode Components (Feb 20, 2026)
+import { QuickQuotePanel } from "@/components/wizard/v7/shared/QuickQuotePanel";
+import { QuickQuoteModal, type QuickQuoteParams } from "@/components/wizard/v7/shared/QuickQuoteModal";
 
 // 🤖 AI Agent for self-healing monitoring
 import { wizardAIAgent } from "@/services/wizardAIAgentV2";
@@ -80,6 +84,10 @@ function WizardV7Page() {
   const wizard = useWizardV7();
   const { state } = wizard;
   const merlinData = useMerlinData(state);
+
+  // ⚡ Quick Quote Mode State (Feb 20, 2026)
+  const [quickQuoteMode, setQuickQuoteMode] = useState<"panel" | "custom-modal" | "ballpark" | "guided">("panel");
+  const [showQuickQuoteModal, setShowQuickQuoteModal] = useState(false);
 
   // 🤖 Start AI Agent for self-healing monitoring (Feb 4, 2026)
   useEffect(() => {
@@ -291,6 +299,51 @@ function WizardV7Page() {
 
   const handleBack = () => {
     wizard.goBack();
+  };
+
+  // ⚡ Quick Quote Handlers (Feb 20, 2026)
+  const handleQuickQuoteStart = (mode: "custom" | "ballpark" | "bill-upload") => {
+    if (mode === "custom") {
+      setShowQuickQuoteModal(true);
+    } else if (mode === "ballpark") {
+      // Auto-generate ballpark quote with regional defaults
+      handleQuickQuoteGenerate({
+        mode: "ballpark",
+        systemSizeKW: 1000,
+        durationHours: 4,
+        industry: "office",
+        location: "CA",
+        electricityRate: 0.15,
+      });
+    }
+    // bill-upload is coming soon
+  };
+
+  const handleQuickQuoteGenerate = async (params: QuickQuoteParams) => {
+    setShowQuickQuoteModal(false);
+    setQuickQuoteMode("guided");
+    
+    // Seed wizard with quick quote parameters
+    // Set location (minimal)
+    const locationData = {
+      formattedAddress: params.location || "California, USA",
+      state: params.location || "CA",
+      postalCode: "90001",
+    };
+    
+    // Set industry
+    wizard.selectIndustry(params.industry || "office");
+    
+    // Skip to MagicFit with pre-filled sizing
+    wizard.goToStep("magicfit");
+    
+    // For custom mode, we'd also inject the sizing params into state
+    // This is a simplified version - full implementation would need
+    // to properly integrate with the pricing bridge
+  };
+
+  const handleStartGuided = () => {
+    setQuickQuoteMode("guided");
   };
 
   // TrueQuote verified status - true once we have results
@@ -614,6 +667,24 @@ function WizardV7Page() {
       />
     );
   }, [state.step, step3Advisor, step6Advisor, gate.canContinue, gate.reason, merlinData, state.locationRawInput, state.location, state.businessCard, state.businessConfirmed, state.locationIntel, state.industry, state.industryLocked, state.goals]);
+
+  // ⚡ Quick Quote Mode - Show panel before wizard starts (Feb 20, 2026)
+  if (quickQuoteMode === "panel") {
+    return (
+      <>
+        <QuickQuotePanel
+          onStartExpress={handleQuickQuoteStart}
+          onStartGuided={handleStartGuided}
+        />
+        {showQuickQuoteModal && (
+          <QuickQuoteModal
+            onClose={() => setShowQuickQuoteModal(false)}
+            onGenerate={handleQuickQuoteGenerate}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <div data-wizard-version="v7" className="w-full h-full">
