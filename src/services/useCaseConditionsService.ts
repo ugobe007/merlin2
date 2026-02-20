@@ -25,7 +25,7 @@
  * @date January 7, 2025
  */
 
-import { getConstant, getConstantsByCategory } from './calculationConstantsService';
+import { getConstant } from './calculationConstantsService';
 import { getSolarTemplate } from './solarTemplates';
 import { getIndustryTemplate } from './industryTemplates';
 import { UseCaseService } from './useCaseService';

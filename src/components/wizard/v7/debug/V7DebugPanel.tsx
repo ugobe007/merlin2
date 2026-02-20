@@ -24,8 +24,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import type { WizardState, PricingStatus } from "@/wizard/v7/hooks/useWizardV7";
-import { getMockPricingMode, type MockPricingMode } from "@/wizard/v7/pricing/mockPricingControl";
+import type { WizardState } from "@/wizard/v7/hooks/useWizardV7";
+import { getMockPricingMode } from "@/wizard/v7/pricing/mockPricingControl";
 
 type Props = {
   state: WizardState;

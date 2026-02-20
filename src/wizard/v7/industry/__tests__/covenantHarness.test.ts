@@ -30,11 +30,10 @@ import {
   resolveIndustryContext,
   listCanonicalSlugs,
   type IndustryContext,
-  type ResolutionTrace,
 } from "../resolveIndustryContext";
 import { INDUSTRY_CATALOG } from "../industryCatalog";
 import { resolveStep3Schema, hasCuratedSchema, getTier1Blockers } from "../../schema/curatedFieldsResolver";
-import { getTemplate, hasTemplate } from "../../templates/templateIndex";
+import { getTemplate } from "../../templates/templateIndex";
 import { CALCULATORS_BY_ID } from "../../calculators/registry";
 
 // ============================================================================

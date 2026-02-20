@@ -19,7 +19,7 @@
  */
 
 import type { IndustryAdapter, NormalizedLoadInputs, ProcessLoad } from "../loadProfile";
-import { SCHEDULE_PRESETS, HVAC_PRESETS, ARCHITECTURE_PRESETS } from "../loadProfile";
+import { SCHEDULE_PRESETS } from "../loadProfile";
 import { registerAdapter } from "../step3Compute";
 
 // ============================================================================

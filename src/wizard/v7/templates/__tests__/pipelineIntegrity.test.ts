@@ -24,13 +24,11 @@ import {
   HOTEL_LOAD_V1_SSOT,
   CAR_WASH_LOAD_V1_SSOT,
   OFFICE_LOAD_V1_SSOT,
-  RETAIL_LOAD_V1_SSOT,
   MANUFACTURING_LOAD_V1_SSOT,
   HOSPITAL_LOAD_V1_SSOT,
   WAREHOUSE_LOAD_V1_SSOT,
   EV_CHARGING_LOAD_V1_SSOT,
   RESTAURANT_LOAD_V1_SSOT,
-  TRUCK_STOP_LOAD_V1_SSOT,
   GAS_STATION_LOAD_V1_SSOT,
 } from "../../calculators/registry";
 import type { CalcRunResult } from "../../calculators/contract";

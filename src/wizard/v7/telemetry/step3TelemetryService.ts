@@ -29,7 +29,7 @@
  */
 
 import type { LoadProfileEnvelope } from "../step3/loadProfile";
-import type { PolicyEvent, PolicyCodeType } from "../step3/policyTaxonomy";
+import type { PolicyEvent } from "../step3/policyTaxonomy";
 import { summarizePolicyEvents } from "../step3/policyTaxonomy";
 import { devInfo, devWarn } from '../debug/devLog';
 

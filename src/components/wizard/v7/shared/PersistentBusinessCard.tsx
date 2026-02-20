@@ -8,7 +8,7 @@
  */
 
 import React, { useMemo } from "react";
-import { MapPin, Building2, TrendingUp, Zap, DollarSign } from "lucide-react";
+import { MapPin, TrendingUp, Zap, DollarSign } from "lucide-react";
 import type { WizardState as WizardV7State } from "@/wizard/v7/hooks/useWizardV7";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 

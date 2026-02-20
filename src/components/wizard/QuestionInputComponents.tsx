@@ -5,10 +5,10 @@
  * for questionnaire forms
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  Plus, Minus, Check, ChevronDown, ChevronUp,
-  Search, X, ZapOff, Zap
+  Plus, Minus, Check, ChevronDown,
+  Search, ZapOff, Zap
 } from 'lucide-react';
 
 // ============================================================================

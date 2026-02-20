@@ -39,12 +39,10 @@ import type {
   LoadContributor,
   NormalizedLoadInputs,
   IndustryAdapter,
-  EnvelopeInvariant,
-  ConfidenceLevel,
   ProvenanceConflict,
 } from "./loadProfile";
 import { checkEnvelopeInvariants, computeConfidence } from "./loadProfile";
-import { PolicyEventCollector, PolicyCode } from "./policyTaxonomy";
+import { PolicyEventCollector } from "./policyTaxonomy";
 import { getCalculatorContract } from "./calculatorContracts";
 
 // ============================================================================

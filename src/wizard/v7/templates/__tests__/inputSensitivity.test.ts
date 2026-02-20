@@ -41,7 +41,7 @@ import {
   listAliasIndustries,
   type AliasIndustry,
 } from "../../calculators/ssotInputAliases";
-import { MANIFEST, getManifestEntry } from "../template-manifest";
+import { MANIFEST } from "../template-manifest";
 
 // ──────────────────────────────────────────────────────
 // Tier 0: buildSSOTInput correctness

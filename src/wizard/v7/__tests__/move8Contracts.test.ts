@@ -34,15 +34,10 @@ import * as path from "path";
 import { buildTelemetryPayload, type Step3TelemetryPayload } from "../telemetry/step3TelemetryService";
 import {
   sanitizeQuoteForDisplay,
-  type DisplayQuote,
-  type DisplayHints,
-  type DisplayTrueQuoteValidation,
-  type DisplayConfidence,
 } from "../utils/pricingSanity";
 import {
   translatePolicyEvents,
   aggregateSemanticConflicts,
-  hasVisiblePolicyEvents,
 } from "../step3/policyTranslation";
 import { PolicyCode, type PolicyEvent, type PolicyCodeType } from "../step3/policyTaxonomy";
 import type { LoadProfileEnvelope } from "../step3/loadProfile";

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import badgeIcon from "@/assets/images/badge_icon.jpg";
 import {
   X,
-  Wrench,
   Zap,
   Calculator,
   TrendingUp,
@@ -31,7 +30,6 @@ import {
   Landmark,
   Banknote,
   Lock,
-  Crown,
   Download,
   CheckCircle,
   ChevronDown,
