@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS shared_quotes (
   quote_data JSONB NOT NULL,
   
   -- Metadata
-  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_by UUID,  -- References auth.users.id (optional: anonymous shares allowed)
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
   
