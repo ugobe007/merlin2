@@ -14,7 +14,7 @@ import { config } from 'dotenv';
 config();
 
 import { createClient } from '@supabase/supabase-js';
-import systemControlsPricingService from '../src/services/systemControlsPricingService';
+import { getSystemControlsPricingService } from '../src/services/systemControlsPricingService';
 
 // Create Supabase client directly (bypasses import.meta.env issue in Node.js)
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
@@ -72,7 +72,7 @@ async function testSystemControlsPricing() {
   console.log('📊 Test 2: Service Loads Configuration from Database');
   console.log('─'.repeat(50));
   try {
-    const config = systemControlsPricingService.getConfiguration();
+    const config = getSystemControlsPricingService().getConfiguration();
     
     if (!config || !config.controllers || config.controllers.length === 0) {
       throw new Error('Configuration not loaded');
@@ -101,7 +101,7 @@ async function testSystemControlsPricing() {
   console.log('📊 Test 3: Controller Pricing Calculation');
   console.log('─'.repeat(50));
   try {
-    const result = systemControlsPricingService.calculateControllerSystemCost(
+    const result = getSystemControlsPricingService().calculateControllerSystemCost(
       'deepsea-dse8610',
       2,  // quantity
       true,  // includeInstallation
@@ -133,7 +133,7 @@ async function testSystemControlsPricing() {
   console.log('📊 Test 4: SCADA System Pricing');
   console.log('─'.repeat(50));
   try {
-    const result = systemControlsPricingService.calculateScadaSystemCost(
+    const result = getSystemControlsPricingService().calculateScadaSystemCost(
       'wonderware-system-platform',
       true,  // includeInstallation
       40     // customizationHours
@@ -166,7 +166,7 @@ async function testSystemControlsPricing() {
   console.log('📊 Test 5: EMS System Pricing');
   console.log('─'.repeat(50));
   try {
-    const result = systemControlsPricingService.calculateEMSCost(
+    const result = getSystemControlsPricingService().calculateEMSCost(
       'schneider-ecostruxure-microgrid',
       1,    // sitesCount
       5.0,  // totalCapacityMW
@@ -250,8 +250,8 @@ async function testSystemControlsPricing() {
   console.log('📊 Test 7: Refresh from Database');
   console.log('─'.repeat(50));
   try {
-    await systemControlsPricingService.refreshFromDatabase();
-    const config = systemControlsPricingService.getConfiguration();
+    await getSystemControlsPricingService().refreshFromDatabase();
+    const config = getSystemControlsPricingService().getConfiguration();
     
     if (!config || !config.controllers || config.controllers.length === 0) {
       throw new Error('Configuration not refreshed');

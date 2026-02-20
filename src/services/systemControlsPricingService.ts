@@ -1030,4 +1030,16 @@ class SystemControlsPricingService {
   }
 }
 
-export default new SystemControlsPricingService();
+// Factory + lazy singleton pattern to prevent TDZ errors
+// No top-level instantiation, no top-level supabase import
+let _instance: SystemControlsPricingService | null = null;
+
+export function getSystemControlsPricingService(): SystemControlsPricingService {
+  if (!_instance) {
+    _instance = new SystemControlsPricingService();
+  }
+  return _instance;
+}
+
+// Legacy default export - DEPRECATED, use getSystemControlsPricingService()
+export default getSystemControlsPricingService();
