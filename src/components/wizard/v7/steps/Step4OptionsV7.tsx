@@ -19,9 +19,11 @@ import type {
   WizardStep,
   PricingStatus,
   SystemAddOns,
+  ITCBonuses,
 } from "@/wizard/v7/hooks/useWizardV7";
-import { DEFAULT_ADD_ONS } from "@/wizard/v7/hooks/useWizardV7";
+import { DEFAULT_ADD_ONS, DEFAULT_ITC_BONUSES } from "@/wizard/v7/hooks/useWizardV7";
 import { SystemAddOnsCards } from "./SystemAddOnsCards";
+import ITCBonusCard from "../shared/ITCBonusCard";
 import { useMerlinData } from "@/wizard/v7/memory";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
@@ -41,13 +43,28 @@ export default function Step4OptionsV7({ state, actions }: Props) {
   const pricingStatus: PricingStatus = state.pricingStatus ?? "idle";
   const [showProQuoteModal, setShowProQuoteModal] = useState(false);
 
+  // ITC bonus qualifications state (IRA 2022)
+  const [itcBonuses, setItcBonuses] = useState<ITCBonuses>(
+    () => state.step4AddOns?.itcBonuses ?? DEFAULT_ITC_BONUSES
+  );
+
+  // Wrap callback to always include ITC bonuses in add-ons
   const handleAddOnsConfirmed = useCallback(async (addOns: SystemAddOns) => {
     if (actions.recalculateWithAddOns) {
-      const result = await actions.recalculateWithAddOns(addOns);
+      const result = await actions.recalculateWithAddOns({ ...addOns, itcBonuses });
       return result;
     }
     return { ok: true };
-  }, [actions]);
+  }, [actions, itcBonuses]);
+
+  // When ITC bonuses change, trigger recalculation
+  const handleITCChange = useCallback((newBonuses: ITCBonuses) => {
+    setItcBonuses(newBonuses);
+    if (actions.recalculateWithAddOns) {
+      const currentAddOns = state.step4AddOns ?? DEFAULT_ADD_ONS;
+      actions.recalculateWithAddOns({ ...currentAddOns, itcBonuses: newBonuses });
+    }
+  }, [actions, state.step4AddOns]);
 
   const peakKW = data.peakLoadKW;
   const industryMeta = getIndustryMeta(data.industry);
@@ -90,6 +107,13 @@ export default function Step4OptionsV7({ state, actions }: Props) {
         pricingStatus={pricingStatus}
         showGenerateButton={false}
         merlinData={data}
+      />
+
+      {/* ── ITC Bonus Qualifications (IRA 2022) ── */}
+      <ITCBonusCard
+        bonuses={itcBonuses}
+        onChange={handleITCChange}
+        capacityMW={peakKW > 0 ? peakKW / 1000 * 0.4 : 1}
       />
 
       {/* ── ProQuote™ upsell — Merlin as salesman ── */}

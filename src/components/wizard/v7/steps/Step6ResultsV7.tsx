@@ -38,6 +38,9 @@ import { resolveBadge, getTopContributors, formatContributorKey } from "../share
 import AdvisorRecommendations from "../shared/AdvisorRecommendations";
 import ExportBar from "../shared/ExportBar";
 import ProTeaserPanels from "../shared/ProTeaserPanels";
+import AdvancedAnalyticsPanels from "../shared/AdvancedAnalyticsPanels";
+import ScenarioComparison from "../shared/ScenarioComparison";
+import QuoteCharts from "../shared/QuoteCharts";
 
 type Props = {
   state: WizardV7State;
@@ -859,6 +862,31 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             </div>
           </div>
         </details>
+      )}
+
+      {/* ================================================================
+          ADVANCED ANALYTICS — Degradation, ITC, Rates, 8760, Risk
+          Surfaces rich metadata from unifiedQuoteCalculator (Feb 2026)
+      ================================================================ */}
+      {quoteReady && quote.metadata && (
+        <AdvancedAnalyticsPanels
+          metadata={quote.metadata}
+          hasSolar={(quote.solarKW as number) > 0}
+        />
+      )}
+
+      {/* ================================================================
+          SCENARIO COMPARISON — Conservative / Balanced / Aggressive
+      ================================================================ */}
+      {quoteReady && (
+        <ScenarioComparison quote={quote} />
+      )}
+
+      {/* ================================================================
+          FINANCIAL CHARTS — Cash flow, Risk bands, Solar, Degradation
+      ================================================================ */}
+      {quoteReady && (
+        <QuoteCharts quote={quote} />
       )}
 
       {/* ================================================================

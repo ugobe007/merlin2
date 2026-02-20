@@ -247,6 +247,76 @@ export type DisplayQuote = {
   notes: string[];
   missingInputs: string[];
 
+  // --- Rich metadata from SSOT (Feb 2026) ---
+  metadata?: {
+    itcDetails?: {
+      totalRate: number;
+      baseRate: number;
+      creditAmount: number;
+      qualifications: {
+        prevailingWage: boolean;
+        energyCommunity: boolean;
+        domesticContent: boolean;
+        lowIncome: boolean;
+      };
+      source: string;
+    };
+    utilityRates?: {
+      electricityRate: number;
+      demandCharge: number;
+      utilityName?: string;
+      rateName?: string;
+      source: string;
+      confidence: string;
+      zipCode?: string;
+      state?: string;
+    };
+    degradation?: {
+      chemistry: string;
+      yearlyCapacityPct: number[];
+      year10CapacityPct: number;
+      year25CapacityPct: number;
+      warrantyPeriod: number;
+      expectedWarrantyCapacity: number;
+      financialImpactPct: number;
+      source: string;
+    };
+    solarProduction?: {
+      annualProductionKWh: number;
+      capacityFactorPct: number;
+      source: string;
+      arrayType?: string;
+      state?: string;
+      monthlyProductionKWh?: number[];
+    };
+    advancedAnalysis?: {
+      hourlySimulation?: {
+        annualSavings: number;
+        touArbitrageSavings: number;
+        peakShavingSavings: number;
+        solarSelfConsumptionSavings: number;
+        demandChargeSavings: number;
+        equivalentCycles: number;
+        capacityFactor: number;
+        source: string;
+      };
+      riskAnalysis?: {
+        npvP10: number;
+        npvP50: number;
+        npvP90: number;
+        irrP10: number;
+        irrP50: number;
+        irrP90: number;
+        paybackP10: number;
+        paybackP50: number;
+        paybackP90: number;
+        probabilityPositiveNPV: number;
+        valueAtRisk95: number;
+        source: string;
+      };
+    };
+  };
+
   // --- Display hints (always present after sanitization) ---
   _displayHints: DisplayHints;
 
@@ -328,6 +398,7 @@ function emptyDisplayQuote(): DisplayQuote {
     trueQuoteValidation: null,
     notes: [],
     missingInputs: [],
+    metadata: undefined,
     _displayHints: {
       topContributors: [],
       contributorCount: 0,
@@ -416,6 +487,7 @@ export function sanitizeQuoteForDisplay(quote: unknown): DisplayQuote {
     "irr", "paybackYears", "demandChargeSavings", "solarKW", "generatorKW",
     "equipmentCosts",
     "confidence", "trueQuoteValidation", "notes", "missingInputs",
+    "metadata",
     "_displayHints",
   ]);
 
@@ -473,6 +545,8 @@ export function sanitizeQuoteForDisplay(quote: unknown): DisplayQuote {
     trueQuoteValidation: (sanitized.trueQuoteValidation as DisplayTrueQuoteValidation) ?? null,
     notes: Array.isArray(sanitized.notes) ? sanitized.notes as string[] : [],
     missingInputs: Array.isArray(sanitized.missingInputs) ? sanitized.missingInputs as string[] : [],
+    // Rich metadata — passed through without sanitization (already typed upstream)
+    metadata: sanitized.metadata as DisplayQuote["metadata"] ?? undefined,
     _displayHints: displayHints,
     _extra: Object.keys(extra).length > 0 ? extra : undefined,
   };
