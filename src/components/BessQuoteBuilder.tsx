@@ -63,15 +63,15 @@ export default function BessQuoteBuilder() {
   >("landing");
 
   // Use custom hook for all state management
-  const { state, actions, exchangeRates } = useBessQuoteBuilder();
+  const { state, actions, exchangeRates: _exchangeRates } = useBessQuoteBuilder();
 
   // Destructure commonly used state values for easier access
   const {
     viewMode,
     publicProfileSlug,
-    showAdvancedQuoteBuilder,
-    userLayoutPreference,
-    showLayoutPreferenceModal,
+    showAdvancedQuoteBuilder: _showAdvancedQuoteBuilder,
+    userLayoutPreference: _userLayoutPreference,
+    showLayoutPreferenceModal: _showLayoutPreferenceModal,
     energyCapacity,
     powerRating,
     showAdvancedOptions,
@@ -127,7 +127,7 @@ export default function BessQuoteBuilder() {
     solarMWp,
     windMW,
     valueKwh,
-    utilization,
+    utilization: _utilization,
     warranty,
     location,
     selectedCountry,
@@ -139,25 +139,25 @@ export default function BessQuoteBuilder() {
     pcsKw,
     bosPercent,
     epcPercent,
-    offGridPcsFactor,
-    onGridPcsFactor,
+    offGridPcsFactor: _offGridPcsFactor,
+    onGridPcsFactor: _onGridPcsFactor,
     genKw,
     solarKwp,
     windKw,
-    tariffPercent,
+    tariffPercent: _tariffPercent,
   } = state;
 
   // Destructure commonly used actions for easier access
   const {
     setViewMode,
     setPublicProfileSlug,
-    setShowAdvancedQuoteBuilder,
-    setUserLayoutPreference,
-    setShowLayoutPreferenceModal,
+    setShowAdvancedQuoteBuilder: _setShowAdvancedQuoteBuilder,
+    setUserLayoutPreference: _setUserLayoutPreference,
+    setShowLayoutPreferenceModal: _setShowLayoutPreferenceModal,
     setEnergyCapacity,
     setPowerRating,
     setShowAdvancedOptions,
-    setQuoteName,
+    setQuoteName: _setQuoteName,
     setShowUserProfile,
     setShowSmartWizard,
     setShowAdvancedQuoteBuilderModal,
@@ -168,7 +168,7 @@ export default function BessQuoteBuilder() {
     setShowWelcomeModal,
     setShowAccountSetup,
     setShowEnhancedProfile,
-    setIsFirstTimeProfile,
+    setIsFirstTimeProfile: _setIsFirstTimeProfile,
     setIsLoggedIn,
     setShowAnalytics,
     setShowBESSAnalytics,
@@ -203,57 +203,57 @@ export default function BessQuoteBuilder() {
     setShowQuotePreview,
     setPowerMW,
     setStandbyHours,
-    setGridMode,
+    setGridMode: _setGridMode,
     setUseCase,
     setGeneratorMW,
     setSolarMWp,
     setWindMW,
     setValueKwh,
-    setUtilization,
+    setUtilization: _setUtilization,
     setWarranty,
-    setLocation,
-    setSelectedCountry,
-    setCurrency,
+    setLocation: _setLocation,
+    setSelectedCountry: _setSelectedCountry,
+    setCurrency: _setCurrency,
     setEnergyUnit,
     setPowerUnit,
     setApplicationType,
-    setBatteryKwh,
-    setPcsKw,
-    setBosPercent,
-    setEpcPercent,
-    setOffGridPcsFactor,
-    setOnGridPcsFactor,
-    setGenKw,
-    setSolarKwp,
-    setWindKw,
-    setTariffPercent,
+    setBatteryKwh: _setBatteryKwh,
+    setPcsKw: _setPcsKw,
+    setBosPercent: _setBosPercent,
+    setEpcPercent: _setEpcPercent,
+    setOffGridPcsFactor: _setOffGridPcsFactor,
+    setOnGridPcsFactor: _setOnGridPcsFactor,
+    setGenKw: _setGenKw,
+    setSolarKwp: _setSolarKwp,
+    setWindKw: _setWindKw,
+    setTariffPercent: _setTariffPercent,
     // Handler functions from the hook
     handleLoginSuccess,
     handleProfileSetup,
     handleStartWizard,
     handleGoHome,
-    handleAdvancedQuoteBuilder,
-    handleLayoutPreference,
-    handleSaveLayoutPreference,
+    handleAdvancedQuoteBuilder: _handleAdvancedQuoteBuilder,
+    handleLayoutPreference: _handleLayoutPreference,
+    handleSaveLayoutPreference: _handleSaveLayoutPreference,
     handleProfileComplete,
     handleContinueToEnhancedProfile,
     handleEnhancedProfileClose,
     handleSaveProject,
     handleUploadProject,
     handleCreateWithWizard,
-    handleSaveToPortfolio,
-    handleLoadProject,
+    handleSaveToPortfolio: _handleSaveToPortfolio,
+    handleLoadProject: _handleLoadProject,
     handleUploadFromComputer,
     handleUploadFromPortfolio,
-    handlePortfolio,
-    handleUserProfile,
-    handleResetToDefaults,
-    handleExportCalculations,
+    handlePortfolio: _handlePortfolio,
+    handleUserProfile: _handleUserProfile,
+    handleResetToDefaults: _handleResetToDefaults,
+    handleExportCalculations: _handleExportCalculations,
     handleApplyTemplate,
     handleApplyUseCaseTemplate,
-    handleExportWord,
-    convertCurrency,
-    loadProjectData,
+    handleExportWord: _handleExportWord,
+    convertCurrency: _convertCurrency,
+    loadProjectData: _loadProjectData,
     loadProjectFromStorage,
   } = actions;
 
@@ -331,7 +331,7 @@ export default function BessQuoteBuilder() {
   useEffect(() => {
     const fetchPricing = async () => {
       try {
-        const totalMWh = powerMW * standbyHours;
+        const _totalMWh = powerMW * standbyHours;
         const batteryPricing = await getBatteryPricing(
           powerMW,
           standbyHours,
@@ -358,15 +358,15 @@ export default function BessQuoteBuilder() {
 
   // If viewing a public profile, show that instead - check early but after all hooks
   if (viewMode === "public-profile" && publicProfileSlug) {
-    const handleNavigateToApp = () => {
+    const _handleNavigateToApp = () => {
       window.history.pushState({}, "", "/");
       setViewMode("app");
       setShowAuthModal(true);
     };
-    return <PublicProfileViewer profileSlug={publicProfileSlug} onSignUp={handleNavigateToApp} />;
+    return <PublicProfileViewer profileSlug={publicProfileSlug} onSignUp={__handleNavigateToApp} />;
   }
 
-  const handleNavigateToApp = () => {
+  const _handleNavigateToApp2 = () => {
     window.history.pushState({}, "", "/");
     setViewMode("app");
     setShowAuthModal(true);
@@ -394,7 +394,7 @@ export default function BessQuoteBuilder() {
   };
 
   // Render main quote form for advanced interface
-  const renderMainQuoteForm = () => (
+  const _renderMainQuoteForm = () => (
     <MainQuoteForm
       energyCapacity={energyCapacity}
       setEnergyCapacity={setEnergyCapacity}
@@ -444,13 +444,13 @@ export default function BessQuoteBuilder() {
   const grandCapEx = bessCapEx * bosMultiplier * epcMultiplier + solarCost + windCost + genCost;
 
   const annualSavings = 0;
-  const roiYears = 0;
-  const actualDuration = standbyHours;
-  const annualEnergyMWh = totalMWh * 365;
-  const pcsKW = powerMW * 1000;
+  const _roiYears = 0;
+  const _actualDuration = standbyHours;
+  const _annualEnergyMWh = totalMWh * 365;
+  const _pcsKW = powerMW * 1000;
 
   // Helper function for currency symbols (moved from deleted quoteCalculations.ts)
-  const getCurrencySymbol = (currencyCode: string): string => {
+  const _getCurrencySymbol = (currencyCode: string): string => {
     const symbols: Record<string, string> = {
       USD: "$",
       EUR: "€",
@@ -474,10 +474,10 @@ export default function BessQuoteBuilder() {
     return symbols[currencyCode] || currencyCode;
   };
 
-  const inputStyle =
+  const _inputStyle =
     "w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium bg-blue-50";
-  const labelStyle = "block text-base font-semibold text-gray-800 mb-2 tracking-wide";
-  const cardStyle =
+  const _labelStyle = "block text-base font-semibold text-gray-800 mb-2 tracking-wide";
+  const _cardStyle =
     "bg-gradient-to-b from-white via-blue-50 to-blue-100 border-2 border-blue-300 rounded-2xl p-8 shadow-xl relative overflow-hidden";
 
   // Show About page if active
@@ -849,7 +849,7 @@ export default function BessQuoteBuilder() {
         systemCost={grandCapEx}
         onStorageSizeChange={setPowerMW}
         onDurationChange={setStandbyHours}
-        onSystemCostChange={(cost) => {
+        onSystemCostChange={(_cost) => {
           // System cost changes might affect grandCapEx calculation
           // For now, no-op - full integration would need more complex state management
         }}

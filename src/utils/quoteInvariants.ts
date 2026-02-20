@@ -155,7 +155,7 @@ export function checkPricingInvariants(fin: {
     }
   }
 
-  const { capexUSD, annualSavingsUSD, roiYears, npvUSD, irrPct } = fin;
+  const { capexUSD, annualSavingsUSD, roiYears, npvUSD: _npvUSD, irrPct } = fin;
 
   // Critical errors
   if (capexUSD != null && isFiniteNumber(capexUSD) && capexUSD < 0) {

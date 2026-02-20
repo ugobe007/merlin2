@@ -219,7 +219,7 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
     localStorage.setItem(`pricing_presets_${userId}`, JSON.stringify(updatedPresets));
   };
 
-  const addAdditionalCost = () => {
+  const _addAdditionalCost = () => {
     if (!editingPreset) return;
     const newCost = {
       id: `cost-${Date.now()}`,
@@ -234,7 +234,7 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
     });
   };
 
-  const removeAdditionalCost = (costId: string) => {
+  const _removeAdditionalCost = (costId: string) => {
     if (!editingPreset) return;
     setEditingPreset({
       ...editingPreset,

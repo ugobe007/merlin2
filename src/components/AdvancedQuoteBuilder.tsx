@@ -173,16 +173,16 @@ export default function AdvancedQuoteBuilder({
   >("CAISO");
   const [projectLeverage, setProjectLeverage] = useState(60); // % debt
   const [interestRate, setInterestRate] = useState(7); // %
-  const [loanTermYears, setLoanTermYears] = useState(15);
+  const [loanTermYears, _setLoanTermYears] = useState(15);
 
   // NEW: State for Interactive Dashboard integration
   const [solarMW, setSolarMW] = useState(0);
-  const [windMW, setWindMW] = useState(0);
+  const [windMW, _setWindMW] = useState(0);
   const [generatorMW, setGeneratorMW] = useState(0);
 
   // NEW: Document Upload / Path A state
   const [extractedData, setExtractedData] = useState<ExtractedSpecsData | null>(null);
-  const [uploadedDocuments, setUploadedDocuments] = useState<ParsedDocument[]>([]);
+  const [_uploadedDocuments, _setUploadedDocuments] = useState<ParsedDocument[]>([]);
   const [showUploadSection, setShowUploadSection] = useState(true);
 
   // Extended configuration state
@@ -191,7 +191,7 @@ export default function AdvancedQuoteBuilder({
   const [applicationType, setApplicationType] = useState("commercial");
   const [useCase, setUseCase] = useState("peak-shaving");
   const [chemistry, setChemistry] = useState("lfp");
-  const [roundTripEfficiency, setRoundTripEfficiency] = useState(90);
+  const [roundTripEfficiency, _setRoundTripEfficiency] = useState(90);
   const [warrantyYears, setWarrantyYears] = useState(10);
   const [cyclesPerYear, setCyclesPerYear] = useState(365);
   const [utilityRate, setUtilityRate] = useState(0.12);
@@ -208,13 +208,13 @@ export default function AdvancedQuoteBuilder({
   const [inverterRating, setInverterRating] = useState(2500); // kW per inverter
   const [pcsQuoteSeparately, setPcsQuoteSeparately] = useState(false); // Quote PCS separately vs included
   const [numberOfInvertersInput, setNumberOfInvertersInput] = useState(1); // Manual override
-  const [switchgearType, setSwitchgearType] = useState("medium-voltage");
-  const [switchgearRating, setSwitchgearRating] = useState(5000); // Amps
-  const [bmsType, setBmsType] = useState("distributed");
-  const [bmsManufacturer, setBmsManufacturer] = useState("");
-  const [transformerRequired, setTransformerRequired] = useState(true);
-  const [transformerRating, setTransformerRating] = useState(3000); // kVA
-  const [transformerVoltage, setTransformerVoltage] = useState("480V/12470V");
+  const [switchgearType, _setSwitchgearType] = useState("medium-voltage");
+  const [switchgearRating, _setSwitchgearRating] = useState(5000); // Amps
+  const [bmsType, _setBmsType] = useState("distributed");
+  const [_bmsManufacturer, _setBmsManufacturer] = useState("");
+  const [transformerRequired, _setTransformerRequired] = useState(true);
+  const [transformerRating, _setTransformerRating] = useState(3000); // kVA
+  const [transformerVoltage, _setTransformerVoltage] = useState("480V/12470V");
 
   // NEW: User-specified electrical inputs (optional overrides)
   const [systemWattsInput, setSystemWattsInput] = useState<number | "">(""); // User input for watts
@@ -273,7 +273,7 @@ export default function AdvancedQuoteBuilder({
   const calculatedAmpsDC = totalWatts / dcVoltage;
   const maxAmpsDC = systemAmpsDCInput !== "" ? systemAmpsDCInput : calculatedAmpsDC;
   const numberOfInverters = numberOfInvertersInput || Math.ceil(totalKW / inverterRating);
-  const requiredTransformerKVA = totalKW * 1.25; // 25% safety factor
+  const _requiredTransformerKVA = totalKW * 1.25; // 25% safety factor
 
   // ✅ SSOT: Use unifiedQuoteCalculator.calculateQuote() - THE TRUE SINGLE ENTRY POINT
   // This properly combines:
@@ -3852,7 +3852,7 @@ export default function AdvancedQuoteBuilder({
                     </button>
                     <button
                       onClick={() => {
-                        const configData = {
+                        const _configData = {
                           projectName,
                           location,
                           storageSizeMW,

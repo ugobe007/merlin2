@@ -48,7 +48,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ isOpen, onClose, 
   const [degradationRate, setDegradationRate] = useState(0.02);
   const [inflationRate, setInflationRate] = useState(0.03);
   const [operatingCostsPercent, setOperatingCostsPercent] = useState(0.025);
-  const [constantsLoaded, setConstantsLoaded] = useState(false);
+  const [_constantsLoaded, setConstantsLoaded] = useState(false);
 
   // Load database constants on mount
   useEffect(() => {

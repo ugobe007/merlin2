@@ -50,7 +50,7 @@ type UploadStatus = 'idle' | 'uploading' | 'parsing' | 'extracting' | 'complete'
 // CONSTANTS
 // ============================================
 
-const ACCEPTED_TYPES = {
+const _ACCEPTED_TYPES = {
   'application/pdf': ['.pdf'],
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
   'application/vnd.ms-excel': ['.xls'],
@@ -169,7 +169,7 @@ export function DocumentUploadZone({
       
       // Update files with parsed results
       setUploadedFiles(prev => 
-        prev.map((f, idx) => {
+        prev.map((f, _idx) => {
           const pendingIdx = pendingFiles.findIndex(p => p.id === f.id);
           if (pendingIdx === -1) return f;
           
@@ -185,7 +185,7 @@ export function DocumentUploadZone({
       
       // Run AI extraction on all successfully parsed docs
       const allParsedDocs = files
-        .map((f, idx) => pendingFiles.findIndex(p => p.id === f.id) !== -1 ? parsedDocs[pendingFiles.findIndex(p => p.id === f.id)] : f.parsedDoc)
+        .map((f, _idx) => pendingFiles.findIndex(p => p.id === f.id) !== -1 ? parsedDocs[pendingFiles.findIndex(p => p.id === f.id)] : f.parsedDoc)
         .filter((d): d is ParsedDocument => d !== undefined && d.status !== 'failed');
       
       if (allParsedDocs.length > 0) {

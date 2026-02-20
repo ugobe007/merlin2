@@ -75,7 +75,7 @@ export default function Portfolio({ onClose, onLoadQuote }: PortfolioProps) {
     if (!confirm("Are you sure you want to delete this quote?")) return;
 
     try {
-      const token = localStorage.getItem("auth_token");
+      const _token = localStorage.getItem("auth_token");
 
       // Load all quotes from localStorage
       const savedQuotes = localStorage.getItem("merlin_quotes");
@@ -98,7 +98,7 @@ export default function Portfolio({ onClose, onLoadQuote }: PortfolioProps) {
 
   const toggleFavorite = async (quoteId: string) => {
     try {
-      const token = localStorage.getItem("auth_token");
+      const _token = localStorage.getItem("auth_token");
 
       // Load all quotes from localStorage
       const savedQuotes = localStorage.getItem("merlin_quotes");

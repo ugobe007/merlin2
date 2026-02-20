@@ -53,7 +53,7 @@ export function CalculatorResultsCard({
   onTalkToExpert,
   onShowTrueQuote,
 }: CalculatorResultsCardProps) {
-  const { theme } = config;
+  const { theme: _theme } = config;
 
   return (
     <div className="relative bg-gradient-to-br from-slate-900/95 via-emerald-900/30 to-slate-900/95 backdrop-blur-xl rounded-3xl p-8 border-2 border-emerald-400/40 shadow-2xl">

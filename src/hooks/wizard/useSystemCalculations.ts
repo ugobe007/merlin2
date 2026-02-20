@@ -103,7 +103,7 @@ export const useSystemCalculations = ({
    * @deprecated Use calculateEVChargingPower() from useCasePowerCalculations.ts instead
    * This function delegates to the centralized calculation.
    */
-  const calculateEVChargingConfig = (data: { [key: string]: any }) => {
+  const _calculateEVChargingConfig = (data: { [key: string]: any }) => {
     // Use centralized EV charging calculation
     const result = calculateEVChargingPower(
       parseInt(data.numberOfLevel1Chargers) || 0,

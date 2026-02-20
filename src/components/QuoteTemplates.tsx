@@ -49,7 +49,7 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
   const [activeTab, setActiveTab] = useState<"browse" | "create" | "manage">("browse");
   const [templates, setTemplates] = useState<QuoteTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<QuoteTemplate | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
+  const [_isCreating, setIsCreating] = useState(false);
 
   // New template form state
   const [newTemplate, setNewTemplate] = useState<Partial<QuoteTemplate>>({

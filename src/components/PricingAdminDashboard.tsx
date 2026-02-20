@@ -51,8 +51,8 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   const canReset = adminAuthService.hasPermission("reset_to_defaults");
   const canImport = adminAuthService.hasPermission("import_config");
   const canSync = adminAuthService.hasPermission("sync_database");
-  const canExport = adminAuthService.hasPermission("export_config");
-  const currentAdmin = adminAuthService.getCurrentAdmin();
+  const _canExport = adminAuthService.hasPermission("export_config");
+  const _currentAdmin = adminAuthService.getCurrentAdmin();
 
   // Editable pricing configurations
   const [editableGenerators, setEditableGenerators] = useState(
@@ -100,7 +100,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
     try {
       // Test connection to Supabase with a simple query
       // Try data_collection_log first (from AI system), fallback to any table
-      const { data, error } = await supabase.from("data_collection_log").select("id").limit(1);
+      const { data: _data, error } = await supabase.from("data_collection_log").select("id").limit(1);
 
       if (error) {
         console.error("Database connection error:", error);
@@ -333,7 +333,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
           setHasChanges(false);
           setTimeout(() => setSaveStatus("idle"), 2000);
         })
-        .catch((error) => {
+        .catch((_error) => {
           setSaveStatus("error");
         });
     } catch (error) {
@@ -392,7 +392,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
               alert("Invalid configuration file format");
             }
           });
-        } catch (error) {
+        } catch (_error) {
           alert("Error importing configuration");
         }
       };

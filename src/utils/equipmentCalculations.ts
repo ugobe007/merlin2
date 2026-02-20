@@ -1227,7 +1227,7 @@ export const calculateEquipmentBreakdown = async (
       epcPercentage = bopConfig.epcPercentage || 0.25;
       contingencyPercentage = bopConfig.contingencyPercentage || 0.05;
     }
-  } catch (error) {
+  } catch (_error) {
     // Using fallback installation cost values - not an error, just DB unavailable
   }
 
@@ -1266,7 +1266,7 @@ export const calculateEquipmentBreakdown = async (
   try {
     const { useCaseService } = await import("../services/useCaseService");
     commissioningConfig = await useCaseService.getPricingConfig("commissioning_costs_2025");
-  } catch (error) {
+  } catch (_error) {
     // Using fallback commissioning values
   }
 
@@ -1333,7 +1333,7 @@ export const calculateEquipmentBreakdown = async (
   try {
     const { useCaseService } = await import("../services/useCaseService");
     certificationConfig = await useCaseService.getPricingConfig("certification_costs_2025");
-  } catch (error) {
+  } catch (_error) {
     // Using fallback certification values
   }
 
@@ -1399,7 +1399,7 @@ export const calculateEquipmentBreakdown = async (
   try {
     const { useCaseService } = await import("../services/useCaseService");
     annualConfig = await useCaseService.getPricingConfig("annual_costs_2025");
-  } catch (error) {
+  } catch (_error) {
     // Using fallback annual cost values
   }
 

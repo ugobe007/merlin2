@@ -27,7 +27,6 @@ import { supabase } from "./supabaseClient";
 import { calculateBESSSize } from "./baselineService"; // Migrated from deprecated bessDataService
 import { calculateFinancialMetrics } from "./centralizedCalculations";
 import { calculateSolarBESSSystem } from "./solarSizingService";
-import { getUseCaseBySlug } from "../data/useCaseTemplates";
 import crypto from "crypto";
 
 // ============================================================================
@@ -413,114 +412,21 @@ export async function clearAllCache(): Promise<number> {
 // ============================================================================
 
 /**
- * Fallback to useCaseTemplates.ts if database unavailable
+ * Fallback to throw error if database unavailable (useCaseTemplates.ts removed)
  */
 async function fetchFromStaticTemplates(
   params: GetUseCaseParams
 ): Promise<UseCaseWithCalculations> {
-  const startTime = Date.now();
-  const { slug, facilitySize, location, customAnswers, solarEnabled } = params;
+  const { slug } = params;
 
   if (import.meta.env.DEV) {
-    console.log("📄 Using static templates fallback...");
+    console.log("⚠️ Database unavailable, no static fallback available");
   }
 
-  const staticTemplate = getUseCaseBySlug(slug);
-  if (!staticTemplate) {
-    throw new Error(`Template not found in static files: ${slug}`);
-  }
-
-  // Transform to expected format
-  const template = {
-    id: staticTemplate.id,
-    slug: staticTemplate.slug,
-    name: staticTemplate.name,
-    description: staticTemplate.description,
-    icon: staticTemplate.icon,
-    image_url: staticTemplate.image || null,
-    category: staticTemplate.category,
-    powerProfile: staticTemplate.powerProfile,
-    financialParams: staticTemplate.financialParams,
-    solarCompatibility: null, // Not in static templates yet
-    customQuestions: staticTemplate.customQuestions || [],
-    recommendedApplications: staticTemplate.recommendedApplications || [],
-    industryStandards: {},
-    version: "1.0.0",
-  };
-
-  const equipment = (staticTemplate.equipment || []).map((eq, index) => ({
-    id: `static-${index}`,
-    name: eq.name,
-    powerKw: eq.powerKw,
-    dutyCycle: eq.dutyCycle,
-    description: eq.description || "",
-    category: "",
-    dataSource: "",
-  }));
-
-  // ✅ SINGLE SOURCE OF TRUTH: Use centralizedCalculations.calculateFinancialMetrics()
-  const financialMetrics = await calculateFinancialMetrics({
-    storageSizeMW: template.powerProfile.peakLoadKw / 1000,
-    durationHours: 4,
-    location: location || "United States", // Use provided location or default
-    electricityRate: 0.12, // Default rate
-    solarMW: 0,
-    includeNPV: true,
-  });
-
-  const sizing = calculateBESSSize({
-    peakDemandkW: template.powerProfile.peakLoadKw,
-    averageDemandkW: template.powerProfile.typicalLoadKw,
-    dailyEnergyConsumptionkWh:
-      template.powerProfile.typicalLoadKw * template.powerProfile.dailyOperatingHours,
-    useCase: template.slug,
-    primaryObjective: "all",
-  });
-
-  let solarCalculations = null;
-  if (solarEnabled) {
-    solarCalculations = calculateSolarBESSSystem({
-      dailyLoadkWh:
-        (sizing.recommendedCapacityMWh * 1000) / template.powerProfile.dailyOperatingHours,
-      peakLoadkW: sizing.recommendedPowerMW * 1000,
-      location,
-      autonomyDays: 3,
-      systemVoltage: 480,
-      temperatureC: 20,
-    });
-  }
-
-  return {
-    template,
-    equipment,
-    calculations: {
-      financial: {
-        netCapex: financialMetrics.netCost,
-        annualRevenue: financialMetrics.annualSavings,
-        annualSavings: financialMetrics.annualSavings,
-        paybackYears: financialMetrics.paybackYears,
-        roi: financialMetrics.roi10Year,
-        npv: financialMetrics.npv || 0,
-        irr: financialMetrics.irr || 0,
-      },
-      sizing: {
-        batteryMW: sizing.recommendedPowerMW,
-        durationHours: sizing.recommendedDurationHours,
-        energyMWh: sizing.recommendedCapacityMWh,
-        solarMW: 0, // TODO: Extract from solarCalculations when structure is fixed
-        windMW: 0,
-        generatorMW: 0,
-      },
-      performance: {
-        cyclesPerYear: 365,
-        degradationRate: 0.02,
-        roundtripEfficiency: 0.85,
-        capacityFactor: 0.25,
-      },
-    },
-    fromCache: false,
-    executionTimeMs: Date.now() - startTime,
-  } as UseCaseWithCalculations;
+  throw new Error(
+    `Database unavailable and static templates have been removed. ` +
+    `Please ensure Supabase connection is working. Template slug: ${slug}`
+  );
 }
 
 // ============================================================================

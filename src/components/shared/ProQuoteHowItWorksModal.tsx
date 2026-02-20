@@ -30,7 +30,7 @@ interface ProQuoteHowItWorksModalProps {
 export default function ProQuoteHowItWorksModal({
   isOpen,
   onClose,
-  onOpenProQuote,
+  _onOpenProQuote,
 }: ProQuoteHowItWorksModalProps) {
   const [animateIn, setAnimateIn] = useState(false);
 

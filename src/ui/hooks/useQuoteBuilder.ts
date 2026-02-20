@@ -95,7 +95,7 @@ export function useQuoteBuilder() {
   /**
    * Load available use cases
    */
-  const loadUseCases = useCallback(async (options?: {
+  const loadUseCases = useCallback(async (_options?: {
     category?: string;
     tier?: string;
   }) => {

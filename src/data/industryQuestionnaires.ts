@@ -35,7 +35,7 @@ export interface QuestionConditional {
 export interface Question {
   id: string;
   label?: string;
-  question?: string; // Alternative to label (for compatibility with useCaseTemplates)
+  question?: string; // Alternative to label (backwards compatibility)
   type:
     | "number"
     | "number_stepper"
@@ -47,7 +47,7 @@ export interface Question {
     | "slider";
   placeholder?: string;
   suffix?: string;
-  unit?: string; // Alternative to suffix (for compatibility with useCaseTemplates)
+  unit?: string; // Alternative to suffix (backwards compatibility)
   options?: (QuestionOption | string)[]; // Allow both formats
   conditional?: QuestionConditional;
   helpText?: string; // Display help text under question

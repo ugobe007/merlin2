@@ -42,7 +42,7 @@ interface MatchedLead {
 
 export default function VendorSponsorship({ onClose }: VendorSponsorshipProps) {
   const [activeTab, setActiveTab] = useState<"submit" | "leads" | "analytics">("submit");
-  const [isVendor, setIsVendor] = useState(false);
+  const [_isVendor, _setIsVendor] = useState(false);
 
   // Submission form state
   const [powerMin, setPowerMin] = useState<number>(100);

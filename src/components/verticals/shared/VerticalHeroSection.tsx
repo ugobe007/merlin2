@@ -32,7 +32,7 @@ const STAT_CARD_COLORS = [
   { bg: 'from-purple-500/20 to-purple-600/10', border: 'border-purple-400/30', value: 'text-purple-400', label: 'text-purple-200' },
 ];
 
-export function VerticalHeroSection({ config, calculatorInputs, onGetQuote, onShowTrueQuote }: VerticalHeroSectionProps) {
+export function VerticalHeroSection({ config, calculatorInputs, _onGetQuote, onShowTrueQuote }: VerticalHeroSectionProps) {
   const { theme, carouselImages, heroCallout, heroStats } = config;
   const BadgeIcon = config.heroBadgeIcon;
   

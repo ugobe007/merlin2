@@ -111,7 +111,7 @@ const INDUSTRY_COMPARABLES: IndustryComparable[] = [
 export function findClosestComparable(
   industry: string | string[],
   sizeMW: number,
-  numberOfRooms?: number
+  _numberOfRooms?: number
 ): IndustryComparable | null {
   const normalizedIndustry = Array.isArray(industry) ? industry[0] : industry;
 

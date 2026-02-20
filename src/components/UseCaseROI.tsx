@@ -371,7 +371,7 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [showAnnualSavings, setShowAnnualSavings] = useState(false);
+  const [_showAnnualSavings, _setShowAnnualSavings] = useState(false);
 
   const currentUseCase = useCases[currentIndex];
 

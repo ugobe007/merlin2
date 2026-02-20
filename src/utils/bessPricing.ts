@@ -19,8 +19,8 @@ export function calculateRealWorldPrice(): number {
 export function calculateBESSPricing(
   powerMW: number,
   standbyHours: number,
-  country: string,
-  includeInstallation: boolean
+  _country: string,
+  _includeInstallation: boolean
 ): {
   contractAveragePerKWh: number;
   [key: string]: any;
@@ -38,9 +38,9 @@ export function calculateBESSPricing(
 export function calculateSystemCost(
   powerMW: number,
   standbyHours: number,
-  country: string,
-  includeInstallation: boolean,
-  useCase: string
+  _country: string,
+  _includeInstallation: boolean,
+  _useCase: string
 ): {
   capacityMWh: number;
   actualDuration: number;

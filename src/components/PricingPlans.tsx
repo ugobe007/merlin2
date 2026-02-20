@@ -5,7 +5,7 @@ interface PricingPlansProps {
   currentTier?: "free" | "starter" | "pro" | "advanced" | "business";
 }
 
-const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentTier }) => {
+const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, _currentTier }) => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const [showLearnMore, setShowLearnMore] = useState<string | null>(null);
 
