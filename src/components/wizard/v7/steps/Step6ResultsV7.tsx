@@ -23,7 +23,6 @@ import type {
 } from "@/wizard/v7/hooks/useWizardV7";
 import { sanitizeQuoteForDisplay, type DisplayQuote } from "@/wizard/v7/utils/pricingSanity";
 import { getEffectiveTier } from "@/services/subscriptionService";
-import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 import { Shield } from "lucide-react";
@@ -139,7 +138,7 @@ export default function Step6ResultsV7({ state, actions }: Props) {
   const quoteReady = pricingStatus === "ok" && !!quoteRaw;
 
   // Badge tier resolution — deterministic, used for badge display decisions
-  const badgeResult = useMemo(
+  const _badgeResult = useMemo(
     () =>
       resolveBadge(
         pricingStatus,

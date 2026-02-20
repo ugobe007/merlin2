@@ -19,7 +19,6 @@ import {
   Zap,
   Shield,
   TrendingDown,
-  TrendingUp,
   ChevronDown,
   Info,
   BarChart3,

@@ -36,7 +36,7 @@ import { getUtilityRatesByZip, getCommercialRateByZip } from "./utilityRateServi
 import { estimateITC } from "./itcCalculator";
 import { estimateDegradation, type BatteryChemistry } from "./batteryDegradationService";
 import { estimateSolarProduction, getPVWattsEstimate } from "./pvWattsService";
-import { estimate8760Savings, run8760Analysis } from "./hourly8760AnalysisService";
+import { run8760Analysis } from "./hourly8760AnalysisService";
 import { estimateRiskMetrics } from "./monteCarloService";
 
 // ============================================
