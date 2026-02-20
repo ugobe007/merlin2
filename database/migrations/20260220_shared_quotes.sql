@@ -21,13 +21,13 @@ CREATE TABLE IF NOT EXISTS shared_quotes (
   
   -- Analytics
   view_count INTEGER DEFAULT 0,
-  last_viewed_at TIMESTAMP WITH TIME ZONE,
-  
-  -- Indexes
-  INDEX idx_short_code (short_code),
-  INDEX idx_created_by (created_by),
-  INDEX idx_expires_at (expires_at)
+  last_viewed_at TIMESTAMP WITH TIME ZONE
 );
+
+-- Indexes for shared_quotes
+CREATE INDEX IF NOT EXISTS idx_shared_quotes_short_code ON shared_quotes(short_code);
+CREATE INDEX IF NOT EXISTS idx_shared_quotes_created_by ON shared_quotes(created_by);
+CREATE INDEX IF NOT EXISTS idx_shared_quotes_expires_at ON shared_quotes(expires_at);
 
 -- View tracking (optional: detailed analytics)
 CREATE TABLE IF NOT EXISTS shared_quote_views (
@@ -38,11 +38,12 @@ CREATE TABLE IF NOT EXISTS shared_quote_views (
   -- Analytics metadata
   ip_address INET,
   user_agent TEXT,
-  referrer TEXT,
-  
-  INDEX idx_shared_quote_id (shared_quote_id),
-  INDEX idx_viewed_at (viewed_at)
+  referrer TEXT
 );
+
+-- Indexes for shared_quote_views
+CREATE INDEX IF NOT EXISTS idx_shared_quote_views_shared_quote_id ON shared_quote_views(shared_quote_id);
+CREATE INDEX IF NOT EXISTS idx_shared_quote_views_viewed_at ON shared_quote_views(viewed_at);
 
 -- Cleanup job: Delete expired quotes (run daily via cron)
 CREATE OR REPLACE FUNCTION cleanup_expired_quotes()
