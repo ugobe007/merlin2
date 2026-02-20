@@ -27,7 +27,7 @@ interface LeadInfo {
 }
 
 export function LeadCaptureModal({ config, isOpen, onClose }: LeadCaptureModalProps) {
-  const { theme, leadSourceTag, brandName } = config;
+  const { theme, leadSourceTag, brandName: _brandName } = config;
   
   const [leadInfo, setLeadInfo] = useState<LeadInfo>({
     businessName: '',

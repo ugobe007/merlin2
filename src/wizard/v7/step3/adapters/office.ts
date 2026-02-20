@@ -33,7 +33,7 @@ import { registerAdapter } from "../step3Compute";
 // ============================================================================
 
 /** Office type → W/sqft multiplier + HVAC class */
-const OFFICE_TYPE_PROFILES: Record<string, { multiplier: number; hvac: "low" | "medium" | "high" }> = {
+const _OFFICE_TYPE_PROFILES: Record<string, { multiplier: number; hvac: "low" | "medium" | "high" }> = {
   "corporate":   { multiplier: 1.0,  hvac: "medium" },
   "tech":        { multiplier: 1.3,  hvac: "medium" },  // Higher plug loads
   "medical":     { multiplier: 1.2,  hvac: "high" },    // Diagnostic equipment
@@ -82,7 +82,7 @@ function mapAnswers(
   // ── HVAC ──
   // Use curated hvacSystem answer to influence cooling type
   const hvacRaw = String(answers.hvacSystem || "central-chilled");
-  const coolingType = hvacRaw === "rooftop" ? "central-ac" as const
+  const _coolingType = hvacRaw === "rooftop" ? "central-ac" as const
     : hvacRaw === "split" ? "split" as const
     : "central-ac" as const;
   const hvacClass = "medium" as const;

@@ -73,7 +73,7 @@ interface QuoteProviderProps {
 export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children, initialQuote }) => {
   const [quote, setQuote] = useState<QuoteDocument>(() => initialQuote || createEmptyQuote());
 
-  const [history, setHistory] = useState<QuoteDocument[]>([]);
+  const [_history, setHistory] = useState<QuoteDocument[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
   /**

@@ -389,7 +389,7 @@ const SupportFAQ: React.FC<SupportFAQProps> = ({
 
             {/* FAQ Accordion */}
             <div className="space-y-2">
-              {filteredFAQs.map((item, index) => {
+              {filteredFAQs.map((item, _index) => {
                 const globalIndex = FAQ_ITEMS.indexOf(item);
                 const isExpanded = expandedItems.has(globalIndex);
                 return (

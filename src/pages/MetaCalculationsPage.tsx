@@ -99,8 +99,8 @@ export default function MetaCalculationsPage() {
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState<'constants' | 'pricing' | 'industries' | 'solar' | 'metrics'>('constants');
-  const [dbHealth, setDbHealth] = useState<DatabaseHealthStatus | null>(null);
-  const [rawDbConstants, setRawDbConstants] = useState<any[]>([]);
+  const [_dbHealth, setDbHealth] = useState<DatabaseHealthStatus | null>(null);
+  const [_rawDbConstants, setRawDbConstants] = useState<any[]>([]);
   const [stateSolarData, setStateSolarData] = useState<StateSolarData[]>([]);
   
   // Admin state
@@ -295,7 +295,7 @@ export default function MetaCalculationsPage() {
 
       await loadAllData();
       setEditModal(null);
-    } catch (err) {
+    } catch (_err) {
       setSaveError('Failed to save');
     }
     setSaving(false);

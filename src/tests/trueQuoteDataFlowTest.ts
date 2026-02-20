@@ -347,7 +347,7 @@ test('TrueQuoteEngine rejects unknown industry type', () => {
   let threw = false;
   try {
     calculateTrueQuote(input);
-  } catch (e) {
+  } catch (_e) {
     threw = true;
   }
   return {
@@ -375,7 +375,7 @@ test('TrueQuoteEngine accepts all 18 industry types', () => {
         options: {},
       };
       calculateTrueQuote(input);
-    } catch (e) {
+    } catch (_e) {
       failed.push(industry);
     }
   }
@@ -402,7 +402,7 @@ for (const scenario of TEST_SCENARIOS) {
       let threw = false;
       try {
         calculateTrueQuote(scenario.input);
-      } catch (e) {
+      } catch (_e) {
         threw = true;
       }
       return {

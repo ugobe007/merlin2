@@ -26,7 +26,7 @@ interface UtilityRatesManagerProps {
   currentRate?: number;
 }
 
-const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({ onClose, onSelectRate, currentRate }) => {
+const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({ onClose, onSelectRate, _currentRate }) => {
   const [selectedState, setSelectedState] = useState('');
   const [selectedUtility, setSelectedUtility] = useState('');
   const [rateType, setRateType] = useState<'residential' | 'commercial' | 'industrial'>('commercial');

@@ -91,7 +91,7 @@ export async function sendContractTelemetry(event: ContractTelemetryEvent): Prom
         devWarn('[V7 Telemetry] Failed to send:', err.message);
       }
     });
-  } catch (err) {
+  } catch (_err) {
     // Swallow all errors (telemetry is best-effort)
   }
 }

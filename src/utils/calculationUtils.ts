@@ -96,7 +96,7 @@ export function calculateComprehensiveSystemCosts(config: SystemConfiguration): 
   const pcsKW = config.powerMW * 1000;
   const actualPcsFactor =
     config.gridMode === "Off-grid" ? config.offGridPcsFactor : config.onGridPcsFactor;
-  const adjustedPcsKw = pcsKW * actualPcsFactor;
+  const _adjustedPcsKw = pcsKW * actualPcsFactor;
 
   // Use dynamic pricing system based on market data
   const dynamicPricing = calculateBESSPricing(

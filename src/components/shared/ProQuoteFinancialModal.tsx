@@ -75,7 +75,7 @@ function fmtM(val: number | undefined): string {
   return `$${val.toLocaleString()}`;
 }
 
-function fmtPct(val: number | undefined): string {
+function _fmtPct(val: number | undefined): string {
   if (val == null) return "—";
   return `${(val * 100).toFixed(1)}%`;
 }

@@ -79,7 +79,7 @@ export const useFinancialMetrics = ({
           location
         );
 
-        const totalAnnualSavings = bessAnnualSavings + solarAnnualSavings + windAnnualSavings;
+        const _totalAnnualSavings = bessAnnualSavings + solarAnnualSavings + windAnnualSavings;
 
         // Use centralized financial calculations
         const financialMetrics = await calculateFinancialMetrics({
@@ -127,7 +127,7 @@ const calculateBESSAnnualSavings = (
   storageMW: number,
   durationHrs: number,
   electricityRate: number,
-  location: string
+  _location: string
 ): number => {
   const energyMWh = storageMW * durationHrs;
   
@@ -168,7 +168,7 @@ const calculateSolarAnnualSavings = (
 const calculateWindAnnualSavings = (
   windMW: number,
   electricityRate: number,
-  location: string
+  _location: string
 ): number => {
   if (windMW === 0) return 0;
   

@@ -333,7 +333,7 @@ export const generateCalculationBreakdown = (
 
   const batteryTariff = bessCapEx * batteryTariffRate;
   const otherTariff = (generatorSubtotal + solarSubtotal + windSubtotal) * otherTariffRate;
-  const totalTariffs = batteryTariff + otherTariff;
+  const _totalTariffs = batteryTariff + otherTariff;
 
   calculations.push({
     section: "Tariffs & Duties",

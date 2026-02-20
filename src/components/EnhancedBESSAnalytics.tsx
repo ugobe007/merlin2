@@ -144,7 +144,7 @@ export const EnhancedBESSAnalytics: React.FC<EnhancedBESSAnalyticsProps> = ({
 
       // Run analyses
       const loadAnalysis = LoadProfileAnalyzer.analyzePeakDemandPatterns(historicalData);
-      const batteryModelInstance = new BatteryElectrochemicalModel(batteryModel);
+      const _batteryModelInstance = new BatteryElectrochemicalModel(batteryModel);
       const batteryAnalysis = {
         degradation_rate: 0.025,
         cycles_completed: 1000,

@@ -137,7 +137,7 @@ export const AUTHORITY_SOURCES: AuthoritySource[] = [
 ];
 
 // Category configurations
-const CATEGORY_CONFIG = {
+const _CATEGORY_CONFIG = {
   government: {
     label: 'Government/DOE',
     icon: Shield,

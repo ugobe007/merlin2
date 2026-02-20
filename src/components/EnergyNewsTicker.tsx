@@ -117,7 +117,7 @@ const EnergyNewsTicker: React.FC = () => {
         if (newsItems.length > 0) {
           setTickerItems(newsItems);
         }
-      } catch (error) {
+      } catch (_error) {
         // Keep using fallback data - no console error needed
       }
     };

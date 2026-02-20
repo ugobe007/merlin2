@@ -46,7 +46,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
   // Branding state
   const [logoUrl, setLogoUrl] = useState<string>("");
-  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [_logoFile, setLogoFile] = useState<File | null>(null);
   const [brandColor, setBrandColor] = useState<string>("#6B46C1");
   const [secondaryColor, setSecondaryColor] = useState<string>("#3B82F6");
   const [quoteTemplate, setQuoteTemplate] = useState<string>("professional");

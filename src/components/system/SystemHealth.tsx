@@ -32,11 +32,11 @@ interface PerformanceMetric {
 
 export default function SystemHealth({ onClose }: SystemHealthProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'errors' | 'maintenance'>('overview');
-  const [systemStatus, setSystemStatus] = useState<'operational' | 'degraded' | 'down'>('operational');
-  const [uptime, setUptime] = useState(99.98);
+  const [systemStatus, _setSystemStatus] = useState<'operational' | 'degraded' | 'down'>('operational');
+  const [uptime, _setUptime] = useState(99.98);
   
   // Mock health metrics
-  const [healthMetrics, setHealthMetrics] = useState<HealthMetric[]>([
+  const [healthMetrics, _setHealthMetrics] = useState<HealthMetric[]>([
     {
       name: 'API Response Time',
       status: 'healthy',

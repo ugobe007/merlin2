@@ -227,7 +227,7 @@ export default function ProQuoteRunningCalculator({
   /* ── cost breakdown % ── */
   const equipPct = projectCost > 0 ? ((fm?.equipmentCost ?? 0) / projectCost) * 100 : 0;
   const installPct = projectCost > 0 ? ((fm?.installationCost ?? 0) / projectCost) * 100 : 0;
-  const otherPct = Math.max(0, 100 - equipPct - installPct);
+  const _otherPct = Math.max(0, 100 - equipPct - installPct);
 
   /* ── loading shimmer ── */
   const shimmer = isCalculating ? "animate-pulse" : "";

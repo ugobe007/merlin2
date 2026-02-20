@@ -102,7 +102,7 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
         const data = await response.json();
         setVendors(data);
       }
-    } catch (error) {
+    } catch (_error) {
     } finally {
       setIsLoading(false);
     }

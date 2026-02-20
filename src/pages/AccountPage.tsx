@@ -111,7 +111,7 @@ function UsageMeter({ label, used, limit, unlimited, icon: Icon }: {
 // ============================================================================
 
 export default function AccountPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, _setIsLoading] = useState(false);
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [, setRefresh] = useState(0); // force re-render after actions

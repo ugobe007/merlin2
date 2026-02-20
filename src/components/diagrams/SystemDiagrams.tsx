@@ -23,7 +23,7 @@ interface DiagramProps {
 }
 
 const navy = '#1E3350';
-const navyLight = '#2A4468';
+const _navyLight = '#2A4468';
 const amber = '#FBBF24';
 const teal = '#14B8A6';
 const slate = '#94A3B8';

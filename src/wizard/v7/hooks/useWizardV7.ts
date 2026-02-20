@@ -5300,7 +5300,7 @@ function isAbort(err: unknown): boolean {
   return ("name" in err && err.name === "AbortError") || ("code" in err && err.code === "ABORTED");
 }
 
-function validateStep3(
+function _validateStep3(
   template: Step3Template,
   answers: Step3Answers
 ): { ok: boolean; reason?: string } {

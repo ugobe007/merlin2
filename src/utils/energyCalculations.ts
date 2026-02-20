@@ -214,7 +214,7 @@ export const calculateEnergySavings = (
   // Calculate peak shaving savings
   const peakShavingKWh = annualEnergyKWh * peakShavingPercent;
    
-  const offPeakKWh = annualEnergyKWh * (1 - peakShavingPercent);
+  const _offPeakKWh = annualEnergyKWh * (1 - peakShavingPercent);
 
   const peakSavings = peakShavingKWh * (rates.peakRateKWh - rates.offPeakRateKWh);
   const demandSavings = batteryMWh * 1000 * rates.demandChargeKW * 12; // Monthly demand charge reduction
