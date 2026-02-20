@@ -1,69 +1,129 @@
 /**
  * V6 Step 2: Industry Selection with Images
- * Updated: January 14, 2026 - All 22 use cases from database
+ * Updated: February 20, 2026 - Lazy-loaded images for bundle optimization
  * NOTE: MerlinAdvisor is now rendered at WizardV6 level (unified advisor)
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, Sparkles } from 'lucide-react';
 import type { WizardState, BusinessSizeTier, QuestionnaireDepth } from '../types';
 import { INDUSTRY_NAMES } from '@/services/googlePlacesService';
 import { BusinessSizePanel } from '../components/BusinessSizePanel';
 
-// Industry images
-import hotelImg from '@/assets/images/hotel_motel_holidayinn_1.jpg';
-import carWashImg from '@/assets/images/Car_Wash_PitStop.jpg';
-import evChargingImg from '@/assets/images/ev_charging_hub2.jpg';
-import manufacturingImg from '@/assets/images/manufacturing_1.jpg';
-import dataCenterImg from '@/assets/images/data-center-1.jpg';
-import hospitalImg from '@/assets/images/hospital_1.jpg';
-import retailImg from '@/assets/images/retail_2.jpg';
-import officeImg from '@/assets/images/office_building1.jpg';
-import collegeImg from '@/assets/images/college_1.jpg';
-import warehouseImg from '@/assets/images/logistics_1.jpg';
-import agricultureImg from '@/assets/images/agriculture_1.jpg';
-import truckStopImg from '@/assets/images/truck_stop.jpg';
-import airportImg from '@/assets/images/airport_11.jpeg';
-import indoorFarmImg from '@/assets/images/indoor_farm1.jpg';
-import shoppingCenterImg from '@/assets/images/shopping_center.jpg';
-import coldStorageImg from '@/assets/images/cold_storage.jpg';
-import apartmentImg from '@/assets/images/apartment_building.jpg';
-import residentialImg from '@/assets/images/residential.jpg';
-import restaurantImg from '@/assets/images/restaurant_1.jpg';
-import casinoImg from '@/assets/images/casino_gaming1.jpg';
+// Lazy-loaded industry images (400-600KB savings!)
+import { getIndustryImage, preloadTopIndustries } from '../utils/lazyIndustryImages';
+
+// ============================================
+// LAZY INDUSTRY CARD COMPONENT
+// ============================================
+
+interface LazyIndustryCardProps {
+  imageSlug: string;
+  name: string;
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+const LazyIndustryCard: React.FC<LazyIndustryCardProps> = ({
+  imageSlug,
+  name,
+  isSelected,
+  onClick,
+}) => {
+  const [loadedImageUrl, setLoadedImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    getIndustryImage(imageSlug as any).then((url) => {
+      if (mounted) setLoadedImageUrl(url);
+    });
+    return () => { mounted = false; };
+  }, [imageSlug]);
+
+  return (
+    <button
+      onClick={onClick}
+      className={`relative group overflow-hidden rounded-2xl transition-all duration-300 ${
+        isSelected
+          ? 'ring-4 ring-purple-500 scale-105 shadow-xl shadow-purple-500/30'
+          : 'hover:scale-102 hover:shadow-lg'
+      }`}
+    >
+      {/* Image or Placeholder */}
+      <div className="aspect-[4/3] overflow-hidden">
+        {loadedImageUrl ? (
+          <img
+            src={loadedImageUrl}
+            alt={name}
+            className={`w-full h-full object-cover transition-transform duration-300 ${
+              isSelected ? 'scale-110' : 'group-hover:scale-110'
+            }`}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 animate-pulse" />
+        )}
+      </div>
+
+      {/* Gradient overlay */}
+      <div
+        className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity ${
+          isSelected ? 'opacity-90' : 'opacity-70 group-hover:opacity-80'
+        }`}
+      />
+
+      {/* Selected checkmark */}
+      {isSelected && (
+        <div className="absolute top-3 right-3 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+          <Check className="w-5 h-5 text-white" />
+        </div>
+      )}
+
+      {/* Label */}
+      <div className="absolute bottom-0 left-0 right-0 p-4">
+        <p
+          className={`font-bold text-base sm:text-lg text-center leading-tight ${
+            isSelected ? 'text-white' : 'text-white/90'
+          }`}
+        >
+          {name}
+        </p>
+      </div>
+    </button>
+  );
+};
 
 // All 20 use cases from database - slugs must match exactly
 const INDUSTRIES = [
   // Commercial
-  { slug: 'hotel', name: 'Hotel / Hospitality', image: hotelImg },
-  { slug: 'car-wash', name: 'Car Wash', image: carWashImg },
-  { slug: 'restaurant', name: 'Restaurant', image: restaurantImg },
-  { slug: 'retail', name: 'Retail / Commercial', image: retailImg },
-  { slug: 'shopping-center', name: 'Shopping Center / Mall', image: shoppingCenterImg },
-  { slug: 'office', name: 'Office Building', image: officeImg },
-  { slug: 'casino', name: 'Casino & Gaming', image: casinoImg },
+  { slug: 'hotel', name: 'Hotel / Hospitality', imageSlug: 'hotel' },
+  { slug: 'car-wash', name: 'Car Wash', imageSlug: 'car-wash' },
+  { slug: 'restaurant', name: 'Restaurant', imageSlug: 'restaurant' },
+  { slug: 'retail', name: 'Retail / Commercial', imageSlug: 'retail' },
+  { slug: 'shopping-center', name: 'Shopping Center / Mall', imageSlug: 'shopping-center' },
+  { slug: 'office', name: 'Office Building', imageSlug: 'office' },
+  { slug: 'casino', name: 'Casino & Gaming', imageSlug: 'casino' },
   
   // Transportation & Logistics
-  { slug: 'heavy_duty_truck_stop', name: 'Truck Stop / Travel Center', image: truckStopImg },
-  { slug: 'ev-charging', name: 'EV Charging Hub', image: evChargingImg },
-  { slug: 'warehouse', name: 'Warehouse / Logistics', image: warehouseImg },
-  { slug: 'airport', name: 'Airport', image: airportImg },
+  { slug: 'heavy_duty_truck_stop', name: 'Truck Stop / Travel Center', imageSlug: 'truck-stop' },
+  { slug: 'ev-charging', name: 'EV Charging Hub', imageSlug: 'ev-charging' },
+  { slug: 'warehouse', name: 'Warehouse / Logistics', imageSlug: 'warehouse' },
+  { slug: 'airport', name: 'Airport', imageSlug: 'airport' },
   
   // Industrial
-  { slug: 'manufacturing', name: 'Manufacturing', image: manufacturingImg },
-  { slug: 'data-center', name: 'Data Center', image: dataCenterImg },
-  { slug: 'cold-storage', name: 'Cold Storage', image: coldStorageImg },
+  { slug: 'manufacturing', name: 'Manufacturing', imageSlug: 'manufacturing' },
+  { slug: 'data-center', name: 'Data Center', imageSlug: 'data-center' },
+  { slug: 'cold-storage', name: 'Cold Storage', imageSlug: 'cold-storage' },
   
   // Institutional
-  { slug: 'hospital', name: 'Hospital / Healthcare', image: hospitalImg },
-  { slug: 'college', name: 'College / University', image: collegeImg },
+  { slug: 'hospital', name: 'Hospital / Healthcare', imageSlug: 'hospital' },
+  { slug: 'college', name: 'College / University', imageSlug: 'college' },
   
   // Agricultural
-  { slug: 'agricultural', name: 'Agriculture', image: agricultureImg },
-  { slug: 'indoor-farm', name: 'Indoor / Vertical Farm', image: indoorFarmImg },
+  { slug: 'agricultural', name: 'Agriculture', imageSlug: 'agriculture' },
+  { slug: 'indoor-farm', name: 'Indoor / Vertical Farm', imageSlug: 'indoor-farm' },
   
   // Residential
-  { slug: 'apartment', name: 'Apartment Complex', image: apartmentImg },
-  { slug: 'residential', name: 'Residential', image: residentialImg },
+  { slug: 'apartment', name: 'Apartment Complex', imageSlug: 'apartment' },
+  { slug: 'residential', name: 'Residential', imageSlug: 'residential' },
 ];
 
 interface Props {
@@ -80,6 +140,14 @@ export function Step2Industry({ state, updateState, onNext }: Props) {
   // If coming from Step 1 with business name (auto-detected), we already may have size info
   // Check if businessSizeTier is already set from Step 1's savings preview
   const hasPresetSize = state.businessName && state.businessSizeTier;
+  
+  // Preload top industry images after 1 second (idle optimization)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      preloadTopIndustries().catch(console.error);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
   
   const selectIndustry = (slug: string, name: string) => {
     // First update the industry
@@ -161,47 +229,13 @@ export function Step2Industry({ state, updateState, onNext }: Props) {
                              normalizeSlug(state.industry) === industry.slug ||
                              state.industry === industry.slug.replace(/_/g, '-');
           return (
-            <button
+            <LazyIndustryCard
               key={industry.slug}
+              imageSlug={industry.imageSlug}
+              name={industry.name}
+              isSelected={isSelected}
               onClick={() => selectIndustry(industry.slug, industry.name)}
-              className={`relative group overflow-hidden rounded-2xl transition-all duration-300 ${
-                isSelected 
-                  ? 'ring-4 ring-purple-500 scale-105 shadow-xl shadow-purple-500/30' 
-                  : 'hover:scale-102 hover:shadow-lg'
-              }`}
-            >
-              {/* Image */}
-              <div className="aspect-[4/3] overflow-hidden">
-                <img 
-                  src={industry.image} 
-                  alt={industry.name}
-                  className={`w-full h-full object-cover transition-transform duration-300 ${
-                    isSelected ? 'scale-110' : 'group-hover:scale-110'
-                  }`}
-                />
-              </div>
-
-              {/* Gradient overlay */}
-              <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity ${
-                isSelected ? 'opacity-90' : 'opacity-70 group-hover:opacity-80'
-              }`} />
-
-              {/* Selected checkmark */}
-              {isSelected && (
-                <div className="absolute top-3 right-3 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Check className="w-5 h-5 text-white" />
-                </div>
-              )}
-
-              {/* Label - LARGER FONTS */}
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <p className={`font-bold text-base sm:text-lg text-center leading-tight ${
-                  isSelected ? 'text-white' : 'text-white/90'
-                }`}>
-                  {industry.name}
-                </p>
-              </div>
-            </button>
+            />
           );
         })}
       </div>
