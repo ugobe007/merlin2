@@ -152,7 +152,7 @@ export default function BessQuoteBuilder() {
     setViewMode,
     setPublicProfileSlug,
     setShowAdvancedQuoteBuilder: _setShowAdvancedQuoteBuilder,
-    _setUserLayoutPreference: __setUserLayoutPreference,
+    setUserLayoutPreference: _setUserLayoutPreference,
     setShowLayoutPreferenceModal: _setShowLayoutPreferenceModal,
     setEnergyCapacity,
     setPowerRating,

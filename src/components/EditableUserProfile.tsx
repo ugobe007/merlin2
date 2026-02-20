@@ -38,7 +38,7 @@ type Tab = "profile" | "team" | "invites";
 const EditableUserProfile: React.FC<EditableUserProfileProps> = ({
   isLoggedIn,
   onClose,
-  _onLoginSuccess,
+  onLoginSuccess: _onLoginSuccess,
   onLogout,
   onShowQuoteTemplates,
   onShowPricingPresets,

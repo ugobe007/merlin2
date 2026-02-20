@@ -25,9 +25,9 @@ import { generateMerlinInsights } from "@/wizard/v7/memory/generateMerlinInsight
 import { QuickQuotePanel } from "@/components/wizard/v7/shared/QuickQuotePanel";
 import { QuickQuoteModal, type QuickQuoteParams } from "@/components/wizard/v7/shared/QuickQuoteModal";
 
-// 💾 Save & Resume Components (Feb 20, 2026) - DISABLED
-// import { useAutoSave } from "@/wizard/v7/hooks/useAutoSave";
-// import { ResumeProgressBanner } from "@/components/wizard/v7/shared/ResumeProgressBanner";
+// 💾 Save & Resume Components (Feb 20, 2026)
+import { useAutoSave } from "@/wizard/v7/hooks/useAutoSave";
+import { ResumeProgressBanner } from "@/components/wizard/v7/shared/ResumeProgressBanner";
 
 // 🤖 AI Agent for self-healing monitoring
 import { wizardAIAgent } from "@/services/wizardAIAgentV2";

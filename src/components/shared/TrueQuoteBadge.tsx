@@ -51,7 +51,7 @@ export interface TrueQuoteSealProps {
 export const TrueQuoteBadge: React.FC<TrueQuoteBadgeProps> = ({
   size = 'md',
   variant = 'default',
-  _showTooltip = true,
+  showTooltip: _showTooltip = true,
   className = '',
   onClick,
   verified = true,
