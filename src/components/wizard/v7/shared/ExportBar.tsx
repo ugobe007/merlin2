@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { Lock, FileText, Bookmark, Share2 } from "lucide-react";
+import { Lock, FileText, Bookmark } from "lucide-react";
 import type { WizardState as WizardV7State } from "@/wizard/v7/hooks/useWizardV7";
 import { buildV7ExportData } from "@/utils/buildV7ExportData";
 import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
@@ -26,7 +26,7 @@ import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanon
 import { supabase } from "@/services/supabaseClient";
 import AuthModal from "@/components/AuthModal";
 import { devInfo, devError } from "@/wizard/v7/debug/devLog";
-import { ShareQuoteModal } from "./ShareQuoteModal";
+// import { ShareQuoteModal } from "./ShareQuoteModal"; // TEMP DISABLED - needs DB types
 
 type ExportFormat = "pdf" | "word" | "excel";
 
@@ -37,7 +37,7 @@ export default function ExportBar({
   state: WizardV7State;
   onTrueQuoteClick?: () => void;
 }) {
-  const [showShareModal, setShowShareModal] = useState(false);
+  // const [showShareModal, setShowShareModal] = useState(false); // TEMP DISABLED
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [_quotaBlocked, setQuotaBlocked] = useState(false);
@@ -57,13 +57,15 @@ export default function ExportBar({
     if (!leadForm.email || !leadForm.name) return;
     setLeadSubmitting(true);
     try {
-      await supabase.from("leads").insert([{
-        name: leadForm.name,
-        email: leadForm.email,
-        company: leadForm.company || null,
-        source: `wizard-v7-${state.industry || "unknown"}`,
-        format: pendingFormat || "pdf",
-      }]);
+      await supabase.from("leads").insert([
+        {
+          name: leadForm.name,
+          email: leadForm.email,
+          company: leadForm.company || null,
+          source: `wizard-v7-${state.industry || "unknown"}`,
+          format: pendingFormat || "pdf",
+        },
+      ]);
     } catch {
       // Don't block UX on lead capture failure
     }
@@ -138,7 +140,7 @@ export default function ExportBar({
         setExporting(null);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [state, leadCaptured]
   );
 
@@ -165,7 +167,15 @@ export default function ExportBar({
 
   return (
     <div className="rounded-xl border-2 border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] p-4 sm:p-6">
-      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
         <div style={{ flex: "1 1 200px", minWidth: 0 }}>
           <div
             style={{
@@ -253,9 +263,9 @@ export default function ExportBar({
               {locked && <Lock className="w-3.5 h-3.5" style={{ opacity: 0.5 }} />}
             </button>
           ))}
-          
-          {/* Share Button */}
-          {state.quote && (
+
+          {/* Share Button - TEMP DISABLED until DB types regenerated */}
+          {/* {state.quote && (
             <button
               type="button"
               onClick={() => setShowShareModal(true)}
@@ -281,7 +291,7 @@ export default function ExportBar({
               <Share2 className="w-4 h-4" />
               <span>Share</span>
             </button>
-          )}
+          )} */}
         </div>
       </div>
 
@@ -395,13 +405,13 @@ export default function ExportBar({
         defaultMode="signup"
       />
 
-      {/* ── SHARE QUOTE MODAL ── */}
-      {showShareModal && state.quote && (
+      {/* ── SHARE QUOTE MODAL ── TEMP DISABLED */}
+      {/* {showShareModal && state.quote && (
         <ShareQuoteModal
           quote={state.quote}
           onClose={() => setShowShareModal(false)}
         />
-      )}
+      )} */}
     </div>
   );
 }

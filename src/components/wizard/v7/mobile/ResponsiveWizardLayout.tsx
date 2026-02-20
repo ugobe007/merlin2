@@ -5,8 +5,8 @@
  * - Mobile (<768px): Full-screen with bottom nav
  */
 
-import React, { ReactNode } from 'react';
-import { MobileBottomNav } from './MobileBottomNav';
+import React, { type ReactNode } from "react";
+import { MobileBottomNav } from "./MobileBottomNav";
 
 interface ResponsiveWizardLayoutProps {
   children: ReactNode;
@@ -31,7 +31,7 @@ export function ResponsiveWizardLayout({
   onBack,
   onNext,
   isLastStep = false,
-  nextLabel = 'Continue',
+  nextLabel = "Continue",
   sidebar,
   showMobileNav = true,
 }: ResponsiveWizardLayoutProps) {
@@ -47,17 +47,13 @@ export function ResponsiveWizardLayout({
         )}
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
 
       {/* Mobile Layout */}
       <div className="md:hidden min-h-screen pb-24">
         {/* Mobile Content */}
-        <main className="px-0">
-          {children}
-        </main>
+        <main className="px-0">{children}</main>
 
         {/* Mobile Bottom Navigation */}
         {showMobileNav && (

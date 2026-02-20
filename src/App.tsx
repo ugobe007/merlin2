@@ -20,7 +20,7 @@ const AccountPage = lazy(() => import("./pages/AccountPage"));
 const SupportFAQ = lazy(() => import("./components/SupportFAQ"));
 const PricingPage = lazy(() => import("./components/pricing/PricingPage"));
 const CheckoutCallback = lazy(() => import("./components/pricing/CheckoutCallback"));
-const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage"));
+// const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
 import { QuoteProvider } from "./contexts/QuoteContext";
 
 // Test calculations temporarily disabled for production build
@@ -129,94 +129,171 @@ function App() {
 
   // Access via /vendor-portal or /vendor - Vendor Portal
   if (showVendorPortal) {
-    return <Suspense fallback={<PageLoader />}><VendorPortal /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <VendorPortal />
+      </Suspense>
+    );
   }
 
   // White-label verticals
   // Access via ?vertical=carwash or eventually carwashenergy.com
   if (activeVertical === "carwash") {
-    return <Suspense fallback={<PageLoader />}><CarWashEnergy /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <CarWashEnergy />
+      </Suspense>
+    );
   }
 
   // Access via ?vertical=evcharging or /evchargingenergy
   if (activeVertical === "evcharging") {
-    return <Suspense fallback={<PageLoader />}><EVChargingEnergy /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <EVChargingEnergy />
+      </Suspense>
+    );
   }
 
   // Access via ?vertical=hotel or /hotelenergy
   if (activeVertical === "hotel") {
-    return <Suspense fallback={<PageLoader />}><HotelEnergy /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <HotelEnergy />
+      </Suspense>
+    );
   }
 
   // Access via ?vertical=datacenter or /data-center or /data-center-energy
   if (activeVertical === "datacenter") {
-    return <Suspense fallback={<PageLoader />}><DataCenterEnergy /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <DataCenterEnergy />
+      </Suspense>
+    );
   }
 
   // Access via ?vertical=hospital or /hospital or /hospital-energy
   if (activeVertical === "hospital") {
-    return <Suspense fallback={<PageLoader />}><HospitalEnergy /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <HospitalEnergy />
+      </Suspense>
+    );
   }
 
   // Access via ?vertical=manufacturing or /manufacturing or /manufacturing-energy
   if (activeVertical === "manufacturing") {
-    return <Suspense fallback={<PageLoader />}><ManufacturingEnergy /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <ManufacturingEnergy />
+      </Suspense>
+    );
   }
 
   // Access via /meta or /meta-calculations - TrueQuote Meta Calculations Dashboard
   if (pathname === "/meta" || pathname === "/meta-calculations" || pathname === "/ssot") {
-    return <Suspense fallback={<PageLoader />}><MetaCalculationsPage /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <MetaCalculationsPage />
+      </Suspense>
+    );
   }
 
   // Access via /support - Support & FAQ page
   if (pathname === "/support" || pathname === "/faq" || pathname === "/help") {
-    return <Suspense fallback={<PageLoader />}><SupportFAQ standalone /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <SupportFAQ standalone />
+      </Suspense>
+    );
   }
 
   // Access via /checkout or any route with ?checkout= — Stripe return handling
-  if (pathname === "/checkout" || urlParams.get('checkout')) {
-    return <Suspense fallback={<PageLoader />}><CheckoutCallback /></Suspense>;
+  if (pathname === "/checkout" || urlParams.get("checkout")) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <CheckoutCallback />
+      </Suspense>
+    );
   }
 
   // Access via /pricing - Pricing & Vendor API page
   if (pathname === "/pricing") {
-    return <Suspense fallback={<PageLoader />}><PricingPage /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <PricingPage />
+      </Suspense>
+    );
   }
 
   // Access via /account - User subscription & billing management
   if (pathname === "/account" || pathname === "/billing" || pathname === "/subscription") {
-    return <Suspense fallback={<PageLoader />}><AccountPage /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AccountPage />
+      </Suspense>
+    );
   }
 
   // Access via /market-intelligence - Subscriber market reports
-  if (pathname === "/market-intelligence" || pathname === "/market" || pathname === "/intelligence") {
-    return <Suspense fallback={<PageLoader />}><MarketIntelligencePage /></Suspense>;
+  if (
+    pathname === "/market-intelligence" ||
+    pathname === "/market" ||
+    pathname === "/intelligence"
+  ) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <MarketIntelligencePage />
+      </Suspense>
+    );
   }
 
   // Access via /templates or /brand-kit - Quote Template Builder
   if (pathname === "/templates" || pathname === "/brand-kit" || pathname === "/template-builder") {
-    return <Suspense fallback={<PageLoader />}><QuoteTemplatePage /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <QuoteTemplatePage />
+      </Suspense>
+    );
   }
 
   // Access via /wizard or /wizard-v7 - V7 SSOT Wizard (Feb 1, 2026 - NOW THE DEFAULT)
-  if (pathname === "/wizard" || pathname === "/wizard-v7" || pathname === "/v7" || pathname === "/wizard/v7") {
-    return <Suspense fallback={<PageLoader />}><WizardV7Page /></Suspense>;
+  if (
+    pathname === "/wizard" ||
+    pathname === "/wizard-v7" ||
+    pathname === "/v7" ||
+    pathname === "/wizard/v7"
+  ) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <WizardV7Page />
+      </Suspense>
+    );
   }
 
   // Access via /wizard-v6 ONLY - V6 Legacy (kept for testing)
   if (pathname === "/wizard-v6") {
-    return <Suspense fallback={<PageLoader />}><WizardV6 /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <WizardV6 />
+      </Suspense>
+    );
   }
 
   // Access via /wizard-vnext or /vnext - vNext luminous HUD scaffold (Jan 30, 2026)
   if (pathname === "/wizard-vnext" || pathname === "/vnext") {
-    return <Suspense fallback={<PageLoader />}><WizardVNextPage /></Suspense>;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <WizardVNextPage />
+      </Suspense>
+    );
   }
 
-  // Access via /q/:shortCode - Shared quote viewer (public)
-  if (pathname.startsWith("/q/")) {
-    return <Suspense fallback={<PageLoader />}><SharedQuotePage /></Suspense>;
-  }
+  // Access via /q/:shortCode - Shared quote viewer (public) - TEMP DISABLED
+  // if (pathname.startsWith("/q/")) {
+  //   return <Suspense fallback={<PageLoader />}><SharedQuotePage /></Suspense>;
+  // }
 
   // Access via /quote-builder or advanced=true - Show Advanced Quote Builder
   // The BessQuoteBuilder component handles this via the advanced param
@@ -224,18 +301,18 @@ function App() {
   return (
     <QuoteProvider>
       <Suspense fallback={<PageLoader />}>
-      <div>
-        <BessQuoteBuilder />
+        <div>
+          <BessQuoteBuilder />
 
-        {/* Floating Admin Access Button - Bottom Right */}
-        <button
-          onClick={handleAdminAccess}
-          className="fixed bottom-4 right-4 bg-gradient-to-br from-purple-700 to-slate-600 hover:from-purple-800 hover:to-slate-700 text-white p-4 rounded-full shadow-xl shadow-purple-700/30 transition-all z-40 opacity-90 hover:opacity-100 hover:scale-110 border-2 border-purple-500 animate-pulse hover:animate-none"
-          title="Admin Access (Ctrl+Shift+A)"
-        >
-          <span className="text-xl">⚙️</span>
-        </button>
-      </div>
+          {/* Floating Admin Access Button - Bottom Right */}
+          <button
+            onClick={handleAdminAccess}
+            className="fixed bottom-4 right-4 bg-gradient-to-br from-purple-700 to-slate-600 hover:from-purple-800 hover:to-slate-700 text-white p-4 rounded-full shadow-xl shadow-purple-700/30 transition-all z-40 opacity-90 hover:opacity-100 hover:scale-110 border-2 border-purple-500 animate-pulse hover:animate-none"
+            title="Admin Access (Ctrl+Shift+A)"
+          >
+            <span className="text-xl">⚙️</span>
+          </button>
+        </div>
       </Suspense>
     </QuoteProvider>
   );
