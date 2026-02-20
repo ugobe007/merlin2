@@ -13,7 +13,7 @@
  * ensuring pricing can be updated via admin dashboard without code deployment.
  */
 
-import { supabase } from "./supabaseClient";
+// Lazy import to avoid TDZ errors - import inside functions that need it
 
 export interface Controller {
   id: string;
@@ -201,6 +201,9 @@ class SystemControlsPricingService {
    * Load configuration from database (database-first approach)
    */
   private async loadFromDatabase(): Promise<SystemControlsPricingConfiguration | null> {
+    // Lazy import to avoid TDZ
+    const { supabase } = await import("./supabaseClient");
+    
     // Check cache first
     if (this.configCache && Date.now() < this.cacheExpiry) {
       this.configuration = this.configCache;
@@ -956,6 +959,9 @@ class SystemControlsPricingService {
 
     // Save to database
     try {
+      // Lazy import to avoid TDZ
+      const { supabase } = await import("./supabaseClient");
+      
       const { error } = await (supabase as any).from("pricing_configurations").upsert(
         {
           config_key: "system_controls_pricing",

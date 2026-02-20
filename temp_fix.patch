@@ -1,0 +1,15 @@
+--- a/src/pages/WizardV7Page.tsx
++++ b/src/pages/WizardV7Page.tsx
+@@ -95,9 +95,9 @@
+ 
+   // 💾 Auto-Save & Resume (Feb 20, 2026)
+   const autoSave = useAutoSave(state, {
+-    goToStep: wizard.goToStep,
+-    selectIndustry: wizard.selectIndustry,
+-    setStep3Answers: wizard.setStep3Answers,
++    goToStep: wizard.goToStep as any,
++    selectIndustry: wizard.selectIndustry as any,
++    setStep3Answers: wizard.setStep3Answers as any,
+   });
+ 
+   const hasProgress = autoSave.hasProgress();
