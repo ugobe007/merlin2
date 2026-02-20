@@ -1415,6 +1415,8 @@ export async function getCommercialRateByZip(zipCode: string): Promise<{
   rate: number;
   demandCharge: number;
   peakRate?: number;
+  offPeakRate?: number;
+  peakHours?: string;
   utilityName: string;
   state: string;
   hasTOU: boolean;
@@ -1428,11 +1430,112 @@ export async function getCommercialRateByZip(zipCode: string): Promise<{
     rate: r.commercialRate,
     demandCharge: r.demandCharge || 0,
     peakRate: r.peakRate,
+    offPeakRate: r.offPeakRate,
+    peakHours: r.peakHours,
     utilityName: r.utilityName,
     state: data.state,
     hasTOU: r.hasTOU,
     source: r.source,
   };
+}
+
+/**
+ * Build TOUPeriod[] from utility rate data for 8760 hourly analysis.
+ * Parses peakHours like "4pm-9pm" into structured period objects.
+ * Returns null if utility has no TOU data.
+ */
+export function buildTOUPeriodsFromUtilityRate(rate: {
+  hasTOU?: boolean;
+  peakRate?: number;
+  offPeakRate?: number;
+  peakHours?: string;
+  commercialRate?: number;
+}): import('./hourly8760AnalysisService').TOUPeriod[] | null {
+  if (!rate.hasTOU || !rate.peakRate || !rate.offPeakRate || !rate.peakHours) {
+    return null;
+  }
+
+  const { peakStart, peakEnd } = parsePeakHours(rate.peakHours);
+  if (peakStart === null || peakEnd === null) return null;
+
+  // Build mid-peak rate (average of peak and off-peak)
+  const midPeakRate = (rate.peakRate + rate.offPeakRate) / 2;
+
+  // Construct TOU periods:
+  // overnight off-peak → daytime mid-peak → afternoon on-peak → evening mid-peak → off-peak
+  const periods: import('./hourly8760AnalysisService').TOUPeriod[] = [];
+
+  // Off-peak overnight: midnight → 2 hours before peak
+  const morningMidStart = Math.max(7, peakStart - 2);
+  periods.push({
+    name: 'off-peak',
+    rate: rate.offPeakRate,
+    startHour: 0,
+    endHour: morningMidStart,
+    days: ['all'],
+  });
+
+  // Mid-peak morning (weekday): before peak window
+  if (morningMidStart < peakStart) {
+    periods.push({
+      name: 'mid-peak',
+      rate: midPeakRate,
+      startHour: morningMidStart,
+      endHour: peakStart,
+      days: ['weekday'],
+    });
+  }
+
+  // On-peak (weekday): peak window
+  periods.push({
+    name: 'on-peak',
+    rate: rate.peakRate,
+    startHour: peakStart,
+    endHour: peakEnd,
+    days: ['weekday'],
+  });
+
+  // Mid-peak evening (weekday): after peak → midnight
+  if (peakEnd < 24) {
+    periods.push({
+      name: 'mid-peak',
+      rate: midPeakRate,
+      startHour: peakEnd,
+      endHour: 24,
+      days: ['weekday'],
+    });
+  }
+
+  // Weekend daytime: mid-peak (lower than weekday peak)
+  periods.push({
+    name: 'mid-peak',
+    rate: rate.offPeakRate + (rate.peakRate - rate.offPeakRate) * 0.3,
+    startHour: morningMidStart,
+    endHour: 24,
+    days: ['weekend'],
+  });
+
+  return periods;
+}
+
+/**
+ * Parse peak hours string like "4pm-9pm", "1pm-7pm", "12pm-9pm" into 24h start/end.
+ */
+function parsePeakHours(peakHours: string): { peakStart: number | null; peakEnd: number | null } {
+  const match = peakHours.match(/(\d{1,2})(am|pm)\s*[-–]\s*(\d{1,2})(am|pm)/i);
+  if (!match) return { peakStart: null, peakEnd: null };
+
+  let start = parseInt(match[1], 10);
+  const startMeridiem = match[2].toLowerCase();
+  let end = parseInt(match[3], 10);
+  const endMeridiem = match[4].toLowerCase();
+
+  if (startMeridiem === 'pm' && start !== 12) start += 12;
+  if (startMeridiem === 'am' && start === 12) start = 0;
+  if (endMeridiem === 'pm' && end !== 12) end += 12;
+  if (endMeridiem === 'am' && end === 12) end = 0;
+
+  return { peakStart: start, peakEnd: end };
 }
 
 /**

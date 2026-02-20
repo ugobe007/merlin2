@@ -45,6 +45,45 @@ function fmtKWh(n: number): string {
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 // ═══════════════════════════════════════════════════════════════════════════
+// SHARED TOOLTIP COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+function SvgTooltip({
+  x,
+  y,
+  label,
+  svgWidth,
+}: {
+  x: number;
+  y: number;
+  label: string;
+  svgWidth: number;
+}) {
+  const estW = label.length * 5 + 16;
+  // Keep tooltip within SVG bounds
+  const tx = Math.min(Math.max(x, estW / 2 + 4), svgWidth - estW / 2 - 4);
+  const ty = Math.max(y - 10, 10);
+
+  return (
+    <g>
+      <rect
+        x={tx - estW / 2}
+        y={ty - 10}
+        width={estW}
+        height={16}
+        rx="4"
+        fill="rgba(15,23,42,0.95)"
+        stroke="rgba(255,255,255,0.15)"
+        strokeWidth="0.5"
+      />
+      <text x={tx} y={ty} fill="#e2e8f0" fontSize="8" fontWeight="600" textAnchor="middle">
+        {label}
+      </text>
+    </g>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // 1. CUMULATIVE SAVINGS TIMELINE — Break-even visualization
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -57,6 +96,7 @@ function CumulativeSavingsChart({
   netCost: number;
   paybackYears: number | null;
 }) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const years = 25;
   const dataPoints = useMemo(() => {
     const points: { year: number; cumulative: number; positive: boolean }[] = [];
@@ -159,6 +199,50 @@ function CumulativeSavingsChart({
             {y}yr
           </text>
         ))}
+
+        {/* Hover hit areas (invisible rects per year) */}
+        {dataPoints.map((d, i) => (
+          <rect
+            key={`h${i}`}
+            x={xScale(d.year) - chartW / years / 2}
+            y={padT}
+            width={chartW / years}
+            height={chartH}
+            fill="transparent"
+            onMouseEnter={() => setHoverIdx(i)}
+            onMouseLeave={() => setHoverIdx(null)}
+            style={{ cursor: "crosshair" }}
+          />
+        ))}
+
+        {/* Hover crosshair + dot */}
+        {hoverIdx !== null && dataPoints[hoverIdx] && (
+          <>
+            <line
+              x1={xScale(dataPoints[hoverIdx].year)}
+              y1={padT}
+              x2={xScale(dataPoints[hoverIdx].year)}
+              y2={svgH - padB}
+              stroke="rgba(255,255,255,0.2)"
+              strokeWidth="0.5"
+              strokeDasharray="2,2"
+            />
+            <circle
+              cx={xScale(dataPoints[hoverIdx].year)}
+              cy={yScale(dataPoints[hoverIdx].cumulative)}
+              r="4"
+              fill={dataPoints[hoverIdx].positive ? "#10b981" : "#ef4444"}
+              stroke="white"
+              strokeWidth="1"
+            />
+            <SvgTooltip
+              x={xScale(dataPoints[hoverIdx].year)}
+              y={yScale(dataPoints[hoverIdx].cumulative)}
+              label={`Yr ${dataPoints[hoverIdx].year}: ${fmtUSD(dataPoints[hoverIdx].cumulative)}`}
+              svgWidth={svgW}
+            />
+          </>
+        )}
       </svg>
 
       <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500">
@@ -214,7 +298,7 @@ function RiskBandsChart({
       <div className="flex items-center gap-2 mb-3">
         <Activity className="w-4 h-4 text-violet-400" />
         <span className="text-xs font-semibold text-violet-300 uppercase tracking-wider">
-          Risk Analysis (Monte Carlo)
+          Risk Bands (P10 / P50 / P90)
         </span>
       </div>
 
@@ -302,6 +386,7 @@ function MonthlySolarChart({
   source: string;
 }) {
   const maxMonth = Math.max(...monthlyKWh);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
   return (
     <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
@@ -316,15 +401,32 @@ function MonthlySolarChart({
       </div>
 
       {/* Bar chart */}
-      <div className="flex items-end gap-1 h-24">
+      <div className="flex items-end gap-1 h-24 relative">
         {monthlyKWh.map((kwh, i) => {
           const pct = maxMonth > 0 ? (kwh / maxMonth) * 100 : 0;
+          const isHovered = hoverIdx === i;
           return (
-            <div key={i} className="flex-1 flex flex-col items-center">
+            <div
+              key={i}
+              className="flex-1 flex flex-col items-center relative"
+              onMouseEnter={() => setHoverIdx(i)}
+              onMouseLeave={() => setHoverIdx(null)}
+              style={{ cursor: "crosshair" }}
+            >
+              {isHovered && (
+                <div
+                  className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap z-10
+                    bg-slate-900/95 text-amber-300 text-[9px] font-semibold px-2 py-0.5 rounded
+                    border border-white/10 shadow-lg"
+                >
+                  {MONTHS[i]}: {fmtKWh(kwh)} kWh
+                </div>
+              )}
               <div
-                className="w-full bg-amber-500/40 rounded-t-sm hover:bg-amber-500/60 transition-colors"
+                className={`w-full rounded-t-sm transition-colors ${
+                  isHovered ? "bg-amber-500/70" : "bg-amber-500/40 hover:bg-amber-500/60"
+                }`}
                 style={{ height: `${Math.max(pct, 3)}%` }}
-                title={`${MONTHS[i]}: ${fmtKWh(kwh)} kWh`}
               />
             </div>
           );
@@ -355,6 +457,7 @@ function MonthlySolarChart({
 // ═══════════════════════════════════════════════════════════════════════════
 
 function DegradationChart({ yearlyPct, warrantyYears }: { yearlyPct: number[]; warrantyYears: number }) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   if (yearlyPct.length < 2) return null;
 
   const svgW = 400;
@@ -436,6 +539,53 @@ function DegradationChart({ yearlyPct, warrantyYears }: { yearlyPct: number[]; w
             {y}yr
           </text>
         ))}
+
+        {/* Hover hit areas */}
+        {yearlyPct.map((pct, i) => {
+          const segW = chartW / (yearlyPct.length - 1);
+          return (
+            <rect
+              key={`h${i}`}
+              x={xScale(i) - segW / 2}
+              y={padT}
+              width={segW}
+              height={chartH}
+              fill="transparent"
+              onMouseEnter={() => setHoverIdx(i)}
+              onMouseLeave={() => setHoverIdx(null)}
+              style={{ cursor: "crosshair" }}
+            />
+          );
+        })}
+
+        {/* Hover crosshair + dot + tooltip */}
+        {hoverIdx !== null && yearlyPct[hoverIdx] !== undefined && (
+          <>
+            <line
+              x1={xScale(hoverIdx)}
+              y1={padT}
+              x2={xScale(hoverIdx)}
+              y2={svgH - padB}
+              stroke="rgba(255,255,255,0.15)"
+              strokeWidth="0.5"
+              strokeDasharray="2,2"
+            />
+            <circle
+              cx={xScale(hoverIdx)}
+              cy={yScale(yearlyPct[hoverIdx])}
+              r="4"
+              fill="#8b5cf6"
+              stroke="white"
+              strokeWidth="1"
+            />
+            <SvgTooltip
+              x={xScale(hoverIdx)}
+              y={yScale(yearlyPct[hoverIdx])}
+              label={`Yr ${hoverIdx}: ${yearlyPct[hoverIdx].toFixed(1)}%`}
+              svgWidth={svgW}
+            />
+          </>
+        )}
       </svg>
 
       <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500">
