@@ -1,9 +1,0 @@
-fix: car wash pricing accuracy - scale costs for small C&I systems
-
-- Scale commissioning/certification/annual fixed costs for <1MW systems (15-100%)
-- Fix generator sizing: small systems priced per-kW, not as 2MW fixed units
-- Car wash water heater default: electric->gas (removes 75kW from load)
-- Tunnel dryer scaling: dryers at EXIT only, don't scale with tunnel length
-- Step5 duration fallback: use industry defaults (car wash=2h) not hardcoded 4h
-- Fix jsdom ESM: downgrade to v25 (v27 @exodus/bytes breaks vitest forks)
-- Tests: 2005 passing (was 0 tests, 27 errors from jsdom ESM issue)
