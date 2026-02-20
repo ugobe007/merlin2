@@ -152,7 +152,7 @@ export default function BessQuoteBuilder() {
     setViewMode,
     setPublicProfileSlug,
     setShowAdvancedQuoteBuilder: _setShowAdvancedQuoteBuilder,
-    setUserLayoutPreference: _setUserLayoutPreference,
+    _setUserLayoutPreference: __setUserLayoutPreference,
     setShowLayoutPreferenceModal: _setShowLayoutPreferenceModal,
     setEnergyCapacity,
     setPowerRating,
@@ -312,9 +312,9 @@ export default function BessQuoteBuilder() {
     // Load user layout preference
     const user = authService.getCurrentUser();
     if (user && user.preferences?.layoutPreference) {
-      setUserLayoutPreference(user.preferences.layoutPreference);
+      _setUserLayoutPreference(user.preferences.layoutPreference);
     }
-  }, [setIsLoggedIn, setUserLayoutPreference]);
+  }, [setIsLoggedIn, _setUserLayoutPreference]);
 
   // Check if user needs to complete profile after login
   useEffect(() => {
@@ -363,7 +363,7 @@ export default function BessQuoteBuilder() {
       setViewMode("app");
       setShowAuthModal(true);
     };
-    return <PublicProfileViewer profileSlug={publicProfileSlug} onSignUp={__handleNavigateToApp} />;
+    return <PublicProfileViewer profileSlug={publicProfileSlug} onSignUp={_handleNavigateToApp} />;
   }
 
   const _handleNavigateToApp2 = () => {

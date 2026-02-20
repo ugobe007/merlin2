@@ -73,7 +73,12 @@ export const dataCenterConfig: VerticalConfig = {
     inputs: [
       { id: 'totalITLoadKW', label: 'Total IT Load', type: 'number', defaultValue: 1000, min: 100, max: 50000, suffix: 'kW' },
       { id: 'pueRatio', label: 'PUE Ratio', type: 'number', defaultValue: 1.4, min: 1.0, max: 3.0, step: 0.1, suffix: 'PUE' },
-      { id: 'redundancyLevel', label: 'Redundancy Level', type: 'select', defaultValue: 'N+1', options: ['N', 'N+1', '2N', '2N+1'] },
+      { id: 'redundancyLevel', label: 'Redundancy Level', type: 'select', defaultValue: 'N+1', options: [
+        { value: 'N', label: 'N' },
+        { value: 'N+1', label: 'N+1' },
+        { value: '2N', label: '2N' },
+        { value: '2N+1', label: '2N+1' },
+      ] },
       { id: 'currentMonthlyBill', label: 'Monthly Electric Bill', type: 'number', defaultValue: 80000, min: 5000, max: 1000000, step: 5000, suffix: '$/mo' },
     ],
     ssotSlug: 'data-center',

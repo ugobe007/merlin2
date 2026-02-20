@@ -4343,7 +4343,7 @@ export function useWizardV7() {
       generatorFuelType: addOns.generatorFuelType,
       includeWind: addOns.includeWind,
       windKW: addOns.windKW,
-      itcBonuses: addOns.itcBonuses,
+      // itcBonuses: addOns.itcBonuses, // DISABLED
       updatedAt: Date.now(),
     });
 

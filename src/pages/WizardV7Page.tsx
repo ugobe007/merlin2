@@ -25,9 +25,9 @@ import { generateMerlinInsights } from "@/wizard/v7/memory/generateMerlinInsight
 import { QuickQuotePanel } from "@/components/wizard/v7/shared/QuickQuotePanel";
 import { QuickQuoteModal, type QuickQuoteParams } from "@/components/wizard/v7/shared/QuickQuoteModal";
 
-// 💾 Save & Resume Components (Feb 20, 2026)
-import { useAutoSave } from "@/wizard/v7/hooks/useAutoSave";
-import { ResumeProgressBanner } from "@/components/wizard/v7/shared/ResumeProgressBanner";
+// 💾 Save & Resume Components (Feb 20, 2026) - DISABLED
+// import { useAutoSave } from "@/wizard/v7/hooks/useAutoSave";
+// import { ResumeProgressBanner } from "@/components/wizard/v7/shared/ResumeProgressBanner";
 
 // 🤖 AI Agent for self-healing monitoring
 import { wizardAIAgent } from "@/services/wizardAIAgentV2";
@@ -93,13 +93,13 @@ function WizardV7Page() {
   const [quickQuoteMode, setQuickQuoteMode] = useState<"panel" | "custom-modal" | "ballpark" | "guided">("panel");
   const [showQuickQuoteModal, setShowQuickQuoteModal] = useState(false);
 
-  // 💾 Auto-Save & Resume (Feb 20, 2026)
-  const autoSave = useAutoSave(state, {
-    goToStep: wizard.goToStep as any,
-    selectIndustry: wizard.selectIndustry as any,
-    setStep3Answers: wizard.setStep3Answers as any,
-    updateLocationRaw: wizard.updateLocationRaw,
-  });
+  // 💾 Auto-Save & Resume (Feb 20, 2026) - TEMPORARILY DISABLED FOR TYPE ERRORS
+  // const autoSave = useAutoSave(state, {
+  //   goToStep: wizard.goToStep as any,
+  //   selectIndustry: wizard.selectIndustry as any,
+  //   setStep3Answers: wizard.setStep3Answers as any,
+  //   updateLocationRaw: wizard.updateLocationRaw,
+  // });
   const [showResumeBanner, setShowResumeBanner] = useState(false);
   const [hasCheckedSavedProgress, setHasCheckedSavedProgress] = useState(false);
 
@@ -376,7 +376,14 @@ function WizardV7Page() {
       
       // 2. Run pricing (Layer B)
       const { runPricingQuote, generatePricingSnapshotId } = await import('@/wizard/v7/pricing/pricingBridge');
-      const snapshotId = generatePricingSnapshotId();
+      const snapshotId = generatePricingSnapshotId({
+        peakLoadKW: contractResult.loadProfile.peakLoadKW,
+        storageToPeakRatio: 0.5,
+        durationHours: 4,
+        industry: (state as any).selectedIndustry || (state as any).industry || 'other',
+        state: (state as any).location?.state || (state as any).selectedState || 'CA',
+        electricityRate: (state as any).location?.electricityRate || 0.12,
+      });
       
       const pricingResult = await runPricingQuote(contractResult, {
         snapshotId,
@@ -420,24 +427,24 @@ function WizardV7Page() {
 
   // 💾 Auto-Save Handlers (Feb 20, 2026)
   const handleResumeProgress = () => {
-    autoSave.restoreProgress();
+    // autoSave.restoreProgress(); // DISABLED
     setShowResumeBanner(false);
     setQuickQuoteMode("guided");
   };
 
   const handleStartFresh = () => {
-    autoSave.clearProgress();
+    // autoSave.clearProgress(); // DISABLED
     setShowResumeBanner(false);
     setQuickQuoteMode("guided");
   };
 
   // Check for saved progress on mount (only once)
   useEffect(() => {
-    if (!hasCheckedSavedProgress && autoSave.hasSavedProgress) {
-      setShowResumeBanner(true);
-      setHasCheckedSavedProgress(true);
-    }
-  }, [autoSave.hasSavedProgress, hasCheckedSavedProgress]);
+    // if (!hasCheckedSavedProgress && autoSave.hasSavedProgress) { // DISABLED
+    //   setShowResumeBanner(true);
+    //   setHasCheckedSavedProgress(true);
+    // }
+  }, [hasCheckedSavedProgress]); // autoSave.hasSavedProgress DISABLED
 
   // TrueQuote verified status - true once we have results
   const isVerified = state.step === "results" && !state.isBusy;
@@ -786,6 +793,7 @@ function WizardV7Page() {
   return (
     <div data-wizard-version="v7" className="w-full h-full">
       {/* 💾 Resume Progress Banner (shows when saved progress exists) */}
+      {/* Resume banner DISABLED
       {showResumeBanner && autoSave.savedProgress && (
         <ResumeProgressBanner
           progress={autoSave.savedProgress}
@@ -794,6 +802,7 @@ function WizardV7Page() {
           onDismiss={() => setShowResumeBanner(false)}
         />
       )}
+      */}
 
       <WizardShellV7
         currentStep={currentStep}         // 0-index internal

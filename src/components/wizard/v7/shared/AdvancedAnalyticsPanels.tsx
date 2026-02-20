@@ -645,10 +645,10 @@ function AnalyticsTeaserStrip({ metadata, hasSolar }: { metadata: Metadata; hasS
   }
 
   // Solar capacity factor
-  if (hasSolar && metadata.solarProduction?.capacityFactor != null) {
+  if (hasSolar && metadata.solarProduction?.capacityFactorPct != null) {
     chips.push({
       label: "Solar CF",
-      value: `${metadata.solarProduction.capacityFactor.toFixed(1)}%`,
+      value: `${metadata.solarProduction.capacityFactorPct.toFixed(1)}%`,
       color: "text-amber-400",
     });
   }

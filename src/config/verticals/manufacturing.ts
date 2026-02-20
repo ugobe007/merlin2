@@ -72,10 +72,10 @@ export const manufacturingConfig: VerticalConfig = {
   calculator: {
     inputs: [
       { id: 'squareFootage', label: 'Facility Size', type: 'number', defaultValue: 100000, min: 5000, max: 2000000, step: 5000, suffix: 'sq ft' },
-      { id: 'operatingShifts', label: 'Operating Shifts', type: 'select', defaultValue: 2, options: [
-        { value: 1, label: '1 Shift (8 hr)' },
-        { value: 2, label: '2 Shifts (16 hr)' },
-        { value: 3, label: '3 Shifts (24/7)' },
+      { id: 'operatingShifts', label: 'Operating Shifts', type: 'select', defaultValue: '2', options: [
+        { value: '1', label: '1 Shift (8 hr)' },
+        { value: '2', label: '2 Shifts (16 hr)' },
+        { value: '3', label: '3 Shifts (24/7)' },
       ] },
       { id: 'hasHeavyMachinery', label: 'Heavy Machinery / CNC', type: 'toggle', defaultValue: true },
       { id: 'currentMonthlyBill', label: 'Monthly Electric Bill', type: 'number', defaultValue: 45000, min: 5000, max: 500000, step: 5000, suffix: '$/mo' },
