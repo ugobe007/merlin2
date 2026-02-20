@@ -3571,6 +3571,247 @@ export const GOVERNMENT_LOAD_V1_SSOT: CalculatorContract = {
   },
 };
 
+// ══════════════════════════════════════════════════════
+// SHOPPING CENTER SSOT ADAPTER
+// ══════════════════════════════════════════════════════
+
+/**
+ * SHOPPING CENTER SSOT ADAPTER
+ *
+ * CalcValidation v1 envelope with contributor breakdown.
+ * SSOT: calculateUseCasePower("shopping-center", { squareFeet }) → 10 W/sqft (CBECS mall)
+ *
+ * Contributor model:
+ *   hvac (35%) — Large open spaces, high foot traffic, food court
+ *   lighting (30%) — Extensive display, accent, parking lot
+ *   process (15%) — Food court, escalators, elevators
+ *   controls (5%) — BMS, security, fire systems
+ *   other (15%) — Common areas, loading, signage
+ */
+export const SHOPPING_CENTER_LOAD_V1_SSOT: CalculatorContract = {
+  id: "shopping_center_load_v1",
+  requiredInputs: ["squareFootage"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    const squareFootage = Number(inputs.squareFootage ?? inputs.sqFt) || 100000;
+    if (!inputs.squareFootage && !inputs.sqFt) {
+      assumptions.push("Default: 100,000 sq ft (no user input)");
+    }
+
+    assumptions.push(
+      `Shopping Center: ${squareFootage.toLocaleString()} sq ft @ 10 W/sqft (CBECS mall peak)`
+    );
+
+    // Capture curated fields in audit trail
+    if (inputs.retailType) assumptions.push(`Retail type: ${inputs.retailType}`);
+    if (inputs.operatingHours) assumptions.push(`Hours: ${inputs.operatingHours}`);
+
+    const result = calculateUseCasePower(
+      "shopping-center",
+      buildSSOTInput("shopping_center", { squareFootage })
+    );
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // Contributor breakdown (CBECS mall benchmark)
+    const hvacKW = peakLoadKW * 0.35;
+    const lightingKW = peakLoadKW * 0.3;
+    const processKW = peakLoadKW * 0.15;
+    const controlsKW = peakLoadKW * 0.05;
+    const otherKW = peakLoadKW * 0.15;
+    const kWContributorsTotalKW = hvacKW + lightingKW + processKW + controlsKW + otherKW;
+
+    const dutyCycle = 0.45;
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: 0,
+        charging: 0,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: 35,
+        lightingPct: 30,
+        processPct: 15,
+        controlsPct: 5,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: 0,
+        otherPct: 15,
+      },
+      details: {
+        shoppingCenter: {
+          squareFootage,
+          wattsPerSqFt: 10,
+        },
+      },
+      notes: [
+        `Shopping Center: ${squareFootage.toLocaleString()} sq ft → ${peakLoadKW.toLocaleString()} kW (CBECS 10 W/sqft)`,
+        `Duty cycle: ${dutyCycle} (14h retail + overnight base load)`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: result,
+    };
+  },
+};
+
+// ══════════════════════════════════════════════════════
+// MICROGRID SSOT ADAPTER
+// ══════════════════════════════════════════════════════
+
+/**
+ * MICROGRID SSOT ADAPTER
+ *
+ * CalcValidation v1 envelope with contributor breakdown.
+ * SSOT: calculateUseCasePower("microgrid", { sqFt, level2Chargers, dcFastChargers })
+ *   → EV charger path (if chargers specified) OR sqft path (8 W/sqft mixed loads)
+ *
+ * Contributor model (sqft path):
+ *   hvac (25%) — Mixed-use building HVAC
+ *   lighting (15%) — Standard commercial
+ *   process (25%) — Mixed loads, manufacturing, specialty
+ *   controls (10%) — Microgrid controller, SCADA, BMS
+ *   charging (10%) — EV or fleet charging
+ *   other (15%) — Resilience loads, community services
+ */
+export const MICROGRID_LOAD_V1_SSOT: CalculatorContract = {
+  id: "microgrid_load_v1",
+  requiredInputs: ["squareFootage"] as const,
+
+  compute: (inputs: CalcInputs): CalcRunResult => {
+    const warnings: string[] = [];
+    const assumptions: string[] = [];
+
+    const squareFootage = Number(inputs.squareFootage ?? inputs.sqFt ?? inputs.facilitySize) || 50000;
+    const level2Chargers = inputs.level2Chargers != null ? Number(inputs.level2Chargers) : 0;
+    const dcfcChargers = inputs.dcfcChargers != null ? Number(inputs.dcfcChargers) : 0;
+
+    const hasEVChargers = level2Chargers > 0 || dcfcChargers > 0;
+
+    if (hasEVChargers) {
+      assumptions.push(
+        `Microgrid with EV: ${level2Chargers} L2 + ${dcfcChargers} DCFC chargers`
+      );
+    } else {
+      assumptions.push(
+        `Microgrid: ${squareFootage.toLocaleString()} sq ft @ 8 W/sqft (mixed-load benchmark)`
+      );
+    }
+
+    const result = calculateUseCasePower(
+      "microgrid",
+      buildSSOTInput("microgrid", { squareFootage, level2Chargers, dcfcChargers })
+    );
+    const peakLoadKW = Math.round(result.powerMW * 1000);
+
+    // Contributor breakdown depends on path
+    let hvacPct: number, lightingPct: number, processPct: number;
+    let controlsPct: number, chargingPct: number, otherPct: number;
+
+    if (hasEVChargers) {
+      // EV-heavy microgrid
+      hvacPct = 0.1;
+      lightingPct = 0.05;
+      processPct = 0.05;
+      controlsPct = 0.1;
+      chargingPct = 0.6;
+      otherPct = 0.1;
+    } else {
+      // Building/campus microgrid
+      hvacPct = 0.25;
+      lightingPct = 0.15;
+      processPct = 0.25;
+      controlsPct = 0.1;
+      chargingPct = 0;
+      otherPct = 0.25;
+    }
+
+    const hvacKW = peakLoadKW * hvacPct;
+    const lightingKW = peakLoadKW * lightingPct;
+    const processKW = peakLoadKW * processPct;
+    const controlsKW = peakLoadKW * controlsPct;
+    const chargingKW = peakLoadKW * chargingPct;
+    const otherKW = peakLoadKW * otherPct;
+    const kWContributorsTotalKW =
+      hvacKW + lightingKW + processKW + controlsKW + chargingKW + otherKW;
+
+    // Microgrids run 24/7 for resilience
+    const dutyCycle = 0.65;
+    const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
+
+    const validation: CalcValidation = {
+      version: "v1",
+      dutyCycle,
+      kWContributors: {
+        hvac: hvacKW,
+        lighting: lightingKW,
+        process: processKW,
+        controls: controlsKW,
+        itLoad: 0,
+        cooling: 0,
+        charging: chargingKW,
+        other: otherKW,
+      },
+      kWContributorsTotalKW,
+      kWContributorShares: {
+        hvacPct: hvacPct * 100,
+        lightingPct: lightingPct * 100,
+        processPct: processPct * 100,
+        controlsPct: controlsPct * 100,
+        itLoadPct: 0,
+        coolingPct: 0,
+        chargingPct: chargingPct * 100,
+        otherPct: otherPct * 100,
+      },
+      details: {
+        microgrid: {
+          squareFootage,
+          level2Chargers,
+          dcfcChargers,
+          hasEVChargers,
+          wattsPerSqFt: hasEVChargers ? "EV-driven" : 8,
+        },
+      },
+      notes: [
+        `Microgrid: ${peakLoadKW.toLocaleString()} kW peak (${hasEVChargers ? "EV charger" : "8 W/sqft"} model)`,
+        `Duty cycle: ${dutyCycle} (24/7 resilience operation)`,
+        hasEVChargers
+          ? `Charging dominant: ${level2Chargers} L2 + ${dcfcChargers} DCFC`
+          : `Mixed-load: ${squareFootage.toLocaleString()} sq ft`,
+      ],
+    };
+
+    return {
+      baseLoadKW,
+      peakLoadKW,
+      energyKWhPerDay: Math.round(baseLoadKW * 24),
+      assumptions,
+      warnings,
+      validation,
+      raw: result,
+    };
+  },
+};
+
 // ========== REGISTRY ==========
 
 /**
@@ -3623,6 +3864,10 @@ export const CALCULATORS_BY_ID: Record<string, CalculatorContract> = {
   [AGRICULTURE_LOAD_V1_SSOT.id]: AGRICULTURE_LOAD_V1_SSOT,
   [RESIDENTIAL_LOAD_V1_SSOT.id]: RESIDENTIAL_LOAD_V1_SSOT,
   [GOVERNMENT_LOAD_V1_SSOT.id]: GOVERNMENT_LOAD_V1_SSOT,
+
+  // NEW: shopping_center + microgrid dedicated adapters
+  [SHOPPING_CENTER_LOAD_V1_SSOT.id]: SHOPPING_CENTER_LOAD_V1_SSOT,
+  [MICROGRID_LOAD_V1_SSOT.id]: MICROGRID_LOAD_V1_SSOT,
 };
 
 /**

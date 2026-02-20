@@ -299,6 +299,17 @@ const INDUSTRY_SIZING_DEFAULTS: Record<string, { ratio: number; hours: number }>
 
   // Agriculture: irrigation + processing
   agriculture: { ratio: 0.35, hours: 4 },
+
+  // Government: office-like + critical ops
+  government: { ratio: 0.4, hours: 4 },
+
+  // Shopping center / mall: multi-tenant peak shaving
+  "shopping-center": { ratio: 0.4, hours: 4 },
+  shopping_center: { ratio: 0.4, hours: 4 },
+
+  // Microgrid: islanding + resilience
+  microgrid: { ratio: 0.6, hours: 4 },
+  "micro-grid": { ratio: 0.6, hours: 4 },
 };
 
 /**

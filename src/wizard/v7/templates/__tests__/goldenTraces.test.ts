@@ -394,7 +394,7 @@ describe("Golden traces: manifest integrity", () => {
     }
   });
 
-  it("all 21 manifest entries present", () => {
+  it("all 23 manifest entries present", () => {
     const slugs = MANIFEST.map((m) => m.industrySlug).sort();
     expect(slugs).toEqual([
       "agriculture",
@@ -412,10 +412,12 @@ describe("Golden traces: manifest integrity", () => {
       "hotel",
       "indoor_farm",
       "manufacturing",
+      "microgrid",
       "office",
       "residential",
       "restaurant",
       "retail",
+      "shopping_center",
       "truck_stop",
       "warehouse",
     ]);

@@ -248,10 +248,20 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     templateKey: "hotel", // borrows hotel's commercial template
     calculatorId: "retail_load_v1", // has own physics model
     schemaKey: "retail",
-    aliases: ["shopping", "shopping-center", "shopping_center", "store"],
+    aliases: ["store"],
     sizingDefaults: { ratio: 0.35, hours: 4 },
     hasTemplate: false,
     hasCuratedSchema: true,
+  },
+  {
+    canonicalSlug: "shopping_center",
+    templateKey: "hotel", // borrows hotel's commercial template
+    calculatorId: "shopping_center_load_v1", // dedicated shopping center calculator (10 W/sqft CBECS)
+    schemaKey: "retail", // borrows retail's curated questions (both are sq-ft driven)
+    aliases: ["shopping-center", "shopping", "shopping-mall", "mall"],
+    sizingDefaults: { ratio: 0.4, hours: 4 }, // larger BESS for multi-tenant peak shaving
+    hasTemplate: false,
+    hasCuratedSchema: true, // borrows retail schema
   },
   {
     canonicalSlug: "warehouse",
@@ -377,6 +387,16 @@ export const INDUSTRY_CATALOG: IndustryCatalogEntry[] = [
     sizingDefaults: { ratio: 0.4, hours: 4 },
     hasTemplate: false,
     hasCuratedSchema: true,
+  },
+  {
+    canonicalSlug: "microgrid",
+    templateKey: "generic",
+    calculatorId: "microgrid_load_v1", // dedicated microgrid calculator (EV + sqft hybrid)
+    schemaKey: "other", // no curated schema yet — falls back to generic "other"
+    aliases: ["micro-grid", "island-grid", "community-microgrid"],
+    sizingDefaults: { ratio: 0.6, hours: 4 }, // higher ratio for islanding/resilience
+    hasTemplate: false,
+    hasCuratedSchema: false,
   },
 
   // ═══════════════════════════════════════════════════════════════════════════

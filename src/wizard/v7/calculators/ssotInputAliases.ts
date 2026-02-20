@@ -618,6 +618,36 @@ export const SSOT_ALIASES = {
       ssotDefault: false,
     },
   } satisfies IndustryAliasMap,
+
+  shopping_center: {
+    squareFootage: {
+      adapterField: "squareFootage",
+      ssotField: "squareFeet",
+      ssotAlternates: ["retailSqFt", "sqFt"],
+      ssotDefault: 100000,
+    },
+  } satisfies IndustryAliasMap,
+
+  microgrid: {
+    squareFootage: {
+      adapterField: "squareFootage",
+      ssotField: "sqFt",
+      ssotAlternates: ["facilitySize"],
+      ssotDefault: 50000,
+    },
+    level2Chargers: {
+      adapterField: "level2Chargers",
+      ssotField: "numberOfLevel2Chargers",
+      ssotAlternates: ["level2Chargers"],
+      ssotDefault: 0,
+    },
+    dcfcChargers: {
+      adapterField: "dcfcChargers",
+      ssotField: "numberOfDCFastChargers",
+      ssotAlternates: ["dcFastChargers"],
+      ssotDefault: 0,
+    },
+  } satisfies IndustryAliasMap,
 } as const;
 
 // Type helper: valid industry slugs in this alias registry
