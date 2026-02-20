@@ -95,9 +95,9 @@ function WizardV7Page() {
 
   // 💾 Auto-Save & Resume (Feb 20, 2026)
   const autoSave = useAutoSave(state, {
-    goToStep: wizard.goToStep as any,
-    selectIndustry: wizard.selectIndustry as any,
-    setStep3Answers: wizard.setStep3Answers as any,
+    goToStep: wizard.goToStep,
+    selectIndustry: wizard.selectIndustry,
+    setStep3Answers: wizard.setStep3Answers,
     updateLocationRaw: wizard.updateLocationRaw,
   });
   const [showResumeBanner, setShowResumeBanner] = useState(false);
@@ -402,10 +402,10 @@ function WizardV7Page() {
       });
       
       // 4. Set industry and location in memory
-      wizard.selectIndustry(params.industry as any || 'office');
+      wizard.selectIndustry(params.industry || 'office');
       
       // 5. Jump to results
-      wizard.goToStep('results' as any);
+      wizard.goToStep('results');
       
     } catch (error) {
       console.error('[Quick Quote] Pricing failed:', error);
