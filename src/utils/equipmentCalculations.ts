@@ -578,7 +578,9 @@ export const calculateEquipmentBreakdown = async (
   }
 
   if (effectiveGeneratorMW > 0) {
-    const generatorUnitMW = 2; // 2MW generators
+    // ✅ FIX Feb 2026: Small systems don't need 2 MW generator units.
+    // Size generator appropriately: small C&I uses per-kW pricing for actual size needed.
+    const isSmallGenerator = effectiveGeneratorMW < 1.0;
 
     // Fetch generator pricing from database - NOW SUPPORTS FUEL TYPE SELECTION
     let costPerKW = 800; // Fallback: $800/kW for diesel generators
@@ -611,8 +613,28 @@ export const calculateEquipmentBreakdown = async (
       console.warn("Using fallback generator pricing:", error);
     }
 
-    const generatorUnitCost = generatorUnitMW * 1000 * costPerKW;
-    const generatorQuantity = Math.ceil(effectiveGeneratorMW / generatorUnitMW);
+    let generatorUnitMW: number;
+    let generatorQuantity: number;
+    let generatorUnitCost: number;
+
+    if (isSmallGenerator) {
+      // ✅ Small C&I: Price actual generator size needed (not 2 MW units)
+      // Commercial generators come in standard sizes: 50kW, 100kW, 150kW, 200kW, 500kW, 750kW
+      generatorUnitMW = effectiveGeneratorMW;
+      generatorQuantity = 1;
+      generatorUnitCost = effectiveGeneratorMW * 1000 * costPerKW;
+
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          `⚡ [Small Generator] ${(effectiveGeneratorMW * 1000).toFixed(0)} kW ${fuelTypeLabel} @ $${costPerKW}/kW = $${generatorUnitCost.toLocaleString()}`
+        );
+      }
+    } else {
+      // Utility-scale: Use 2 MW unit increments
+      generatorUnitMW = 2;
+      generatorUnitCost = generatorUnitMW * 1000 * costPerKW;
+      generatorQuantity = Math.ceil(effectiveGeneratorMW / generatorUnitMW);
+    }
 
     generators = {
       quantity: generatorQuantity,
@@ -1248,6 +1270,12 @@ export const calculateEquipmentBreakdown = async (
     // Using fallback commissioning values
   }
 
+  // ✅ FIX Feb 2026: Small C&I systems (< 1 MW) don't need utility-scale
+  // commissioning, certification, or annual overhead. Scale fixed base costs
+  // proportionally to system size, with a minimum of 15%.
+  // Example: 0.124 MW system pays ~15% of base costs, not 100%.
+  const smallSystemCostScale = isSmallSystem ? Math.max(0.15, storageSizeMW) : 1.0;
+
   // Factory Acceptance Test (FAT) - Testing at manufacturer before shipping
   // Typically 1-2% of battery system cost
   const fatPercentage = commissioningConfig?.fatPercentage || 0.015;
@@ -1260,22 +1288,24 @@ export const calculateEquipmentBreakdown = async (
 
   // SCADA/EMS Integration - Control system programming and integration
   // Fixed base + per-MW cost for complexity
+  // ✅ FIX: Small C&I uses simple monitoring (cloud EMS), not full SCADA
   const scadaBaseCost = commissioningConfig?.scadaBaseCost || 25000;
   const scadaPerMW = commissioningConfig?.scadaPerMW || 5000;
-  const scadaIntegration = scadaBaseCost + storageSizeMW * scadaPerMW;
+  const scadaIntegration = (scadaBaseCost * smallSystemCostScale) + storageSizeMW * scadaPerMW;
 
   // Functional Safety Testing (IEC 61508/62443 compliance)
   // Critical for grid-connected and off-grid systems
-  // Includes: Protection relay testing, fault response, emergency shutdown
+  // ✅ FIX: Small behind-the-meter systems need basic safety, not full IEC 61508
   const safetyTestBaseCost = commissioningConfig?.safetyTestBaseCost || 15000;
   const safetyTestPerMW = commissioningConfig?.safetyTestPerMW || 3000;
-  const functionalSafetyTest = safetyTestBaseCost + storageSizeMW * safetyTestPerMW;
+  const functionalSafetyTest = (safetyTestBaseCost * smallSystemCostScale) + storageSizeMW * safetyTestPerMW;
 
   // Performance Testing - Capacity verification, round-trip efficiency
   // Required for warranty validation and performance guarantees
+  // ✅ FIX: Small systems need simple discharge test, not full performance suite
   const performanceTestBaseCost = commissioningConfig?.performanceTestBaseCost || 10000;
   const performanceTestPerMWh = commissioningConfig?.performanceTestPerMWh || 500;
-  const performanceTest = performanceTestBaseCost + totalEnergyMWh * performanceTestPerMWh;
+  const performanceTest = (performanceTestBaseCost * smallSystemCostScale) + totalEnergyMWh * performanceTestPerMWh;
 
   const totalCommissioning =
     factoryAcceptanceTest +
@@ -1309,32 +1339,39 @@ export const calculateEquipmentBreakdown = async (
 
   // Interconnection Study - Utility grid impact study
   // Cost varies significantly by utility and system size
+  // ✅ FIX: Small behind-the-meter systems (<1 MW) typically only need
+  // utility notification, not a full interconnection study
   const interconnectionBaseCost = certificationConfig?.interconnectionBaseCost || 10000;
   const interconnectionPerMW = certificationConfig?.interconnectionPerMW || 15000;
-  const interconnectionStudy = interconnectionBaseCost + storageSizeMW * interconnectionPerMW;
+  const interconnectionStudy = (interconnectionBaseCost * smallSystemCostScale) + storageSizeMW * interconnectionPerMW;
 
   // Utility Grid Upgrades - If study determines upgrades needed
   // Highly variable - using conservative estimate (may be $0 or much higher)
+  // ✅ FIX: Small behind-the-meter C&I rarely triggers grid upgrades
   const utilityUpgradePercentage = certificationConfig?.utilityUpgradePercentage || 0.03;
   const utilityUpgrades =
-    gridConnection === "off-grid" ? 0 : equipmentCost * utilityUpgradePercentage;
+    gridConnection === "off-grid" ? 0
+    : isSmallSystem ? 0  // Small C&I behind-the-meter: no grid upgrades
+    : equipmentCost * utilityUpgradePercentage;
 
   // Environmental Permits - NEPA review, state environmental compliance
-  // Higher for larger systems and greenfield sites
+  // ✅ FIX: Small indoor/behind-the-meter BESS needs minimal env review
   const envPermitBaseCost = certificationConfig?.envPermitBaseCost || 5000;
   const envPermitPerMW = certificationConfig?.envPermitPerMW || 2000;
-  const environmentalPermits = envPermitBaseCost + storageSizeMW * envPermitPerMW;
+  const environmentalPermits = (envPermitBaseCost * smallSystemCostScale) + storageSizeMW * envPermitPerMW;
 
   // Building Permits - Local construction permits, inspections
+  // ✅ FIX: Scale minimum for small systems
   const buildingPermitPercentage = certificationConfig?.buildingPermitPercentage || 0.005;
   const buildingPermitMin = certificationConfig?.buildingPermitMin || 2500;
-  const buildingPermits = Math.max(buildingPermitMin, equipmentCost * buildingPermitPercentage);
+  const scaledBuildingPermitMin = buildingPermitMin * smallSystemCostScale;
+  const buildingPermits = Math.max(scaledBuildingPermitMin, equipmentCost * buildingPermitPercentage);
 
   // Fire Code Compliance - NFPA 855 (battery storage standard)
-  // Includes fire suppression, thermal management verification, signage
+  // ✅ FIX: Small systems need basic fire compliance, not full NFPA 855 audit
   const fireCodeBaseCost = certificationConfig?.fireCodeBaseCost || 8000;
   const fireCodePerMWh = certificationConfig?.fireCodePerMWh || 1000;
-  const fireCodeCompliance = fireCodeBaseCost + totalEnergyMWh * fireCodePerMWh;
+  const fireCodeCompliance = (fireCodeBaseCost * smallSystemCostScale) + totalEnergyMWh * fireCodePerMWh;
 
   const totalCertification =
     interconnectionStudy +
@@ -1378,9 +1415,10 @@ export const calculateEquipmentBreakdown = async (
 
   // Annual Capacity Testing - Required for warranty and performance guarantees
   // Includes discharge testing, efficiency verification
+  // ✅ FIX: Small systems need simpler annual testing
   const capacityTestBaseCost = annualConfig?.capacityTestBaseCost || 3000;
   const capacityTestPerMWh = annualConfig?.capacityTestPerMWh || 200;
-  const capacityTesting = capacityTestBaseCost + totalEnergyMWh * capacityTestPerMWh;
+  const capacityTesting = (capacityTestBaseCost * smallSystemCostScale) + totalEnergyMWh * capacityTestPerMWh;
 
   // Insurance Premium - Asset insurance for the storage system
   // Typically 0.3-0.5% of replacement value annually
@@ -1389,9 +1427,10 @@ export const calculateEquipmentBreakdown = async (
 
   // Software Licenses - SCADA, energy management, optimization software
   // Annual subscription fees
+  // ✅ FIX: Small systems use basic cloud monitoring, not full SCADA license
   const softwareBaseCost = annualConfig?.softwareBaseCost || 5000;
   const softwarePerMW = annualConfig?.softwarePerMW || 2000;
-  const softwareLicenses = softwareBaseCost + storageSizeMW * softwarePerMW;
+  const softwareLicenses = (softwareBaseCost * smallSystemCostScale) + storageSizeMW * softwarePerMW;
 
   const totalAnnualCost =
     operationsAndMaintenance +

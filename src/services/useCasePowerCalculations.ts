@@ -5475,7 +5475,7 @@ export const CAR_WASH_EQUIPMENT_DEFAULTS = {
     entranceExitRollers: 2,
     highPressurePump: 2,
     boosterPump: 1,
-    waterHeaterElectric: 1,
+    waterHeaterElectric: 0, // ✅ FIX: Most car washes use gas water heaters, not electric (75 kW savings)
     reclaimRecyclingSystem: 1,
     spotFreeRinseRO: 1,
     rotatingBrushMitter: 6,
@@ -5717,15 +5717,15 @@ export function calculateCarWashPowerFromEquipment(
     totalConnectedKW = scaledTotal;
   } else if (bayCount > 1) {
     // Tunnel types: more bays/lanes = longer tunnel = more wash positions
-    // Drying and wash equipment scale with tunnel length (bay count proxy)
-    // Shared infrastructure (pumps, controls, facility) stays fixed
-    const dryerBase = breakdown["drying"] || 0;
+    // ✅ FIX Feb 2026: Only wash equipment scales with tunnel length (more arches/brushes)
+    // Drying is at the EXIT of the tunnel — NOT distributed along its length.
+    // A 6-bay tunnel has the same dryer section as a 2-bay tunnel.
     const washBase = breakdown["washEquipment"] || 0;
     // Scale factor: diminishing returns (sqrt) — 6 bays ≈ 2.4x, not 6x
     const tunnelScale = Math.sqrt(bayCount);
-    const dryerScaled = dryerBase * tunnelScale;
     const washScaled = washBase * tunnelScale;
-    totalConnectedKW = totalConnectedKW - dryerBase - washBase + dryerScaled + washScaled;
+    // Dryers stay at 1x (they're at the exit only, independent of tunnel length)
+    totalConnectedKW = totalConnectedKW - washBase + washScaled;
   }
 
   // Peak demand is typically 70-80% of connected load

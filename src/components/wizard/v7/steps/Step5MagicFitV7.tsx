@@ -34,7 +34,7 @@ import { devLog, devError } from '@/wizard/v7/debug/devLog';
 
 // SSOT calculation engine — only used as fallback when Step 4 pricing is missing
 import { calculateQuote } from "@/services/unifiedQuoteCalculator";
-import { applyMarginToQuote } from "@/wizard/v7/pricing/pricingBridge";
+import { applyMarginToQuote, getSizingDefaults } from "@/wizard/v7/pricing/pricingBridge";
 import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
 import { getFacilityConstraints } from "@/services/useCasePowerCalculations";
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
@@ -737,7 +737,10 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   if (!snapshotRef.current.frozen) {
     const rawBESSKW =
       data.bessKW > 0 ? data.bessKW : data.peakLoadKW || state?.quote?.peakLoadKW || 200;
-    const ssotDuration = data.durationHours > 0 ? data.durationHours : 4;
+    // ✅ FIX Feb 2026: Use industry-specific duration defaults (car wash = 2h, hotel = 4h)
+    // instead of hardcoded 4h which doubles energy storage cost for short-duration industries.
+    const industryDefaults = getSizingDefaults(data.industry || "commercial");
+    const ssotDuration = data.durationHours > 0 ? data.durationHours : industryDefaults.hours;
 
     snapshotRef.current = {
       frozen: true,
