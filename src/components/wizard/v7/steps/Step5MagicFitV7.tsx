@@ -36,6 +36,7 @@ import { devLog, devError } from '@/wizard/v7/debug/devLog';
 import { calculateQuote } from "@/services/unifiedQuoteCalculator";
 import { applyMarginToQuote } from "@/wizard/v7/pricing/pricingBridge";
 import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
+import { getFacilityConstraints } from "@/services/useCasePowerCalculations";
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
 
 interface Props {
@@ -248,7 +249,8 @@ function scaleTier(
     itcAmount: number;
     netCost: number;
   } | null,
-  maxRoofSolarMW?: number // Cap from solar sizing (roof-only, no canopy)
+  maxRoofSolarMW?: number, // Cap from solar sizing (roof-only, no canopy)
+  maxTotalSolarMW?: number // Cap from INDUSTRY_FACILITY_CONSTRAINTS (roof + canopy physical limit)
 ): TierQuote {
   // For perfectFit (1.0x multipliers), just return the base directly
   if (config.multiplier === 1.0 && config.solarMultiplier === 1.0 && config.genMultiplier === 1.0) {
@@ -292,7 +294,8 @@ function scaleTier(
     totalCost: baseEquipment.switchgear.totalCost * config.multiplier,
   };
 
-  // Solar scaling: for Starter (scale-down), cap to roof-only if solar sizing provided
+  // Solar scaling: cap to physical building constraints (roof + canopy)
+  // Vineet: "Solar 165kW will not fit in an automated car wash" — respect physics
   let solarScale = config.solarMultiplier;
   if (maxRoofSolarMW && maxRoofSolarMW > 0 && baseEquipment.solar && baseEquipment.solar.totalMW > 0) {
     const rawScaledMW = baseEquipment.solar.totalMW * config.solarMultiplier;
@@ -302,6 +305,14 @@ function scaleTier(
     } else if (config.solarMultiplier > 1.0) {
       // BeastMode: allow scaling above base but not below roof-only
       solarScale = Math.max(solarScale, maxRoofSolarMW / baseEquipment.solar.totalMW);
+    }
+  }
+
+  // Hard cap: total solar (roof + canopy) must not exceed physical building limit
+  if (maxTotalSolarMW && maxTotalSolarMW > 0 && baseEquipment.solar && baseEquipment.solar.totalMW > 0) {
+    const scaledMW = baseEquipment.solar.totalMW * solarScale;
+    if (scaledMW > maxTotalSolarMW) {
+      solarScale = maxTotalSolarMW / baseEquipment.solar.totalMW;
     }
   }
 
@@ -774,7 +785,17 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   // ── Stabilize derived sizing from frozen snapshot ──
   const baseBESSKW = snap.rawBESSKW * goalModifiers.bessMultiplier;
   const baseDuration = snap.ssotDuration * goalModifiers.durationMultiplier;
-  const baseSolarKW = snap.solarKW * goalModifiers.solarMultiplier;
+
+  // Solar: apply goal multiplier BUT cap to physical building constraints
+  // Vineet: "Solar 165kW will not fit in an automated car wash" — enforce realistic limits
+  const uncappedSolarKW = snap.solarKW * goalModifiers.solarMultiplier;
+  const facilityConstraints = getFacilityConstraints(snap.industry);
+  const maxPhysicalSolarKW = facilityConstraints?.totalRealisticSolarKW ?? Infinity;
+  const baseSolarKW = Math.min(uncappedSolarKW, maxPhysicalSolarKW);
+  if (uncappedSolarKW > maxPhysicalSolarKW) {
+    devLog(`[Step5 MagicFit] Solar capped from ${Math.round(uncappedSolarKW)} kW to ${maxPhysicalSolarKW} kW (${snap.industry} building constraint)`);
+  }
+
   const baseGeneratorKW = snap.generatorKW * goalModifiers.generatorMultiplier;
   const baseWindKW = snap.windKW * goalModifiers.solarMultiplier;
 
@@ -925,9 +946,11 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         // ═══════════════════════════════════════════════════════════════════
         const results: TierQuote[] = [];
         const maxRoofMW = snap.roofSolarKW > 0 ? snap.roofSolarKW / 1000 : undefined;
+        // Physical solar cap from INDUSTRY_FACILITY_CONSTRAINTS (prevents oversizing)
+        const maxTotalSolarMW = maxPhysicalSolarKW < Infinity ? maxPhysicalSolarKW / 1000 : undefined;
         for (const tierKey of ["starter", "perfectFit", "beastMode"] as const) {
           results.push(
-            scaleTier(baseQuoteResult, tierKey, TIER_CONFIG[tierKey], baseDuration, baseMargin, maxRoofMW)
+            scaleTier(baseQuoteResult, tierKey, TIER_CONFIG[tierKey], baseDuration, baseMargin, maxRoofMW, maxTotalSolarMW)
           );
         }
 
