@@ -151,7 +151,7 @@ export async function lookupZipCode(zipCode: string): Promise<ZipCodeResult | nu
 
     if (data && !error) {
       const elapsed = Date.now() - startTime;
-      console.log(`[ZipLookup] ✅ Database hit (${elapsed}ms): ${data.city}, ${data.state_code}`);
+      if (import.meta.env.DEV) console.log(`[ZipLookup] ✅ Database hit (${elapsed}ms): ${data.city}, ${data.state_code}`);
       
       return {
         zipCode: data.zip_code,
@@ -164,7 +164,7 @@ export async function lookupZipCode(zipCode: string): Promise<ZipCodeResult | nu
       };
     }
 
-    console.log('[ZipLookup] ⚠️ Database miss - trying Google Maps API');
+    if (import.meta.env.DEV) console.log('[ZipLookup] ⚠️ Database miss - trying Google Maps API');
   } catch (dbError) {
     console.error('[ZipLookup] Database error:', dbError);
   }
@@ -177,7 +177,7 @@ export async function lookupZipCode(zipCode: string): Promise<ZipCodeResult | nu
     
     if (geocoded) {
       const elapsed = Date.now() - startTime;
-      console.log(`[ZipLookup] ✅ Google Maps hit (${elapsed}ms): ${geocoded.city}, ${geocoded.stateCode}`);
+      if (import.meta.env.DEV) console.log(`[ZipLookup] ✅ Google Maps hit (${elapsed}ms): ${geocoded.city}, ${geocoded.stateCode}`);
 
       const result: ZipCodeResult = {
         zipCode,
@@ -197,7 +197,7 @@ export async function lookupZipCode(zipCode: string): Promise<ZipCodeResult | nu
       return result;
     }
 
-    console.log('[ZipLookup] ⚠️ Google Maps failed - trying hardcoded fallback');
+    if (import.meta.env.DEV) console.log('[ZipLookup] ⚠️ Google Maps failed - trying hardcoded fallback');
   } catch (apiError) {
     console.error('[ZipLookup] Google Maps error:', apiError);
   }
@@ -209,7 +209,7 @@ export async function lookupZipCode(zipCode: string): Promise<ZipCodeResult | nu
   
   if (hardcoded) {
     const elapsed = Date.now() - startTime;
-    console.log(`[ZipLookup] ✅ Hardcoded fallback (${elapsed}ms): ${hardcoded.city}, ${hardcoded.state}`);
+    if (import.meta.env.DEV) console.log(`[ZipLookup] ✅ Hardcoded fallback (${elapsed}ms): ${hardcoded.city}, ${hardcoded.state}`);
     return hardcoded;
   }
 
@@ -242,7 +242,7 @@ async function saveZipCodeToDatabase(data: ZipCodeResult): Promise<void> {
   if (error) {
     console.error('[ZipLookup] Failed to save to database:', error);
   } else {
-    console.log(`[ZipLookup] Cached ${data.zipCode} to database`);
+    if (import.meta.env.DEV) console.log(`[ZipLookup] Cached ${data.zipCode} to database`);
   }
 }
 

@@ -677,7 +677,7 @@ export function CompleteStep3Component({
       | undefined;
 
     if (!industry || !businessSizeTier) {
-      console.log("📋 [LEGACY] No business size pre-fill: industry=", industry, "tier=", businessSizeTier);
+      if (import.meta.env.DEV) console.log("📋 [LEGACY] No business size pre-fill: industry=", industry, "tier=", businessSizeTier);
       return;
     }
 
@@ -685,19 +685,19 @@ export function CompleteStep3Component({
     // This prevents infinite loop where effect modifies state.useCaseData which triggers effect again
     const preFillKey = `${industry}-${businessSizeTier}`;
     if (preFillsAppliedRef.current === preFillKey) {
-      console.log(`✅ [LEGACY] Pre-fills already applied for ${preFillKey}, skipping`);
+      if (import.meta.env.DEV) console.log(`✅ [LEGACY] Pre-fills already applied for ${preFillKey}, skipping`);
       return;
     }
 
     const industryPrefills = BUSINESS_SIZE_PREFILLS[industry];
     if (!industryPrefills) {
-      console.log(`📋 [LEGACY] No pre-fill mapping for industry: ${industry}`);
+      if (import.meta.env.DEV) console.log(`📋 [LEGACY] No pre-fill mapping for industry: ${industry}`);
       return;
     }
 
     const tierPrefills = industryPrefills[businessSizeTier];
     if (!tierPrefills) {
-      console.log(`📋 [LEGACY] No pre-fill mapping for tier: ${businessSizeTier}`);
+      if (import.meta.env.DEV) console.log(`📋 [LEGACY] No pre-fill mapping for tier: ${businessSizeTier}`);
       return;
     }
 
@@ -721,7 +721,7 @@ export function CompleteStep3Component({
         merged[key] = currentAnswers[key];
       }
     });
-    console.log("📋 [LEGACY] Merged answers with pre-fills:", merged);
+    if (import.meta.env.DEV) console.log("📋 [LEGACY] Merged answers with pre-fills:", merged);
     
     // Mark as applied BEFORE calling updateState to prevent re-entry
     preFillsAppliedRef.current = preFillKey;
@@ -729,7 +729,7 @@ export function CompleteStep3Component({
     // ✅ FIX (Jan 26, 2026 evening): Ensure validation sees the pre-filled answers
     // Write to wizard store AND trigger validation
     if (updateState) {
-      console.log("📝 Writing pre-fills to wizard store...");
+      if (import.meta.env.DEV) console.log("📝 Writing pre-fills to wizard store...");
       updateState({
         useCaseData: {
           ...state.useCaseData,
@@ -739,7 +739,7 @@ export function CompleteStep3Component({
       
       // Force validation to re-check after next render
       queueMicrotask(() => {
-        console.log("✅ Pre-fills written, validation should re-check now");
+        if (import.meta.env.DEV) console.log("✅ Pre-fills written, validation should re-check now");
       });
     }
   }, [state.industry, state.businessSizeTier, updateState]);
@@ -777,7 +777,7 @@ export function CompleteStep3Component({
         });
         
         if (appliedCount > 0 && updateState) {
-          console.log(`📋 Applied ${appliedCount} smart defaults from database:`, 
+          if (import.meta.env.DEV) console.log(`📋 Applied ${appliedCount} smart defaults from database:`, 
             loadedQuestions.filter(q => q.smartDefault).map(q => ({ id: q.id, default: q.smartDefault })));
           updateState({
             useCaseData: {
@@ -800,22 +800,22 @@ export function CompleteStep3Component({
           industryStr.replace(/-/g, "_"), // With underscores: data_center
         ].filter((s, i, arr) => arr.indexOf(s) === i); // Remove duplicates
 
-        console.log(`📋 Loading questions for industry: ${industry}, trying slugs:`, slugVariants);
+        if (import.meta.env.DEV) console.log(`📋 Loading questions for industry: ${industry}, trying slugs:`, slugVariants);
 
         // Try each slug variant until one works
         let useCase = null;
         let _successSlug = null;
         for (const slug of slugVariants) {
-          console.log(`🔎 Trying slug: "${slug}"...`);
+          if (import.meta.env.DEV) console.log(`🔎 Trying slug: "${slug}"...`);
           useCase = await useCaseService.getUseCaseBySlug(slug);
-          console.log(
+          if (import.meta.env.DEV) console.log(
             `   Result for "${slug}":`,
             useCase
               ? `✅ Found! Name: ${useCase.name}, Questions: ${useCase.custom_questions?.length || 0}`
               : "❌ Not found"
           );
           if (useCase && useCase.custom_questions && useCase.custom_questions.length > 0) {
-            console.log(`✅ Found use case with slug: ${slug}`);
+            if (import.meta.env.DEV) console.log(`✅ Found use case with slug: ${slug}`);
             _successSlug = slug;
             break;
           }
@@ -823,12 +823,12 @@ export function CompleteStep3Component({
 
         if (useCase && useCase.custom_questions && useCase.custom_questions.length > 0) {
           const dbQuestions = useCase.custom_questions as Record<string, unknown>[];
-          console.log(
+          if (import.meta.env.DEV) console.log(
             `✅ Loaded ${dbQuestions.length} questions from database for ${useCase.name}`
           );
 
           // Debug: Log first few questions to see what fields we're getting
-          if (dbQuestions.length > 0) {
+          if (import.meta.env.DEV && dbQuestions.length > 0) {
             console.log("📋 Sample question from DB:", JSON.stringify(dbQuestions[0], null, 2));
           }
 
@@ -846,10 +846,10 @@ export function CompleteStep3Component({
             return true;
           });
 
-          console.log(
+          if (import.meta.env.DEV) console.log(
             `📋 Transformed ${transformedQuestions.length} questions, ${dedupedQuestions.length} after deduplication`
           );
-          if (dedupedQuestions.length > 0) {
+          if (import.meta.env.DEV && dedupedQuestions.length > 0) {
             console.log(
               "📋 Sample transformed question:",
               JSON.stringify(dedupedQuestions[0], null, 2)
@@ -889,7 +889,7 @@ export function CompleteStep3Component({
           }
         } else {
           // Log what we actually got from the service
-          console.log(
+          if (import.meta.env.DEV) console.log(
             "🔍 useCase result:",
             useCase
               ? {
@@ -901,7 +901,7 @@ export function CompleteStep3Component({
           );
 
           // Fallback to car wash if no DB questions
-          console.log(`⚠️ No database questions found for ${industry}, using car wash fallback`);
+          if (import.meta.env.DEV) console.log(`⚠️ No database questions found for ${industry}, using car wash fallback`);
 
           if (industry === "car_wash" || industry === "car-wash") {
             setQuestions(carWashQuestionsComplete);

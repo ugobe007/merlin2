@@ -122,7 +122,7 @@ export function Step1AdvisorLed({ state, updateState, onNext: _onNext, onGoToSte
 
   const [streetAddress, setStreetAddress] = useState("");
   const [isLookingUp, setIsLookingUp] = useState(false);
-  const [zipLookupResult, setZipLookupResult] = useState<ZipCodeResult | null>(null);
+  const [_zipLookupResult, setZipLookupResult] = useState<ZipCodeResult | null>(null);
   const [businessLookup, setBusinessLookup] = useState<PlaceLookupResult | null>(null);
 
   // 🔎 DEBUG: Track business state changes (Jan 25, 2026)

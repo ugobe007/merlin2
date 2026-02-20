@@ -84,7 +84,7 @@ const STEP_MESSAGES: Record<number, { title: string; message: string; tip?: stri
   }
 };
 
-export function MerlinGuide({ step, industry, state, goals, sunHours, electricityRate, solarRating }: MerlinGuideProps) {
+export function MerlinGuide({ step, industry, state, goals, sunHours, electricityRate, solarRating: _solarRating }: MerlinGuideProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
 

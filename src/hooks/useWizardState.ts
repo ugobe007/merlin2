@@ -127,7 +127,7 @@ export function useWizardState() {
     const industryType = state.industry.type.toLowerCase();
 
     // DEBUG: Log input state
-    console.log("🔧 [calculateBuildingLoad] INPUT:", {
+    if (import.meta.env.DEV) console.log("🔧 [calculateBuildingLoad] INPUT:", {
       industryType,
       facilitySquareFeet: state.facility.squareFeet,
       facilityRoomCount: state.facility.roomCount,
@@ -136,7 +136,7 @@ export function useWizardState() {
 
     // Skip calculation if no industry selected
     if (!industryType || industryType === "") {
-      console.log("🔧 [calculateBuildingLoad] No industry - returning 0");
+      if (import.meta.env.DEV) console.log("🔧 [calculateBuildingLoad] No industry - returning 0");
       return 0;
     }
 
@@ -175,7 +175,7 @@ export function useWizardState() {
         const itLoadKW = state.useCaseData.itLoadKW;
         const itLoadMW = state.useCaseData.itLoadMW;
         const converted = itLoadMW ? parseFloat(itLoadMW) * 1000 : undefined;
-        console.log("🔧 [useCaseData mapping] IT Load conversion:", {
+        if (import.meta.env.DEV) console.log("🔧 [useCaseData mapping] IT Load conversion:", {
           raw_itLoadKW: itLoadKW,
           raw_itLoadMW: itLoadMW,
           parsed_MW: itLoadMW ? parseFloat(itLoadMW) : "N/A",
@@ -221,7 +221,7 @@ export function useWizardState() {
         0,
     };
 
-    console.log("🔧 [calculateBuildingLoad] useCaseData being sent to SSOT:", useCaseData);
+    if (import.meta.env.DEV) console.log("🔧 [calculateBuildingLoad] useCaseData being sent to SSOT:", useCaseData);
 
     try {
       // DELEGATE to SSOT - this is the single source of truth
@@ -230,7 +230,7 @@ export function useWizardState() {
       // Convert MW to kW
       const baseLoadKW = powerResult.powerMW * 1000;
 
-      console.log("🔧 [calculateBuildingLoad] SSOT result:", {
+      if (import.meta.env.DEV) console.log("🔧 [calculateBuildingLoad] SSOT result:", {
         industryType,
         squareFeet: useCaseData.squareFeet,
         powerMW: powerResult.powerMW,
@@ -380,7 +380,7 @@ export function useWizardState() {
       const newEVLoadKW = calculateNewEVLoad(state.goals);
       const totalPeakDemandKW = baseBuildingLoadKW + existingEVLoadKW + newEVLoadKW;
 
-      console.log("🔋🔋🔋 [recalculate] CRITICAL DATA CENTER DEBUG:", {
+      if (import.meta.env.DEV) console.log("🔋🔋🔋 [recalculate] CRITICAL DATA CENTER DEBUG:", {
         industryType: state.industry.type,
         baseBuildingLoadKW,
         existingEVLoadKW,
@@ -471,7 +471,7 @@ export function useWizardState() {
       let recommendedBatteryKW = Math.round(totalPeakDemandKW * bessRatio);
       let recommendedBatteryKWh = Math.round(recommendedBatteryKW * recommendedBackupHours);
 
-      console.log("🔋 [recalculate] BESS sizing v2.0:", {
+      if (import.meta.env.DEV) console.log("🔋 [recalculate] BESS sizing v2.0:", {
         totalPeakDemandKW,
         bessRatio,
         primaryGoal:
@@ -513,7 +513,7 @@ export function useWizardState() {
         const solarInputKW = Math.round(safeSolarKW * 0.8); // 80% of solar capacity
         recommendedBatteryKW = Math.min(Math.max(recommendedBatteryKW, solarInputKW), maxBatteryKW);
 
-        console.log("🔋 [recalculate] Solar storage adjustment:", {
+        if (import.meta.env.DEV) console.log("🔋 [recalculate] Solar storage adjustment:", {
           userSolarKW,
           safeSolarKW,
           maxReasonableSolarKW,
@@ -550,7 +550,7 @@ export function useWizardState() {
         estimatedCost: 0,
       };
 
-      console.log("🔋 [recalculate] Final values:", {
+      if (import.meta.env.DEV) console.log("🔋 [recalculate] Final values:", {
         baseBuildingLoadKW: finalValues.baseBuildingLoadKW,
         existingEVLoadKW: finalValues.existingEVLoadKW,
         newEVLoadKW: finalValues.newEVLoadKW,
@@ -574,7 +574,7 @@ export function useWizardState() {
     const newCalculated = recalculate(wizardState);
 
     // Debug logging - CRITICAL for tracing Power Gap updates
-    console.log("⚡ [useWizardState] RECALCULATE TRIGGERED:", {
+    if (import.meta.env.DEV) console.log("⚡ [useWizardState] RECALCULATE TRIGGERED:", {
       industryType: wizardState.industry.type,
       facilitySquareFeet: wizardState.facility.squareFeet,
       facilityBedCount: wizardState.facility.bedCount,
@@ -624,7 +624,7 @@ export function useWizardState() {
     // Debounce: only run after values stabilize
     const timeoutId = setTimeout(async () => {
       try {
-        console.log("💰 [useWizardState] Calculating financial estimates via SSOT:", {
+        if (import.meta.env.DEV) console.log("💰 [useWizardState] Calculating financial estimates via SSOT:", {
           storageSizeMW,
           durationHours: recommendedBackupHours,
           electricityRate,
@@ -636,7 +636,7 @@ export function useWizardState() {
           electricityRate
         );
 
-        console.log("💰 [useWizardState] SSOT financial estimate:", estimate);
+        if (import.meta.env.DEV) console.log("💰 [useWizardState] SSOT financial estimate:", estimate);
 
         setWizardState((prev) => ({
           ...prev,

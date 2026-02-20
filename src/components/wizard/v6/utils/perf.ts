@@ -26,7 +26,7 @@ export function perfMark(name: PerfEvent, detail?: Record<string, unknown>) {
   try {
     performance.mark(name);
     if (detail) {
-      console.log("[perf]", name, detail);
+      if (import.meta.env.DEV) console.log("[perf]", name, detail);
     }
   } catch (err) {
     // Silently fail if performance API is not available
@@ -53,7 +53,7 @@ export function perfMeasure(label: string, start: PerfEvent, end: PerfEvent) {
     const entry = entries[entries.length - 1];
 
     if (entry && "duration" in entry) {
-      console.log(`[perf] ${label}: ${entry.duration.toFixed(2)}ms`);
+      if (import.meta.env.DEV) console.log(`[perf] ${label}: ${entry.duration.toFixed(2)}ms`);
     }
 
     return entry ?? null;

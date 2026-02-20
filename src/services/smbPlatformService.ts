@@ -252,7 +252,7 @@ export async function getCalculationConstants(): Promise<CalculationConstants> {
     constantsCache = constants;
     constantsCacheTime = Date.now();
 
-    console.log("[SMBPlatform] Constants loaded from database");
+    if (import.meta.env.DEV) console.log("[SMBPlatform] Constants loaded from database");
     return constants;
   } catch (error) {
     console.error("[SMBPlatform] Error loading constants:", error);
@@ -365,7 +365,7 @@ export async function getSiteConfig(siteSlug: string): Promise<SMBSiteConfig | n
  * Uses the unified quote calculator with industry-specific defaults
  */
 export async function generateSMBQuote(input: SMBQuoteInput) {
-  console.log("[SMBPlatform] Generating quote for", input.siteSlug);
+  if (import.meta.env.DEV) console.log("[SMBPlatform] Generating quote for", input.siteSlug);
 
   // Get calculation constants from database
   const constants = await getCalculationConstants();
@@ -505,7 +505,7 @@ export async function saveSMBLead(
 
     if (error) throw error;
 
-    console.log("[SMBPlatform] Lead saved:", data.id);
+    if (import.meta.env.DEV) console.log("[SMBPlatform] Lead saved:", data.id);
     return { success: true, id: data.id };
   } catch (error: any) {
     console.error("[SMBPlatform] Error saving lead:", error);

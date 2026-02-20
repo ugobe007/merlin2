@@ -72,7 +72,7 @@ function generateAreaPath(
 /**
  * Generate SVG path for line chart
  */
-function generateLinePath(
+function _generateLinePath(
   points: { hour: number; demandKW: number }[],
   width: number,
   height: number,

@@ -32,7 +32,7 @@ export function MerlinEnergyAdvisor({
   const overallProgress = visibleQuestionsLength > 0 
     ? ((answeredCount / visibleQuestionsLength) * 100)
     : 0;
-  const questionsAnswered = answeredCount;
+  const _questionsAnswered = answeredCount;
 
   // Calculate section progress
   const getSectionProgress = (sectionId: string) => {
@@ -45,11 +45,11 @@ export function MerlinEnergyAdvisor({
     };
   };
 
-  const sectionProgress = getSectionProgress(currentQuestion.section);
+  const _sectionProgress = getSectionProgress(currentQuestion.section);
   const currentSection = SECTIONS.find((s) => s.id === currentQuestion.section);
 
   // Generate dynamic message based on current question
-  const getDynamicMessage = (): string => {
+  const _getDynamicMessage = (): string => {
     // Use merlinTip if available, otherwise generate contextual message
     if (currentQuestion.merlinTip) {
       return currentQuestion.merlinTip;

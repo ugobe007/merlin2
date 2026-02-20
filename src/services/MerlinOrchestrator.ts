@@ -65,13 +65,15 @@ const ORCHESTRATOR_VERSION = '1.0.0';
 export async function generateQuote(
   wizardState: WizardState
 ): Promise<TrueQuoteAuthenticatedResult | TrueQuoteRejection> {
-  console.log('');
-  console.log('╔═══════════════════════════════════════════════════════╗');
-  console.log('║           MERLIN ORCHESTRATOR v' + ORCHESTRATOR_VERSION + '                  ║');
-  console.log('╠═══════════════════════════════════════════════════════╣');
-  console.log('║  Translating wizard state → TrueQuote request...      ║');
-  console.log('╚═══════════════════════════════════════════════════════╝');
-  console.log('');
+  if (import.meta.env.DEV) {
+    console.log('');
+    console.log('╔═══════════════════════════════════════════════════════╗');
+    console.log('║           MERLIN ORCHESTRATOR v' + ORCHESTRATOR_VERSION + '                  ║');
+    console.log('╠═══════════════════════════════════════════════════════╣');
+    console.log('║  Translating wizard state → TrueQuote request...      ║');
+    console.log('╚═══════════════════════════════════════════════════════╝');
+    console.log('');
+  }
 
   // ─────────────────────────────────────────────────────────────
   // STEP 1: Validate wizard state
@@ -96,16 +98,20 @@ export async function generateQuote(
   // STEP 2: Translate WizardState → MerlinRequest
   // ─────────────────────────────────────────────────────────────
   const request = translateWizardState(wizardState);
-  console.log('📋 Merlin: Request built');
-  console.log('   Request ID:', request.requestId);
-  console.log('   Industry:', request.facility.industry);
-  console.log('   Location:', request.location.state, request.location.zipCode);
+  if (import.meta.env.DEV) {
+    console.log('📋 Merlin: Request built');
+    console.log('   Request ID:', request.requestId);
+    console.log('   Industry:', request.facility.industry);
+    console.log('   Location:', request.location.state, request.location.zipCode);
+  }
 
   // ─────────────────────────────────────────────────────────────
   // STEP 3: Delegate to TrueQuote Engine
   // ─────────────────────────────────────────────────────────────
-  console.log('');
-  console.log('📤 Merlin: Delegating to TrueQuote Engine...');
+  if (import.meta.env.DEV) {
+    console.log('');
+    console.log('📤 Merlin: Delegating to TrueQuote Engine...');
+  }
   
   try {
     const result = await processQuote(request);
@@ -115,14 +121,16 @@ export async function generateQuote(
       return result;
     }
 
-    console.log('');
-    console.log('╔═══════════════════════════════════════════════════════╗');
-    console.log('║           ✅ QUOTE GENERATION COMPLETE                ║');
-    console.log('╠═══════════════════════════════════════════════════════╣');
-    console.log('║  Quote ID: ' + result.quoteId.padEnd(42) + '║');
-    console.log('║  Options: Starter, Perfect Fit, Beast Mode            ║');
-    console.log('║  Status: Authenticated ✓                              ║');
-    console.log('╚═══════════════════════════════════════════════════════╝');
+    if (import.meta.env.DEV) {
+      console.log('');
+      console.log('╔═══════════════════════════════════════════════════════╗');
+      console.log('║           ✅ QUOTE GENERATION COMPLETE                ║');
+      console.log('╠═══════════════════════════════════════════════════════╣');
+      console.log('║  Quote ID: ' + result.quoteId.padEnd(42) + '║');
+      console.log('║  Options: Starter, Perfect Fit, Beast Mode            ║');
+      console.log('║  Status: Authenticated ✓                              ║');
+      console.log('╚═══════════════════════════════════════════════════════╝');
+    }
     
     return result;
     

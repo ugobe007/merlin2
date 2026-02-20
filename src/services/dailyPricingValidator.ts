@@ -128,7 +128,7 @@ class DailyPricingValidationService {
       return this.validationResults;
     }
 
-    console.log("🔍 Starting daily pricing validation...");
+    if (import.meta.env.DEV) console.log("🔍 Starting daily pricing validation...");
 
     this.validationResults = [];
 
@@ -162,7 +162,7 @@ class DailyPricingValidationService {
       this.notifyAdministrators(criticalAlerts);
     }
 
-    console.log(
+    if (import.meta.env.DEV) console.log(
       `✅ Pricing validation complete. ${this.validationResults.length} alerts generated.`
     );
 

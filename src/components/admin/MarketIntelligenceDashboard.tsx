@@ -91,7 +91,7 @@ const MarketIntelligenceDashboard: React.FC = () => {
         
         if (!hasData) {
           // Data is incomplete - don't show placeholder data
-          console.log('📊 Existing data is incomplete. Run analysis to generate insights.');
+          if (import.meta.env.DEV) console.log('📊 Existing data is incomplete. Run analysis to generate insights.');
         } else {
           setInference({
             analysisDate: data.analysis_date,
@@ -110,7 +110,7 @@ const MarketIntelligenceDashboard: React.FC = () => {
         }
       } else {
         // No data in database - don't show placeholder data
-        console.log('📊 No existing inference data found. Run analysis to generate insights.');
+        if (import.meta.env.DEV) console.log('📊 No existing inference data found. Run analysis to generate insights.');
       }
     } catch (err) {
       console.error('Error loading inference:', err);
@@ -152,7 +152,7 @@ const MarketIntelligenceDashboard: React.FC = () => {
   };
 
   const handleItemClick = (type: 'trend' | 'config' | 'indicator' | 'opportunity' | 'adoption' | 'pricing', data: any) => {
-    console.log('🔍 Opening detail modal:', { type, data });
+    if (import.meta.env.DEV) console.log('🔍 Opening detail modal:', { type, data });
     if (!data) {
       console.error('❌ No data provided to modal!');
       alert('No data available for this item.');

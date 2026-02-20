@@ -29,15 +29,15 @@ interface WordExportParams {
 
 export class WordExportService {
   static async exportProfessionalQuote(params: WordExportParams): Promise<void> {
-    console.log('🚀 Export to Word button clicked!');
+    if (import.meta.env.DEV) console.log('🚀 Export to Word button clicked!');
     
     // Play magical sound effect
     try {
       const audio = new Audio(params.magicPoofSound);
       audio.volume = 0.5;
-      audio.play().catch(err => console.log('Audio play failed:', err));
+      audio.play().catch(err => { if (import.meta.env.DEV) console.log('Audio play failed:', err); });
     } catch (err) {
-      console.log('Sound file error:', err);
+      if (import.meta.env.DEV) console.log('Sound file error:', err);
     }
     
     try {

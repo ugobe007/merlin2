@@ -49,7 +49,7 @@ class WizardAIAgent {
       return;
     }
 
-    console.log('🤖 [Wizard AI Agent] Starting health monitoring...');
+    if (import.meta.env.DEV) console.log('🤖 [Wizard AI Agent] Starting health monitoring...');
     
     // Initial check
     this.runHealthCheck();
@@ -67,7 +67,7 @@ class WizardAIAgent {
     if (this.checkInterval !== null) {
       window.clearInterval(this.checkInterval);
       this.checkInterval = null;
-      console.log('🤖 [Wizard AI Agent] Stopped');
+      if (import.meta.env.DEV) console.log('🤖 [Wizard AI Agent] Stopped');
     }
   }
 
@@ -128,12 +128,12 @@ class WizardAIAgent {
       // Auto-fix if available
       issues.forEach(issue => {
         if (issue.autoFixAvailable) {
-          console.log(`🔧 [Wizard AI Agent] Auto-fix available for: ${issue.title}`);
+          if (import.meta.env.DEV) console.log(`🔧 [Wizard AI Agent] Auto-fix available for: ${issue.title}`);
           // TODO: Implement auto-fix logic
         }
       });
     } else {
-      console.log('✅ [Wizard AI Agent] All systems healthy');
+      if (import.meta.env.DEV) console.log('✅ [Wizard AI Agent] All systems healthy');
     }
   }
 

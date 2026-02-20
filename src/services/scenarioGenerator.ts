@@ -123,7 +123,7 @@ const SCENARIO_MULTIPLIERS = {
 export async function generateScenarios(
   input: ScenarioGeneratorInput
 ): Promise<ScenarioGeneratorResult> {
-  console.log("🎯 [ScenarioGenerator] Generating 3 scenarios for:", input.industryType);
+  if (import.meta.env.DEV) console.log("🎯 [ScenarioGenerator] Generating 3 scenarios for:", input.industryType);
 
   // Get industry-specific parameters
   const baseRatio = getIndustryBESSRatio(input.industryType);
@@ -141,7 +141,7 @@ export async function generateScenarios(
     touOverlapScore: 0.6, // Default TOU overlap score
   };
 
-  console.log("📊 [ScenarioGenerator] Base parameters:", {
+  if (import.meta.env.DEV) console.log("📊 [ScenarioGenerator] Base parameters:", {
     peakDemandKW: input.peakDemandKW,
     dailyKWh: input.dailyKWh,
     baseRatio,

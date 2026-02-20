@@ -157,7 +157,7 @@ async function aggregateMarketData(timeframeDays: number = 90): Promise<{
         .limit(500);
       if (!error && data && data.length > 0) {
         quotes = data;
-        console.log(`✅ Found ${quotes.length} quotes from ${table}`);
+        if (import.meta.env.DEV) console.log(`✅ Found ${quotes.length} quotes from ${table}`);
         break;
       }
     } catch (err) {
@@ -179,7 +179,7 @@ async function aggregateMarketData(timeframeDays: number = 90): Promise<{
         .limit(500);
       if (!error && data && data.length > 0) {
         installations = data;
-        console.log(`✅ Found ${installations.length} installations from ${table}`);
+        if (import.meta.env.DEV) console.log(`✅ Found ${installations.length} installations from ${table}`);
         break;
       }
     } catch (err) {
@@ -797,14 +797,14 @@ function generatePricingRecommendations(
  * Run complete market inference analysis
  */
 export async function runMarketInference(timeframeDays: number = 90): Promise<MarketInference> {
-  console.log("🔍 Starting market inference analysis...");
+  if (import.meta.env.DEV) console.log("🔍 Starting market inference analysis...");
 
   try {
     // Aggregate data
     const { scrapedArticles, customerQuotes, installations, marketData } =
       await aggregateMarketData(timeframeDays);
 
-    console.log(
+    if (import.meta.env.DEV) console.log(
       `📊 Analyzing ${scrapedArticles.length} articles, ${customerQuotes.length} quotes, ${installations.length} installations`
     );
 
@@ -908,7 +908,7 @@ export async function runMarketInference(timeframeDays: number = 90): Promise<Ma
       // Continue anyway
     }
 
-    console.log("✅ Market inference analysis complete");
+    if (import.meta.env.DEV) console.log("✅ Market inference analysis complete");
 
     return inference;
   } catch (error) {
@@ -974,7 +974,7 @@ async function feedToMLEngine(inference: MarketInference): Promise<void> {
     console.error("Error feeding to ML engine:", error);
     // Don't throw - ML processing can happen asynchronously
   } else {
-    console.log("📤 Inference data fed to ML engine");
+    if (import.meta.env.DEV) console.log("📤 Inference data fed to ML engine");
   }
 }
 

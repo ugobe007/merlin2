@@ -93,7 +93,7 @@ export async function checkAndAlert(payload: AlertPayload): Promise<{
   const now = Date.now();
   const cooldownMs = ALERT_CONFIG.alertCooldownMinutes * 60 * 1000;
   if (now - lastAlertTime < cooldownMs) {
-    console.log("⏳ Alert cooldown active, skipping notification");
+    if (import.meta.env.DEV) console.log("⏳ Alert cooldown active, skipping notification");
     return { alertSent: false, channels: ["cooldown"] };
   }
 
@@ -134,7 +134,7 @@ export async function checkAndAlert(payload: AlertPayload): Promise<{
     }
   }
 
-  console.log(`🚨 SSOT Alert sent via: ${channels.join(", ") || "none (no channels configured)"}`);
+  if (import.meta.env.DEV) console.log(`🚨 SSOT Alert sent via: ${channels.join(", ") || "none (no channels configured)"}`);
 
   return { alertSent: channels.length > 0, channels };
 }

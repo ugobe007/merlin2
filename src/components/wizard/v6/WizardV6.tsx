@@ -184,7 +184,7 @@ export default function WizardV6() {
   useEffect(() => {
     if (shouldStartFresh && typeof window !== "undefined") {
       bufferService.clear();
-      console.log("✅ Cleared persisted wizard state for fresh start");
+      if (import.meta.env.DEV) console.log("✅ Cleared persisted wizard state for fresh start");
     }
   }, [shouldStartFresh]);
 
@@ -208,7 +208,7 @@ export default function WizardV6() {
   const [currentStep, setCurrentStep] = useState(() => {
     // ✅ FIXED: Always start at Step 1 for fresh starts
     if (shouldStartFresh) {
-      console.log("✅ Starting fresh at Step 1 (shouldStartFresh=true)");
+      if (import.meta.env.DEV) console.log("✅ Starting fresh at Step 1 (shouldStartFresh=true)");
       return 1;
     }
 
@@ -232,11 +232,11 @@ export default function WizardV6() {
       if (!hasStep6) step = Math.min(step, 5);
 
       const calculatedStep = Math.max(1, Math.min(step, 6));
-      console.log("📊 Restored wizard state - starting at Step", calculatedStep);
+      if (import.meta.env.DEV) console.log("📊 Restored wizard state - starting at Step", calculatedStep);
       return calculatedStep;
     }
 
-    console.log("✅ No saved state - starting at Step 1");
+    if (import.meta.env.DEV) console.log("✅ No saved state - starting at Step 1");
     return 1; // Always default to Step 1
   });
 
@@ -1990,7 +1990,7 @@ export default function WizardV6() {
       return;
     }
 
-    console.log("[Intelligence] Orchestrating intelligence layer:", {
+    if (import.meta.env.DEV) console.log("[Intelligence] Orchestrating intelligence layer:", {
       zipCode,
       stateCode,
       industrySlug,
@@ -2026,7 +2026,7 @@ export default function WizardV6() {
       }),
     ])
       .then(([industryResult, goalsResult, weatherImpact, valueTeaserResult]) => {
-        console.log("[Intelligence] Results:", {
+        if (import.meta.env.DEV) console.log("[Intelligence] Results:", {
           industry: industryResult.data,
           goals: goalsResult.data,
           weatherImpact,
@@ -2074,7 +2074,7 @@ export default function WizardV6() {
     // If we don't have industry yet, use quick estimate
     if (!industrySlug) {
       const quickScore = estimateSiteScore(stateCode, "office"); // Default to office
-      console.log("[SiteScore™] Quick estimate (no industry):", quickScore);
+      if (import.meta.env.DEV) console.log("[SiteScore™] Quick estimate (no industry):", quickScore);
       setSiteScore({
         totalScore: quickScore.estimatedScore,
         scoreLabel: quickScore.estimatedLabel,
@@ -2128,7 +2128,7 @@ export default function WizardV6() {
         estimatedPeakKW: state.calculations?.base?.peakDemandKW,
       });
 
-      console.log("[SiteScore™] Full calculation:", {
+      if (import.meta.env.DEV) console.log("[SiteScore™] Full calculation:", {
         totalScore: result.totalScore,
         label: result.scoreLabel,
         merlinSays: result.merlinSays,
@@ -2167,7 +2167,7 @@ export default function WizardV6() {
       // ✅ GATING FIX (Jan 24, 2026): Block advancing if current step isn't complete
       // This prevents users from blasting through incomplete steps
       if (!_canProceed()) {
-        console.log(`⚠️ Step ${prev} blocked - requirements not met`);
+        if (import.meta.env.DEV) console.log(`⚠️ Step ${prev} blocked - requirements not met`);
         setShowBlockedFeedback(true);
         setTimeout(() => setShowBlockedFeedback(false), 3000);
         return prev;
@@ -2175,7 +2175,7 @@ export default function WizardV6() {
 
       // ✅ CONTRACT (Jan 24, 2026): Step 3 validation uses contract validator
       if (prev === 3 && !step3Contract.ok) {
-        console.log("⚠️ Step 3 not valid - cannot advance. Missing:", step3Contract.missing);
+        if (import.meta.env.DEV) console.log("⚠️ Step 3 not valid - cannot advance. Missing:", step3Contract.missing);
         setShowBlockedFeedback(true);
         setTimeout(() => setShowBlockedFeedback(false), 3000);
         return prev;
@@ -2184,7 +2184,7 @@ export default function WizardV6() {
       // Skip Step 2 (Industry Selection) if industry was auto-detected from business lookup
       // ✅ FIX 3 (Jan 24, 2026): Use hasIndustry for deterministic skip
       if (prev === 1 && hasIndustry) {
-        console.log("🧙 Skipping Step 2 - Industry detected:", state.industry || state.detectedIndustry);
+        if (import.meta.env.DEV) console.log("🧙 Skipping Step 2 - Industry detected:", state.industry || state.detectedIndustry);
         return 3; // Go directly to Step 3 (Details)
       }
 
@@ -2196,7 +2196,7 @@ export default function WizardV6() {
       const back = prev - 1;
       // Always go to the previous step (no more skipping)
       // User can click step indicators to jump to any completed step
-      console.log(`🔙 Going back from Step ${prev} to Step ${back}`);
+      if (import.meta.env.DEV) console.log(`🔙 Going back from Step ${prev} to Step ${back}`);
       return Math.max(back, 1);
     });
   const goToStep = useCallback((step: number) => setCurrentStep(step), []);
@@ -2507,7 +2507,7 @@ export default function WizardV6() {
             onNext={() => {
               // ✅ CONTRACT (Jan 24, 2026): Use contract validator for hard gating
               if (!step3Contract.ok) {
-                console.log("⚠️ Step 3 onNext blocked - missing:", step3Contract.missing);
+                if (import.meta.env.DEV) console.log("⚠️ Step 3 onNext blocked - missing:", step3Contract.missing);
                 return;
               }
               goToStep(4);

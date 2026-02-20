@@ -759,7 +759,7 @@ if (import.meta.env.DEV) {
           inputs: answers,
         },
       });
-      console.log("[Step3] Injected answers:", answers);
+      if (import.meta.env.DEV) console.log("[Step3] Injected answers:", answers);
     },
     getState: () => {
       if (!_step3State) {

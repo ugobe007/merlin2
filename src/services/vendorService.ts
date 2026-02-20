@@ -526,7 +526,7 @@ async function notifyRelevantVendors(rfqId: string, data: CreateRFQData) {
       .in("specialty", specialties);
 
     if (error || !vendors?.length) {
-      console.log("No matching vendors found for RFQ notification");
+      if (import.meta.env.DEV) console.log("No matching vendors found for RFQ notification");
       return;
     }
 

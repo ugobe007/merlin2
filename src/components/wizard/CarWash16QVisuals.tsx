@@ -236,7 +236,7 @@ interface BackupRuntimeProps {
 export function BackupRuntimeDisplay({
   backupRuntimeHours,
   bessRecommendedKWh,
-  peakDemandKW,
+  peakDemandKW: _peakDemandKW,
 }: BackupRuntimeProps) {
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">

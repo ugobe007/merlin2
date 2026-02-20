@@ -255,7 +255,7 @@ const INDUSTRIES: IndustryOpportunity[] = [
 // RENDER SOLAR FIT STARS
 // ============================================
 
-const SolarFitStars: React.FC<{ rating: number }> = ({ rating }) => {
+const _SolarFitStars: React.FC<{ rating: number }> = ({ rating }) => {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
