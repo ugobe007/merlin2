@@ -127,6 +127,13 @@ export const INDUSTRY_META: Record<string, IndustryMetaEntry> = {
     description: "Stores, shopping centers, malls",
     hasTemplate: false,
   },
+  shopping_center: {
+    icon: "🏬",
+    label: "Shopping Center / Mall",
+    slug: "shopping_center",
+    description: "Malls, shopping plazas, multi-tenant retail",
+    hasTemplate: false,
+  },
   restaurant: {
     icon: "🍽️",
     label: "Restaurant",
@@ -140,6 +147,13 @@ export const INDUSTRY_META: Record<string, IndustryMetaEntry> = {
     label: "Gas / Truck Stop",
     slug: "gas_station",
     description: "Fuel stations, truck stops, convenience",
+    hasTemplate: false,
+  },
+  truck_stop: {
+    icon: "🚛",
+    label: "Truck Stop / Travel Center",
+    slug: "truck_stop",
+    description: "Truck stops, travel plazas, fleet fueling",
     hasTemplate: false,
   },
   airport: {
@@ -198,6 +212,20 @@ export const INDUSTRY_META: Record<string, IndustryMetaEntry> = {
     description: "Farms, irrigation, processing",
     hasTemplate: false,
   },
+  government: {
+    icon: "🏛️",
+    label: "Government & Public",
+    slug: "government",
+    description: "Federal, state, municipal facilities",
+    hasTemplate: false,
+  },
+  microgrid: {
+    icon: "🔋",
+    label: "Microgrid",
+    slug: "microgrid",
+    description: "Community microgrids, island grids, resilience hubs",
+    hasTemplate: false,
+  },
   other: {
     icon: "⚙️",
     label: "Other / Custom",
@@ -232,7 +260,6 @@ export function canonicalizeSlug(slug: string): string {
     evcharging: "ev_charging",
     logistics: "warehouse",
     logistics_center: "warehouse",
-    shopping_center: "retail",
     truck_stop: "gas_station",
     tribal_casino: "casino",
     casino_gaming: "casino",

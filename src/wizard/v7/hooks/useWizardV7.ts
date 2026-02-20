@@ -4629,15 +4629,42 @@ export function useWizardV7() {
       // ✅ Navigate to Results IMMEDIATELY (non-blocking)
       setStep("results", "step3_partial");
 
-      // ⚠️ PROVISIONAL MODE: Run Layer A only (no pricing)
-      // Pricing requires complete inputs for confident financials.
-      // User must "Complete Step 3" to enable pricing.
+      // ── PROVISIONAL PRICING: merge defaults + partial answers ──
+      // Build a complete answer set by filling gaps with defaults.
+      // Priority: user answer > template.defaults > question.defaultValue
+      const mergedAnswers: Record<string, unknown> = {};
 
-      // TODO: Implement Layer A-only contract quote call here
-      // For now, we navigate and show the warning banner.
-      // The "Complete Step 3 →" link brings them back to finish.
+      // 1. Seed from template-level defaults
+      if (state.step3Template.defaults) {
+        for (const [key, val] of Object.entries(state.step3Template.defaults)) {
+          if (val !== undefined && val !== null) mergedAnswers[key] = val;
+        }
+      }
 
-      devLog("[V7] Partial submit - Layer A only, pricing disabled");
+      // 2. Overlay per-question defaultValues (slightly higher priority)
+      for (const q of state.step3Template.questions ?? []) {
+        if (q.defaultValue !== undefined && q.defaultValue !== null && !(q.id in mergedAnswers)) {
+          mergedAnswers[q.id] = q.defaultValue;
+        }
+      }
+
+      // 3. Overlay actual user answers (highest priority)
+      for (const [key, val] of Object.entries(state.step3Answers ?? {})) {
+        if (val !== undefined && val !== null) mergedAnswers[key] = val;
+      }
+
+      devLog("[V7] Partial submit - merged defaults + user answers, running provisional pricing");
+
+      // Fire-and-forget provisional pricing (non-blocking, user already on results page)
+      runPricingSafe({
+        industry: state.industry,
+        answers: mergedAnswers,
+        location,
+        locationIntel: state.locationIntel ?? undefined,
+        addOns: state.step4AddOns,
+      }).catch((err) => {
+        devLog("[V7] Provisional pricing failed (non-fatal):", err);
+      });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- state intentionally excluded (only uses specific fields)
     [
@@ -4645,12 +4672,14 @@ export function useWizardV7() {
       clearError,
       setError,
       setStep,
+      runPricingSafe,
       state.location,
       state.locationIntel,
       state.industry,
       state.step3Template,
       state.step3Answers,
       state.pricingStatus,
+      state.step4AddOns,
     ]
   );
 

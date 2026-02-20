@@ -566,6 +566,38 @@ export const MANIFEST: ManifestEntry[] = [
     typicalPeakKWRange: [50, 2000],
     ssotInputAliases: SSOT_ALIASES.government,
   },
+
+  // ──────────────────────────────────────────────────────
+  // SHOPPING CENTER (adapter-only, borrows retail schema)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "shopping_center",
+    templateVersion: "adapter-only",
+    calculatorId: "shopping_center_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["squareFootage"],
+    contributorKeysExpected: ["hvac", "lighting", "process", "controls", "other"],
+    dutyCycleRange: [0.35, 0.55],
+    typicalPeakKWRange: [200, 5000],
+    ssotInputAliases: SSOT_ALIASES.shopping_center,
+  },
+
+  // ──────────────────────────────────────────────────────
+  // MICROGRID (adapter-only, fallback schema)
+  // ──────────────────────────────────────────────────────
+  {
+    industrySlug: "microgrid",
+    templateVersion: "adapter-only",
+    calculatorId: "microgrid_load_v1",
+    validationVersion: "v1",
+    requiredQuestionIds: [],
+    requiredCalcFields: ["squareFootage"],
+    contributorKeysExpected: ["hvac", "lighting", "process", "controls", "other"],
+    dutyCycleRange: [0.55, 0.75],
+    typicalPeakKWRange: [100, 5000],
+    ssotInputAliases: SSOT_ALIASES.microgrid,
+  },
 ];
 
 // ──────────────────────────────────────────────────────

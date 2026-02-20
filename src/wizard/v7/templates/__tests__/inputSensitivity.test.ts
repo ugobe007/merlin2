@@ -346,9 +346,9 @@ describe("SSOT_ALIASES structural integrity", () => {
     }
   });
 
-  test("all 21 industries have alias entries", () => {
+  test("all 23 industries have alias entries", () => {
     const industries = listAliasIndustries();
-    expect(industries.length).toBe(21);
+    expect(industries.length).toBe(23);
     expect(industries).toContain("office");
     expect(industries).toContain("retail");
     expect(industries).toContain("warehouse");
