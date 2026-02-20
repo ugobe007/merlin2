@@ -6,7 +6,7 @@ import {
   calculateMarketAlignedBESSPricing,
   getMarketIntelligenceRecommendations,
 } from "../services/marketIntelligence";
-import systemControlsPricingService from "../services/systemControlsPricingService";
+import { getSystemControlsPricingService } from "../services/systemControlsPricingService";
 import solarPricingService from "../services/solarPricingService";
 
 // NEW: Import from equipmentPricingTiersService for new equipment types
@@ -1047,7 +1047,7 @@ export const calculateEquipmentBreakdown = async (
   // Generator Controllers (if generators present)
   if (needsGeneratorControllers && generators) {
     try {
-      const generatorControllerResult = systemControlsPricingService.calculateControllerSystemCost(
+      const generatorControllerResult = getSystemControlsPricingService().calculateControllerSystemCost(
         "deepsea-dse8610", // Default generator controller
         generators.quantity,
         true, // includeInstallation
@@ -1074,7 +1074,7 @@ export const calculateEquipmentBreakdown = async (
   // Protective Relays (always needed for grid protection)
   if (needsProtectiveRelays) {
     try {
-      const relayResult = systemControlsPricingService.calculateControllerSystemCost(
+      const relayResult = getSystemControlsPricingService().calculateControllerSystemCost(
         "schneider-sepam-80", // Protective relay
         1, // Typically 1 per system
         true, // includeInstallation
@@ -1104,7 +1104,7 @@ export const calculateEquipmentBreakdown = async (
     try {
       // Scale customization hours based on system size
       const customizationHours = Math.max(40, Math.ceil(storageSizeMW * 10));
-      const scadaResult = systemControlsPricingService.calculateScadaSystemCost(
+      const scadaResult = getSystemControlsPricingService().calculateScadaSystemCost(
         "wonderware-system-platform", // Default SCADA system
         true, // includeInstallation
         customizationHours
@@ -1142,7 +1142,7 @@ export const calculateEquipmentBreakdown = async (
   if (needsEMS) {
     try {
       const sitesCount = 1; // Single site
-      const emsResult = systemControlsPricingService.calculateEMSCost(
+      const emsResult = getSystemControlsPricingService().calculateEMSCost(
         gridConnection === "off-grid"
           ? "schneider-ecostruxure-microgrid" // Microgrid controller for off-grid
           : "ge-aems-energy-management", // Optimization system for on-grid

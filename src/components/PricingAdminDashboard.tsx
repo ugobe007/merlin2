@@ -20,7 +20,7 @@ import generatorPricingService from "../services/generatorPricingService";
 import solarPricingService from "../services/solarPricingService";
 import windPricingService from "../services/windPricingService";
 import powerElectronicsPricingService from "../services/powerElectronicsPricingService";
-import systemControlsPricingService from "../services/systemControlsPricingService";
+import { getSystemControlsPricingService } from "../services/systemControlsPricingService";
 
 // Temporary type until migration complete
 type DatabaseSyncResult = {
@@ -64,7 +64,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
     powerElectronicsPricingService.getConfiguration()
   );
   const [editableSystemControls, setEditableSystemControls] = useState(
-    systemControlsPricingService.getConfiguration()
+    getSystemControlsPricingService().getConfiguration()
   );
 
   // Supabase integration state
@@ -470,7 +470,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
       }
     }
     setEditableSystemControls(updatedControls);
-    systemControlsPricingService.updateConfiguration(updatedControls);
+    getSystemControlsPricingService().updateConfiguration(updatedControls);
     setHasChanges(true);
   };
 
@@ -1730,7 +1730,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                         e.target.value
                       );
                       setEditableSystemControls(updated);
-                      systemControlsPricingService.updateConfiguration(updated);
+                      getSystemControlsPricingService().updateConfiguration(updated);
                       setHasChanges(true);
                     }}
                     className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded focus:border-blue-500"
@@ -1753,7 +1753,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                       const updated = { ...editableSystemControls };
                       updated.integrationCosts.cybersecuritySetup = parseInt(e.target.value);
                       setEditableSystemControls(updated);
-                      systemControlsPricingService.updateConfiguration(updated);
+                      getSystemControlsPricingService().updateConfiguration(updated);
                       setHasChanges(true);
                     }}
                     className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded focus:border-blue-500"
