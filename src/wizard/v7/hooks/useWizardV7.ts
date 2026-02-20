@@ -163,6 +163,13 @@ export type PricingFreeze = {
  * These are PRESCRIPTIVE ("what to quote") vs Step 3's DIAGNOSTIC ("what you have").
  * Values flow: Step 4 UI → recalculateWithAddOns → pricingBridge → calculateQuote()
  */
+export type ITCBonuses = {
+  prevailingWage: boolean;
+  energyCommunity: boolean | 'coal-closure' | 'brownfield' | 'fossil-fuel-employment';
+  domesticContent: boolean;
+  lowIncome: boolean | 'located-in' | 'serves';
+};
+
 export type SystemAddOns = {
   includeSolar: boolean;
   solarKW: number;
@@ -171,6 +178,15 @@ export type SystemAddOns = {
   generatorFuelType: 'natural-gas' | 'diesel' | 'dual-fuel';
   includeWind: boolean;
   windKW: number;
+  /** ITC bonus qualifications (IRA 2022) — drives dynamic ITC rate */
+  itcBonuses?: ITCBonuses;
+};
+
+export const DEFAULT_ITC_BONUSES: ITCBonuses = {
+  prevailingWage: true,       // Most commercial projects meet PWA
+  energyCommunity: false,
+  domesticContent: false,
+  lowIncome: false,
 };
 
 export const DEFAULT_ADD_ONS: SystemAddOns = {
@@ -181,6 +197,7 @@ export const DEFAULT_ADD_ONS: SystemAddOns = {
   generatorFuelType: 'natural-gas',
   includeWind: false,
   windKW: 0,
+  itcBonuses: DEFAULT_ITC_BONUSES,
 };
 
 // Options can be strings or {value, label} objects (server templates use the latter)
@@ -379,6 +396,76 @@ export type QuoteOutput = {
     policyVersion: string;
     needsReview: boolean;
     warnings: string[];
+  };
+
+  // ─── Rich metadata from SSOT (Feb 2026) ───
+  metadata?: {
+    itcDetails?: {
+      totalRate: number;
+      baseRate: number;
+      creditAmount: number;
+      qualifications: {
+        prevailingWage: boolean;
+        energyCommunity: boolean;
+        domesticContent: boolean;
+        lowIncome: boolean;
+      };
+      source: string;
+    };
+    utilityRates?: {
+      electricityRate: number;
+      demandCharge: number;
+      utilityName?: string;
+      rateName?: string;
+      source: string;
+      confidence: string;
+      zipCode?: string;
+      state?: string;
+    };
+    degradation?: {
+      chemistry: string;
+      yearlyCapacityPct: number[];
+      year10CapacityPct: number;
+      year25CapacityPct: number;
+      warrantyPeriod: number;
+      expectedWarrantyCapacity: number;
+      financialImpactPct: number;
+      source: string;
+    };
+    solarProduction?: {
+      annualProductionKWh: number;
+      capacityFactorPct: number;
+      source: string;
+      arrayType?: string;
+      state?: string;
+      monthlyProductionKWh?: number[];
+    };
+    advancedAnalysis?: {
+      hourlySimulation?: {
+        annualSavings: number;
+        touArbitrageSavings: number;
+        peakShavingSavings: number;
+        solarSelfConsumptionSavings: number;
+        demandChargeSavings: number;
+        equivalentCycles: number;
+        capacityFactor: number;
+        source: string;
+      };
+      riskAnalysis?: {
+        npvP10: number;
+        npvP50: number;
+        npvP90: number;
+        irrP10: number;
+        irrP50: number;
+        irrP90: number;
+        paybackP10: number;
+        paybackP50: number;
+        paybackP90: number;
+        probabilityPositiveNPV: number;
+        valueAtRisk95: number;
+        source: string;
+      };
+    };
   };
 };
 
@@ -3909,7 +3996,10 @@ export function useWizardV7() {
           // Build pricing config
           const pricingConfig: PricingConfig = {
             snapshotId,
-            includeAdvancedAnalysis: false, // Can be enabled for Pro mode
+            // Advanced analysis enabled — 8760 + Monte Carlo + degradation (Feb 2026)
+            includeAdvancedAnalysis: true,
+            // ITC bonus qualifications from Step 4 (IRA 2022)
+            itcBonuses: addOns?.itcBonuses ?? undefined,
           };
 
           pricingResult = await withTimeout(
@@ -4037,6 +4127,8 @@ export function useWizardV7() {
                       warnings: pricingResult.data.margin.warnings,
                     }
                   : undefined,
+                // Rich metadata from SSOT (Feb 2026)
+                metadata: pricingResult.data.metadata ?? undefined,
               }
             : {
                 // MONOTONIC: pricingComplete=false means NO financial fields populated
@@ -4251,6 +4343,7 @@ export function useWizardV7() {
       generatorFuelType: addOns.generatorFuelType,
       includeWind: addOns.includeWind,
       windKW: addOns.windKW,
+      itcBonuses: addOns.itcBonuses,
       updatedAt: Date.now(),
     });
 

@@ -120,6 +120,14 @@ export interface PricingConfig {
 
   /** Include advanced analysis (8760 + Monte Carlo) */
   includeAdvancedAnalysis?: boolean;
+
+  /** ITC bonus qualifications (IRA 2022) — from Step 4 user inputs */
+  itcBonuses?: {
+    prevailingWage?: boolean;
+    energyCommunity?: boolean | 'coal-closure' | 'brownfield' | 'fossil-fuel-employment';
+    domesticContent?: boolean;
+    lowIncome?: boolean | 'located-in' | 'serves';
+  };
 }
 
 /**
@@ -184,6 +192,81 @@ export interface PricingQuoteData {
     needsReview: boolean;
     /** Warnings from margin engine */
     warnings: string[];
+  };
+
+  // ─── METADATA: Rich analysis from unifiedQuoteCalculator (Feb 2026) ───
+  metadata?: {
+    /** ITC calculation details per IRA 2022 */
+    itcDetails?: {
+      totalRate: number;
+      baseRate: number;
+      creditAmount: number;
+      qualifications: {
+        prevailingWage: boolean;
+        energyCommunity: boolean;
+        domesticContent: boolean;
+        lowIncome: boolean;
+      };
+      source: string;
+    };
+    /** Utility rate attribution */
+    utilityRates?: {
+      electricityRate: number;
+      demandCharge: number;
+      utilityName?: string;
+      rateName?: string;
+      source: string;
+      confidence: string;
+      zipCode?: string;
+      state?: string;
+    };
+    /** Battery degradation analysis */
+    degradation?: {
+      chemistry: string;
+      yearlyCapacityPct: number[];
+      year10CapacityPct: number;
+      year25CapacityPct: number;
+      warrantyPeriod: number;
+      expectedWarrantyCapacity: number;
+      financialImpactPct: number;
+      source: string;
+    };
+    /** Solar production analysis */
+    solarProduction?: {
+      annualProductionKWh: number;
+      capacityFactorPct: number;
+      source: string;
+      arrayType?: string;
+      state?: string;
+      monthlyProductionKWh?: number[];
+    };
+    /** Advanced analysis: 8760 + Monte Carlo */
+    advancedAnalysis?: {
+      hourlySimulation?: {
+        annualSavings: number;
+        touArbitrageSavings: number;
+        peakShavingSavings: number;
+        solarSelfConsumptionSavings: number;
+        demandChargeSavings: number;
+        equivalentCycles: number;
+        capacityFactor: number;
+        source: string;
+      };
+      riskAnalysis?: {
+        npvP10: number;
+        npvP50: number;
+        npvP90: number;
+        irrP10: number;
+        irrP50: number;
+        irrP90: number;
+        paybackP10: number;
+        paybackP50: number;
+        paybackP90: number;
+        probabilityPositiveNPV: number;
+        valueAtRisk95: number;
+        source: string;
+      };
+    };
   };
 }
 
@@ -389,7 +472,9 @@ export async function runPricingQuote(
     demandCharge: contract.inputsUsed.demandCharge,
     useCase: contract.inputsUsed.industry,
     gridConnection: mapGridMode(contract.inputsUsed.gridMode),
-    includeAdvancedAnalysis: config.includeAdvancedAnalysis,
+    // Always enable advanced analysis — 8760 + Monte Carlo + degradation (Feb 2026)
+    includeAdvancedAnalysis: config.includeAdvancedAnalysis !== false,
+    peakDemandKW: peakKW,
     // System add-ons (from Step 4 configuration)
     solarMW: contract.inputsUsed.solarMW,
     generatorMW: contract.inputsUsed.generatorMW,
@@ -417,7 +502,12 @@ export async function runPricingQuote(
     // Dynamic ITC calculation per IRA 2022 (replaces hardcoded 0.30)
     const hasSolar = (contract.inputsUsed.solarMW ?? 0) > 0;
     const itcProjectType = hasSolar ? "hybrid" as const : "bess" as const;
-    const itcEstimate = estimateITC(itcProjectType, sellPriceTotal, storageSizeMW, true);
+    const pwa = config.itcBonuses?.prevailingWage ?? true; // Default: most commercial projects meet PWA
+    const itcEstimate = estimateITC(itcProjectType, sellPriceTotal, storageSizeMW, pwa, {
+      energyCommunity: config.itcBonuses?.energyCommunity,
+      domesticContent: config.itcBonuses?.domesticContent,
+      lowIncome: config.itcBonuses?.lowIncome,
+    });
     const itcRate = itcEstimate.totalRate;
     const itcAmount = sellPriceTotal * itcRate;
     const grossCost = sellPriceTotal;
@@ -469,6 +559,45 @@ export async function runPricingQuote(
           policyVersion: marginResult.policyVersion,
           needsReview: marginResult.needsHumanReview,
           warnings: marginResult.quoteLevelWarnings,
+        },
+        // ─── METADATA: Rich analysis passthrough (Feb 2026) ───
+        metadata: {
+          itcDetails: quoteResult.metadata?.itcDetails ? {
+            totalRate: quoteResult.metadata.itcDetails.totalRate,
+            baseRate: quoteResult.metadata.itcDetails.baseRate,
+            creditAmount: quoteResult.metadata.itcDetails.creditAmount,
+            qualifications: quoteResult.metadata.itcDetails.qualifications,
+            source: quoteResult.metadata.itcDetails.source,
+          } : undefined,
+          utilityRates: quoteResult.metadata?.utilityRates ? {
+            electricityRate: quoteResult.metadata.utilityRates.electricityRate,
+            demandCharge: quoteResult.metadata.utilityRates.demandCharge,
+            utilityName: quoteResult.metadata.utilityRates.utilityName,
+            rateName: quoteResult.metadata.utilityRates.rateName,
+            source: quoteResult.metadata.utilityRates.source,
+            confidence: quoteResult.metadata.utilityRates.confidence,
+            zipCode: quoteResult.metadata.utilityRates.zipCode,
+            state: quoteResult.metadata.utilityRates.state,
+          } : undefined,
+          degradation: quoteResult.metadata?.degradation ? {
+            chemistry: quoteResult.metadata.degradation.chemistry,
+            yearlyCapacityPct: quoteResult.metadata.degradation.yearlyCapacityPct,
+            year10CapacityPct: quoteResult.metadata.degradation.year10CapacityPct,
+            year25CapacityPct: quoteResult.metadata.degradation.year25CapacityPct,
+            warrantyPeriod: quoteResult.metadata.degradation.warrantyPeriod,
+            expectedWarrantyCapacity: quoteResult.metadata.degradation.expectedWarrantyCapacity,
+            financialImpactPct: quoteResult.metadata.degradation.financialImpactPct,
+            source: quoteResult.metadata.degradation.source,
+          } : undefined,
+          solarProduction: quoteResult.metadata?.solarProduction ? {
+            annualProductionKWh: quoteResult.metadata.solarProduction.annualProductionKWh,
+            capacityFactorPct: quoteResult.metadata.solarProduction.capacityFactorPct,
+            source: quoteResult.metadata.solarProduction.source,
+            arrayType: quoteResult.metadata.solarProduction.arrayType,
+            state: quoteResult.metadata.solarProduction.state,
+            monthlyProductionKWh: quoteResult.metadata.solarProduction.monthlyProductionKWh,
+          } : undefined,
+          advancedAnalysis: quoteResult.metadata?.advancedAnalysis ?? undefined,
         },
       },
     };

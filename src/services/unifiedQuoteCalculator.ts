@@ -35,8 +35,8 @@ import { AUTHORITATIVE_SOURCES, PRICING_BENCHMARKS, CURRENT_BENCHMARK_VERSION } 
 import { getUtilityRatesByZip, getCommercialRateByZip } from "./utilityRateService";
 import { estimateITC } from "./itcCalculator";
 import { estimateDegradation, type BatteryChemistry } from "./batteryDegradationService";
-import { estimateSolarProduction } from "./pvWattsService";
-import { estimate8760Savings } from "./hourly8760AnalysisService";
+import { estimateSolarProduction, getPVWattsEstimate } from "./pvWattsService";
+import { estimate8760Savings, run8760Analysis } from "./hourly8760AnalysisService";
 import { estimateRiskMetrics } from "./monteCarloService";
 
 // ============================================
@@ -177,6 +177,7 @@ export interface QuoteResult {
       source: 'pvwatts' | 'regional-estimate' | 'manual';
       arrayType?: string;
       state?: string;
+      monthlyProductionKWh?: number[];
     };
     // NEW: Advanced analysis results (Jan 2026)
     advancedAnalysis?: {
@@ -487,11 +488,9 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
     let productionSource: 'pvwatts' | 'regional-estimate' | 'manual' = 'manual';
     
     if (!annualSolarKWh) {
-      // Auto-estimate based on location
-      // Extract state from location or use default
+      // Extract state from location string for fallback
       let state = 'CA'; // Default
       if (location) {
-        // Try to extract state from location string
         const stateMatch = location.match(/\b([A-Z]{2})\b/) || location.match(/(California|Texas|Arizona|Florida|Nevada|New York)/i);
         if (stateMatch) {
           const stateMap: Record<string, string> = {
@@ -502,29 +501,72 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
           state = stateMap[stateMatch[1]] || stateMatch[1];
         }
       }
-      
-      // Use regional estimate (faster than API call)
-      const solarEstimate = estimateSolarProduction(solarCapacityKW, state, 'fixed');
-      annualSolarKWh = solarEstimate.annualProductionKWh;
-      productionSource = 'regional-estimate';
-      
-      if (import.meta.env.DEV) {
-        console.log(`☀️ [UnifiedQuoteCalculator] Solar production estimate:`, {
-          solarMW,
-          state,
+
+      // Strategy: Try PVWatts API first (location-specific), fall back to regional estimate
+      let pvWattsSucceeded = false;
+
+      if (zipCode && zipCode.length === 5) {
+        try {
+          const pvResult = await getPVWattsEstimate({
+            systemCapacityKW: solarCapacityKW,
+            zipCode,
+            arrayType: 0, // Fixed open rack (default)
+          });
+          annualSolarKWh = pvResult.annualProductionKWh;
+          productionSource = 'pvwatts';
+          pvWattsSucceeded = true;
+
+          solarProductionInfo = {
+            annualProductionKWh: pvResult.annualProductionKWh,
+            capacityFactorPct: pvResult.capacityFactor,
+            source: 'pvwatts',
+            arrayType: 'fixed',
+            state: pvResult.location.state ?? state,
+            monthlyProductionKWh: pvResult.monthlyProductionKWh,
+          };
+
+          if (import.meta.env.DEV) {
+            console.log(`☀️ [UnifiedQuoteCalculator] PVWatts API solar estimate:`, {
+              solarMW,
+              zipCode,
+              annualProductionKWh: annualSolarKWh,
+              capacityFactorPct: pvResult.capacityFactor,
+              source: 'pvwatts',
+              station: pvResult.solarResource.station,
+            });
+          }
+        } catch {
+          // PVWatts failed — fall through to regional estimate below
+          if (import.meta.env.DEV) {
+            console.warn(`☀️ [UnifiedQuoteCalculator] PVWatts API unavailable for ZIP ${zipCode}, using regional estimate`);
+          }
+        }
+      }
+
+      if (!pvWattsSucceeded) {
+        // Fallback: regional estimate (fast, no API key needed)
+        const solarEstimate = estimateSolarProduction(solarCapacityKW, state, 'fixed');
+        annualSolarKWh = solarEstimate.annualProductionKWh;
+        productionSource = 'regional-estimate';
+
+        solarProductionInfo = {
           annualProductionKWh: annualSolarKWh,
           capacityFactorPct: solarEstimate.capacityFactor,
           source: productionSource,
-        });
+          arrayType: 'fixed',
+          state,
+        };
+
+        if (import.meta.env.DEV) {
+          console.log(`☀️ [UnifiedQuoteCalculator] Regional solar estimate (fallback):`, {
+            solarMW,
+            state,
+            annualProductionKWh: annualSolarKWh,
+            capacityFactorPct: solarEstimate.capacityFactor,
+            source: productionSource,
+          });
+        }
       }
-      
-      solarProductionInfo = {
-        annualProductionKWh: annualSolarKWh,
-        capacityFactorPct: solarEstimate.capacityFactor,
-        source: productionSource,
-        arrayType: 'fixed',
-        state,
-      };
     } else {
       // Manual production provided
       const capacityFactor = (annualSolarKWh / (solarCapacityKW * 8760)) * 100;
@@ -697,16 +739,22 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
       const bessKWh = storageSizeMW * durationHours * 1000;
       const bessKW = storageSizeMW * 1000;
       
-      // 8760 Hourly Simulation (quick estimate version)
-      const hourlyResults = estimate8760Savings(
-        bessKWh,
-        bessKW,
+      // 8760 Hourly Simulation — use FULL simulation for accurate results (Feb 2026 upgrade)
+      const annualLoadEstimate = input.annualLoadKWh || (bessKW * 8760 * 0.4); // Rough estimate if not provided
+      const fullHourlyResults = run8760Analysis({
+        bessCapacityKWh: bessKWh,
+        bessPowerKW: bessKW,
         loadProfileType,
-        electricityRate,
-        demandCharge
-      );
+        annualLoadKWh: annualLoadEstimate,
+        peakDemandKW: input.peakDemandKW || bessKW,
+        rateStructure: { type: 'tou' as const, touPeriods: [] }, // Uses default TOU rates
+        demandCharge,
+        state: location,
+        strategy: 'hybrid',
+        solarCapacityKW: solarMW > 0 ? solarMW * 1000 : undefined,
+      });
       
-      // Monte Carlo Risk Analysis (quick estimate version)
+      // Monte Carlo Risk Analysis (quick estimate version — full MC is too slow for synchronous calls)
       const npv = financials.npv ?? 0;
       const riskResults = estimateRiskMetrics(npv, totalProjectCost);
       
@@ -718,14 +766,14 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
       
       advancedAnalysis = {
         hourlySimulation: {
-          annualSavings: hourlyResults.estimatedAnnualSavings,
-          touArbitrageSavings: Math.round(hourlyResults.estimatedAnnualSavings * 0.4), // ~40% from arbitrage
-          peakShavingSavings: Math.round(hourlyResults.estimatedAnnualSavings * 0.35), // ~35% from peak shaving
-          solarSelfConsumptionSavings: solarMW > 0 ? Math.round(hourlyResults.estimatedAnnualSavings * 0.25) : 0,
-          demandChargeSavings: Math.round(bessKW * demandCharge * 12 * 0.3),
-          equivalentCycles: hourlyResults.estimatedCycles,
-          capacityFactor: Math.round((hourlyResults.estimatedCycles * bessKWh / 8760 / bessKW) * 1000) / 10,
-          source: '8760 hourly simulation (DOE load profiles + TOU rates)',
+          annualSavings: fullHourlyResults.summary.annualSavings,
+          touArbitrageSavings: fullHourlyResults.summary.touArbitrageSavings,
+          peakShavingSavings: fullHourlyResults.summary.peakShavingSavings,
+          solarSelfConsumptionSavings: fullHourlyResults.summary.solarSelfConsumptionSavings,
+          demandChargeSavings: fullHourlyResults.summary.demandChargeSavings,
+          equivalentCycles: fullHourlyResults.summary.equivalentCycles,
+          capacityFactor: Math.round(fullHourlyResults.summary.capacityFactor * 10) / 10,
+          source: fullHourlyResults.audit.methodology || '8760 hourly simulation (DOE load profiles + TOU rates)',
         },
         riskAnalysis: {
           npvP10: riskResults.npvP10,
