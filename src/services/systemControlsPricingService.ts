@@ -158,13 +158,43 @@ class SystemControlsPricingService {
   private configCache: SystemControlsPricingConfiguration | null = null;
   private cacheExpiry: number = 0;
   private readonly CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+  private isInitialized: boolean = false;
+  private initPromise: Promise<void> | null = null;
 
   constructor() {
     this.configuration = this.getDefaultConfiguration();
-    // Load from database asynchronously (non-blocking)
-    this.loadFromDatabase().catch((error) => {
-      console.warn("Could not load system controls pricing from database, using defaults:", error);
-    });
+    // Start loading from database in background (non-blocking)
+    // Use setTimeout to defer until after module fully loaded
+    if (typeof window !== 'undefined') {
+      setTimeout(() => this.ensureInitialized(), 0);
+    }
+  }
+
+  /**
+   * Lazy initialization - loads from database on first use
+   */
+  private async ensureInitialized(): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
+
+    // Prevent concurrent initialization
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+
+    this.initPromise = (async () => {
+      try {
+        await this.loadFromDatabase();
+        this.isInitialized = true;
+      } catch (error) {
+        console.warn("Error loading system controls pricing from database:", error);
+        // Keep using defaults
+        this.isInitialized = true; // Don't retry on every call
+      }
+    })();
+
+    return this.initPromise;
   }
 
   /**
@@ -890,16 +920,28 @@ class SystemControlsPricingService {
   }
 
   getControllersByType(type: string): Controller[] {
+    // Trigger initialization if not already started
+    if (!this.isInitialized && typeof window !== 'undefined') {
+      this.ensureInitialized().catch(console.error);
+    }
     return this.configuration.controllers.filter((controller) => controller.type === type);
   }
 
   getControllersByManufacturer(manufacturer: string): Controller[] {
+    // Trigger initialization if not already started
+    if (!this.isInitialized && typeof window !== 'undefined') {
+      this.ensureInitialized().catch(console.error);
+    }
     return this.configuration.controllers.filter((controller) =>
       controller.manufacturer.toLowerCase().includes(manufacturer.toLowerCase())
     );
   }
 
   getConfiguration(): SystemControlsPricingConfiguration {
+    // Trigger initialization if not already started
+    if (!this.isInitialized && typeof window !== 'undefined') {
+      this.ensureInitialized().catch(console.error);
+    }
     return this.configuration;
   }
 
