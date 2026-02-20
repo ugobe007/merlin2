@@ -80,7 +80,7 @@ export default function ExportBar({
   }, []);
 
   const tier = getEffectiveTier();
-  const isPremium = tier === "pro" || tier === "advanced" || tier === "business";
+  const _isPremium = tier === "pro" || tier === "advanced" || tier === "business";
   const handleExport = useCallback(
     async (format: ExportFormat, bypassLeadGate = false) => {
       setError(null);
