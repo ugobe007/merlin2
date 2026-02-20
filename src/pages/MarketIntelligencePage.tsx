@@ -29,7 +29,6 @@ import {
   BarChart3,
   Battery,
   Sun,
-  MapPin,
   Lock,
   ArrowUpRight,
   RefreshCw,
@@ -38,15 +37,13 @@ import {
 } from 'lucide-react';
 import {
   getMarketPriceSummary,
-  type MarketPriceSummary,
 } from '@/services/marketDataIntegrationService';
-import { calculateITC, estimateITC } from '@/services/itcCalculator';
+import { calculateITC } from '@/services/itcCalculator';
 import { estimateDegradation } from '@/services/batteryDegradationService';
 import {
   gatedMarketReport,
   canRunMarketReport,
   getFeatureAvailability,
-  type GateResult,
 } from '@/services/featureGate';
 import { getEffectiveTier, getPlan } from '@/services/subscriptionService';
 

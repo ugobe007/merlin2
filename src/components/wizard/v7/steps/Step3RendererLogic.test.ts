@@ -12,7 +12,6 @@ import {
   chooseRendererForQuestion,
   validateQuestionTypeSupport,
   getSupportedRendererTypes,
-  type RendererType,
 } from "./Step3RendererLogic";
 import type { CuratedField } from "@/wizard/v7/schema/curatedFieldsResolver";
 

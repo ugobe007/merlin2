@@ -28,7 +28,7 @@
  * Run: npx vitest run src/wizard/v7/step3/__tests__/envelopeHarness.test.ts
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   step3Compute,
   registerAdapter,
@@ -37,7 +37,6 @@ import {
   computeConfidence,
   checkEnvelopeInvariants,
   type LoadProfileEnvelope,
-  type NormalizedLoadInputs,
   SCHEDULE_PRESETS,
   HVAC_PRESETS,
   ARCHITECTURE_PRESETS,

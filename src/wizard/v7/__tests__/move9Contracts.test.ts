@@ -59,15 +59,13 @@ import { resolveStep3Schema } from "../schema/curatedFieldsResolver";
 import { resolveIndustryContext } from "../industry/resolveIndustryContext";
 
 // SSOT aliases (for Layer 2: verifying calculator input coverage)
-import { SSOT_ALIASES, listAliasIndustries, getAliasMap } from "../calculators/ssotInputAliases";
+import { listAliasIndustries, getAliasMap } from "../calculators/ssotInputAliases";
 
 // Calculator contracts (for Layer 2: required flat keys)
-import { getCalculatorContract } from "../step3/calculatorContracts";
 
 // DisplayQuote boundary
 import {
   sanitizeQuoteForDisplay,
-  type DisplayQuote,
 } from "../utils/pricingSanity";
 
 // ============================================================================

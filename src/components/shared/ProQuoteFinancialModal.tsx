@@ -18,7 +18,6 @@ import {
   Clock,
   Percent,
   Shield,
-  AlertCircle,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";

@@ -20,8 +20,7 @@ import { v4 as uuidv4 } from "uuid";
 import { calculateQuote, type QuoteInput, type QuoteResult } from "./unifiedQuoteCalculator";
 import { CURRENT_BENCHMARK_VERSION } from "./benchmarkSources";
 import { 
-  applyMarginPolicy, 
-  MARGIN_POLICY_VERSION,
+  applyMarginPolicy,
   type MarginPolicyInput,
   type ProductClass,
 } from "./marginPolicyEngine";
@@ -38,7 +37,6 @@ import type {
   LegacyQuoteInput,
   RecordedAssumption,
   AssumptionWarning,
-  AssumptionWarningCode,
   QuoteConfigLineItem,
   AuditLineItem,
   GeneratorFuelType,

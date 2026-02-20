@@ -11,9 +11,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, Crown, Zap, Building2, Rocket, User,
-  BarChart3, FileText, Shield, AlertTriangle, Check,
-  ChevronRight, RefreshCw, XCircle, CheckCircle2,
-  Loader2, Settings, CreditCard, Calendar, Clock,
+  BarChart3, FileText, AlertTriangle, Check,
+  ChevronRight, RefreshCw, XCircle, CheckCircle2, Settings, CreditCard, Calendar, Clock,
   TrendingUp, Sparkles, Download, Star, Activity,
 } from 'lucide-react';
 import merlinIcon from '@/assets/images/new_small_profile_.png';
@@ -22,7 +21,6 @@ import {
   getUsageSummary,
   getCurrentSubscription,
   getPlan,
-  getAllPlans,
   cancelSubscription,
   reactivateSubscription,
   getUpgradeRecommendation,

@@ -24,7 +24,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { INDUSTRY_CATALOG, type IndustryCatalogEntry } from "../industryCatalog";
+import { INDUSTRY_CATALOG } from "../industryCatalog";
 import {
   resolveIndustryContext,
   listCanonicalSlugs,

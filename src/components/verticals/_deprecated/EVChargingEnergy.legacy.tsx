@@ -17,7 +17,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Calculator, CheckCircle, ArrowRight, Phone, Sun, TrendingDown, Shield, Sparkles, X, Battery, Bolt, Gauge, ChevronDown, Zap, Check } from 'lucide-react';
+import { Calculator, CheckCircle, ArrowRight, Phone, Sun, TrendingDown, Sparkles, X, Battery, Bolt, Gauge, ChevronDown, Zap, Check } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { calculateEVChargingPowerSimple } from '@/services/evChargingCalculations';
