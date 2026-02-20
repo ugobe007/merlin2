@@ -2364,7 +2364,7 @@ export default function WizardV6() {
       case 2:
         // Industry must be selected AND business size tier must be set
         return state.industry !== "" && state.businessSizeTier !== undefined;
-      case 3:
+      case 3: {
         // ✅ CONTRACT (Jan 24, 2026): Use contract validator, not UI-reported step3Valid
         // This ensures Step 3 can't lie about validity
         const can = step3Contract.ok;
@@ -2383,6 +2383,7 @@ export default function WizardV6() {
           });
         }
         return can;
+      }
       case 4:
         // ✅ FIX 2 (Jan 24, 2026): Step 4 is ALWAYS valid (opt-in add-ons)
         return true;

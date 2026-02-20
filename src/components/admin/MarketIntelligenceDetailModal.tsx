@@ -69,7 +69,7 @@ const MarketIntelligenceDetailModal: React.FC<DetailModalProps> = ({
 
   const renderContent = () => {
     switch (type) {
-      case 'trend':
+      case 'trend': {
         const trend = data as MarketTrend;
         return (
           <div className="space-y-4">
@@ -169,8 +169,9 @@ const MarketIntelligenceDetailModal: React.FC<DetailModalProps> = ({
             </div>
           </div>
         );
+      }
 
-      case 'config':
+      case 'config': {
         const config = data as BESSConfigurationPattern;
         return (
           <div className="space-y-4">
@@ -245,8 +246,9 @@ const MarketIntelligenceDetailModal: React.FC<DetailModalProps> = ({
             </div>
           </div>
         );
+      }
 
-      case 'indicator':
+      case 'indicator': {
         const indicator = data as CustomerDecisionIndicator;
         return (
           <div className="space-y-4">
@@ -328,8 +330,9 @@ const MarketIntelligenceDetailModal: React.FC<DetailModalProps> = ({
             </div>
           </div>
         );
+      }
 
-      case 'opportunity':
+      case 'opportunity': {
         const opportunity = data as EmergingOpportunity;
         return (
           <div className="space-y-4">
@@ -412,8 +415,9 @@ const MarketIntelligenceDetailModal: React.FC<DetailModalProps> = ({
             </div>
           </div>
         );
+      }
 
-      case 'adoption':
+      case 'adoption': {
         const adoption = data as IndustryAdoptionRate;
         return (
           <div className="space-y-4">
@@ -488,8 +492,9 @@ const MarketIntelligenceDetailModal: React.FC<DetailModalProps> = ({
             </div>
           </div>
         );
+      }
 
-      case 'pricing':
+      case 'pricing': {
         const pricing = data as PricingUpdateRecommendation;
         return (
           <div className="space-y-4">
@@ -577,6 +582,7 @@ const MarketIntelligenceDetailModal: React.FC<DetailModalProps> = ({
             </div>
           </div>
         );
+      }
 
       default:
         return <div>Unknown type</div>;

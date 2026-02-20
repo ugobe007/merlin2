@@ -211,30 +211,36 @@ export function calculateEV(input: EVCalculationInput): EVCalculationResult {
   let totalChargers = config.baseChargers;
 
   switch (config.scaleFactor) {
-    case 'rooms':
+    case 'rooms': {
       const rooms = input.useCaseData.roomCount || input.useCaseData.rooms || 100;
       totalChargers = Math.max(config.baseChargers, Math.round(rooms * 0.05)); // 5% of rooms
       break;
-    case 'sqft':
+    }
+    case 'sqft': {
       const sqft = input.useCaseData.squareFootage || input.useCaseData.totalSqFt || 50000;
       totalChargers = Math.max(config.baseChargers, Math.round(sqft / 10000)); // 1 per 10k sqft
       break;
-    case 'beds':
+    }
+    case 'beds': {
       const beds = input.useCaseData.bedCount || input.useCaseData.beds || 200;
       totalChargers = Math.max(config.baseChargers, Math.round(beds * 0.03)); // 3% of beds
       break;
-    case 'seats':
+    }
+    case 'seats': {
       const seats = input.useCaseData.seats || input.useCaseData.capacity || 100;
       totalChargers = Math.max(config.baseChargers, Math.round(seats * 0.02)); // 2% of seats
       break;
-    case 'students':
+    }
+    case 'students': {
       const students = input.useCaseData.students || input.useCaseData.enrollment || 5000;
       totalChargers = Math.max(config.baseChargers, Math.round(students / 500)); // 1 per 500 students
       break;
-    case 'bays':
+    }
+    case 'bays': {
       const bays = input.useCaseData.tunnelCount || input.useCaseData.bays || 2;
       totalChargers = Math.max(config.baseChargers, bays * 2);
       break;
+    }
     case 'fixed':
     default:
       totalChargers = config.baseChargers;
@@ -342,22 +348,26 @@ export function getEVPresetTiers(
   let baseChargers = config.baseChargers;
   
   switch (config.scaleFactor) {
-    case 'rooms':
+    case 'rooms': {
       const rooms = useCaseData.roomCount || useCaseData.rooms || 100;
       baseChargers = Math.max(config.baseChargers, Math.round(rooms * 0.05));
       break;
-    case 'sqft':
+    }
+    case 'sqft': {
       const sqft = useCaseData.squareFootage || useCaseData.totalSqFt || 50000;
       baseChargers = Math.max(config.baseChargers, Math.round(sqft / 10000));
       break;
-    case 'beds':
+    }
+    case 'beds': {
       const beds = useCaseData.bedCount || useCaseData.beds || 200;
       baseChargers = Math.max(config.baseChargers, Math.round(beds * 0.03));
       break;
-    case 'bays':
+    }
+    case 'bays': {
       const bays = useCaseData.tunnelCount || useCaseData.bays || 2;
       baseChargers = Math.max(config.baseChargers, bays * 2);
       break;
+    }
     default:
       baseChargers = config.baseChargers;
   }

@@ -128,7 +128,9 @@ export default function MetaCalculationsPage() {
           setIsAdmin(true);
           setAdminName(parsed.name || 'Admin');
         }
-      } catch {}
+      } catch {
+        // Invalid session JSON - user remains non-admin
+      }
     }
   }, []);
 
@@ -157,6 +159,7 @@ export default function MetaCalculationsPage() {
           source: dbValue !== null ? 'database' : 'fallback',
         });
       } catch {
+        // Failed to load constant - use fallback
         loaded.push({ ...def, dbValue: null, activeValue: def.fallbackValue, source: 'fallback' });
       }
     }
@@ -178,7 +181,9 @@ export default function MetaCalculationsPage() {
         })));
         return;
       }
-    } catch {}
+    } catch {
+      // Failed to load pricing from database - use defaults
+    }
     setPricing([
       { category: 'BESS', item: 'LFP Battery Cells', currentPrice: 95, previousPrice: 105, changePercent: -9.5, source: 'BloombergNEF', confidence: 0.92 },
       { category: 'Solar', item: 'Mono PERC Module', currentPrice: 0.22, previousPrice: 0.24, changePercent: -8.3, source: 'PVInsights', confidence: 0.95 },
@@ -201,7 +206,9 @@ export default function MetaCalculationsPage() {
         })));
         return;
       }
-    } catch {}
+    } catch {
+      // Failed to load industries from database - use defaults
+    }
     setIndustries([
       { industry: 'hotel', name: 'Hotel / Resort', loadMethod: 'per_unit', wattsPerUnit: 2500, loadFactor: 0.45, bessHours: 4, criticalLoad: 0.60, subtypes: 4 },
     ]);
