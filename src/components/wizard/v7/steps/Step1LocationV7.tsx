@@ -408,13 +408,13 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                   name="merlin-zip-nofill"
                   style={{
                     width: "100%",
-                    height: 44,
+                    height: 56,
                     paddingLeft: 44,
                     paddingRight: 16,
                     borderRadius: 8,
                     border: "1px solid rgba(255, 255, 255, 0.06)",
-                    background: "rgba(255, 255, 255, 0.04)",
-                    fontSize: 14,
+                    background: "linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))",
+                    fontSize: 18,
                     color: "rgba(232, 235, 243, 0.95)",
                     outline: "none",
                   }}

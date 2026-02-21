@@ -673,10 +673,14 @@ function WizardV7Page() {
       );
 
       if (!hasZip) {
+        subtitle = "Welcome! I'm Merlin, your AI Energy Advisor";
         bullets.push(
-          "Because utility rates vary by region, your ZIP code unlocks local pricing and solar data."
+          "I'll help you discover exactly how much you can save with battery energy storage."
         );
-        bullets.push("This takes about 10 seconds — then we'll size your system.");
+        bullets.push(
+          "Let's start by entering your ZIP code to see your local energy rates and solar potential."
+        );
+        bullets.push("This analysis takes about 10 seconds — then we'll build your custom quote.");
       } else if (!hasLocation && !hasIntel && !intelAttempted) {
         subtitle = "Looking up your area…";
         badgeLabel = "analyzing";

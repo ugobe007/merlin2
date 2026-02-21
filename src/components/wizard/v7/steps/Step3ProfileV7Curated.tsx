@@ -1175,6 +1175,64 @@ export default function Step3ProfileV7Curated(props: Props) {
 
         {/* Progress banner */}
         <div className="p-4 border-t border-slate-700/40">
+          {/* Default Settings Explanation - Always shown at top */}
+          <div
+            style={{
+              marginBottom: 16,
+              padding: "16px 20px",
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.08))",
+              border: "1px solid rgba(139, 92, 246, 0.2)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "start",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  flexShrink: 0,
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: "rgba(139, 92, 246, 0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 18,
+                }}
+              >
+                💡
+              </div>
+              <div style={{ flex: 1 }}>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "rgba(255, 255, 255, 0.95)",
+                    marginBottom: 6,
+                  }}
+                >
+                  Industry Default Settings
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                    color: "rgba(255, 255, 255, 0.70)",
+                  }}
+                >
+                  We've pre-filled answers with industry standard values to help you get started quickly.
+                  Please review and adjust any fields to match your specific requirements — every facility is unique.
+                  Once you're satisfied, continue to see your custom quote.
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Pre-filled hint (shows when defaults were applied) */}
           {defaultFilledIds.size > 0 && (
             <div className="flex items-center gap-2 mb-3 p-2.5 bg-cyan-950/30 border border-cyan-500/20 rounded-lg">
