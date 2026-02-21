@@ -493,17 +493,25 @@ export default function WizardShellV7({
               padding: "12px 20px",
               borderRadius: 8,
               minHeight: 44,
-              background:
+              background: "transparent",
+              border:
                 canGoNext && !isNextLoading
-                  ? "#3ECF8E"
-                  : "rgba(255, 255, 255, 0.04)",
-              border: "none",
-              color: canGoNext && !isNextLoading ? "#000" : "rgba(232, 235, 243, 0.20)",
+                  ? "2px solid #3ECF8E"
+                  : "2px solid rgba(255, 255, 255, 0.08)",
+              color: canGoNext && !isNextLoading ? "#3ECF8E" : "rgba(232, 235, 243, 0.30)",
               cursor: canGoNext && !isNextLoading ? "pointer" : "not-allowed",
               fontSize: 14,
               fontWeight: 600,
               boxShadow: "none",
               transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              if (canGoNext && !isNextLoading) {
+                e.currentTarget.style.background = "rgba(62, 207, 142, 0.1)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
             }}
           >
             {isNextLoading ? "Working..." : nextLabel || "Next Step"} <span>›</span>
