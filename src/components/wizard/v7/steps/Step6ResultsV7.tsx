@@ -439,58 +439,86 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       ================================================================ */}
       {quoteReady && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-white/[0.06] rounded-lg overflow-hidden">
-          {/* Equipment — left column */}
-          <div className="p-3 border-b md:border-b-0 md:border-r border-white/[0.06]">
-            <div className="flex items-center gap-1.5 mb-2">
+          {/* Equipment — horizontal badges */}
+          <div className="p-4 border-b md:border-b-0 md:border-r border-white/[0.06]">
+            <div className="flex items-center gap-1.5 mb-3">
               <Battery className="w-3.5 h-3.5 text-slate-500" />
               <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                 Equipment
               </span>
             </div>
-            <div className="divide-y divide-white/[0.04]">
+
+            {/* Horizontal badge row */}
+            <div className="flex flex-wrap items-center gap-3">
               {quote.bessKWh != null && (
-                <div className="flex items-baseline justify-between py-1.5">
-                  <span className="text-xs text-slate-400">Battery Storage</span>
-                  <span className="text-xs font-bold text-white tabular-nums">
-                    {fmtNum(Math.round(quote.bessKWh))} kWh
-                    {quote.bessKW != null && (
-                      <span className="text-slate-500 font-medium ml-1.5">
-                        {fmtNum(Math.round(quote.bessKW))} kW
-                      </span>
-                    )}
-                  </span>
+                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                  <Battery className="w-3.5 h-3.5 text-violet-400" />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                      Battery
+                    </span>
+                    <span className="text-xs font-bold text-white tabular-nums">
+                      {fmtNum(Math.round(quote.bessKWh))} kWh
+                    </span>
+                  </div>
                 </div>
               )}
+
               {quote.durationHours != null && (
-                <div className="flex items-baseline justify-between py-1.5">
-                  <span className="text-xs text-slate-400">Duration</span>
-                  <span className="text-xs font-bold text-white tabular-nums">
-                    {fmtNum(quote.durationHours)} hours
-                  </span>
+                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <Zap className="w-3.5 h-3.5 text-blue-400" />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                      Duration
+                    </span>
+                    <span className="text-xs font-bold text-white tabular-nums">
+                      {fmtNum(quote.durationHours)} hrs
+                    </span>
+                  </div>
                 </div>
               )}
+
               {(quote.solarKW as number) > 0 && (
-                <div className="flex items-baseline justify-between py-1.5">
-                  <span className="text-xs text-slate-400">Solar Array</span>
-                  <span className="text-xs font-bold text-white tabular-nums">
-                    {fmtNum(Math.round(quote.solarKW as number))} kW
-                  </span>
+                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                      Solar
+                    </span>
+                    <span className="text-xs font-bold text-white tabular-nums">
+                      {fmtNum(Math.round(quote.solarKW as number))} kW
+                    </span>
+                  </div>
                 </div>
               )}
+
               {(quote.generatorKW as number) > 0 && (
-                <div className="flex items-baseline justify-between py-1.5">
-                  <span className="text-xs text-slate-400">Backup Generator</span>
-                  <span className="text-xs font-bold text-white tabular-nums">
-                    {fmtNum(Math.round(quote.generatorKW as number))} kW
-                  </span>
+                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <Zap className="w-3.5 h-3.5 text-red-400" />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                      Generator
+                    </span>
+                    <span className="text-xs font-bold text-white tabular-nums">
+                      {fmtNum(Math.round(quote.generatorKW as number))} kW
+                    </span>
+                  </div>
                 </div>
               )}
-              <div className="flex items-baseline justify-between py-1.5">
-                <span className="text-xs text-slate-400">Peak Demand</span>
-                <span className="text-xs font-bold text-white tabular-nums">
-                  {quote.peakLoadKW ? `${fmtNum(Math.round(quote.peakLoadKW))} kW` : "—"}
-                </span>
-              </div>
+
+              {quote.peakLoadKW && (
+                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                  <Zap className="w-3.5 h-3.5 text-emerald-400" />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                      Peak
+                    </span>
+                    <span className="text-xs font-bold text-white tabular-nums">
+                      {fmtNum(Math.round(quote.peakLoadKW))} kW
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -877,16 +905,12 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       {/* ================================================================
           SCENARIO COMPARISON — Conservative / Balanced / Aggressive
       ================================================================ */}
-      {quoteReady && (
-        <ScenarioComparison quote={quote} />
-      )}
+      {quoteReady && <ScenarioComparison quote={quote} />}
 
       {/* ================================================================
           FINANCIAL CHARTS — Cash flow, Risk bands, Solar, Degradation
       ================================================================ */}
-      {quoteReady && (
-        <QuoteCharts quote={quote} />
-      )}
+      {quoteReady && <QuoteCharts quote={quote} />}
 
       {/* ================================================================
           WHY THIS SIZE? — Trust accelerator

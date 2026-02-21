@@ -9,6 +9,7 @@
  */
 
 import React from "react";
+import { Sun } from "lucide-react";
 
 /** Fetch status for individual intel data points */
 type FetchStatus = "idle" | "fetching" | "ready" | "error";
@@ -101,8 +102,8 @@ export default function IntelStripInline({ intel }: Props) {
   return (
     <div
       style={{
-        fontSize: 13,
-        lineHeight: 1.6,
+        fontSize: 15, // Increased from 13
+        lineHeight: 1.8, // Increased from 1.6
         display: "flex",
         flexWrap: "wrap",
         alignItems: "center",
@@ -125,13 +126,17 @@ export default function IntelStripInline({ intel }: Props) {
         status={intel.utilityStatus}
       />
       <Dot />
-      <Datum
-        label="Sun"
-        value={intel.peakSunHours}
-        unit="hrs"
-        color="rgba(245, 158, 11, 0.9)"
-        status={intel.solarStatus}
-      />
+      {/* Sun icon with hours */}
+      <span style={{ whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 4 }}>
+        <Sun className="w-4 h-4" style={{ color: "rgba(245, 158, 11, 0.9)" }} />
+        <Datum
+          label=""
+          value={intel.peakSunHours}
+          unit="hrs"
+          color="rgba(245, 158, 11, 0.9)"
+          status={intel.solarStatus}
+        />
+      </span>
       {intel.solarGrade && (
         <>
           <Dot />
@@ -157,7 +162,7 @@ export default function IntelStripInline({ intel }: Props) {
       {intel.utilityProvider && intel.utilityStatus === "ready" && (
         <>
           <Dot />
-          <span style={{ color: "rgba(232, 235, 243, 0.25)", fontSize: 12 }}>
+          <span style={{ color: "rgba(232, 235, 243, 0.25)", fontSize: 13 }}>
             {intel.utilityProvider}
           </span>
         </>
