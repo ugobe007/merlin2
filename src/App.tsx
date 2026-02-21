@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 
 // ─── Lazy-loaded routes (code-split per page) ───
 const BessQuoteBuilder = lazy(() => import("./components/BessQuoteBuilder"));
+const ProQuoteConfigurationPage = lazy(() => import("./pages/ProQuoteConfigurationPage"));
 const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
 const VendorPortal = lazy(() => import("./components/VendorPortal"));
 const CarWashEnergy = lazy(() => import("./components/verticals/CarWashEnergy"));
@@ -295,8 +296,18 @@ function App() {
   //   return <Suspense fallback={<PageLoader />}><SharedQuotePage /></Suspense>;
   // }
 
-  // Access via /quote-builder or advanced=true - Show Advanced Quote Builder
-  // The BessQuoteBuilder component handles this via the advanced param
+  // Access via /quote-builder - ProQuote Configuration Page (AdvancedQuoteBuilder)
+  if (
+    pathname === "/quote-builder" ||
+    pathname === "/proquote" ||
+    (advancedParam === "true" && pathname !== "/")
+  ) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <ProQuoteConfigurationPage />
+      </Suspense>
+    );
+  }
 
   return (
     <QuoteProvider>
