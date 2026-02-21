@@ -835,21 +835,21 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 style={{
                   padding: "10px 20px",
                   borderRadius: 8,
-                  border: "none",
-                  background: "#3ECF8E",
-                  color: "#000",
+                  border: "2px solid #3ECF8E",
+                  background: "transparent",
+                  color: "#3ECF8E",
                   fontWeight: 600,
                   fontSize: 14,
                   cursor: "pointer",
                   whiteSpace: "nowrap",
-                  transition: "opacity 0.15s",
+                  transition: "all 0.15s",
                   flexShrink: 0,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "0.9";
+                  e.currentTarget.style.background = "rgba(62, 207, 142, 0.1)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "1";
+                  e.currentTarget.style.background = "transparent";
                 }}
               >
                 Set Goals

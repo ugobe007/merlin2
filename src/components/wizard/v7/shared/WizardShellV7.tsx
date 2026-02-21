@@ -145,6 +145,7 @@ export default function WizardShellV7({
                     height: 16,
                     borderRadius: "50%",
                     background: "#3ECF8E",
+                    boxShadow: "0 0 8px rgba(62, 207, 142, 0.5)",
                   }}
                 />
               </div>
