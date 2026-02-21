@@ -435,12 +435,12 @@ export default function Step6ResultsV7({ state, actions }: Props) {
       )}
 
       {/* ================================================================
-          EQUIPMENT & FINANCIAL SUMMARY — Clean two-column layout
+          EQUIPMENT & FINANCIAL SUMMARY — Horizontal layout
       ================================================================ */}
       {quoteReady && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-white/[0.06] rounded-lg overflow-hidden">
-          {/* Equipment — horizontal badges */}
-          <div className="p-4 border-b md:border-b-0 md:border-r border-white/[0.06]">
+        <div className="border border-white/[0.06] rounded-lg overflow-hidden space-y-0">
+          {/* Equipment — horizontal row */}
+          <div className="p-4 border-b border-white/[0.06]">
             <div className="flex items-center gap-1.5 mb-3">
               <Battery className="w-3.5 h-3.5 text-slate-500" />
               <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
@@ -522,9 +522,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
             </div>
           </div>
 
-          {/* Financial — right column */}
-          <div className="p-3">
-            <div className="flex items-center justify-between mb-2">
+          {/* Financial — 2-column grid layout */}
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5 text-slate-500" />
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
@@ -536,25 +536,41 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                 <span className="text-amber-400 font-bold">TrueQuote™</span>
               </div>
             </div>
-            <div className="divide-y divide-white/[0.04]">
-              <div className="flex justify-between py-1.5">
-                <span className="text-xs text-slate-400">Total Investment</span>
-                <span className="text-xs font-bold text-white tabular-nums">
+
+            {/* 2-column grid layout */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              {/* Total Investment */}
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                  Total Investment
+                </span>
+                <span className="text-sm font-bold text-white tabular-nums">
                   {fmtUSD((quote.grossCost ?? quote.capexUSD) as number | null)}
                 </span>
               </div>
-              {/* Federal ITC — use actual itcAmount from calculator, not hardcoded 30% */}
+
+              {/* Annual Savings */}
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                  Annual Savings
+                </span>
+                <span className="text-sm font-bold text-emerald-400 tabular-nums">
+                  {fmtUSD(quote.annualSavingsUSD as number | null)}
+                </span>
+              </div>
+
+              {/* Federal ITC */}
               {(quote.grossCost ?? quote.capexUSD) != null &&
                 Number(quote.grossCost ?? quote.capexUSD) > 0 && (
-                  <div className="flex justify-between py-1.5">
-                    <span className="text-xs text-slate-400">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
                       Federal ITC (
                       {quote.itcRate != null
                         ? `${Math.round(Number(quote.itcRate) * 100)}%`
                         : "30%"}
                       )
                     </span>
-                    <span className="text-xs font-bold text-emerald-400 tabular-nums">
+                    <span className="text-sm font-bold text-emerald-400 tabular-nums">
                       −
                       {fmtUSD(
                         quote.itcAmount != null
@@ -564,40 +580,36 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                     </span>
                   </div>
                 )}
-              {/* Net cost after ITC — capexUSD IS already net of ITC */}
-              {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
-                <div className="flex justify-between py-1.5 bg-white/[0.02] -mx-3 px-3">
-                  <span className="text-xs font-semibold text-slate-200">Net Cost</span>
-                  <span className="text-xs font-bold text-white tabular-nums">
-                    {fmtUSD(quote.capexUSD as number | null)}
-                  </span>
-                </div>
-              )}
-              <div className="flex justify-between py-1.5">
-                <span className="text-xs text-slate-400">Annual Savings</span>
-                <span className="text-xs font-bold text-emerald-400 tabular-nums">
-                  {fmtUSD(quote.annualSavingsUSD as number | null)}
-                </span>
-              </div>
-              {quote.demandChargeSavings != null && Number(quote.demandChargeSavings) > 0 && (
-                <div className="flex justify-between py-1.5">
-                  <span className="text-xs text-slate-400">Demand Charge Savings</span>
-                  <span className="text-xs font-bold text-cyan-400 tabular-nums">
-                    {fmtUSD(quote.demandChargeSavings as number | null)}
-                  </span>
-                </div>
-              )}
-              {/* Monthly savings for quick reference */}
+
+              {/* Monthly Savings */}
               {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
-                <div className="flex justify-between py-1.5">
-                  <span className="text-xs text-slate-400">Monthly Savings</span>
-                  <span className="text-xs font-bold text-slate-300 tabular-nums">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                    Monthly Savings
+                  </span>
+                  <span className="text-sm font-bold text-slate-300 tabular-nums">
                     {fmtUSD(Number(quote.annualSavingsUSD) / 12)}
                   </span>
                 </div>
               )}
-              <div className="flex justify-between py-1.5">
-                <span className="text-xs text-slate-400">Simple Payback</span>
+
+              {/* Net Cost */}
+              {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
+                <div className="flex flex-col col-span-2 pt-2 border-t border-white/[0.06]">
+                  <span className="text-[10px] text-slate-300 uppercase tracking-wider mb-1 font-semibold">
+                    Net Cost
+                  </span>
+                  <span className="text-base font-bold text-white tabular-nums">
+                    {fmtUSD(quote.capexUSD as number | null)}
+                  </span>
+                </div>
+              )}
+
+              {/* Simple Payback */}
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                  Simple Payback
+                </span>
                 <span className="text-xs font-bold text-white tabular-nums">
                   {quote.roiYears != null && Number(quote.roiYears) > 0
                     ? `${parseFloat(Number(quote.roiYears).toFixed(1))} years`

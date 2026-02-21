@@ -80,7 +80,10 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
   // Auto-open ONLY for the non-business path (ZIP-only → no business card to review).
   const goalsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (goalsTimerRef.current) { clearTimeout(goalsTimerRef.current); goalsTimerRef.current = null; }
+    if (goalsTimerRef.current) {
+      clearTimeout(goalsTimerRef.current);
+      goalsTimerRef.current = null;
+    }
 
     // Only auto-open when there's NO business card to review
     if (
@@ -88,13 +91,21 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
       !state.goalsConfirmed &&
       !showGoalsModal &&
       !state.isBusy &&
-      !state.businessCard  // ← Don't auto-open when business card is present
+      !state.businessCard // ← Don't auto-open when business card is present
     ) {
       goalsTimerRef.current = setTimeout(() => setShowGoalsModal(true), 400);
     }
 
-    return () => { if (goalsTimerRef.current) clearTimeout(goalsTimerRef.current); };
-  }, [state.locationConfirmed, state.goalsConfirmed, showGoalsModal, state.isBusy, state.businessCard]);
+    return () => {
+      if (goalsTimerRef.current) clearTimeout(goalsTimerRef.current);
+    };
+  }, [
+    state.locationConfirmed,
+    state.goalsConfirmed,
+    showGoalsModal,
+    state.isBusy,
+    state.businessCard,
+  ]);
 
   // ✅ FIX Feb 13: Listen to goalsModalRequested from shell's handleNext ("Set Goals & Continue" button)
   useEffect(() => {
@@ -106,10 +117,10 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
   // ✅ FIX Feb 13: Scroll to top when business card appears so user can see & review it
   useEffect(() => {
     if (state.businessConfirmed && state.businessCard) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       // Also try the wizard scroll container (modal path)
-      const scrollContainer = document.querySelector('[data-wizard-scroll]') as HTMLElement | null;
-      if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      const scrollContainer = document.querySelector("[data-wizard-scroll]") as HTMLElement | null;
+      if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [state.businessConfirmed, state.businessCard]);
 
@@ -164,7 +175,9 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
 
     // ✅ FIX Feb 13: Require ZIP before business search — geocoder needs geographic context
     if (!isValidZip) {
-      setBusinessSearchError("Please enter your ZIP code above first — it helps us find the right location.");
+      setBusinessSearchError(
+        "Please enter your ZIP code above first — it helps us find the right location."
+      );
       // Focus the ZIP input
       const el = document.getElementById("merlin-zip-input") as HTMLInputElement | null;
       el?.focus();
@@ -186,7 +199,9 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
       // Show a friendly inline error instead of letting the SSOT error display at the top
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("No location found") || msg.includes("VALIDATION")) {
-        setBusinessSearchError("Couldn't find that business. Try adding more details to the address field (city, state).");
+        setBusinessSearchError(
+          "Couldn't find that business. Try adding more details to the address field (city, state)."
+        );
       } else {
         setBusinessSearchError("Search failed — please try again.");
       }
@@ -203,7 +218,6 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, position: "relative" }}>
-
       {/* ✅ Confirmed business profile card — prominent at TOP */}
       {state.businessConfirmed && state.businessCard && (
         <div style={{ marginBottom: 4 }}>
@@ -226,13 +240,9 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
 
       {/* Hero Section */}
       <div style={{ position: "relative", zIndex: 1 }}>
-
         {/* TrueQuote badge — clickable */}
         <div style={{ marginBottom: 18, position: "relative", zIndex: 2 }}>
-          <TrueQuoteBadgeCanonical
-            onClick={() => setShowTrueQuoteModal(true)}
-            showTooltip={true}
-          />
+          <TrueQuoteBadgeCanonical onClick={() => setShowTrueQuoteModal(true)} showTooltip={true} />
         </div>
 
         <h1
@@ -297,7 +307,16 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
 
         {/* Resolved City/State */}
         {state.location && (
-          <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 12, position: "relative", zIndex: 1 }}>
+          <div
+            style={{
+              marginTop: 14,
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
             <div
               style={{
                 width: 8,
@@ -307,21 +326,28 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 flexShrink: 0,
               }}
             />
-            <span style={{ fontSize: 20, fontWeight: 700, color: "rgba(232, 235, 243, 0.92)", letterSpacing: "-0.3px" }}>
+            <span
+              style={{
+                fontSize: 20,
+                fontWeight: 700,
+                color: "rgba(232, 235, 243, 0.92)",
+                letterSpacing: "-0.3px",
+              }}
+            >
               {state.location.city && <span>{state.location.city}</span>}
               {state.location.state && state.location.city && (
                 <span style={{ color: "rgba(232, 235, 243, 0.35)", margin: "0 4px" }}>,</span>
               )}
-              {state.location.state && <span style={{ color: "#3ECF8E" }}>{state.location.state}</span>}
+              {state.location.state && (
+                <span style={{ color: "#3ECF8E" }}>{state.location.state}</span>
+              )}
             </span>
           </div>
         )}
       </div>
 
       {/* ✅ Location Intelligence — inline data row */}
-      {showIntel && (
-        <IntelStripInline intel={state.locationIntel} />
-      )}
+      {showIntel && <IntelStripInline intel={state.locationIntel} />}
 
       {/* ✅ Primary input block MUST be immediately after headline */}
       <div style={{ position: "relative", zIndex: 1 }}>
@@ -336,7 +362,10 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 minWidth: 44,
                 padding: "0 14px",
                 borderRadius: 8,
-                border: country === "US" ? "1px solid rgba(62,207,142,0.45)" : "1px solid rgba(255,255,255,0.08)",
+                border:
+                  country === "US"
+                    ? "1px solid rgba(62,207,142,0.45)"
+                    : "1px solid rgba(255,255,255,0.08)",
                 background: country === "US" ? "rgba(62,207,142,0.10)" : "rgba(255,255,255,0.03)",
                 color: country === "US" ? "#3ECF8E" : "rgba(232,235,243,0.70)",
                 fontWeight: 600,
@@ -353,8 +382,12 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 height: 44,
                 padding: "0 14px",
                 borderRadius: 8,
-                border: country === "International" ? "1px solid rgba(62,207,142,0.45)" : "1px solid rgba(255,255,255,0.08)",
-                background: country === "International" ? "rgba(62,207,142,0.10)" : "rgba(255,255,255,0.03)",
+                border:
+                  country === "International"
+                    ? "1px solid rgba(62,207,142,0.45)"
+                    : "1px solid rgba(255,255,255,0.08)",
+                background:
+                  country === "International" ? "rgba(62,207,142,0.10)" : "rgba(255,255,255,0.03)",
                 color: country === "International" ? "#3ECF8E" : "rgba(232,235,243,0.70)",
                 fontWeight: 600,
                 cursor: "pointer",
@@ -413,7 +446,8 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                     paddingRight: 16,
                     borderRadius: 8,
                     border: "1px solid rgba(255, 255, 255, 0.06)",
-                    background: "linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))",
+                    background:
+                      "linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))",
                     fontSize: 18,
                     color: "rgba(232, 235, 243, 0.95)",
                     outline: "none",
@@ -430,12 +464,12 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                   height: 44,
                   padding: "0 20px",
                   borderRadius: 8,
-                  border: "none",
-                  background:
+                  border:
                     !isValidZip || state.isBusy
-                      ? "rgba(255, 255, 255, 0.04)"
-                      : "#3ECF8E",
-                  color: !isValidZip || state.isBusy ? "rgba(232, 235, 243, 0.25)" : "#000",
+                      ? "2px solid rgba(255, 255, 255, 0.08)"
+                      : "2px solid #3ECF8E",
+                  background: "transparent",
+                  color: !isValidZip || state.isBusy ? "rgba(232, 235, 243, 0.25)" : "#3ECF8E",
                   fontSize: 14,
                   fontWeight: 600,
                   cursor: !isValidZip || state.isBusy ? "not-allowed" : "pointer",
@@ -479,7 +513,9 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                   // ✅ Must unconfirm so the ZIP input renders again
                   setLocationConfirmed(false);
                   requestAnimationFrame(() => {
-                    const el = document.getElementById("merlin-zip-input") as HTMLInputElement | null;
+                    const el = document.getElementById(
+                      "merlin-zip-input"
+                    ) as HTMLInputElement | null;
                     el?.focus();
                     el?.select();
                   });
@@ -502,7 +538,6 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
         </div>
 
         {/* ✅ Intel moved to above ZIP input — see above */}
-
       </div>
 
       {/* Business: if confirmed, show a hard confirmation card and collapse the form */}
@@ -530,7 +565,16 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 flexShrink: 0,
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3ECF8E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#3ECF8E"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
@@ -539,38 +583,67 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
               <div style={{ fontSize: 15, fontWeight: 600, color: "rgba(232, 235, 243, 0.92)" }}>
                 Find My Business
               </div>
-              <div style={{ fontSize: 11, fontWeight: 500, color: "rgba(232, 235, 243, 0.35)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "rgba(232, 235, 243, 0.35)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
                 Optional — improves accuracy
               </div>
             </div>
           </div>
 
-          <div style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.40)", marginBottom: 18, lineHeight: 1.6, paddingLeft: 48 }}>
-            Adding your business helps Merlin tailor equipment sizing, load profiles, and incentive eligibility to your exact facility.
+          <div
+            style={{
+              fontSize: 13,
+              color: "rgba(255, 255, 255, 0.40)",
+              marginBottom: 18,
+              lineHeight: 1.6,
+              paddingLeft: 48,
+            }}
+          >
+            Adding your business helps Merlin tailor equipment sizing, load profiles, and incentive
+            eligibility to your exact facility.
           </div>
 
           {/* Inline validation error */}
           {businessSearchError && (
-            <div style={{
-              marginBottom: 12,
-              padding: "10px 14px",
-              borderRadius: 10,
-              background: "rgba(251, 191, 36, 0.08)",
-              border: "1px solid rgba(251, 191, 36, 0.25)",
-              fontSize: 13,
-              color: "rgba(251, 191, 36, 0.9)",
-              lineHeight: 1.5,
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 8,
-            }}>
+            <div
+              style={{
+                marginBottom: 12,
+                padding: "10px 14px",
+                borderRadius: 10,
+                background: "rgba(251, 191, 36, 0.08)",
+                border: "1px solid rgba(251, 191, 36, 0.25)",
+                fontSize: 13,
+                color: "rgba(251, 191, 36, 0.9)",
+                lineHeight: 1.5,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 8,
+              }}
+            >
               <span style={{ flexShrink: 0, fontSize: 14 }}>⚠️</span>
               <span>{businessSearchError}</span>
             </div>
           )}
 
           <div style={{ marginBottom: 12 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 500, color: "rgba(255, 255, 255, 0.35)", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontWeight: 500,
+                color: "rgba(255, 255, 255, 0.35)",
+                marginBottom: 5,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+              }}
+            >
               Business Name
             </label>
             <input
@@ -598,8 +671,21 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
           </div>
 
           <div style={{ marginBottom: 14 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 500, color: "rgba(255, 255, 255, 0.35)", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              Street Address or City <span style={{ opacity: 0.6, fontWeight: 400, textTransform: "none" }}>(optional)</span>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontWeight: 500,
+                color: "rgba(255, 255, 255, 0.35)",
+                marginBottom: 5,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Street Address or City{" "}
+              <span style={{ opacity: 0.6, fontWeight: 400, textTransform: "none" }}>
+                (optional)
+              </span>
             </label>
             <input
               type="text"
@@ -641,7 +727,8 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 isResolvingBusiness || !businessValue.trim()
                   ? "rgba(255, 255, 255, 0.04)"
                   : "#3ECF8E",
-              color: isResolvingBusiness || !businessValue.trim() ? "rgba(232, 235, 243, 0.25)" : "#000",
+              color:
+                isResolvingBusiness || !businessValue.trim() ? "rgba(232, 235, 243, 0.25)" : "#000",
               fontSize: 14,
               fontWeight: 600,
               cursor: isResolvingBusiness || !businessValue.trim() ? "not-allowed" : "pointer",
@@ -705,7 +792,10 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "#3ECF8E" }}>
-                  Industry detected: {state.industry ? state.industry.replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : ""}
+                  Industry detected:{" "}
+                  {state.industry
+                    ? state.industry.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+                    : ""}
                 </div>
                 <div style={{ fontSize: 12, color: "rgba(232, 235, 243, 0.6)", marginTop: 2 }}>
                   We'll skip straight to your load profile
@@ -728,7 +818,14 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                 <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(232, 235, 243, 0.92)" }}>
                   What are your energy goals?
                 </div>
-                <div style={{ fontSize: 12, color: "rgba(232, 235, 243, 0.55)", marginTop: 3, lineHeight: 1.4 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "rgba(232, 235, 243, 0.55)",
+                    marginTop: 3,
+                    lineHeight: 1.4,
+                  }}
+                >
                   Reduce bills, backup power, EV charging — helps Merlin size your system
                 </div>
               </div>
@@ -748,10 +845,10 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
                   transition: "opacity 0.15s",
                   flexShrink: 0,
                 }}
-                onMouseEnter={e => {
+                onMouseEnter={(e) => {
                   e.currentTarget.style.opacity = "0.9";
                 }}
-                onMouseLeave={e => {
+                onMouseLeave={(e) => {
                   e.currentTarget.style.opacity = "1";
                 }}
               >
@@ -819,10 +916,7 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
       />
 
       {/* TrueQuote™ explainer modal */}
-      <TrueQuoteModal
-        isOpen={showTrueQuoteModal}
-        onClose={() => setShowTrueQuoteModal(false)}
-      />
+      <TrueQuoteModal isOpen={showTrueQuoteModal} onClose={() => setShowTrueQuoteModal(false)} />
     </div>
   );
 }
