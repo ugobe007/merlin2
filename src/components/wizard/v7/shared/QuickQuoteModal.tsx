@@ -199,6 +199,10 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
               </div>
               <button 
                 type="button"
+                onClick={() => {
+                  onClose();
+                  window.location.href = '/quote-builder?advanced=true&mode=upload';
+                }}
                 className="px-4 py-2 border-2 border-purple-400/50 text-purple-300 hover:border-purple-400 hover:text-purple-200 font-semibold rounded-lg transition-all text-sm"
               >
                 Upload Files

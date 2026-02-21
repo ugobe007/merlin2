@@ -118,7 +118,7 @@ interface AdvancedQuoteBuilderProps {
   initialView?: ViewMode;
 }
 
-type ViewMode = "landing" | "custom-config" | "interactive-dashboard" | "professional-model";
+type ViewMode = "landing" | "custom-config" | "interactive-dashboard" | "professional-model" | "upload";
 
 export default function AdvancedQuoteBuilder({
   show,
@@ -485,11 +485,17 @@ export default function AdvancedQuoteBuilder({
   // Reset to initialView when modal opens AND load wizard config if needed
   useEffect(() => {
     if (show) {
-      setViewMode(initialView);
+      // If upload mode, redirect to custom-config with upload section open
+      if (initialView === "upload") {
+        setViewMode("custom-config");
+        setShowUploadSection(true);
+      } else {
+        setViewMode(initialView);
+      }
       window.scrollTo(0, 0);
 
       // Load wizard config immediately if we're going to custom-config view
-      if (initialView === "custom-config") {
+      if (initialView === "custom-config" || initialView === "upload") {
         // Small delay to ensure state is set
         setTimeout(() => {
           loadWizardConfig();
