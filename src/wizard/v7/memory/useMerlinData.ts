@@ -33,7 +33,7 @@
 import { useMemo } from "react";
 import { useMerlinMemory } from "./useMerlinMemory";
 import { merlinMemory } from "./merlinMemory";
-import type { TrueQuoteReport } from "./truequoteValidator";
+import type { TrueQuoteReport } from "./memoryTypes";
 
 // ============================================================================
 // TYPES

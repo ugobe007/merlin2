@@ -42,45 +42,11 @@ import type {
   MemorySolar,
   MemoryFinancials,
   MemorySession,
-} from "./merlinMemory";
-
-// ============================================================================
-// VIOLATION TYPES
-// ============================================================================
-
-export type ViolationSeverity = "error" | "warning" | "info";
-
-export type ViolationCategory =
-  | "integrity"     // Missing/malformed data
-  | "range"         // Value outside SSOT bounds
-  | "consistency"   // Cross-slot mismatch
-  | "compliance"    // Pricing/margin policy violation
-  | "checksum";     // Tamper detection
-
-export interface TrueQuoteViolation {
-  id: string;                    // Unique violation ID (e.g., "LOC-001")
-  slot: MemorySlotKey;           // Which memory slot
-  field: string;                 // Which field (dot-notated)
-  severity: ViolationSeverity;
-  category: ViolationCategory;
-  message: string;               // Human-readable description
-  expected?: string;             // What was expected
-  actual?: string;               // What was found
-  source?: string;               // SSOT source (e.g., "NREL ATB 2024")
-}
-
-export interface TrueQuoteReport {
-  timestamp: number;
-  sessionId: string;
-  checksum: string;              // SHA-like hash of memory state
-  slotsFilled: MemorySlotKey[];
-  slotsEmpty: MemorySlotKey[];
-  violations: TrueQuoteViolation[];
-  errorCount: number;
-  warningCount: number;
-  isCompliant: boolean;          // true if 0 errors
-  isTrueQuoteReady: boolean;     // true if 0 errors + profile + quote present
-}
+  TrueQuoteViolation,
+  TrueQuoteReport,
+  ViolationSeverity,
+  ViolationCategory,
+} from "./memoryTypes";
 
 // ============================================================================
 // SSOT BOUNDS (from authoritative sources)
