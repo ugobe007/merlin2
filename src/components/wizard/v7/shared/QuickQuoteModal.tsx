@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from "react";
-import { X, ArrowRight, Sparkles, Shield } from "lucide-react";
+import { X, ArrowRight, Sparkles } from "lucide-react";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 
 interface QuickQuoteModalProps {
@@ -50,24 +50,21 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
           <div className="flex items-center gap-4">
-            {/* ProQuote Badge - Shield + Badge */}
+            {/* Official ProQuote Badge */}
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#3ECF8E]/20 via-[#68BFFA]/20 to-purple-500/20 rounded-xl blur-lg"></div>
-              <div className="relative w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/20 via-blue-500/20 to-slate-800/40 border-2 border-[#3ECF8E]/40 flex items-center justify-center">
-                <Shield className="w-7 h-7 text-[#68BFFA] stroke-[2.5]" />
-                <img 
-                  src={badgeProQuoteIcon} 
-                  alt="ProQuote" 
-                  className="absolute w-6 h-6 object-contain bottom-0 right-0 transform translate-x-1 translate-y-1"
-                />
-              </div>
+              <div className="absolute inset-0 bg-[#68BFFA]/30 rounded-xl blur-xl"></div>
+              <img 
+                src={badgeProQuoteIcon} 
+                alt="ProQuote" 
+                className="relative w-16 h-16 object-contain"
+              />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-[#3ECF8E] via-[#68BFFA] to-purple-400 bg-clip-text text-transparent">
+                <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#68BFFA] to-cyan-300" style={{ WebkitTextStroke: '1px rgba(104, 191, 250, 0.5)', textShadow: '0 0 20px rgba(104, 191, 250, 0.6), 0 0 40px rgba(104, 191, 250, 0.3)' }}>
                   ProQuote™
                 </h2>
-                <span className="px-2 py-0.5 text-[10px] font-bold border border-purple-400/50 text-purple-300 rounded">
+                <span className="px-2 py-0.5 text-[10px] font-bold border border-[#68BFFA]/50 text-[#68BFFA] rounded" style={{ textShadow: '0 0 10px rgba(104, 191, 250, 0.5)' }}>
                   PRO
                 </span>
               </div>
@@ -85,7 +82,7 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
         </div>
 
         {/* Form - Scrollable Content */}
-        <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-200px)] scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {/* System Size */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
