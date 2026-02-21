@@ -30,7 +30,7 @@ import {
   normalizeFieldType as normalizeFieldTypeUtil,
   chooseRendererForQuestion,
 } from "./Step3RendererLogic";
-import { devLog, devWarn, devError } from '@/wizard/v7/debug/devLog';
+import { devLog, devWarn, devError } from "@/wizard/v7/debug/devLog";
 
 // Industry images (same as original)
 import hotelImg from "@/assets/images/hotel_motel_holidayinn_1.jpg";
@@ -530,10 +530,14 @@ export default function Step3ProfileV7Curated(props: Props) {
             </div>
 
             {/* Title */}
-            <div className="text-sm lg:text-base font-bold text-slate-100 tracking-tight">{label}</div>
+            <div className="text-sm lg:text-base font-bold text-slate-100 tracking-tight">
+              {label}
+            </div>
 
             {/* Subtitle */}
-            {q.subtitle && <div className="text-xs lg:text-sm text-slate-400 mt-1">{q.subtitle}</div>}
+            {q.subtitle && (
+              <div className="text-xs lg:text-sm text-slate-400 mt-1">{q.subtitle}</div>
+            )}
           </div>
         </div>
 
@@ -552,7 +556,9 @@ export default function Step3ProfileV7Curated(props: Props) {
               <Sparkles className="w-3.5 h-3.5 text-[#3ECF8E]" />
             </div>
             <div>
-              <div className="font-semibold text-slate-300 text-xs lg:text-sm mb-0.5">Merlin's Tip</div>
+              <div className="font-semibold text-slate-300 text-xs lg:text-sm mb-0.5">
+                Merlin's Tip
+              </div>
               <p className="text-xs lg:text-sm text-slate-400 leading-relaxed">{q.merlinTip}</p>
             </div>
           </div>
@@ -629,7 +635,9 @@ export default function Step3ProfileV7Curated(props: Props) {
                     )}
                     <div className="text-sm lg:text-base font-medium">{opt.icon || opt.label}</div>
                     {opt.description && (
-                      <div className="text-[10px] lg:text-xs text-slate-500 mt-0.5">{opt.description}</div>
+                      <div className="text-[10px] lg:text-xs text-slate-500 mt-0.5">
+                        {opt.description}
+                      </div>
                     )}
                   </button>
                 );
@@ -1181,7 +1189,8 @@ export default function Step3ProfileV7Curated(props: Props) {
               marginBottom: 16,
               padding: "16px 20px",
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.08))",
+              background:
+                "linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.08))",
               border: "1px solid rgba(139, 92, 246, 0.2)",
             }}
           >
@@ -1225,9 +1234,10 @@ export default function Step3ProfileV7Curated(props: Props) {
                     color: "rgba(255, 255, 255, 0.70)",
                   }}
                 >
-                  We've pre-filled answers with industry standard values to help you get started quickly.
-                  Please review and adjust any fields to match your specific requirements — every facility is unique.
-                  Once you're satisfied, continue to see your custom quote.
+                  We've pre-filled answers with industry standard values to help you get started
+                  quickly. Please review and adjust any fields to match your specific requirements —
+                  every facility is unique. Once you're satisfied, continue to see your custom
+                  quote.
                 </div>
               </div>
             </div>
@@ -1310,7 +1320,9 @@ export default function Step3ProfileV7Curated(props: Props) {
                       {group.label}
                     </h3>
                     {group.description && (
-                      <p className="text-xs lg:text-sm text-slate-400 mt-0.5">{group.description}</p>
+                      <p className="text-xs lg:text-sm text-slate-400 mt-0.5">
+                        {group.description}
+                      </p>
                     )}
                   </div>
 
@@ -1429,7 +1441,7 @@ export default function Step3ProfileV7Curated(props: Props) {
                         void actions.submitStep3();
                       }
                     }}
-                    className="px-5 py-2.5 rounded-lg font-semibold text-sm bg-[#3ECF8E] text-[#0D0D0D] transition-all hover:bg-[#3ECF8E]/90"
+                    className="px-5 py-2.5 rounded-lg font-semibold text-sm border-2 border-[#3ECF8E] text-[#3ECF8E] hover:bg-[#3ECF8E]/10 transition-all"
                   >
                     Looks good — Continue →
                   </button>
@@ -1464,8 +1476,8 @@ export default function Step3ProfileV7Curated(props: Props) {
               px-6 py-3 rounded-lg font-semibold text-base transition-all
               ${
                 isComplete && state.pricingStatus !== "pending"
-                  ? "bg-[#3ECF8E] text-[#0D0D0D] cursor-pointer hover:bg-[#3ECF8E]/90"
-                  : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                  ? "border-2 border-[#3ECF8E] text-[#3ECF8E] cursor-pointer hover:bg-[#3ECF8E]/10"
+                  : "border-2 border-slate-700 text-slate-500 cursor-not-allowed"
               }
             `}
           >
