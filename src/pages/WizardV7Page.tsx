@@ -429,10 +429,8 @@ function WizardV7Page() {
 
     // ✅ CRITICAL FIX (Feb 10, 2026): Use effectiveIndustry from template (retail → hotel mapping)
     const effectiveIndustry =
-      // @ts-expect-error - Template structure may include effectiveIndustry
-      state.step3Template?.effectiveIndustry ||
-      // @ts-expect-error - Template structure may include selectedIndustry
-      state.step3Template?.selectedIndustry ||
+      (state.step3Template as { effectiveIndustry?: string })?.effectiveIndustry ||
+      (state.step3Template as { selectedIndustry?: string })?.selectedIndustry ||
       state.industry ||
       "other";
 

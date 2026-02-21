@@ -34,6 +34,9 @@ import {
   CheckCircle,
   ChevronDown,
   ShieldCheck,
+  Clock,
+  CheckCircle2,
+  FileEdit,
 } from "lucide-react";
 // InteractiveConfigDashboard moved to legacy - feature disabled for V5 cleanup
 import {
@@ -61,7 +64,9 @@ import { DocumentUploadZone } from "./upload/DocumentUploadZone";
 import type { ExtractedSpecsData } from "@/services/openAIExtractionService";
 import type { ParsedDocument } from "@/services/documentParserService";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
-import ProQuoteFinancialModal, { type ProQuoteFinancialData } from "@/components/shared/ProQuoteFinancialModal";
+import ProQuoteFinancialModal, {
+  type ProQuoteFinancialData,
+} from "@/components/shared/ProQuoteFinancialModal";
 // ProQuoteRunningCalculator removed — replaced by inline cost summary strip
 import { ProjectInfoForm } from "./ProjectInfoForm";
 import { supabase } from "../services/supabaseClient";
@@ -118,7 +123,13 @@ interface AdvancedQuoteBuilderProps {
   initialView?: ViewMode;
 }
 
-type ViewMode = "landing" | "custom-config" | "interactive-dashboard" | "professional-model" | "upload";
+type ViewMode =
+  | "landing"
+  | "custom-config"
+  | "interactive-dashboard"
+  | "professional-model"
+  | "upload"
+  | "upload-first"; // Added upload-first for dedicated upload landing (Feb 2026)
 
 export default function AdvancedQuoteBuilder({
   show,
@@ -184,6 +195,9 @@ export default function AdvancedQuoteBuilder({
   const [extractedData, setExtractedData] = useState<ExtractedSpecsData | null>(null);
   const [_uploadedDocuments, __setUploadedDocuments] = useState<ParsedDocument[]>([]);
   const [showUploadSection, setShowUploadSection] = useState(true);
+  const [showExtractionSuccessModal, setShowExtractionSuccessModal] = useState(false);
+  const [pendingExtractedData, setPendingExtractedData] = useState<ExtractedSpecsData | null>(null);
+  const [showDataReview, setShowDataReview] = useState(false);
 
   // Extended configuration state
   const [projectName, setProjectName] = useState("");
@@ -229,12 +243,16 @@ export default function AdvancedQuoteBuilder({
   const [solarPanelType, setSolarPanelType] = useState("monocrystalline");
   const [solarPanelEfficiency, setSolarPanelEfficiency] = useState(21);
   const [solarInverterType, setSolarInverterType] = useState("string");
-  const [solarInstallType, setSolarInstallType] = useState<'rooftop' | 'canopy' | 'ground-mount' | 'mixed'>('rooftop');
+  const [solarInstallType, setSolarInstallType] = useState<
+    "rooftop" | "canopy" | "ground-mount" | "mixed"
+  >("rooftop");
   const [solarRoofSpaceSqFt, setSolarRoofSpaceSqFt] = useState(10000);
   const [solarCanopySqFt, setSolarCanopySqFt] = useState(5000);
   const [solarGroundAcres, setSolarGroundAcres] = useState(2);
   const [solarPeakSunHours, setSolarPeakSunHours] = useState(5);
-  const [solarTrackingType, setSolarTrackingType] = useState<'fixed' | 'single-axis' | 'dual-axis'>('fixed');
+  const [solarTrackingType, setSolarTrackingType] = useState<"fixed" | "single-axis" | "dual-axis">(
+    "fixed"
+  );
   // Wind - expanded configuration
   const [windTurbineIncluded, setWindTurbineIncluded] = useState(true);
   const [windCapacityKW, setWindCapacityKW] = useState(500);
@@ -242,7 +260,9 @@ export default function AdvancedQuoteBuilder({
   const [windClassRating, setWindClassRating] = useState(3);
   const [windTurbineCount, setWindTurbineCount] = useState(1);
   const [windHubHeight, setWindHubHeight] = useState(80);
-  const [windTerrain, setWindTerrain] = useState<'open' | 'suburban' | 'coastal' | 'complex'>('open');
+  const [windTerrain, setWindTerrain] = useState<"open" | "suburban" | "coastal" | "complex">(
+    "open"
+  );
   // Fuel Cell
   const [fuelCellIncluded, setFuelCellIncluded] = useState(true);
   const [fuelCellCapacityKW, setFuelCellCapacityKW] = useState(250);
@@ -251,8 +271,10 @@ export default function AdvancedQuoteBuilder({
   // Generator - unified (replaces separate diesel/natgas)
   const [generatorIncluded, setGeneratorIncluded] = useState(true);
   const [generatorCapacityKW, setGeneratorCapacityKW] = useState(500);
-  const [generatorFuelTypeSelected, setGeneratorFuelTypeSelected] = useState<'natural-gas' | 'diesel' | 'dual-fuel' | 'linear'>('natural-gas');
-  const [generatorUseCases, setGeneratorUseCases] = useState<string[]>(['backup']);
+  const [generatorFuelTypeSelected, setGeneratorFuelTypeSelected] = useState<
+    "natural-gas" | "diesel" | "dual-fuel" | "linear"
+  >("natural-gas");
+  const [generatorUseCases, setGeneratorUseCases] = useState<string[]>(["backup"]);
   const [generatorRedundancy, setGeneratorRedundancy] = useState(false);
   const [generatorSpaceAvailable, setGeneratorSpaceAvailable] = useState(true);
   // EV Chargers (NEW)
@@ -301,9 +323,10 @@ export default function AdvancedQuoteBuilder({
         const fuelCellMWFromConfig = fuelCellIncluded ? fuelCellCapacityKW / 1000 : 0;
 
         // Determine generator fuel type from unified selector
-        const generatorFuelTypeForQuote = generatorFuelTypeSelected === 'linear'
-          ? ("natural-gas" as const)
-          : (generatorFuelTypeSelected as "diesel" | "natural-gas" | "dual-fuel");
+        const generatorFuelTypeForQuote =
+          generatorFuelTypeSelected === "linear"
+            ? ("natural-gas" as const)
+            : (generatorFuelTypeSelected as "diesel" | "natural-gas" | "dual-fuel");
 
         // Map fuelType state to FuelCellType for SSOT
         const fuelCellTypeForQuote =
@@ -485,9 +508,9 @@ export default function AdvancedQuoteBuilder({
   // Reset to initialView when modal opens AND load wizard config if needed
   useEffect(() => {
     if (show) {
-      // If upload mode, redirect to custom-config with upload section open
+      // If upload mode, show dedicated upload-first view
       if (initialView === "upload") {
-        setViewMode("custom-config");
+        setViewMode("upload-first");
         setShowUploadSection(true);
       } else {
         setViewMode(initialView);
@@ -521,9 +544,20 @@ export default function AdvancedQuoteBuilder({
         console.log("📄 [AdvancedQuoteBuilder] Extraction complete:", data);
       }
 
+      // Store pending data and show success modal
+      setPendingExtractedData(data);
       setExtractedData(data);
       __setUploadedDocuments(documents);
+      setShowExtractionSuccessModal(true);
 
+      // Don't auto-apply data yet - let user review first
+    },
+    []
+  );
+
+  // Apply extracted data to form (called after user reviews and confirms)
+  const applyExtractedData = useCallback(
+    (data: ExtractedSpecsData) => {
       // Pre-populate form fields from extracted data
       if (data.location?.state) {
         setLocation(data.location.state);
@@ -557,8 +591,11 @@ export default function AdvancedQuoteBuilder({
         setGeneratorMW(data.existingInfrastructure.generatorKW / 1000);
       }
 
-      // Collapse upload section after successful extraction
+      // Close modals and show config page
+      setShowExtractionSuccessModal(false);
+      setShowDataReview(false);
       setShowUploadSection(false);
+      setViewMode("custom-config");
     },
     [onStorageSizeChange]
   );
@@ -707,9 +744,10 @@ export default function AdvancedQuoteBuilder({
           solarMW: solarPVIncluded ? solarCapacityKW / 1000 : 0,
           windMW: windTurbineIncluded ? windCapacityKW / 1000 : 0,
           generatorMW: generatorIncluded ? generatorCapacityKW / 1000 : 0,
-          generatorFuelType: generatorFuelTypeSelected === 'linear'
-            ? "natural-gas"
-            : (generatorFuelTypeSelected as "diesel" | "natural-gas" | "dual-fuel"),
+          generatorFuelType:
+            generatorFuelTypeSelected === "linear"
+              ? "natural-gas"
+              : (generatorFuelTypeSelected as "diesel" | "natural-gas" | "dual-fuel"),
           fuelCellMW: fuelCellIncluded ? fuelCellCapacityKW / 1000 : 0,
           fuelCellType:
             fuelType === "natural-gas"
@@ -843,7 +881,10 @@ export default function AdvancedQuoteBuilder({
                       "Inverter Type:",
                       inverterType === "bidirectional" ? "Bidirectional" : "Unidirectional",
                     ],
-                    ["Number of Inverters:", `${numberOfInverters} units @ ${inverterRating} kW each`],
+                    [
+                      "Number of Inverters:",
+                      `${numberOfInverters} units @ ${inverterRating} kW each`,
+                    ],
                   ],
                   40
                 ),
@@ -962,35 +1003,46 @@ export default function AdvancedQuoteBuilder({
     <div
       className="flex items-start gap-2.5 rounded-lg px-3.5 py-2.5 mt-3 transition-all hover:brightness-110"
       style={{
-        background: 'linear-gradient(135deg, rgba(52,211,153,0.06) 0%, rgba(59,130,246,0.06) 100%)',
-        border: '1px solid rgba(52,211,153,0.12)',
+        background: "linear-gradient(135deg, rgba(52,211,153,0.06) 0%, rgba(59,130,246,0.06) 100%)",
+        border: "1px solid rgba(52,211,153,0.12)",
       }}
     >
       <img
         src={merlinImage}
         alt="Merlin"
         className="w-6 h-6 rounded-full shrink-0 mt-0.5"
-        style={{ border: '1.5px solid rgba(52,211,153,0.3)', boxShadow: '0 0 8px rgba(52,211,153,0.15)' }}
+        style={{
+          border: "1.5px solid rgba(52,211,153,0.3)",
+          boxShadow: "0 0 8px rgba(52,211,153,0.15)",
+        }}
       />
       <div className="min-w-0">
-        <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
-          <span className="font-bold text-emerald-400/80">Merlin says:</span>{' '}{tip}
+        <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
+          <span className="font-bold text-emerald-400/80">Merlin says:</span> {tip}
         </p>
         {context && (
-          <p className="text-[10px] mt-0.5 italic" style={{ color: 'rgba(255,255,255,0.3)' }}>{context}</p>
+          <p className="text-[10px] mt-0.5 italic" style={{ color: "rgba(255,255,255,0.3)" }}>
+            {context}
+          </p>
         )}
       </div>
     </div>
   );
 
   return (
-    <div className="fixed inset-0 z-[70] overflow-y-auto" style={{ background: '#0f1117' }}>
+    <div className="fixed inset-0 z-[70] overflow-y-auto" style={{ background: "#0f1117" }}>
       <div className="min-h-screen text-gray-100">
         {/* LANDING PAGE VIEW */}
         {viewMode === "landing" && (
           <>
             {/* Premium header - sleek dark with emerald accent line */}
-            <div className="sticky top-0 z-10 backdrop-blur-xl" style={{ background: 'rgba(15, 17, 23, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div
+              className="sticky top-0 z-10 backdrop-blur-xl"
+              style={{
+                background: "rgba(15, 17, 23, 0.95)",
+                borderBottom: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
               <div className="max-w-7xl mx-auto px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -1003,10 +1055,8 @@ export default function AdvancedQuoteBuilder({
                       }}
                     />
                     <div>
-                      <h1 className="text-2xl font-bold text-white">
-                        ProQuote
-                      </h1>
-                      <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      <h1 className="text-2xl font-bold text-white">ProQuote</h1>
+                      <p className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>
                         Professional-grade BESS configuration
                       </p>
                     </div>
@@ -1017,9 +1067,16 @@ export default function AdvancedQuoteBuilder({
                     <button
                       onClick={() => setShowHowItWorks(true)}
                       className="group flex items-center gap-2 rounded-full px-4 py-2 transition-all duration-200 hover:scale-105"
-                      style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                      style={{
+                        background: "transparent",
+                        border: "1px solid rgba(255,255,255,0.15)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
                     >
                       <Sparkles className="w-4 h-4 text-emerald-400" />
                       <span className="text-xs font-semibold text-slate-200">How It Works</span>
@@ -1041,9 +1098,16 @@ export default function AdvancedQuoteBuilder({
                         }, 300);
                       }}
                       className="group flex items-center gap-2 rounded-full px-4 py-2 transition-all duration-200 hover:scale-105"
-                      style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.25)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)'; }}
+                      style={{
+                        background: "rgba(59, 130, 246, 0.15)",
+                        border: "1px solid rgba(59, 130, 246, 0.3)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(59, 130, 246, 0.25)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "rgba(59, 130, 246, 0.15)";
+                      }}
                     >
                       <Zap className="w-4 h-4 text-blue-400" />
                       <span className="text-xs font-semibold text-white">Electrical</span>
@@ -1065,9 +1129,16 @@ export default function AdvancedQuoteBuilder({
                         }, 300);
                       }}
                       className="group flex items-center gap-2 rounded-full px-4 py-2 transition-all duration-200 hover:scale-105"
-                      style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(34, 197, 94, 0.25)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(34, 197, 94, 0.15)'; }}
+                      style={{
+                        background: "rgba(34, 197, 94, 0.15)",
+                        border: "1px solid rgba(34, 197, 94, 0.3)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(34, 197, 94, 0.25)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "rgba(34, 197, 94, 0.15)";
+                      }}
                     >
                       <Sparkles className="w-4 h-4 text-emerald-400" />
                       <span className="text-xs font-semibold text-white">Renewables</span>
@@ -1086,9 +1157,16 @@ export default function AdvancedQuoteBuilder({
                         }, 300);
                       }}
                       className="group flex items-center gap-2 rounded-full px-4 py-2 transition-all duration-200 hover:scale-105"
-                      style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(16, 185, 129, 0.25)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'; }}
+                      style={{
+                        background: "rgba(16, 185, 129, 0.15)",
+                        border: "1px solid rgba(16, 185, 129, 0.3)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(16, 185, 129, 0.25)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "rgba(16, 185, 129, 0.15)";
+                      }}
                     >
                       <Calculator className="w-4 h-4 text-emerald-400" />
                       <span className="text-xs font-semibold text-white">Financial</span>
@@ -1098,7 +1176,7 @@ export default function AdvancedQuoteBuilder({
                   <button
                     onClick={onClose}
                     className="p-2.5 hover:bg-white/10 rounded-full transition-all text-white/60 hover:text-white"
-                    style={{ border: '1px solid rgba(255,255,255,0.15)' }}
+                    style={{ border: "1px solid rgba(255,255,255,0.15)" }}
                     aria-label="Close"
                   >
                     <X className="w-5 h-5" />
@@ -1110,39 +1188,95 @@ export default function AdvancedQuoteBuilder({
             {/* BESS Market Pricing Intelligence - Clean horizontal strip */}
             <div className="max-w-7xl mx-auto px-6 pt-6 pb-4">
               <div className="flex flex-wrap items-center justify-center gap-3">
-                <div className="flex items-center gap-2 px-4 py-2" style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: 20 }}>
-                  <TrendingUp className="w-4 h-4" style={{ color: '#34d399' }} />
-                  <span className="text-sm font-semibold" style={{ color: '#34d399' }}>Market Pricing</span>
+                <div
+                  className="flex items-center gap-2 px-4 py-2"
+                  style={{
+                    background: "rgba(16, 185, 129, 0.08)",
+                    border: "1px solid rgba(16, 185, 129, 0.2)",
+                    borderRadius: 20,
+                  }}
+                >
+                  <TrendingUp className="w-4 h-4" style={{ color: "#34d399" }} />
+                  <span className="text-sm font-semibold" style={{ color: "#34d399" }}>
+                    Market Pricing
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2" style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: 20 }}>
+                <div
+                  className="flex items-center gap-2 px-4 py-2"
+                  style={{
+                    background: "rgba(59, 130, 246, 0.08)",
+                    border: "1px solid rgba(59, 130, 246, 0.2)",
+                    borderRadius: 20,
+                  }}
+                >
                   <Battery className="w-4 h-4 text-blue-400" />
                   <span className="text-sm font-bold text-white">$200/kWh</span>
-                  <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>≤2 MWh</span>
+                  <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    ≤2 MWh
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2" style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.2)', borderRadius: 20 }}>
+                <div
+                  className="flex items-center gap-2 px-4 py-2"
+                  style={{
+                    background: "rgba(20, 184, 166, 0.08)",
+                    border: "1px solid rgba(20, 184, 166, 0.2)",
+                    borderRadius: 20,
+                  }}
+                >
                   <Battery className="w-4 h-4 text-teal-400" />
                   <span className="text-sm font-bold text-white">$155/kWh</span>
-                  <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>2–15 MWh</span>
+                  <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    2–15 MWh
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2" style={{ background: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.2)', borderRadius: 20 }}>
+                <div
+                  className="flex items-center gap-2 px-4 py-2"
+                  style={{
+                    background: "rgba(34, 197, 94, 0.08)",
+                    border: "1px solid rgba(34, 197, 94, 0.2)",
+                    borderRadius: 20,
+                  }}
+                >
                   <Battery className="w-4 h-4 text-emerald-400" />
                   <span className="text-sm font-bold text-white">$140/kWh</span>
-                  <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>15+ MWh</span>
+                  <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    15+ MWh
+                  </span>
                 </div>
-                <div className="px-3 py-2" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20 }}>
-                  <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>Q4 2025</span>
+                <div
+                  className="px-3 py-2"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 20,
+                  }}
+                >
+                  <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    Q4 2025
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* System Configuration Hero Panel - START HERE */}
             <div className="max-w-7xl mx-auto px-6 pb-6">
-              <div className="group w-full relative rounded-xl p-10 md:p-14 text-left transition-all duration-300 overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-
+              <div
+                className="group w-full relative rounded-xl p-10 md:p-14 text-left transition-all duration-300 overflow-hidden"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
                 <div className="relative flex flex-col md:flex-row items-center gap-10 md:gap-12">
                   {/* Merlin on the left */}
                   <div className="flex-shrink-0">
-                    <div className="w-40 h-40 md:w-44 md:h-44 rounded-2xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div
+                      className="w-40 h-40 md:w-44 md:h-44 rounded-2xl p-3"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
                       <img
                         src={merlinImage}
                         alt="Merlin"
@@ -1154,35 +1288,64 @@ export default function AdvancedQuoteBuilder({
                   {/* Content on the right */}
                   <div className="flex-1">
                     {/* START HERE badge */}
-                    <span className="inline-block px-3 py-1 text-xs font-semibold rounded-md mb-5" style={{ background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.2)' }}>
+                    <span
+                      className="inline-block px-3 py-1 text-xs font-semibold rounded-md mb-5"
+                      style={{
+                        background: "rgba(16,185,129,0.1)",
+                        color: "#34d399",
+                        border: "1px solid rgba(16,185,129,0.2)",
+                      }}
+                    >
                       START HERE
                     </span>
 
                     <h3 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
                       System Configuration
                     </h3>
-                    <p className="text-lg md:text-xl leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                      Design your complete BESS system with professional-grade tools.
-                      Configure electrical specifications, renewable energy integration,
-                      and all system parameters in one place.
+                    <p
+                      className="text-lg md:text-xl leading-relaxed mb-8"
+                      style={{ color: "rgba(255,255,255,0.6)" }}
+                    >
+                      Design your complete BESS system with professional-grade tools. Configure
+                      electrical specifications, renewable energy integration, and all system
+                      parameters in one place.
                     </p>
 
                     {/* Feature highlights */}
                     <div className="grid md:grid-cols-2 gap-4 mb-8">
-                      <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <Sparkles className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#34d399' }} />
+                      <div
+                        className="flex items-start gap-3 p-4 rounded-xl"
+                        style={{
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        <Sparkles
+                          className="w-5 h-5 flex-shrink-0 mt-0.5"
+                          style={{ color: "#34d399" }}
+                        />
                         <div>
                           <p className="font-semibold text-white mb-1">Professional Tools</p>
-                          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                            Advanced configuration, detailed electrical specs, and real-time calculations
+                          <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+                            Advanced configuration, detailed electrical specs, and real-time
+                            calculations
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <Zap className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#4ade80' }} />
+                      <div
+                        className="flex items-start gap-3 p-4 rounded-xl"
+                        style={{
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        <Zap
+                          className="w-5 h-5 flex-shrink-0 mt-0.5"
+                          style={{ color: "#4ade80" }}
+                        />
                         <div>
                           <p className="font-semibold text-white mb-1">Save Time & Money</p>
-                          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                          <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
                             Instant feedback and market intelligence to optimize your design
                           </p>
                         </div>
@@ -1201,9 +1364,17 @@ export default function AdvancedQuoteBuilder({
                           }
                         }}
                         className="group/btn w-full md:w-auto px-8 py-3.5 font-semibold text-base rounded-lg flex items-center justify-center gap-3 transition-all duration-200"
-                        style={{ background: 'transparent', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(16,185,129,0.08)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                        style={{
+                          background: "transparent",
+                          color: "#34d399",
+                          border: "1px solid rgba(16,185,129,0.35)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "rgba(16,185,129,0.08)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                        }}
                       >
                         <Sliders className="w-5 h-5" />
                         <span>Launch Configuration Tool</span>
@@ -1214,13 +1385,30 @@ export default function AdvancedQuoteBuilder({
                       <a
                         href="/vendor"
                         className="group/vnd w-full md:w-auto px-5 py-3.5 rounded-lg flex items-center justify-center gap-2.5 text-sm font-semibold transition-all duration-200 no-underline"
-                        style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', color: '#60a5fa' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(59,130,246,0.16)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(59,130,246,0.08)'; }}
+                        style={{
+                          background: "rgba(59,130,246,0.08)",
+                          border: "1px solid rgba(59,130,246,0.25)",
+                          color: "#60a5fa",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "rgba(59,130,246,0.16)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "rgba(59,130,246,0.08)";
+                        }}
                       >
                         <Building2 className="w-4 h-4" />
                         <span>Vendor & EPC Portal</span>
-                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ background: 'rgba(59,130,246,0.12)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.2)' }}>NREL</span>
+                        <span
+                          className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                          style={{
+                            background: "rgba(59,130,246,0.12)",
+                            color: "#93c5fd",
+                            border: "1px solid rgba(59,130,246,0.2)",
+                          }}
+                        >
+                          NREL
+                        </span>
                         <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover/vnd:translate-x-0.5 transition-transform" />
                       </a>
                     </div>
@@ -1231,16 +1419,31 @@ export default function AdvancedQuoteBuilder({
 
             {/* Document Upload Section - Path A */}
             <div className="max-w-7xl mx-auto px-6 pb-8">
-              <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div
+                className="rounded-xl overflow-hidden"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
                 <div
                   className="flex items-center justify-between cursor-pointer p-6"
                   onClick={() => setShowUploadSection(!showUploadSection)}
                 >
                   <h3 className="text-lg font-semibold text-white flex items-center gap-3">
-                    <div className="p-2 rounded-lg" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+                    <div
+                      className="p-2 rounded-lg"
+                      style={{ background: "rgba(16, 185, 129, 0.1)" }}
+                    >
                       <FileText className="w-5 h-5 text-emerald-400" />
                     </div>
-                    Upload Existing Specs
+                    <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                      Smart Upload™
+                    </span>
+                    <span className="ml-2 px-3 py-1 bg-purple-500/10 text-purple-300 text-xs rounded-full border border-purple-400/30 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      Saves 10+ min
+                    </span>
                     {extractedData && (
                       <span className="ml-2 px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-400/30">
                         ✓ Data Extracted
@@ -1256,7 +1459,8 @@ export default function AdvancedQuoteBuilder({
                   <div className="px-6 pb-6">
                     <p className="text-gray-400 text-sm mb-4">
                       Have utility bills, equipment schedules, or load profiles? Upload them and let
-                      AI extract the data to pre-populate your quote.
+                      AI extract the data to pre-populate your quote.{" "}
+                      <span className="text-purple-400 font-medium">Saves 10+ minutes!</span>
                     </p>
                     <DocumentUploadZone
                       onExtractionComplete={handleExtractionComplete}
@@ -1319,8 +1523,14 @@ export default function AdvancedQuoteBuilder({
 
             {/* Welcome Popup Modal */}
             {showWelcomePopup && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(4, 8, 20, 0.8)', backdropFilter: 'blur(8px)' }}>
-                <div className="rounded-xl max-w-lg w-full overflow-hidden animate-fadeIn" style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                style={{ background: "rgba(4, 8, 20, 0.8)", backdropFilter: "blur(8px)" }}
+              >
+                <div
+                  className="rounded-xl max-w-lg w-full overflow-hidden animate-fadeIn"
+                  style={{ background: "#0f1117", border: "1px solid rgba(255,255,255,0.08)" }}
+                >
                   {/* Header with Merlin */}
                   <div className="p-8 pb-6 text-center relative">
                     <img
@@ -1328,48 +1538,76 @@ export default function AdvancedQuoteBuilder({
                       alt="Merlin"
                       className="w-20 h-20 mx-auto mb-4 drop-shadow-2xl"
                     />
-                    <h2 className="text-2xl font-bold text-white mb-1">
-                      Welcome to ProQuote
-                    </h2>
-                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    <h2 className="text-2xl font-bold text-white mb-1">Welcome to ProQuote</h2>
+                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
                       Professional-grade BESS configuration tools
                     </p>
                   </div>
 
                   {/* Tools explanation */}
                   <div className="px-6 pb-2 space-y-3">
-                    <div className="flex items-start gap-4 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
-                        <Sliders className="w-5 h-5" style={{ color: '#34d399' }} />
+                    <div
+                      className="flex items-start gap-4 p-4 rounded-xl"
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
+                      <div
+                        className="p-2.5 rounded-lg flex-shrink-0"
+                        style={{ background: "rgba(16, 185, 129, 0.1)" }}
+                      >
+                        <Sliders className="w-5 h-5" style={{ color: "#34d399" }} />
                       </div>
                       <div>
                         <h3 className="font-semibold text-white text-sm">System Configuration</h3>
-                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          Design your BESS system with detailed electrical specs, renewable integration, and all parameters.
+                        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+                          Design your BESS system with detailed electrical specs, renewable
+                          integration, and all parameters.
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-4 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
+                    <div
+                      className="flex items-start gap-4 p-4 rounded-xl"
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
+                      <div
+                        className="p-2.5 rounded-lg flex-shrink-0"
+                        style={{ background: "rgba(59, 130, 246, 0.1)" }}
+                      >
                         <Gauge className="w-5 h-5 text-blue-400" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-white text-sm">Interactive Dashboard</h3>
-                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          Fine-tune with real-time sliders. See instant cost and ROI updates as you adjust.
+                        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+                          Fine-tune with real-time sliders. See instant cost and ROI updates as you
+                          adjust.
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-4 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ background: 'rgba(34, 197, 94, 0.1)' }}>
+                    <div
+                      className="flex items-start gap-4 p-4 rounded-xl"
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
+                      <div
+                        className="p-2.5 rounded-lg flex-shrink-0"
+                        style={{ background: "rgba(34, 197, 94, 0.1)" }}
+                      >
                         <Landmark className="w-5 h-5 text-emerald-400" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-white text-sm">Bank-Ready Model</h3>
-                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          Generate 3-statement financial models for investors. Includes DSCR, IRR, and MACRS.
+                        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+                          Generate 3-statement financial models for investors. Includes DSCR, IRR,
+                          and MACRS.
                         </p>
                       </div>
                     </div>
@@ -1380,7 +1618,11 @@ export default function AdvancedQuoteBuilder({
                     <button
                       onClick={() => setShowWelcomePopup(false)}
                       className="w-full font-semibold py-3 px-6 rounded-lg transition-all"
-                      style={{ background: 'transparent', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)' }}
+                      style={{
+                        background: "transparent",
+                        color: "#34d399",
+                        border: "1px solid rgba(16,185,129,0.35)",
+                      }}
                     >
                       Let's Build a Quote →
                     </button>
@@ -1391,10 +1633,12 @@ export default function AdvancedQuoteBuilder({
 
             {/* Tool cards grid — Supabase dark design */}
             <div className="max-w-7xl mx-auto px-6 pt-8 pb-16">
-
               {/* ── Analysis & Reporting ── */}
               <div className="mb-10">
-                <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                <p
+                  className="text-xs font-bold uppercase tracking-wider mb-4"
+                  style={{ color: "rgba(255,255,255,0.35)" }}
+                >
                   Analysis &amp; Reporting
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1405,18 +1649,38 @@ export default function AdvancedQuoteBuilder({
                         key={tool.id}
                         onClick={tool.action}
                         className="group flex items-start gap-4 rounded-lg p-4 text-left transition-colors duration-150"
-                        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                        style={{
+                          background: "rgba(255,255,255,0.02)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                        }}
                       >
-                        <div className="p-2 rounded-md flex-shrink-0" style={{ background: 'rgba(59,130,246,0.08)' }}>
+                        <div
+                          className="p-2 rounded-md flex-shrink-0"
+                          style={{ background: "rgba(59,130,246,0.08)" }}
+                        >
                           <div className="text-blue-400 [&>svg]:w-5 [&>svg]:h-5">{tool.icon}</div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-semibold text-white mb-0.5">{tool.title}</h4>
-                          <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{tool.description}</p>
+                          <p
+                            className="text-xs leading-relaxed"
+                            style={{ color: "rgba(255,255,255,0.4)" }}
+                          >
+                            {tool.description}
+                          </p>
                         </div>
-                        <ArrowRight className="w-4 h-4 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all" style={{ color: 'rgba(255,255,255,0.4)' }} />
+                        <ArrowRight
+                          className="w-4 h-4 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all"
+                          style={{ color: "rgba(255,255,255,0.4)" }}
+                        />
                       </button>
                     ))}
                 </div>
@@ -1424,7 +1688,10 @@ export default function AdvancedQuoteBuilder({
 
               {/* ── Professional Tools ── */}
               <div className="mb-10">
-                <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                <p
+                  className="text-xs font-bold uppercase tracking-wider mb-4"
+                  style={{ color: "rgba(255,255,255,0.35)" }}
+                >
                   Professional Tools
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -1435,23 +1702,48 @@ export default function AdvancedQuoteBuilder({
                         key={tool.id}
                         onClick={tool.action}
                         className="group flex items-start gap-4 rounded-lg p-4 text-left transition-colors duration-150 relative"
-                        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                        style={{
+                          background: "rgba(255,255,255,0.02)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                        }}
                       >
                         {"badge" in tool && tool.badge && (
-                          <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399' }}>
+                          <span
+                            className="absolute top-2.5 right-2.5 text-[10px] font-bold px-1.5 py-0.5 rounded"
+                            style={{ background: "rgba(16,185,129,0.15)", color: "#34d399" }}
+                          >
                             {tool.badge}
                           </span>
                         )}
-                        <div className="p-2 rounded-md flex-shrink-0" style={{ background: 'rgba(16,185,129,0.08)' }}>
-                          <div style={{ color: '#34d399' }} className="[&>svg]:w-5 [&>svg]:h-5">{tool.icon}</div>
+                        <div
+                          className="p-2 rounded-md flex-shrink-0"
+                          style={{ background: "rgba(16,185,129,0.08)" }}
+                        >
+                          <div style={{ color: "#34d399" }} className="[&>svg]:w-5 [&>svg]:h-5">
+                            {tool.icon}
+                          </div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-semibold text-white mb-0.5">{tool.title}</h4>
-                          <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{tool.description}</p>
+                          <p
+                            className="text-xs leading-relaxed"
+                            style={{ color: "rgba(255,255,255,0.4)" }}
+                          >
+                            {tool.description}
+                          </p>
                         </div>
-                        <ArrowRight className="w-4 h-4 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all" style={{ color: '#34d399' }} />
+                        <ArrowRight
+                          className="w-4 h-4 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all"
+                          style={{ color: "#34d399" }}
+                        />
                       </button>
                     ))}
                 </div>
@@ -1459,7 +1751,10 @@ export default function AdvancedQuoteBuilder({
 
               {/* ── Premium ── */}
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                <p
+                  className="text-xs font-bold uppercase tracking-wider mb-4"
+                  style={{ color: "rgba(255,255,255,0.35)" }}
+                >
                   Premium
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -1472,28 +1767,69 @@ export default function AdvancedQuoteBuilder({
                           key={tool.id}
                           onClick={isLocked ? undefined : tool.action}
                           disabled={isLocked}
-                          className={`group flex items-start gap-4 rounded-lg p-4 text-left transition-colors duration-150 relative ${isLocked ? 'cursor-not-allowed' : ''}`}
-                          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', opacity: isLocked ? 0.55 : 1 }}
-                          onMouseEnter={(e) => { if (!isLocked) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; } }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
-                        >
-                          <div className="p-2 rounded-md flex-shrink-0" style={{ background: isLocked ? 'rgba(255,255,255,0.04)' : 'rgba(16,185,129,0.08)' }}>
-                            {isLocked
-                              ? <Lock className="w-5 h-5" style={{ color: 'rgba(255,255,255,0.25)' }} />
-                              : <div style={{ color: '#34d399' }} className="[&>svg]:w-5 [&>svg]:h-5">{tool.icon}</div>
+                          className={`group flex items-start gap-4 rounded-lg p-4 text-left transition-colors duration-150 relative ${isLocked ? "cursor-not-allowed" : ""}`}
+                          style={{
+                            background: "rgba(255,255,255,0.02)",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                            opacity: isLocked ? 0.55 : 1,
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isLocked) {
+                              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                              e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
                             }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                          }}
+                        >
+                          <div
+                            className="p-2 rounded-md flex-shrink-0"
+                            style={{
+                              background: isLocked
+                                ? "rgba(255,255,255,0.04)"
+                                : "rgba(16,185,129,0.08)",
+                            }}
+                          >
+                            {isLocked ? (
+                              <Lock
+                                className="w-5 h-5"
+                                style={{ color: "rgba(255,255,255,0.25)" }}
+                              />
+                            ) : (
+                              <div style={{ color: "#34d399" }} className="[&>svg]:w-5 [&>svg]:h-5">
+                                {tool.icon}
+                              </div>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-sm font-semibold text-white mb-0.5 flex items-center gap-2">
                               {tool.title}
                               {"comingSoon" in tool && tool.comingSoon && (
-                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.3)' }}>Soon</span>
+                                <span
+                                  className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                                  style={{
+                                    background: "rgba(255,255,255,0.06)",
+                                    color: "rgba(255,255,255,0.3)",
+                                  }}
+                                >
+                                  Soon
+                                </span>
                               )}
                             </h4>
-                            <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>{tool.description}</p>
+                            <p
+                              className="text-xs leading-relaxed"
+                              style={{ color: "rgba(255,255,255,0.35)" }}
+                            >
+                              {tool.description}
+                            </p>
                           </div>
                           {!isLocked && (
-                            <ArrowRight className="w-4 h-4 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all" style={{ color: 'rgba(255,255,255,0.4)' }} />
+                            <ArrowRight
+                              className="w-4 h-4 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            />
                           )}
                         </button>
                       );
@@ -1507,13 +1843,85 @@ export default function AdvancedQuoteBuilder({
         )}
 
         {/* ════════════════════════════════════════════════════════════════════════════
+            SMART UPLOAD VIEW - DEDICATED UPLOAD-FIRST LANDING (Feb 2026)
+            ════════════════════════════════════════════════════════════════════════════ */}
+        {viewMode === "upload-first" && (
+          <div
+            className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
+            style={{ background: "#0f1117" }}
+          >
+            {/* Background gradient */}
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute top-20 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+              <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"></div>
+            </div>
+
+            <div className="max-w-3xl w-full relative z-10">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <img src={merlinImage} alt="Merlin" className="w-12 h-12" />
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                    Smart Upload™
+                  </h1>
+                </div>
+                <div
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+                  style={{
+                    background: "rgba(139, 92, 246, 0.1)",
+                    border: "1px solid rgba(139, 92, 246, 0.3)",
+                  }}
+                >
+                  <Clock className="w-4 h-4 text-purple-400" />
+                  <span className="text-sm font-medium text-purple-300">Saves 10+ minutes!</span>
+                </div>
+                <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                  Upload utility bills, equipment schedules, or load profiles and let AI extract the
+                  data to pre-populate your quote.
+                </p>
+              </div>
+
+              {/* Upload Zone */}
+              <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/30 rounded-2xl p-8 backdrop-blur-xl border border-white/10 shadow-2xl mb-6">
+                <DocumentUploadZone
+                  onExtractionComplete={handleExtractionComplete}
+                  onError={(error) => console.error("Upload error:", error)}
+                  maxFiles={5}
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => setViewMode("custom-config")}
+                  className="px-6 py-3 rounded-xl text-gray-300 hover:text-white transition-colors border border-white/10 hover:border-white/20 font-medium"
+                >
+                  Skip to Manual Configuration
+                </button>
+                <button
+                  onClick={() => setViewMode("landing")}
+                  className="px-6 py-3 rounded-xl text-gray-400 hover:text-gray-300 transition-colors font-medium"
+                >
+                  Back to Options
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════════════════════
             CUSTOM CONFIGURATION VIEW - REDESIGNED WITH TAB NAVIGATION & LIVE FINANCIALS
             ════════════════════════════════════════════════════════════════════════════ */}
         {viewMode === "custom-config" && (
-          <div className="min-h-screen relative overflow-hidden" style={{ background: '#0f1117' }}>
-
+          <div className="min-h-screen relative overflow-hidden" style={{ background: "#0f1117" }}>
             {/* ═══ STICKY HEADER WITH TAB NAVIGATION ═══ */}
-            <div className="sticky top-0 z-20 backdrop-blur-xl" style={{ background: 'rgba(15, 17, 23, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div
+              className="sticky top-0 z-20 backdrop-blur-xl"
+              style={{
+                background: "rgba(15, 17, 23, 0.95)",
+                borderBottom: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
               {/* Top Bar - Title & Actions */}
               <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -1538,7 +1946,11 @@ export default function AdvancedQuoteBuilder({
                   <button
                     onClick={() => setShowHowItWorks(true)}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-white/[0.06]"
-                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      color: "rgba(255,255,255,0.7)",
+                    }}
                   >
                     <Sparkles className="w-4 h-4" />
                     <span className="hidden sm:inline">How It Works</span>
@@ -1546,7 +1958,11 @@ export default function AdvancedQuoteBuilder({
                   <button
                     onClick={() => setShowFinancialSummary(true)}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-emerald-500/[0.06]"
-                    style={{ background: 'transparent', border: '1px solid rgba(16,185,129,0.35)', color: '#34d399' }}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid rgba(16,185,129,0.35)",
+                      color: "#34d399",
+                    }}
                   >
                     <BarChart3 className="w-4 h-4" />
                     <span className="hidden sm:inline">Financial Summary</span>
@@ -1613,8 +2029,6 @@ export default function AdvancedQuoteBuilder({
               </div>
             </div>
 
-
-
             {/* ═══ PROJECT INFO FORM - Account Creation ═══ */}
             <div className="max-w-[1440px] mx-auto px-4 py-6 relative z-0">
               <ProjectInfoForm
@@ -1639,2279 +2053,3928 @@ export default function AdvancedQuoteBuilder({
               <div>
                 {/* FULL WIDTH: Configuration Form */}
                 <div className="space-y-6">
-
-                {/* ═══ PROQUOTE™ HERO BADGE PANEL ═══ */}
-                <button
-                  type="button"
-                  onClick={() => setShowHowItWorks(true)}
-                  className="group w-full flex items-center gap-5 p-5 rounded-xl transition-all duration-300 cursor-pointer"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(96,165,250,0.04) 50%, rgba(59,130,246,0.06) 100%)',
-                    border: '2px solid rgba(59,130,246,0.20)',
-                    boxShadow: '0 0 0 1px rgba(59,130,246,0.05), 0 4px 24px rgba(0,0,0,0.2)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(59,130,246,0.40)';
-                    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(59,130,246,0.1), 0 4px 32px rgba(59,130,246,0.1), 0 0 60px rgba(59,130,246,0.04)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(59,130,246,0.20)';
-                    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(59,130,246,0.05), 0 4px 24px rgba(0,0,0,0.2)';
-                  }}
-                  aria-label="Learn how ProQuote works"
-                >
-                  {/* Blue Shield Badge */}
-                  <div className="shrink-0 relative">
-                    <div className="relative">
-                      <img
-                        src={badgeIcon}
-                        alt="ProQuote Badge"
-                        className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <div
-                        className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
-                        style={{ background: 'rgba(59,130,246,0.9)', boxShadow: '0 0 8px rgba(59,130,246,0.4)' }}
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                  {/* ═══ PROQUOTE™ HERO BADGE PANEL ═══ */}
+                  <button
+                    type="button"
+                    onClick={() => setShowHowItWorks(true)}
+                    className="group w-full flex items-center gap-5 p-5 rounded-xl transition-all duration-300 cursor-pointer"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(96,165,250,0.04) 50%, rgba(59,130,246,0.06) 100%)",
+                      border: "2px solid rgba(59,130,246,0.20)",
+                      boxShadow: "0 0 0 1px rgba(59,130,246,0.05), 0 4px 24px rgba(0,0,0,0.2)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "rgba(59,130,246,0.40)";
+                      e.currentTarget.style.boxShadow =
+                        "0 0 0 1px rgba(59,130,246,0.1), 0 4px 32px rgba(59,130,246,0.1), 0 0 60px rgba(59,130,246,0.04)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "rgba(59,130,246,0.20)";
+                      e.currentTarget.style.boxShadow =
+                        "0 0 0 1px rgba(59,130,246,0.05), 0 4px 24px rgba(0,0,0,0.2)";
+                    }}
+                    aria-label="Learn how ProQuote works"
+                  >
+                    {/* Blue Shield Badge */}
+                    <div className="shrink-0 relative">
+                      <div className="relative">
+                        <img
+                          src={badgeIcon}
+                          alt="ProQuote Badge"
+                          className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
+                        />
+                        <div
+                          className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
+                          style={{
+                            background: "rgba(59,130,246,0.9)",
+                            boxShadow: "0 0 8px rgba(59,130,246,0.4)",
+                          }}
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Badge Text */}
-                  <div className="flex-1 text-left min-w-0">
-                    <div className="flex items-center gap-2.5 mb-1">
-                      <span className="text-xl font-bold text-blue-400 tracking-tight">ProQuote™</span>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400/70 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
-                        Pro Mode
-                      </span>
+                    {/* Badge Text */}
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="flex items-center gap-2.5 mb-1">
+                        <span className="text-xl font-bold text-blue-400 tracking-tight">
+                          ProQuote™
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400/70 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                          Pro Mode
+                        </span>
+                      </div>
+                      <p
+                        className="text-sm leading-snug"
+                        style={{ color: "rgba(255,255,255,0.5)" }}
+                      >
+                        Full engineering control — custom equipment, fuel cells, financial modeling,
+                        and bank-ready exports.
+                        <span className="text-blue-400/60 font-medium"> Click to learn more →</span>
+                      </p>
                     </div>
-                    <p className="text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                      Full engineering control — custom equipment, fuel cells, financial modeling, and bank-ready exports.
-                      <span className="text-blue-400/60 font-medium"> Click to learn more →</span>
-                    </p>
-                  </div>
 
-                  {/* Arrow */}
-                  <div className="shrink-0 text-blue-500/40 group-hover:text-blue-400 group-hover:translate-x-1 transition-all duration-300">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </button>
+                    {/* Arrow */}
+                    <div className="shrink-0 text-blue-500/40 group-hover:text-blue-400 group-hover:translate-x-1 transition-all duration-300">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
 
-                {/* ═══ INLINE COST SUMMARY STRIP (POP Edition) ═══ */}
-                <div
-                  className="sticky top-[64px] z-20 -mx-4 px-4"
-                >
-                  <div
-                    className="rounded-xl overflow-hidden backdrop-blur-xl transition-all duration-500"
-                    style={{
-                      background: financialMetrics ? 'rgba(15,17,23,0.95)' : 'rgba(15,17,23,0.85)',
-                      border: financialMetrics ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(255,255,255,0.08)',
-                      boxShadow: financialMetrics
-                        ? '0 0 0 1px rgba(52,211,153,0.1), 0 4px 32px rgba(0,0,0,0.5), 0 0 60px rgba(52,211,153,0.06)'
-                        : '0 4px 24px rgba(0,0,0,0.3)',
-                    }}
-                  >
-                    {/* Top accent gradient bar */}
+                  {/* ═══ INLINE COST SUMMARY STRIP (POP Edition) ═══ */}
+                  <div className="sticky top-[64px] z-20 -mx-4 px-4">
                     <div
-                      className="h-[2px] w-full"
+                      className="rounded-xl overflow-hidden backdrop-blur-xl transition-all duration-500"
                       style={{
                         background: financialMetrics
-                          ? 'linear-gradient(90deg, #34d399 0%, #38bdf8 25%, #6ee7b7 50%, #38bdf8 75%, #34d399 100%)'
-                          : 'linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 100%)',
+                          ? "rgba(15,17,23,0.95)"
+                          : "rgba(15,17,23,0.85)",
+                        border: financialMetrics
+                          ? "1px solid rgba(52,211,153,0.25)"
+                          : "1px solid rgba(255,255,255,0.08)",
+                        boxShadow: financialMetrics
+                          ? "0 0 0 1px rgba(52,211,153,0.1), 0 4px 32px rgba(0,0,0,0.5), 0 0 60px rgba(52,211,153,0.06)"
+                          : "0 4px 24px rgba(0,0,0,0.3)",
                       }}
-                    />
+                    >
+                      {/* Top accent gradient bar */}
+                      <div
+                        className="h-[2px] w-full"
+                        style={{
+                          background: financialMetrics
+                            ? "linear-gradient(90deg, #34d399 0%, #38bdf8 25%, #6ee7b7 50%, #38bdf8 75%, #34d399 100%)"
+                            : "linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 100%)",
+                        }}
+                      />
 
-                    <div className="px-5 py-3">
-                      {/* Metrics row */}
-                      {financialMetrics ? (
-                        <div className="flex items-center justify-center gap-3 lg:gap-5 overflow-x-auto scrollbar-none">
-                          {/* System badge - left */}
-                          <div className="flex items-center gap-2 shrink-0">
+                      <div className="px-5 py-3">
+                        {/* Metrics row */}
+                        {financialMetrics ? (
+                          <div className="flex items-center justify-center gap-3 lg:gap-5 overflow-x-auto scrollbar-none">
+                            {/* System badge - left */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div
+                                className={`w-2.5 h-2.5 rounded-full ${isCalculating ? "bg-blue-400 animate-pulse" : "bg-emerald-400"}`}
+                                style={{
+                                  boxShadow: isCalculating
+                                    ? "0 0 8px rgba(59,130,246,0.5)"
+                                    : "0 0 8px rgba(52,211,153,0.5)",
+                                }}
+                              />
+                              <span
+                                className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline"
+                                style={{ color: "rgba(52,211,153,0.7)" }}
+                              >
+                                {isCalculating ? "Updating" : "Live"}
+                              </span>
+                            </div>
+
+                            {/* Divider */}
                             <div
-                              className={`w-2.5 h-2.5 rounded-full ${isCalculating ? 'bg-blue-400 animate-pulse' : 'bg-emerald-400'}`}
-                              style={{ boxShadow: isCalculating ? '0 0 8px rgba(59,130,246,0.5)' : '0 0 8px rgba(52,211,153,0.5)' }}
+                              className="w-px h-8 shrink-0"
+                              style={{ background: "rgba(255,255,255,0.08)" }}
                             />
-                            <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline" style={{ color: 'rgba(52,211,153,0.7)' }}>
-                              {isCalculating ? 'Updating' : 'Live'}
+
+                            {/* Total Cost */}
+                            <div className="flex flex-col items-center shrink-0 px-2">
+                              <span
+                                className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
+                                style={{ color: "rgba(255,255,255,0.35)" }}
+                              >
+                                Total
+                              </span>
+                              <span className="text-lg font-extrabold tabular-nums text-white leading-tight">
+                                {Math.abs(financialMetrics.totalProjectCost ?? 0) >= 1_000_000
+                                  ? `$${((financialMetrics.totalProjectCost ?? 0) / 1_000_000).toFixed(2)}M`
+                                  : `$${((financialMetrics.totalProjectCost ?? 0) / 1_000).toFixed(0)}K`}
+                              </span>
+                            </div>
+
+                            {/* After ITC */}
+                            {(financialMetrics.netCost ?? 0) > 0 &&
+                              (financialMetrics.netCost ?? 0) !==
+                                (financialMetrics.totalProjectCost ?? 0) && (
+                                <>
+                                  <div
+                                    className="w-px h-8 shrink-0"
+                                    style={{ background: "rgba(255,255,255,0.06)" }}
+                                  />
+                                  <div className="flex flex-col items-center shrink-0 px-2">
+                                    <span
+                                      className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
+                                      style={{ color: "rgba(255,255,255,0.35)" }}
+                                    >
+                                      After ITC
+                                    </span>
+                                    <span
+                                      className="text-lg font-extrabold tabular-nums leading-tight"
+                                      style={{ color: "#34d399" }}
+                                    >
+                                      {Math.abs(financialMetrics.netCost ?? 0) >= 1_000_000
+                                        ? `$${((financialMetrics.netCost ?? 0) / 1_000_000).toFixed(2)}M`
+                                        : `$${((financialMetrics.netCost ?? 0) / 1_000).toFixed(0)}K`}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
+
+                            {/* $/kWh */}
+                            <div
+                              className="w-px h-8 shrink-0"
+                              style={{ background: "rgba(255,255,255,0.06)" }}
+                            />
+                            <div className="flex flex-col items-center shrink-0 px-2">
+                              <span
+                                className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
+                                style={{ color: "rgba(255,255,255,0.35)" }}
+                              >
+                                $/kWh
+                              </span>
+                              <span
+                                className="text-lg font-extrabold tabular-nums leading-tight"
+                                style={{ color: "#38bdf8" }}
+                              >
+                                {storageSizeMWh > 0
+                                  ? `$${((financialMetrics.totalProjectCost ?? 0) / (storageSizeMWh * 1000)).toFixed(0)}`
+                                  : "—"}
+                              </span>
+                            </div>
+
+                            {/* Payback */}
+                            <div
+                              className="w-px h-8 shrink-0"
+                              style={{ background: "rgba(255,255,255,0.06)" }}
+                            />
+                            <div className="flex flex-col items-center shrink-0 px-2">
+                              <span
+                                className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
+                                style={{ color: "rgba(255,255,255,0.35)" }}
+                              >
+                                Payback
+                              </span>
+                              <span
+                                className="text-lg font-extrabold tabular-nums leading-tight"
+                                style={{ color: "#34d399" }}
+                              >
+                                {financialMetrics.paybackYears != null
+                                  ? `${financialMetrics.paybackYears.toFixed(1)} yr`
+                                  : "—"}
+                              </span>
+                            </div>
+
+                            {/* Annual Savings */}
+                            <div
+                              className="w-px h-8 shrink-0"
+                              style={{ background: "rgba(255,255,255,0.06)" }}
+                            />
+                            <div className="flex flex-col items-center shrink-0 px-2">
+                              <span
+                                className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
+                                style={{ color: "rgba(255,255,255,0.35)" }}
+                              >
+                                Savings
+                              </span>
+                              <span
+                                className="text-lg font-extrabold tabular-nums leading-tight"
+                                style={{ color: "#a78bfa" }}
+                              >
+                                {(financialMetrics.annualSavings ?? 0) > 0
+                                  ? (financialMetrics.annualSavings ?? 0) >= 1_000_000
+                                    ? `$${((financialMetrics.annualSavings ?? 0) / 1_000_000).toFixed(2)}M/yr`
+                                    : `$${((financialMetrics.annualSavings ?? 0) / 1_000).toFixed(0)}K/yr`
+                                  : "—"}
+                              </span>
+                            </div>
+
+                            {/* ROI */}
+                            {financialMetrics.roi10Year != null && (
+                              <>
+                                <div
+                                  className="w-px h-8 shrink-0 hidden lg:block"
+                                  style={{ background: "rgba(255,255,255,0.06)" }}
+                                />
+                                <div className="flex flex-col items-center shrink-0 px-2 hidden lg:flex">
+                                  <span
+                                    className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
+                                    style={{ color: "rgba(255,255,255,0.35)" }}
+                                  >
+                                    10yr ROI
+                                  </span>
+                                  <span
+                                    className="text-lg font-extrabold tabular-nums leading-tight"
+                                    style={{ color: "#34d399" }}
+                                  >
+                                    {financialMetrics.roi10Year.toFixed(0)}%
+                                  </span>
+                                </div>
+                              </>
+                            )}
+
+                            {/* Divider */}
+                            <div
+                              className="w-px h-8 shrink-0"
+                              style={{ background: "rgba(255,255,255,0.08)" }}
+                            />
+
+                            {/* System badge - right */}
+                            <div className="flex items-center shrink-0">
+                              <span
+                                className="text-[10px] font-bold px-2.5 py-1 rounded-md tracking-wide"
+                                style={{
+                                  background: "rgba(52,211,153,0.08)",
+                                  color: "rgba(52,211,153,0.6)",
+                                  border: "1px solid rgba(52,211,153,0.15)",
+                                }}
+                              >
+                                {storageSizeMW > 0 ? `${storageSizeMW.toFixed(1)} MW` : "—"} /{" "}
+                                {durationHours > 0 ? `${durationHours}h` : "—"}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center gap-3 py-1">
+                            <div className="w-2 h-2 rounded-full bg-white/15" />
+                            <span
+                              className="text-xs font-medium"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            >
+                              Set your BESS power and duration to see real-time pricing
+                            </span>
+                            <span
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-md"
+                              style={{
+                                background: "rgba(255,255,255,0.04)",
+                                color: "rgba(255,255,255,0.25)",
+                                border: "1px solid rgba(255,255,255,0.06)",
+                              }}
+                            >
+                              {storageSizeMW > 0 ? `${storageSizeMW.toFixed(1)} MW` : "—"} /{" "}
+                              {durationHours > 0 ? `${durationHours}h` : "—"}
                             </span>
                           </div>
-
-                          {/* Divider */}
-                          <div className="w-px h-8 shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }} />
-
-                          {/* Total Cost */}
-                          <div className="flex flex-col items-center shrink-0 px-2">
-                            <span className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                              Total
-                            </span>
-                            <span className="text-lg font-extrabold tabular-nums text-white leading-tight">
-                              {Math.abs(financialMetrics.totalProjectCost ?? 0) >= 1_000_000
-                                ? `$${((financialMetrics.totalProjectCost ?? 0) / 1_000_000).toFixed(2)}M`
-                                : `$${((financialMetrics.totalProjectCost ?? 0) / 1_000).toFixed(0)}K`}
-                            </span>
-                          </div>
-
-                          {/* After ITC */}
-                          {(financialMetrics.netCost ?? 0) > 0 && (financialMetrics.netCost ?? 0) !== (financialMetrics.totalProjectCost ?? 0) && (
-                            <>
-                              <div className="w-px h-8 shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                              <div className="flex flex-col items-center shrink-0 px-2">
-                                <span className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                                  After ITC
-                                </span>
-                                <span className="text-lg font-extrabold tabular-nums leading-tight" style={{ color: '#34d399' }}>
-                                  {Math.abs(financialMetrics.netCost ?? 0) >= 1_000_000
-                                    ? `$${((financialMetrics.netCost ?? 0) / 1_000_000).toFixed(2)}M`
-                                    : `$${((financialMetrics.netCost ?? 0) / 1_000).toFixed(0)}K`}
-                                </span>
-                              </div>
-                            </>
-                          )}
-
-                          {/* $/kWh */}
-                          <div className="w-px h-8 shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                          <div className="flex flex-col items-center shrink-0 px-2">
-                            <span className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                              $/kWh
-                            </span>
-                            <span className="text-lg font-extrabold tabular-nums leading-tight" style={{ color: '#38bdf8' }}>
-                              {storageSizeMWh > 0 ? `$${((financialMetrics.totalProjectCost ?? 0) / (storageSizeMWh * 1000)).toFixed(0)}` : '—'}
-                            </span>
-                          </div>
-
-                          {/* Payback */}
-                          <div className="w-px h-8 shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                          <div className="flex flex-col items-center shrink-0 px-2">
-                            <span className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                              Payback
-                            </span>
-                            <span className="text-lg font-extrabold tabular-nums leading-tight" style={{ color: '#34d399' }}>
-                              {financialMetrics.paybackYears != null ? `${financialMetrics.paybackYears.toFixed(1)} yr` : '—'}
-                            </span>
-                          </div>
-
-                          {/* Annual Savings */}
-                          <div className="w-px h-8 shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                          <div className="flex flex-col items-center shrink-0 px-2">
-                            <span className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                              Savings
-                            </span>
-                            <span className="text-lg font-extrabold tabular-nums leading-tight" style={{ color: '#a78bfa' }}>
-                              {(financialMetrics.annualSavings ?? 0) > 0
-                                ? (financialMetrics.annualSavings ?? 0) >= 1_000_000
-                                  ? `$${((financialMetrics.annualSavings ?? 0) / 1_000_000).toFixed(2)}M/yr`
-                                  : `$${((financialMetrics.annualSavings ?? 0) / 1_000).toFixed(0)}K/yr`
-                                : '—'}
-                            </span>
-                          </div>
-
-                          {/* ROI */}
-                          {financialMetrics.roi10Year != null && (
-                            <>
-                              <div className="w-px h-8 shrink-0 hidden lg:block" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                              <div className="flex flex-col items-center shrink-0 px-2 hidden lg:flex">
-                                <span className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                                  10yr ROI
-                                </span>
-                                <span className="text-lg font-extrabold tabular-nums leading-tight" style={{ color: '#34d399' }}>
-                                  {financialMetrics.roi10Year.toFixed(0)}%
-                                </span>
-                              </div>
-                            </>
-                          )}
-
-                          {/* Divider */}
-                          <div className="w-px h-8 shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }} />
-
-                          {/* System badge - right */}
-                          <div className="flex items-center shrink-0">
-                            <span className="text-[10px] font-bold px-2.5 py-1 rounded-md tracking-wide" style={{ background: 'rgba(52,211,153,0.08)', color: 'rgba(52,211,153,0.6)', border: '1px solid rgba(52,211,153,0.15)' }}>
-                              {storageSizeMW > 0 ? `${storageSizeMW.toFixed(1)} MW` : '—'} / {durationHours > 0 ? `${durationHours}h` : '—'}
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center gap-3 py-1">
-                          <div className="w-2 h-2 rounded-full bg-white/15" />
-                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                            Set your BESS power and duration to see real-time pricing
-                          </span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md" style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                            {storageSizeMW > 0 ? `${storageSizeMW.toFixed(1)} MW` : '—'} / {durationHours > 0 ? `${durationHours}h` : '—'}
-                          </span>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* ────────────────────────────────────────────────
+                  {/* ────────────────────────────────────────────────
                     SECTION: SYSTEM CONFIGURATION
                     ──────────────────────────────────────────────── */}
-                <div
-                  data-section="system"
-                  className="scroll-mt-48 rounded-xl overflow-hidden"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
-                >
-                  {/* Section Header */}
-                  <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-3">
-                      <div className="p-2 rounded-lg" style={{ background: 'rgba(59,130,246,0.1)' }}>
-                        <Battery className="w-5 h-5 text-blue-400" />
-                      </div>
-                      System Configuration
-                      <span className="text-xs font-normal ml-auto" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                        Core BESS Parameters
-                      </span>
-                    </h3>
-                    <MerlinTip
-                      tip={storageSizeMW < 0.5 ? "Start with your peak demand. Most commercial sites need 500 kW – 2 MW of BESS power with 2-4 hour duration." : `${(storageSizeMW * 1000).toFixed(0)} kW / ${durationHours}h = ${storageSizeMWh.toFixed(1)} MWh is a solid configuration. Adjust duration for more energy shifting or backup runtime.`}
-                      context="Based on NREL ATB 2024 commercial BESS sizing benchmarks"
-                    />
-                  </div>
-
-                  {/* Section Content */}
-                  <div className="p-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Power Capacity - Full Width Slider */}
-                      <div className="lg:col-span-2 rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <div className="flex items-center justify-between mb-3">
-                          <label className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                            Power Capacity
-                          </label>
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-md" style={{ background: 'rgba(59,130,246,0.12)', color: '#60a5fa' }}>
-                            {(storageSizeMW * 1000).toFixed(0)} kW
-                          </span>
+                  <div
+                    data-section="system"
+                    className="scroll-mt-48 rounded-xl overflow-hidden"
+                    style={{
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    {/* Section Header */}
+                    <div
+                      className="px-6 py-4"
+                      style={{
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        background: "rgba(255,255,255,0.02)",
+                      }}
+                    >
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-3">
+                        <div
+                          className="p-2 rounded-lg"
+                          style={{ background: "rgba(59,130,246,0.1)" }}
+                        >
+                          <Battery className="w-5 h-5 text-blue-400" />
                         </div>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="range"
-                            min="0.1"
-                            max="10"
-                            step="0.1"
-                            value={storageSizeMW}
-                            onChange={(e) => onStorageSizeChange(parseFloat(e.target.value))}
-                            className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-blue-500"
-                            style={{ background: `linear-gradient(to right, #3b82f6 ${((storageSizeMW - 0.1) / 9.9) * 100}%, rgba(255,255,255,0.08) ${((storageSizeMW - 0.1) / 9.9) * 100}%)` }}
-                          />
-                          <div className="relative">
+                        System Configuration
+                        <span
+                          className="text-xs font-normal ml-auto"
+                          style={{ color: "rgba(255,255,255,0.35)" }}
+                        >
+                          Core BESS Parameters
+                        </span>
+                      </h3>
+                      <MerlinTip
+                        tip={
+                          storageSizeMW < 0.5
+                            ? "Start with your peak demand. Most commercial sites need 500 kW – 2 MW of BESS power with 2-4 hour duration."
+                            : `${(storageSizeMW * 1000).toFixed(0)} kW / ${durationHours}h = ${storageSizeMWh.toFixed(1)} MWh is a solid configuration. Adjust duration for more energy shifting or backup runtime.`
+                        }
+                        context="Based on NREL ATB 2024 commercial BESS sizing benchmarks"
+                      />
+                    </div>
+
+                    {/* Section Content */}
+                    <div className="p-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Power Capacity - Full Width Slider */}
+                        <div
+                          className="lg:col-span-2 rounded-xl p-5"
+                          style={{
+                            background: "rgba(255,255,255,0.02)",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                          }}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <label
+                              className="text-sm font-semibold"
+                              style={{ color: "rgba(255,255,255,0.7)" }}
+                            >
+                              Power Capacity
+                            </label>
+                            <span
+                              className="text-xs font-medium px-2 py-0.5 rounded-md"
+                              style={{ background: "rgba(59,130,246,0.12)", color: "#60a5fa" }}
+                            >
+                              {(storageSizeMW * 1000).toFixed(0)} kW
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
                             <input
-                              type="number"
-                              value={storageSizeMW}
-                              onChange={(e) => onStorageSizeChange(parseFloat(e.target.value) || 0.1)}
-                              step="0.1"
+                              type="range"
                               min="0.1"
-                              max="50"
-                              className="w-28 pl-3 pr-10 py-2.5 text-white rounded-lg text-right font-bold text-sm focus:ring-2 focus:ring-blue-500/50 focus:outline-none"
-                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                              max="10"
+                              step="0.1"
+                              value={storageSizeMW}
+                              onChange={(e) => onStorageSizeChange(parseFloat(e.target.value))}
+                              className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-blue-500"
+                              style={{
+                                background: `linear-gradient(to right, #3b82f6 ${((storageSizeMW - 0.1) / 9.9) * 100}%, rgba(255,255,255,0.08) ${((storageSizeMW - 0.1) / 9.9) * 100}%)`,
+                              }}
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.35)' }}>MW</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Duration - Full Width Slider */}
-                      <div className="lg:col-span-2 rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <div className="flex items-center justify-between mb-3">
-                          <label className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                            Duration
-                          </label>
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-md" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}>
-                            {(storageSizeMW * durationHours).toFixed(1)} MWh total
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="range"
-                            min="0.5"
-                            max="12"
-                            step="0.5"
-                            value={durationHours}
-                            onChange={(e) => onDurationChange(parseFloat(e.target.value))}
-                            className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-indigo-500"
-                            style={{ background: `linear-gradient(to right, #6366f1 ${((durationHours - 0.5) / 11.5) * 100}%, rgba(255,255,255,0.08) ${((durationHours - 0.5) / 11.5) * 100}%)` }}
-                          />
-                          <div className="relative">
-                            <input
-                              type="number"
-                              value={durationHours}
-                              onChange={(e) => onDurationChange(parseFloat(e.target.value) || 0.5)}
-                              step="0.5"
-                              min="0.5"
-                              max="24"
-                              className="w-28 pl-3 pr-10 py-2.5 text-white rounded-lg text-right font-bold text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
-                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.35)' }}>hrs</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Battery Chemistry */}
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Battery Chemistry
-                        </label>
-                        <select
-                          value={chemistry}
-                          onChange={(e) => setChemistry(e.target.value)}
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        >
-                          <option value="lfp">LiFePO4 (LFP) - Long life, safe</option>
-                          <option value="nmc">NMC - High energy density</option>
-                          <option value="lto">LTO - Ultra-long life</option>
-                          <option value="sodium-ion">Sodium-Ion - Low cost</option>
-                        </select>
-                      </div>
-
-                      {/* Installation Type */}
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Installation Type
-                        </label>
-                        <select
-                          value={installationType}
-                          onChange={(e) => setInstallationType(e.target.value)}
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        >
-                          <option value="outdoor">Outdoor (Containerized)</option>
-                          <option value="indoor">Indoor (Room/Vault)</option>
-                          <option value="rooftop">Rooftop</option>
-                        </select>
-                      </div>
-
-                      {/* Grid Connection */}
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Grid Connection
-                        </label>
-                        <select
-                          value={gridConnection}
-                          onChange={(e) => setGridConnection(e.target.value)}
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        >
-                          <option value="ac-coupled">AC-Coupled (Grid-tied)</option>
-                          <option value="dc-coupled">DC-Coupled (with Solar)</option>
-                          <option value="hybrid">Hybrid (AC+DC)</option>
-                          <option value="off-grid">Off-Grid/Island Mode</option>
-                        </select>
-                      </div>
-
-                      {/* Inverter Efficiency */}
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Inverter Efficiency (%)
-                        </label>
-                        <input
-                          type="number"
-                          value={inverterEfficiency}
-                          onChange={(e) => setInverterEfficiency(parseFloat(e.target.value) || 90)}
-                          min="85"
-                          max="99"
-                          step="0.5"
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ────────────────────────────────────────────────
-                    SECTION: APPLICATION & USE CASE
-                    ──────────────────────────────────────────────── */}
-                <div
-                  data-section="application"
-                  className="scroll-mt-48 rounded-xl overflow-hidden"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
-                >
-                  <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-3">
-                      <div className="p-2 rounded-lg" style={{ background: 'rgba(34,197,94,0.1)' }}>
-                        <Building2 className="w-5 h-5 text-emerald-400" />
-                      </div>
-                      Application & Use Case
-                      <span className="text-xs font-normal ml-auto" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                        How you'll use the system
-                      </span>
-                    </h3>
-                  </div>
-
-                  <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Application Type
-                        </label>
-                        <select
-                          value={applicationType}
-                          onChange={(e) => setApplicationType(e.target.value)}
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        >
-                          <option value="residential">Residential</option>
-                          <option value="commercial">Commercial & Industrial</option>
-                          <option value="utility">Utility Scale</option>
-                          <option value="microgrid">Microgrid</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Primary Use Case
-                        </label>
-                        <select
-                          value={useCase}
-                          onChange={(e) => setUseCase(e.target.value)}
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        >
-                          <option value="peak-shaving">Peak Shaving / Demand Reduction</option>
-                          <option value="arbitrage">Energy Arbitrage / TOU</option>
-                          <option value="backup">Backup Power / UPS</option>
-                          <option value="solar-shifting">Solar + Storage</option>
-                          <option value="frequency-regulation">Frequency Regulation</option>
-                          <option value="renewable-smoothing">Renewable Smoothing</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Project Name
-                        </label>
-                        <input
-                          type="text"
-                          value={projectName}
-                          onChange={(e) => setProjectName(e.target.value)}
-                          placeholder="e.g., Downtown Hotel BESS"
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder-white/20"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Location
-                        </label>
-                        <input
-                          type="text"
-                          value={location}
-                          onChange={(e) => setLocation(e.target.value)}
-                          placeholder="City, State"
-                          className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder-white/20"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ────────────────────────────────────────────────
-                    SECTION: FINANCIAL PARAMETERS
-                    ──────────────────────────────────────────────── */}
-                <div
-                  data-section="financial"
-                  className="scroll-mt-48 rounded-xl overflow-hidden"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
-                >
-                  <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-3">
-                      <div className="p-2 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)' }}>
-                        <DollarSign className="w-5 h-5" style={{ color: '#34d399' }} />
-                      </div>
-                      Financial Parameters
-                      <span className="text-xs font-normal ml-auto" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                        Rates & costs for ROI calculation
-                      </span>
-                    </h3>
-                  </div>
-
-                  <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                          Utility Rate
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'rgba(16,185,129,0.6)' }}>$</span>
-                          <input
-                            type="number"
-                            value={utilityRate}
-                            onChange={(e) => setUtilityRate(parseFloat(e.target.value) || 0)}
-                            step="0.01"
-                            className="w-full pl-7 pr-14 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
-                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>/kWh</span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                          Demand Charge
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'rgba(16,185,129,0.6)' }}>$</span>
-                          <input
-                            type="number"
-                            value={demandCharge}
-                            onChange={(e) => setDemandCharge(parseFloat(e.target.value) || 0)}
-                            className="w-full pl-7 pr-12 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
-                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>/kW</span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                          Cycles / Year
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={cyclesPerYear}
-                            onChange={(e) => setCyclesPerYear(parseFloat(e.target.value) || 1)}
-                            className="w-full px-3 pr-14 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
-                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>cyc/yr</span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                          Warranty
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={warrantyYears}
-                            onChange={(e) => setWarrantyYears(parseFloat(e.target.value) || 10)}
-                            className="w-full px-3 pr-12 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
-                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>years</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Advanced Financials Link */}
-                    <div className="mt-6 p-4 rounded-xl" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Landmark className="w-5 h-5" style={{ color: '#34d399' }} />
-                          <div>
-                            <p className="text-sm font-semibold text-white">
-                              Need Bank-Ready Financials?
-                            </p>
-                            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                              3-Statement Model, DSCR, IRR, MACRS, Revenue Stacking
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => setViewMode("professional-model")}
-                          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-                          style={{ background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.2)' }}
-                        >
-                          Open Pro Model
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ────────────────────────────────────────────────
-                    SECTION: ELECTRICAL SPECIFICATIONS
-                    ──────────────────────────────────────────────── */}
-                <div
-                  data-section="electrical"
-                  className="scroll-mt-48 rounded-xl overflow-hidden"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
-                >
-                  <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-3">
-                      <div className="p-2 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)' }}>
-                        <Zap className="w-5 h-5 text-emerald-400" />
-                      </div>
-                      Electrical Specifications
-                      <span className="text-xs font-normal ml-auto" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                        PCS, Inverters, Transformers
-                      </span>
-                    </h3>
-                    <MerlinTip
-                      tip="Most projects use a pre-engineered containerized BESS solution that includes the PCS, BMS, and thermal management. Transformer specs should match your utility interconnection requirements."
-                      context="IEEE 1547-2018 interconnection standard"
-                    />
-                  </div>
-
-                  <div className="p-6">
-                    {/* Power Conversion System (PCS) Configuration */}
-                    <div className="rounded-xl p-6 mb-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <h4 className="text-lg font-semibold mb-6 text-white flex items-center gap-2">
-                        <Zap className="w-5 h-5 text-emerald-400" />
-                        Power Conversion System (PCS)
-                      </h4>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* PCS Quoting Option */}
-                        <div className="col-span-full">
-                          <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                            PCS Quoting Method
-                          </label>
-                          <div className="flex gap-4">
-                            <label className="flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all flex-1" style={{ background: !pcsQuoteSeparately ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)', border: !pcsQuoteSeparately ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(255,255,255,0.08)' }}>
+                            <div className="relative">
                               <input
-                                type="radio"
-                                checked={!pcsQuoteSeparately}
-                                onChange={() => setPcsQuoteSeparately(false)}
-                                className="w-5 h-5 text-emerald-500"
+                                type="number"
+                                value={storageSizeMW}
+                                onChange={(e) =>
+                                  onStorageSizeChange(parseFloat(e.target.value) || 0.1)
+                                }
+                                step="0.1"
+                                min="0.1"
+                                max="50"
+                                className="w-28 pl-3 pr-10 py-2.5 text-white rounded-lg text-right font-bold text-sm focus:ring-2 focus:ring-blue-500/50 focus:outline-none"
+                                style={{
+                                  background: "rgba(255,255,255,0.06)",
+                                  border: "1px solid rgba(255,255,255,0.12)",
+                                }}
                               />
-                              <span className="text-sm font-semibold text-white">
-                                Included with BESS System
+                              <span
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold pointer-events-none"
+                                style={{ color: "rgba(255,255,255,0.35)" }}
+                              >
+                                MW
                               </span>
-                            </label>
-                            <label className="flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all flex-1" style={{ background: pcsQuoteSeparately ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)', border: pcsQuoteSeparately ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(255,255,255,0.08)' }}>
-                              <input
-                                type="radio"
-                                checked={pcsQuoteSeparately}
-                                onChange={() => setPcsQuoteSeparately(true)}
-                                className="w-5 h-5 text-emerald-500"
-                              />
-                              <span className="text-sm font-semibold text-white">Quote PCS Separately</span>
-                            </label>
+                            </div>
                           </div>
-                          {pcsQuoteSeparately && (
-                            <p className="text-sm mt-3 rounded-lg p-3" style={{ color: 'rgba(16,185,129,0.9)', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                              💡 PCS will be itemized separately in the quote with detailed
-                              specifications
-                            </p>
-                          )}
                         </div>
 
-                        {/* Inverter Type */}
+                        {/* Duration - Full Width Slider */}
+                        <div
+                          className="lg:col-span-2 rounded-xl p-5"
+                          style={{
+                            background: "rgba(255,255,255,0.02)",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                          }}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <label
+                              className="text-sm font-semibold"
+                              style={{ color: "rgba(255,255,255,0.7)" }}
+                            >
+                              Duration
+                            </label>
+                            <span
+                              className="text-xs font-medium px-2 py-0.5 rounded-md"
+                              style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8" }}
+                            >
+                              {(storageSizeMW * durationHours).toFixed(1)} MWh total
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min="0.5"
+                              max="12"
+                              step="0.5"
+                              value={durationHours}
+                              onChange={(e) => onDurationChange(parseFloat(e.target.value))}
+                              className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-indigo-500"
+                              style={{
+                                background: `linear-gradient(to right, #6366f1 ${((durationHours - 0.5) / 11.5) * 100}%, rgba(255,255,255,0.08) ${((durationHours - 0.5) / 11.5) * 100}%)`,
+                              }}
+                            />
+                            <div className="relative">
+                              <input
+                                type="number"
+                                value={durationHours}
+                                onChange={(e) =>
+                                  onDurationChange(parseFloat(e.target.value) || 0.5)
+                                }
+                                step="0.5"
+                                min="0.5"
+                                max="24"
+                                className="w-28 pl-3 pr-10 py-2.5 text-white rounded-lg text-right font-bold text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                                style={{
+                                  background: "rgba(255,255,255,0.06)",
+                                  border: "1px solid rgba(255,255,255,0.12)",
+                                }}
+                              />
+                              <span
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold pointer-events-none"
+                                style={{ color: "rgba(255,255,255,0.35)" }}
+                              >
+                                hrs
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Battery Chemistry */}
                         <div>
-                          <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                            Inverter Type
+                          <label
+                            className="block text-sm font-semibold mb-2"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            Battery Chemistry
                           </label>
                           <select
-                            value={inverterType}
-                            onChange={(e) => setInverterType(e.target.value)}
-                            className="w-full px-4 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-colors"
-                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                            value={chemistry}
+                            onChange={(e) => setChemistry(e.target.value)}
+                            className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
                           >
-                            <option value="bidirectional">Bidirectional Inverter</option>
-                            <option value="unidirectional">Unidirectional (Charge Only)</option>
+                            <option value="lfp">LiFePO4 (LFP) - Long life, safe</option>
+                            <option value="nmc">NMC - High energy density</option>
+                            <option value="lto">LTO - Ultra-long life</option>
+                            <option value="sodium-ion">Sodium-Ion - Low cost</option>
                           </select>
-                          <p className="text-sm mt-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                            {inverterType === "bidirectional"
-                              ? "⚡ Supports charge & discharge"
-                              : "⚡ Charge only (typical for solar)"}
-                          </p>
                         </div>
 
-                        {/* Number of Inverters */}
+                        {/* Installation Type */}
                         <div>
-                          <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                            Number of Inverters
+                          <label
+                            className="block text-sm font-semibold mb-2"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            Installation Type
                           </label>
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              value={numberOfInvertersInput}
-                              onChange={(e) =>
-                                setNumberOfInvertersInput(parseInt(e.target.value) || 1)
-                              }
-                              min="1"
-                              className="flex-1 px-4 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                              placeholder="Auto-calculated"
-                            />
-                            <button
-                              onClick={() =>
-                                setNumberOfInvertersInput(Math.ceil(totalKW / inverterRating))
-                              }
-                              className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 border-2 border-emerald-700 rounded-lg text-sm font-bold text-white transition-all shadow-sm"
-                              title="Auto-calculate based on system size"
-                            >
-                              Auto
-                            </button>
-                          </div>
-                          <p className="text-sm mt-2 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                            Suggested: {Math.ceil(totalKW / inverterRating)} units @{" "}
-                            {inverterRating} kW each
-                          </p>
+                          <select
+                            value={installationType}
+                            onChange={(e) => setInstallationType(e.target.value)}
+                            className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <option value="outdoor">Outdoor (Containerized)</option>
+                            <option value="indoor">Indoor (Room/Vault)</option>
+                            <option value="rooftop">Rooftop</option>
+                          </select>
                         </div>
 
-                        {/* Inverter Rating */}
+                        {/* Grid Connection */}
                         <div>
-                          <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                            Inverter Rating (kW per unit)
+                          <label
+                            className="block text-sm font-semibold mb-2"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            Grid Connection
+                          </label>
+                          <select
+                            value={gridConnection}
+                            onChange={(e) => setGridConnection(e.target.value)}
+                            className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <option value="ac-coupled">AC-Coupled (Grid-tied)</option>
+                            <option value="dc-coupled">DC-Coupled (with Solar)</option>
+                            <option value="hybrid">Hybrid (AC+DC)</option>
+                            <option value="off-grid">Off-Grid/Island Mode</option>
+                          </select>
+                        </div>
+
+                        {/* Inverter Efficiency */}
+                        <div>
+                          <label
+                            className="block text-sm font-semibold mb-2"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            Inverter Efficiency (%)
                           </label>
                           <input
                             type="number"
-                            value={inverterRating}
-                            onChange={(e) => setInverterRating(parseFloat(e.target.value) || 2500)}
-                            step="100"
-                            min="100"
-                            className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-blue-500/40 focus:outline-none transition-all"
-                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                            value={inverterEfficiency}
+                            onChange={(e) =>
+                              setInverterEfficiency(parseFloat(e.target.value) || 90)
+                            }
+                            min="85"
+                            max="99"
+                            step="0.5"
+                            className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
                           />
                         </div>
+                      </div>
+                    </div>
+                  </div>
 
-                        {/* Manufacturer */}
+                  {/* ────────────────────────────────────────────────
+                    SECTION: APPLICATION & USE CASE
+                    ──────────────────────────────────────────────── */}
+                  <div
+                    data-section="application"
+                    className="scroll-mt-48 rounded-xl overflow-hidden"
+                    style={{
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <div
+                      className="px-6 py-4"
+                      style={{
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        background: "rgba(255,255,255,0.02)",
+                      }}
+                    >
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-3">
+                        <div
+                          className="p-2 rounded-lg"
+                          style={{ background: "rgba(34,197,94,0.1)" }}
+                        >
+                          <Building2 className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        Application & Use Case
+                        <span
+                          className="text-xs font-normal ml-auto"
+                          style={{ color: "rgba(255,255,255,0.35)" }}
+                        >
+                          How you'll use the system
+                        </span>
+                      </h3>
+                    </div>
+
+                    <div className="p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                            Inverter Manufacturer (Optional)
+                          <label
+                            className="block text-sm font-semibold mb-2"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            Application Type
+                          </label>
+                          <select
+                            value={applicationType}
+                            onChange={(e) => setApplicationType(e.target.value)}
+                            className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <option value="residential">Residential</option>
+                            <option value="commercial">Commercial & Industrial</option>
+                            <option value="utility">Utility Scale</option>
+                            <option value="microgrid">Microgrid</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label
+                            className="block text-sm font-semibold mb-2"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            Primary Use Case
+                          </label>
+                          <select
+                            value={useCase}
+                            onChange={(e) => setUseCase(e.target.value)}
+                            className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <option value="peak-shaving">Peak Shaving / Demand Reduction</option>
+                            <option value="arbitrage">Energy Arbitrage / TOU</option>
+                            <option value="backup">Backup Power / UPS</option>
+                            <option value="solar-shifting">Solar + Storage</option>
+                            <option value="frequency-regulation">Frequency Regulation</option>
+                            <option value="renewable-smoothing">Renewable Smoothing</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label
+                            className="block text-sm font-semibold mb-2"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            Project Name
                           </label>
                           <input
                             type="text"
-                            value={inverterManufacturer}
-                            onChange={(e) => setInverterManufacturer(e.target.value)}
-                            placeholder="e.g., SMA, Sungrow, Power Electronics"
-                            className="w-full px-4 py-3 rounded-lg text-white text-base placeholder-white/30 focus:ring-2 focus:ring-blue-500/40 focus:outline-none transition-all"
-                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                            value={projectName}
+                            onChange={(e) => setProjectName(e.target.value)}
+                            placeholder="e.g., Downtown Hotel BESS"
+                            className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder-white/20"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            className="block text-sm font-semibold mb-2"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            Location
+                          </label>
+                          <input
+                            type="text"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            placeholder="City, State"
+                            className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder-white/20"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
                           />
                         </div>
                       </div>
-                    </div>
-
-                    {/* Electrical Parameters - INPUT FIELDS */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      {/* System Watts */}
-                      <div className="rounded-xl p-4" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                        <label className="block text-xs mb-2 font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          System Power (Watts)
-                        </label>
-                        <input
-                          type="number"
-                          value={systemWattsInput}
-                          onChange={(e) =>
-                            setSystemWattsInput(
-                              e.target.value === "" ? "" : parseFloat(e.target.value)
-                            )
-                          }
-                          placeholder={calculatedWatts.toLocaleString()}
-                          className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        />
-                        <p className="text-xs text-emerald-400 mt-2 font-bold">
-                          {totalKW.toLocaleString()} kW / {(totalKW / 1000).toFixed(2)} MW
-                        </p>
-                        <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          Calculated: {calculatedWatts.toLocaleString()} W
-                        </p>
-                      </div>
-
-                      {/* AC Amps */}
-                      <div className="rounded-xl p-4" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                        <label className="block text-xs mb-2 font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          AC Current (3-Phase)
-                        </label>
-                        <input
-                          type="number"
-                          value={systemAmpsACInput}
-                          onChange={(e) =>
-                            setSystemAmpsACInput(
-                              e.target.value === "" ? "" : parseFloat(e.target.value)
-                            )
-                          }
-                          placeholder={calculatedAmpsAC.toFixed(0)}
-                          className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        />
-                        <p className="text-xs text-indigo-400 mt-2 font-bold">
-                          @ {systemVoltage}V AC Per Phase
-                        </p>
-                        <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          Calculated: {calculatedAmpsAC.toFixed(0)} A
-                        </p>
-                      </div>
-
-                      {/* DC Amps */}
-                      <div className="rounded-xl p-4" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                        <label className="block text-xs mb-2 font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          DC Current (Battery Side)
-                        </label>
-                        <input
-                          type="number"
-                          value={systemAmpsDCInput}
-                          onChange={(e) =>
-                            setSystemAmpsDCInput(
-                              e.target.value === "" ? "" : parseFloat(e.target.value)
-                            )
-                          }
-                          placeholder={calculatedAmpsDC.toFixed(0)}
-                          className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        />
-                        <p className="text-xs text-blue-400 mt-2 font-bold">@ {dcVoltage}V DC</p>
-                        <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          Calculated: {calculatedAmpsDC.toFixed(0)} A
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Voltage Configuration */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                      <div className="rounded-lg p-4" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          AC System Voltage (V)
-                        </label>
-                        <select
-                          value={systemVoltage}
-                          onChange={(e) => setSystemVoltage(parseInt(e.target.value))}
-                          className="w-full px-4 py-3 rounded-lg text-white font-medium focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        >
-                          <option value={208}>208V (Small Commercial)</option>
-                          <option value={480}>480V (Standard Industrial)</option>
-                          <option value={600}>600V (Large Industrial)</option>
-                          <option value={4160}>4.16 kV (Medium Voltage)</option>
-                          <option value={13800}>13.8 kV (Utility Scale)</option>
-                        </select>
-                      </div>
-
-                      <div className="rounded-lg p-4" style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          DC Battery Voltage (V)
-                        </label>
-                        <input
-                          type="number"
-                          value={dcVoltage}
-                          onChange={(e) => setDcVoltage(parseInt(e.target.value) || 1000)}
-                          step="100"
-                          min="100"
-                          className="w-full px-4 py-3 rounded-lg text-white font-medium focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        />
-                        <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          Typical: 800V - 1500V DC
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Summary Card */}
-                    <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <h4 className="text-sm font-bold text-emerald-400 mb-4 flex items-center gap-2">
-                        <Cpu className="w-5 h-5 text-emerald-400" />
-                        System Summary
-                      </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <p className="mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Total Power:</p>
-                          <p className="text-xl font-bold text-white">
-                            {(totalKW / 1000).toFixed(2)} MW
-                          </p>
-                        </div>
-                        <div>
-                          <p className="mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Inverters:</p>
-                          <p className="text-xl font-bold text-white">
-                            {numberOfInverters} units
-                          </p>
-                        </div>
-                        <div>
-                          <p className="mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>AC Current:</p>
-                          <p className="text-xl font-bold text-indigo-400">
-                            {maxAmpsAC.toLocaleString(undefined, { maximumFractionDigits: 0 })} A
-                          </p>
-                        </div>
-                        <div>
-                          <p className="mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>DC Current:</p>
-                          <p className="text-xl font-bold text-blue-400">
-                            {maxAmpsDC.toLocaleString(undefined, { maximumFractionDigits: 0 })} A
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                            PCS Configuration:
-                          </span>
-                          <span className="text-sm font-bold text-white">
-                            {inverterType === "bidirectional"
-                              ? "⚡ Bidirectional"
-                              : "→ Unidirectional"}{" "}
-                            |{pcsQuoteSeparately ? " Quoted Separately" : " Included in System"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 rounded-lg p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        ⚡ <strong className="text-white">Note:</strong> Input custom values to override calculated
-                        specifications. Leave blank to use auto-calculated values based on{" "}
-                        {storageSizeMW} MW system rating.
-                        {pcsQuoteSeparately &&
-                          " PCS will be itemized with detailed manufacturer specifications."}
-                      </p>
                     </div>
                   </div>
 
-                  {/* Renewables & Alternative Power Section */}
+                  {/* ────────────────────────────────────────────────
+                    SECTION: FINANCIAL PARAMETERS
+                    ──────────────────────────────────────────────── */}
                   <div
-                    data-section="renewables"
-                    className="rounded-xl p-8 scroll-mt-24"
-                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    data-section="financial"
+                    className="scroll-mt-48 rounded-xl overflow-hidden"
+                    style={{
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
                   >
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold flex items-center gap-3">
-                        <Sparkles className="w-5 h-5 text-emerald-400" />
-                        <span className="text-white">
-                          Renewables & Alternative Power
+                    <div
+                      className="px-6 py-4"
+                      style={{
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        background: "rgba(255,255,255,0.02)",
+                      }}
+                    >
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-3">
+                        <div
+                          className="p-2 rounded-lg"
+                          style={{ background: "rgba(16,185,129,0.1)" }}
+                        >
+                          <DollarSign className="w-5 h-5" style={{ color: "#34d399" }} />
+                        </div>
+                        Financial Parameters
+                        <span
+                          className="text-xs font-normal ml-auto"
+                          style={{ color: "rgba(255,255,255,0.35)" }}
+                        >
+                          Rates & costs for ROI calculation
                         </span>
                       </h3>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          Include Renewables
-                        </span>
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={includeRenewables}
-                            onChange={(e) => setIncludeRenewables(e.target.checked)}
-                            className="sr-only peer"
-                          />
-                          <div className="w-14 h-7 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
-                        </div>
-                      </label>
                     </div>
 
-                    {includeRenewables && (
-                      <div className="space-y-6">
-                        <MerlinTip
-                          tip={solarPVIncluded && solarCapacityKW > 0 ? `Solar + BESS is the sweet spot. Your ${solarCapacityKW} kW solar array pairs well with ${(storageSizeMW * 1000).toFixed(0)} kW BESS for maximum self-consumption and ITC stacking.` : "Solar PV paired with BESS can qualify for 30-50% ITC under IRA 2022. DC-coupled systems with ILR 1.3-1.5 maximize battery utilization."}
-                          context="IRA 2022 Section 48E + NREL ATB 2024 PV-Plus-Battery guidance"
-                        />
-                        {/* ═══════════════ SOLAR PV SYSTEM ═══════════════ */}
-                        <div className="rounded-xl p-6" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                          <div className="flex items-center justify-between mb-6">
-                            <h4 className="text-base font-semibold flex items-center gap-2 text-white">
-                              ☀️ Solar PV System
-                            </h4>
-                            <label className="flex items-center gap-3 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={solarPVIncluded}
-                                onChange={(e) => setSolarPVIncluded(e.target.checked)}
-                                className="w-5 h-5 rounded border-2 border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
-                              />
-                              <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                                Include Solar
-                              </span>
-                            </label>
+                    <div className="p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                          <label
+                            className="block text-xs font-bold uppercase tracking-wider mb-2"
+                            style={{ color: "rgba(255,255,255,0.45)" }}
+                          >
+                            Utility Rate
+                          </label>
+                          <div className="relative">
+                            <span
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold"
+                              style={{ color: "rgba(16,185,129,0.6)" }}
+                            >
+                              $
+                            </span>
+                            <input
+                              type="number"
+                              value={utilityRate}
+                              onChange={(e) => setUtilityRate(parseFloat(e.target.value) || 0)}
+                              step="0.01"
+                              className="w-full pl-7 pr-14 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
+                              style={{
+                                background: "rgba(255,255,255,0.06)",
+                                border: "1px solid rgba(255,255,255,0.12)",
+                              }}
+                            />
+                            <span
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none"
+                              style={{ color: "rgba(255,255,255,0.3)" }}
+                            >
+                              /kWh
+                            </span>
                           </div>
-
-                          {solarPVIncluded &&
-                            (() => {
-                              const solarSizing = calculateSolarSizing({
-                                solarCapacityKW,
-                                panelType: solarPanelType,
-                                panelEfficiency: solarPanelEfficiency,
-                                region: "midwest",
-                              });
-                              // Solar Sizing Tool: calculate max capacity from available space
-                              const panelAreaSqFt = 21.5; // 400W panel
-                              const panelWattage = 400;
-                              const availableSqFt = solarInstallType === 'rooftop' ? solarRoofSpaceSqFt
-                                : solarInstallType === 'canopy' ? solarCanopySqFt
-                                : solarInstallType === 'ground-mount' ? solarGroundAcres * 43560
-                                : solarRoofSpaceSqFt + solarCanopySqFt + (solarGroundAcres * 43560);
-                              const maxPanelsFromSpace = Math.floor(availableSqFt / panelAreaSqFt);
-                              const maxSolarKWFromSpace = Math.round((maxPanelsFromSpace * panelWattage) / 1000);
-                              const trackingBoost = solarTrackingType === 'single-axis' ? 1.25 : solarTrackingType === 'dual-axis' ? 1.35 : 1.0;
-                              const adjustedAnnualKWh = Math.round(solarSizing.annualKWh * trackingBoost);
-
-                              return (
-                                <div className="space-y-5">
-                                  {/* Installation Type */}
-                                  <div>
-                                    <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                      Installation Type
-                                    </label>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                      {([
-                                        { value: 'rooftop', label: '🏢 Rooftop', desc: 'Building roof' },
-                                        { value: 'canopy', label: '🅿️ Parking Canopy', desc: 'Covered parking' },
-                                        { value: 'ground-mount', label: '🌾 Ground Mount', desc: 'Open land' },
-                                        { value: 'mixed', label: '🔀 Mixed', desc: 'Multiple locations' },
-                                      ] as const).map((opt) => (
-                                        <button
-                                          key={opt.value}
-                                          onClick={() => setSolarInstallType(opt.value)}
-                                          className="p-3 rounded-lg text-left transition-all"
-                                          style={{
-                                            background: solarInstallType === opt.value ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
-                                            border: solarInstallType === opt.value ? '1px solid rgba(16,185,129,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                                          }}
-                                        >
-                                          <span className="text-sm font-semibold text-white">{opt.label}</span>
-                                          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{opt.desc}</p>
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  {/* Available Space - conditional on install type */}
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {(solarInstallType === 'rooftop' || solarInstallType === 'mixed') && (
-                                      <div>
-                                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                          Available Roof Space (sq ft)
-                                        </label>
-                                        <input
-                                          type="number"
-                                          value={solarRoofSpaceSqFt}
-                                          onChange={(e) => setSolarRoofSpaceSqFt(parseFloat(e.target.value) || 0)}
-                                          step="500"
-                                          min="0"
-                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                        />
-                                      </div>
-                                    )}
-                                    {(solarInstallType === 'canopy' || solarInstallType === 'mixed') && (
-                                      <div>
-                                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                          Parking Canopy Area (sq ft)
-                                        </label>
-                                        <input
-                                          type="number"
-                                          value={solarCanopySqFt}
-                                          onChange={(e) => setSolarCanopySqFt(parseFloat(e.target.value) || 0)}
-                                          step="500"
-                                          min="0"
-                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                        />
-                                      </div>
-                                    )}
-                                    {(solarInstallType === 'ground-mount' || solarInstallType === 'mixed') && (
-                                      <div>
-                                        <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                          Available Land (acres)
-                                        </label>
-                                        <input
-                                          type="number"
-                                          value={solarGroundAcres}
-                                          onChange={(e) => setSolarGroundAcres(parseFloat(e.target.value) || 0)}
-                                          step="0.5"
-                                          min="0"
-                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                        />
-                                      </div>
-                                    )}
-                                    <div>
-                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                        Peak Sun Hours (daily avg)
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={solarPeakSunHours}
-                                        onChange={(e) => setSolarPeakSunHours(parseFloat(e.target.value) || 4)}
-                                        step="0.5"
-                                        min="2"
-                                        max="8"
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                      />
-                                      <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Southwest: 6-7h | Midwest: 4-5h | Northeast: 3-4h</p>
-                                    </div>
-                                  </div>
-
-                                  {/* Solar Sizing Tool - recommendation banner */}
-                                  <div className="rounded-lg p-4" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                                    <div className="flex items-center justify-between">
-                                      <div>
-                                        <p className="text-sm font-bold text-emerald-300">🔧 Solar Sizing Tool</p>
-                                        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                          Your available space supports up to <strong className="text-emerald-200">{maxSolarKWFromSpace.toLocaleString()} kW</strong> ({maxPanelsFromSpace.toLocaleString()} panels)
-                                        </p>
-                                      </div>
-                                      {solarCapacityKW !== maxSolarKWFromSpace && maxSolarKWFromSpace > 0 && (
-                                        <button
-                                          onClick={() => setSolarCapacityKW(maxSolarKWFromSpace)}
-                                          className="px-4 py-2 rounded-lg text-xs font-bold transition-all"
-                                          style={{ background: 'transparent', border: '1px solid rgba(16,185,129,0.35)', color: '#34d399' }}
-                                        >
-                                          Use Max
-                                        </button>
-                                      )}
-                                    </div>
-                                    {solarCapacityKW > maxSolarKWFromSpace && maxSolarKWFromSpace > 0 && (
-                                      <p className="text-xs mt-2 text-red-400">
-                                        ⚠️ Selected capacity ({solarCapacityKW} kW) exceeds available space ({maxSolarKWFromSpace} kW)
-                                      </p>
-                                    )}
-                                  </div>
-
-                                  {/* Core Solar Config */}
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                        Solar Capacity (kW)
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={solarCapacityKW}
-                                        onChange={(e) => setSolarCapacityKW(parseFloat(e.target.value) || 0)}
-                                        step="50"
-                                        min="0"
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                        Panel Type
-                                      </label>
-                                      <select
-                                        value={solarPanelType}
-                                        onChange={(e) => setSolarPanelType(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                      >
-                                        <option value="monocrystalline">Monocrystalline (20-22%)</option>
-                                        <option value="polycrystalline">Polycrystalline (15-17%)</option>
-                                        <option value="thin-film">Thin-Film (10-12%)</option>
-                                        <option value="bifacial">Bifacial (22-24%)</option>
-                                        <option value="perc">PERC (21-23%)</option>
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                        Panel Efficiency (%)
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={solarPanelEfficiency}
-                                        onChange={(e) => setSolarPanelEfficiency(parseFloat(e.target.value) || 15)}
-                                        min="10"
-                                        max="25"
-                                        step="0.5"
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {/* Inverter & Tracking */}
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                        Inverter Type
-                                      </label>
-                                      <select
-                                        value={solarInverterType}
-                                        onChange={(e) => setSolarInverterType(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                      >
-                                        <option value="string">String Inverter</option>
-                                        <option value="micro">Micro-Inverters</option>
-                                        <option value="power-optimizer">Power Optimizers</option>
-                                        <option value="central">Central Inverter</option>
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                        Tracking System
-                                      </label>
-                                      <select
-                                        value={solarTrackingType}
-                                        onChange={(e) => setSolarTrackingType(e.target.value as 'fixed' | 'single-axis' | 'dual-axis')}
-                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                      >
-                                        <option value="fixed">Fixed Tilt (lowest cost)</option>
-                                        <option value="single-axis">Single-Axis Tracker (+25% output)</option>
-                                        <option value="dual-axis">Dual-Axis Tracker (+35% output)</option>
-                                      </select>
-                                    </div>
-                                  </div>
-
-                                  {/* Production Estimate */}
-                                  <div className="rounded-xl p-4" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                                    <p className="text-sm text-emerald-300 font-bold mb-2">
-                                      ☀️ Estimated Annual Production:{" "}
-                                      <strong className="text-emerald-200">
-                                        {adjustedAnnualKWh.toLocaleString()} kWh/year
-                                      </strong>{" "}
-                                      ({solarSizing.sunHours} sun-hrs/yr{solarTrackingType !== 'fixed' ? ` + ${solarTrackingType} tracking` : ''})
-                                    </p>
-                                    <p className="text-sm mt-2 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      Array: ~{solarSizing.arrayAreaSqFt.toLocaleString()} sq ft (~{solarSizing.arrayAreaAcres} acres) | ~{solarSizing.panelsNeeded} panels @ {solarSizing.panelWattage}W
-                                    </p>
-                                    <p className="text-sm mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      ILR: {solarSizing.ilr} (DC-coupled, NREL ATB 2024) | BESS should store {Math.round(solarCapacityKW * 0.3)} kW for solar smoothing
-                                    </p>
-                                    <p className="text-xs mt-2 italic" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                                      {solarSizing.citation}
-                                    </p>
-                                  </div>
-                                </div>
-                              );
-                            })()}
                         </div>
 
-                        {/* ═══════════════ WIND TURBINE SYSTEM ═══════════════ */}
-                        <div className="rounded-xl p-6" style={{ background: 'rgba(34,211,238,0.05)', border: '1px solid rgba(34,211,238,0.15)' }}>
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-base font-semibold flex items-center gap-2 text-white">
-                              💨 Wind Turbine System
-                            </h4>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={windTurbineIncluded}
-                                onChange={(e) => setWindTurbineIncluded(e.target.checked)}
-                                className="w-5 h-5 rounded border-white/20 text-cyan-500 focus:ring-cyan-500/40 bg-transparent"
-                              />
-                              <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                                Include Wind
-                              </span>
+                        <div>
+                          <label
+                            className="block text-xs font-bold uppercase tracking-wider mb-2"
+                            style={{ color: "rgba(255,255,255,0.45)" }}
+                          >
+                            Demand Charge
+                          </label>
+                          <div className="relative">
+                            <span
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold"
+                              style={{ color: "rgba(16,185,129,0.6)" }}
+                            >
+                              $
+                            </span>
+                            <input
+                              type="number"
+                              value={demandCharge}
+                              onChange={(e) => setDemandCharge(parseFloat(e.target.value) || 0)}
+                              className="w-full pl-7 pr-12 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
+                              style={{
+                                background: "rgba(255,255,255,0.06)",
+                                border: "1px solid rgba(255,255,255,0.12)",
+                              }}
+                            />
+                            <span
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none"
+                              style={{ color: "rgba(255,255,255,0.3)" }}
+                            >
+                              /kW
+                            </span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label
+                            className="block text-xs font-bold uppercase tracking-wider mb-2"
+                            style={{ color: "rgba(255,255,255,0.45)" }}
+                          >
+                            Cycles / Year
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={cyclesPerYear}
+                              onChange={(e) => setCyclesPerYear(parseFloat(e.target.value) || 1)}
+                              className="w-full px-3 pr-14 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
+                              style={{
+                                background: "rgba(255,255,255,0.06)",
+                                border: "1px solid rgba(255,255,255,0.12)",
+                              }}
+                            />
+                            <span
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none"
+                              style={{ color: "rgba(255,255,255,0.3)" }}
+                            >
+                              cyc/yr
+                            </span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label
+                            className="block text-xs font-bold uppercase tracking-wider mb-2"
+                            style={{ color: "rgba(255,255,255,0.45)" }}
+                          >
+                            Warranty
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={warrantyYears}
+                              onChange={(e) => setWarrantyYears(parseFloat(e.target.value) || 10)}
+                              className="w-full px-3 pr-12 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
+                              style={{
+                                background: "rgba(255,255,255,0.06)",
+                                border: "1px solid rgba(255,255,255,0.12)",
+                              }}
+                            />
+                            <span
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold pointer-events-none"
+                              style={{ color: "rgba(255,255,255,0.3)" }}
+                            >
+                              years
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Advanced Financials Link */}
+                      <div
+                        className="mt-6 p-4 rounded-xl"
+                        style={{
+                          background: "rgba(16,185,129,0.05)",
+                          border: "1px solid rgba(16,185,129,0.15)",
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Landmark className="w-5 h-5" style={{ color: "#34d399" }} />
+                            <div>
+                              <p className="text-sm font-semibold text-white">
+                                Need Bank-Ready Financials?
+                              </p>
+                              <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                3-Statement Model, DSCR, IRR, MACRS, Revenue Stacking
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setViewMode("professional-model")}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                            style={{
+                              background: "rgba(16,185,129,0.1)",
+                              color: "#34d399",
+                              border: "1px solid rgba(16,185,129,0.2)",
+                            }}
+                          >
+                            Open Pro Model
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ────────────────────────────────────────────────
+                    SECTION: ELECTRICAL SPECIFICATIONS
+                    ──────────────────────────────────────────────── */}
+                  <div
+                    data-section="electrical"
+                    className="scroll-mt-48 rounded-xl overflow-hidden"
+                    style={{
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <div
+                      className="px-6 py-4"
+                      style={{
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        background: "rgba(255,255,255,0.02)",
+                      }}
+                    >
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-3">
+                        <div
+                          className="p-2 rounded-lg"
+                          style={{ background: "rgba(16,185,129,0.1)" }}
+                        >
+                          <Zap className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        Electrical Specifications
+                        <span
+                          className="text-xs font-normal ml-auto"
+                          style={{ color: "rgba(255,255,255,0.35)" }}
+                        >
+                          PCS, Inverters, Transformers
+                        </span>
+                      </h3>
+                      <MerlinTip
+                        tip="Most projects use a pre-engineered containerized BESS solution that includes the PCS, BMS, and thermal management. Transformer specs should match your utility interconnection requirements."
+                        context="IEEE 1547-2018 interconnection standard"
+                      />
+                    </div>
+
+                    <div className="p-6">
+                      {/* Power Conversion System (PCS) Configuration */}
+                      <div
+                        className="rounded-xl p-6 mb-6"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
+                        <h4 className="text-lg font-semibold mb-6 text-white flex items-center gap-2">
+                          <Zap className="w-5 h-5 text-emerald-400" />
+                          Power Conversion System (PCS)
+                        </h4>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* PCS Quoting Option */}
+                          <div className="col-span-full">
+                            <label
+                              className="block text-sm font-semibold mb-3"
+                              style={{ color: "rgba(255,255,255,0.7)" }}
+                            >
+                              PCS Quoting Method
                             </label>
+                            <div className="flex gap-4">
+                              <label
+                                className="flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all flex-1"
+                                style={{
+                                  background: !pcsQuoteSeparately
+                                    ? "rgba(16,185,129,0.1)"
+                                    : "rgba(255,255,255,0.03)",
+                                  border: !pcsQuoteSeparately
+                                    ? "1px solid rgba(16,185,129,0.3)"
+                                    : "1px solid rgba(255,255,255,0.08)",
+                                }}
+                              >
+                                <input
+                                  type="radio"
+                                  checked={!pcsQuoteSeparately}
+                                  onChange={() => setPcsQuoteSeparately(false)}
+                                  className="w-5 h-5 text-emerald-500"
+                                />
+                                <span className="text-sm font-semibold text-white">
+                                  Included with BESS System
+                                </span>
+                              </label>
+                              <label
+                                className="flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all flex-1"
+                                style={{
+                                  background: pcsQuoteSeparately
+                                    ? "rgba(16,185,129,0.1)"
+                                    : "rgba(255,255,255,0.03)",
+                                  border: pcsQuoteSeparately
+                                    ? "1px solid rgba(16,185,129,0.3)"
+                                    : "1px solid rgba(255,255,255,0.08)",
+                                }}
+                              >
+                                <input
+                                  type="radio"
+                                  checked={pcsQuoteSeparately}
+                                  onChange={() => setPcsQuoteSeparately(true)}
+                                  className="w-5 h-5 text-emerald-500"
+                                />
+                                <span className="text-sm font-semibold text-white">
+                                  Quote PCS Separately
+                                </span>
+                              </label>
+                            </div>
+                            {pcsQuoteSeparately && (
+                              <p
+                                className="text-sm mt-3 rounded-lg p-3"
+                                style={{
+                                  color: "rgba(16,185,129,0.9)",
+                                  background: "rgba(16,185,129,0.08)",
+                                  border: "1px solid rgba(16,185,129,0.15)",
+                                }}
+                              >
+                                💡 PCS will be itemized separately in the quote with detailed
+                                specifications
+                              </p>
+                            )}
                           </div>
 
-                          {windTurbineIncluded && (
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                    Total Wind Capacity (kW)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={windCapacityKW}
-                                    onChange={(e) => setWindCapacityKW(parseFloat(e.target.value) || 0)}
-                                    step="50"
-                                    min="0"
-                                    className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
-                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                    Turbine Type
-                                  </label>
-                                  <select
-                                    value={windTurbineType}
-                                    onChange={(e) => setWindTurbineType(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
-                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                  >
-                                    <option value="horizontal">Horizontal Axis (HAWT) — Utility scale</option>
-                                    <option value="vertical">Vertical Axis (VAWT) — Urban / rooftop</option>
-                                  </select>
-                                </div>
-                              </div>
+                          {/* Inverter Type */}
+                          <div>
+                            <label
+                              className="block text-sm font-semibold mb-3"
+                              style={{ color: "rgba(255,255,255,0.7)" }}
+                            >
+                              Inverter Type
+                            </label>
+                            <select
+                              value={inverterType}
+                              onChange={(e) => setInverterType(e.target.value)}
+                              className="w-full px-4 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-colors"
+                              style={{
+                                background: "rgba(255,255,255,0.06)",
+                                border: "1px solid rgba(255,255,255,0.1)",
+                              }}
+                            >
+                              <option value="bidirectional">Bidirectional Inverter</option>
+                              <option value="unidirectional">Unidirectional (Charge Only)</option>
+                            </select>
+                            <p className="text-sm mt-2" style={{ color: "rgba(255,255,255,0.4)" }}>
+                              {inverterType === "bidirectional"
+                                ? "⚡ Supports charge & discharge"
+                                : "⚡ Charge only (typical for solar)"}
+                            </p>
+                          </div>
 
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                    Number of Turbines
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={windTurbineCount}
-                                    onChange={(e) => setWindTurbineCount(Math.max(1, parseInt(e.target.value) || 1))}
-                                    min="1"
-                                    max="50"
-                                    className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
-                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                  />
-                                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                                    {Math.round(windCapacityKW / Math.max(1, windTurbineCount))} kW per turbine
-                                  </p>
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                    Hub Height (m)
-                                  </label>
-                                  <select
-                                    value={windHubHeight}
-                                    onChange={(e) => setWindHubHeight(parseInt(e.target.value))}
-                                    className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
-                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                  >
-                                    <option value="30">30m — Small / distributed</option>
-                                    <option value="50">50m — Community scale</option>
-                                    <option value="80">80m — Standard commercial</option>
-                                    <option value="100">100m — Large commercial</option>
-                                    <option value="120">120m — Utility scale</option>
-                                  </select>
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                    Site Terrain
-                                  </label>
-                                  <select
-                                    value={windTerrain}
-                                    onChange={(e) => setWindTerrain(e.target.value as 'open' | 'suburban' | 'coastal' | 'complex')}
-                                    className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
-                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                  >
-                                    <option value="open">Open Terrain (best)</option>
-                                    <option value="coastal">Coastal (strong, consistent)</option>
-                                    <option value="suburban">Suburban (reduced)</option>
-                                    <option value="complex">Complex Terrain (ridges, valleys)</option>
-                                  </select>
-                                </div>
-                              </div>
+                          {/* Number of Inverters */}
+                          <div>
+                            <label
+                              className="block text-sm font-semibold mb-3"
+                              style={{ color: "rgba(255,255,255,0.7)" }}
+                            >
+                              Number of Inverters
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                value={numberOfInvertersInput}
+                                onChange={(e) =>
+                                  setNumberOfInvertersInput(parseInt(e.target.value) || 1)
+                                }
+                                min="1"
+                                className="flex-1 px-4 py-3 text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                                style={{
+                                  background: "rgba(255,255,255,0.06)",
+                                  border: "1px solid rgba(255,255,255,0.1)",
+                                }}
+                                placeholder="Auto-calculated"
+                              />
+                              <button
+                                onClick={() =>
+                                  setNumberOfInvertersInput(Math.ceil(totalKW / inverterRating))
+                                }
+                                className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 border-2 border-emerald-700 rounded-lg text-sm font-bold text-white transition-all shadow-sm"
+                                title="Auto-calculate based on system size"
+                              >
+                                Auto
+                              </button>
+                            </div>
+                            <p
+                              className="text-sm mt-2 font-medium"
+                              style={{ color: "rgba(255,255,255,0.5)" }}
+                            >
+                              Suggested: {Math.ceil(totalKW / inverterRating)} units @{" "}
+                              {inverterRating} kW each
+                            </p>
+                          </div>
 
-                              {/* Wind Class */}
-                              <div>
-                                <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                  IEC Wind Class
-                                </label>
-                                <div className="grid grid-cols-4 gap-2">
-                                  {([
-                                    { value: 1, label: 'Class I', desc: '10+ m/s', color: 'rgba(34,211,238,0.3)' },
-                                    { value: 2, label: 'Class II', desc: '8.5-10 m/s', color: 'rgba(34,211,238,0.22)' },
-                                    { value: 3, label: 'Class III', desc: '7.5-8.5 m/s', color: 'rgba(34,211,238,0.15)' },
-                                    { value: 4, label: 'Class IV', desc: '<7.5 m/s', color: 'rgba(34,211,238,0.08)' },
-                                  ] as const).map((cls) => (
-                                    <button
-                                      key={cls.value}
-                                      onClick={() => setWindClassRating(cls.value)}
-                                      className="p-3 rounded-lg text-center transition-all"
+                          {/* Inverter Rating */}
+                          <div>
+                            <label
+                              className="block text-sm font-semibold mb-2"
+                              style={{ color: "rgba(255,255,255,0.6)" }}
+                            >
+                              Inverter Rating (kW per unit)
+                            </label>
+                            <input
+                              type="number"
+                              value={inverterRating}
+                              onChange={(e) =>
+                                setInverterRating(parseFloat(e.target.value) || 2500)
+                              }
+                              step="100"
+                              min="100"
+                              className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-blue-500/40 focus:outline-none transition-all"
+                              style={{
+                                background: "rgba(255,255,255,0.06)",
+                                border: "1px solid rgba(255,255,255,0.1)",
+                              }}
+                            />
+                          </div>
+
+                          {/* Manufacturer */}
+                          <div>
+                            <label
+                              className="block text-sm font-semibold mb-2"
+                              style={{ color: "rgba(255,255,255,0.6)" }}
+                            >
+                              Inverter Manufacturer (Optional)
+                            </label>
+                            <input
+                              type="text"
+                              value={inverterManufacturer}
+                              onChange={(e) => setInverterManufacturer(e.target.value)}
+                              placeholder="e.g., SMA, Sungrow, Power Electronics"
+                              className="w-full px-4 py-3 rounded-lg text-white text-base placeholder-white/30 focus:ring-2 focus:ring-blue-500/40 focus:outline-none transition-all"
+                              style={{
+                                background: "rgba(255,255,255,0.06)",
+                                border: "1px solid rgba(255,255,255,0.1)",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Electrical Parameters - INPUT FIELDS */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        {/* System Watts */}
+                        <div
+                          className="rounded-xl p-4"
+                          style={{
+                            background: "rgba(59,130,246,0.08)",
+                            border: "1px solid rgba(59,130,246,0.2)",
+                          }}
+                        >
+                          <label
+                            className="block text-xs mb-2 font-semibold"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            System Power (Watts)
+                          </label>
+                          <input
+                            type="number"
+                            value={systemWattsInput}
+                            onChange={(e) =>
+                              setSystemWattsInput(
+                                e.target.value === "" ? "" : parseFloat(e.target.value)
+                              )
+                            }
+                            placeholder={calculatedWatts.toLocaleString()}
+                            className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          />
+                          <p className="text-xs text-emerald-400 mt-2 font-bold">
+                            {totalKW.toLocaleString()} kW / {(totalKW / 1000).toFixed(2)} MW
+                          </p>
+                          <p
+                            className="text-xs mt-1 font-medium"
+                            style={{ color: "rgba(255,255,255,0.4)" }}
+                          >
+                            Calculated: {calculatedWatts.toLocaleString()} W
+                          </p>
+                        </div>
+
+                        {/* AC Amps */}
+                        <div
+                          className="rounded-xl p-4"
+                          style={{
+                            background: "rgba(99,102,241,0.08)",
+                            border: "1px solid rgba(99,102,241,0.2)",
+                          }}
+                        >
+                          <label
+                            className="block text-xs mb-2 font-semibold"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            AC Current (3-Phase)
+                          </label>
+                          <input
+                            type="number"
+                            value={systemAmpsACInput}
+                            onChange={(e) =>
+                              setSystemAmpsACInput(
+                                e.target.value === "" ? "" : parseFloat(e.target.value)
+                              )
+                            }
+                            placeholder={calculatedAmpsAC.toFixed(0)}
+                            className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          />
+                          <p className="text-xs text-indigo-400 mt-2 font-bold">
+                            @ {systemVoltage}V AC Per Phase
+                          </p>
+                          <p
+                            className="text-xs mt-1 font-medium"
+                            style={{ color: "rgba(255,255,255,0.4)" }}
+                          >
+                            Calculated: {calculatedAmpsAC.toFixed(0)} A
+                          </p>
+                        </div>
+
+                        {/* DC Amps */}
+                        <div
+                          className="rounded-xl p-4"
+                          style={{
+                            background: "rgba(59,130,246,0.08)",
+                            border: "1px solid rgba(59,130,246,0.2)",
+                          }}
+                        >
+                          <label
+                            className="block text-xs mb-2 font-semibold"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            DC Current (Battery Side)
+                          </label>
+                          <input
+                            type="number"
+                            value={systemAmpsDCInput}
+                            onChange={(e) =>
+                              setSystemAmpsDCInput(
+                                e.target.value === "" ? "" : parseFloat(e.target.value)
+                              )
+                            }
+                            placeholder={calculatedAmpsDC.toFixed(0)}
+                            className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          />
+                          <p className="text-xs text-blue-400 mt-2 font-bold">@ {dcVoltage}V DC</p>
+                          <p
+                            className="text-xs mt-1 font-medium"
+                            style={{ color: "rgba(255,255,255,0.4)" }}
+                          >
+                            Calculated: {calculatedAmpsDC.toFixed(0)} A
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Voltage Configuration */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div
+                          className="rounded-lg p-4"
+                          style={{
+                            background: "rgba(99,102,241,0.06)",
+                            border: "1px solid rgba(99,102,241,0.15)",
+                          }}
+                        >
+                          <label
+                            className="block text-sm font-semibold mb-2"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            AC System Voltage (V)
+                          </label>
+                          <select
+                            value={systemVoltage}
+                            onChange={(e) => setSystemVoltage(parseInt(e.target.value))}
+                            className="w-full px-4 py-3 rounded-lg text-white font-medium focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <option value={208}>208V (Small Commercial)</option>
+                            <option value={480}>480V (Standard Industrial)</option>
+                            <option value={600}>600V (Large Industrial)</option>
+                            <option value={4160}>4.16 kV (Medium Voltage)</option>
+                            <option value={13800}>13.8 kV (Utility Scale)</option>
+                          </select>
+                        </div>
+
+                        <div
+                          className="rounded-lg p-4"
+                          style={{
+                            background: "rgba(59,130,246,0.06)",
+                            border: "1px solid rgba(59,130,246,0.15)",
+                          }}
+                        >
+                          <label
+                            className="block text-sm font-semibold mb-2"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            DC Battery Voltage (V)
+                          </label>
+                          <input
+                            type="number"
+                            value={dcVoltage}
+                            onChange={(e) => setDcVoltage(parseInt(e.target.value) || 1000)}
+                            step="100"
+                            min="100"
+                            className="w-full px-4 py-3 rounded-lg text-white font-medium focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          />
+                          <p
+                            className="text-xs mt-1 font-medium"
+                            style={{ color: "rgba(255,255,255,0.4)" }}
+                          >
+                            Typical: 800V - 1500V DC
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Summary Card */}
+                      <div
+                        className="rounded-xl p-6"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        <h4 className="text-sm font-bold text-emerald-400 mb-4 flex items-center gap-2">
+                          <Cpu className="w-5 h-5 text-emerald-400" />
+                          System Summary
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <p
+                              className="mb-1 font-medium"
+                              style={{ color: "rgba(255,255,255,0.5)" }}
+                            >
+                              Total Power:
+                            </p>
+                            <p className="text-xl font-bold text-white">
+                              {(totalKW / 1000).toFixed(2)} MW
+                            </p>
+                          </div>
+                          <div>
+                            <p
+                              className="mb-1 font-medium"
+                              style={{ color: "rgba(255,255,255,0.5)" }}
+                            >
+                              Inverters:
+                            </p>
+                            <p className="text-xl font-bold text-white">
+                              {numberOfInverters} units
+                            </p>
+                          </div>
+                          <div>
+                            <p
+                              className="mb-1 font-medium"
+                              style={{ color: "rgba(255,255,255,0.5)" }}
+                            >
+                              AC Current:
+                            </p>
+                            <p className="text-xl font-bold text-indigo-400">
+                              {maxAmpsAC.toLocaleString(undefined, { maximumFractionDigits: 0 })} A
+                            </p>
+                          </div>
+                          <div>
+                            <p
+                              className="mb-1 font-medium"
+                              style={{ color: "rgba(255,255,255,0.5)" }}
+                            >
+                              DC Current:
+                            </p>
+                            <p className="text-xl font-bold text-blue-400">
+                              {maxAmpsDC.toLocaleString(undefined, { maximumFractionDigits: 0 })} A
+                            </p>
+                          </div>
+                        </div>
+                        <div
+                          className="mt-4 pt-4"
+                          style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span
+                              className="text-sm font-medium"
+                              style={{ color: "rgba(255,255,255,0.5)" }}
+                            >
+                              PCS Configuration:
+                            </span>
+                            <span className="text-sm font-bold text-white">
+                              {inverterType === "bidirectional"
+                                ? "⚡ Bidirectional"
+                                : "→ Unidirectional"}{" "}
+                              |{pcsQuoteSeparately ? " Quoted Separately" : " Included in System"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className="mt-4 rounded-lg p-4"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
+                        <p
+                          className="text-xs font-medium"
+                          style={{ color: "rgba(255,255,255,0.5)" }}
+                        >
+                          ⚡ <strong className="text-white">Note:</strong> Input custom values to
+                          override calculated specifications. Leave blank to use auto-calculated
+                          values based on {storageSizeMW} MW system rating.
+                          {pcsQuoteSeparately &&
+                            " PCS will be itemized with detailed manufacturer specifications."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Renewables & Alternative Power Section */}
+                    <div
+                      data-section="renewables"
+                      className="rounded-xl p-8 scroll-mt-24"
+                      style={{
+                        background: "rgba(255,255,255,0.02)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-semibold flex items-center gap-3">
+                          <Sparkles className="w-5 h-5 text-emerald-400" />
+                          <span className="text-white">Renewables & Alternative Power</span>
+                        </h3>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            Include Renewables
+                          </span>
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={includeRenewables}
+                              onChange={(e) => setIncludeRenewables(e.target.checked)}
+                              className="sr-only peer"
+                            />
+                            <div className="w-14 h-7 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                          </div>
+                        </label>
+                      </div>
+
+                      {includeRenewables && (
+                        <div className="space-y-6">
+                          <MerlinTip
+                            tip={
+                              solarPVIncluded && solarCapacityKW > 0
+                                ? `Solar + BESS is the sweet spot. Your ${solarCapacityKW} kW solar array pairs well with ${(storageSizeMW * 1000).toFixed(0)} kW BESS for maximum self-consumption and ITC stacking.`
+                                : "Solar PV paired with BESS can qualify for 30-50% ITC under IRA 2022. DC-coupled systems with ILR 1.3-1.5 maximize battery utilization."
+                            }
+                            context="IRA 2022 Section 48E + NREL ATB 2024 PV-Plus-Battery guidance"
+                          />
+                          {/* ═══════════════ SOLAR PV SYSTEM ═══════════════ */}
+                          <div
+                            className="rounded-xl p-6"
+                            style={{
+                              background: "rgba(16,185,129,0.05)",
+                              border: "1px solid rgba(16,185,129,0.15)",
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-6">
+                              <h4 className="text-base font-semibold flex items-center gap-2 text-white">
+                                ☀️ Solar PV System
+                              </h4>
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={solarPVIncluded}
+                                  onChange={(e) => setSolarPVIncluded(e.target.checked)}
+                                  className="w-5 h-5 rounded border-2 border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
+                                />
+                                <span
+                                  className="text-sm font-semibold"
+                                  style={{ color: "rgba(255,255,255,0.7)" }}
+                                >
+                                  Include Solar
+                                </span>
+                              </label>
+                            </div>
+
+                            {solarPVIncluded &&
+                              (() => {
+                                const solarSizing = calculateSolarSizing({
+                                  solarCapacityKW,
+                                  panelType: solarPanelType,
+                                  panelEfficiency: solarPanelEfficiency,
+                                  region: "midwest",
+                                });
+                                // Solar Sizing Tool: calculate max capacity from available space
+                                const panelAreaSqFt = 21.5; // 400W panel
+                                const panelWattage = 400;
+                                const availableSqFt =
+                                  solarInstallType === "rooftop"
+                                    ? solarRoofSpaceSqFt
+                                    : solarInstallType === "canopy"
+                                      ? solarCanopySqFt
+                                      : solarInstallType === "ground-mount"
+                                        ? solarGroundAcres * 43560
+                                        : solarRoofSpaceSqFt +
+                                          solarCanopySqFt +
+                                          solarGroundAcres * 43560;
+                                const maxPanelsFromSpace = Math.floor(
+                                  availableSqFt / panelAreaSqFt
+                                );
+                                const maxSolarKWFromSpace = Math.round(
+                                  (maxPanelsFromSpace * panelWattage) / 1000
+                                );
+                                const trackingBoost =
+                                  solarTrackingType === "single-axis"
+                                    ? 1.25
+                                    : solarTrackingType === "dual-axis"
+                                      ? 1.35
+                                      : 1.0;
+                                const adjustedAnnualKWh = Math.round(
+                                  solarSizing.annualKWh * trackingBoost
+                                );
+
+                                return (
+                                  <div className="space-y-5">
+                                    {/* Installation Type */}
+                                    <div>
+                                      <label
+                                        className="block text-sm font-semibold mb-3"
+                                        style={{ color: "rgba(255,255,255,0.6)" }}
+                                      >
+                                        Installation Type
+                                      </label>
+                                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        {(
+                                          [
+                                            {
+                                              value: "rooftop",
+                                              label: "🏢 Rooftop",
+                                              desc: "Building roof",
+                                            },
+                                            {
+                                              value: "canopy",
+                                              label: "🅿️ Parking Canopy",
+                                              desc: "Covered parking",
+                                            },
+                                            {
+                                              value: "ground-mount",
+                                              label: "🌾 Ground Mount",
+                                              desc: "Open land",
+                                            },
+                                            {
+                                              value: "mixed",
+                                              label: "🔀 Mixed",
+                                              desc: "Multiple locations",
+                                            },
+                                          ] as const
+                                        ).map((opt) => (
+                                          <button
+                                            key={opt.value}
+                                            onClick={() => setSolarInstallType(opt.value)}
+                                            className="p-3 rounded-lg text-left transition-all"
+                                            style={{
+                                              background:
+                                                solarInstallType === opt.value
+                                                  ? "rgba(16,185,129,0.15)"
+                                                  : "rgba(255,255,255,0.04)",
+                                              border:
+                                                solarInstallType === opt.value
+                                                  ? "1px solid rgba(16,185,129,0.4)"
+                                                  : "1px solid rgba(255,255,255,0.08)",
+                                            }}
+                                          >
+                                            <span className="text-sm font-semibold text-white">
+                                              {opt.label}
+                                            </span>
+                                            <p
+                                              className="text-xs mt-0.5"
+                                              style={{ color: "rgba(255,255,255,0.4)" }}
+                                            >
+                                              {opt.desc}
+                                            </p>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+
+                                    {/* Available Space - conditional on install type */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      {(solarInstallType === "rooftop" ||
+                                        solarInstallType === "mixed") && (
+                                        <div>
+                                          <label
+                                            className="block text-sm font-semibold mb-2"
+                                            style={{ color: "rgba(255,255,255,0.6)" }}
+                                          >
+                                            Available Roof Space (sq ft)
+                                          </label>
+                                          <input
+                                            type="number"
+                                            value={solarRoofSpaceSqFt}
+                                            onChange={(e) =>
+                                              setSolarRoofSpaceSqFt(parseFloat(e.target.value) || 0)
+                                            }
+                                            step="500"
+                                            min="0"
+                                            className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                            style={{
+                                              background: "rgba(255,255,255,0.06)",
+                                              border: "1px solid rgba(255,255,255,0.1)",
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                      {(solarInstallType === "canopy" ||
+                                        solarInstallType === "mixed") && (
+                                        <div>
+                                          <label
+                                            className="block text-sm font-semibold mb-2"
+                                            style={{ color: "rgba(255,255,255,0.6)" }}
+                                          >
+                                            Parking Canopy Area (sq ft)
+                                          </label>
+                                          <input
+                                            type="number"
+                                            value={solarCanopySqFt}
+                                            onChange={(e) =>
+                                              setSolarCanopySqFt(parseFloat(e.target.value) || 0)
+                                            }
+                                            step="500"
+                                            min="0"
+                                            className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                            style={{
+                                              background: "rgba(255,255,255,0.06)",
+                                              border: "1px solid rgba(255,255,255,0.1)",
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                      {(solarInstallType === "ground-mount" ||
+                                        solarInstallType === "mixed") && (
+                                        <div>
+                                          <label
+                                            className="block text-sm font-semibold mb-2"
+                                            style={{ color: "rgba(255,255,255,0.6)" }}
+                                          >
+                                            Available Land (acres)
+                                          </label>
+                                          <input
+                                            type="number"
+                                            value={solarGroundAcres}
+                                            onChange={(e) =>
+                                              setSolarGroundAcres(parseFloat(e.target.value) || 0)
+                                            }
+                                            step="0.5"
+                                            min="0"
+                                            className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                            style={{
+                                              background: "rgba(255,255,255,0.06)",
+                                              border: "1px solid rgba(255,255,255,0.1)",
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                      <div>
+                                        <label
+                                          className="block text-sm font-semibold mb-2"
+                                          style={{ color: "rgba(255,255,255,0.6)" }}
+                                        >
+                                          Peak Sun Hours (daily avg)
+                                        </label>
+                                        <input
+                                          type="number"
+                                          value={solarPeakSunHours}
+                                          onChange={(e) =>
+                                            setSolarPeakSunHours(parseFloat(e.target.value) || 4)
+                                          }
+                                          step="0.5"
+                                          min="2"
+                                          max="8"
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                          style={{
+                                            background: "rgba(255,255,255,0.06)",
+                                            border: "1px solid rgba(255,255,255,0.1)",
+                                          }}
+                                        />
+                                        <p
+                                          className="text-xs mt-1"
+                                          style={{ color: "rgba(255,255,255,0.35)" }}
+                                        >
+                                          Southwest: 6-7h | Midwest: 4-5h | Northeast: 3-4h
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {/* Solar Sizing Tool - recommendation banner */}
+                                    <div
+                                      className="rounded-lg p-4"
                                       style={{
-                                        background: windClassRating === cls.value ? cls.color : 'rgba(255,255,255,0.04)',
-                                        border: windClassRating === cls.value ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                                        background: "rgba(16,185,129,0.1)",
+                                        border: "1px solid rgba(16,185,129,0.2)",
                                       }}
                                     >
-                                      <span className="text-sm font-bold text-white">{cls.label}</span>
-                                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{cls.desc}</p>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="text-sm font-bold text-emerald-300">
+                                            🔧 Solar Sizing Tool
+                                          </p>
+                                          <p
+                                            className="text-xs mt-1"
+                                            style={{ color: "rgba(255,255,255,0.5)" }}
+                                          >
+                                            Your available space supports up to{" "}
+                                            <strong className="text-emerald-200">
+                                              {maxSolarKWFromSpace.toLocaleString()} kW
+                                            </strong>{" "}
+                                            ({maxPanelsFromSpace.toLocaleString()} panels)
+                                          </p>
+                                        </div>
+                                        {solarCapacityKW !== maxSolarKWFromSpace &&
+                                          maxSolarKWFromSpace > 0 && (
+                                            <button
+                                              onClick={() =>
+                                                setSolarCapacityKW(maxSolarKWFromSpace)
+                                              }
+                                              className="px-4 py-2 rounded-lg text-xs font-bold transition-all"
+                                              style={{
+                                                background: "transparent",
+                                                border: "1px solid rgba(16,185,129,0.35)",
+                                                color: "#34d399",
+                                              }}
+                                            >
+                                              Use Max
+                                            </button>
+                                          )}
+                                      </div>
+                                      {solarCapacityKW > maxSolarKWFromSpace &&
+                                        maxSolarKWFromSpace > 0 && (
+                                          <p className="text-xs mt-2 text-red-400">
+                                            ⚠️ Selected capacity ({solarCapacityKW} kW) exceeds
+                                            available space ({maxSolarKWFromSpace} kW)
+                                          </p>
+                                        )}
+                                    </div>
 
-                              {/* Wind Production Estimate */}
-                              {(() => {
-                                const terrainFactor = windTerrain === 'open' ? 1.0 : windTerrain === 'coastal' ? 1.05 : windTerrain === 'suburban' ? 0.7 : 0.85;
-                                const classFactor = windClassRating === 1 ? 0.35 : windClassRating === 2 ? 0.30 : windClassRating === 3 ? 0.25 : 0.20;
-                                const heightFactor = windHubHeight >= 100 ? 1.1 : windHubHeight >= 80 ? 1.0 : windHubHeight >= 50 ? 0.9 : 0.75;
-                                const effectiveCF = classFactor * terrainFactor * heightFactor;
-                                const annualWindKWh = Math.round(windCapacityKW * 8760 * effectiveCF);
-                                return (
-                                  <div className="rounded p-4" style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.15)' }}>
-                                    <p className="text-sm text-cyan-300 font-bold">
-                                      💨 Estimated Annual Production:{" "}
-                                      <strong className="text-cyan-200">{annualWindKWh.toLocaleString()} kWh/year</strong>{" "}
-                                      ({(effectiveCF * 100).toFixed(0)}% capacity factor)
-                                    </p>
-                                    <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                      {windTurbineCount} × {Math.round(windCapacityKW / Math.max(1, windTurbineCount))} kW turbines | {windHubHeight}m hub height | {windTerrain} terrain
-                                    </p>
-                                    <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                      BESS should store {Math.round(windCapacityKW * 0.4)} kW for wind variability smoothing
-                                    </p>
+                                    {/* Core Solar Config */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                      <div>
+                                        <label
+                                          className="block text-sm font-semibold mb-2"
+                                          style={{ color: "rgba(255,255,255,0.6)" }}
+                                        >
+                                          Solar Capacity (kW)
+                                        </label>
+                                        <input
+                                          type="number"
+                                          value={solarCapacityKW}
+                                          onChange={(e) =>
+                                            setSolarCapacityKW(parseFloat(e.target.value) || 0)
+                                          }
+                                          step="50"
+                                          min="0"
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                          style={{
+                                            background: "rgba(255,255,255,0.06)",
+                                            border: "1px solid rgba(255,255,255,0.1)",
+                                          }}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label
+                                          className="block text-sm font-semibold mb-2"
+                                          style={{ color: "rgba(255,255,255,0.6)" }}
+                                        >
+                                          Panel Type
+                                        </label>
+                                        <select
+                                          value={solarPanelType}
+                                          onChange={(e) => setSolarPanelType(e.target.value)}
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                          style={{
+                                            background: "rgba(255,255,255,0.06)",
+                                            border: "1px solid rgba(255,255,255,0.1)",
+                                          }}
+                                        >
+                                          <option value="monocrystalline">
+                                            Monocrystalline (20-22%)
+                                          </option>
+                                          <option value="polycrystalline">
+                                            Polycrystalline (15-17%)
+                                          </option>
+                                          <option value="thin-film">Thin-Film (10-12%)</option>
+                                          <option value="bifacial">Bifacial (22-24%)</option>
+                                          <option value="perc">PERC (21-23%)</option>
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label
+                                          className="block text-sm font-semibold mb-2"
+                                          style={{ color: "rgba(255,255,255,0.6)" }}
+                                        >
+                                          Panel Efficiency (%)
+                                        </label>
+                                        <input
+                                          type="number"
+                                          value={solarPanelEfficiency}
+                                          onChange={(e) =>
+                                            setSolarPanelEfficiency(
+                                              parseFloat(e.target.value) || 15
+                                            )
+                                          }
+                                          min="10"
+                                          max="25"
+                                          step="0.5"
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                          style={{
+                                            background: "rgba(255,255,255,0.06)",
+                                            border: "1px solid rgba(255,255,255,0.1)",
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {/* Inverter & Tracking */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      <div>
+                                        <label
+                                          className="block text-sm font-semibold mb-2"
+                                          style={{ color: "rgba(255,255,255,0.6)" }}
+                                        >
+                                          Inverter Type
+                                        </label>
+                                        <select
+                                          value={solarInverterType}
+                                          onChange={(e) => setSolarInverterType(e.target.value)}
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                          style={{
+                                            background: "rgba(255,255,255,0.06)",
+                                            border: "1px solid rgba(255,255,255,0.1)",
+                                          }}
+                                        >
+                                          <option value="string">String Inverter</option>
+                                          <option value="micro">Micro-Inverters</option>
+                                          <option value="power-optimizer">Power Optimizers</option>
+                                          <option value="central">Central Inverter</option>
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label
+                                          className="block text-sm font-semibold mb-2"
+                                          style={{ color: "rgba(255,255,255,0.6)" }}
+                                        >
+                                          Tracking System
+                                        </label>
+                                        <select
+                                          value={solarTrackingType}
+                                          onChange={(e) =>
+                                            setSolarTrackingType(
+                                              e.target.value as
+                                                | "fixed"
+                                                | "single-axis"
+                                                | "dual-axis"
+                                            )
+                                          }
+                                          className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                          style={{
+                                            background: "rgba(255,255,255,0.06)",
+                                            border: "1px solid rgba(255,255,255,0.1)",
+                                          }}
+                                        >
+                                          <option value="fixed">Fixed Tilt (lowest cost)</option>
+                                          <option value="single-axis">
+                                            Single-Axis Tracker (+25% output)
+                                          </option>
+                                          <option value="dual-axis">
+                                            Dual-Axis Tracker (+35% output)
+                                          </option>
+                                        </select>
+                                      </div>
+                                    </div>
+
+                                    {/* Production Estimate */}
+                                    <div
+                                      className="rounded-xl p-4"
+                                      style={{
+                                        background: "rgba(16,185,129,0.08)",
+                                        border: "1px solid rgba(16,185,129,0.15)",
+                                      }}
+                                    >
+                                      <p className="text-sm text-emerald-300 font-bold mb-2">
+                                        ☀️ Estimated Annual Production:{" "}
+                                        <strong className="text-emerald-200">
+                                          {adjustedAnnualKWh.toLocaleString()} kWh/year
+                                        </strong>{" "}
+                                        ({solarSizing.sunHours} sun-hrs/yr
+                                        {solarTrackingType !== "fixed"
+                                          ? ` + ${solarTrackingType} tracking`
+                                          : ""}
+                                        )
+                                      </p>
+                                      <p
+                                        className="text-sm mt-2 font-medium"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        Array: ~{solarSizing.arrayAreaSqFt.toLocaleString()} sq ft
+                                        (~{solarSizing.arrayAreaAcres} acres) | ~
+                                        {solarSizing.panelsNeeded} panels @{" "}
+                                        {solarSizing.panelWattage}W
+                                      </p>
+                                      <p
+                                        className="text-sm mt-1 font-medium"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        ILR: {solarSizing.ilr} (DC-coupled, NREL ATB 2024) | BESS
+                                        should store {Math.round(solarCapacityKW * 0.3)} kW for
+                                        solar smoothing
+                                      </p>
+                                      <p
+                                        className="text-xs mt-2 italic"
+                                        style={{ color: "rgba(255,255,255,0.35)" }}
+                                      >
+                                        {solarSizing.citation}
+                                      </p>
+                                    </div>
                                   </div>
                                 );
                               })()}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* ═══════════════ FUEL CELL SYSTEM ═══════════════ */}
-                        <div className="rounded-xl p-6" style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-base font-semibold flex items-center gap-2 text-white">
-                              <Cpu className="w-5 h-5 text-blue-400" />
-                              Fuel Cell System
-                            </h4>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={fuelCellIncluded}
-                                onChange={(e) => setFuelCellIncluded(e.target.checked)}
-                                className="w-5 h-5 rounded border-white/20 text-blue-500 focus:ring-blue-500/40 bg-transparent"
-                              />
-                              <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                                Include Fuel Cell
-                              </span>
-                            </label>
                           </div>
 
-                          {fuelCellIncluded && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                  Fuel Cell Capacity (kW)
-                                </label>
+                          {/* ═══════════════ WIND TURBINE SYSTEM ═══════════════ */}
+                          <div
+                            className="rounded-xl p-6"
+                            style={{
+                              background: "rgba(34,211,238,0.05)",
+                              border: "1px solid rgba(34,211,238,0.15)",
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-4">
+                              <h4 className="text-base font-semibold flex items-center gap-2 text-white">
+                                💨 Wind Turbine System
+                              </h4>
+                              <label className="flex items-center gap-2 cursor-pointer">
                                 <input
-                                  type="number"
-                                  value={fuelCellCapacityKW}
-                                  onChange={(e) => setFuelCellCapacityKW(parseFloat(e.target.value) || 0)}
-                                  step="25"
-                                  min="0"
-                                  className="w-full px-4 py-2 rounded-lg text-white font-medium focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
-                                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  type="checkbox"
+                                  checked={windTurbineIncluded}
+                                  onChange={(e) => setWindTurbineIncluded(e.target.checked)}
+                                  className="w-5 h-5 rounded border-white/20 text-cyan-500 focus:ring-cyan-500/40 bg-transparent"
                                 />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                  Fuel Cell Type
-                                </label>
-                                <select
-                                  value={fuelCellType}
-                                  onChange={(e) => setFuelCellType(e.target.value)}
-                                  className="w-full px-4 py-2 rounded-lg text-white font-medium focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
-                                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                <span
+                                  className="text-sm font-semibold"
+                                  style={{ color: "rgba(255,255,255,0.7)" }}
                                 >
-                                  <option value="pem">PEM (Proton Exchange Membrane)</option>
-                                  <option value="sofc">SOFC (Solid Oxide)</option>
-                                  <option value="mcfc">MCFC (Molten Carbonate)</option>
-                                  <option value="pafc">PAFC (Phosphoric Acid)</option>
-                                </select>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                  Fuel Type
-                                </label>
-                                <select
-                                  value={fuelType}
-                                  onChange={(e) => setFuelType(e.target.value)}
-                                  className="w-full px-4 py-2 rounded-lg text-white font-medium focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
-                                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                >
-                                  <option value="hydrogen">Hydrogen (H₂)</option>
-                                  <option value="natural-gas">Natural Gas</option>
-                                  <option value="biogas">Biogas</option>
-                                  <option value="methanol">Methanol</option>
-                                </select>
-                              </div>
-                              <div className="rounded p-3" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                                <p className="text-sm text-blue-300 font-bold">
-                                  ⚡ Efficiency: <strong className="text-blue-200">45-60%</strong>
-                                </p>
-                                <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                  Clean, quiet, continuous power
-                                </p>
-                              </div>
+                                  Include Wind
+                                </span>
+                              </label>
                             </div>
-                          )}
-                        </div>
 
-                        {/* ═══════════════ GENERATOR SYSTEM (UNIFIED) ═══════════════ */}
-                        <div className="rounded-xl p-6" style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-base font-semibold flex items-center gap-2 text-white">
-                              <GitBranch className="w-5 h-5 text-emerald-400" />
-                              Generator System
-                            </h4>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={generatorIncluded}
-                                onChange={(e) => setGeneratorIncluded(e.target.checked)}
-                                className="w-5 h-5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
-                              />
-                              <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                                Include Generator
-                              </span>
-                            </label>
-                          </div>
-
-                          {generatorIncluded && (
-                            <div className="space-y-4">
-                              {/* Fuel Type Selector */}
-                              <div>
-                                <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                  Fuel Type
-                                </label>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                  {([
-                                    { value: 'natural-gas', label: '🔥 Natural Gas', desc: 'Clean, continuous' },
-                                    { value: 'diesel', label: '🛢️ Diesel', desc: 'Proven reliability' },
-                                    { value: 'dual-fuel', label: '⚡ Dual-Fuel', desc: 'Gas + diesel backup' },
-                                    { value: 'linear', label: '🔄 Linear (Mainspring)', desc: 'Low emissions, quiet' },
-                                  ] as const).map((opt) => (
-                                    <button
-                                      key={opt.value}
-                                      onClick={() => setGeneratorFuelTypeSelected(opt.value)}
-                                      className="p-3 rounded-lg text-left transition-all"
-                                      style={{
-                                        background: generatorFuelTypeSelected === opt.value ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)',
-                                        border: generatorFuelTypeSelected === opt.value ? '1px solid rgba(59,130,246,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                                      }}
-                                    >
-                                      <span className="text-sm font-bold text-white">{opt.label}</span>
-                                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{opt.desc}</p>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                    Generator Capacity (kW)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={generatorCapacityKW}
-                                    onChange={(e) => setGeneratorCapacityKW(parseFloat(e.target.value) || 0)}
-                                    step="50"
-                                    min="0"
-                                    className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                    Space Available
-                                  </label>
-                                  <div className="flex gap-2 mt-1">
-                                    <button
-                                      onClick={() => setGeneratorSpaceAvailable(true)}
-                                      className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all"
-                                      style={{
-                                        background: generatorSpaceAvailable ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
-                                        border: generatorSpaceAvailable ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(255,255,255,0.08)',
-                                        color: generatorSpaceAvailable ? '#6ee7b7' : 'rgba(255,255,255,0.5)',
-                                      }}
-                                    >
-                                      ✓ Yes
-                                    </button>
-                                    <button
-                                      onClick={() => setGeneratorSpaceAvailable(false)}
-                                      className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all"
-                                      style={{
-                                        background: !generatorSpaceAvailable ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.04)',
-                                        border: !generatorSpaceAvailable ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.08)',
-                                        color: !generatorSpaceAvailable ? '#fca5a5' : 'rgba(255,255,255,0.5)',
-                                      }}
-                                    >
-                                      ✗ Constrained
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Generator Use Case */}
-                              <div>
-                                <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                  Primary Use Cases <span className="text-xs font-normal">(select all that apply)</span>
-                                </label>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                  {([
-                                    { value: 'backup', label: '🔋 Backup Power', desc: 'Outage protection' },
-                                    { value: 'ups', label: '⚡ UPS / Bridge', desc: 'Instant switchover' },
-                                    { value: 'peak-shaving', label: '📉 Peak Shaving', desc: 'Reduce demand charges' },
-                                    { value: 'grid-stability', label: '🔌 Grid Stability', desc: 'Frequency / voltage' },
-                                    { value: 'augment', label: '💪 Augment Power', desc: 'Supplement grid capacity' },
-                                    { value: 'island', label: '🏝️ Island Mode', desc: 'Off-grid operation' },
-                                  ]).map((opt) => (
-                                    <button
-                                      key={opt.value}
-                                      onClick={() => {
-                                        setGeneratorUseCases(prev =>
-                                          prev.includes(opt.value)
-                                            ? prev.filter(v => v !== opt.value)
-                                            : [...prev, opt.value]
-                                        );
-                                      }}
-                                      className="p-3 rounded-lg text-left transition-all"
-                                      style={{
-                                        background: generatorUseCases.includes(opt.value) ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.04)',
-                                        border: generatorUseCases.includes(opt.value) ? '1px solid rgba(59,130,246,0.35)' : '1px solid rgba(255,255,255,0.08)',
-                                      }}
-                                    >
-                                      <span className="text-sm font-semibold text-white">{opt.label}</span>
-                                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{opt.desc}</p>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-
-                              {/* N+1 Redundancy */}
-                              <div className="flex items-center justify-between rounded-lg p-4" style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.12)' }}>
-                                <div>
-                                  <p className="text-sm font-semibold text-white">N+1 Redundancy</p>
-                                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                    Add redundant unit for critical loads (2 × {generatorCapacityKW} kW)
-                                  </p>
-                                </div>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={generatorRedundancy}
-                                    onChange={(e) => setGeneratorRedundancy(e.target.checked)}
-                                    className="w-5 h-5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
-                                  />
-                                </label>
-                              </div>
-
-                              {/* Generator Info */}
-                              <div className="rounded p-3" style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.1)' }}>
-                                <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                  💡 <strong className="text-white">{generatorFuelTypeSelected === 'linear' ? 'Mainspring' : generatorFuelTypeSelected === 'natural-gas' ? 'Natural Gas' : generatorFuelTypeSelected === 'dual-fuel' ? 'Dual-Fuel' : 'Diesel'}:</strong>{' '}
-                                  {generatorFuelTypeSelected === 'natural-gas' ? 'Cleaner than diesel, continuous runtime with utility gas connection. Lower emissions, quieter operation.' :
-                                   generatorFuelTypeSelected === 'diesel' ? 'Proven reliability for critical backup. Fuel: ~0.3 gal/kWh. Runtime: 8-24 hrs at 50% load.' :
-                                   generatorFuelTypeSelected === 'dual-fuel' ? 'Starts on diesel, switches to natural gas. Best of both worlds for reliability + emissions.' :
-                                   'Linear generator (Mainspring Flex). Ultra-low emissions, fuel-flexible, quiet. Ideal for distributed generation + BESS hybrid.'}
-                                  {' '}Best paired with BESS for instant response + generator ramp-up.
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* ═══════════════ EV CHARGER SYSTEM (EXPANDED) ═══════════════ */}
-                        <div className="rounded-xl p-6" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-base font-semibold flex items-center gap-2 text-white">
-                              🔌 EV Charging System
-                            </h4>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={evChargersIncluded}
-                                onChange={(e) => setEvChargersIncluded(e.target.checked)}
-                                className="w-5 h-5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
-                              />
-                              <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                                Include EV Chargers
-                              </span>
-                            </label>
-                          </div>
-
-                          {evChargersIncluded && (
-                            <div className="space-y-5">
-                              <MerlinTip
-                                tip={evDCFCCount >= 4 ? `${evDCFCCount} DCFC units may qualify for NEVI funding (up to 80% cost coverage). BESS behind the meter is critical — a single 150 kW DCFC creates a $3,000+/mo demand charge spike without peak shaving.` : "Mix L2 for dwell-time charging (workplace, hotel, retail) with DCFC for quick-stop locations. BESS paired with EV charging can cut demand charges by 50-70%."}
-                                context="NEVI Formula Program + EPRI EV Infrastructure Guide"
-                              />
-                              {/* ── Level 2 AC Charging ── */}
-                              <div className="rounded-lg p-4" style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.12)' }}>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <span className="text-base">🔵</span>
-                                  <h5 className="text-sm font-bold text-blue-300">Level 2 — AC Charging</h5>
-                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full ml-auto" style={{ background: 'rgba(59,130,246,0.12)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.2)' }}>
-                                    7.2 kW per port
-                                  </span>
-                                </div>
+                            {windTurbineIncluded && (
+                              <div className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div>
-                                    <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                      Number of L2 Chargers
+                                    <label
+                                      className="block text-sm font-semibold mb-2"
+                                      style={{ color: "rgba(255,255,255,0.6)" }}
+                                    >
+                                      Total Wind Capacity (kW)
                                     </label>
                                     <input
                                       type="number"
-                                      value={evLevel2Count}
-                                      onChange={(e) => setEvLevel2Count(Math.max(0, parseInt(e.target.value) || 0))}
+                                      value={windCapacityKW}
+                                      onChange={(e) =>
+                                        setWindCapacityKW(parseFloat(e.target.value) || 0)
+                                      }
+                                      step="50"
                                       min="0"
-                                      max="100"
-                                      className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
-                                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                      className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
+                                      style={{
+                                        background: "rgba(255,255,255,0.06)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                      }}
                                     />
                                   </div>
-                                  <div className="space-y-1.5">
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>🔌</span> <span>J1772 / Type 2 connector</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>⏱️</span> <span>Full charge: 4–8 hours (ideal for workplace/overnight)</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>💰</span> <span>~$5,000 hardware + $3,000 install per unit</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>🏷️</span> <span className="italic">ChargePoint CP6000, Enel X JuiceBox, Siemens VersiCharge</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                {evLevel2Count > 0 && (
-                                  <div className="mt-3 flex items-center gap-4 text-xs font-medium" style={{ color: 'rgba(147,197,253,0.7)' }}>
-                                    <span>⚡ {(evLevel2Count * 7.2).toFixed(1)} kW connected</span>
-                                    <span>•</span>
-                                    <span>💵 ~${((evLevel2Count * 8000) / 1000).toFixed(0)}K est. hardware + install</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* ── DC Fast Charging (DCFC) ── */}
-                              <div className="rounded-lg p-4" style={{ background: 'rgba(251,146,60,0.05)', border: '1px solid rgba(251,146,60,0.12)' }}>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <span className="text-base">🟠</span>
-                                  <h5 className="text-sm font-bold text-emerald-300">DC Fast Charging — DCFC</h5>
-                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full ml-auto" style={{ background: 'rgba(251,146,60,0.12)', color: '#fdba74', border: '1px solid rgba(251,146,60,0.2)' }}>
-                                    150 kW per port
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div>
-                                    <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                      Number of DCFC Chargers
+                                    <label
+                                      className="block text-sm font-semibold mb-2"
+                                      style={{ color: "rgba(255,255,255,0.6)" }}
+                                    >
+                                      Turbine Type
+                                    </label>
+                                    <select
+                                      value={windTurbineType}
+                                      onChange={(e) => setWindTurbineType(e.target.value)}
+                                      className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
+                                      style={{
+                                        background: "rgba(255,255,255,0.06)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                      }}
+                                    >
+                                      <option value="horizontal">
+                                        Horizontal Axis (HAWT) — Utility scale
+                                      </option>
+                                      <option value="vertical">
+                                        Vertical Axis (VAWT) — Urban / rooftop
+                                      </option>
+                                    </select>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                  <div>
+                                    <label
+                                      className="block text-sm font-semibold mb-2"
+                                      style={{ color: "rgba(255,255,255,0.6)" }}
+                                    >
+                                      Number of Turbines
                                     </label>
                                     <input
                                       type="number"
-                                      value={evDCFCCount}
-                                      onChange={(e) => setEvDCFCCount(Math.max(0, parseInt(e.target.value) || 0))}
-                                      min="0"
+                                      value={windTurbineCount}
+                                      onChange={(e) =>
+                                        setWindTurbineCount(
+                                          Math.max(1, parseInt(e.target.value) || 1)
+                                        )
+                                      }
+                                      min="1"
                                       max="50"
-                                      className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                      className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
+                                      style={{
+                                        background: "rgba(255,255,255,0.06)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                      }}
                                     />
+                                    <p
+                                      className="text-xs mt-1"
+                                      style={{ color: "rgba(255,255,255,0.35)" }}
+                                    >
+                                      {Math.round(windCapacityKW / Math.max(1, windTurbineCount))}{" "}
+                                      kW per turbine
+                                    </p>
                                   </div>
-                                  <div className="space-y-1.5">
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>🔌</span> <span>CCS (Combined Charging System) + CHAdeMO</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>⏱️</span> <span>20-80% in ~25-30 min (200+ miles range added)</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>💰</span> <span>~$55,000 hardware + $30,000 install per unit</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>🏷️</span> <span className="italic">ABB Terra 184, BTC Power Gen4, Tritium RTM</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>⚡</span> <span>400-920V DC output, liquid-cooled cable</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                {evDCFCCount > 0 && (
-                                  <div className="mt-3 flex items-center gap-4 text-xs font-medium" style={{ color: 'rgba(253,186,116,0.7)' }}>
-                                    <span>⚡ {(evDCFCCount * 150).toFixed(0)} kW connected</span>
-                                    <span>•</span>
-                                    <span>💵 ~${((evDCFCCount * 85000) / 1000).toFixed(0)}K est. hardware + install</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* ── High Power Charging (HPC) ── */}
-                              <div className="rounded-lg p-4" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.12)' }}>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <span className="text-base">🔴</span>
-                                  <h5 className="text-sm font-bold text-red-300">High Power Charging — HPC</h5>
-                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full ml-auto" style={{ background: 'rgba(239,68,68,0.12)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.2)' }}>
-                                    250 kW per port
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div>
-                                    <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                      Number of HPC Chargers
+                                    <label
+                                      className="block text-sm font-semibold mb-2"
+                                      style={{ color: "rgba(255,255,255,0.6)" }}
+                                    >
+                                      Hub Height (m)
                                     </label>
-                                    <input
-                                      type="number"
-                                      value={evHPCCount}
-                                      onChange={(e) => setEvHPCCount(Math.max(0, parseInt(e.target.value) || 0))}
-                                      min="0"
-                                      max="20"
-                                      className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-red-500/40 focus:outline-none"
-                                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                    />
+                                    <select
+                                      value={windHubHeight}
+                                      onChange={(e) => setWindHubHeight(parseInt(e.target.value))}
+                                      className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
+                                      style={{
+                                        background: "rgba(255,255,255,0.06)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                      }}
+                                    >
+                                      <option value="30">30m — Small / distributed</option>
+                                      <option value="50">50m — Community scale</option>
+                                      <option value="80">80m — Standard commercial</option>
+                                      <option value="100">100m — Large commercial</option>
+                                      <option value="120">120m — Utility scale</option>
+                                    </select>
                                   </div>
-                                  <div className="space-y-1.5">
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>🔌</span> <span>CCS2 (up to 350 kW capable)</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>⏱️</span> <span>10-80% in ~15 min (gas station equivalent speed)</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>💰</span> <span>~$90,000 hardware + $40,000 install per unit</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>🏷️</span> <span className="italic">ABB Terra HP, Tritium PKM, Kempower S-Series</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      <span>⚡</span> <span>800V+ architecture, active liquid cooling required</span>
-                                    </div>
+                                  <div>
+                                    <label
+                                      className="block text-sm font-semibold mb-2"
+                                      style={{ color: "rgba(255,255,255,0.6)" }}
+                                    >
+                                      Site Terrain
+                                    </label>
+                                    <select
+                                      value={windTerrain}
+                                      onChange={(e) =>
+                                        setWindTerrain(
+                                          e.target.value as
+                                            | "open"
+                                            | "suburban"
+                                            | "coastal"
+                                            | "complex"
+                                        )
+                                      }
+                                      className="w-full px-4 py-3 rounded-lg text-white font-semibold focus:ring-2 focus:ring-cyan-500/40 focus:outline-none"
+                                      style={{
+                                        background: "rgba(255,255,255,0.06)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                      }}
+                                    >
+                                      <option value="open">Open Terrain (best)</option>
+                                      <option value="coastal">Coastal (strong, consistent)</option>
+                                      <option value="suburban">Suburban (reduced)</option>
+                                      <option value="complex">
+                                        Complex Terrain (ridges, valleys)
+                                      </option>
+                                    </select>
                                   </div>
                                 </div>
-                                {evHPCCount > 0 && (
-                                  <div className="mt-3 flex items-center gap-4 text-xs font-medium" style={{ color: 'rgba(252,165,165,0.7)' }}>
-                                    <span>⚡ {(evHPCCount * 250).toFixed(0)} kW connected</span>
-                                    <span>•</span>
-                                    <span>💵 ~${((evHPCCount * 130000) / 1000).toFixed(0)}K est. hardware + install</span>
-                                  </div>
-                                )}
-                              </div>
 
-                              {/* ── Station Config + Site Power ── */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Wind Class */}
                                 <div>
-                                  <label className="block text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                    Chargers per Station
+                                  <label
+                                    className="block text-sm font-semibold mb-3"
+                                    style={{ color: "rgba(255,255,255,0.6)" }}
+                                  >
+                                    IEC Wind Class
                                   </label>
-                                  <div className="flex gap-2">
-                                    {([1, 2] as const).map((n) => (
+                                  <div className="grid grid-cols-4 gap-2">
+                                    {(
+                                      [
+                                        {
+                                          value: 1,
+                                          label: "Class I",
+                                          desc: "10+ m/s",
+                                          color: "rgba(34,211,238,0.3)",
+                                        },
+                                        {
+                                          value: 2,
+                                          label: "Class II",
+                                          desc: "8.5-10 m/s",
+                                          color: "rgba(34,211,238,0.22)",
+                                        },
+                                        {
+                                          value: 3,
+                                          label: "Class III",
+                                          desc: "7.5-8.5 m/s",
+                                          color: "rgba(34,211,238,0.15)",
+                                        },
+                                        {
+                                          value: 4,
+                                          label: "Class IV",
+                                          desc: "<7.5 m/s",
+                                          color: "rgba(34,211,238,0.08)",
+                                        },
+                                      ] as const
+                                    ).map((cls) => (
                                       <button
-                                        key={n}
-                                        onClick={() => setEvChargersPerStation(n)}
-                                        className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all"
+                                        key={cls.value}
+                                        onClick={() => setWindClassRating(cls.value)}
+                                        className="p-3 rounded-lg text-center transition-all"
                                         style={{
-                                          background: evChargersPerStation === n ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
-                                          border: evChargersPerStation === n ? '1px solid rgba(16,185,129,0.35)' : '1px solid rgba(255,255,255,0.08)',
-                                          color: evChargersPerStation === n ? '#6ee7b7' : 'rgba(255,255,255,0.5)',
+                                          background:
+                                            windClassRating === cls.value
+                                              ? cls.color
+                                              : "rgba(255,255,255,0.04)",
+                                          border:
+                                            windClassRating === cls.value
+                                              ? "1px solid rgba(34,211,238,0.4)"
+                                              : "1px solid rgba(255,255,255,0.08)",
                                         }}
                                       >
-                                        {n} Connector{n > 1 ? 's' : ''} / Station
+                                        <span className="text-sm font-bold text-white">
+                                          {cls.label}
+                                        </span>
+                                        <p
+                                          className="text-xs mt-0.5"
+                                          style={{ color: "rgba(255,255,255,0.4)" }}
+                                        >
+                                          {cls.desc}
+                                        </p>
                                       </button>
                                     ))}
                                   </div>
                                 </div>
+
+                                {/* Wind Production Estimate */}
+                                {(() => {
+                                  const terrainFactor =
+                                    windTerrain === "open"
+                                      ? 1.0
+                                      : windTerrain === "coastal"
+                                        ? 1.05
+                                        : windTerrain === "suburban"
+                                          ? 0.7
+                                          : 0.85;
+                                  const classFactor =
+                                    windClassRating === 1
+                                      ? 0.35
+                                      : windClassRating === 2
+                                        ? 0.3
+                                        : windClassRating === 3
+                                          ? 0.25
+                                          : 0.2;
+                                  const heightFactor =
+                                    windHubHeight >= 100
+                                      ? 1.1
+                                      : windHubHeight >= 80
+                                        ? 1.0
+                                        : windHubHeight >= 50
+                                          ? 0.9
+                                          : 0.75;
+                                  const effectiveCF = classFactor * terrainFactor * heightFactor;
+                                  const annualWindKWh = Math.round(
+                                    windCapacityKW * 8760 * effectiveCF
+                                  );
+                                  return (
+                                    <div
+                                      className="rounded p-4"
+                                      style={{
+                                        background: "rgba(34,211,238,0.08)",
+                                        border: "1px solid rgba(34,211,238,0.15)",
+                                      }}
+                                    >
+                                      <p className="text-sm text-cyan-300 font-bold">
+                                        💨 Estimated Annual Production:{" "}
+                                        <strong className="text-cyan-200">
+                                          {annualWindKWh.toLocaleString()} kWh/year
+                                        </strong>{" "}
+                                        ({(effectiveCF * 100).toFixed(0)}% capacity factor)
+                                      </p>
+                                      <p
+                                        className="text-xs mt-1 font-medium"
+                                        style={{ color: "rgba(255,255,255,0.4)" }}
+                                      >
+                                        {windTurbineCount} ×{" "}
+                                        {Math.round(windCapacityKW / Math.max(1, windTurbineCount))}{" "}
+                                        kW turbines | {windHubHeight}m hub height | {windTerrain}{" "}
+                                        terrain
+                                      </p>
+                                      <p
+                                        className="text-xs mt-1 font-medium"
+                                        style={{ color: "rgba(255,255,255,0.4)" }}
+                                      >
+                                        BESS should store {Math.round(windCapacityKW * 0.4)} kW for
+                                        wind variability smoothing
+                                      </p>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* ═══════════════ FUEL CELL SYSTEM ═══════════════ */}
+                          <div
+                            className="rounded-xl p-6"
+                            style={{
+                              background: "rgba(59,130,246,0.05)",
+                              border: "1px solid rgba(59,130,246,0.15)",
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-4">
+                              <h4 className="text-base font-semibold flex items-center gap-2 text-white">
+                                <Cpu className="w-5 h-5 text-blue-400" />
+                                Fuel Cell System
+                              </h4>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={fuelCellIncluded}
+                                  onChange={(e) => setFuelCellIncluded(e.target.checked)}
+                                  className="w-5 h-5 rounded border-white/20 text-blue-500 focus:ring-blue-500/40 bg-transparent"
+                                />
+                                <span
+                                  className="text-sm font-semibold"
+                                  style={{ color: "rgba(255,255,255,0.7)" }}
+                                >
+                                  Include Fuel Cell
+                                </span>
+                              </label>
+                            </div>
+
+                            {fuelCellIncluded && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                                    Additional Site Power (kW)
+                                  <label
+                                    className="block text-sm font-semibold mb-2"
+                                    style={{ color: "rgba(255,255,255,0.6)" }}
+                                  >
+                                    Fuel Cell Capacity (kW)
                                   </label>
                                   <input
                                     type="number"
-                                    value={evAdditionalPowerKW}
-                                    onChange={(e) => setEvAdditionalPowerKW(Math.max(0, parseFloat(e.target.value) || 0))}
-                                    step="10"
+                                    value={fuelCellCapacityKW}
+                                    onChange={(e) =>
+                                      setFuelCellCapacityKW(parseFloat(e.target.value) || 0)
+                                    }
+                                    step="25"
                                     min="0"
-                                    className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
-                                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                    className="w-full px-4 py-2 rounded-lg text-white font-medium focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
+                                    style={{
+                                      background: "rgba(255,255,255,0.06)",
+                                      border: "1px solid rgba(255,255,255,0.1)",
+                                    }}
                                   />
-                                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Lighting, signage, HVAC, convenience store, etc.</p>
+                                </div>
+                                <div>
+                                  <label
+                                    className="block text-sm font-semibold mb-2"
+                                    style={{ color: "rgba(255,255,255,0.6)" }}
+                                  >
+                                    Fuel Cell Type
+                                  </label>
+                                  <select
+                                    value={fuelCellType}
+                                    onChange={(e) => setFuelCellType(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-lg text-white font-medium focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
+                                    style={{
+                                      background: "rgba(255,255,255,0.06)",
+                                      border: "1px solid rgba(255,255,255,0.1)",
+                                    }}
+                                  >
+                                    <option value="pem">PEM (Proton Exchange Membrane)</option>
+                                    <option value="sofc">SOFC (Solid Oxide)</option>
+                                    <option value="mcfc">MCFC (Molten Carbonate)</option>
+                                    <option value="pafc">PAFC (Phosphoric Acid)</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label
+                                    className="block text-sm font-semibold mb-2"
+                                    style={{ color: "rgba(255,255,255,0.6)" }}
+                                  >
+                                    Fuel Type
+                                  </label>
+                                  <select
+                                    value={fuelType}
+                                    onChange={(e) => setFuelType(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-lg text-white font-medium focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
+                                    style={{
+                                      background: "rgba(255,255,255,0.06)",
+                                      border: "1px solid rgba(255,255,255,0.1)",
+                                    }}
+                                  >
+                                    <option value="hydrogen">Hydrogen (H₂)</option>
+                                    <option value="natural-gas">Natural Gas</option>
+                                    <option value="biogas">Biogas</option>
+                                    <option value="methanol">Methanol</option>
+                                  </select>
+                                </div>
+                                <div
+                                  className="rounded p-3"
+                                  style={{
+                                    background: "rgba(59,130,246,0.08)",
+                                    border: "1px solid rgba(59,130,246,0.15)",
+                                  }}
+                                >
+                                  <p className="text-sm text-blue-300 font-bold">
+                                    ⚡ Efficiency: <strong className="text-blue-200">45-60%</strong>
+                                  </p>
+                                  <p
+                                    className="text-xs mt-1 font-medium"
+                                    style={{ color: "rgba(255,255,255,0.4)" }}
+                                  >
+                                    Clean, quiet, continuous power
+                                  </p>
                                 </div>
                               </div>
+                            )}
+                          </div>
 
-                              {/* ── NEVI Compliance Callout ── */}
-                              {evDCFCCount >= 4 && (
-                                <div className="rounded-lg p-3 flex items-start gap-3" style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)' }}>
-                                  <span className="text-lg shrink-0 mt-0.5">🏛️</span>
-                                  <div>
-                                    <p className="text-sm font-semibold text-emerald-300 mb-1">NEVI Program Eligible</p>
-                                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                      With {evDCFCCount}× DCFC units, this site may qualify for the <strong className="text-emerald-300/80">National Electric Vehicle Infrastructure (NEVI)</strong> program — 
-                                      up to <strong className="text-emerald-300/80">80% of costs covered</strong> (max $7,500 per port, $900K per site). 
-                                      Requires ≥4 CCS ports at 150 kW+, located along Alternative Fuel Corridors.
-                                    </p>
+                          {/* ═══════════════ GENERATOR SYSTEM (UNIFIED) ═══════════════ */}
+                          <div
+                            className="rounded-xl p-6"
+                            style={{
+                              background: "rgba(59,130,246,0.05)",
+                              border: "1px solid rgba(59,130,246,0.15)",
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-4">
+                              <h4 className="text-base font-semibold flex items-center gap-2 text-white">
+                                <GitBranch className="w-5 h-5 text-emerald-400" />
+                                Generator System
+                              </h4>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={generatorIncluded}
+                                  onChange={(e) => setGeneratorIncluded(e.target.checked)}
+                                  className="w-5 h-5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
+                                />
+                                <span
+                                  className="text-sm font-semibold"
+                                  style={{ color: "rgba(255,255,255,0.7)" }}
+                                >
+                                  Include Generator
+                                </span>
+                              </label>
+                            </div>
+
+                            {generatorIncluded && (
+                              <div className="space-y-4">
+                                {/* Fuel Type Selector */}
+                                <div>
+                                  <label
+                                    className="block text-sm font-semibold mb-3"
+                                    style={{ color: "rgba(255,255,255,0.6)" }}
+                                  >
+                                    Fuel Type
+                                  </label>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    {(
+                                      [
+                                        {
+                                          value: "natural-gas",
+                                          label: "🔥 Natural Gas",
+                                          desc: "Clean, continuous",
+                                        },
+                                        {
+                                          value: "diesel",
+                                          label: "🛢️ Diesel",
+                                          desc: "Proven reliability",
+                                        },
+                                        {
+                                          value: "dual-fuel",
+                                          label: "⚡ Dual-Fuel",
+                                          desc: "Gas + diesel backup",
+                                        },
+                                        {
+                                          value: "linear",
+                                          label: "🔄 Linear (Mainspring)",
+                                          desc: "Low emissions, quiet",
+                                        },
+                                      ] as const
+                                    ).map((opt) => (
+                                      <button
+                                        key={opt.value}
+                                        onClick={() => setGeneratorFuelTypeSelected(opt.value)}
+                                        className="p-3 rounded-lg text-left transition-all"
+                                        style={{
+                                          background:
+                                            generatorFuelTypeSelected === opt.value
+                                              ? "rgba(59,130,246,0.15)"
+                                              : "rgba(255,255,255,0.04)",
+                                          border:
+                                            generatorFuelTypeSelected === opt.value
+                                              ? "1px solid rgba(59,130,246,0.4)"
+                                              : "1px solid rgba(255,255,255,0.08)",
+                                        }}
+                                      >
+                                        <span className="text-sm font-bold text-white">
+                                          {opt.label}
+                                        </span>
+                                        <p
+                                          className="text-xs mt-0.5"
+                                          style={{ color: "rgba(255,255,255,0.4)" }}
+                                        >
+                                          {opt.desc}
+                                        </p>
+                                      </button>
+                                    ))}
                                   </div>
                                 </div>
-                              )}
 
-                              {/* ── EV Infrastructure Cost Estimate ── */}
-                              {(() => {
-                                const evL2HW = evLevel2Count * 5000;
-                                const evL2Install = evLevel2Count * 3000;
-                                const evDCFCHW = evDCFCCount * 55000;
-                                const evDCFCInstall = evDCFCCount * 30000;
-                                const evHPCHW = evHPCCount * 90000;
-                                const evHPCInstall = evHPCCount * 40000;
-                                const evMakeReady = (evDCFCCount + evHPCCount) * 25000; // Electrical make-ready
-                                const evTotalHW = evL2HW + evDCFCHW + evHPCHW;
-                                const evTotalInstall = evL2Install + evDCFCInstall + evHPCInstall + evMakeReady;
-                                const evGrandTotal = evTotalHW + evTotalInstall;
-                                const evConnectedKW = (evLevel2Count * 7.2) + (evDCFCCount * 150) + (evHPCCount * 250);
-                                const evPeakKW = Math.round(evConnectedKW * 0.7); // 70% concurrency
-                                const evTotalPeakKW = evPeakKW + evAdditionalPowerKW;
-                                const evBESSRecommendedKW = Math.round(evPeakKW * 0.7); // 70% peak shaving
-                                const evStations = Math.ceil((evLevel2Count + evDCFCCount + evHPCCount) / evChargersPerStation);
-                                const totalChargers = evLevel2Count + evDCFCCount + evHPCCount;
-                                if (totalChargers === 0) return null;
-
-                                return (
-                                  <div className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(16,185,129,0.2)' }}>
-                                    {/* Summary Header */}
-                                    <div className="px-4 py-3" style={{ background: 'rgba(16,185,129,0.1)' }}>
-                                      <h5 className="text-sm font-bold text-emerald-200 flex items-center gap-2">
-                                        📊 EV Infrastructure Summary
-                                      </h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <label
+                                      className="block text-sm font-semibold mb-2"
+                                      style={{ color: "rgba(255,255,255,0.6)" }}
+                                    >
+                                      Generator Capacity (kW)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={generatorCapacityKW}
+                                      onChange={(e) =>
+                                        setGeneratorCapacityKW(parseFloat(e.target.value) || 0)
+                                      }
+                                      step="50"
+                                      min="0"
+                                      className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                      style={{
+                                        background: "rgba(255,255,255,0.06)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                      }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label
+                                      className="block text-sm font-semibold mb-2"
+                                      style={{ color: "rgba(255,255,255,0.6)" }}
+                                    >
+                                      Space Available
+                                    </label>
+                                    <div className="flex gap-2 mt-1">
+                                      <button
+                                        onClick={() => setGeneratorSpaceAvailable(true)}
+                                        className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all"
+                                        style={{
+                                          background: generatorSpaceAvailable
+                                            ? "rgba(16,185,129,0.15)"
+                                            : "rgba(255,255,255,0.04)",
+                                          border: generatorSpaceAvailable
+                                            ? "1px solid rgba(16,185,129,0.3)"
+                                            : "1px solid rgba(255,255,255,0.08)",
+                                          color: generatorSpaceAvailable
+                                            ? "#6ee7b7"
+                                            : "rgba(255,255,255,0.5)",
+                                        }}
+                                      >
+                                        ✓ Yes
+                                      </button>
+                                      <button
+                                        onClick={() => setGeneratorSpaceAvailable(false)}
+                                        className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all"
+                                        style={{
+                                          background: !generatorSpaceAvailable
+                                            ? "rgba(239,68,68,0.15)"
+                                            : "rgba(255,255,255,0.04)",
+                                          border: !generatorSpaceAvailable
+                                            ? "1px solid rgba(239,68,68,0.3)"
+                                            : "1px solid rgba(255,255,255,0.08)",
+                                          color: !generatorSpaceAvailable
+                                            ? "#fca5a5"
+                                            : "rgba(255,255,255,0.5)",
+                                        }}
+                                      >
+                                        ✗ Constrained
+                                      </button>
                                     </div>
+                                  </div>
+                                </div>
 
-                                    <div className="p-4 space-y-4" style={{ background: 'rgba(16,185,129,0.04)' }}>
-                                      {/* Power Metrics */}
-                                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        <div className="text-center p-2.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                          <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Connected</p>
-                                          <p className="text-xl font-extrabold text-emerald-300">{evConnectedKW.toFixed(0)} <span className="text-xs font-medium">kW</span></p>
-                                        </div>
-                                        <div className="text-center p-2.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                          <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Peak Demand</p>
-                                          <p className="text-xl font-extrabold text-emerald-300">{evTotalPeakKW.toFixed(0)} <span className="text-xs font-medium">kW</span></p>
-                                        </div>
-                                        <div className="text-center p-2.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                          <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Stations</p>
-                                          <p className="text-xl font-extrabold text-emerald-300">{evStations}</p>
-                                        </div>
-                                        <div className="text-center p-2.5 rounded-lg" style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.12)' }}>
-                                          <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>BESS Peak Shaving</p>
-                                          <p className="text-xl font-extrabold text-emerald-400">{evBESSRecommendedKW} <span className="text-xs font-medium">kW</span></p>
-                                        </div>
-                                      </div>
-
-                                      {/* Cost Breakdown */}
-                                      <div className="rounded-lg p-3 space-y-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                                          Estimated Infrastructure Cost
+                                {/* Generator Use Case */}
+                                <div>
+                                  <label
+                                    className="block text-sm font-semibold mb-3"
+                                    style={{ color: "rgba(255,255,255,0.6)" }}
+                                  >
+                                    Primary Use Cases{" "}
+                                    <span className="text-xs font-normal">
+                                      (select all that apply)
+                                    </span>
+                                  </label>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    {[
+                                      {
+                                        value: "backup",
+                                        label: "🔋 Backup Power",
+                                        desc: "Outage protection",
+                                      },
+                                      {
+                                        value: "ups",
+                                        label: "⚡ UPS / Bridge",
+                                        desc: "Instant switchover",
+                                      },
+                                      {
+                                        value: "peak-shaving",
+                                        label: "📉 Peak Shaving",
+                                        desc: "Reduce demand charges",
+                                      },
+                                      {
+                                        value: "grid-stability",
+                                        label: "🔌 Grid Stability",
+                                        desc: "Frequency / voltage",
+                                      },
+                                      {
+                                        value: "augment",
+                                        label: "💪 Augment Power",
+                                        desc: "Supplement grid capacity",
+                                      },
+                                      {
+                                        value: "island",
+                                        label: "🏝️ Island Mode",
+                                        desc: "Off-grid operation",
+                                      },
+                                    ].map((opt) => (
+                                      <button
+                                        key={opt.value}
+                                        onClick={() => {
+                                          setGeneratorUseCases((prev) =>
+                                            prev.includes(opt.value)
+                                              ? prev.filter((v) => v !== opt.value)
+                                              : [...prev, opt.value]
+                                          );
+                                        }}
+                                        className="p-3 rounded-lg text-left transition-all"
+                                        style={{
+                                          background: generatorUseCases.includes(opt.value)
+                                            ? "rgba(59,130,246,0.12)"
+                                            : "rgba(255,255,255,0.04)",
+                                          border: generatorUseCases.includes(opt.value)
+                                            ? "1px solid rgba(59,130,246,0.35)"
+                                            : "1px solid rgba(255,255,255,0.08)",
+                                        }}
+                                      >
+                                        <span className="text-sm font-semibold text-white">
+                                          {opt.label}
+                                        </span>
+                                        <p
+                                          className="text-xs mt-0.5"
+                                          style={{ color: "rgba(255,255,255,0.4)" }}
+                                        >
+                                          {opt.desc}
                                         </p>
-                                        {evLevel2Count > 0 && (
-                                          <div className="flex items-center justify-between text-xs">
-                                            <span style={{ color: 'rgba(255,255,255,0.5)' }}>🔵 Level 2 × {evLevel2Count}</span>
-                                            <span className="font-semibold text-blue-300">${((evL2HW + evL2Install) / 1000).toFixed(0)}K</span>
-                                          </div>
-                                        )}
-                                        {evDCFCCount > 0 && (
-                                          <div className="flex items-center justify-between text-xs">
-                                            <span style={{ color: 'rgba(255,255,255,0.5)' }}>🟠 DCFC × {evDCFCCount}</span>
-                                            <span className="font-semibold text-emerald-300">${((evDCFCHW + evDCFCInstall) / 1000).toFixed(0)}K</span>
-                                          </div>
-                                        )}
-                                        {evHPCCount > 0 && (
-                                          <div className="flex items-center justify-between text-xs">
-                                            <span style={{ color: 'rgba(255,255,255,0.5)' }}>🔴 HPC × {evHPCCount}</span>
-                                            <span className="font-semibold text-red-300">${((evHPCHW + evHPCInstall) / 1000).toFixed(0)}K</span>
-                                          </div>
-                                        )}
-                                        {(evDCFCCount + evHPCCount) > 0 && (
-                                          <div className="flex items-center justify-between text-xs">
-                                            <span style={{ color: 'rgba(255,255,255,0.5)' }}>🔧 Electrical Make-Ready</span>
-                                            <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>${(evMakeReady / 1000).toFixed(0)}K</span>
-                                          </div>
-                                        )}
-                                        <div className="flex items-center justify-between text-sm font-bold pt-2 mt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                                          <span className="text-white">Total EV Infrastructure</span>
-                                          <span className="text-emerald-300">${evGrandTotal >= 1_000_000 ? `${(evGrandTotal / 1_000_000).toFixed(2)}M` : `${(evGrandTotal / 1000).toFixed(0)}K`}</span>
-                                        </div>
-                                      </div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
 
-                                      {/* BESS Tip */}
-                                      <div className="flex items-start gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                                        <span className="shrink-0">🔋</span>
+                                {/* N+1 Redundancy */}
+                                <div
+                                  className="flex items-center justify-between rounded-lg p-4"
+                                  style={{
+                                    background: "rgba(59,130,246,0.06)",
+                                    border: "1px solid rgba(59,130,246,0.12)",
+                                  }}
+                                >
+                                  <div>
+                                    <p className="text-sm font-semibold text-white">
+                                      N+1 Redundancy
+                                    </p>
+                                    <p
+                                      className="text-xs mt-0.5"
+                                      style={{ color: "rgba(255,255,255,0.4)" }}
+                                    >
+                                      Add redundant unit for critical loads (2 ×{" "}
+                                      {generatorCapacityKW} kW)
+                                    </p>
+                                  </div>
+                                  <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={generatorRedundancy}
+                                      onChange={(e) => setGeneratorRedundancy(e.target.checked)}
+                                      className="w-5 h-5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
+                                    />
+                                  </label>
+                                </div>
+
+                                {/* Generator Info */}
+                                <div
+                                  className="rounded p-3"
+                                  style={{
+                                    background: "rgba(59,130,246,0.06)",
+                                    border: "1px solid rgba(59,130,246,0.1)",
+                                  }}
+                                >
+                                  <p
+                                    className="text-xs font-medium"
+                                    style={{ color: "rgba(255,255,255,0.5)" }}
+                                  >
+                                    💡{" "}
+                                    <strong className="text-white">
+                                      {generatorFuelTypeSelected === "linear"
+                                        ? "Mainspring"
+                                        : generatorFuelTypeSelected === "natural-gas"
+                                          ? "Natural Gas"
+                                          : generatorFuelTypeSelected === "dual-fuel"
+                                            ? "Dual-Fuel"
+                                            : "Diesel"}
+                                      :
+                                    </strong>{" "}
+                                    {generatorFuelTypeSelected === "natural-gas"
+                                      ? "Cleaner than diesel, continuous runtime with utility gas connection. Lower emissions, quieter operation."
+                                      : generatorFuelTypeSelected === "diesel"
+                                        ? "Proven reliability for critical backup. Fuel: ~0.3 gal/kWh. Runtime: 8-24 hrs at 50% load."
+                                        : generatorFuelTypeSelected === "dual-fuel"
+                                          ? "Starts on diesel, switches to natural gas. Best of both worlds for reliability + emissions."
+                                          : "Linear generator (Mainspring Flex). Ultra-low emissions, fuel-flexible, quiet. Ideal for distributed generation + BESS hybrid."}{" "}
+                                    Best paired with BESS for instant response + generator ramp-up.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* ═══════════════ EV CHARGER SYSTEM (EXPANDED) ═══════════════ */}
+                          <div
+                            className="rounded-xl p-6"
+                            style={{
+                              background: "rgba(16,185,129,0.05)",
+                              border: "1px solid rgba(16,185,129,0.15)",
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-4">
+                              <h4 className="text-base font-semibold flex items-center gap-2 text-white">
+                                🔌 EV Charging System
+                              </h4>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={evChargersIncluded}
+                                  onChange={(e) => setEvChargersIncluded(e.target.checked)}
+                                  className="w-5 h-5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500/40 bg-transparent"
+                                />
+                                <span
+                                  className="text-sm font-semibold"
+                                  style={{ color: "rgba(255,255,255,0.7)" }}
+                                >
+                                  Include EV Chargers
+                                </span>
+                              </label>
+                            </div>
+
+                            {evChargersIncluded && (
+                              <div className="space-y-5">
+                                <MerlinTip
+                                  tip={
+                                    evDCFCCount >= 4
+                                      ? `${evDCFCCount} DCFC units may qualify for NEVI funding (up to 80% cost coverage). BESS behind the meter is critical — a single 150 kW DCFC creates a $3,000+/mo demand charge spike without peak shaving.`
+                                      : "Mix L2 for dwell-time charging (workplace, hotel, retail) with DCFC for quick-stop locations. BESS paired with EV charging can cut demand charges by 50-70%."
+                                  }
+                                  context="NEVI Formula Program + EPRI EV Infrastructure Guide"
+                                />
+                                {/* ── Level 2 AC Charging ── */}
+                                <div
+                                  className="rounded-lg p-4"
+                                  style={{
+                                    background: "rgba(59,130,246,0.05)",
+                                    border: "1px solid rgba(59,130,246,0.12)",
+                                  }}
+                                >
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <span className="text-base">🔵</span>
+                                    <h5 className="text-sm font-bold text-blue-300">
+                                      Level 2 — AC Charging
+                                    </h5>
+                                    <span
+                                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full ml-auto"
+                                      style={{
+                                        background: "rgba(59,130,246,0.12)",
+                                        color: "#93c5fd",
+                                        border: "1px solid rgba(59,130,246,0.2)",
+                                      }}
+                                    >
+                                      7.2 kW per port
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <label
+                                        className="block text-sm font-semibold mb-2"
+                                        style={{ color: "rgba(255,255,255,0.6)" }}
+                                      >
+                                        Number of L2 Chargers
+                                      </label>
+                                      <input
+                                        type="number"
+                                        value={evLevel2Count}
+                                        onChange={(e) =>
+                                          setEvLevel2Count(
+                                            Math.max(0, parseInt(e.target.value) || 0)
+                                          )
+                                        }
+                                        min="0"
+                                        max="100"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
+                                        style={{
+                                          background: "rgba(255,255,255,0.06)",
+                                          border: "1px solid rgba(255,255,255,0.1)",
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>🔌</span> <span>J1772 / Type 2 connector</span>
+                                      </div>
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>⏱️</span>{" "}
                                         <span>
-                                          EV charging creates very spiky demand. BESS peak shaving can <strong className="text-emerald-300/80">reduce demand charges by 50%+</strong>. 
-                                          70% concurrency factor applied — not all chargers operate at max simultaneously.
+                                          Full charge: 4–8 hours (ideal for workplace/overnight)
+                                        </span>
+                                      </div>
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>💰</span>{" "}
+                                        <span>~$5,000 hardware + $3,000 install per unit</span>
+                                      </div>
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>🏷️</span>{" "}
+                                        <span className="italic">
+                                          ChargePoint CP6000, Enel X JuiceBox, Siemens VersiCharge
                                         </span>
                                       </div>
                                     </div>
                                   </div>
-                                );
-                              })()}
-                            </div>
-                          )}
-                        </div>
+                                  {evLevel2Count > 0 && (
+                                    <div
+                                      className="mt-3 flex items-center gap-4 text-xs font-medium"
+                                      style={{ color: "rgba(147,197,253,0.7)" }}
+                                    >
+                                      <span>
+                                        ⚡ {(evLevel2Count * 7.2).toFixed(1)} kW connected
+                                      </span>
+                                      <span>•</span>
+                                      <span>
+                                        💵 ~${((evLevel2Count * 8000) / 1000).toFixed(0)}K est.
+                                        hardware + install
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
 
-                        {/* ═══════════════ COMBINED SUMMARY + BESS SIZING ═══════════════ */}
-                        <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                          <h4 className="text-base font-semibold mb-4 flex items-center gap-2 text-white">
-                            <Sparkles className="w-5 h-5 text-emerald-400" />
-                            Combined System Summary & BESS Sizing
-                          </h4>
+                                {/* ── DC Fast Charging (DCFC) ── */}
+                                <div
+                                  className="rounded-lg p-4"
+                                  style={{
+                                    background: "rgba(251,146,60,0.05)",
+                                    border: "1px solid rgba(251,146,60,0.12)",
+                                  }}
+                                >
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <span className="text-base">🟠</span>
+                                    <h5 className="text-sm font-bold text-emerald-300">
+                                      DC Fast Charging — DCFC
+                                    </h5>
+                                    <span
+                                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full ml-auto"
+                                      style={{
+                                        background: "rgba(251,146,60,0.12)",
+                                        color: "#fdba74",
+                                        border: "1px solid rgba(251,146,60,0.2)",
+                                      }}
+                                    >
+                                      150 kW per port
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <label
+                                        className="block text-sm font-semibold mb-2"
+                                        style={{ color: "rgba(255,255,255,0.6)" }}
+                                      >
+                                        Number of DCFC Chargers
+                                      </label>
+                                      <input
+                                        type="number"
+                                        value={evDCFCCount}
+                                        onChange={(e) =>
+                                          setEvDCFCCount(Math.max(0, parseInt(e.target.value) || 0))
+                                        }
+                                        min="0"
+                                        max="50"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                        style={{
+                                          background: "rgba(255,255,255,0.06)",
+                                          border: "1px solid rgba(255,255,255,0.1)",
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>🔌</span>{" "}
+                                        <span>CCS (Combined Charging System) + CHAdeMO</span>
+                                      </div>
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>⏱️</span>{" "}
+                                        <span>20-80% in ~25-30 min (200+ miles range added)</span>
+                                      </div>
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>💰</span>{" "}
+                                        <span>~$55,000 hardware + $30,000 install per unit</span>
+                                      </div>
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>🏷️</span>{" "}
+                                        <span className="italic">
+                                          ABB Terra 184, BTC Power Gen4, Tritium RTM
+                                        </span>
+                                      </div>
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>⚡</span>{" "}
+                                        <span>400-920V DC output, liquid-cooled cable</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {evDCFCCount > 0 && (
+                                    <div
+                                      className="mt-3 flex items-center gap-4 text-xs font-medium"
+                                      style={{ color: "rgba(253,186,116,0.7)" }}
+                                    >
+                                      <span>⚡ {(evDCFCCount * 150).toFixed(0)} kW connected</span>
+                                      <span>•</span>
+                                      <span>
+                                        💵 ~${((evDCFCCount * 85000) / 1000).toFixed(0)}K est.
+                                        hardware + install
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
 
-                          {(() => {
-                            const totalRenewableKW = (solarPVIncluded ? solarCapacityKW : 0) + (windTurbineIncluded ? windCapacityKW : 0) + (fuelCellIncluded ? fuelCellCapacityKW : 0);
-                            const totalGenKW = generatorIncluded ? (generatorRedundancy ? generatorCapacityKW * 2 : generatorCapacityKW) : 0;
-                            const evConnectedKW = evChargersIncluded ? (evLevel2Count * 7.2) + (evDCFCCount * 150) + (evHPCCount * 250) : 0;
-                            const evPeakKW = Math.round(evConnectedKW * 0.7);
-                            const totalSystemKW = totalKW + totalRenewableKW + totalGenKW + evPeakKW;
-                            // BESS sizing recommendation
-                            const bessSolarSmoothing = solarPVIncluded ? Math.round(solarCapacityKW * 0.3) : 0;
-                            const bessWindSmoothing = windTurbineIncluded ? Math.round(windCapacityKW * 0.4) : 0;
-                            const bessEVPeakShaving = evChargersIncluded ? Math.round(evPeakKW * 0.7) : 0;
-                            const bessBackupBuffer = generatorIncluded ? Math.round(generatorCapacityKW * 0.2) : 0;
-                            const bessRecommendedKW = Math.max(totalKW, bessSolarSmoothing + bessWindSmoothing + bessEVPeakShaving + bessBackupBuffer);
-                            const bessRecommendedKWh = bessRecommendedKW * durationHours;
+                                {/* ── High Power Charging (HPC) ── */}
+                                <div
+                                  className="rounded-lg p-4"
+                                  style={{
+                                    background: "rgba(239,68,68,0.05)",
+                                    border: "1px solid rgba(239,68,68,0.12)",
+                                  }}
+                                >
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <span className="text-base">🔴</span>
+                                    <h5 className="text-sm font-bold text-red-300">
+                                      High Power Charging — HPC
+                                    </h5>
+                                    <span
+                                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full ml-auto"
+                                      style={{
+                                        background: "rgba(239,68,68,0.12)",
+                                        color: "#fca5a5",
+                                        border: "1px solid rgba(239,68,68,0.2)",
+                                      }}
+                                    >
+                                      250 kW per port
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <label
+                                        className="block text-sm font-semibold mb-2"
+                                        style={{ color: "rgba(255,255,255,0.6)" }}
+                                      >
+                                        Number of HPC Chargers
+                                      </label>
+                                      <input
+                                        type="number"
+                                        value={evHPCCount}
+                                        onChange={(e) =>
+                                          setEvHPCCount(Math.max(0, parseInt(e.target.value) || 0))
+                                        }
+                                        min="0"
+                                        max="20"
+                                        className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-red-500/40 focus:outline-none"
+                                        style={{
+                                          background: "rgba(255,255,255,0.06)",
+                                          border: "1px solid rgba(255,255,255,0.1)",
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>🔌</span> <span>CCS2 (up to 350 kW capable)</span>
+                                      </div>
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>⏱️</span>{" "}
+                                        <span>
+                                          10-80% in ~15 min (gas station equivalent speed)
+                                        </span>
+                                      </div>
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>💰</span>{" "}
+                                        <span>~$90,000 hardware + $40,000 install per unit</span>
+                                      </div>
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>🏷️</span>{" "}
+                                        <span className="italic">
+                                          ABB Terra HP, Tritium PKM, Kempower S-Series
+                                        </span>
+                                      </div>
+                                      <div
+                                        className="flex items-center gap-2 text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        <span>⚡</span>{" "}
+                                        <span>
+                                          800V+ architecture, active liquid cooling required
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {evHPCCount > 0 && (
+                                    <div
+                                      className="mt-3 flex items-center gap-4 text-xs font-medium"
+                                      style={{ color: "rgba(252,165,165,0.7)" }}
+                                    >
+                                      <span>⚡ {(evHPCCount * 250).toFixed(0)} kW connected</span>
+                                      <span>•</span>
+                                      <span>
+                                        💵 ~${((evHPCCount * 130000) / 1000).toFixed(0)}K est.
+                                        hardware + install
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
 
-                            return (
-                              <div className="space-y-4">
-                                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                                  <div className="rounded p-3" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                                    <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Renewable</p>
-                                    <p className="text-xl font-bold text-emerald-400">{totalRenewableKW.toFixed(0)} kW</p>
+                                {/* ── Station Config + Site Power ── */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <label
+                                      className="block text-sm font-semibold mb-3"
+                                      style={{ color: "rgba(255,255,255,0.6)" }}
+                                    >
+                                      Chargers per Station
+                                    </label>
+                                    <div className="flex gap-2">
+                                      {([1, 2] as const).map((n) => (
+                                        <button
+                                          key={n}
+                                          onClick={() => setEvChargersPerStation(n)}
+                                          className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all"
+                                          style={{
+                                            background:
+                                              evChargersPerStation === n
+                                                ? "rgba(16,185,129,0.15)"
+                                                : "rgba(255,255,255,0.04)",
+                                            border:
+                                              evChargersPerStation === n
+                                                ? "1px solid rgba(16,185,129,0.35)"
+                                                : "1px solid rgba(255,255,255,0.08)",
+                                            color:
+                                              evChargersPerStation === n
+                                                ? "#6ee7b7"
+                                                : "rgba(255,255,255,0.5)",
+                                          }}
+                                        >
+                                          {n} Connector{n > 1 ? "s" : ""} / Station
+                                        </button>
+                                      ))}
+                                    </div>
                                   </div>
-                                  <div className="rounded p-3" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                                    <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Generator</p>
-                                    <p className="text-xl font-bold text-emerald-400">{totalGenKW.toFixed(0)} kW</p>
-                                  </div>
-                                  <div className="rounded p-3" style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.15)' }}>
-                                    <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>EV Peak</p>
-                                    <p className="text-xl font-bold text-teal-400">{evPeakKW.toFixed(0)} kW</p>
-                                  </div>
-                                  <div className="rounded p-3" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                                    <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>BESS</p>
-                                    <p className="text-xl font-bold text-blue-400">{totalKW.toFixed(0)} kW</p>
-                                  </div>
-                                  <div className="rounded p-3" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                                    <p className="text-xs mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Total System</p>
-                                    <p className="text-xl font-bold text-emerald-400">{totalSystemKW.toFixed(0)} kW</p>
+                                  <div>
+                                    <label
+                                      className="block text-sm font-semibold mb-2"
+                                      style={{ color: "rgba(255,255,255,0.6)" }}
+                                    >
+                                      Additional Site Power (kW)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={evAdditionalPowerKW}
+                                      onChange={(e) =>
+                                        setEvAdditionalPowerKW(
+                                          Math.max(0, parseFloat(e.target.value) || 0)
+                                        )
+                                      }
+                                      step="10"
+                                      min="0"
+                                      className="w-full px-4 py-3 rounded-lg text-white text-base font-semibold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+                                      style={{
+                                        background: "rgba(255,255,255,0.06)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                      }}
+                                    />
+                                    <p
+                                      className="text-xs mt-1"
+                                      style={{ color: "rgba(255,255,255,0.35)" }}
+                                    >
+                                      Lighting, signage, HVAC, convenience store, etc.
+                                    </p>
                                   </div>
                                 </div>
 
-                                {/* BESS Sizing Recommendation */}
-                                <div className="rounded-lg p-4" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                                  <p className="text-sm font-bold text-emerald-300 mb-2">🔋 Recommended BESS Sizing (based on all inputs)</p>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                                    {bessSolarSmoothing > 0 && (
-                                      <div className="text-center">
-                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Solar Smoothing</p>
-                                        <p className="text-sm font-bold text-emerald-300">{bessSolarSmoothing} kW</p>
-                                      </div>
-                                    )}
-                                    {bessWindSmoothing > 0 && (
-                                      <div className="text-center">
-                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Wind Smoothing</p>
-                                        <p className="text-sm font-bold text-cyan-300">{bessWindSmoothing} kW</p>
-                                      </div>
-                                    )}
-                                    {bessEVPeakShaving > 0 && (
-                                      <div className="text-center">
-                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>EV Peak Shaving</p>
-                                        <p className="text-sm font-bold text-emerald-300">{bessEVPeakShaving} kW</p>
-                                      </div>
-                                    )}
-                                    {bessBackupBuffer > 0 && (
-                                      <div className="text-center">
-                                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Gen Backup Buffer</p>
-                                        <p className="text-sm font-bold text-emerald-300">{bessBackupBuffer} kW</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center justify-between mt-2 pt-2" style={{ borderTop: '1px solid rgba(16,185,129,0.15)' }}>
+                                {/* ── NEVI Compliance Callout ── */}
+                                {evDCFCCount >= 4 && (
+                                  <div
+                                    className="rounded-lg p-3 flex items-start gap-3"
+                                    style={{
+                                      background: "rgba(52,211,153,0.06)",
+                                      border: "1px solid rgba(52,211,153,0.15)",
+                                    }}
+                                  >
+                                    <span className="text-lg shrink-0 mt-0.5">🏛️</span>
                                     <div>
-                                      <p className="text-sm font-medium text-white">
-                                        Recommended: <strong className="text-emerald-300">{bessRecommendedKW.toLocaleString()} kW / {bessRecommendedKWh.toLocaleString()} kWh</strong>
+                                      <p className="text-sm font-semibold text-emerald-300 mb-1">
+                                        NEVI Program Eligible
                                       </p>
-                                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                        Current BESS: {totalKW.toFixed(0)} kW / {(storageSizeMWh * 1000).toFixed(0)} kWh
-                                        {bessRecommendedKW > totalKW * 1.1 && (
-                                          <span className="text-emerald-400 ml-2">⚠️ Consider increasing BESS size</span>
-                                        )}
+                                      <p
+                                        className="text-xs"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        With {evDCFCCount}× DCFC units, this site may qualify for
+                                        the{" "}
+                                        <strong className="text-emerald-300/80">
+                                          National Electric Vehicle Infrastructure (NEVI)
+                                        </strong>{" "}
+                                        program — up to{" "}
+                                        <strong className="text-emerald-300/80">
+                                          80% of costs covered
+                                        </strong>{" "}
+                                        (max $7,500 per port, $900K per site). Requires ≥4 CCS ports
+                                        at 150 kW+, located along Alternative Fuel Corridors.
                                       </p>
                                     </div>
                                   </div>
-                                </div>
+                                )}
+
+                                {/* ── EV Infrastructure Cost Estimate ── */}
+                                {(() => {
+                                  const evL2HW = evLevel2Count * 5000;
+                                  const evL2Install = evLevel2Count * 3000;
+                                  const evDCFCHW = evDCFCCount * 55000;
+                                  const evDCFCInstall = evDCFCCount * 30000;
+                                  const evHPCHW = evHPCCount * 90000;
+                                  const evHPCInstall = evHPCCount * 40000;
+                                  const evMakeReady = (evDCFCCount + evHPCCount) * 25000; // Electrical make-ready
+                                  const evTotalHW = evL2HW + evDCFCHW + evHPCHW;
+                                  const evTotalInstall =
+                                    evL2Install + evDCFCInstall + evHPCInstall + evMakeReady;
+                                  const evGrandTotal = evTotalHW + evTotalInstall;
+                                  const evConnectedKW =
+                                    evLevel2Count * 7.2 + evDCFCCount * 150 + evHPCCount * 250;
+                                  const evPeakKW = Math.round(evConnectedKW * 0.7); // 70% concurrency
+                                  const evTotalPeakKW = evPeakKW + evAdditionalPowerKW;
+                                  const evBESSRecommendedKW = Math.round(evPeakKW * 0.7); // 70% peak shaving
+                                  const evStations = Math.ceil(
+                                    (evLevel2Count + evDCFCCount + evHPCCount) /
+                                      evChargersPerStation
+                                  );
+                                  const totalChargers = evLevel2Count + evDCFCCount + evHPCCount;
+                                  if (totalChargers === 0) return null;
+
+                                  return (
+                                    <div
+                                      className="rounded-lg overflow-hidden"
+                                      style={{ border: "1px solid rgba(16,185,129,0.2)" }}
+                                    >
+                                      {/* Summary Header */}
+                                      <div
+                                        className="px-4 py-3"
+                                        style={{ background: "rgba(16,185,129,0.1)" }}
+                                      >
+                                        <h5 className="text-sm font-bold text-emerald-200 flex items-center gap-2">
+                                          📊 EV Infrastructure Summary
+                                        </h5>
+                                      </div>
+
+                                      <div
+                                        className="p-4 space-y-4"
+                                        style={{ background: "rgba(16,185,129,0.04)" }}
+                                      >
+                                        {/* Power Metrics */}
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                          <div
+                                            className="text-center p-2.5 rounded-lg"
+                                            style={{
+                                              background: "rgba(255,255,255,0.03)",
+                                              border: "1px solid rgba(255,255,255,0.06)",
+                                            }}
+                                          >
+                                            <p
+                                              className="text-[10px] font-bold uppercase tracking-wider mb-1"
+                                              style={{ color: "rgba(255,255,255,0.35)" }}
+                                            >
+                                              Connected
+                                            </p>
+                                            <p className="text-xl font-extrabold text-emerald-300">
+                                              {evConnectedKW.toFixed(0)}{" "}
+                                              <span className="text-xs font-medium">kW</span>
+                                            </p>
+                                          </div>
+                                          <div
+                                            className="text-center p-2.5 rounded-lg"
+                                            style={{
+                                              background: "rgba(255,255,255,0.03)",
+                                              border: "1px solid rgba(255,255,255,0.06)",
+                                            }}
+                                          >
+                                            <p
+                                              className="text-[10px] font-bold uppercase tracking-wider mb-1"
+                                              style={{ color: "rgba(255,255,255,0.35)" }}
+                                            >
+                                              Peak Demand
+                                            </p>
+                                            <p className="text-xl font-extrabold text-emerald-300">
+                                              {evTotalPeakKW.toFixed(0)}{" "}
+                                              <span className="text-xs font-medium">kW</span>
+                                            </p>
+                                          </div>
+                                          <div
+                                            className="text-center p-2.5 rounded-lg"
+                                            style={{
+                                              background: "rgba(255,255,255,0.03)",
+                                              border: "1px solid rgba(255,255,255,0.06)",
+                                            }}
+                                          >
+                                            <p
+                                              className="text-[10px] font-bold uppercase tracking-wider mb-1"
+                                              style={{ color: "rgba(255,255,255,0.35)" }}
+                                            >
+                                              Stations
+                                            </p>
+                                            <p className="text-xl font-extrabold text-emerald-300">
+                                              {evStations}
+                                            </p>
+                                          </div>
+                                          <div
+                                            className="text-center p-2.5 rounded-lg"
+                                            style={{
+                                              background: "rgba(52,211,153,0.05)",
+                                              border: "1px solid rgba(52,211,153,0.12)",
+                                            }}
+                                          >
+                                            <p
+                                              className="text-[10px] font-bold uppercase tracking-wider mb-1"
+                                              style={{ color: "rgba(255,255,255,0.35)" }}
+                                            >
+                                              BESS Peak Shaving
+                                            </p>
+                                            <p className="text-xl font-extrabold text-emerald-400">
+                                              {evBESSRecommendedKW}{" "}
+                                              <span className="text-xs font-medium">kW</span>
+                                            </p>
+                                          </div>
+                                        </div>
+
+                                        {/* Cost Breakdown */}
+                                        <div
+                                          className="rounded-lg p-3 space-y-2"
+                                          style={{
+                                            background: "rgba(255,255,255,0.02)",
+                                            border: "1px solid rgba(255,255,255,0.06)",
+                                          }}
+                                        >
+                                          <p
+                                            className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                                            style={{ color: "rgba(255,255,255,0.35)" }}
+                                          >
+                                            Estimated Infrastructure Cost
+                                          </p>
+                                          {evLevel2Count > 0 && (
+                                            <div className="flex items-center justify-between text-xs">
+                                              <span style={{ color: "rgba(255,255,255,0.5)" }}>
+                                                🔵 Level 2 × {evLevel2Count}
+                                              </span>
+                                              <span className="font-semibold text-blue-300">
+                                                ${((evL2HW + evL2Install) / 1000).toFixed(0)}K
+                                              </span>
+                                            </div>
+                                          )}
+                                          {evDCFCCount > 0 && (
+                                            <div className="flex items-center justify-between text-xs">
+                                              <span style={{ color: "rgba(255,255,255,0.5)" }}>
+                                                🟠 DCFC × {evDCFCCount}
+                                              </span>
+                                              <span className="font-semibold text-emerald-300">
+                                                ${((evDCFCHW + evDCFCInstall) / 1000).toFixed(0)}K
+                                              </span>
+                                            </div>
+                                          )}
+                                          {evHPCCount > 0 && (
+                                            <div className="flex items-center justify-between text-xs">
+                                              <span style={{ color: "rgba(255,255,255,0.5)" }}>
+                                                🔴 HPC × {evHPCCount}
+                                              </span>
+                                              <span className="font-semibold text-red-300">
+                                                ${((evHPCHW + evHPCInstall) / 1000).toFixed(0)}K
+                                              </span>
+                                            </div>
+                                          )}
+                                          {evDCFCCount + evHPCCount > 0 && (
+                                            <div className="flex items-center justify-between text-xs">
+                                              <span style={{ color: "rgba(255,255,255,0.5)" }}>
+                                                🔧 Electrical Make-Ready
+                                              </span>
+                                              <span
+                                                className="font-semibold"
+                                                style={{ color: "rgba(255,255,255,0.6)" }}
+                                              >
+                                                ${(evMakeReady / 1000).toFixed(0)}K
+                                              </span>
+                                            </div>
+                                          )}
+                                          <div
+                                            className="flex items-center justify-between text-sm font-bold pt-2 mt-2"
+                                            style={{
+                                              borderTop: "1px solid rgba(255,255,255,0.08)",
+                                            }}
+                                          >
+                                            <span className="text-white">
+                                              Total EV Infrastructure
+                                            </span>
+                                            <span className="text-emerald-300">
+                                              $
+                                              {evGrandTotal >= 1_000_000
+                                                ? `${(evGrandTotal / 1_000_000).toFixed(2)}M`
+                                                : `${(evGrandTotal / 1000).toFixed(0)}K`}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* BESS Tip */}
+                                        <div
+                                          className="flex items-start gap-2 text-xs"
+                                          style={{ color: "rgba(255,255,255,0.45)" }}
+                                        >
+                                          <span className="shrink-0">🔋</span>
+                                          <span>
+                                            EV charging creates very spiky demand. BESS peak shaving
+                                            can{" "}
+                                            <strong className="text-emerald-300/80">
+                                              reduce demand charges by 50%+
+                                            </strong>
+                                            . 70% concurrency factor applied — not all chargers
+                                            operate at max simultaneously.
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
                               </div>
-                            );
-                          })()}
+                            )}
+                          </div>
+
+                          {/* ═══════════════ COMBINED SUMMARY + BESS SIZING ═══════════════ */}
+                          <div
+                            className="rounded-xl p-6"
+                            style={{
+                              background: "rgba(255,255,255,0.03)",
+                              border: "1px solid rgba(255,255,255,0.08)",
+                            }}
+                          >
+                            <h4 className="text-base font-semibold mb-4 flex items-center gap-2 text-white">
+                              <Sparkles className="w-5 h-5 text-emerald-400" />
+                              Combined System Summary & BESS Sizing
+                            </h4>
+
+                            {(() => {
+                              const totalRenewableKW =
+                                (solarPVIncluded ? solarCapacityKW : 0) +
+                                (windTurbineIncluded ? windCapacityKW : 0) +
+                                (fuelCellIncluded ? fuelCellCapacityKW : 0);
+                              const totalGenKW = generatorIncluded
+                                ? generatorRedundancy
+                                  ? generatorCapacityKW * 2
+                                  : generatorCapacityKW
+                                : 0;
+                              const evConnectedKW = evChargersIncluded
+                                ? evLevel2Count * 7.2 + evDCFCCount * 150 + evHPCCount * 250
+                                : 0;
+                              const evPeakKW = Math.round(evConnectedKW * 0.7);
+                              const totalSystemKW =
+                                totalKW + totalRenewableKW + totalGenKW + evPeakKW;
+                              // BESS sizing recommendation
+                              const bessSolarSmoothing = solarPVIncluded
+                                ? Math.round(solarCapacityKW * 0.3)
+                                : 0;
+                              const bessWindSmoothing = windTurbineIncluded
+                                ? Math.round(windCapacityKW * 0.4)
+                                : 0;
+                              const bessEVPeakShaving = evChargersIncluded
+                                ? Math.round(evPeakKW * 0.7)
+                                : 0;
+                              const bessBackupBuffer = generatorIncluded
+                                ? Math.round(generatorCapacityKW * 0.2)
+                                : 0;
+                              const bessRecommendedKW = Math.max(
+                                totalKW,
+                                bessSolarSmoothing +
+                                  bessWindSmoothing +
+                                  bessEVPeakShaving +
+                                  bessBackupBuffer
+                              );
+                              const bessRecommendedKWh = bessRecommendedKW * durationHours;
+
+                              return (
+                                <div className="space-y-4">
+                                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                    <div
+                                      className="rounded p-3"
+                                      style={{
+                                        background: "rgba(16,185,129,0.08)",
+                                        border: "1px solid rgba(16,185,129,0.15)",
+                                      }}
+                                    >
+                                      <p
+                                        className="text-xs mb-1 font-medium"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        Renewable
+                                      </p>
+                                      <p className="text-xl font-bold text-emerald-400">
+                                        {totalRenewableKW.toFixed(0)} kW
+                                      </p>
+                                    </div>
+                                    <div
+                                      className="rounded p-3"
+                                      style={{
+                                        background: "rgba(59,130,246,0.08)",
+                                        border: "1px solid rgba(59,130,246,0.15)",
+                                      }}
+                                    >
+                                      <p
+                                        className="text-xs mb-1 font-medium"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        Generator
+                                      </p>
+                                      <p className="text-xl font-bold text-emerald-400">
+                                        {totalGenKW.toFixed(0)} kW
+                                      </p>
+                                    </div>
+                                    <div
+                                      className="rounded p-3"
+                                      style={{
+                                        background: "rgba(20,184,166,0.08)",
+                                        border: "1px solid rgba(20,184,166,0.15)",
+                                      }}
+                                    >
+                                      <p
+                                        className="text-xs mb-1 font-medium"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        EV Peak
+                                      </p>
+                                      <p className="text-xl font-bold text-teal-400">
+                                        {evPeakKW.toFixed(0)} kW
+                                      </p>
+                                    </div>
+                                    <div
+                                      className="rounded p-3"
+                                      style={{
+                                        background: "rgba(59,130,246,0.08)",
+                                        border: "1px solid rgba(59,130,246,0.15)",
+                                      }}
+                                    >
+                                      <p
+                                        className="text-xs mb-1 font-medium"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        BESS
+                                      </p>
+                                      <p className="text-xl font-bold text-blue-400">
+                                        {totalKW.toFixed(0)} kW
+                                      </p>
+                                    </div>
+                                    <div
+                                      className="rounded p-3"
+                                      style={{
+                                        background: "rgba(16,185,129,0.08)",
+                                        border: "1px solid rgba(16,185,129,0.15)",
+                                      }}
+                                    >
+                                      <p
+                                        className="text-xs mb-1 font-medium"
+                                        style={{ color: "rgba(255,255,255,0.5)" }}
+                                      >
+                                        Total System
+                                      </p>
+                                      <p className="text-xl font-bold text-emerald-400">
+                                        {totalSystemKW.toFixed(0)} kW
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* BESS Sizing Recommendation */}
+                                  <div
+                                    className="rounded-lg p-4"
+                                    style={{
+                                      background: "rgba(16,185,129,0.06)",
+                                      border: "1px solid rgba(16,185,129,0.15)",
+                                    }}
+                                  >
+                                    <p className="text-sm font-bold text-emerald-300 mb-2">
+                                      🔋 Recommended BESS Sizing (based on all inputs)
+                                    </p>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                      {bessSolarSmoothing > 0 && (
+                                        <div className="text-center">
+                                          <p
+                                            className="text-xs"
+                                            style={{ color: "rgba(255,255,255,0.4)" }}
+                                          >
+                                            Solar Smoothing
+                                          </p>
+                                          <p className="text-sm font-bold text-emerald-300">
+                                            {bessSolarSmoothing} kW
+                                          </p>
+                                        </div>
+                                      )}
+                                      {bessWindSmoothing > 0 && (
+                                        <div className="text-center">
+                                          <p
+                                            className="text-xs"
+                                            style={{ color: "rgba(255,255,255,0.4)" }}
+                                          >
+                                            Wind Smoothing
+                                          </p>
+                                          <p className="text-sm font-bold text-cyan-300">
+                                            {bessWindSmoothing} kW
+                                          </p>
+                                        </div>
+                                      )}
+                                      {bessEVPeakShaving > 0 && (
+                                        <div className="text-center">
+                                          <p
+                                            className="text-xs"
+                                            style={{ color: "rgba(255,255,255,0.4)" }}
+                                          >
+                                            EV Peak Shaving
+                                          </p>
+                                          <p className="text-sm font-bold text-emerald-300">
+                                            {bessEVPeakShaving} kW
+                                          </p>
+                                        </div>
+                                      )}
+                                      {bessBackupBuffer > 0 && (
+                                        <div className="text-center">
+                                          <p
+                                            className="text-xs"
+                                            style={{ color: "rgba(255,255,255,0.4)" }}
+                                          >
+                                            Gen Backup Buffer
+                                          </p>
+                                          <p className="text-sm font-bold text-emerald-300">
+                                            {bessBackupBuffer} kW
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div
+                                      className="flex items-center justify-between mt-2 pt-2"
+                                      style={{ borderTop: "1px solid rgba(16,185,129,0.15)" }}
+                                    >
+                                      <div>
+                                        <p className="text-sm font-medium text-white">
+                                          Recommended:{" "}
+                                          <strong className="text-emerald-300">
+                                            {bessRecommendedKW.toLocaleString()} kW /{" "}
+                                            {bessRecommendedKWh.toLocaleString()} kWh
+                                          </strong>
+                                        </p>
+                                        <p
+                                          className="text-xs mt-0.5"
+                                          style={{ color: "rgba(255,255,255,0.4)" }}
+                                        >
+                                          Current BESS: {totalKW.toFixed(0)} kW /{" "}
+                                          {(storageSizeMWh * 1000).toFixed(0)} kWh
+                                          {bessRecommendedKW > totalKW * 1.1 && (
+                                            <span className="text-emerald-400 ml-2">
+                                              ⚠️ Consider increasing BESS size
+                                            </span>
+                                          )}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {!includeRenewables && (
-                      <div className="text-center py-8">
-                        <p className="text-lg text-white/70 font-semibold">
-                          Enable renewables to configure solar, wind, generators, fuel cells, and EV
-                          chargers
-                        </p>
-                        <p className="text-sm mt-2 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          Hybrid systems can reduce costs and improve resiliency
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ProQuote™ Badge + Financial Summary */}
-                  <div className="rounded-xl p-6" style={{ background: 'rgba(59,130,246,0.04)', border: '1px solid rgba(59,130,246,0.12)' }}>
-                    {/* Badge row */}
-                    <div className="flex items-center gap-3 mb-5">
-                      <img
-                        src={badgeIcon}
-                        alt="ProQuote"
-                        className="w-10 h-10 object-contain"
-                        style={{ filter: 'drop-shadow(0 2px 6px rgba(59,130,246,0.35))' }}
-                      />
-                      <div>
-                        <span className="text-base font-bold text-white tracking-tight">ProQuote™</span>
-                        <span className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(59,130,246,0.2)', color: 'rgb(147,197,253)' }}>VERIFIED</span>
-                      </div>
-                    </div>
-
-                    {/* Financial metrics strip */}
-                    {financialMetrics && (
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {/* Gross Cost */}
-                        <div>
-                          <p className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Total Investment</p>
-                          <p className="text-xl font-bold text-white">
-                            {localSystemCost >= 1_000_000
-                              ? `$${(localSystemCost / 1_000_000).toFixed(2)}M`
-                              : `$${(localSystemCost / 1_000).toFixed(0)}K`}
+                      {!includeRenewables && (
+                        <div className="text-center py-8">
+                          <p className="text-lg text-white/70 font-semibold">
+                            Enable renewables to configure solar, wind, generators, fuel cells, and
+                            EV chargers
+                          </p>
+                          <p
+                            className="text-sm mt-2 font-medium"
+                            style={{ color: "rgba(255,255,255,0.4)" }}
+                          >
+                            Hybrid systems can reduce costs and improve resiliency
                           </p>
                         </div>
-                        {/* ITC Credit */}
-                        {(financialMetrics.taxCredit ?? 0) > 0 && (
+                      )}
+                    </div>
+
+                    {/* ProQuote™ Badge + Financial Summary */}
+                    <div
+                      className="rounded-xl p-6"
+                      style={{
+                        background: "rgba(59,130,246,0.04)",
+                        border: "1px solid rgba(59,130,246,0.12)",
+                      }}
+                    >
+                      {/* Badge row */}
+                      <div className="flex items-center gap-3 mb-5">
+                        <img
+                          src={badgeIcon}
+                          alt="ProQuote"
+                          className="w-10 h-10 object-contain"
+                          style={{ filter: "drop-shadow(0 2px 6px rgba(59,130,246,0.35))" }}
+                        />
+                        <div>
+                          <span className="text-base font-bold text-white tracking-tight">
+                            ProQuote™
+                          </span>
+                          <span
+                            className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                            style={{
+                              background: "rgba(59,130,246,0.2)",
+                              color: "rgb(147,197,253)",
+                            }}
+                          >
+                            VERIFIED
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Financial metrics strip */}
+                      {financialMetrics && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {/* Gross Cost */}
                           <div>
-                            <p className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Federal ITC (30%)</p>
-                            <p className="text-xl font-bold text-emerald-400">
-                              −{financialMetrics.taxCredit >= 1_000_000
-                                ? `$${(financialMetrics.taxCredit / 1_000_000).toFixed(2)}M`
-                                : `$${(financialMetrics.taxCredit / 1_000).toFixed(0)}K`}
+                            <p
+                              className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            >
+                              Total Investment
+                            </p>
+                            <p className="text-xl font-bold text-white">
+                              {localSystemCost >= 1_000_000
+                                ? `$${(localSystemCost / 1_000_000).toFixed(2)}M`
+                                : `$${(localSystemCost / 1_000).toFixed(0)}K`}
                             </p>
                           </div>
-                        )}
-                        {/* Net Cost */}
-                        <div>
-                          <p className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Net Cost</p>
-                          <p className="text-xl font-bold text-blue-400">
-                            {(financialMetrics.netCost ?? localSystemCost) >= 1_000_000
-                              ? `$${((financialMetrics.netCost ?? localSystemCost) / 1_000_000).toFixed(2)}M`
-                              : `$${((financialMetrics.netCost ?? localSystemCost) / 1_000).toFixed(0)}K`}
-                          </p>
+                          {/* ITC Credit */}
+                          {(financialMetrics.taxCredit ?? 0) > 0 && (
+                            <div>
+                              <p
+                                className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                                style={{ color: "rgba(255,255,255,0.4)" }}
+                              >
+                                Federal ITC (30%)
+                              </p>
+                              <p className="text-xl font-bold text-emerald-400">
+                                −
+                                {financialMetrics.taxCredit >= 1_000_000
+                                  ? `$${(financialMetrics.taxCredit / 1_000_000).toFixed(2)}M`
+                                  : `$${(financialMetrics.taxCredit / 1_000).toFixed(0)}K`}
+                              </p>
+                            </div>
+                          )}
+                          {/* Net Cost */}
+                          <div>
+                            <p
+                              className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            >
+                              Net Cost
+                            </p>
+                            <p className="text-xl font-bold text-blue-400">
+                              {(financialMetrics.netCost ?? localSystemCost) >= 1_000_000
+                                ? `$${((financialMetrics.netCost ?? localSystemCost) / 1_000_000).toFixed(2)}M`
+                                : `$${((financialMetrics.netCost ?? localSystemCost) / 1_000).toFixed(0)}K`}
+                            </p>
+                          </div>
+                          {/* Annual Savings */}
+                          <div>
+                            <p
+                              className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            >
+                              Annual Savings
+                            </p>
+                            <p className="text-xl font-bold text-emerald-400">
+                              {estimatedAnnualSavings >= 1_000_000
+                                ? `$${(estimatedAnnualSavings / 1_000_000).toFixed(2)}M`
+                                : `$${(estimatedAnnualSavings / 1_000).toFixed(0)}K`}
+                            </p>
+                          </div>
                         </div>
-                        {/* Annual Savings */}
-                        <div>
-                          <p className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Annual Savings</p>
-                          <p className="text-xl font-bold text-emerald-400">
-                            {estimatedAnnualSavings >= 1_000_000
-                              ? `$${(estimatedAnnualSavings / 1_000_000).toFixed(2)}M`
-                              : `$${(estimatedAnnualSavings / 1_000).toFixed(0)}K`}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Payback + ROI row */}
-                    {financialMetrics && (
-                      <div className="flex items-center gap-6 mt-4 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>Payback</span>
-                          <span className="text-sm font-bold text-white">{paybackYears.toFixed(1)} yrs</span>
-                        </div>
-                        {(financialMetrics.npv ?? 0) > 0 && (
+                      {/* Payback + ROI row */}
+                      {financialMetrics && (
+                        <div
+                          className="flex items-center gap-6 mt-4 pt-4"
+                          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+                        >
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>NPV</span>
-                            <span className="text-sm font-bold text-emerald-400">
-                              ${((financialMetrics.npv ?? 0) / 1_000_000).toFixed(1)}M
+                            <span
+                              className="text-[11px] font-medium uppercase tracking-wider"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            >
+                              Payback
+                            </span>
+                            <span className="text-sm font-bold text-white">
+                              {paybackYears.toFixed(1)} yrs
                             </span>
                           </div>
-                        )}
-                        {(financialMetrics.irr ?? 0) > 0 && (
+                          {(financialMetrics.npv ?? 0) > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="text-[11px] font-medium uppercase tracking-wider"
+                                style={{ color: "rgba(255,255,255,0.4)" }}
+                              >
+                                NPV
+                              </span>
+                              <span className="text-sm font-bold text-emerald-400">
+                                ${((financialMetrics.npv ?? 0) / 1_000_000).toFixed(1)}M
+                              </span>
+                            </div>
+                          )}
+                          {(financialMetrics.irr ?? 0) > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="text-[11px] font-medium uppercase tracking-wider"
+                                style={{ color: "rgba(255,255,255,0.4)" }}
+                              >
+                                IRR
+                              </span>
+                              <span className="text-sm font-bold text-blue-400">
+                                {(financialMetrics.irr ?? 0).toFixed(1)}%
+                              </span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>IRR</span>
-                            <span className="text-sm font-bold text-blue-400">{(financialMetrics.irr ?? 0).toFixed(1)}%</span>
+                            <span
+                              className="text-[11px] font-medium uppercase tracking-wider"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            >
+                              25yr ROI
+                            </span>
+                            <span className="text-sm font-bold text-emerald-400">
+                              {(financialMetrics.roi25Year ?? 0).toFixed(0)}%
+                            </span>
                           </div>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>25yr ROI</span>
-                          <span className="text-sm font-bold text-emerald-400">{(financialMetrics.roi25Year ?? 0).toFixed(0)}%</span>
+                          <button
+                            onClick={() => setShowFinancialSummary(true)}
+                            className="ml-auto text-[11px] font-semibold px-3 py-1 rounded-md transition-colors"
+                            style={{
+                              color: "rgb(147,197,253)",
+                              background: "rgba(59,130,246,0.1)",
+                              border: "1px solid rgba(59,130,246,0.2)",
+                            }}
+                          >
+                            View Full Breakdown →
+                          </button>
                         </div>
-                        <button
-                          onClick={() => setShowFinancialSummary(true)}
-                          className="ml-auto text-[11px] font-semibold px-3 py-1 rounded-md transition-colors"
-                          style={{ color: 'rgb(147,197,253)', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}
-                        >
-                          View Full Breakdown →
-                        </button>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Loading state */}
-                    {!financialMetrics && isCalculating && (
-                      <div className="flex items-center gap-3 py-4">
-                        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-                        <span className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>Calculating financials…</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* System Summary */}
-                  <div className="rounded-xl p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <h3 className="text-lg font-semibold mb-6 text-white flex items-center gap-2">
-                      📊 System Summary
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="rounded-xl p-4" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                        <p className="text-sm mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>System Rating</p>
-                        <p className="text-3xl font-bold text-blue-400">
-                          {storageSizeMW.toFixed(1)} MW
-                        </p>
-                        <p className="text-lg font-bold" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                          {storageSizeMWh.toFixed(1)} MWh
-                        </p>
-                      </div>
-                      <div className="rounded-xl p-4" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                        <p className="text-sm mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Total Cost</p>
-                        <p className="text-3xl font-bold text-emerald-400">
-                          ${(localSystemCost / 1000000).toFixed(2)}M
-                        </p>
-                        <p className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                          ${(localSystemCost / (storageSizeMW * 1000)).toFixed(0)}/kW
-                        </p>
-                      </div>
-                      <div className="rounded-xl p-4" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                        <p className="text-sm mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Application</p>
-                        <p className="text-xl font-bold text-emerald-400 capitalize">
-                          {applicationType}
-                        </p>
-                        <p className="text-sm font-bold capitalize" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                          {useCase.replace("-", " ")}
-                        </p>
-                      </div>
+                      {/* Loading state */}
+                      {!financialMetrics && isCalculating && (
+                        <div className="flex items-center gap-3 py-4">
+                          <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                          <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+                            Calculating financials…
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex gap-4 pt-6">
-                    <button
-                      onClick={() => setViewMode("landing")}
-                      className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-                    >
-                      ← Back to Tools
-                    </button>
-                    <button
-                      onClick={() => {
-                        const _configData = {
-                          projectName,
-                          location,
-                          storageSizeMW,
-                          durationHours,
-                          storageSizeMWh,
-                          systemCost: localSystemCost,
-                          applicationType,
-                          useCase,
-                          chemistry,
-                          installationType,
-                          gridConnection,
-                          inverterEfficiency,
-                          roundTripEfficiency,
-                          cyclesPerYear,
-                          utilityRate,
-                          demandCharge,
-                          warrantyYears,
-                        };
-                        onGenerateQuote?.();
-                        onClose();
+                    {/* System Summary */}
+                    <div
+                      className="rounded-xl p-8"
+                      style={{
+                        background: "rgba(255,255,255,0.02)",
+                        border: "1px solid rgba(255,255,255,0.08)",
                       }}
-                      className="flex-1 px-6 py-3 rounded-lg font-semibold transition-all"
-                      style={{ background: 'transparent', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)' }}
                     >
-                      Generate Detailed Quote →
-                    </button>
-                  </div>
-                </div>
+                      <h3 className="text-lg font-semibold mb-6 text-white flex items-center gap-2">
+                        📊 System Summary
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div
+                          className="rounded-xl p-4"
+                          style={{
+                            background: "rgba(59,130,246,0.08)",
+                            border: "1px solid rgba(59,130,246,0.15)",
+                          }}
+                        >
+                          <p
+                            className="text-sm mb-1 font-medium"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                          >
+                            System Rating
+                          </p>
+                          <p className="text-3xl font-bold text-blue-400">
+                            {storageSizeMW.toFixed(1)} MW
+                          </p>
+                          <p
+                            className="text-lg font-bold"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            {storageSizeMWh.toFixed(1)} MWh
+                          </p>
+                        </div>
+                        <div
+                          className="rounded-xl p-4"
+                          style={{
+                            background: "rgba(16,185,129,0.08)",
+                            border: "1px solid rgba(16,185,129,0.15)",
+                          }}
+                        >
+                          <p
+                            className="text-sm mb-1 font-medium"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                          >
+                            Total Cost
+                          </p>
+                          <p className="text-3xl font-bold text-emerald-400">
+                            ${(localSystemCost / 1000000).toFixed(2)}M
+                          </p>
+                          <p
+                            className="text-sm font-bold"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                          >
+                            ${(localSystemCost / (storageSizeMW * 1000)).toFixed(0)}/kW
+                          </p>
+                        </div>
+                        <div
+                          className="rounded-xl p-4"
+                          style={{
+                            background: "rgba(16,185,129,0.08)",
+                            border: "1px solid rgba(16,185,129,0.15)",
+                          }}
+                        >
+                          <p
+                            className="text-sm mb-1 font-medium"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                          >
+                            Application
+                          </p>
+                          <p className="text-xl font-bold text-emerald-400 capitalize">
+                            {applicationType}
+                          </p>
+                          <p
+                            className="text-sm font-bold capitalize"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                          >
+                            {useCase.replace("-", " ")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Help Section */}
-                <div className="mt-8 rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <h3 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
-                    💡 Configuration Guidelines
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="font-semibold text-white mb-1">Power & Duration:</p>
-                      <ul className="space-y-1 ml-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        <li>• Peak shaving: 0.5-2 MW, 2-4 hrs</li>
-                        <li>• Backup power: 0.5-5 MW, 4-8 hrs</li>
-                        <li>• Utility scale: 10-100 MW, 2-4 hrs</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white mb-1">Battery Chemistry:</p>
-                      <ul className="space-y-1 ml-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        <li>• LFP: Best for daily cycling, safest</li>
-                        <li>• NMC: Higher energy density, premium cost</li>
-                        <li>• LTO: 20,000+ cycles, fastest charge</li>
-                      </ul>
+                    {/* Action Buttons */}
+                    <div className="flex gap-4 pt-6">
+                      <button
+                        onClick={() => setViewMode("landing")}
+                        className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                      >
+                        ← Back to Tools
+                      </button>
+                      <button
+                        onClick={() => {
+                          const _configData = {
+                            projectName,
+                            location,
+                            storageSizeMW,
+                            durationHours,
+                            storageSizeMWh,
+                            systemCost: localSystemCost,
+                            applicationType,
+                            useCase,
+                            chemistry,
+                            installationType,
+                            gridConnection,
+                            inverterEfficiency,
+                            roundTripEfficiency,
+                            cyclesPerYear,
+                            utilityRate,
+                            demandCharge,
+                            warrantyYears,
+                          };
+                          onGenerateQuote?.();
+                          onClose();
+                        }}
+                        className="flex-1 px-6 py-3 rounded-lg font-semibold transition-all"
+                        style={{
+                          background: "transparent",
+                          color: "#34d399",
+                          border: "1px solid rgba(16,185,129,0.35)",
+                        }}
+                      >
+                        Generate Detailed Quote →
+                      </button>
                     </div>
                   </div>
-                </div>
+
+                  {/* Help Section */}
+                  <div
+                    className="mt-8 rounded-xl p-6"
+                    style={{
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    <h3 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
+                      💡 Configuration Guidelines
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="font-semibold text-white mb-1">Power & Duration:</p>
+                        <ul className="space-y-1 ml-4" style={{ color: "rgba(255,255,255,0.5)" }}>
+                          <li>• Peak shaving: 0.5-2 MW, 2-4 hrs</li>
+                          <li>• Backup power: 0.5-5 MW, 4-8 hrs</li>
+                          <li>• Utility scale: 10-100 MW, 2-4 hrs</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white mb-1">Battery Chemistry:</p>
+                        <ul className="space-y-1 ml-4" style={{ color: "rgba(255,255,255,0.5)" }}>
+                          <li>• LFP: Best for daily cycling, safest</li>
+                          <li>• NMC: Higher energy density, premium cost</li>
+                          <li>• LTO: 20,000+ cycles, fastest charge</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 {/* END CONFIGURATION FORM */}
               </div>
@@ -3922,15 +5985,26 @@ export default function AdvancedQuoteBuilder({
         {/* Quote Preview Modal */}
         {showQuotePreview && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden" style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div
+              className="rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden"
+              style={{ background: "#0f1117", border: "1px solid rgba(255,255,255,0.08)" }}
+            >
               {/* Modal Header */}
-              <div className="text-white p-6 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div
+                className="text-white p-6 flex items-center justify-between"
+                style={{
+                  background: "rgba(255,255,255,0.02)",
+                  borderBottom: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
                 <div>
                   <h2 className="text-2xl font-bold flex items-center gap-3">
                     <Eye className="w-7 h-7 text-blue-400" />
                     Quote Format Preview
                   </h2>
-                  <p className="mt-1 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>See how your professional quote will look</p>
+                  <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    See how your professional quote will look
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowQuotePreview(false)}
@@ -3943,7 +6017,10 @@ export default function AdvancedQuoteBuilder({
               {/* Modal Content */}
               <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
                 {/* Format Tabs */}
-                <div className="flex gap-4 mb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <div
+                  className="flex gap-4 mb-6"
+                  style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
+                >
                   <button
                     onClick={() => setPreviewFormat("word")}
                     className={`px-6 py-3 font-semibold transition-colors ${
@@ -3968,7 +6045,13 @@ export default function AdvancedQuoteBuilder({
 
                 {/* Word Document Preview */}
                 {previewFormat === "word" && (
-                  <div className="rounded-xl p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div
+                    className="rounded-xl p-8"
+                    style={{
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
                     <div
                       className="bg-white rounded-lg p-8 shadow-lg max-w-4xl mx-auto"
                       style={{ fontFamily: "Calibri, sans-serif" }}
@@ -4303,10 +6386,17 @@ export default function AdvancedQuoteBuilder({
                               {generatorIncluded && (
                                 <tr className="border-b border-gray-200 bg-blue-50">
                                   <td className="py-2 font-semibold text-gray-700">
-                                    {generatorFuelTypeSelected === 'diesel' ? '🛢️ Diesel' : generatorFuelTypeSelected === 'natural-gas' ? '🔥 Natural Gas' : generatorFuelTypeSelected === 'dual-fuel' ? '⚡ Dual-Fuel' : '🔄 Linear'} Generator:
+                                    {generatorFuelTypeSelected === "diesel"
+                                      ? "🛢️ Diesel"
+                                      : generatorFuelTypeSelected === "natural-gas"
+                                        ? "🔥 Natural Gas"
+                                        : generatorFuelTypeSelected === "dual-fuel"
+                                          ? "⚡ Dual-Fuel"
+                                          : "🔄 Linear"}{" "}
+                                    Generator:
                                   </td>
                                   <td className="py-2 text-gray-900 text-right">
-                                    {generatorCapacityKW} kW{generatorRedundancy ? ' (N+1)' : ''}
+                                    {generatorCapacityKW} kW{generatorRedundancy ? " (N+1)" : ""}
                                   </td>
                                 </tr>
                               )}
@@ -4358,7 +6448,13 @@ export default function AdvancedQuoteBuilder({
 
                 {/* Excel Spreadsheet Preview */}
                 {previewFormat === "excel" && (
-                  <div className="rounded-xl p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div
+                    className="rounded-xl p-8"
+                    style={{
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
                     <div className="bg-white rounded-lg p-4 shadow-lg max-w-5xl mx-auto overflow-x-auto">
                       {/* Excel-style spreadsheet */}
                       <div className="text-xs" style={{ fontFamily: "Arial, sans-serif" }}>
@@ -4733,7 +6829,8 @@ export default function AdvancedQuoteBuilder({
                 <div className="mt-6 flex gap-4 justify-end">
                   <button
                     onClick={() => setShowQuotePreview(false)}
-                    className="px-6 py-3 rounded-lg font-semibold transition-colors" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)' }}
+                    className="px-6 py-3 rounded-lg font-semibold transition-colors"
+                    style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)" }}
                   >
                     Close Preview
                   </button>
@@ -4743,7 +6840,12 @@ export default function AdvancedQuoteBuilder({
                     <button
                       onClick={() => handleExportQuote("word")}
                       disabled={isExporting}
-                      className="px-5 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 flex items-center gap-2 hover:scale-[1.02]" style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#93c5fd' }}
+                      className="px-5 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 flex items-center gap-2 hover:scale-[1.02]"
+                      style={{
+                        background: "rgba(59,130,246,0.15)",
+                        border: "1px solid rgba(59,130,246,0.3)",
+                        color: "#93c5fd",
+                      }}
                     >
                       {isExporting ? (
                         <>
@@ -4764,14 +6866,24 @@ export default function AdvancedQuoteBuilder({
                     </button>
                     <button
                       onClick={() => handleExportQuote("excel")}
-                      className="px-5 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 hover:scale-[1.02]" style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#6ee7b7' }}
+                      className="px-5 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 hover:scale-[1.02]"
+                      style={{
+                        background: "rgba(16,185,129,0.15)",
+                        border: "1px solid rgba(16,185,129,0.3)",
+                        color: "#6ee7b7",
+                      }}
                     >
                       <FileSpreadsheet className="w-5 h-5" />
                       Excel
                     </button>
                     <button
                       onClick={() => handleExportQuote("pdf")}
-                      className="px-5 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 hover:scale-[1.02]" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}
+                      className="px-5 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 hover:scale-[1.02]"
+                      style={{
+                        background: "rgba(239,68,68,0.15)",
+                        border: "1px solid rgba(239,68,68,0.3)",
+                        color: "#fca5a5",
+                      }}
                     >
                       <FileText className="w-5 h-5" />
                       PDF
@@ -4785,11 +6897,20 @@ export default function AdvancedQuoteBuilder({
 
         {/* Interactive Dashboard View - DISABLED for V5 cleanup */}
         {viewMode === "interactive-dashboard" && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: '#060d1f' }}>
-            <div className="rounded-2xl p-8 max-w-md text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ background: "#060d1f" }}
+          >
+            <div
+              className="rounded-2xl p-8 max-w-md text-center"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
               <Sparkles className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-2">Interactive Dashboard</h2>
-              <p className="mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <p className="mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
                 This feature is being upgraded to V5. Please use the Custom Configuration for now.
               </p>
               <button
@@ -4804,9 +6925,15 @@ export default function AdvancedQuoteBuilder({
 
         {/* Professional Financial Model View */}
         {viewMode === "professional-model" && (
-          <div className="min-h-screen" style={{ background: '#0f1117' }}>
+          <div className="min-h-screen" style={{ background: "#0f1117" }}>
             {/* Header */}
-            <div className="sticky top-0 z-10" style={{ background: 'rgba(15,17,23,0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div
+              className="sticky top-0 z-10"
+              style={{
+                background: "rgba(15,17,23,0.95)",
+                borderBottom: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
               <div className="max-w-7xl mx-auto px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -4817,8 +6944,14 @@ export default function AdvancedQuoteBuilder({
                       <ArrowLeft className="w-5 h-5" />
                       <span className="text-sm font-medium">Back</span>
                     </button>
-                    <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-                    <div className="p-2 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                    <div className="h-8 w-px" style={{ background: "rgba(255,255,255,0.1)" }} />
+                    <div
+                      className="p-2 rounded-lg"
+                      style={{
+                        background: "rgba(16,185,129,0.1)",
+                        border: "1px solid rgba(16,185,129,0.2)",
+                      }}
+                    >
                       <Landmark className="w-5 h-5 text-emerald-400" />
                     </div>
                     <div>
@@ -4842,7 +6975,13 @@ export default function AdvancedQuoteBuilder({
 
             <div className="max-w-7xl mx-auto px-6 py-8">
               {/* Configuration Panel */}
-              <div className="rounded-xl p-6 mb-8" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div
+                className="rounded-xl p-6 mb-8"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
                 <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
                   <Sliders className="w-5 h-5 text-emerald-400" />
                   Model Configuration
@@ -4854,7 +6993,13 @@ export default function AdvancedQuoteBuilder({
                     <label className="block text-sm font-semibold text-slate-400 mb-2">
                       System Size (MW)
                     </label>
-                    <div className="rounded-lg px-4 py-3 text-white font-mono text-lg" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div
+                      className="rounded-lg px-4 py-3 text-white font-mono text-lg"
+                      style={{
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                      }}
+                    >
                       {storageSizeMW.toFixed(2)} MW / {durationHours}h
                     </div>
                     <p className="text-xs text-slate-400 mt-1">
@@ -4874,7 +7019,10 @@ export default function AdvancedQuoteBuilder({
                         setSelectedISORegion(e.target.value as typeof selectedISORegion)
                       }
                       className="w-full rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                      style={{
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                      }}
                     >
                       <option value="CAISO">CAISO (California)</option>
                       <option value="ERCOT">ERCOT (Texas)</option>
@@ -4898,7 +7046,7 @@ export default function AdvancedQuoteBuilder({
                       value={projectLeverage}
                       onChange={(e) => setProjectLeverage(Number(e.target.value))}
                       className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                      style={{ background: 'rgba(255,255,255,0.1)' }}
+                      style={{ background: "rgba(255,255,255,0.1)" }}
                     />
                     <div className="flex justify-between text-xs text-slate-400 mt-1">
                       <span>0% (All Equity)</span>
@@ -4920,7 +7068,10 @@ export default function AdvancedQuoteBuilder({
                         value={interestRate}
                         onChange={(e) => setInterestRate(Number(e.target.value))}
                         className="w-full rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                        style={{
+                          background: "rgba(255,255,255,0.06)",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                        }}
                       />
                       <span className="text-slate-400">%</span>
                     </div>
@@ -4929,7 +7080,13 @@ export default function AdvancedQuoteBuilder({
 
                 {/* Example Output Preview - Shows users what to expect */}
                 {!professionalModel && (
-                  <div className="mt-6 rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div
+                    className="mt-6 rounded-xl p-6"
+                    style={{
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
                     <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
                       <Eye className="w-4 h-4 text-slate-500" />
                       Example Output Preview
@@ -4940,14 +7097,26 @@ export default function AdvancedQuoteBuilder({
                     </p>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="rounded-lg p-3 text-center"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
                         <p className="text-xs text-slate-500">Est. CapEx</p>
                         {/* SSOT: Using BESS_MARKET_RATE_2025 = $125/kWh from market data */}
                         <p className="text-lg font-bold text-white">
                           ${((storageSizeMW * durationHours * 1000 * 125) / 1000000).toFixed(1)}M
                         </p>
                       </div>
-                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="rounded-lg p-3 text-center"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
                         <p className="text-xs text-slate-500">Est. Equity</p>
                         {/* SSOT: Equity = CapEx × (1 - leverage) */}
                         <p className="text-lg font-bold text-emerald-400">
@@ -4963,34 +7132,72 @@ export default function AdvancedQuoteBuilder({
                           M
                         </p>
                       </div>
-                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="rounded-lg p-3 text-center"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
                         <p className="text-xs text-slate-500">Target IRR</p>
                         <p className="text-lg font-bold text-emerald-400">12-18%</p>
                       </div>
-                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="rounded-lg p-3 text-center"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
                         <p className="text-xs text-slate-500">DSCR Target</p>
                         <p className="text-lg font-bold text-blue-400">≥1.25x</p>
                       </div>
-                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="rounded-lg p-3 text-center"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
                         <p className="text-xs text-slate-500">Payback</p>
                         <p className="text-lg font-bold text-slate-300">6-10 yrs</p>
                       </div>
-                      <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="rounded-lg p-3 text-center"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
                         <p className="text-xs text-slate-500">Project Life</p>
                         <p className="text-lg font-bold text-slate-300">25 yrs</p>
                       </div>
                     </div>
 
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <p className="text-white font-semibold text-sm mb-2">📊 3-Statement Model</p>
+                      <div
+                        className="rounded-lg p-3"
+                        style={{
+                          background: "rgba(255,255,255,0.02)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
+                        <p className="text-white font-semibold text-sm mb-2">
+                          📊 3-Statement Model
+                        </p>
                         <ul className="text-slate-500 text-xs space-y-1">
                           <li>• Income Statement (25 years)</li>
                           <li>• Balance Sheet</li>
                           <li>• Cash Flow Statement</li>
                         </ul>
                       </div>
-                      <div className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="rounded-lg p-3"
+                        style={{
+                          background: "rgba(255,255,255,0.02)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
                         <p className="text-white font-semibold text-sm mb-2">💰 Revenue Stacking</p>
                         <ul className="text-slate-500 text-xs space-y-1">
                           <li>• Energy Arbitrage</li>
@@ -4998,7 +7205,13 @@ export default function AdvancedQuoteBuilder({
                           <li>• Capacity Payments</li>
                         </ul>
                       </div>
-                      <div className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="rounded-lg p-3"
+                        style={{
+                          background: "rgba(255,255,255,0.02)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
                         <p className="text-white font-semibold text-sm mb-2">🏦 Bank Metrics</p>
                         <ul className="text-slate-500 text-xs space-y-1">
                           <li>• DSCR Analysis</li>
@@ -5044,7 +7257,11 @@ export default function AdvancedQuoteBuilder({
                     }}
                     disabled={isGeneratingModel}
                     className="flex items-center gap-3 font-semibold px-8 py-3.5 rounded-lg transition-all disabled:opacity-50"
-                    style={{ background: 'transparent', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)' }}
+                    style={{
+                      background: "transparent",
+                      color: "#34d399",
+                      border: "1px solid rgba(16,185,129,0.35)",
+                    }}
                   >
                     {isGeneratingModel ? (
                       <>
@@ -5065,7 +7282,13 @@ export default function AdvancedQuoteBuilder({
               {professionalModel && (
                 <div className="space-y-8">
                   {/* Executive Summary */}
-                  <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div
+                    className="rounded-xl p-6"
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
                     <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
                       <FileSpreadsheet className="w-5 h-5 text-emerald-400" />
                       Executive Summary
@@ -5136,13 +7359,25 @@ export default function AdvancedQuoteBuilder({
                         </p>
                         <p className="text-xs text-slate-500">Target: ≥1.25x</p>
                       </div>
-                      <div className="rounded-lg p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="rounded-lg p-4 text-center"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
                         <p className="text-xs text-slate-500 uppercase tracking-wide">Avg DSCR</p>
                         <p className="text-2xl font-bold text-blue-400">
                           {professionalModel.summary.averageDSCR.toFixed(2)}x
                         </p>
                       </div>
-                      <div className="rounded-lg p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="rounded-lg p-4 text-center"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
                         <p className="text-xs text-slate-500 uppercase tracking-wide">
                           Simple Payback
                         </p>
@@ -5150,7 +7385,13 @@ export default function AdvancedQuoteBuilder({
                           {professionalModel.summary.simplePayback.toFixed(1)} yrs
                         </p>
                       </div>
-                      <div className="rounded-lg p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div
+                        className="rounded-lg p-4 text-center"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
                         <p className="text-xs text-slate-500 uppercase tracking-wide">Y1 Revenue</p>
                         <p className="text-2xl font-bold text-emerald-400">
                           ${(professionalModel.summary.totalAnnualRevenue / 1000000).toFixed(2)}M
@@ -5160,7 +7401,13 @@ export default function AdvancedQuoteBuilder({
                   </div>
 
                   {/* Revenue Streams */}
-                  <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div
+                    className="rounded-xl p-6"
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-emerald-400" />
                       Year 1 Revenue Breakdown ({selectedISORegion})
@@ -5171,7 +7418,14 @@ export default function AdvancedQuoteBuilder({
                         Object.entries(professionalModel.revenueProjection[0])
                           .filter(([key]) => key !== "year" && key !== "totalRevenue")
                           .map(([stream, value]) => (
-                            <div key={stream} className="rounded-lg p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div
+                              key={stream}
+                              className="rounded-lg p-4"
+                              style={{
+                                background: "rgba(255,255,255,0.03)",
+                                border: "1px solid rgba(255,255,255,0.06)",
+                              }}
+                            >
                               <p className="text-xs text-slate-500 capitalize">
                                 {stream.replace(/([A-Z])/g, " $1").trim()}
                               </p>
@@ -5186,7 +7440,13 @@ export default function AdvancedQuoteBuilder({
                   {/* 3-Statement Preview */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Income Statement */}
-                    <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div
+                      className="rounded-xl p-6"
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
                       <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
                         <FileText className="w-4 h-4 text-blue-400" />
                         Income Statement (Y1)
@@ -5257,7 +7517,13 @@ export default function AdvancedQuoteBuilder({
                     </div>
 
                     {/* Balance Sheet */}
-                    <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div
+                      className="rounded-xl p-6"
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
                       <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-emerald-400" />
                         Balance Sheet (Y1)
@@ -5307,7 +7573,13 @@ export default function AdvancedQuoteBuilder({
                     </div>
 
                     {/* Cash Flow */}
-                    <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div
+                      className="rounded-xl p-6"
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
                       <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
                         <DollarSign className="w-4 h-4 text-emerald-400" />
                         Cash Flow (Y1)
@@ -5359,7 +7631,13 @@ export default function AdvancedQuoteBuilder({
                   </div>
 
                   {/* DSCR & Debt Schedule Chart (simplified table) */}
-                  <div className="rounded-xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div
+                    className="rounded-xl p-6"
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
                     <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
                       <Banknote className="w-5 h-5 text-emerald-400" />
                       Debt Service Coverage Ratio (DSCR) by Year
@@ -5414,7 +7692,11 @@ export default function AdvancedQuoteBuilder({
                         );
                       }}
                       className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors"
-                      style={{ background: 'rgba(16,185,129,0.15)', color: 'rgb(52,211,153)', border: '1px solid rgba(16,185,129,0.3)' }}
+                      style={{
+                        background: "rgba(16,185,129,0.15)",
+                        color: "rgb(52,211,153)",
+                        border: "1px solid rgba(16,185,129,0.3)",
+                      }}
                     >
                       <FileSpreadsheet className="w-5 h-5" />
                       Export to Excel
@@ -5427,7 +7709,11 @@ export default function AdvancedQuoteBuilder({
                         );
                       }}
                       className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors"
-                      style={{ background: 'rgba(59,130,246,0.15)', color: 'rgb(96,165,250)', border: '1px solid rgba(59,130,246,0.3)' }}
+                      style={{
+                        background: "rgba(59,130,246,0.15)",
+                        color: "rgb(96,165,250)",
+                        border: "1px solid rgba(59,130,246,0.3)",
+                      }}
                     >
                       <FileText className="w-5 h-5" />
                       Export to PDF
@@ -5453,47 +7739,387 @@ export default function AdvancedQuoteBuilder({
           isOpen={showFinancialSummary}
           onClose={() => setShowFinancialSummary(false)}
           systemLabel={`${storageSizeMW.toFixed(1)} MW / ${durationHours}h BESS${solarMW > 0 ? ` + ${(solarMW * 1000).toFixed(0)} kW Solar` : ""}${generatorMW > 0 ? ` + ${(generatorMW * 1000).toFixed(0)} kW Gen` : ""}`}
-          data={{
-            totalEquipmentCost: financialMetrics?.equipmentCost,
-            installationCost: financialMetrics?.installationCost,
-            totalProjectCost: financialMetrics?.totalProjectCost ?? localSystemCost,
-            netCost: financialMetrics?.netCost,
-            itcCredit: financialMetrics?.taxCredit,
-            itcRate: financialMetrics?.taxCredit && financialMetrics?.totalProjectCost
-              ? financialMetrics.taxCredit / financialMetrics.totalProjectCost
-              : 0.30,
-            annualSavings: estimatedAnnualSavings,
-            paybackYears,
-            npv: financialMetrics?.npv,
-            irr: financialMetrics?.irr,
-            roi25Year: financialMetrics?.roi25Year,
-            lcoe: financialMetrics?.levelizedCostOfStorage,
-            equipmentBreakdown: financialMetrics ? [
-              { label: "Battery Storage", cost: (financialMetrics.equipmentCost ?? 0) * 0.55, notes: `${storageSizeMW.toFixed(1)} MW × ${durationHours}h LFP` },
-              { label: "Power Conversion (PCS)", cost: (financialMetrics.equipmentCost ?? 0) * 0.18, notes: `Inverters, switchgear` },
-              { label: "Balance of System", cost: (financialMetrics.equipmentCost ?? 0) * 0.12, notes: `BMS, enclosure, cabling` },
-              { label: "EMS / Controls", cost: (financialMetrics.equipmentCost ?? 0) * 0.08, notes: `Energy management software` },
-              { label: "Transformer / Interconnect", cost: (financialMetrics.equipmentCost ?? 0) * 0.07, notes: `Grid connection` },
-            ] : undefined,
-            cashFlowProjection: estimatedAnnualSavings > 0 ? Array.from({ length: 10 }, (_, i) => {
-              const yr = i + 1;
-              const annualEsc = estimatedAnnualSavings * Math.pow(1.025, i);
-              return {
-                year: yr,
-                savings: Math.round(annualEsc),
-                cumulative: Math.round(
-                  Array.from({ length: yr }, (__, j) => estimatedAnnualSavings * Math.pow(1.025, j))
-                    .reduce((a, b) => a + b, 0) - (financialMetrics?.netCost ?? localSystemCost)
-                ),
-              };
-            }) : undefined,
-            sensitivity: [
-              { variable: "Electricity Rate", low: paybackYears * 1.25, base: paybackYears, high: paybackYears * 0.8, unit: "yrs" },
-              { variable: "Equipment Cost", low: paybackYears * 0.85, base: paybackYears, high: paybackYears * 1.15, unit: "yrs" },
-              { variable: "Battery Degradation", low: paybackYears * 0.95, base: paybackYears, high: paybackYears * 1.12, unit: "yrs" },
-            ],
-          } satisfies ProQuoteFinancialData}
+          data={
+            {
+              totalEquipmentCost: financialMetrics?.equipmentCost,
+              installationCost: financialMetrics?.installationCost,
+              totalProjectCost: financialMetrics?.totalProjectCost ?? localSystemCost,
+              netCost: financialMetrics?.netCost,
+              itcCredit: financialMetrics?.taxCredit,
+              itcRate:
+                financialMetrics?.taxCredit && financialMetrics?.totalProjectCost
+                  ? financialMetrics.taxCredit / financialMetrics.totalProjectCost
+                  : 0.3,
+              annualSavings: estimatedAnnualSavings,
+              paybackYears,
+              npv: financialMetrics?.npv,
+              irr: financialMetrics?.irr,
+              roi25Year: financialMetrics?.roi25Year,
+              lcoe: financialMetrics?.levelizedCostOfStorage,
+              equipmentBreakdown: financialMetrics
+                ? [
+                    {
+                      label: "Battery Storage",
+                      cost: (financialMetrics.equipmentCost ?? 0) * 0.55,
+                      notes: `${storageSizeMW.toFixed(1)} MW × ${durationHours}h LFP`,
+                    },
+                    {
+                      label: "Power Conversion (PCS)",
+                      cost: (financialMetrics.equipmentCost ?? 0) * 0.18,
+                      notes: `Inverters, switchgear`,
+                    },
+                    {
+                      label: "Balance of System",
+                      cost: (financialMetrics.equipmentCost ?? 0) * 0.12,
+                      notes: `BMS, enclosure, cabling`,
+                    },
+                    {
+                      label: "EMS / Controls",
+                      cost: (financialMetrics.equipmentCost ?? 0) * 0.08,
+                      notes: `Energy management software`,
+                    },
+                    {
+                      label: "Transformer / Interconnect",
+                      cost: (financialMetrics.equipmentCost ?? 0) * 0.07,
+                      notes: `Grid connection`,
+                    },
+                  ]
+                : undefined,
+              cashFlowProjection:
+                estimatedAnnualSavings > 0
+                  ? Array.from({ length: 10 }, (_, i) => {
+                      const yr = i + 1;
+                      const annualEsc = estimatedAnnualSavings * Math.pow(1.025, i);
+                      return {
+                        year: yr,
+                        savings: Math.round(annualEsc),
+                        cumulative: Math.round(
+                          Array.from(
+                            { length: yr },
+                            (__, j) => estimatedAnnualSavings * Math.pow(1.025, j)
+                          ).reduce((a, b) => a + b, 0) -
+                            (financialMetrics?.netCost ?? localSystemCost)
+                        ),
+                      };
+                    })
+                  : undefined,
+              sensitivity: [
+                {
+                  variable: "Electricity Rate",
+                  low: paybackYears * 1.25,
+                  base: paybackYears,
+                  high: paybackYears * 0.8,
+                  unit: "yrs",
+                },
+                {
+                  variable: "Equipment Cost",
+                  low: paybackYears * 0.85,
+                  base: paybackYears,
+                  high: paybackYears * 1.15,
+                  unit: "yrs",
+                },
+                {
+                  variable: "Battery Degradation",
+                  low: paybackYears * 0.95,
+                  base: paybackYears,
+                  high: paybackYears * 1.12,
+                  unit: "yrs",
+                },
+              ],
+            } satisfies ProQuoteFinancialData
+          }
         />
+
+        {/* ════════════════════════════════════════════════════════════════════════════
+            SMART UPLOAD SUCCESS MODAL (Feb 2026)
+            ════════════════════════════════════════════════════════════════════════════ */}
+        {showExtractionSuccessModal && pendingExtractedData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 max-w-2xl w-full shadow-2xl border border-white/10 animate-in fade-in zoom-in duration-300">
+              {/* Success Icon */}
+              <div className="flex justify-center mb-6">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
+                  <CheckCircle2 className="w-12 h-12 text-white" />
+                </div>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-3xl font-bold text-center mb-3 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                Smart Upload Complete!
+              </h2>
+
+              {/* Time saved badge */}
+              <div className="flex justify-center mb-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/30">
+                  <Clock className="w-4 h-4 text-green-400" />
+                  <span className="text-sm font-medium text-green-300">
+                    Saved you ~12 minutes of manual entry!
+                  </span>
+                </div>
+              </div>
+
+              {/* Extracted Data Summary */}
+              <div className="bg-slate-900/50 rounded-xl p-6 mb-6 border border-white/5">
+                <h3 className="text-lg font-semibold text-white mb-4">✨ Extracted Information:</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  {pendingExtractedData.location?.state && (
+                    <div>
+                      <span className="text-gray-400">Location:</span>
+                      <span className="text-white ml-2 font-medium">
+                        {pendingExtractedData.location.state}
+                      </span>
+                    </div>
+                  )}
+                  {pendingExtractedData.powerRequirements?.peakDemandKW && (
+                    <div>
+                      <span className="text-gray-400">Peak Demand:</span>
+                      <span className="text-white ml-2 font-medium">
+                        {pendingExtractedData.powerRequirements.peakDemandKW.toFixed(0)} kW
+                      </span>
+                    </div>
+                  )}
+                  {pendingExtractedData.utilityInfo?.electricityRate && (
+                    <div>
+                      <span className="text-gray-400">Electricity Rate:</span>
+                      <span className="text-white ml-2 font-medium">
+                        ${pendingExtractedData.utilityInfo.electricityRate.toFixed(3)}/kWh
+                      </span>
+                    </div>
+                  )}
+                  {pendingExtractedData.utilityInfo?.demandCharge && (
+                    <div>
+                      <span className="text-gray-400">Demand Charge:</span>
+                      <span className="text-white ml-2 font-medium">
+                        ${pendingExtractedData.utilityInfo.demandCharge}/kW
+                      </span>
+                    </div>
+                  )}
+                  {pendingExtractedData.existingInfrastructure?.hasSolar && (
+                    <div>
+                      <span className="text-gray-400">Solar PV:</span>
+                      <span className="text-white ml-2 font-medium">
+                        {pendingExtractedData.existingInfrastructure.solarKW} kW
+                      </span>
+                    </div>
+                  )}
+                  {pendingExtractedData.existingInfrastructure?.hasGenerator && (
+                    <div>
+                      <span className="text-gray-400">Generator:</span>
+                      <span className="text-white ml-2 font-medium">
+                        {pendingExtractedData.existingInfrastructure.generatorKW} kW
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setShowDataReview(true)}
+                  className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <FileEdit className="w-5 h-5" />
+                    <span>Review & Edit Data</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => applyExtractedData(pendingExtractedData)}
+                  className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>Apply & Continue</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════════════════════
+            DATA REVIEW SCREEN (Feb 2026)
+            ════════════════════════════════════════════════════════════════════════════ */}
+        {showDataReview && pendingExtractedData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 max-w-4xl w-full shadow-2xl border border-white/10 my-8">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">Review Extracted Data</h2>
+                  <p className="text-sm text-gray-400">
+                    Make any changes before applying to your quote
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowDataReview(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Editable Fields */}
+              <div className="space-y-6 mb-6">
+                {/* Location */}
+                {pendingExtractedData.location?.state && (
+                  <div className="bg-slate-900/50 rounded-xl p-4 border border-white/5">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
+                    <input
+                      type="text"
+                      value={pendingExtractedData.location.state}
+                      onChange={(e) =>
+                        setPendingExtractedData({
+                          ...pendingExtractedData,
+                          location: { ...pendingExtractedData.location!, state: e.target.value },
+                        })
+                      }
+                      className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                    />
+                  </div>
+                )}
+
+                {/* Power Requirements */}
+                {pendingExtractedData.powerRequirements?.peakDemandKW && (
+                  <div className="bg-slate-900/50 rounded-xl p-4 border border-white/5">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Peak Demand (kW)
+                    </label>
+                    <input
+                      type="number"
+                      value={pendingExtractedData.powerRequirements.peakDemandKW}
+                      onChange={(e) =>
+                        setPendingExtractedData({
+                          ...pendingExtractedData,
+                          powerRequirements: {
+                            ...pendingExtractedData.powerRequirements!,
+                            peakDemandKW: parseFloat(e.target.value) || 0,
+                          },
+                        })
+                      }
+                      className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                    />
+                  </div>
+                )}
+
+                {/* Utility Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  {pendingExtractedData.utilityInfo?.electricityRate != null && (
+                    <div className="bg-slate-900/50 rounded-xl p-4 border border-white/5">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Electricity Rate ($/kWh)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.001"
+                        value={pendingExtractedData.utilityInfo.electricityRate}
+                        onChange={(e) =>
+                          setPendingExtractedData({
+                            ...pendingExtractedData,
+                            utilityInfo: {
+                              ...pendingExtractedData.utilityInfo!,
+                              electricityRate: parseFloat(e.target.value) || 0,
+                            },
+                          })
+                        }
+                        className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                      />
+                    </div>
+                  )}
+
+                  {pendingExtractedData.utilityInfo?.demandCharge != null && (
+                    <div className="bg-slate-900/50 rounded-xl p-4 border border-white/5">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Demand Charge ($/kW)
+                      </label>
+                      <input
+                        type="number"
+                        value={pendingExtractedData.utilityInfo.demandCharge}
+                        onChange={(e) =>
+                          setPendingExtractedData({
+                            ...pendingExtractedData,
+                            utilityInfo: {
+                              ...pendingExtractedData.utilityInfo!,
+                              demandCharge: parseFloat(e.target.value) || 0,
+                            },
+                          })
+                        }
+                        className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Solar/Generator */}
+                <div className="grid grid-cols-2 gap-4">
+                  {pendingExtractedData.existingInfrastructure?.hasSolar && (
+                    <div className="bg-slate-900/50 rounded-xl p-4 border border-white/5">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Solar PV (kW)
+                      </label>
+                      <input
+                        type="number"
+                        value={pendingExtractedData.existingInfrastructure.solarKW || 0}
+                        onChange={(e) =>
+                          setPendingExtractedData({
+                            ...pendingExtractedData,
+                            existingInfrastructure: {
+                              ...pendingExtractedData.existingInfrastructure!,
+                              solarKW: parseFloat(e.target.value) || 0,
+                            },
+                          })
+                        }
+                        className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                      />
+                    </div>
+                  )}
+
+                  {pendingExtractedData.existingInfrastructure?.hasGenerator && (
+                    <div className="bg-slate-900/50 rounded-xl p-4 border border-white/5">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Generator (kW)
+                      </label>
+                      <input
+                        type="number"
+                        value={pendingExtractedData.existingInfrastructure.generatorKW || 0}
+                        onChange={(e) =>
+                          setPendingExtractedData({
+                            ...pendingExtractedData,
+                            existingInfrastructure: {
+                              ...pendingExtractedData.existingInfrastructure!,
+                              generatorKW: parseFloat(e.target.value) || 0,
+                            },
+                          })
+                        }
+                        className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setShowDataReview(false)}
+                  className="px-6 py-3 rounded-xl border border-white/10 hover:border-white/20 text-gray-300 hover:text-white font-medium transition-all"
+                >
+                  Back to Summary
+                </button>
+                <button
+                  onClick={() => applyExtractedData(pendingExtractedData)}
+                  className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>Apply Changes & Continue</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
