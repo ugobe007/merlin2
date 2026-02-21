@@ -10,7 +10,7 @@
  */
 
 import React, { useState } from "react";
-import { Building2, Zap, Upload, ArrowRight, Sparkles } from "lucide-react";
+import { Building2, Zap, Upload, ArrowRight, Sparkles, Shield, TrendingUp } from "lucide-react";
 
 interface QuickQuotePanelProps {
   onStartExpress: (mode: "custom" | "ballpark" | "bill-upload") => void;
@@ -21,19 +21,27 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
   const [hoveredMode, setHoveredMode] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
       <div className="max-w-5xl w-full space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Sparkles className="w-8 h-8 text-blue-600" />
-            <h1 className="text-4xl font-bold text-slate-900">
-              Get Your BESS Quote
+            {/* Purple gradient icon */}
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-purple-300 to-purple-400 bg-clip-text text-transparent">
+              Merlin ProQuote™
             </h1>
           </div>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Choose your path: Get a ballpark estimate in 30 seconds, or build a detailed custom quote in 5 minutes.
+          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+            Choose your path: Get a <span className="text-purple-400 font-medium">TrueQuote™</span> estimate in 30 seconds, or build a detailed quote with full source attribution.
           </p>
+          {/* TrueQuote badge */}
+          <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
+            <Shield className="w-4 h-4 text-purple-400" />
+            <span>Every number traceable to authoritative sources (NREL, EIA, Visual Crossing)</span>
+          </div>
         </div>
 
         {/* Quick Quote Options */}
@@ -43,31 +51,31 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
             onClick={() => onStartExpress("custom")}
             onMouseEnter={() => setHoveredMode("custom")}
             onMouseLeave={() => setHoveredMode(null)}
-            className="group relative bg-white rounded-xl border-2 border-slate-200 hover:border-blue-500 hover:shadow-lg transition-all duration-200 p-6 text-left"
+            className="group relative bg-transparent rounded-xl border-2 border-purple-500/30 hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-200 p-6 text-left"
           >
             <div className="absolute top-4 right-4">
-              <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+              <span className="text-xs font-semibold text-purple-400 border border-purple-500/30 px-2 py-1 rounded-full">
                 30 sec
               </span>
             </div>
             
-            <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors">
-              <Zap className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 rounded-lg border-2 border-purple-500/30 flex items-center justify-center mb-4 group-hover:border-purple-500 transition-colors">
+              <Zap className="w-6 h-6 text-purple-400" />
             </div>
 
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">
+            <h3 className="text-xl font-semibold text-white mb-2">
               I Know My System Size
             </h3>
-            <p className="text-sm text-slate-600 mb-4">
+            <p className="text-sm text-slate-400 mb-4">
               Enter your target kW/kWh directly. Skip the questionnaire and jump to pricing.
             </p>
 
-            <div className="flex items-center text-blue-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center text-purple-400 font-medium text-sm group-hover:translate-x-1 transition-transform">
               Quick Quote <ArrowRight className="w-4 h-4 ml-1" />
             </div>
 
             {hoveredMode === "custom" && (
-              <div className="absolute inset-0 bg-blue-500/5 rounded-xl pointer-events-none" />
+              <div className="absolute inset-0 bg-purple-500/5 rounded-xl pointer-events-none" />
             )}
           </button>
 
@@ -76,57 +84,57 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
             onClick={() => onStartExpress("ballpark")}
             onMouseEnter={() => setHoveredMode("ballpark")}
             onMouseLeave={() => setHoveredMode(null)}
-            className="group relative bg-white rounded-xl border-2 border-slate-200 hover:border-green-500 hover:shadow-lg transition-all duration-200 p-6 text-left"
+            className="group relative bg-transparent rounded-xl border-2 border-purple-500/30 hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-200 p-6 text-left"
           >
             <div className="absolute top-4 right-4">
-              <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+              <span className="text-xs font-semibold text-purple-400 border border-purple-500/30 px-2 py-1 rounded-full">
                 15 sec
               </span>
             </div>
             
-            <div className="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
-              <Sparkles className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 rounded-lg border-2 border-purple-500/30 flex items-center justify-center mb-4 group-hover:border-purple-500 transition-colors">
+              <Sparkles className="w-6 h-6 text-purple-400" />
             </div>
 
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">
+            <h3 className="text-xl font-semibold text-white mb-2">
               Just Give Me a Ballpark
             </h3>
-            <p className="text-sm text-slate-600 mb-4">
+            <p className="text-sm text-slate-400 mb-4">
               Auto-generate a quote using regional averages. Fast and simple.
             </p>
 
-            <div className="flex items-center text-green-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center text-purple-400 font-medium text-sm group-hover:translate-x-1 transition-transform">
               Instant Quote <ArrowRight className="w-4 h-4 ml-1" />
             </div>
 
             {hoveredMode === "ballpark" && (
-              <div className="absolute inset-0 bg-green-500/5 rounded-xl pointer-events-none" />
+              <div className="absolute inset-0 bg-purple-500/5 rounded-xl pointer-events-none" />
             )}
           </button>
 
           {/* Option 3: Bill Upload (Coming Soon) */}
           <button
             disabled
-            className="group relative bg-white rounded-xl border-2 border-slate-200 opacity-50 cursor-not-allowed p-6 text-left"
+            className="group relative bg-transparent rounded-xl border-2 border-slate-700/30 opacity-50 cursor-not-allowed p-6 text-left"
           >
             <div className="absolute top-4 right-4">
-              <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
+              <span className="text-xs font-semibold text-slate-500 border border-slate-700/30 px-2 py-1 rounded-full">
                 Coming Soon
               </span>
             </div>
             
-            <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center mb-4">
-              <Upload className="w-6 h-6 text-slate-400" />
+            <div className="w-12 h-12 rounded-lg border-2 border-slate-700/30 flex items-center justify-center mb-4">
+              <Upload className="w-6 h-6 text-slate-500" />
             </div>
 
-            <h3 className="text-xl font-semibold text-slate-700 mb-2">
+            <h3 className="text-xl font-semibold text-slate-500 mb-2">
               Upload My Utility Bill
             </h3>
-            <p className="text-sm text-slate-500 mb-4">
+            <p className="text-sm text-slate-600 mb-4">
               Extract your usage data automatically. Get a precise quote based on real consumption.
             </p>
 
-            <div className="flex items-center text-slate-400 font-medium text-sm">
+            <div className="flex items-center text-slate-600 font-medium text-sm">
               Coming Q2 2026 <ArrowRight className="w-4 h-4 ml-1" />
             </div>
           </button>
@@ -135,10 +143,10 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
+            <div className="w-full border-t border-slate-700/50" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-white text-slate-500">or</span>
+            <span className="px-4 bg-slate-950 text-slate-500">or</span>
           </div>
         </div>
 
@@ -146,29 +154,29 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
         <div className="text-center">
           <button
             onClick={onStartGuided}
-            className="group inline-flex items-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-medium px-8 py-4 rounded-lg transition-all duration-200 hover:shadow-lg"
+            className="group inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium px-8 py-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/30"
           >
             <Building2 className="w-5 h-5" />
             <span>Start Guided Wizard (Detailed Quote)</span>
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>
-          <p className="text-sm text-slate-500 mt-3">
+          <p className="text-sm text-slate-400 mt-3">
             Answer 16 questions • Get TrueQuote™ verified pricing • ~5 minutes
           </p>
         </div>
 
         {/* Trust Indicators */}
-        <div className="flex items-center justify-center gap-8 pt-8 text-sm text-slate-500">
+        <div className="flex items-center justify-center gap-8 pt-8 text-sm text-slate-400">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <div className="w-2 h-2 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50" />
             <span>TrueQuote™ Verified</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-blue-500" />
+            <div className="w-2 h-2 rounded-full bg-purple-400 shadow-sm shadow-purple-400/50" />
             <span>NREL Pricing</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-purple-500" />
+            <div className="w-2 h-2 rounded-full bg-purple-300 shadow-sm shadow-purple-300/50" />
             <span>IRA 2022 Tax Credits</span>
           </div>
         </div>
