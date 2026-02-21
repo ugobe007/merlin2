@@ -616,9 +616,13 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                     : "—"}
                 </span>
               </div>
+
+              {/* NPV (25yr) */}
               {quote.npv != null && (
-                <div className="flex justify-between py-1.5">
-                  <span className="text-xs text-slate-400">NPV (25yr)</span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                    NPV (25yr)
+                  </span>
                   <span
                     className={`text-xs font-bold tabular-nums ${Number(quote.npv) >= 0 ? "text-emerald-400" : "text-red-400"}`}
                   >
@@ -626,9 +630,13 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                   </span>
                 </div>
               )}
+
+              {/* IRR */}
               {quote.irr != null && (
-                <div className="flex justify-between py-1.5">
-                  <span className="text-xs text-slate-400">IRR</span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                    IRR
+                  </span>
                   <span
                     className={`text-xs font-bold tabular-nums ${(() => {
                       const raw = Number(quote.irr);
@@ -646,18 +654,25 @@ export default function Step6ResultsV7({ state, actions }: Props) {
                   </span>
                 </div>
               )}
+
+              {/* Discounted Payback */}
               {quote.paybackYears != null && Number(quote.paybackYears) > 0 && (
-                <div className="flex justify-between py-1.5">
-                  <span className="text-xs text-slate-400">Discounted Payback</span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                    Discounted Payback
+                  </span>
                   <span className="text-xs font-bold text-white tabular-nums">
                     {parseFloat(Number(quote.paybackYears).toFixed(1))} years
                   </span>
                 </div>
               )}
-              {/* 10yr cumulative savings */}
+
+              {/* 10yr Cumulative Savings */}
               {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
-                <div className="flex justify-between py-1.5">
-                  <span className="text-xs text-slate-400">10yr Cumulative Savings</span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                    10yr Cumulative
+                  </span>
                   <span className="text-xs font-bold text-emerald-400 tabular-nums">
                     {fmtUSD(Number(quote.annualSavingsUSD) * 10)}
                   </span>

@@ -53,7 +53,7 @@ function Datum({
 
   return (
     <span style={{ whiteSpace: "nowrap" }}>
-      <span style={{ color: "rgba(232, 235, 243, 0.38)" }}>{label} </span>
+      {label && <span style={{ color: "rgba(232, 235, 243, 0.38)" }}>{label} </span>}
       {isLoading ? (
         <span
           style={{

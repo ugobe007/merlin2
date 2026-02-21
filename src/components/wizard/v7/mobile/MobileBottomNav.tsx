@@ -4,8 +4,8 @@
  * Replaces top nav on small screens (<768px)
  */
 
-import React from 'react';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import React from "react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
 interface MobileBottomNavProps {
   currentStep: number;
@@ -26,7 +26,7 @@ export function MobileBottomNav({
   onBack,
   onNext,
   isLastStep = false,
-  nextLabel = 'Continue',
+  nextLabel = "Continue",
 }: MobileBottomNavProps) {
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-t border-white/10 safe-area-inset-bottom">
@@ -58,9 +58,7 @@ export function MobileBottomNav({
             <div
               key={idx}
               className={`h-1.5 rounded-full transition-all ${
-                idx <= currentStep
-                  ? 'w-6 bg-[#3ECF8E]'
-                  : 'w-1.5 bg-white/20'
+                idx <= currentStep ? "w-6 bg-[#3ECF8E]" : "w-1.5 bg-white/20"
               }`}
             />
           ))}
@@ -71,15 +69,11 @@ export function MobileBottomNav({
           type="button"
           onClick={onNext}
           disabled={!canContinue}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all min-w-[90px] justify-center"
-          aria-label={isLastStep ? 'Finish' : nextLabel}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-[#3ECF8E] bg-transparent text-[#3ECF8E] font-bold disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all min-w-[90px] justify-center disabled:border-slate-600 disabled:text-slate-600"
+          aria-label={isLastStep ? "Finish" : nextLabel}
         >
-          <span className="text-sm">{isLastStep ? 'Finish' : nextLabel}</span>
-          {isLastStep ? (
-            <Check className="w-4 h-4" />
-          ) : (
-            <ArrowRight className="w-4 h-4" />
-          )}
+          <span className="text-sm">{isLastStep ? "Finish" : nextLabel}</span>
+          {isLastStep ? <Check className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
         </button>
       </div>
     </div>
