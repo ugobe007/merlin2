@@ -14,7 +14,7 @@
  */
 
 import React, { useState } from "react";
-import { Building2, Zap, Upload, ArrowRight, Sparkles, ShieldCheck } from "lucide-react";
+import { Building2, Zap, Upload, ArrowRight, Sparkles } from "lucide-react";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 
@@ -160,11 +160,11 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
               <Upload className="w-6 h-6 text-slate-500" />
             </div>
 
-            <h3 className="text-x(Stroke-Only Button) */}
-        <div className="text-center">
-          <button
-            onClick={onStartGuided}
-            className="group inline-flex items-center gap-3 border-2 border-[#3ECF8E]/50 hover:border-[#3ECF8E] text-[#3ECF8E] font-bold px-8 py-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-[#3ECF8E]/2
+            <h3 className="text-xl font-semibold text-slate-500 mb-2">
+              Upload My Utility Bill
+            </h3>
+            <p className="text-sm text-slate-600 mb-4">
+              Extract your usage data automatically. Get a precise quote based on real consumption.
             </p>
 
             <div className="flex items-center text-slate-600 font-medium text-sm">
@@ -183,11 +183,11 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
           </div>
         </div>
 
-        {/* Guided Wizard Option */}
+        {/* Guided Wizard Option (Stroke-Only Button) */}
         <div className="text-center">
           <button
             onClick={onStartGuided}
-            className="group inline-flex items-center gap-3 bg-gradient-to-r from-[#3ECF8E] to-[#2EA574] hover:from-[#35b87a] hover:to-[#2A9468] text-[#0D0D0D] font-bold px-8 py-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-[#3ECF8E]/30"
+            className="group inline-flex items-center gap-3 border-2 border-[#3ECF8E]/50 hover:border-[#3ECF8E] text-[#3ECF8E] font-bold px-8 py-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-[#3ECF8E]/20"
           >
             <Building2 className="w-5 h-5" />
             <span>Start Guided Wizard (Detailed Quote)</span>
