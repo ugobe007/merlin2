@@ -196,8 +196,8 @@ export default function GoalsModal({
                 px-6 py-2.5 rounded-lg font-semibold transition-all
                 ${
                   canContinue
-                    ? "bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
-                    : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                    ? "border-2 border-blue-500 hover:border-blue-400 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 cursor-pointer"
+                    : "border-2 border-slate-700 text-slate-500 cursor-not-allowed"
                 }
               `}
               aria-label={

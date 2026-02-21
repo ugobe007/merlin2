@@ -7926,7 +7926,7 @@ export default function AdvancedQuoteBuilder({
                 </button>
                 <button
                   onClick={() => applyExtractedData(pendingExtractedData)}
-                  className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="flex-1 px-6 py-4 rounded-xl border-2 border-green-500 hover:border-green-400 text-green-400 hover:text-green-300 font-semibold transition-all hover:bg-green-500/10"
                 >
                   <div className="flex items-center justify-center gap-2">
                     <CheckCircle2 className="w-5 h-5" />
@@ -8109,7 +8109,7 @@ export default function AdvancedQuoteBuilder({
                 </button>
                 <button
                   onClick={() => applyExtractedData(pendingExtractedData)}
-                  className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="flex-1 px-6 py-4 rounded-xl border-2 border-green-500 hover:border-green-400 text-green-400 hover:text-green-300 font-semibold transition-all hover:bg-green-500/10"
                 >
                   <div className="flex items-center justify-center gap-2">
                     <CheckCircle2 className="w-5 h-5" />
