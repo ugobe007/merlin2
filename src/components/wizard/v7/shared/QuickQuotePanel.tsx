@@ -7,10 +7,14 @@
  * 1. "I know my system size" → Jump to MagicFit with custom inputs
  * 2. "Just give me a ballpark" → Auto-generate with regional averages
  * 3. "I have a utility bill" → Extract usage, generate quote (future)
+ * 
+ * Design: Supabase-style with Merlin emerald green (#3ECF8E) primary accent
  */
 
 import React, { useState } from "react";
-import { Building2, Zap, Upload, ArrowRight, Sparkles, Shield, TrendingUp } from "lucide-react";
+import { Building2, Zap, Upload, ArrowRight, Sparkles } from "lucide-react";
+import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
+import wizardIcon from "@/assets/images/wizard_icon1.png";
 
 interface QuickQuotePanelProps {
   onStartExpress: (mode: "custom" | "ballpark" | "bill-upload") => void;
@@ -26,21 +30,25 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-3 mb-4">
-            {/* Purple gradient icon */}
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-purple-300 to-purple-400 bg-clip-text text-transparent">
-              Merlin ProQuote™
+            {/* Real Merlin Wizard Icon */}
+            <img 
+              src={wizardIcon} 
+              alt="Merlin" 
+              className="w-12 h-12 rounded-xl object-cover"
+            />
+            <h1 className="text-4xl font-bold text-white">
+              Merlin <span className="text-[#3ECF8E]">ProQuote</span>™
             </h1>
           </div>
           <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-            Choose your path: Get a <span className="text-purple-400 font-medium">TrueQuote™</span> estimate in 30 seconds, or build a detailed quote with full source attribution.
+            Choose your path: Get a ballpark estimate in 30 seconds, or build a detailed quote with full source attribution.
           </p>
-          {/* TrueQuote badge */}
-          <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
-            <Shield className="w-4 h-4 text-purple-400" />
-            <span>Every number traceable to authoritative sources (NREL, EIA, Visual Crossing)</span>
+          {/* TrueQuote Badge */}
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <TrueQuoteBadgeCanonical showTooltip={true} />
+            <span className="text-sm text-slate-400">
+              Every number traceable to authoritative sources
+            </span>
           </div>
         </div>
 
@@ -51,16 +59,16 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
             onClick={() => onStartExpress("custom")}
             onMouseEnter={() => setHoveredMode("custom")}
             onMouseLeave={() => setHoveredMode(null)}
-            className="group relative bg-transparent rounded-xl border-2 border-purple-500/30 hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-200 p-6 text-left"
+            className="group relative bg-transparent rounded-xl border-2 border-[#3ECF8E]/30 hover:border-[#3ECF8E] hover:shadow-lg hover:shadow-[#3ECF8E]/20 transition-all duration-200 p-6 text-left"
           >
             <div className="absolute top-4 right-4">
-              <span className="text-xs font-semibold text-purple-400 border border-purple-500/30 px-2 py-1 rounded-full">
+              <span className="text-xs font-semibold text-[#3ECF8E] border border-[#3ECF8E]/30 px-2 py-1 rounded-full">
                 30 sec
               </span>
             </div>
             
-            <div className="w-12 h-12 rounded-lg border-2 border-purple-500/30 flex items-center justify-center mb-4 group-hover:border-purple-500 transition-colors">
-              <Zap className="w-6 h-6 text-purple-400" />
+            <div className="w-12 h-12 rounded-lg border-2 border-[#3ECF8E]/30 flex items-center justify-center mb-4 group-hover:border-[#3ECF8E] transition-colors">
+              <Zap className="w-6 h-6 text-[#3ECF8E]" />
             </div>
 
             <h3 className="text-xl font-semibold text-white mb-2">
@@ -70,12 +78,12 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
               Enter your target kW/kWh directly. Skip the questionnaire and jump to pricing.
             </p>
 
-            <div className="flex items-center text-purple-400 font-medium text-sm group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center text-[#3ECF8E] font-medium text-sm group-hover:translate-x-1 transition-transform">
               Quick Quote <ArrowRight className="w-4 h-4 ml-1" />
             </div>
 
             {hoveredMode === "custom" && (
-              <div className="absolute inset-0 bg-purple-500/5 rounded-xl pointer-events-none" />
+              <div className="absolute inset-0 bg-[#3ECF8E]/5 rounded-xl pointer-events-none" />
             )}
           </button>
 
@@ -84,16 +92,16 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
             onClick={() => onStartExpress("ballpark")}
             onMouseEnter={() => setHoveredMode("ballpark")}
             onMouseLeave={() => setHoveredMode(null)}
-            className="group relative bg-transparent rounded-xl border-2 border-purple-500/30 hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-200 p-6 text-left"
+            className="group relative bg-transparent rounded-xl border-2 border-[#68BFFA]/30 hover:border-[#68BFFA] hover:shadow-lg hover:shadow-[#68BFFA]/20 transition-all duration-200 p-6 text-left"
           >
             <div className="absolute top-4 right-4">
-              <span className="text-xs font-semibold text-purple-400 border border-purple-500/30 px-2 py-1 rounded-full">
+              <span className="text-xs font-semibold text-[#68BFFA] border border-[#68BFFA]/30 px-2 py-1 rounded-full">
                 15 sec
               </span>
             </div>
             
-            <div className="w-12 h-12 rounded-lg border-2 border-purple-500/30 flex items-center justify-center mb-4 group-hover:border-purple-500 transition-colors">
-              <Sparkles className="w-6 h-6 text-purple-400" />
+            <div className="w-12 h-12 rounded-lg border-2 border-[#68BFFA]/30 flex items-center justify-center mb-4 group-hover:border-[#68BFFA] transition-colors">
+              <Sparkles className="w-6 h-6 text-[#68BFFA]" />
             </div>
 
             <h3 className="text-xl font-semibold text-white mb-2">
@@ -103,12 +111,12 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
               Auto-generate a quote using regional averages. Fast and simple.
             </p>
 
-            <div className="flex items-center text-purple-400 font-medium text-sm group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center text-[#68BFFA] font-medium text-sm group-hover:translate-x-1 transition-transform">
               Instant Quote <ArrowRight className="w-4 h-4 ml-1" />
             </div>
 
             {hoveredMode === "ballpark" && (
-              <div className="absolute inset-0 bg-purple-500/5 rounded-xl pointer-events-none" />
+              <div className="absolute inset-0 bg-[#68BFFA]/5 rounded-xl pointer-events-none" />
             )}
           </button>
 
@@ -154,7 +162,7 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
         <div className="text-center">
           <button
             onClick={onStartGuided}
-            className="group inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-medium px-8 py-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/30"
+            className="group inline-flex items-center gap-3 bg-gradient-to-r from-[#3ECF8E] to-[#2EA574] hover:from-[#35b87a] hover:to-[#2A9468] text-[#0D0D0D] font-bold px-8 py-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-[#3ECF8E]/30"
           >
             <Building2 className="w-5 h-5" />
             <span>Start Guided Wizard (Detailed Quote)</span>
@@ -168,15 +176,15 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
         {/* Trust Indicators */}
         <div className="flex items-center justify-center gap-8 pt-8 text-sm text-slate-400">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50" />
-            <span>TrueQuote™ Verified</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-purple-400 shadow-sm shadow-purple-400/50" />
+            <div className="w-2 h-2 rounded-full bg-[#3ECF8E] shadow-sm shadow-[#3ECF8E]/50" />
             <span>NREL Pricing</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-purple-300 shadow-sm shadow-purple-300/50" />
+            <div className="w-2 h-2 rounded-full bg-[#68BFFA] shadow-sm shadow-[#68BFFA]/50" />
+            <span>EIA Data</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#ffa600] shadow-sm shadow-[#ffa600]/50" />
             <span>IRA 2022 Tax Credits</span>
           </div>
         </div>
