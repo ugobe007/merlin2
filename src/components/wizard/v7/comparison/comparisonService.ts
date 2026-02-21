@@ -43,7 +43,7 @@ export async function saveScenario(
   const annualSavings = (quoteResult as any)?.financials?.annualSavings || 0;
   const paybackYears = (quoteResult as any)?.financials?.paybackYears || 0;
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("saved_scenarios")
     .insert({
       user_id: user?.id || null,
@@ -80,7 +80,7 @@ export async function getUserScenarios(): Promise<SavedScenario[]> {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("saved_scenarios")
     .select("*")
     .or(`session_id.eq.${sessionId},user_id.eq.${user?.id || "null"}`)
@@ -98,7 +98,7 @@ export async function getUserScenarios(): Promise<SavedScenario[]> {
  * Get comparison metrics for multiple scenarios
  */
 export async function getScenarioComparison(scenarioIds: string[]): Promise<ComparisonMetrics[]> {
-  const { data, error } = await supabase.rpc("get_scenario_comparison", {
+  const { data, error } = await (supabase as any).rpc("get_scenario_comparison", {
     scenario_ids: scenarioIds,
   });
 
@@ -122,7 +122,7 @@ export async function updateScenario(
     isBaseline?: boolean;
   }
 ): Promise<boolean> {
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("saved_scenarios")
     .update({
       scenario_name: updates.scenarioName,
@@ -145,7 +145,7 @@ export async function updateScenario(
  * Delete a scenario
  */
 export async function deleteScenario(scenarioId: string): Promise<boolean> {
-  const { error } = await supabase.from("saved_scenarios").delete().eq("id", scenarioId);
+  const { error } = await (supabase as any).from("saved_scenarios").delete().eq("id", scenarioId);
 
   if (error) {
     console.error("Error deleting scenario:", error);
@@ -167,7 +167,7 @@ export async function createComparisonSet(
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("comparison_sets")
     .insert({
       user_id: user?.id || null,
@@ -196,7 +196,7 @@ export async function getUserComparisonSets(): Promise<ComparisonSet[]> {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("comparison_sets")
     .select("*")
     .or(`session_id.eq.${sessionId},user_id.eq.${user?.id || "null"}`)

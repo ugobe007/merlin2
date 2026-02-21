@@ -64,7 +64,8 @@ CREATE INDEX IF NOT EXISTS idx_comparison_sets_created_at ON comparison_sets(cre
 ALTER TABLE saved_scenarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comparison_sets ENABLE ROW LEVEL SECURITY;
 
--- saved_scenarios policies
+-- saved_scenarios policies (drop existing first for idempotency)
+DROP POLICY IF EXISTS "Users can view their own scenarios or by session_id" ON saved_scenarios;
 CREATE POLICY "Users can view their own scenarios or by session_id"
   ON saved_scenarios FOR SELECT
   USING (
@@ -73,6 +74,7 @@ CREATE POLICY "Users can view their own scenarios or by session_id"
     OR user_id IS NULL
   );
 
+DROP POLICY IF EXISTS "Users can create scenarios" ON saved_scenarios;
 CREATE POLICY "Users can create scenarios"
   ON saved_scenarios FOR INSERT
   WITH CHECK (
@@ -80,6 +82,7 @@ CREATE POLICY "Users can create scenarios"
     OR auth.uid() IS NULL
   );
 
+DROP POLICY IF EXISTS "Users can update their own scenarios" ON saved_scenarios;
 CREATE POLICY "Users can update their own scenarios"
   ON saved_scenarios FOR UPDATE
   USING (
@@ -87,6 +90,7 @@ CREATE POLICY "Users can update their own scenarios"
     OR (user_id IS NULL AND session_id = current_setting('app.session_id', true))
   );
 
+DROP POLICY IF EXISTS "Users can delete their own scenarios" ON saved_scenarios;
 CREATE POLICY "Users can delete their own scenarios"
   ON saved_scenarios FOR DELETE
   USING (
@@ -94,7 +98,8 @@ CREATE POLICY "Users can delete their own scenarios"
     OR (user_id IS NULL AND session_id = current_setting('app.session_id', true))
   );
 
--- comparison_sets policies
+-- comparison_sets policies (drop existing first for idempotency)
+DROP POLICY IF EXISTS "Users can view their own comparison sets" ON comparison_sets;
 CREATE POLICY "Users can view their own comparison sets"
   ON comparison_sets FOR SELECT
   USING (
@@ -103,6 +108,7 @@ CREATE POLICY "Users can view their own comparison sets"
     OR user_id IS NULL
   );
 
+DROP POLICY IF EXISTS "Users can create comparison sets" ON comparison_sets;
 CREATE POLICY "Users can create comparison sets"
   ON comparison_sets FOR INSERT
   WITH CHECK (
@@ -110,6 +116,7 @@ CREATE POLICY "Users can create comparison sets"
     OR auth.uid() IS NULL
   );
 
+DROP POLICY IF EXISTS "Users can update their own comparison sets" ON comparison_sets;
 CREATE POLICY "Users can update their own comparison sets"
   ON comparison_sets FOR UPDATE
   USING (
@@ -117,6 +124,7 @@ CREATE POLICY "Users can update their own comparison sets"
     OR (user_id IS NULL AND session_id = current_setting('app.session_id', true))
   );
 
+DROP POLICY IF EXISTS "Users can delete their own comparison sets" ON comparison_sets;
 CREATE POLICY "Users can delete their own comparison sets"
   ON comparison_sets FOR DELETE
   USING (

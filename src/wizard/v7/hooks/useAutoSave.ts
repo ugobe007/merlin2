@@ -70,7 +70,7 @@ export function useAutoSave(
     updateLocationRaw: (input: string) => void;
   }
 ): UseAutoSaveReturn {
-  const saveIntervalRef = useRef<NodeJS.Timeout>();
+  const saveIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const lastSaveRef = useRef<string>('');
 
   // Check for existing saved progress on mount
@@ -99,7 +99,7 @@ export function useAutoSave(
       console.error('[AutoSave] Failed to load progress:', error);
       return null;
     }
-  }, []);
+  }, []); // Empty deps - only runs on mount
 
   // Save current progress
   const saveProgress = useCallback(() => {
@@ -126,10 +126,10 @@ export function useAutoSave(
       step3Answers: state.step3Answers,
       goals: state.goals,
       addOns: {
-        solarMW: state.solarMW,
-        generatorMW: state.generatorMW,
-        generatorFuelType: state.generatorFuelType,
-        windMW: state.windMW,
+        solarMW: (state as any).solarMW || 0,
+        generatorMW: (state as any).generatorMW || 0,
+        generatorFuelType: (state as any).generatorFuelType || 'natural-gas',
+        windMW: (state as any).windMW || 0,
       },
     };
 
