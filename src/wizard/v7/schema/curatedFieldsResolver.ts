@@ -736,8 +736,12 @@ function makeCompleteResolver(
  * 1. Create src/data/{industry}-questions-complete.config.ts
  * 2. Import questions + sections above
  * 3. Register here with makeCompleteResolver()
+ *
+ * NOTE: This is a FUNCTION (not const object) to avoid TDZ errors.
+ * Module-level const initialization can fail if imports aren't ready.
  */
-const COMPLETE_SCHEMAS: Record<string, () => CuratedSchema> = {
+function getCOMPLETE_SCHEMAS(): Record<string, () => CuratedSchema> {
+  return {
   "car-wash": makeCompleteResolver(
     "car-wash",
     "Car Wash",
@@ -872,7 +876,8 @@ const COMPLETE_SCHEMAS: Record<string, () => CuratedSchema> = {
     restaurantQuestionsComplete as HotelQuestion[],
     restaurantSections
   ),
-};
+  };
+}
 
 function resolveLegacySchema(industryKey: string): CuratedSchema | null {
   // Use SSOT helper for key mapping
@@ -1110,7 +1115,7 @@ export function resolveStep3Schema(industry: string): CuratedSchema {
   const effectiveSchemaKey = normalizeIndustrySlug(ctx.schemaKey);
 
   // Priority 1: Complete curated schemas (best)
-  const complete = COMPLETE_SCHEMAS[effectiveSchemaKey];
+  const complete = getCOMPLETE_SCHEMAS()[effectiveSchemaKey];
   if (complete) {
     const schema = complete();
     if (import.meta.env.DEV) {
@@ -1161,7 +1166,7 @@ export function hasCuratedSchema(industry: string): boolean {
   const effectiveKey = normalizeIndustrySlug(ctx.schemaKey);
 
   // Complete schemas (unified registry — includes borrowed schemas via ctx.schemaKey)
-  if (COMPLETE_SCHEMAS[effectiveKey]) return true;
+  if (getCOMPLETE_SCHEMAS()[effectiveKey]) return true;
 
   // Legacy schemas — single path through effectiveKey, no double-try
   const legacyKey = getLegacyQuestionnaireKey(effectiveKey);
