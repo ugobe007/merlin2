@@ -117,9 +117,9 @@ export default function GoalsModal({
             </div>
           </div>
 
-          {/* Goals List - Removed unnecessary max-h constraint to reduce scroll (Feb 2026) */}
+          {/* Goals List - Hidden scrollbar (Feb 2026) */}
           <div
-            className="p-6 space-y-3 overflow-y-auto"
+            className="p-6 space-y-3 overflow-y-auto scrollbar-hide"
             style={{ maxHeight: "calc(85vh - 300px)" }}
           >
             {GOAL_OPTIONS.map((option) => {
