@@ -9,7 +9,7 @@
  */
 
 import React from "react";
-import { Sun } from "lucide-react";
+import { Sun, Cloud } from "lucide-react";
 
 /** Fetch status for individual intel data points */
 type FetchStatus = "idle" | "fetching" | "ready" | "error";
@@ -151,6 +151,7 @@ export default function IntelStripInline({ intel }: Props) {
       {intel.weatherProfile && (
         <>
           <Dot />
+          <Cloud className="w-3.5 h-3.5" style={{ color: "rgba(56, 189, 248, 0.85)" }} />
           <Datum
             label=""
             value={intel.weatherProfile}

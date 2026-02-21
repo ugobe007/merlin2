@@ -523,38 +523,40 @@ export default function Step6ResultsV7({ state, actions }: Props) {
           </div>
 
           {/* Financial — 2-column grid layout */}
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-slate-500" />
-                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="p-4 bg-gradient-to-br from-slate-800/30 to-slate-900/30">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                </div>
+                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
                   Financials
                 </span>
               </div>
-              <div className="flex items-center gap-1 text-[10px]">
-                <Shield className="w-3 h-3 text-amber-500" />
-                <span className="text-amber-400 font-bold">TrueQuote™</span>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/20">
+                <Shield className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-amber-400 font-bold text-[10px]">TrueQuote™</span>
               </div>
             </div>
 
             {/* 2-column grid layout */}
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
               {/* Total Investment */}
               <div className="flex flex-col">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
                   Total Investment
                 </span>
-                <span className="text-sm font-bold text-white tabular-nums">
+                <span className="text-lg font-bold text-white tabular-nums">
                   {fmtUSD((quote.grossCost ?? quote.capexUSD) as number | null)}
                 </span>
               </div>
 
               {/* Annual Savings */}
               <div className="flex flex-col">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
                   Annual Savings
                 </span>
-                <span className="text-sm font-bold text-emerald-400 tabular-nums">
+                <span className="text-lg font-bold text-emerald-400 tabular-nums">
                   {fmtUSD(quote.annualSavingsUSD as number | null)}
                 </span>
               </div>
@@ -563,14 +565,14 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               {(quote.grossCost ?? quote.capexUSD) != null &&
                 Number(quote.grossCost ?? quote.capexUSD) > 0 && (
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
                       Federal ITC (
                       {quote.itcRate != null
                         ? `${Math.round(Number(quote.itcRate) * 100)}%`
                         : "30%"}
                       )
                     </span>
-                    <span className="text-sm font-bold text-emerald-400 tabular-nums">
+                    <span className="text-base font-bold text-emerald-400 tabular-nums">
                       −
                       {fmtUSD(
                         quote.itcAmount != null
@@ -584,10 +586,10 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               {/* Monthly Savings */}
               {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
                     Monthly Savings
                   </span>
-                  <span className="text-sm font-bold text-slate-300 tabular-nums">
+                  <span className="text-base font-bold text-slate-300 tabular-nums">
                     {fmtUSD(Number(quote.annualSavingsUSD) / 12)}
                   </span>
                 </div>
@@ -595,11 +597,11 @@ export default function Step6ResultsV7({ state, actions }: Props) {
 
               {/* Net Cost */}
               {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
-                <div className="flex flex-col col-span-2 pt-2 border-t border-white/[0.06]">
-                  <span className="text-[10px] text-slate-300 uppercase tracking-wider mb-1 font-semibold">
+                <div className="flex flex-col col-span-2 pt-3 mt-2 border-t-2 border-emerald-500/20">
+                  <span className="text-[11px] text-emerald-300 uppercase tracking-wider mb-1.5 font-bold">
                     Net Cost
                   </span>
-                  <span className="text-base font-bold text-white tabular-nums">
+                  <span className="text-xl font-bold text-white tabular-nums">
                     {fmtUSD(quote.capexUSD as number | null)}
                   </span>
                 </div>
@@ -607,10 +609,10 @@ export default function Step6ResultsV7({ state, actions }: Props) {
 
               {/* Simple Payback */}
               <div className="flex flex-col">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
                   Simple Payback
                 </span>
-                <span className="text-xs font-bold text-white tabular-nums">
+                <span className="text-base font-bold text-white tabular-nums">
                   {quote.roiYears != null && Number(quote.roiYears) > 0
                     ? `${parseFloat(Number(quote.roiYears).toFixed(1))} years`
                     : "—"}
@@ -620,11 +622,11 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               {/* NPV (25yr) */}
               {quote.npv != null && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
                     NPV (25yr)
                   </span>
                   <span
-                    className={`text-xs font-bold tabular-nums ${Number(quote.npv) >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                    className={`text-base font-bold tabular-nums ${Number(quote.npv) >= 0 ? "text-emerald-400" : "text-red-400"}`}
                   >
                     {fmtUSD(quote.npv as number | null)}
                   </span>
@@ -634,11 +636,11 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               {/* IRR */}
               {quote.irr != null && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
                     IRR
                   </span>
                   <span
-                    className={`text-xs font-bold tabular-nums ${(() => {
+                    className={`text-base font-bold tabular-nums ${(() => {
                       const raw = Number(quote.irr);
                       const pct = raw > 1 ? raw : raw * 100;
                       return pct >= 8 ? "text-emerald-400" : "text-amber-400";
@@ -658,10 +660,10 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               {/* Discounted Payback */}
               {quote.paybackYears != null && Number(quote.paybackYears) > 0 && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
                     Discounted Payback
                   </span>
-                  <span className="text-xs font-bold text-white tabular-nums">
+                  <span className="text-base font-bold text-white tabular-nums">
                     {parseFloat(Number(quote.paybackYears).toFixed(1))} years
                   </span>
                 </div>
@@ -670,10 +672,10 @@ export default function Step6ResultsV7({ state, actions }: Props) {
               {/* 10yr Cumulative Savings */}
               {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
                     10yr Cumulative
                   </span>
-                  <span className="text-xs font-bold text-emerald-400 tabular-nums">
+                  <span className="text-base font-bold text-emerald-400 tabular-nums">
                     {fmtUSD(Number(quote.annualSavingsUSD) * 10)}
                   </span>
                 </div>
