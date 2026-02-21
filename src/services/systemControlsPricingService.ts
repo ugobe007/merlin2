@@ -163,11 +163,8 @@ class SystemControlsPricingService {
 
   constructor() {
     this.configuration = this.getDefaultConfiguration();
-    // Start loading from database in background (non-blocking)
-    // Use setTimeout to defer until after module fully loaded
-    if (typeof window !== 'undefined') {
-      setTimeout(() => this.ensureInitialized(), 0);
-    }
+    // DON'T auto-initialize - let methods call ensureInitialized() on demand
+    // This prevents TDZ errors from circular dependencies
   }
 
   /**
@@ -715,6 +712,11 @@ class SystemControlsPricingService {
     totalCost: number;
     breakdown: any;
   } {
+    // Trigger initialization if not already done
+    if (!this.isInitialized && typeof window !== 'undefined') {
+      this.ensureInitialized().catch(console.error);
+    }
+    
     const controller = this.configuration.controllers.find((ctrl) => ctrl.id === controllerId);
 
     if (!controller) {
@@ -796,6 +798,11 @@ class SystemControlsPricingService {
     annualMaintenanceCost: number;
     breakdown: any;
   } {
+    // Trigger initialization if not already done
+    if (!this.isInitialized && typeof window !== 'undefined') {
+      this.ensureInitialized().catch(console.error);
+    }
+    
     const scada = this.configuration.scadaSystems.find((s) => s.id === scadaId);
 
     if (!scada) {
@@ -874,6 +881,11 @@ class SystemControlsPricingService {
     annualOperatingCost: number;
     breakdown: any;
   } {
+    // Trigger initialization if not already done
+    if (!this.isInitialized && typeof window !== 'undefined') {
+      this.ensureInitialized().catch(console.error);
+    }
+    
     const ems = this.configuration.energyManagementSystems.find((e) => e.id === emsId);
 
     if (!ems) {
