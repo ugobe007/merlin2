@@ -37,18 +37,15 @@ export {
 export { useMerlinData, getProQuoteSeed } from "./useMerlinData";
 export type { MerlinData } from "./useMerlinData";
 
-// ── TrueQuote™ Validator ──────────────────────────────────────────────────
-export {
-  validateMemory,
-  validateSlot,
-  generateChecksum,
-  formatViolations,
-  getComplianceBadge,
-} from "./truequoteValidator";
-
+// ── TrueQuote™ Validator Types (NO runtime exports to avoid circular TDZ) ──
 export type {
   TrueQuoteReport,
   TrueQuoteViolation,
   ViolationSeverity,
   ViolationCategory,
-} from "./truequoteValidator";
+} from "./memoryTypes";
+
+// ⚠️ NOTE: Validator FUNCTIONS are NOT exported from barrel to prevent TDZ.
+// Import directly from ./truequoteValidator if needed:
+//   import { validateMemory } from "@/wizard/v7/memory/truequoteValidator";
+
