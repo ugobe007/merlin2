@@ -69,7 +69,7 @@ export function MobileBottomNav({
           type="button"
           onClick={onNext}
           disabled={!canContinue}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-[#3ECF8E] bg-transparent text-[#3ECF8E] font-bold disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all min-w-[90px] justify-center disabled:border-slate-600 disabled:text-slate-600"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-[#3ECF8E] bg-transparent text-[#3ECF8E] font-semibold disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all min-w-[90px] justify-center disabled:border-slate-600 disabled:text-slate-600 hover:bg-[#3ECF8E]/10"
           aria-label={isLastStep ? "Finish" : nextLabel}
         >
           <span className="text-sm">{isLastStep ? "Finish" : nextLabel}</span>
