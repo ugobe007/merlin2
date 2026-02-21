@@ -56,16 +56,7 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
           </p>
         </div>
 
-        {/* Two Main Choices */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* WIZARD Path */}
-          <button
-            onClick={onStartGuided}
-            onMouseEnter={() => setHoveredMode("wizard")}
-            onMouseLeave={() => setHoveredMode(null)}
-            className="group relative bg-transparent rounded-2xl border-2 border-[#3ECF8E]/40 hover:border-[#3ECF8E] hover:shadow-2xl hover:shadow-[#3ECF8E]/30 transition-all duration-300 p-8 text-left"
-          >
-            <hree Options - Inline Text Links */}
+        {/* Three Options - Inline Text Links */}
         <div className="space-y-6 max-w-2xl mx-auto">
           {/* Option 1: Guided Wizard - Recommended */}
           <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-6 hover:border-[#3ECF8E]/50 transition-colors">
