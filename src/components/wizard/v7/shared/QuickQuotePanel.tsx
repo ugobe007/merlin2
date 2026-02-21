@@ -8,13 +8,15 @@
  * 2. "Just give me a ballpark" → Auto-generate with regional averages
  * 3. "I have a utility bill" → Extract usage, generate quote (future)
  * 
- * Design: Supabase-style with Merlin emerald green (#3ECF8E) primary accent
+ * Design: Supabase-style stroke-only with emerald green (#3ECF8E) primary
+ * Uses official badge images: badge_icon.jpg (ProQuote), badge_gold_icon.jpg (TrueQuote)
+ * Uses real Merlin avatar: /images/new_profile_merlin.png
  */
 
 import React, { useState } from "react";
-import { Building2, Zap, Upload, ArrowRight, Sparkles } from "lucide-react";
-import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
-import wizardIcon from "@/assets/images/wizard_icon1.png";
+import { Building2, Zap, Upload, ArrowRight, Sparkles, ShieldCheck } from "lucide-react";
+import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
+import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 
 interface QuickQuotePanelProps {
   onStartExpress: (mode: "custom" | "ballpark" | "bill-upload") => void;
@@ -27,29 +29,52 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
       <div className="max-w-5xl w-full space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            {/* Real Merlin Wizard Icon */}
+        {/* Header with Official Badges */}
+        <div className="text-center space-y-6">
+          <div className="flex items-center justify-center gap-4">
+            {/* Real Merlin Avatar */}
             <img 
-              src={wizardIcon} 
-              alt="Merlin" 
-              className="w-12 h-12 rounded-xl object-cover"
+              src="/images/new_profile_merlin.png" 
+              alt="Merlin AI" 
+              className="w-16 h-16 rounded-full object-cover"
             />
             <h1 className="text-4xl font-bold text-white">
               Merlin <span className="text-[#3ECF8E]">ProQuote</span>™
             </h1>
           </div>
+
+          {/* Official Badges Row */}
+          <div className="flex items-center justify-center gap-6">
+            {/* ProQuote Badge (Blue Shield) */}
+            <div className="flex items-center gap-2">
+              <img 
+                src={badgeProQuoteIcon} 
+                alt="ProQuote Badge" 
+                className="w-12 h-12 object-contain drop-shadow-lg"
+              />
+              <div className="text-left">
+                <div className="text-sm font-bold text-blue-400">ProQuote™</div>
+                <div className="text-xs text-slate-400">Pro Mode</div>
+              </div>
+            </div>
+
+            {/* TrueQuote Badge (Gold Shield) */}
+            <div className="flex items-center gap-2">
+              <img 
+                src={badgeGoldIcon} 
+                alt="TrueQuote Verified" 
+                className="w-12 h-12 object-contain drop-shadow-lg"
+              />
+              <div className="text-left">
+                <div className="text-sm font-bold text-amber-400">TrueQuote™</div>
+                <div className="text-xs text-slate-400">Source-Verified</div>
+              </div>
+            </div>
+          </div>
+
           <p className="text-lg text-slate-300 max-w-2xl mx-auto">
             Choose your path: Get a ballpark estimate in 30 seconds, or build a detailed quote with full source attribution.
           </p>
-          {/* TrueQuote Badge */}
-          <div className="flex items-center justify-center gap-3 mt-4">
-            <TrueQuoteBadgeCanonical showTooltip={true} />
-            <span className="text-sm text-slate-400">
-              Every number traceable to authoritative sources
-            </span>
-          </div>
         </div>
 
         {/* Quick Quote Options */}
@@ -135,11 +160,11 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
               <Upload className="w-6 h-6 text-slate-500" />
             </div>
 
-            <h3 className="text-xl font-semibold text-slate-500 mb-2">
-              Upload My Utility Bill
-            </h3>
-            <p className="text-sm text-slate-600 mb-4">
-              Extract your usage data automatically. Get a precise quote based on real consumption.
+            <h3 className="text-x(Stroke-Only Button) */}
+        <div className="text-center">
+          <button
+            onClick={onStartGuided}
+            className="group inline-flex items-center gap-3 border-2 border-[#3ECF8E]/50 hover:border-[#3ECF8E] text-[#3ECF8E] font-bold px-8 py-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-[#3ECF8E]/2
             </p>
 
             <div className="flex items-center text-slate-600 font-medium text-sm">
