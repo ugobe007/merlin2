@@ -37,7 +37,7 @@ export default function ProQuoteConfigurationPage() {
       onDurationChange={setDuration}
       onSystemCostChange={setSystemCostState}
       initialView={
-        modeParam as "landing" | "custom-config" | "interactive-dashboard" | "professional-model"
+        modeParam as "landing" | "custom-config" | "interactive-dashboard" | "professional-model" | "upload"
       }
     />
   );
