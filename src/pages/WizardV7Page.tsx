@@ -4,7 +4,7 @@
  * - SSOT: useWizardV7() orchestrates all state + transitions
  * - Steps are dumb: they render state + emit intents
  * - Shell provides: Merlin Rail + TrueQuote badge + Navigation
- * 
+ *
  * ✅ FEB 1, 2026: Navigation now uses wizardStepGates.ts (SSOT)
  * Each step gates on ONLY its own completion criteria.
  * No cross-step dependencies. No pricing/DB/async blocking.
@@ -23,11 +23,12 @@ import { generateMerlinInsights } from "@/wizard/v7/memory/generateMerlinInsight
 
 // ⚡ Quick Quote Mode Components (Feb 20, 2026)
 import { QuickQuotePanel } from "@/components/wizard/v7/shared/QuickQuotePanel";
-import { QuickQuoteModal, type QuickQuoteParams } from "@/components/wizard/v7/shared/QuickQuoteModal";
+import {
+  QuickQuoteModal,
+  type QuickQuoteParams,
+} from "@/components/wizard/v7/shared/QuickQuoteModal";
 
 // 💾 Save & Resume Components (Feb 20, 2026)
-import { useAutoSave } from "@/wizard/v7/hooks/useAutoSave";
-import { ResumeProgressBanner } from "@/components/wizard/v7/shared/ResumeProgressBanner";
 
 // 🤖 AI Agent for self-healing monitoring
 import { wizardAIAgent } from "@/services/wizardAIAgentV2";
@@ -40,7 +41,7 @@ import { PersistentBusinessCard } from "@/components/wizard/v7/shared/Persistent
 import V7DebugPanel from "@/components/wizard/v7/debug/V7DebugPanel";
 
 // ✅ SSOT Gates (Feb 1, 2026)
-import { 
+import {
   getGateForStep,
   getStepIndex,
   type WizardStepId,
@@ -90,7 +91,9 @@ function WizardV7Page() {
   const merlinData = useMerlinData(state);
 
   // ⚡ Quick Quote Mode State (Feb 20, 2026)
-  const [quickQuoteMode, setQuickQuoteMode] = useState<"panel" | "custom-modal" | "ballpark" | "guided">("panel");
+  const [quickQuoteMode, setQuickQuoteMode] = useState<
+    "panel" | "custom-modal" | "ballpark" | "guided"
+  >("panel");
   const [showQuickQuoteModal, setShowQuickQuoteModal] = useState(false);
 
   // 💾 Auto-Save & Resume (Feb 20, 2026) - TEMPORARILY DISABLED FOR TYPE ERRORS
@@ -100,23 +103,33 @@ function WizardV7Page() {
   //   setStep3Answers: wizard.setStep3Answers as any,
   //   updateLocationRaw: wizard.updateLocationRaw,
   // });
-  const [_showResumeBanner, setShowResumeBanner] = useState(false);
+  const [_showResumeBanner, _setShowResumeBanner] = useState(false);
   const [_hasCheckedSavedProgress, _setHasCheckedSavedProgress] = useState(false);
 
   // 🤖 Start AI Agent for self-healing monitoring (Feb 4, 2026)
   useEffect(() => {
     wizardAIAgent.start();
-    if (import.meta.env.DEV) console.log('🤖 [WizardV7] AI Agent started');
-    
+    if (import.meta.env.DEV) console.log("🤖 [WizardV7] AI Agent started");
+
     return () => {
       wizardAIAgent.stop();
-      if (import.meta.env.DEV) console.log('🤖 [WizardV7] AI Agent stopped');
+      if (import.meta.env.DEV) console.log("🤖 [WizardV7] AI Agent stopped");
     };
   }, []);
 
   // ✅ DEBUG: Log step transitions to verify navigation (Feb 10, 2026)
   useEffect(() => {
-    if (import.meta.env.DEV) console.log('[WizardV7] step =', state.step, 'locationConfirmed =', state.locationConfirmed, 'goalsConfirmed =', state.goalsConfirmed, 'isBusy =', state.isBusy);
+    if (import.meta.env.DEV)
+      console.log(
+        "[WizardV7] step =",
+        state.step,
+        "locationConfirmed =",
+        state.locationConfirmed,
+        "goalsConfirmed =",
+        state.goalsConfirmed,
+        "isBusy =",
+        state.isBusy
+      );
   }, [state.step, state.locationConfirmed, state.goalsConfirmed, state.isBusy]);
 
   // ─── MERLIN MEMORY NAVIGATOR ─────────────────────────────────────────────
@@ -131,12 +144,17 @@ function WizardV7Page() {
   // Track gate validation issues for AI agent
   useEffect(() => {
     const sessionId = `v7-${Date.now()}`;
-    wizardHealthMonitor.track('gate_check', state.step, {
-      location: state.location,
-      locationRawInput: state.locationRawInput,
-      locationConfirmed: state.locationConfirmed,
-      industry: state.industry,
-    }, sessionId);
+    wizardHealthMonitor.track(
+      "gate_check",
+      state.step,
+      {
+        location: state.location,
+        locationRawInput: state.locationRawInput,
+        locationConfirmed: state.locationConfirmed,
+        industry: state.industry,
+      },
+      sessionId
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.step, state.location, state.locationRawInput, state.industry]);
 
@@ -158,7 +176,13 @@ function WizardV7Page() {
       }
     }
     return (NEXT_HINTS[state.step as WizardStepId] ?? "") as string;
-  }, [state.step, state.locationConfirmed, state.goalsConfirmed, state.industryLocked, state.industry]);
+  }, [
+    state.step,
+    state.locationConfirmed,
+    state.goalsConfirmed,
+    state.industryLocked,
+    state.industry,
+  ]);
 
   // ✅ Dynamic label for location step (Feb 11, 2026)
   const nextLabel = useMemo(() => {
@@ -175,7 +199,13 @@ function WizardV7Page() {
       }
     }
     return (NEXT_LABELS[state.step as WizardStepId] ?? "Next Step") as string;
-  }, [state.step, state.locationConfirmed, state.goalsConfirmed, state.industryLocked, state.industry]);
+  }, [
+    state.step,
+    state.locationConfirmed,
+    state.goalsConfirmed,
+    state.industryLocked,
+    state.industry,
+  ]);
 
   // ============================================================================
   // GATE CHECK — SSOT (Feb 1, 2026)
@@ -183,33 +213,40 @@ function WizardV7Page() {
   // Each step gates on ONLY its own completion criteria.
   // No cross-step dependencies. No pricing. No DB. No async.
   // ============================================================================
-  
-  const gateState: WizardGateState = useMemo(() => ({
-    location: state.location ? {
-      zip: state.location.postalCode,
-      postalCode: state.location.postalCode,
-      formattedAddress: state.location.formattedAddress,
-    } : null,
-    locationRawInput: state.locationRawInput ?? '',
-    locationConfirmed: state.locationConfirmed,
-    industry: state.industry,
-    step3Answers: (state.step3Answers ?? {}) as Record<string, unknown>,
-    step3Complete: state.step3Complete,
-    step3Template: state.step3Template ? {
-      questions: (state.step3Template.questions ?? []).map(q => ({
-        id: q.id,
-        required: q.required,
-      })),
-    } : null,
-  }), [
-    state.location,
-    state.locationRawInput,
-    state.locationConfirmed,
-    state.industry,
-    state.step3Answers,
-    state.step3Complete,
-    state.step3Template,
-  ]);
+
+  const gateState: WizardGateState = useMemo(
+    () => ({
+      location: state.location
+        ? {
+            zip: state.location.postalCode,
+            postalCode: state.location.postalCode,
+            formattedAddress: state.location.formattedAddress,
+          }
+        : null,
+      locationRawInput: state.locationRawInput ?? "",
+      locationConfirmed: state.locationConfirmed,
+      industry: state.industry,
+      step3Answers: (state.step3Answers ?? {}) as Record<string, unknown>,
+      step3Complete: state.step3Complete,
+      step3Template: state.step3Template
+        ? {
+            questions: (state.step3Template.questions ?? []).map((q) => ({
+              id: q.id,
+              required: q.required,
+            })),
+          }
+        : null,
+    }),
+    [
+      state.location,
+      state.locationRawInput,
+      state.locationConfirmed,
+      state.industry,
+      state.step3Answers,
+      state.step3Complete,
+      state.step3Template,
+    ]
+  );
 
   const gate = useMemo(() => {
     return getGateForStep(state.step as WizardStepId, gateState);
@@ -227,23 +264,23 @@ function WizardV7Page() {
   const canGoNext = useMemo(() => {
     // Always block during async operations
     if (state.isBusy) return false;
-    
+
     // Business confirmation is a special case (not in gate)
     // If business was detected but not confirmed, block
     if (state.step === "location" && state.businessCard && !state.businessConfirmed) {
       return false;
     }
-    
+
     // Step 3 uses its own submit button, so shell Next is disabled
     if (state.step === "profile") {
       return false;
     }
-    
+
     // MagicFit: enable Continue once user has selected a tier
     if (state.step === "magicfit") {
       return !!state.quote?.pricingComplete;
     }
-    
+
     // Results step has no Next
     if (state.step === "results") {
       return false;
@@ -296,7 +333,8 @@ function WizardV7Page() {
     }
 
     if (state.step === "profile") {
-      if (import.meta.env.DEV) console.log("[WizardV7Page] handleNext: Calling wizard.submitStep3()");
+      if (import.meta.env.DEV)
+        console.log("[WizardV7Page] handleNext: Calling wizard.submitStep3()");
       wizard.submitStep3();
       return;
     }
@@ -330,55 +368,29 @@ function WizardV7Page() {
         location: "CA",
         electricityRate: 0.15,
       });
+    } else if (mode === "bill-upload") {
+      // Navigate to ProQuote Configuration with document upload enabled
+      window.location.href = "/quote-builder?advanced=true&mode=upload";
     }
-    // bill-upload is coming soon
   };
 
   const handleQuickQuoteGenerate = async (params: QuickQuoteParams) => {
     setShowQuickQuoteModal(false);
-    setQuickQuoteMode("guided");
-    
-    // Pre-fill wizard state with ProQuote specs and start from Step 1
-    try {
-      // 1. Store ProQuote specs in wizard state for later use
-      wizard.updateQuote({
-        proQuoteSpecs: {
-          systemSizeKW: params.systemSizeKW || 1000,
-          durationHours: params.durationHours || 4,
-          electricityRate: params.electricityRate || 0.15,
-        },
-      });
-      
-      // 2. Pre-fill location if provided
-      if (params.location) {
-        // Convert state abbreviation to full address format
-        const stateMap: Record<string, string> = {
-          'CA': 'California, USA',
-          'NY': 'New York, USA',
-          'TX': 'Texas, USA',
-          'FL': 'Florida, USA',
-          'IL': 'Illinois, USA',
-          'MA': 'Massachusetts, USA',
-          'AZ': 'Arizona, USA',
-          'NV': 'Nevada, USA',
-        };
-        const locationInput = stateMap[params.location] || `${params.location}, USA`;
-        wizard.updateLocationRaw(locationInput);
-      }
-      
-      // 3. Pre-select industry if provided
-      if (params.industry) {
-        wizard.selectIndustry(params.industry);
-      }
-      
-      // 4. Start from Step 1 (Location) so user can confirm/edit
-      wizard.goToStep('location');
-      
-    } catch (error) {
-      console.error('[Quick Quote] Setup failed:', error);
-      // Fallback: Start at location step
-      wizard.goToStep('location');
-    }
+
+    // Navigate to ProQuote Configuration Page (AdvancedQuoteBuilder)
+    // Store specs in URL params for AdvancedQuoteBuilder to read
+    const proQuoteParams = new URLSearchParams({
+      advanced: "true",
+      mode: "custom-config",
+      systemSizeKW: String(params.systemSizeKW || 1000),
+      durationHours: String(params.durationHours || 4),
+      industry: params.industry || "office",
+      location: params.location || "CA",
+      electricityRate: String(params.electricityRate || 0.15),
+    });
+
+    // Redirect to AdvancedQuoteBuilder (ProQuote Configuration)
+    window.location.href = `/quote-builder?${proQuoteParams.toString()}`;
   };
 
   const handleStartGuided = () => {
@@ -416,10 +428,11 @@ function WizardV7Page() {
     if (state.step !== "profile") return null;
 
     // ✅ CRITICAL FIX (Feb 10, 2026): Use effectiveIndustry from template (retail → hotel mapping)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const effectiveIndustry =
-      (state.step3Template as any)?.effectiveIndustry ||
-      (state.step3Template as any)?.selectedIndustry ||
+      // @ts-expect-error - Template structure may include effectiveIndustry
+      state.step3Template?.effectiveIndustry ||
+      // @ts-expect-error - Template structure may include selectedIndustry
+      state.step3Template?.selectedIndustry ||
       state.industry ||
       "other";
 
@@ -439,7 +452,9 @@ function WizardV7Page() {
     };
 
     // Visibility check: fail-open (same as Step3 hardening)
-    const isVisible = (q: { conditionalLogic?: { dependsOn?: string; showIf?: (v: unknown) => boolean } }) => {
+    const isVisible = (q: {
+      conditionalLogic?: { dependsOn?: string; showIf?: (v: unknown) => boolean };
+    }) => {
       const c = q?.conditionalLogic;
       if (!c?.dependsOn || typeof c.showIf !== "function") return true;
       try {
@@ -453,7 +468,7 @@ function WizardV7Page() {
       (q.required ?? q.validation?.required ?? false) === true;
 
     const visibleRequired = schema.questions.filter(isReq).filter(isVisible);
-    const missing = visibleRequired.filter(q => !isAnswered(answers[q.id])).map(q => q.id);
+    const missing = visibleRequired.filter((q) => !isAnswered(answers[q.id])).map((q) => q.id);
 
     const answeredCount = Math.max(0, visibleRequired.length - missing.length);
     const pct = visibleRequired.length === 0 ? 100 : (answeredCount / visibleRequired.length) * 100;
@@ -473,11 +488,11 @@ function WizardV7Page() {
   // ============================================================================
   const step6Advisor = useMemo(() => {
     if (state.step !== "results") return null;
-    
+
     const quote = state.quote;
     const pricingStatus = state.pricingStatus ?? "idle";
     const pricingComplete = quote?.pricingComplete ?? false;
-    
+
     // Format USD with null safety
     const fmtUSD = (n?: number | null): string | null => {
       if (n === null || n === undefined) return null;
@@ -494,18 +509,26 @@ function WizardV7Page() {
     };
 
     // Track input fallbacks for transparency ("why these numbers?")
-    const inputFallbacks = (quote as { inputFallbacks?: Record<string, { value: unknown; reason: string }> })?.inputFallbacks;
+    const inputFallbacks = (
+      quote as { inputFallbacks?: Record<string, { value: unknown; reason: string }> }
+    )?.inputFallbacks;
     const fallbackLines: string[] = [];
     if (inputFallbacks?.electricityRate) {
-      fallbackLines.push(`Rate: $${inputFallbacks.electricityRate.value}/kWh (${inputFallbacks.electricityRate.reason})`);
+      fallbackLines.push(
+        `Rate: $${inputFallbacks.electricityRate.value}/kWh (${inputFallbacks.electricityRate.reason})`
+      );
     }
     if (inputFallbacks?.demandCharge) {
-      fallbackLines.push(`Demand: $${inputFallbacks.demandCharge.value}/kW (${inputFallbacks.demandCharge.reason})`);
+      fallbackLines.push(
+        `Demand: $${inputFallbacks.demandCharge.value}/kW (${inputFallbacks.demandCharge.reason})`
+      );
     }
     if (inputFallbacks?.location) {
-      fallbackLines.push(`Location: ${inputFallbacks.location.value} (${inputFallbacks.location.reason})`);
+      fallbackLines.push(
+        `Location: ${inputFallbacks.location.value} (${inputFallbacks.location.reason})`
+      );
     }
-    
+
     return {
       pricingStatus,
       pricingComplete,
@@ -531,10 +554,18 @@ function WizardV7Page() {
 
     // Results: verified TrueQuote with financial summary
     if (state.step === "results" && step6Advisor) {
-      const { pricingStatus, pricingComplete, capexUSD, annualSavingsUSD, roiYears, bessKWh, peakLoadKW } = step6Advisor;
-      
+      const {
+        pricingStatus,
+        pricingComplete,
+        capexUSD,
+        annualSavingsUSD,
+        roiYears,
+        bessKWh,
+        peakLoadKW,
+      } = step6Advisor;
+
       const bullets: string[] = [];
-      
+
       if (pricingStatus === "pending") {
         bullets.push("Calculating your TrueQuote™...");
       } else if (pricingStatus === "timed_out") {
@@ -554,7 +585,7 @@ function WizardV7Page() {
         if (peakLoadKW) bullets.push(`Peak Load: ${peakLoadKW}`);
         bullets.push("Load profile ready — financials pending.");
       }
-      
+
       // Append Memory-driven insights (cross-slot intelligence)
       for (const insight of insights.bullets) {
         if (bullets.length < 6) bullets.push(insight);
@@ -572,14 +603,14 @@ function WizardV7Page() {
       } else {
         badges.push({ label: "load profile only", tone: "amber" });
       }
-      
+
       return (
         <V7AdvisorPanel
           title="Merlin Advisor"
           subtitle="Your TrueQuote™ Results"
           badges={badges}
           bullets={bullets}
-          progressPct={pricingComplete ? 100 : (pricingStatus === "pending" ? 50 : 25)}
+          progressPct={pricingComplete ? 100 : pricingStatus === "pending" ? 50 : 25}
         />
       );
     }
@@ -591,7 +622,9 @@ function WizardV7Page() {
 
       const bullets: string[] = [];
       if (pct === 0) {
-        bullets.push("Because each industry has different peak loads, your answers shape the system size.");
+        bullets.push(
+          "Because each industry has different peak loads, your answers shape the system size."
+        );
       } else if (remaining > 0) {
         bullets.push(`${remaining} field${remaining === 1 ? "" : "s"} remaining — almost there.`);
       } else {
@@ -607,9 +640,9 @@ function WizardV7Page() {
           title="Merlin Advisor"
           subtitle={step3Advisor.schema.displayName}
           badges={[
-            { 
-              label: `${step3Advisor.answeredCount}/${step3Advisor.visibleRequiredCount} complete`, 
-              tone: step3Advisor.missing.length ? "amber" : "green" 
+            {
+              label: `${step3Advisor.answeredCount}/${step3Advisor.visibleRequiredCount} complete`,
+              tone: step3Advisor.missing.length ? "amber" : "green",
             },
           ]}
           progressPct={step3Advisor.progressPct}
@@ -640,7 +673,9 @@ function WizardV7Page() {
       );
 
       if (!hasZip) {
-        bullets.push("Because utility rates vary by region, your ZIP code unlocks local pricing and solar data.");
+        bullets.push(
+          "Because utility rates vary by region, your ZIP code unlocks local pricing and solar data."
+        );
         bullets.push("This takes about 10 seconds — then we'll size your system.");
       } else if (!hasLocation && !hasIntel && !intelAttempted) {
         subtitle = "Looking up your area…";
@@ -651,13 +686,17 @@ function WizardV7Page() {
         subtitle = "ZIP recognized ✓";
         badgeLabel = "ready";
         badgeTone = "amber";
-        bullets.push("Couldn't find local utility data for this ZIP — we'll use regional estimates.");
+        bullets.push(
+          "Couldn't find local utility data for this ZIP — we'll use regional estimates."
+        );
         bullets.push("Hit Next to choose your industry.");
       } else if (needsConfirm) {
         subtitle = "Business detected";
         badgeLabel = "business found";
         badgeTone = "green";
-        bullets.push("Because confirming your business helps auto-detect your industry and tailor the analysis.");
+        bullets.push(
+          "Because confirming your business helps auto-detect your industry and tailor the analysis."
+        );
         bullets.push("Not your business? Skip it and choose your industry next.");
       } else {
         subtitle = hasLocation ? "Location locked in ✓" : "Location data loaded ✓";
@@ -668,7 +707,9 @@ function WizardV7Page() {
           if (bullets.length < 4) bullets.push(insight);
         }
         if (bullets.length === 0) {
-          bullets.push("Add your business name for better accuracy, or continue to choose your industry.");
+          bullets.push(
+            "Add your business name for better accuracy, or continue to choose your industry."
+          );
         }
       }
 
@@ -684,35 +725,46 @@ function WizardV7Page() {
 
     // All other steps: fully Memory-driven insights
     // Industry, Options, MagicFit — use generateMerlinInsights entirely
-    const fallbackBullets = insights.bullets.length > 0
-      ? insights.bullets
-      : [
-          gate.canContinue
-            ? "You're all set — hit Next to continue."
-            : gate.reason ?? "Complete this step to continue.",
-        ];
+    const fallbackBullets =
+      insights.bullets.length > 0
+        ? insights.bullets
+        : [
+            gate.canContinue
+              ? "You're all set — hit Next to continue."
+              : (gate.reason ?? "Complete this step to continue."),
+          ];
 
     // Step-specific supplemental bullets
     if (state.step === "industry") {
       const hasIndustry = state.industry && state.industry !== "auto";
       const industryLabel = hasIndustry ? getIndustryMeta(state.industry).label : null;
       if (state.industryLocked && hasIndustry) {
-        fallbackBullets.unshift(`Because your business looks like ${industryLabel}, Merlin pre-selected it. Change it if needed.`);
+        fallbackBullets.unshift(
+          `Because your business looks like ${industryLabel}, Merlin pre-selected it. Change it if needed.`
+        );
       } else if (!hasIndustry) {
-        fallbackBullets.unshift("Because load profiles differ by industry, this choice shapes your system sizing.");
+        fallbackBullets.unshift(
+          "Because load profiles differ by industry, this choice shapes your system sizing."
+        );
       }
     }
 
     if (state.step === "magicfit" && insights.bullets.length === 0) {
       if (state.goals.length > 0) {
-        const goalNames = state.goals.map(g => g.replace(/_/g, " ")).join(", ");
-        fallbackBullets.unshift(`Because you prioritize ${goalNames}, Merlin sized three options to match.`);
+        const goalNames = state.goals.map((g) => g.replace(/_/g, " ")).join(", ");
+        fallbackBullets.unshift(
+          `Because you prioritize ${goalNames}, Merlin sized three options to match.`
+        );
       }
-      fallbackBullets.push("Starter = fast payback. Perfect Fit = balanced. Beast Mode = maximum savings.");
+      fallbackBullets.push(
+        "Starter = fast payback. Perfect Fit = balanced. Beast Mode = maximum savings."
+      );
     }
 
     if (state.step === "options" && insights.bullets.length === 0) {
-      fallbackBullets.push("Adding solar cuts daytime energy costs. A generator provides outage protection.");
+      fallbackBullets.push(
+        "Adding solar cuts daytime energy costs. A generator provides outage protection."
+      );
     }
 
     // Add nudge if available
@@ -729,17 +781,28 @@ function WizardV7Page() {
         bullets={fallbackBullets.slice(0, 5)}
       />
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.step, step3Advisor, step6Advisor, gate.canContinue, gate.reason, merlinData, state.locationRawInput, state.location, state.businessCard, state.businessConfirmed, state.locationIntel, state.industry, state.industryLocked, state.goals]);
+  }, [
+    state.step,
+    step3Advisor,
+    step6Advisor,
+    gate.canContinue,
+    gate.reason,
+    merlinData,
+    state.locationRawInput,
+    state.location,
+    state.businessCard,
+    state.businessConfirmed,
+    state.locationIntel,
+    state.industry,
+    state.industryLocked,
+    state.goals,
+  ]);
 
   // ⚡ Quick Quote Mode - Show panel before wizard starts (Feb 20, 2026)
   if (quickQuoteMode === "panel") {
     return (
       <>
-        <QuickQuotePanel
-          onStartExpress={handleQuickQuoteStart}
-          onStartGuided={handleStartGuided}
-        />
+        <QuickQuotePanel onStartExpress={handleQuickQuoteStart} onStartGuided={handleStartGuided} />
         {showQuickQuoteModal && (
           <QuickQuoteModal
             onClose={() => setShowQuickQuoteModal(false)}
@@ -765,8 +828,8 @@ function WizardV7Page() {
       */}
 
       <WizardShellV7
-        currentStep={currentStep}         // 0-index internal
-        stepLabels={[...STEP_LABELS]}     // ✅ shell no longer has its own steps list
+        currentStep={currentStep} // 0-index internal
+        stepLabels={[...STEP_LABELS]} // ✅ shell no longer has its own steps list
         nextHint={nextHint}
         nextLabel={nextLabel}
         canGoBack={canGoBack}
@@ -775,168 +838,168 @@ function WizardV7Page() {
         onBack={handleBack}
         onNext={handleNext}
         isVerified={isVerified}
-        advisorContent={rightPanel}    // ✅ Advisor panel in left rail
+        advisorContent={rightPanel} // ✅ Advisor panel in left rail
       >
-      {/* Error overlay */}
-      {state.error?.message && (
-        <div
-          style={{
-            padding: "12px 16px",
-            borderRadius: 12,
-            background: "rgba(239, 68, 68, 0.1)",
-            border: "1px solid rgba(239, 68, 68, 0.25)",
-            marginBottom: 20,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <span style={{ fontSize: 14, color: "rgba(239, 68, 68, 0.9)" }}>
-            {state.error.message}
-          </span>
-          <button
-            onClick={wizard.clearError}
+        {/* Error overlay */}
+        {state.error?.message && (
+          <div
             style={{
-              background: "none",
-              border: "none",
-              color: "rgba(239, 68, 68, 0.7)",
-              cursor: "pointer",
-              fontSize: 16,
+              padding: "12px 16px",
+              borderRadius: 12,
+              background: "rgba(239, 68, 68, 0.1)",
+              border: "1px solid rgba(239, 68, 68, 0.25)",
+              marginBottom: 20,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            ✕
-          </button>
-        </div>
-      )}
+            <span style={{ fontSize: 14, color: "rgba(239, 68, 68, 0.9)" }}>
+              {state.error.message}
+            </span>
+            <button
+              onClick={wizard.clearError}
+              style={{
+                background: "none",
+                border: "none",
+                color: "rgba(239, 68, 68, 0.7)",
+                cursor: "pointer",
+                fontSize: 16,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
-      {/* 📇 Persistent Business Card — visible on steps 2-6 */}
-      {state.step !== "location" && <PersistentBusinessCard state={state} />}
+        {/* 📇 Persistent Business Card — visible on steps 2-6 */}
+        {state.step !== "location" && <PersistentBusinessCard state={state} />}
 
-      {/* Step Router */}
-      {state.step === "location" && (
-        <Step1LocationV7
-          state={state}
-          actions={{
-            updateLocationRaw: wizard.updateLocationRaw,
-            submitLocation: wizard.submitLocation,
-            primeLocationIntel: wizard.primeLocationIntel,
-            toggleGoal: wizard.toggleGoal,
-            confirmGoals: wizard.confirmGoals,
-            confirmBusiness: wizard.confirmBusiness,
-            skipBusiness: wizard.skipBusiness,
-            setBusinessDraft: wizard.setBusinessDraft,
-            setLocationConfirmed: wizard.confirmLocation,
-          }}
-          onGoalsConfirmedAdvance={() => {
-            // ✅ FIX: Auto-advance after goals confirmed in modal
-            if (state.industryLocked && state.industry && state.industry !== "auto") {
-              wizard.goToStep("profile");
-            } else {
-              wizard.goToStep("industry");
-            }
-          }}
-        />
-      )}
+        {/* Step Router */}
+        {state.step === "location" && (
+          <Step1LocationV7
+            state={state}
+            actions={{
+              updateLocationRaw: wizard.updateLocationRaw,
+              submitLocation: wizard.submitLocation,
+              primeLocationIntel: wizard.primeLocationIntel,
+              toggleGoal: wizard.toggleGoal,
+              confirmGoals: wizard.confirmGoals,
+              confirmBusiness: wizard.confirmBusiness,
+              skipBusiness: wizard.skipBusiness,
+              setBusinessDraft: wizard.setBusinessDraft,
+              setLocationConfirmed: wizard.confirmLocation,
+            }}
+            onGoalsConfirmedAdvance={() => {
+              // ✅ FIX: Auto-advance after goals confirmed in modal
+              if (state.industryLocked && state.industry && state.industry !== "auto") {
+                wizard.goToStep("profile");
+              } else {
+                wizard.goToStep("industry");
+              }
+            }}
+          />
+        )}
 
-      {state.step === "industry" && (
-        <Step2IndustryV7
-          state={state}
-          actions={{
-            goBack: wizard.goBack,
-            selectIndustry: wizard.selectIndustry,
-          }}
-        />
-      )}
+        {state.step === "industry" && (
+          <Step2IndustryV7
+            state={state}
+            actions={{
+              goBack: wizard.goBack,
+              selectIndustry: wizard.selectIndustry,
+            }}
+          />
+        )}
 
-      {/* Step 3: Profile (feature-flagged between Profile, Curated, and Gated) */}
-      {/* Priority: Gated > Curated > Basic Profile */}
-      {state.step === "profile" && !V7_ENABLE_GATED_STEP3 && V7_USE_CURATED_STEP3 && (
-        <Step3ProfileV7Curated
-          state={state}
-          actions={{
-            // MINIMAL CONTRACT (Feb 2, 2026): Same as Step3ProfileV7
-            setStep3Answer: wizard.setStep3Answer,
-            submitStep3: wizard.submitStep3,
-            goBack: wizard.goBack,
-            setSolarSizing: wizard.setSolarSizing,
-          }}
-        />
-      )}
+        {/* Step 3: Profile (feature-flagged between Profile, Curated, and Gated) */}
+        {/* Priority: Gated > Curated > Basic Profile */}
+        {state.step === "profile" && !V7_ENABLE_GATED_STEP3 && V7_USE_CURATED_STEP3 && (
+          <Step3ProfileV7Curated
+            state={state}
+            actions={{
+              // MINIMAL CONTRACT (Feb 2, 2026): Same as Step3ProfileV7
+              setStep3Answer: wizard.setStep3Answer,
+              submitStep3: wizard.submitStep3,
+              goBack: wizard.goBack,
+              setSolarSizing: wizard.setSolarSizing,
+            }}
+          />
+        )}
 
-      {/* Fallback: Basic Step 3 Profile (when curated is disabled) */}
-      {state.step === "profile" && !V7_ENABLE_GATED_STEP3 && !V7_USE_CURATED_STEP3 && (
-        <Step3ProfileV7
-          state={state}
-          actions={{
-            // MINIMAL CONTRACT (Feb 1, 2026): Only methods Step3ProfileV7 actually uses
-            // We DO NOT pass canApplyDefaults/canResetToDefaults — they were causing crashes
-            setStep3Answer: wizard.setStep3Answer,
-            submitStep3: wizard.submitStep3,
-            goBack: wizard.goBack,
-          }}
-        />
-      )}
+        {/* Fallback: Basic Step 3 Profile (when curated is disabled) */}
+        {state.step === "profile" && !V7_ENABLE_GATED_STEP3 && !V7_USE_CURATED_STEP3 && (
+          <Step3ProfileV7
+            state={state}
+            actions={{
+              // MINIMAL CONTRACT (Feb 1, 2026): Only methods Step3ProfileV7 actually uses
+              // We DO NOT pass canApplyDefaults/canResetToDefaults — they were causing crashes
+              setStep3Answer: wizard.setStep3Answer,
+              submitStep3: wizard.submitStep3,
+              goBack: wizard.goBack,
+            }}
+          />
+        )}
 
-      {/* Step 3 Gated: 4-part questionnaire (behind feature flag) */}
-      {/* NOTE: Gated Step3 requires template format IndustryTemplateV1 and additional SSOT actions */}
-      {/* These are provided via wizard hook when V7_ENABLE_GATED_STEP3=true */}
-      {state.step === "profile" && V7_ENABLE_GATED_STEP3 && (
-        <Step3GatedV7
-          template={state.step3Template as Parameters<typeof Step3GatedV7>[0]['template']}
-          answers={state.step3Answers}
-          onAnswerChange={wizard.setStep3Answer}
-          onResetPart={(partId: string) => wizard.resetToDefaults({ partId })}
-          onDefaultsApplied={wizard.markDefaultsApplied}
-          hasDefaultsApplied={wizard.hasDefaultsApplied}
-          canResetToDefaults={wizard.canResetToDefaults}
-          canApplyDefaults={wizard.canApplyDefaults}
-          applyStep3Defaults={(partId: string) => wizard.resetToDefaults({ partId })} // Map to resetToDefaults
-          getDefaultForQuestion={wizard.getDefaultForQuestion}
-          onComplete={wizard.submitStep3}
-          onBack={wizard.goBack}
-          lifeSignals={wizard.lifeSignals}
-          selectedIndustrySlug={state.industry}
-          industryDisplayName={state.step3Template?.selectedIndustry || state.industry}
-          isBusy={state.isBusy}
-        />
-      )}
+        {/* Step 3 Gated: 4-part questionnaire (behind feature flag) */}
+        {/* NOTE: Gated Step3 requires template format IndustryTemplateV1 and additional SSOT actions */}
+        {/* These are provided via wizard hook when V7_ENABLE_GATED_STEP3=true */}
+        {state.step === "profile" && V7_ENABLE_GATED_STEP3 && (
+          <Step3GatedV7
+            template={state.step3Template as Parameters<typeof Step3GatedV7>[0]["template"]}
+            answers={state.step3Answers}
+            onAnswerChange={wizard.setStep3Answer}
+            onResetPart={(partId: string) => wizard.resetToDefaults({ partId })}
+            onDefaultsApplied={wizard.markDefaultsApplied}
+            hasDefaultsApplied={wizard.hasDefaultsApplied}
+            canResetToDefaults={wizard.canResetToDefaults}
+            canApplyDefaults={wizard.canApplyDefaults}
+            applyStep3Defaults={(partId: string) => wizard.resetToDefaults({ partId })} // Map to resetToDefaults
+            getDefaultForQuestion={wizard.getDefaultForQuestion}
+            onComplete={wizard.submitStep3}
+            onBack={wizard.goBack}
+            lifeSignals={wizard.lifeSignals}
+            selectedIndustrySlug={state.industry}
+            industryDisplayName={state.step3Template?.selectedIndustry || state.industry}
+            isBusy={state.isBusy}
+          />
+        )}
 
-      {state.step === "options" && (
-        <Step4OptionsV7
-          state={state}
-          actions={{
-            goBack: wizard.goBack,
-            goToStep: wizard.goToStep,
-            recalculateWithAddOns: wizard.recalculateWithAddOns,
-          }}
-        />
-      )}
+        {state.step === "options" && (
+          <Step4OptionsV7
+            state={state}
+            actions={{
+              goBack: wizard.goBack,
+              goToStep: wizard.goToStep,
+              recalculateWithAddOns: wizard.recalculateWithAddOns,
+            }}
+          />
+        )}
 
-      {state.step === "magicfit" && (
-        <Step5MagicFitV7
-          state={state}
-          actions={{
-            goBack: wizard.goBack,
-            goToStep: wizard.goToStep,
-            updateQuote: wizard.updateQuote,
-          }}
-        />
-      )}
+        {state.step === "magicfit" && (
+          <Step5MagicFitV7
+            state={state}
+            actions={{
+              goBack: wizard.goBack,
+              goToStep: wizard.goToStep,
+              updateQuote: wizard.updateQuote,
+            }}
+          />
+        )}
 
-      {state.step === "results" && (
-        <Step6ResultsV7
-          state={state}
-          actions={{
-            goBack: wizard.goBack,
-            resetSession: wizard.resetSession,
-            goToStep: wizard.goToStep,
-            // Phase 6: Pricing retry (non-blocking)
-            retryPricing: wizard.retryPricing,
-            // Phase 8: System add-ons (solar/generator/wind)
-            recalculateWithAddOns: wizard.recalculateWithAddOns,
-          }}
-        />
-      )}
+        {state.step === "results" && (
+          <Step6ResultsV7
+            state={state}
+            actions={{
+              goBack: wizard.goBack,
+              resetSession: wizard.resetSession,
+              goToStep: wizard.goToStep,
+              // Phase 6: Pricing retry (non-blocking)
+              retryPricing: wizard.retryPricing,
+              // Phase 8: System add-ons (solar/generator/wind)
+              recalculateWithAddOns: wizard.recalculateWithAddOns,
+            }}
+          />
+        )}
       </WizardShellV7>
 
       {/* 🔧 Debug Panel — Dev-only, toggle with Ctrl+Shift+D */}
