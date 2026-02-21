@@ -112,13 +112,30 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
             </div>
           </button>
 
-          {/* Upload Link Below ProQuote */}
+          {/* Option 3: Upload Documents - PROMINENT */}
           <button
             onClick={() => onStartExpress("bill-upload")}
-            className="w-full text-center py-2 text-sm text-slate-500 hover:text-blue-400 transition-colors flex items-center justify-center gap-2"
+            className="group w-full bg-gradient-to-r from-purple-500/10 to-blue-500/10 hover:from-purple-500/20 hover:to-blue-500/20 border-2 border-dashed border-purple-400/30 hover:border-purple-400/50 rounded-lg p-5 text-left transition-all"
           >
-            <Upload className="w-4 h-4" />
-            <span>Or upload RFQ/RFP documents</span>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-400/30 flex items-center justify-center flex-shrink-0">
+                    <Upload className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-white">Upload RFQ/RFP</h3>
+                    <span className="text-xs font-semibold text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded">
+                      Fastest
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-400 ml-11">
+                  Have specifications or documents? Upload your RFQ, RFP, or spec sheets. We'll extract your requirements and generate a quote automatically. ~2 minutes.
+                </p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all flex-shrink-0 ml-4" />
+            </div>
           </button>
         </div>
       </div>

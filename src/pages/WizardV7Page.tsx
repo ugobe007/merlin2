@@ -100,8 +100,8 @@ function WizardV7Page() {
   //   setStep3Answers: wizard.setStep3Answers as any,
   //   updateLocationRaw: wizard.updateLocationRaw,
   // });
-  const [showResumeBanner, setShowResumeBanner] = useState(false);
-  const [hasCheckedSavedProgress, setHasCheckedSavedProgress] = useState(false);
+  const [_showResumeBanner, setShowResumeBanner] = useState(false);
+  const [_hasCheckedSavedProgress, _setHasCheckedSavedProgress] = useState(false);
 
   // 🤖 Start AI Agent for self-healing monitoring (Feb 4, 2026)
   useEffect(() => {
@@ -338,85 +338,45 @@ function WizardV7Page() {
     setShowQuickQuoteModal(false);
     setQuickQuoteMode("guided");
     
-    // Generate full quote with pricing bridge
+    // Pre-fill wizard state with ProQuote specs and start from Step 1
     try {
-      // 1. Build contract result (Layer A - Load Profile)
-      const peakLoadKW = params.systemSizeKW || 1000;
-      const durationHours = params.durationHours || 4;
-      const storageToPeakRatio = 1.0; // Direct sizing (user specified exact kW)
-      
-      const contractResult = {
-        loadProfile: {
-          baseLoadKW: peakLoadKW * 0.7,
-          peakLoadKW: peakLoadKW,
-          energyKWhPerDay: peakLoadKW * durationHours * 0.4,
-        },
-        assumptions: [
-          `Quick Quote: ${params.mode === 'ballpark' ? 'Regional averages' : 'User-specified sizing'}`,
-          `System: ${peakLoadKW} kW × ${durationHours}h`,
-        ],
-        warnings: params.mode === 'ballpark' ? ['Using regional averages - for precise quotes, use guided wizard'] : [],
-        sizingHints: {
-          storageToPeakRatio,
-          durationHours,
-          source: 'user-config' as const,
-        },
-        inputsUsed: {
+      // 1. Store ProQuote specs in wizard state for later use
+      wizard.updateQuote({
+        proQuoteSpecs: {
+          systemSizeKW: params.systemSizeKW || 1000,
+          durationHours: params.durationHours || 4,
           electricityRate: params.electricityRate || 0.15,
-          demandCharge: 15,
-          location: {
-            state: params.location || 'CA',
-            zip: '90001',
-            city: params.location || 'California',
-          },
-          industry: params.industry || 'office',
-          gridMode: 'grid_tied',
         },
-      };
-      
-      // 2. Run pricing (Layer B)
-      const { runPricingQuote, generatePricingSnapshotId } = await import('@/wizard/v7/pricing/pricingBridge');
-      const snapshotId = generatePricingSnapshotId({
-        peakLoadKW: contractResult.loadProfile.peakLoadKW,
-        storageToPeakRatio: 0.5,
-        durationHours: 4,
-        industry: (state as any).selectedIndustry || (state as any).industry || 'other',
-        state: (state as any).location?.state || (state as any).selectedState || 'CA',
-        electricityRate: (state as any).location?.electricityRate || 0.12,
       });
       
-      const pricingResult = await runPricingQuote(contractResult, {
-        snapshotId,
-        includeAdvancedAnalysis: false, // Quick quote = fast, no advanced
-      });
-      
-      if (!pricingResult.ok) {
-        throw new Error(pricingResult.error);
+      // 2. Pre-fill location if provided
+      if (params.location) {
+        // Convert state abbreviation to full address format
+        const stateMap: Record<string, string> = {
+          'CA': 'California, USA',
+          'NY': 'New York, USA',
+          'TX': 'Texas, USA',
+          'FL': 'Florida, USA',
+          'IL': 'Illinois, USA',
+          'MA': 'Massachusetts, USA',
+          'AZ': 'Arizona, USA',
+          'NV': 'Nevada, USA',
+        };
+        const locationInput = stateMap[params.location] || `${params.location}, USA`;
+        wizard.updateLocationRaw(locationInput);
       }
       
-      // 3. Seed wizard state with results
-      wizard.updateQuote({
-        peakLoadKW: contractResult.loadProfile.peakLoadKW,
-        bessKW: pricingResult.data.sizing.storageSizeMW * 1000,
-        bessKWh: pricingResult.data.sizing.energyMWh * 1000,
-        capexUSD: pricingResult.data.capexUSD,
-        annualSavingsUSD: pricingResult.data.annualSavingsUSD,
-        roiYears: pricingResult.data.roiYears,
-        paybackYears: pricingResult.data.roiYears,
-        npv: pricingResult.data.financials?.npv,
-        irr: pricingResult.data.financials?.irr,
-        pricingComplete: true,
-      });
+      // 3. Pre-select industry if provided
+      if (params.industry) {
+        wizard.selectIndustry(params.industry);
+      }
       
-      // 4. Set industry and location in memory
-      wizard.selectIndustry(params.industry as any || 'office');
-      
-      // 5. Jump to results
-      wizard.goToStep('results' as any);
+      // 4. Start from Step 1 (Location) so user can confirm/edit
+      wizard.goToStep('location');
       
     } catch (error) {
-      console.error('[Quick Quote] Pricing failed:', error);
-      // Fallback: Start guided wizard at Step 1
+      console.error('[Quick Quote] Setup failed:', error);
+      // Fallback: Start at location step
       wizard.goToStep('location');
     }
   };
@@ -425,26 +385,26 @@ function WizardV7Page() {
     setQuickQuoteMode("guided");
   };
 
-  // 💾 Auto-Save Handlers (Feb 20, 2026)
-  const handleResumeProgress = () => {
-    // autoSave.restoreProgress(); // DISABLED
-    setShowResumeBanner(false);
-    setQuickQuoteMode("guided");
-  };
+  // 💾 Auto-Save Handlers (Feb 20, 2026) - DISABLED
+  // const handleResumeProgress = () => {
+  //   // autoSave.restoreProgress(); // DISABLED
+  //   setShowResumeBanner(false);
+  //   setQuickQuoteMode("guided");
+  // };
 
-  const handleStartFresh = () => {
-    // autoSave.clearProgress(); // DISABLED
-    setShowResumeBanner(false);
-    setQuickQuoteMode("guided");
-  };
+  // const handleStartFresh = () => {
+  //   // autoSave.clearProgress(); // DISABLED
+  //   setShowResumeBanner(false);
+  //   setQuickQuoteMode("guided");
+  // };
 
-  // Check for saved progress on mount (only once)
+  // Check for saved progress on mount (only once) - DISABLED
   useEffect(() => {
     // if (!hasCheckedSavedProgress && autoSave.hasSavedProgress) { // DISABLED
     //   setShowResumeBanner(true);
     //   setHasCheckedSavedProgress(true);
     // }
-  }, [hasCheckedSavedProgress]); // autoSave.hasSavedProgress DISABLED
+  }, []);
 
   // TrueQuote verified status - true once we have results
   const isVerified = state.step === "results" && !state.isBusy;

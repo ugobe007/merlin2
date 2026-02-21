@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from "react";
-import { X, ArrowRight, Sparkles } from "lucide-react";
+import { X, ArrowRight, Sparkles, Upload } from "lucide-react";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 
 interface QuickQuoteModalProps {
@@ -183,6 +183,27 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
             <p className="text-xs text-slate-400 mt-1.5">
               Commercial average: $0.10-0.20/kWh
             </p>
+          </div>
+
+          {/* Upload Option - Prominent */}
+          <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-2 border-dashed border-purple-400/30 rounded-lg p-4 hover:border-purple-400/50 transition-all cursor-pointer group">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-400/30 flex items-center justify-center flex-shrink-0 group-hover:border-purple-400/50 transition-all">
+                <Upload className="w-5 h-5 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-white mb-0.5">Have an RFQ/RFP or Spec Sheet?</p>
+                <p className="text-xs text-slate-400">
+                  Upload your documents for faster quote generation. We'll extract your specs automatically.
+                </p>
+              </div>
+              <button 
+                type="button"
+                className="px-4 py-2 border-2 border-purple-400/50 text-purple-300 hover:border-purple-400 hover:text-purple-200 font-semibold rounded-lg transition-all text-sm"
+              >
+                Upload Files
+              </button>
+            </div>
           </div>
 
           {/* Info Box */}
