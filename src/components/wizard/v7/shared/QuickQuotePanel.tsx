@@ -120,4 +120,9 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
                 </span>
               </div>
             </div>
-          </div
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
