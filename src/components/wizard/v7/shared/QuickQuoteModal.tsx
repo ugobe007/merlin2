@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from "react";
-import { X, Zap, ArrowRight, Sparkles } from "lucide-react";
+import { X, ArrowRight, Sparkles, Shield } from "lucide-react";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 
 interface QuickQuoteModalProps {
@@ -46,23 +46,30 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-700/50">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-slate-700/50">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
-              <Zap className="w-6 h-6 text-blue-400" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold text-white">
-                  ProQuote™
-                </h2>
+          <div className="flex items-center gap-4">
+            {/* ProQuote Badge - Shield + Badge */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#3ECF8E]/20 via-[#68BFFA]/20 to-purple-500/20 rounded-xl blur-lg"></div>
+              <div className="relative w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/20 via-blue-500/20 to-slate-800/40 border-2 border-[#3ECF8E]/40 flex items-center justify-center">
+                <Shield className="w-7 h-7 text-[#68BFFA] stroke-[2.5]" />
                 <img 
                   src={badgeProQuoteIcon} 
                   alt="ProQuote" 
-                  className="w-7 h-7 object-contain"
+                  className="absolute w-6 h-6 object-contain bottom-0 right-0 transform translate-x-1 translate-y-1"
                 />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-[#3ECF8E] via-[#68BFFA] to-purple-400 bg-clip-text text-transparent">
+                  ProQuote™
+                </h2>
+                <span className="px-2 py-0.5 text-[10px] font-bold border border-purple-400/50 text-purple-300 rounded">
+                  PRO
+                </span>
               </div>
               <p className="text-sm text-slate-400">
                 Enter your target system specifications
@@ -77,8 +84,8 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
           </button>
         </div>
 
-        {/* Form */}
-        <div className="p-6 space-y-5">
+        {/* Form - Scrollable Content */}
+        <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-200px)]">
           {/* System Size */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
@@ -199,14 +206,14 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
         <div className="flex items-center justify-between p-6 border-t border-slate-700/50 bg-slate-900/50">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-slate-400 hover:text-white font-medium transition-colors"
+            className="px-5 py-2.5 border-2 border-slate-600 text-slate-300 hover:border-slate-400 hover:text-white font-semibold rounded-lg transition-all"
           >
             Cancel
           </button>
           <button
             onClick={handleGenerate}
             disabled={!isValid}
-            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center gap-2 transition-all hover:shadow-lg hover:shadow-blue-500/30"
+            className="px-6 py-2.5 border-2 border-[#3ECF8E] text-[#3ECF8E] hover:border-[#68BFFA] hover:text-[#68BFFA] disabled:border-slate-700 disabled:text-slate-600 disabled:cursor-not-allowed font-semibold rounded-lg flex items-center gap-2 transition-all"
           >
             Generate Quote <ArrowRight className="w-4 h-4" />
           </button>
