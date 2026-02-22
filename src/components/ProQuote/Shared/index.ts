@@ -6,6 +6,7 @@
 export { LiveCostSummaryStrip } from "./LiveCostSummaryStrip";
 export { ProQuoteBadgePanel } from "./ProQuoteBadgePanel";
 export { SectionHeader } from "./SectionHeader";
+export { MerlinTip } from "./MerlinTip";
 
 // Re-export types
 export type * from "./types";
