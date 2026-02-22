@@ -38,6 +38,7 @@ import LiveFinancialSummaryStrip from "./quotes/LiveFinancialSummaryStrip";
 import SystemConfigSection from "./ProQuote/Forms/SystemConfigSection";
 import ApplicationUseCaseSection from "./ProQuote/Forms/ApplicationUseCaseSection";
 import FinancialParametersSection from "./ProQuote/Forms/FinancialParametersSection";
+import ElectricalSpecsSection from "./ProQuote/Forms/ElectricalSpecsSection";
 
 import { useQuoteExport } from "@/hooks/useQuoteExport";
 import { QuotePreviewModal } from "./ProQuote/Export/QuotePreviewModal";
