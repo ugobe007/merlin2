@@ -3,3 +3,5 @@
  */
 
 export { SystemConfigSection } from "./SystemConfigSection";
+export { ApplicationSection } from "./ApplicationSection";
+export { FinancialSection } from "./FinancialSection";
