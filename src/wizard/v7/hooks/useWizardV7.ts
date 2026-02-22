@@ -28,6 +28,7 @@ import { merlinMemory } from "@/wizard/v7/memory";
 import { devLog, devWarn, devError } from "@/wizard/v7/debug/devLog";
 import { useWizardLocation } from "./useWizardLocation";
 import { useWizardStep3 } from "./useWizardStep3";
+import { useWizardAddOns } from "./useWizardAddOns";
 
 // ✅ Wizard API (Feb 22, 2026): External service integrations
 import { wizardAPI as api } from "@/wizard/v7/api/wizardAPI";
@@ -2250,85 +2251,6 @@ export function useWizardV7() {
     api,
   });
 
-  // Goals callbacks (part of location flow)
-  /**
-   * setGoals - Set all goals at once
-   */
-  const setGoals = useCallback((goals: EnergyGoal[]) => {
-    dispatch({ type: "SET_GOALS", goals });
-  }, []);
-
-  /**
-   * toggleGoal - Toggle a single goal on/off
-   */
-  const toggleGoal = useCallback((goal: EnergyGoal) => {
-    dispatch({ type: "TOGGLE_GOAL", goal });
-  }, []);
-
-  /**
-   * confirmGoals - User confirms goals selection (or skips)
-   */
-  const confirmGoals = useCallback(
-    (value: boolean) => {
-      dispatch({ type: "SET_GOALS_CONFIRMED", confirmed: value });
-      dispatch({ type: "DEBUG_NOTE", note: `Goals ${value ? "confirmed" : "skipped"} by user` });
-
-      // ✅ MERLIN MEMORY (Feb 11, 2026): Persist goals
-      if (value) {
-        merlinMemory.set("goals", {
-          selected: state.goals,
-          confirmedAt: Date.now(),
-        });
-      }
-    },
-    [state.goals]
-  );
-
-  // ============================================================
-  // Step 4: Add-ons (solar, generator, EV charging)
-  // ============================================================
-
-  /**
-   * toggleSolar - Toggle solar add-on
-   */
-  const toggleSolar = useCallback(() => {
-    dispatch({ type: "TOGGLE_SOLAR" });
-  }, []);
-
-  /**
-   * setSolarSizing - Apply solar sizing result from SolarSizingModal (Feb 18, 2026)
-   * Sets includeSolar=true and populates solarKW in step4AddOns
-   */
-  const setSolarSizing = useCallback((solarKW: number) => {
-    dispatch({ type: "SET_SOLAR_SIZING", solarKW });
-    dispatch({
-      type: "DEBUG_NOTE",
-      note: `Solar sizing applied: ${solarKW} kW from SolarSizingModal`,
-    });
-  }, []);
-
-  /**
-   * toggleGenerator - Toggle generator add-on
-   */
-  const toggleGenerator = useCallback(() => {
-    dispatch({ type: "TOGGLE_GENERATOR" });
-  }, []);
-
-  /**
-   * toggleEV - Toggle EV charging add-on
-   */
-  const toggleEV = useCallback(() => {
-    dispatch({ type: "TOGGLE_EV" });
-  }, []);
-
-  /**
-   * confirmAddOns - User confirms add-ons selection (or skips)
-   */
-  const confirmAddOns = useCallback((value: boolean) => {
-    dispatch({ type: "SET_ADDONS_CONFIRMED", confirmed: value });
-    dispatch({ type: "DEBUG_NOTE", note: `Add-ons ${value ? "confirmed" : "skipped"} by user` });
-  }, []);
-
   // ============================================================
   // Step 2: Industry Selection
   // ============================================================
@@ -3042,54 +2964,7 @@ export function useWizardV7() {
     state.step4AddOns,
   ]);
 
-  /**
-   * recalculateWithAddOns - Re-run pricing with new add-on configuration from Step 4.
-   *
-   * Flow: User toggles solar/generator/EV in Step 4 → saves add-ons → re-runs pricing.
-   * Layer A (load profile) is re-computed (no cache), Layer B (pricing) gets add-on values.
-   */
-  const recalculateWithAddOns = useCallback(
-    async (addOns: SystemAddOns) => {
-      if (state.industry === "auto") {
-        devWarn("[V7] Cannot recalculate: industry not set");
-        return { ok: false as const, error: "Industry not set" };
-      }
-      // 1. Persist add-ons to state
-      dispatch({ type: "SET_STEP4_ADDONS", addOns });
-
-      // ✅ MERLIN MEMORY (Feb 11, 2026): Persist add-ons configuration
-      // ✅ MERLIN MEMORY: Bump add-on change counter for session telemetry
-      const sessionForAddOns = merlinMemory.get("session");
-      if (sessionForAddOns) {
-        merlinMemory.patch("session", {
-          addOnChanges: (sessionForAddOns.addOnChanges ?? 0) + 1,
-          lastActiveAt: Date.now(),
-        });
-      }
-      merlinMemory.set("addOns", {
-        includeSolar: addOns.includeSolar,
-        solarKW: addOns.solarKW,
-        includeGenerator: addOns.includeGenerator,
-        generatorKW: addOns.generatorKW,
-        generatorFuelType: addOns.generatorFuelType,
-        includeWind: addOns.includeWind,
-        windKW: addOns.windKW,
-        // itcBonuses: addOns.itcBonuses, // DISABLED
-        updatedAt: Date.now(),
-      });
-
-      // 2. Re-run pricing with new add-ons
-      dispatch({ type: "PRICING_RETRY" });
-      return runPricingSafe({
-        industry: state.industry,
-        answers: state.step3Answers,
-        location: state.location ?? undefined,
-        locationIntel: state.locationIntel ?? undefined,
-        addOns,
-      });
-    },
-    [runPricingSafe, state.industry, state.step3Answers, state.location, state.locationIntel]
-  );
+  // recalculateWithAddOns extracted to useWizardAddOns (Op1c - Feb 22, 2026)
 
   /**
    * retryTemplate — Attempt to reload an industry-specific template when currently in fallback mode.
@@ -3163,7 +3038,7 @@ export function useWizardV7() {
     ]);
   };
 
-  const retry = async <T>(
+  const _retry = async <T>(
     fn: () => Promise<T>,
     options: { attempts?: number; baseDelayMs?: number; timeoutMs?: number } = {}
   ): Promise<T> => {
@@ -3218,6 +3093,21 @@ export function useWizardV7() {
     runPricingSafe,
     buildMinimalLocationFromZip: (minState) =>
       buildMinimalLocationFromZip({ ...state, ...minState }),
+  });
+
+  // ============================================================
+  // Goals & Add-ons: Hook Invocation (Op1c - Feb 22, 2026)
+  // ============================================================
+  const addOnsActions = useWizardAddOns({
+    state: {
+      goals: state.goals,
+      industry: state.industry,
+      step3Answers: state.step3Answers,
+      location: state.location,
+      locationIntel: state.locationIntel,
+    },
+    dispatch: dispatch as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    runPricingSafe,
   });
 
   // Optional: hard jump with gate checks
@@ -3620,20 +3510,8 @@ export function useWizardV7() {
     // step 1: location (from useWizardLocation hook)
     ...locationActions,
 
-    // step 1: goals
-    setGoals,
-    toggleGoal,
-    confirmGoals,
-    requestGoalsModal: useCallback(() => {
-      dispatch({ type: "REQUEST_GOALS_MODAL" });
-    }, []),
-
-    // step 3.5: add-ons
-    toggleSolar,
-    setSolarSizing,
-    toggleGenerator,
-    toggleEV,
-    confirmAddOns,
+    // step 1: goals & step 4: add-ons (extracted to useWizardAddOns hook - Op1c Feb 22, 2026)
+    ...addOnsActions,
 
     // step 2
     selectIndustry,
@@ -3644,7 +3522,7 @@ export function useWizardV7() {
     // step 4: pricing (Phase 6: non-blocking)
     retryPricing, // Retry pricing from Results page
     retryTemplate, // Retry industry template load (upgrade fallback → industry)
-    recalculateWithAddOns, // Re-run pricing with new add-on config (solar/gen/wind)
+    // recalculateWithAddOns now in addOnsActions (Op1c - Feb 22, 2026)
 
     // step 5: MagicFit tier selection → update wizard quote
     updateQuote: useCallback(
