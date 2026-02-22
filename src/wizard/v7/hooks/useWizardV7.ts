@@ -27,6 +27,7 @@ import {
 // Steps are momentary — memory is persistent. No more cross-step flag dependencies.
 import { merlinMemory } from "@/wizard/v7/memory";
 import { devLog, devWarn, devError } from "@/wizard/v7/debug/devLog";
+import { useWizardLocation } from "./useWizardLocation";
 
 // Quota enforcement moved to export-only (Step 6). Previews are never metered.
 
@@ -165,9 +166,9 @@ export type PricingFreeze = {
  */
 export type ITCBonuses = {
   prevailingWage: boolean;
-  energyCommunity: boolean | 'coal-closure' | 'brownfield' | 'fossil-fuel-employment';
+  energyCommunity: boolean | "coal-closure" | "brownfield" | "fossil-fuel-employment";
   domesticContent: boolean;
-  lowIncome: boolean | 'located-in' | 'serves';
+  lowIncome: boolean | "located-in" | "serves";
 };
 
 export type SystemAddOns = {
@@ -175,7 +176,7 @@ export type SystemAddOns = {
   solarKW: number;
   includeGenerator: boolean;
   generatorKW: number;
-  generatorFuelType: 'natural-gas' | 'diesel' | 'dual-fuel';
+  generatorFuelType: "natural-gas" | "diesel" | "dual-fuel";
   includeWind: boolean;
   windKW: number;
   /** ITC bonus qualifications (IRA 2022) — drives dynamic ITC rate */
@@ -183,7 +184,7 @@ export type SystemAddOns = {
 };
 
 export const DEFAULT_ITC_BONUSES: ITCBonuses = {
-  prevailingWage: true,       // Most commercial projects meet PWA
+  prevailingWage: true, // Most commercial projects meet PWA
   energyCommunity: false,
   domesticContent: false,
   lowIncome: false,
@@ -194,7 +195,7 @@ export const DEFAULT_ADD_ONS: SystemAddOns = {
   solarKW: 0,
   includeGenerator: false,
   generatorKW: 0,
-  generatorFuelType: 'natural-gas',
+  generatorFuelType: "natural-gas",
   includeWind: false,
   windKW: 0,
   itcBonuses: DEFAULT_ITC_BONUSES,
@@ -321,10 +322,10 @@ export type QuoteOutput = {
   durationHours?: number;
 
   // Financial outputs (from Layer B - pricing bridge)
-  capexUSD?: number;           // Net cost (after ITC)
-  grossCost?: number;          // Total project cost BEFORE ITC
-  itcAmount?: number;          // ITC credit dollar amount
-  itcRate?: number;            // ITC rate applied (e.g. 0.30)
+  capexUSD?: number; // Net cost (after ITC)
+  grossCost?: number; // Total project cost BEFORE ITC
+  itcAmount?: number; // ITC credit dollar amount
+  itcRate?: number; // ITC rate applied (e.g. 0.30)
   annualSavingsUSD?: number;
   roiYears?: number;
   npv?: number;
@@ -340,20 +341,20 @@ export type QuoteOutput = {
 
   // Equipment cost breakdown (from Layer B) — for unit economics display
   equipmentCosts?: {
-    batteryCost?: number;       // Total battery cost
-    batteryPerKWh?: number;     // $/kWh for battery pack
-    inverterCost?: number;      // Total inverter/PCS cost
-    inverterPerKW?: number;     // $/kW for PCS
-    transformerCost?: number;   // Total transformer cost
-    switchgearCost?: number;    // Total switchgear cost
-    solarCost?: number;         // Total solar cost
-    solarPerWatt?: number;      // $/W for solar
-    generatorCost?: number;     // Total generator cost
-    generatorPerKW?: number;    // $/kW for generator
-    installationCost?: number;  // Total installation/BOS/EPC
+    batteryCost?: number; // Total battery cost
+    batteryPerKWh?: number; // $/kWh for battery pack
+    inverterCost?: number; // Total inverter/PCS cost
+    inverterPerKW?: number; // $/kW for PCS
+    transformerCost?: number; // Total transformer cost
+    switchgearCost?: number; // Total switchgear cost
+    solarCost?: number; // Total solar cost
+    solarPerWatt?: number; // $/W for solar
+    generatorCost?: number; // Total generator cost
+    generatorPerKW?: number; // $/kW for generator
+    installationCost?: number; // Total installation/BOS/EPC
     totalEquipmentCost?: number; // Sum of all equipment (pre-margin)
-    allInPerKW?: number;        // Total $/kW (grossCost / powerKW)
-    allInPerKWh?: number;       // Total $/kWh (grossCost / energyKWh)
+    allInPerKW?: number; // Total $/kW (grossCost / powerKW)
+    allInPerKWh?: number; // Total $/kWh (grossCost / energyKWh)
   };
 
   // Audit / notes
@@ -503,12 +504,12 @@ export type PricingStatus =
   | "error" // Pricing failed (retryable)
   | "timed_out"; // Pricing exceeded timeout threshold
 
-export type EnergyGoal = 
-  | 'lower_bills'
-  | 'backup_power'
-  | 'reduce_carbon'
-  | 'energy_independence'
-  | 'reduce_demand_charges';
+export type EnergyGoal =
+  | "lower_bills"
+  | "backup_power"
+  | "reduce_carbon"
+  | "energy_independence"
+  | "reduce_demand_charges";
 
 export type WizardState = {
   // meta
@@ -714,13 +715,19 @@ function runContractQuote(params: {
     // 2. Load template using resolved templateKey
     const tpl = getTemplate(ctx.templateKey);
     if (!tpl) {
-      throw { code: "STATE", message: `No template found for industry "${params.industry}" (templateKey: "${ctx.templateKey}")` };
+      throw {
+        code: "STATE",
+        message: `No template found for industry "${params.industry}" (templateKey: "${ctx.templateKey}")`,
+      };
     }
 
     // 3. Get calculator contract using resolved calculatorId
     const calc = CALCULATORS_BY_ID[ctx.calculatorId];
     if (!calc) {
-      throw { code: "STATE", message: `No calculator registered for id "${ctx.calculatorId}" (industry: "${params.industry}")` };
+      throw {
+        code: "STATE",
+        message: `No calculator registered for id "${ctx.calculatorId}" (industry: "${params.industry}")`,
+      };
     }
 
     // Initialize logger with context
@@ -753,7 +760,7 @@ function runContractQuote(params: {
 
     // 4. Apply mapping (answers → canonical calculator inputs)
     const mappedInputs = applyTemplateMapping(tpl, params.answers);
-    
+
     // 4a. Bridge: pass raw answers underneath mapped inputs.
     // This ensures legacy curated-schema field names (e.g., "capacity",
     // "uptimeRequirement") are visible to calculator adapters even when
@@ -1187,11 +1194,13 @@ const api = {
         // ✅ FIX Feb 7, 2026: Business name keyword match gets 0.92 confidence
         // (clears the 0.85 threshold for auto-skip to Step 3).
         // Location-only keyword match stays at 0.75 (user picks industry manually).
-        const fromBusiness = businessCard?.name && keywords.some((kw) =>
-          (businessCard.name ?? "").toLowerCase().includes(kw)
-        );
+        const fromBusiness =
+          businessCard?.name &&
+          keywords.some((kw) => (businessCard.name ?? "").toLowerCase().includes(kw));
         const conf = fromBusiness ? 0.92 : 0.75;
-        devLog(`[V7 SSOT] Inferred industry from keywords: ${industry} (conf=${conf}, fromBusiness=${fromBusiness})`);
+        devLog(
+          `[V7 SSOT] Inferred industry from keywords: ${industry} (conf=${conf}, fromBusiness=${fromBusiness})`
+        );
         return { industry: industry as IndustrySlug, confidence: conf };
       }
     }
@@ -1314,7 +1323,9 @@ const api = {
     const selected = industry;
     const effective = ctx.templateKey as IndustrySlug;
 
-    devLog(`[V7 SSOT] Step3 template resolved: selected=${selected} effective=${effective} (via industryCatalog)`);
+    devLog(
+      `[V7 SSOT] Step3 template resolved: selected=${selected} effective=${effective} (via industryCatalog)`
+    );
 
     // ============================================================
     // Phase 1: Try remote API (preferred — freshest data)
@@ -1622,10 +1633,10 @@ function reduce(state: WizardState, intent: Intent): WizardState {
       const prev = state.step;
       const next = intent.step;
       const reason = intent.reason || "unknown";
-      
+
       // Diagnostic log (Step3→Step4 root cause analysis)
       devLog("[Wizard] step transition", { from: prev, to: next, reason });
-      
+
       return {
         ...state,
         step: intent.step,
@@ -1736,25 +1747,25 @@ function reduce(state: WizardState, intent: Intent): WizardState {
 
     case "SET_GOALS_CONFIRMED": {
       const goalsConfirmed = intent.confirmed;
-      
+
       // ✅ FIX Feb 12: Business is auto-confirmed on search, so no businessPending gate needed
       const onLocationStep = state.step === "location";
       const locationReady = state.locationConfirmed === true;
-      
+
       // Advance when goals confirmed + location ready
       const canAdvance = goalsConfirmed && onLocationStep && locationReady;
-      
+
       // ✅ FIX Feb 11: Skip industry step when already locked AND template is loaded
       // Goals inform the wizard, they don't instruct it — routing is based on industry detection
-      const skipIndustry = canAdvance
-        && state.industryLocked
-        && !!state.industry && state.industry !== "auto"
-        && !!state.step3Template; // Safety: template must be loaded before skipping to profile
-      
-      const nextStep = canAdvance
-        ? (skipIndustry ? "profile" : "industry")
-        : state.step;
-      
+      const skipIndustry =
+        canAdvance &&
+        state.industryLocked &&
+        !!state.industry &&
+        state.industry !== "auto" &&
+        !!state.step3Template; // Safety: template must be loaded before skipping to profile
+
+      const nextStep = canAdvance ? (skipIndustry ? "profile" : "industry") : state.step;
+
       return {
         ...state,
         goalsConfirmed,
@@ -2024,8 +2035,8 @@ function reduce(state: WizardState, intent: Intent): WizardState {
         debug: {
           ...state.debug,
           lastAction: "SUBMIT_STEP3_STARTED",
-          notes: ["Submitting Step 3 answers with retry logic"]
-        }
+          notes: ["Submitting Step 3 answers with retry logic"],
+        },
       };
 
     case "SUBMIT_STEP3_SUCCESS":
@@ -2037,15 +2048,16 @@ function reduce(state: WizardState, intent: Intent): WizardState {
         step: "options", // Step 3 → Step 4 Options (add-ons)
         // FIX (Feb 11, 2026): Push 'profile' to stepHistory so goBack from Options
         // correctly returns to profile instead of skipping over it
-        stepHistory: state.stepHistory[state.stepHistory.length - 1] === "profile"
-          ? state.stepHistory
-          : [...state.stepHistory, "profile"],
+        stepHistory:
+          state.stepHistory[state.stepHistory.length - 1] === "profile"
+            ? state.stepHistory
+            : [...state.stepHistory, "profile"],
         debug: {
           ...state.debug,
           lastAction: "SUBMIT_STEP3_SUCCESS",
           lastTransition: "profile → options (step3_complete)",
-          notes: ["Step 3 submission successful, advanced to options step"]
-        }
+          notes: ["Step 3 submission successful, advanced to options step"],
+        },
       };
 
     case "SUBMIT_STEP3_FAILED":
@@ -2055,13 +2067,15 @@ function reduce(state: WizardState, intent: Intent): WizardState {
         error: {
           code: "UNKNOWN",
           message: intent.error.message,
-          detail: { retries: intent.error.retries }
+          detail: { retries: intent.error.retries },
         },
         debug: {
           ...state.debug,
           lastAction: "SUBMIT_STEP3_FAILED",
-          notes: [`Step 3 submission failed after ${intent.error.retries || 0} retries: ${intent.error.message}`]
-        }
+          notes: [
+            `Step 3 submission failed after ${intent.error.retries || 0} retries: ${intent.error.message}`,
+          ],
+        },
       };
 
     // ============================================================
@@ -2302,8 +2316,7 @@ function reduce(state: WizardState, intent: Intent): WizardState {
  * This prevents "ZIP value drift" between state.location.zip/postalCode/locationRawInput
  */
 export function getNormalizedZip(state: WizardState): string {
-  const raw =
-    state.location?.postalCode ?? state.locationRawInput ?? "";
+  const raw = state.location?.postalCode ?? state.locationRawInput ?? "";
   return raw.replace(/\D/g, "").slice(0, 5);
 }
 
@@ -2313,11 +2326,11 @@ function normalizeZip5(s: string): string {
 }
 
 /** True when the string contains a valid US 5-digit ZIP. */
-function isZip5(s: string): boolean {
+function _isZip5(s: string): boolean {
   return normalizeZip5(s).length === 5;
 }
 
-function hasState(location: LocationCard | null): boolean {
+function _hasState(location: LocationCard | null): boolean {
   // your bug: "STATE never confirms"
   return !!location?.state && location.state.trim().length >= 2;
 }
@@ -2352,7 +2365,7 @@ function getStateFromZipPrefix(zip: string): string | undefined {
   if (prefix === 200 || prefix === 202 || (prefix >= 203 && prefix <= 205)) return "DC";
   if (prefix === 197 || prefix === 198 || prefix === 199) return "DE";
   if (prefix >= 320 && prefix <= 349) return "FL";
-  if (prefix >= 300 && prefix <= 319 || prefix === 398 || prefix === 399) return "GA";
+  if ((prefix >= 300 && prefix <= 319) || prefix === 398 || prefix === 399) return "GA";
   if (prefix >= 967 && prefix <= 968) return "HI";
   if (prefix >= 500 && prefix <= 528) return "IA";
   if (prefix >= 832 && prefix <= 838) return "ID";
@@ -2385,7 +2398,7 @@ function getStateFromZipPrefix(zip: string): string | undefined {
   if (prefix >= 290 && prefix <= 299) return "SC";
   if (prefix >= 570 && prefix <= 577) return "SD";
   if (prefix >= 370 && prefix <= 385) return "TN";
-  if (prefix >= 750 && prefix <= 799 || (prefix >= 885 && prefix <= 888)) return "TX";
+  if ((prefix >= 750 && prefix <= 799) || (prefix >= 885 && prefix <= 888)) return "TX";
   if (prefix >= 840 && prefix <= 847) return "UT";
   if (prefix >= 220 && prefix <= 246) return "VA";
   if (prefix >= 50 && prefix <= 59) return "VT";
@@ -2528,7 +2541,9 @@ export function useWizardV7() {
         }
       } else {
         if (import.meta.env.DEV) {
-          devLog("[V7 SSOT] Fresh start skipped (HMR remount) — keeping current storage, NOT hydrating");
+          devLog(
+            "[V7 SSOT] Fresh start skipped (HMR remount) — keeping current storage, NOT hydrating"
+          );
         }
         // ✅ CONTRACT: Do NOT read from LS here. The persist effect writes to LS
         // on every state change, so in-memory state is already correct.
@@ -2716,7 +2731,7 @@ export function useWizardV7() {
         );
       }
     }
-  }, [state.locationRawInput]); // ← intentionally ONLY watches rawInput, not locationConfirmed
+  }, [state.locationRawInput]); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally ONLY watches rawInput, not locationConfirmed
 
   /* ============================================================
      Public Actions (UI calls these)
@@ -2748,7 +2763,10 @@ export function useWizardV7() {
       history.push({ step, enteredAt: now });
       merlinMemory.patch("session", {
         stepHistory: history,
-        totalStepsCompleted: Math.max(session.totalStepsCompleted, history.filter(h => h.exitedAt).length),
+        totalStepsCompleted: Math.max(
+          session.totalStepsCompleted,
+          history.filter((h) => h.exitedAt).length
+        ),
         lastActiveAt: now,
       });
     } else {
@@ -2772,20 +2790,32 @@ export function useWizardV7() {
     setStep(prev, "back");
   }, [state.stepHistory, setStep]);
 
-  // Step 1: location input typing
-  const updateLocationRaw = useCallback((value: string) => {
-    dispatch({ type: "SET_LOCATION_RAW", value });
-  }, []);
+  // ============================================================
+  // Step 1: Location (extracted to useWizardLocation hook)
+  // ============================================================
+  const locationActions = useWizardLocation({
+    state: {
+      locationRawInput: state.locationRawInput,
+      location: state.location,
+      locationConfirmed: state.locationConfirmed,
+      locationIntel: state.locationIntel,
+      businessDraft: state.businessDraft,
+      businessCard: state.businessCard,
+      businessConfirmed: state.businessConfirmed,
+      goalsConfirmed: state.goalsConfirmed,
+      step: state.step,
+    },
+    dispatch,
+    clearError,
+    setError,
+    setBusy,
+    abortOngoing,
+    setStep,
+    abortRef,
+    api,
+  });
 
-  /**
-   * confirmLocation - User confirms their location (ZIP resolved)
-   * @param value - true = confirmed, false = reset
-   */
-  const confirmLocation = useCallback((value: boolean) => {
-    dispatch({ type: "SET_LOCATION_CONFIRMED", confirmed: value });
-    dispatch({ type: "DEBUG_NOTE", note: `Location ${value ? "confirmed" : "reset"} by user` });
-  }, []);
-
+  // Goals callbacks (part of location flow)
   /**
    * setGoals - Set all goals at once
    */
@@ -2803,18 +2833,25 @@ export function useWizardV7() {
   /**
    * confirmGoals - User confirms goals selection (or skips)
    */
-  const confirmGoals = useCallback((value: boolean) => {
-    dispatch({ type: "SET_GOALS_CONFIRMED", confirmed: value });
-    dispatch({ type: "DEBUG_NOTE", note: `Goals ${value ? "confirmed" : "skipped"} by user` });
+  const confirmGoals = useCallback(
+    (value: boolean) => {
+      dispatch({ type: "SET_GOALS_CONFIRMED", confirmed: value });
+      dispatch({ type: "DEBUG_NOTE", note: `Goals ${value ? "confirmed" : "skipped"} by user` });
 
-    // ✅ MERLIN MEMORY (Feb 11, 2026): Persist goals
-    if (value) {
-      merlinMemory.set("goals", {
-        selected: state.goals,
-        confirmedAt: Date.now(),
-      });
-    }
-  }, [state.goals]);
+      // ✅ MERLIN MEMORY (Feb 11, 2026): Persist goals
+      if (value) {
+        merlinMemory.set("goals", {
+          selected: state.goals,
+          confirmedAt: Date.now(),
+        });
+      }
+    },
+    [state.goals]
+  );
+
+  // ============================================================
+  // Step 4: Add-ons (solar, generator, EV charging)
+  // ============================================================
 
   /**
    * toggleSolar - Toggle solar add-on
@@ -2829,7 +2866,10 @@ export function useWizardV7() {
    */
   const setSolarSizing = useCallback((solarKW: number) => {
     dispatch({ type: "SET_SOLAR_SIZING", solarKW });
-    dispatch({ type: "DEBUG_NOTE", note: `Solar sizing applied: ${solarKW} kW from SolarSizingModal` });
+    dispatch({
+      type: "DEBUG_NOTE",
+      note: `Solar sizing applied: ${solarKW} kW from SolarSizingModal`,
+    });
   }, []);
 
   /**
@@ -2854,582 +2894,9 @@ export function useWizardV7() {
     dispatch({ type: "DEBUG_NOTE", note: `Add-ons ${value ? "confirmed" : "skipped"} by user` });
   }, []);
 
-  /**
-   * setBusinessDraft - Update draft business fields (name/address)
-   * This is ephemeral input that should NOT persist unless confirmed.
-   */
-  const setBusinessDraft = useCallback((patch: Partial<{ name: string; address: string }>) => {
-    dispatch({ type: "SET_BUSINESS_DRAFT", patch });
-  }, []);
-
-  /**
-   * primeLocationIntel - SINGLE SOURCE OF TRUTH for location enrichment
-   *
-   * ✅ UNIFIED (Feb 7, 2026): Both debounced typing AND submitLocation use this function.
-   * - Fires 3 parallel fetches (utility, solar, weather)
-   * - Dispatches PATCH_LOCATION_INTEL as each resolves (progressive UI hydration)
-   * - Returns the assembled Partial<LocationIntel> so callers can use it immediately
-   *   (without waiting for React state to propagate)
-   *
-   * @param zipOrInput - ZIP code or raw input string
-   * @returns Partial<LocationIntel> with whatever data was successfully fetched
-   */
-  const primeLocationIntel = useCallback(async (zipOrInput: string): Promise<Partial<LocationIntel>> => {
-    const input = zipOrInput.trim();
-    if (!input || input.length < 3) return {};
-
-    dispatch({ type: "DEBUG_TAG", lastAction: "primeLocationIntel" });
-
-    // Set all to fetching (progressive UI feedback)
-    dispatch({
-      type: "PATCH_LOCATION_INTEL",
-      patch: {
-        utilityStatus: "fetching",
-        solarStatus: "fetching",
-        weatherStatus: "fetching",
-        utilityError: undefined,
-        solarError: undefined,
-        weatherError: undefined,
-      },
-    });
-
-    // Fire all 3 in parallel with Promise.allSettled (fail-soft per service)
-    const [utilityRes, solarRes, weatherRes] = await Promise.allSettled([
-      api.fetchUtility(input),
-      api.fetchSolar(input),
-      api.fetchWeather(input),
-    ]);
-
-    // Assemble the intel object from settled results
-    const intel: Partial<LocationIntel> = { updatedAt: Date.now() };
-
-    if (utilityRes.status === "fulfilled") {
-      intel.utilityRate = utilityRes.value.rate;
-      intel.demandCharge = utilityRes.value.demandCharge;
-      intel.utilityProvider = utilityRes.value.provider;
-      intel.utilityStatus = "ready";
-    } else {
-      intel.utilityStatus = "error";
-      intel.utilityError = String(utilityRes.reason?.message ?? utilityRes.reason);
-    }
-
-    if (solarRes.status === "fulfilled") {
-      intel.peakSunHours = solarRes.value.peakSunHours;
-      intel.solarGrade = solarRes.value.grade;
-      intel.solarStatus = "ready";
-    } else {
-      intel.solarStatus = "error";
-      intel.solarError = String(solarRes.reason?.message ?? solarRes.reason);
-    }
-
-    if (weatherRes.status === "fulfilled") {
-      intel.weatherRisk = weatherRes.value.risk;
-      intel.weatherProfile = weatherRes.value.profile;
-      intel.weatherStatus = "ready";
-    } else {
-      intel.weatherStatus = "error";
-      intel.weatherError = String(weatherRes.reason?.message ?? weatherRes.reason);
-    }
-
-    // Dispatch final merged state (one atomic patch with all results)
-    dispatch({ type: "PATCH_LOCATION_INTEL", patch: intel });
-
-    // ✅ MERLIN MEMORY (Feb 11, 2026): Persist weather data
-    if (weatherRes.status === "fulfilled" && (weatherRes.value.risk || weatherRes.value.profile)) {
-      // Lazy-import the full weather data to get HDD/CDD if available
-      merlinMemory.set("weather", {
-        profile: weatherRes.value.profile,
-        extremes: weatherRes.value.risk,
-        source: "cache",
-        fetchedAt: Date.now(),
-      });
-    }
-
-    // ✅ MERLIN MEMORY (Feb 11, 2026): Persist solar resource data
-    if (solarRes.status === "fulfilled" && solarRes.value.peakSunHours) {
-      merlinMemory.set("solar", {
-        peakSunHours: solarRes.value.peakSunHours,
-        grade: solarRes.value.grade,
-        // Derive capacity factor from peak sun hours (PSH / 24)
-        capacityFactor: solarRes.value.peakSunHours ? solarRes.value.peakSunHours / 24 : undefined,
-        source: "regional-estimate",
-        fetchedAt: Date.now(),
-      });
-    }
-
-    // ✅ MERLIN MEMORY: Also patch location with utility rates
-    if (intel.utilityRate != null || intel.demandCharge != null) {
-      merlinMemory.patch("location", {
-        utilityRate: intel.utilityRate,
-        demandCharge: intel.demandCharge,
-        peakSunHours: intel.peakSunHours,
-      });
-    }
-
-    if (import.meta.env.DEV) {
-      const ready = [intel.utilityStatus, intel.solarStatus, intel.weatherStatus].filter(s => s === "ready").length;
-      devLog(`[V7 SSOT] primeLocationIntel complete: ${ready}/3 services ready for "${input}"`);
-    }
-
-    return intel;
-  }, []);
-
-  // Step 1: submit location (SSOT validates + populates intel)
-  // ✅ FIX Jan 31: Accept businessInfo directly from Step1 (not stale state.businessDraft)
-  const submitLocation = useCallback(
-    async (rawInput?: string, businessInfo?: { name?: string; address?: string }) => {
-      clearError();
-      abortOngoing();
-
-      const input = (rawInput ?? state.locationRawInput).trim();
-      if (import.meta.env.DEV) {
-        devLog("[V7] submitLocation called", { rawInput, stateRaw: state.locationRawInput, input });
-      }
-      dispatch({ type: "DEBUG_TAG", lastAction: "submitLocation" });
-
-      const normalizedZip = normalizeZip5(input);
-
-      // ✅ GUARD: Prevent double-submit loop when already confirmed for same ZIP
-      if (
-        state.locationConfirmed &&
-        normalizedZip &&
-        state.location?.postalCode === normalizedZip &&
-        state.step !== "location"
-      ) {
-        if (import.meta.env.DEV) {
-          devLog("[V7] submitLocation: Already confirmed for this ZIP, skipping re-submit");
-        }
-        return;
-      }
-
-      if (!input) {
-        setError({ code: "VALIDATION", message: "Please enter an address or business name." });
-        return;
-      }
-
-      // ✅ CONFIRMATION DOCTRINE (Feb 10): confirmation is a USER intent state
-      // - If user clicked Continue and we can derive a ZIP5, confirm immediately
-      // - Resolve/prime are best-effort and MUST NOT clear confirmation
-      const canConfirm = normalizedZip.length === 5;
-      if (canConfirm) {
-        dispatch({ type: "SET_LOCATION_CONFIRMED", confirmed: true });
-        if (import.meta.env.DEV) {
-          devLog("[V7 SSOT] Location confirmed by user (Continue clicked)", { zip: normalizedZip });
-        }
-      }
-
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      try {
-        setBusy(true, "Resolving location...");
-        dispatch({ type: "DEBUG_TAG", lastApi: "resolveLocation" });
-
-        let location: LocationCard;
-
-        try {
-          location = await api.resolveLocation(input, controller.signal);
-        } catch (resolveErr) {
-          // ✅ Non-blocking fallback: proceed with ZIP-only location card
-          devWarn("[V7 SSOT] resolveLocation failed, using ZIP fallback:", resolveErr);
-          const minCard = buildMinimalLocationFromZip(state);
-          if (!minCard) throw resolveErr;
-
-          location = minCard;
-          dispatch({
-            type: "DEBUG_NOTE",
-            note: `Geocode failed — using ZIP-only location (${minCard.postalCode})`,
-          });
-
-          // ✅ IMPORTANT: do NOT clear confirmation here (keep user intent)
-          dispatch({ type: "SET_LOCATION", location: minCard });
-        }
-
-        // ✅ FIX Feb 7, 2026: Guarantee postalCode is populated when input is a ZIP.
-        // Many geocoders return lat/lng + formattedAddress but omit postalCode for ZIP lookups.
-        const zip5 = normalizeZip5(input);
-        if (isZip5(input) && !location.postalCode) {
-          location = { ...location, postalCode: zip5 };
-          dispatch({
-            type: "DEBUG_NOTE",
-            note: `Resolved location missing postalCode; injected ZIP ${zip5} from raw input`,
-          });
-        }
-
-        // Also inject state from ZIP prefix if geocoder didn't return it
-        if (!hasState(location) && isZip5(input)) {
-          const stateFromZip = getStateFromZipPrefix(zip5);
-          if (stateFromZip) {
-            location = { ...location, state: stateFromZip };
-            dispatch({
-              type: "DEBUG_NOTE",
-              note: `Resolved location missing state; injected ${stateFromZip} from ZIP prefix`,
-            });
-          }
-        }
-
-        // SSOT: allow location but note missing state if expected
-        if (!hasState(location)) {
-          dispatch({
-            type: "DEBUG_NOTE",
-            note: "Location resolved but state missing. Ensure geocoder returns state for US addresses.",
-          });
-        }
-
-        dispatch({ type: "SET_LOCATION", location });
-
-        // ✅ FIX Jan 31: Use businessInfo passed directly (not stale state.businessDraft)
-        // Create businessCard when business name is provided
-        const businessName = businessInfo?.name?.trim();
-        const businessAddress = businessInfo?.address?.trim();
-        const hasBusiness = !!businessName || !!businessAddress;
-
-        let newBusinessCard: BusinessCard | null = null;
-        if (hasBusiness) {
-          newBusinessCard = {
-            name: businessName || undefined,
-            address: businessAddress || undefined,
-            formattedAddress: location.formattedAddress,
-            city: location.city,
-            stateCode: location.state,
-            postal: location.postalCode,
-            lat: location.lat,
-            lng: location.lng,
-            placeId: location.placeId,
-            resolvedAt: Date.now(),
-          };
-          dispatch({ type: "SET_BUSINESS_CARD", card: newBusinessCard });
-          dispatch({ type: "SET_BUSINESS_CONFIRMED", confirmed: true }); // ✅ Auto-confirm (Feb 12): no friction gate
-          dispatch({
-            type: "DEBUG_NOTE",
-            note: `Business card created + auto-confirmed: ${newBusinessCard.name || newBusinessCard.address}`,
-          });
-        }
-
-        // ✅ UNIFIED ENRICHMENT (Feb 7, 2026): Use primeLocationIntel — SINGLE path
-        // primeLocationIntel dispatches progressive PATCH_LOCATION_INTEL AND returns the intel.
-        // We await it so we have LOCAL intel for buildIntelPatch (no stale state reads).
-        setBusy(true, "Fetching location intelligence...");
-        dispatch({ type: "DEBUG_TAG", lastApi: "primeLocationIntel" });
-        const zip = normalizeZip5(location.postalCode || input);
-        let intel: Partial<LocationIntel> = {};
-        try {
-          intel = await primeLocationIntel(zip || input);
-
-          // ✅ RUNTIME PROBE (Feb 7, 2026): Log exactly what came back so we can tell
-          // if the problem is in the enrichment pipeline vs upstream services
-          if (import.meta.env.DEV) {
-            const definedKeys = Object.keys(intel).filter(
-              (k) => (intel as Record<string, unknown>)[k] !== undefined
-            );
-            devLog(
-              `[V7 Step1] submitLocation intel keys: [${definedKeys.join(", ")}]`,
-              `| utilityRate=${intel.utilityRate} | peakSunHours=${intel.peakSunHours} | solarGrade=${intel.solarGrade} | weatherRisk=${intel.weatherRisk}`
-            );
-          }
-        } catch (enrichErr) {
-          // Enrichment failure is NEVER fatal — proceed with empty intel
-          devWarn("[V7 Step1] primeLocationIntel failed (non-blocking):", enrichErr);
-          dispatch({
-            type: "DEBUG_NOTE",
-            note: `Location intel failed (non-blocking): ${(enrichErr as { message?: string })?.message ?? enrichErr}`,
-          });
-        }
-
-        // ✅ NOTE: locationConfirmed was already set to true at the start of submitLocation
-        // Intel failures (if any) are shown as status banners, not blockers
-
-        // ✅ MERLIN MEMORY (Feb 11, 2026): Persist location for downstream steps
-        merlinMemory.set("location", {
-          zip: location.postalCode || normalizedZip,
-          state: location.state,
-          city: location.city,
-          lat: location.lat,
-          lng: location.lng,
-          formattedAddress: location.formattedAddress,
-          utilityRate: (intel as Record<string, unknown>).utilityRate as number | undefined,
-          demandCharge: (intel as Record<string, unknown>).demandCharge as number | undefined,
-          peakSunHours: (intel as Record<string, unknown>).peakSunHours as number | undefined,
-        });
-        if (newBusinessCard) {
-          merlinMemory.set("business", {
-            name: newBusinessCard.name,
-            address: newBusinessCard.address,
-            placeId: newBusinessCard.placeId,
-          });
-        }
-
-        // ✅ FIX Feb 12: Business is auto-confirmed on creation (no confirm gate).
-        // If we created a business card, run industry inference before stopping for goals.
-        if (newBusinessCard) {
-          try {
-            setBusy(true, "Inferring industry...");
-            dispatch({ type: "DEBUG_TAG", lastApi: "inferIndustry" });
-            const inferred = await api.inferIndustry(location, controller.signal, newBusinessCard);
-
-            if (inferred.industry !== "auto" && inferred.confidence >= 0.85) {
-              dispatch({ type: "SET_INDUSTRY", industry: inferred.industry, locked: true });
-              dispatch({
-                type: "DEBUG_NOTE",
-                note: `Industry inferred from business: ${inferred.industry} (locked)`,
-              });
-
-              merlinMemory.set("industry", {
-                slug: inferred.industry,
-                inferred: true,
-                confidence: inferred.confidence,
-              });
-
-              // Preload step 3 template immediately
-              setBusy(true, "Loading profile template...");
-              dispatch({ type: "DEBUG_TAG", lastApi: "loadStep3Template" });
-              const template = await api.loadStep3Template(inferred.industry, controller.signal);
-              dispatch({ type: "SET_STEP3_TEMPLATE", template });
-              dispatch({
-                type: "SET_TEMPLATE_MODE",
-                mode: (template.industry as string) === "generic" ? "fallback" : "industry",
-              });
-
-              const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
-              dispatch({
-                type: "SET_STEP3_ANSWERS",
-                answers: baselineAnswers,
-                source: "template_default",
-              });
-
-              const intelPatch = api.buildIntelPatch(intel as LocationIntel);
-              if (Object.keys(intelPatch).length > 0) {
-                dispatch({ type: "PATCH_STEP3_ANSWERS", patch: intelPatch, source: "location_intel" });
-              }
-
-              const businessPatch = api.buildBusinessPatch(newBusinessCard);
-              if (Object.keys(businessPatch).length > 0) {
-                dispatch({ type: "PATCH_STEP3_ANSWERS", patch: businessPatch, source: "business_detection" });
-              }
-            } else {
-              dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
-            }
-          } catch (inferErr) {
-            devWarn("[V7] Industry inference failed (non-blocking):", inferErr);
-            dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
-          }
-        }
-
-        // ✅ GOALS MODAL CHECK (Feb 10, 2026)
-        // Location is now confirmed - check if goals modal should show
-        // If goals not yet confirmed, stop here - UI will show goals modal via useEffect
-        if (!state.goalsConfirmed) {
-          dispatch({
-            type: "DEBUG_NOTE",
-            note: "Location confirmed - waiting for goals selection",
-          });
-          setBusy(false);
-          abortRef.current = null;
-          return;
-        }
-
-        // ✅ FIX Feb 10: Goals already confirmed - proceed to industry inference
-        // NOTE: Step transition happens in SET_GOALS_CONFIRMED reducer, not here
-
-        // Goals already confirmed - proceed to industry inference
-        setBusy(true, "Inferring industry...");
-        dispatch({ type: "DEBUG_TAG", lastApi: "inferIndustry" });
-        const inferred = await api.inferIndustry(location, controller.signal);
-
-        if (inferred.industry !== "auto" && inferred.confidence >= 0.85) {
-          dispatch({ type: "SET_INDUSTRY", industry: inferred.industry, locked: true });
-          dispatch({
-            type: "DEBUG_NOTE",
-            note: `Industry inferred: ${inferred.industry} (locked)`,
-          });
-
-          // ✅ MERLIN MEMORY (Feb 11, 2026): Persist auto-inferred industry
-          merlinMemory.set("industry", {
-            slug: inferred.industry,
-            inferred: true,
-            confidence: inferred.confidence,
-          });
-          
-          // ❌ REMOVED (Feb 10, 2026): Do NOT auto-confirm goals
-          // Goals modal MUST show to user even when business inference succeeds
-          // User expects to see and confirm their energy goals before proceeding to Step 3
-
-          // Preload step 3 template immediately
-          setBusy(true, "Loading profile template...");
-          dispatch({ type: "DEBUG_TAG", lastApi: "loadStep3Template" });
-          const template = await api.loadStep3Template(inferred.industry, controller.signal);
-          dispatch({ type: "SET_STEP3_TEMPLATE", template });
-          dispatch({
-            type: "SET_TEMPLATE_MODE",
-            mode: (template.industry as string) === "generic" ? "fallback" : "industry",
-          });
-
-          // ✅ PROVENANCE: Apply baseline defaults (template + question defaults)
-          const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
-          dispatch({
-            type: "SET_STEP3_ANSWERS",
-            answers: baselineAnswers,
-            source: "template_default",
-          });
-
-          // ✅ PROVENANCE: Apply intel patches using LOCAL intel (not stale state.locationIntel)
-          const intelPatch = api.buildIntelPatch(intel as LocationIntel);
-          if (Object.keys(intelPatch).length > 0) {
-            dispatch({ type: "PATCH_STEP3_ANSWERS", patch: intelPatch, source: "location_intel" });
-          }
-
-          // ✅ FIX Feb 11: Goals already confirmed — advance to profile (skip industry, it's locked)
-          devLog("[V7 SSOT] Business + industry inferred + goals confirmed → profile");
-          setStep("profile", "industry_locked_goals_confirmed");
-        } else {
-          dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
-          setStep("industry", "needs_industry");
-        }
-      } catch (err: unknown) {
-        if (isAbort(err)) {
-          setError({ code: "ABORTED", message: "Request cancelled." });
-        } else {
-          setError(err);
-        }
-      } finally {
-        setBusy(false);
-        abortRef.current = null;
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- primeLocationIntel is stable (empty deps)
-    [abortOngoing, clearError, setError, setBusy, setStep, state.locationRawInput, primeLocationIntel]
-  );
-
-  /**
-   * skipBusiness - User skips/dismisses the detected business card
-   * Clears the business card AND draft, then proceeds based on remaining sub-gates
-   */
-  const skipBusiness = useCallback(() => {
-    // ✅ FIX Jan 31: Clear businessDraft to prevent stale draft persisting
-    dispatch({ type: "SET_BUSINESS_DRAFT", patch: { name: "", address: "" } });
-    dispatch({ type: "SET_BUSINESS_CARD", card: null });
-    dispatch({ type: "SET_BUSINESS_CONFIRMED", confirmed: true }); // Mark as "handled" even if skipped
-    dispatch({ type: "DEBUG_NOTE", note: "Business skipped by user - draft cleared" });
-    dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
-    
-    // ✅ FIX Feb 11: Don't jump to industry if goals aren't confirmed yet
-    // Stay on location so the goals modal can render
-    if (!state.goalsConfirmed) {
-      dispatch({ type: "DEBUG_NOTE", note: "Business skipped - staying on location for goals modal" });
-      // Goals modal useEffect will fire now that businessPending is cleared
-      return;
-    }
-    setStep("industry", "business_skipped");
-  }, [setStep, state.goalsConfirmed]);
-
-  /**
-   * confirmBusiness - User confirms or skips the detected business card
-   * @param value - true = confirm business, false = skip (delegates to skipBusiness)
-   */
-  const confirmBusiness = useCallback(
-    async (value: boolean) => {
-      // If false, delegate to skipBusiness and return early
-      if (!value) {
-        skipBusiness();
-        return;
-      }
-
-      dispatch({ type: "SET_BUSINESS_CONFIRMED", confirmed: true });
-      dispatch({ type: "DEBUG_NOTE", note: "Business confirmed by user" });
-
-      // Now proceed to industry selection/inference
-      if (!state.location) {
-        setError({ code: "VALIDATION", message: "No location set." });
-        return;
-      }
-
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      try {
-        setBusy(true, "Inferring industry...");
-        dispatch({ type: "DEBUG_TAG", lastApi: "inferIndustry" });
-        const inferred = await api.inferIndustry(
-          state.location,
-          controller.signal,
-          state.businessCard
-        );
-
-        if (inferred.industry !== "auto" && inferred.confidence >= 0.85) {
-          dispatch({ type: "SET_INDUSTRY", industry: inferred.industry, locked: true });
-          dispatch({
-            type: "DEBUG_NOTE",
-            note: `Industry inferred: ${inferred.industry} (locked)`,
-          });
-
-          // ✅ MERLIN MEMORY (Feb 11, 2026): Persist business-inferred industry
-          merlinMemory.set("industry", {
-            slug: inferred.industry,
-            inferred: true,
-            confidence: inferred.confidence,
-          });
-
-          // Preload step 3 template immediately
-          setBusy(true, "Loading profile template...");
-          dispatch({ type: "DEBUG_TAG", lastApi: "loadStep3Template" });
-          const template = await api.loadStep3Template(inferred.industry, controller.signal);
-          dispatch({ type: "SET_STEP3_TEMPLATE", template });
-          dispatch({
-            type: "SET_TEMPLATE_MODE",
-            mode: (template.industry as string) === "generic" ? "fallback" : "industry",
-          });
-
-          // ✅ PROVENANCE: Apply baseline defaults (template + question defaults)
-          const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
-          dispatch({
-            type: "SET_STEP3_ANSWERS",
-            answers: baselineAnswers,
-            source: "template_default",
-          });
-
-          // ✅ PROVENANCE: Apply intel patches separately (won't stomp user edits later)
-          const intelPatch = api.buildIntelPatch(state.locationIntel);
-          if (Object.keys(intelPatch).length > 0) {
-            dispatch({ type: "PATCH_STEP3_ANSWERS", patch: intelPatch, source: "location_intel" });
-          }
-
-          // ✅ PROVENANCE: Apply business detection patches separately
-          const businessPatch = api.buildBusinessPatch(state.businessCard);
-          if (Object.keys(businessPatch).length > 0) {
-            dispatch({
-              type: "PATCH_STEP3_ANSWERS",
-              patch: businessPatch,
-              source: "business_detection",
-            });
-          }
-
-          // ✅ FIX (Feb 10, 2026): Do NOT auto-skip to Step 3
-          // Stay on location step so goals modal can render
-          // User will proceed to Step 3 after confirming goals
-          devLog("[V7 SSOT] Business confirmed, staying on location for goals modal");
-        } else {
-          dispatch({ type: "SET_INDUSTRY", industry: "auto", locked: false });
-          // ✅ FIX Feb 11: Don't jump to industry if goals aren't confirmed yet
-          if (!state.goalsConfirmed) {
-            dispatch({ type: "DEBUG_NOTE", note: "Industry not inferred - staying on location for goals modal" });
-          } else {
-            setStep("industry", "needs_industry");
-          }
-        }
-      } catch (err: unknown) {
-        if (isAbort(err)) {
-          setError({ code: "ABORTED", message: "Request cancelled." });
-        } else {
-          setError(err);
-        }
-      } finally {
-        setBusy(false);
-        abortRef.current = null;
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- locationIntel intentionally excluded (causes re-render loops)
-    [skipBusiness, setError, setBusy, setStep, state.location, state.businessCard]
-  );
+  // ============================================================
+  // Step 2: Industry Selection
+  // ============================================================
 
   // Step 2: user selects industry (SSOT)
   const selectIndustry = useCallback(
@@ -3471,14 +2938,14 @@ export function useWizardV7() {
         // Template provides industry-specific defaults (e.g., 18 questions)
         // Schema provides ALL curated fields (e.g., 27 questions)
         // Merge ensures no question ID is left undefined
-        
+
         const effectiveIndustry =
           (template as Record<string, unknown>).effectiveIndustry ||
           template.selectedIndustry ||
           industry;
-        
+
         const schema = resolveStep3Schema(String(effectiveIndustry));
-        
+
         // 1) Schema defaults (all questions get some value)
         const schemaDefaults: Record<string, unknown> = {};
         schema.questions.forEach((q) => {
@@ -3496,14 +2963,14 @@ export function useWizardV7() {
             schemaDefaults[q.id] = false;
           }
         });
-        
+
         // 2) Template baseline defaults (industry-specific, may be subset)
         const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
-        
+
         // 3) Intelligent defaults from location/business intel
         const intelPatch = api.buildIntelPatch(state.locationIntel);
         const businessPatch = api.buildBusinessPatch(state.businessCard);
-        
+
         // 4) Merge: schema → template → intel → business (later wins)
         const mergedAnswers = {
           ...schemaDefaults,
@@ -3511,18 +2978,21 @@ export function useWizardV7() {
           ...intelPatch,
           ...businessPatch,
         };
-        
-        devLog("[V7 SSOT] selectIndustry: applied baseline + intel + business patches (SCHEMA-aligned)", {
-          industry,
-          effectiveIndustry,
-          schemaQ: schema.questions.length,
-          schemaDefaultsCount: Object.keys(schemaDefaults).length,
-          baselineCount: Object.keys(baselineAnswers).length,
-          intelCount: Object.keys(intelPatch).length,
-          businessCount: Object.keys(businessPatch).length,
-          mergedCount: Object.keys(mergedAnswers).length,
-        });
-        
+
+        devLog(
+          "[V7 SSOT] selectIndustry: applied baseline + intel + business patches (SCHEMA-aligned)",
+          {
+            industry,
+            effectiveIndustry,
+            schemaQ: schema.questions.length,
+            schemaDefaultsCount: Object.keys(schemaDefaults).length,
+            baselineCount: Object.keys(baselineAnswers).length,
+            intelCount: Object.keys(intelPatch).length,
+            businessCount: Object.keys(businessPatch).length,
+            mergedCount: Object.keys(mergedAnswers).length,
+          }
+        );
+
         dispatch({
           type: "SET_STEP3_ANSWERS",
           answers: mergedAnswers,
@@ -3964,18 +3434,14 @@ export function useWizardV7() {
                 industry: inputsUsed.industry,
                 gridMode: inputsUsed.gridMode,
                 // System add-ons (Step 4 → pricingBridge → calculateQuote)
-                solarMW: addOns?.includeSolar && addOns.solarKW > 0
-                  ? addOns.solarKW / 1000
-                  : undefined,
-                generatorMW: addOns?.includeGenerator && addOns.generatorKW > 0
-                  ? addOns.generatorKW / 1000
-                  : undefined,
-                generatorFuelType: addOns?.includeGenerator
-                  ? addOns.generatorFuelType
-                  : undefined,
-                windMW: addOns?.includeWind && addOns.windKW > 0
-                  ? addOns.windKW / 1000
-                  : undefined,
+                solarMW:
+                  addOns?.includeSolar && addOns.solarKW > 0 ? addOns.solarKW / 1000 : undefined,
+                generatorMW:
+                  addOns?.includeGenerator && addOns.generatorKW > 0
+                    ? addOns.generatorKW / 1000
+                    : undefined,
+                generatorFuelType: addOns?.includeGenerator ? addOns.generatorFuelType : undefined,
+                windMW: addOns?.includeWind && addOns.windKW > 0 ? addOns.windKW / 1000 : undefined,
               },
               assumptions: baseQuote.notes?.filter((n) => !n.startsWith("⚠️")),
               warnings: baseQuote.notes
@@ -4097,15 +3563,18 @@ export function useWizardV7() {
                   const gross = pricingResult.data.grossCost;
                   return {
                     batteryCost: bd.batteries?.totalCost,
-                    batteryPerKWh: bessKWh > 0 ? Math.round(bd.batteries.totalCost / bessKWh) : undefined,
+                    batteryPerKWh:
+                      bessKWh > 0 ? Math.round(bd.batteries.totalCost / bessKWh) : undefined,
                     inverterCost: bd.inverters?.totalCost,
-                    inverterPerKW: bessKW > 0 ? Math.round(bd.inverters.totalCost / bessKW) : undefined,
+                    inverterPerKW:
+                      bessKW > 0 ? Math.round(bd.inverters.totalCost / bessKW) : undefined,
                     transformerCost: bd.transformers?.totalCost,
                     switchgearCost: bd.switchgear?.totalCost,
                     solarCost: bd.solar?.totalCost,
                     solarPerWatt: bd.solar?.costPerWatt,
                     generatorCost: bd.generators?.totalCost,
                     generatorPerKW: bd.generators?.costPerKW,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     installationCost: (pricingResult.data as any).financials?.installationCost,
                     totalEquipmentCost: pricingResult.data.baseCost,
                     allInPerKW: bessKW > 0 ? Math.round(gross / bessKW) : undefined,
@@ -4160,7 +3629,8 @@ export function useWizardV7() {
 
           // Industry template quality
           const industryConf: "v1" | "fallback" =
-            (template?.industry as string) === "generic" || (template?._effectiveTemplate as string) === "generic"
+            (template?.industry as string) === "generic" ||
+            (template?._effectiveTemplate as string) === "generic"
               ? "fallback"
               : "v1";
 
@@ -4310,7 +3780,14 @@ export function useWizardV7() {
       locationIntel: state.locationIntel ?? undefined,
       addOns: state.step4AddOns,
     });
-  }, [runPricingSafe, state.industry, state.step3Answers, state.location, state.locationIntel, state.step4AddOns]);
+  }, [
+    runPricingSafe,
+    state.industry,
+    state.step3Answers,
+    state.location,
+    state.locationIntel,
+    state.step4AddOns,
+  ]);
 
   /**
    * recalculateWithAddOns - Re-run pricing with new add-on configuration from Step 4.
@@ -4318,45 +3795,48 @@ export function useWizardV7() {
    * Flow: User toggles solar/generator/EV in Step 4 → saves add-ons → re-runs pricing.
    * Layer A (load profile) is re-computed (no cache), Layer B (pricing) gets add-on values.
    */
-  const recalculateWithAddOns = useCallback(async (addOns: SystemAddOns) => {
-    if (state.industry === "auto") {
-      devWarn("[V7] Cannot recalculate: industry not set");
-      return { ok: false as const, error: "Industry not set" };
-    }
-    // 1. Persist add-ons to state
-    dispatch({ type: "SET_STEP4_ADDONS", addOns });
+  const recalculateWithAddOns = useCallback(
+    async (addOns: SystemAddOns) => {
+      if (state.industry === "auto") {
+        devWarn("[V7] Cannot recalculate: industry not set");
+        return { ok: false as const, error: "Industry not set" };
+      }
+      // 1. Persist add-ons to state
+      dispatch({ type: "SET_STEP4_ADDONS", addOns });
 
-    // ✅ MERLIN MEMORY (Feb 11, 2026): Persist add-ons configuration
-    // ✅ MERLIN MEMORY: Bump add-on change counter for session telemetry
-    const sessionForAddOns = merlinMemory.get("session");
-    if (sessionForAddOns) {
-      merlinMemory.patch("session", {
-        addOnChanges: (sessionForAddOns.addOnChanges ?? 0) + 1,
-        lastActiveAt: Date.now(),
+      // ✅ MERLIN MEMORY (Feb 11, 2026): Persist add-ons configuration
+      // ✅ MERLIN MEMORY: Bump add-on change counter for session telemetry
+      const sessionForAddOns = merlinMemory.get("session");
+      if (sessionForAddOns) {
+        merlinMemory.patch("session", {
+          addOnChanges: (sessionForAddOns.addOnChanges ?? 0) + 1,
+          lastActiveAt: Date.now(),
+        });
+      }
+      merlinMemory.set("addOns", {
+        includeSolar: addOns.includeSolar,
+        solarKW: addOns.solarKW,
+        includeGenerator: addOns.includeGenerator,
+        generatorKW: addOns.generatorKW,
+        generatorFuelType: addOns.generatorFuelType,
+        includeWind: addOns.includeWind,
+        windKW: addOns.windKW,
+        // itcBonuses: addOns.itcBonuses, // DISABLED
+        updatedAt: Date.now(),
       });
-    }
-    merlinMemory.set("addOns", {
-      includeSolar: addOns.includeSolar,
-      solarKW: addOns.solarKW,
-      includeGenerator: addOns.includeGenerator,
-      generatorKW: addOns.generatorKW,
-      generatorFuelType: addOns.generatorFuelType,
-      includeWind: addOns.includeWind,
-      windKW: addOns.windKW,
-      // itcBonuses: addOns.itcBonuses, // DISABLED
-      updatedAt: Date.now(),
-    });
 
-    // 2. Re-run pricing with new add-ons
-    dispatch({ type: "PRICING_RETRY" });
-    return runPricingSafe({
-      industry: state.industry,
-      answers: state.step3Answers,
-      location: state.location ?? undefined,
-      locationIntel: state.locationIntel ?? undefined,
-      addOns,
-    });
-  }, [runPricingSafe, state.industry, state.step3Answers, state.location, state.locationIntel]);
+      // 2. Re-run pricing with new add-ons
+      dispatch({ type: "PRICING_RETRY" });
+      return runPricingSafe({
+        industry: state.industry,
+        answers: state.step3Answers,
+        location: state.location ?? undefined,
+        locationIntel: state.locationIntel ?? undefined,
+        addOns,
+      });
+    },
+    [runPricingSafe, state.industry, state.step3Answers, state.location, state.locationIntel]
+  );
 
   /**
    * retryTemplate — Attempt to reload an industry-specific template when currently in fallback mode.
@@ -4415,13 +3895,13 @@ export function useWizardV7() {
   // - Validation failures BLOCK (user must fix)
   // - Pricing failures DO NOT BLOCK (shown as banner in Results)
   // - Navigation proceeds regardless of pricing outcome
-  
+
   /* ============================================================
      Helper Functions: Retry Logic with Exponential Backoff
   ============================================================ */
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+  const withTimeout = <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
     return Promise.race([
       promise,
       new Promise<T>((_, reject) =>
@@ -4430,7 +3910,7 @@ export function useWizardV7() {
     ]);
   };
 
-  const retry = async <T,>(
+  const retry = async <T>(
     fn: () => Promise<T>,
     options: { attempts?: number; baseDelayMs?: number; timeoutMs?: number } = {}
   ): Promise<T> => {
@@ -4465,7 +3945,7 @@ export function useWizardV7() {
         goalsConfirmed: state.goalsConfirmed,
         step3Complete: state.step3Complete,
       });
-      
+
       // ✅ FIX (Feb 10, 2026): Check prerequisites and guide user to fix missing steps
       if (!state.locationConfirmed) {
         devError("[submitStep3] ❌ Blocked: Location not confirmed");
@@ -4476,7 +3956,7 @@ export function useWizardV7() {
         setStep("location", "prerequisite_missing");
         return;
       }
-      
+
       if (!state.goalsConfirmed) {
         devError("[submitStep3] ❌ Blocked: Goals not confirmed");
         setError({
@@ -4486,27 +3966,29 @@ export function useWizardV7() {
         setStep("location", "prerequisite_missing");
         return;
       }
-      
+
       clearError();
       abortOngoing();
       dispatch({ type: "DEBUG_TAG", lastAction: "submitStep3" });
 
       // ✅ SSOT FIX (Feb 10, 2026): Use TEMPLATE as SSOT for validation
       // Template questions are what we rendered + seeded defaults for
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       const effectiveIndustry =
         (state.step3Template as any)?.effectiveIndustry ||
         (state.step3Template as any)?.selectedIndustry ||
         state.industry;
-      
+
       // ✅ SSOT: Get template questions (what was actually rendered)
       const templateQuestions = (state.step3Template as any)?.questions ?? [];
       const templateQuestionCount = templateQuestions.length;
-      
+
       // Required IDs from template (use template.required flag, or treat all as required)
       const templateRequiredIds = templateQuestions
         .filter((q: { required?: boolean }) => q.required !== false) // Default to required unless explicitly false
         .map((q: { id: string }) => q.id);
-      
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+
       devLog("[V7] submitStep3 called (TEMPLATE SSOT)", {
         step: state.step,
         industry: state.industry,
@@ -4517,13 +3999,13 @@ export function useWizardV7() {
         step3Complete: state.step3Complete,
         pricingStatus: state.pricingStatus,
       });
-      
+
       // Guard: prevent double-submission while pricing is in flight
       if (state.pricingStatus === "pending") {
         devWarn("[V7] submitStep3 blocked: pricing already pending");
         return;
       }
-      
+
       // ✅ FIX (Feb 5, 2026): Accept ZIP-only minimal location
       let location = state.location;
       if (!location) {
@@ -4543,7 +4025,7 @@ export function useWizardV7() {
         setError({ code: "STATE", message: "Profile template missing. Reload Step 3." });
         return;
       }
-      
+
       // ✅ SSOT: Validate against TEMPLATE (what we actually rendered)
       const answers = answersOverride ?? state.step3Answers;
       const missingIds = templateRequiredIds.filter((id: string) => {
@@ -4551,7 +4033,7 @@ export function useWizardV7() {
         // Empty answer check
         return val == null || val === "" || (Array.isArray(val) && val.length === 0);
       });
-      
+
       if (missingIds.length > 0) {
         // ✅ ENHANCED DEBUG: Log complete validation context
         devWarn("[V7] submitStep3 blocked (TEMPLATE validation)", {
@@ -4564,12 +4046,14 @@ export function useWizardV7() {
           step: state.step,
           step3Complete: state.step3Complete,
         });
-        
-        const fieldNames = missingIds.map((id: string) => {
-          const q = templateQuestions.find((tq: { id: string }) => tq.id === id);
-          return q?.label || id;
-        }).join(", ");
-        
+
+        const fieldNames = missingIds
+          .map((id: string) => {
+            const q = templateQuestions.find((tq: { id: string }) => tq.id === id);
+            return q?.label || id;
+          })
+          .join(", ");
+
         setError({ code: "VALIDATION", message: `Please complete required fields: ${fieldNames}` });
         return;
       }
@@ -4634,11 +4118,11 @@ export function useWizardV7() {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         devError("[V7 SSOT] submitStep3 failed after retries:", errorMessage);
-        
+
         // ✅ Dispatch FAILED but still allow progression (non-blocking)
-        dispatch({ 
-          type: "SUBMIT_STEP3_FAILED", 
-          error: { message: errorMessage, retries: 3 } 
+        dispatch({
+          type: "SUBMIT_STEP3_FAILED",
+          error: { message: errorMessage, retries: 3 },
         });
 
         // ✅ Still transition to options even if backend submission failed
@@ -4880,11 +4364,14 @@ export function useWizardV7() {
           return;
         }
         if (!state.step3Complete) {
-          setError({ code: "STATE", message: "Step 3 incomplete. Please answer all required questions." });
+          setError({
+            code: "STATE",
+            message: "Step 3 incomplete. Please answer all required questions.",
+          });
           setStep("profile", "prereq_missing");
           return;
         }
-        
+
         const ok = stepCanProceed(state, "results");
         if (!ok.ok) {
           setError({ code: "STATE", message: ok.reason ?? "Cannot proceed to Results." });
@@ -4934,25 +4421,28 @@ export function useWizardV7() {
     // ✅ FIX (Feb 10, 2026): Only evaluate gates for current step or forward transitions
     // This prevents "Step 3 with locationConfirmed=false" gate spam that fights UI state
     const currentStep = state.step;
-    
+
     // Only check location gate if we're ON location step or ABOUT TO leave it
-    const canGoIndustry = 
+    const canGoIndustry =
       currentStep === "location" || currentStep === "industry"
         ? stepCanProceed(state, "location").ok
         : true; // Don't block if we're past it
-    
+
     // Only check industry gate if we're ON industry step or ABOUT TO leave it
-    const canGoProfile = 
+    const canGoProfile =
       currentStep === "industry" || currentStep === "profile"
         ? stepCanProceed(state, "industry").ok
         : true; // Don't block if we're past it
-    
+
     // Only check results gate if we're TRYING to enter results
-    const canGoResults = 
-      currentStep === "profile" || currentStep === "options" || currentStep === "magicfit" || currentStep === "results"
+    const canGoResults =
+      currentStep === "profile" ||
+      currentStep === "options" ||
+      currentStep === "magicfit" ||
+      currentStep === "results"
         ? stepCanProceed(state, "results").ok
         : true;
-    
+
     return {
       canGoIndustry,
       canGoProfile,
@@ -5167,11 +4657,8 @@ export function useWizardV7() {
     goBack,
     goToStep,
 
-    // step 1: location
-    updateLocationRaw,
-    submitLocation,
-    confirmLocation,
-    primeLocationIntel,
+    // step 1: location (from useWizardLocation hook)
+    ...locationActions,
 
     // step 1: goals
     setGoals,
@@ -5187,11 +4674,6 @@ export function useWizardV7() {
     toggleGenerator,
     toggleEV,
     confirmAddOns,
-
-    // step 1: business (V6 parity)
-    setBusinessDraft,
-    confirmBusiness,
-    skipBusiness,
 
     // step 2
     selectIndustry,
@@ -5223,26 +4705,29 @@ export function useWizardV7() {
     recalculateWithAddOns, // Re-run pricing with new add-on config (solar/gen/wind)
 
     // step 5: MagicFit tier selection → update wizard quote
-    updateQuote: useCallback((partial: Partial<QuoteOutput>) => {
-      const merged: QuoteOutput = { ...state.quote, ...partial };
-      dispatch({ type: "SET_QUOTE", quote: merged });
+    updateQuote: useCallback(
+      (partial: Partial<QuoteOutput>) => {
+        const merged: QuoteOutput = { ...state.quote, ...partial };
+        dispatch({ type: "SET_QUOTE", quote: merged });
 
-      // ✅ MERLIN MEMORY (Feb 11, 2026): Persist quote snapshot
-      merlinMemory.set("quote", {
-        peakLoadKW: merged.peakLoadKW,
-        bessKWh: merged.bessKWh,
-        bessMW: merged.bessKW ? merged.bessKW / 1000 : undefined,
-        capexUSD: merged.capexUSD,
-        totalCost: merged.capexUSD,
-        netCost: merged.capexUSD,
-        annualSavingsUSD: merged.annualSavingsUSD,
-        annualSavings: merged.annualSavingsUSD,
-        paybackYears: merged.paybackYears ?? merged.roiYears,
-        npv: merged.npv,
-        irr: merged.irr,
-        generatedAt: Date.now(),
-      });
-    }, [state.quote]),
+        // ✅ MERLIN MEMORY (Feb 11, 2026): Persist quote snapshot
+        merlinMemory.set("quote", {
+          peakLoadKW: merged.peakLoadKW,
+          bessKWh: merged.bessKWh,
+          bessMW: merged.bessKW ? merged.bessKW / 1000 : undefined,
+          capexUSD: merged.capexUSD,
+          totalCost: merged.capexUSD,
+          netCost: merged.capexUSD,
+          annualSavingsUSD: merged.annualSavingsUSD,
+          annualSavings: merged.annualSavingsUSD,
+          paybackYears: merged.paybackYears ?? merged.roiYears,
+          npv: merged.npv,
+          irr: merged.irr,
+          generatedAt: Date.now(),
+        });
+      },
+      [state.quote]
+    ),
 
     // misc
     clearError,
@@ -5307,8 +4792,8 @@ function _validateStep3(
   // Get industry from template metadata
   const industry = String(
     (template as Record<string, unknown>).industry ??
-    (template as Record<string, unknown>).industryId ??
-    ""
+      (template as Record<string, unknown>).industryId ??
+      ""
   );
 
   // Get Tier 1 blockers for this industry (if configured)
