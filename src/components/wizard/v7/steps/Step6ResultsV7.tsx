@@ -108,7 +108,7 @@ function fmtNum(n?: number | null, fallback = "—"): string {
 
 // Badge resolver, contributor helpers: imported from ../shared/badgeResolver
 
-export default function Step6ResultsV7({ state, actions }: Props) {
+const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Props) {
   // ============================================================================
   // MERLIN MEMORY — canonical cross-step data reads
   // ============================================================================
@@ -1158,9 +1158,9 @@ export default function Step6ResultsV7({ state, actions }: Props) {
         annualSavings={Number(quote.annualSavingsUSD ?? 0)}
         bessKWh={Number(quote.bessKWh ?? 0) || undefined}
         solarKW={Number(quote.solarKW ?? 0) || undefined}
-        industry={data.industry || undefined}
-        location={locLine !== "—" ? locLine : undefined}
       />
     </div>
   );
-}
+});
+
+export default Step6ResultsV7;

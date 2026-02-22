@@ -10,7 +10,7 @@
  * No cross-step dependencies. No pricing/DB/async blocking.
  */
 
-import React, { useMemo, useEffect, useState } from "react";
+import React, { useMemo, useEffect, useState, lazy, Suspense } from "react";
 import { useWizardV7 } from "@/wizard/v7/hooks/useWizardV7";
 import { V7_ENABLE_GATED_STEP3, V7_USE_CURATED_STEP3 } from "@/wizard/v7/featureFlags";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
@@ -57,8 +57,14 @@ import {
   Step3GatedV7,
   Step4OptionsV7,
   Step5MagicFitV7,
-  Step6ResultsV7,
 } from "@/components/wizard/v7/steps";
+
+// ⚡ Lazy load Step6 (code splitting for results page - reduces initial bundle)
+const Step6ResultsV7 = lazy(() =>
+  import("@/components/wizard/v7/steps/Step6ResultsV7").then((module) => ({
+    default: module.default,
+  }))
+);
 
 // ⚠️ STEP_ORDER removed — import WIZARD_STEP_ORDER from wizardStepGates.ts (SSOT)
 
@@ -989,18 +995,29 @@ function WizardV7Page() {
         )}
 
         {state.step === "results" && (
-          <Step6ResultsV7
-            state={state}
-            actions={{
-              goBack: wizard.goBack,
-              resetSession: wizard.resetSession,
-              goToStep: wizard.goToStep,
-              // Phase 6: Pricing retry (non-blocking)
-              retryPricing: wizard.retryPricing,
-              // Phase 8: System add-ons (solar/generator/wind)
-              recalculateWithAddOns: wizard.recalculateWithAddOns,
-            }}
-          />
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center space-y-4">
+                  <div className="inline-block w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+                  <p className="text-sm text-slate-400">Loading results...</p>
+                </div>
+              </div>
+            }
+          >
+            <Step6ResultsV7
+              state={state}
+              actions={{
+                goBack: wizard.goBack,
+                resetSession: wizard.resetSession,
+                goToStep: wizard.goToStep,
+                // Phase 6: Pricing retry (non-blocking)
+                retryPricing: wizard.retryPricing,
+                // Phase 8: System add-ons (solar/generator/wind)
+                recalculateWithAddOns: wizard.recalculateWithAddOns,
+              }}
+            />
+          </Suspense>
         )}
       </WizardShellV7>
 

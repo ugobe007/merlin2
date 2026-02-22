@@ -62,6 +62,7 @@
     "src/components/admin/**",
     "src/components/modals/EmailCaptureModal.tsx",
     "src/components/ProjectInfoForm.tsx",
-    "src/utils/testDatabaseConnection.ts"
+    "src/utils/testDatabaseConnection.ts",
+    "src/tests/_deprecated/**"
   ]
 }

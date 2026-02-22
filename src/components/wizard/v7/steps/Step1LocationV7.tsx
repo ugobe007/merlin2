@@ -47,7 +47,7 @@ interface Props {
   onGoalsConfirmedAdvance?: () => void;
 }
 
-export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvance }: Props) {
+const Step1LocationV7 = React.memo(function Step1LocationV7({ state, actions, onGoalsConfirmedAdvance }: Props) {
   const {
     updateLocationRaw,
     submitLocation,
@@ -919,4 +919,6 @@ export default function Step1LocationV7({ state, actions, onGoalsConfirmedAdvanc
       <TrueQuoteModal isOpen={showTrueQuoteModal} onClose={() => setShowTrueQuoteModal(false)} />
     </div>
   );
-}
+});
+
+export default Step1LocationV7;
