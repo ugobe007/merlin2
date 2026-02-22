@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import merlinImage from "@/assets/images/merlin_avatar.png";
+import merlinImage from "@/assets/images/new_profile_merlin.png";
 
 interface MerlinTipProps {
   tip: string;
