@@ -6,7 +6,6 @@ import { validateTemplateAgainstCalculator } from "@/wizard/v7/templates/validat
 import { applyTemplateMapping } from "@/wizard/v7/templates/applyMapping";
 import type { CalcInputs } from "@/wizard/v7/calculators/contract";
 import { ContractRunLogger } from "@/wizard/v7/telemetry/contractTelemetry";
-import { validateTemplate, formatValidationResult } from "@/wizard/v7/validation/templateValidator";
 import { sanityCheckQuote, type PricingSanity } from "@/wizard/v7/utils/pricingSanity";
 import { getTier1Blockers, resolveStep3Schema } from "@/wizard/v7/schema/curatedFieldsResolver";
 
@@ -28,6 +27,7 @@ import {
 import { merlinMemory } from "@/wizard/v7/memory";
 import { devLog, devWarn, devError } from "@/wizard/v7/debug/devLog";
 import { useWizardLocation } from "./useWizardLocation";
+import { useWizardStep3 } from "./useWizardStep3";
 
 // ✅ Wizard API (Feb 22, 2026): External service integrations
 import { wizardAPI as api } from "@/wizard/v7/api/wizardAPI";
@@ -2519,188 +2519,6 @@ export function useWizardV7() {
     ]
   );
 
-  // Step 3: answer updates (SSOT) - User edits are source="user"
-  const setStep3Answer = useCallback((id: string, value: unknown) => {
-    dispatch({ type: "DEBUG_TAG", lastAction: "setStep3Answer" });
-    dispatch({ type: "SET_STEP3_ANSWER", id, value, source: "user" });
-
-    // Completion can be computed and applied later (explicit submit)
-  }, []);
-
-  const setStep3Answers = useCallback((answers: Step3Answers, source: AnswerSource = "user") => {
-    dispatch({ type: "DEBUG_TAG", lastAction: "setStep3Answers" });
-    dispatch({ type: "SET_STEP3_ANSWERS", answers, source });
-  }, []);
-
-  /**
-   * applyIntelPatch - Apply location intel updates at runtime
-   *
-   * Called when locationIntel changes AFTER Step 3 is already loaded.
-   * Uses PATCH_STEP3_ANSWERS so it won't stomp user edits.
-   */
-  const applyIntelPatch = useCallback(() => {
-    const patch = api.buildIntelPatch(state.locationIntel);
-    if (Object.keys(patch).length > 0) {
-      dispatch({ type: "PATCH_STEP3_ANSWERS", patch, source: "location_intel" });
-      dispatch({
-        type: "DEBUG_NOTE",
-        note: `Applied intel patch: ${Object.keys(patch).join(", ")}`,
-      });
-    }
-  }, [state.locationIntel]);
-
-  /**
-   * resetToDefaults - User explicitly requests "reset to defaults"
-   *
-   * This WILL overwrite user edits because user asked for it.
-   * Provenance is rewritten to template_default/question_default.
-   *
-   * @param scope - "all" or { partId: string } for partial reset
-   */
-  const resetToDefaults = useCallback((scope: "all" | { partId: string } = "all") => {
-    dispatch({ type: "RESET_STEP3_TO_DEFAULTS", scope });
-    dispatch({ type: "DEBUG_NOTE", note: `User reset to defaults: ${JSON.stringify(scope)}` });
-  }, []);
-
-  // ============================================================
-  // Step 3 FSM Actions
-  // ============================================================
-
-  /**
-   * markDefaultsApplied - Record that defaults have been applied for a part
-   * Guards against re-applying defaults on re-render
-   */
-  const markDefaultsApplied = useCallback(
-    (partId: string) => {
-      const templateId = state.step3Template?.id || "unknown";
-      dispatch({ type: "STEP3_DEFAULTS_APPLIED", partId, templateId });
-    },
-    [state.step3Template?.id]
-  );
-
-  /**
-   * goToNextPart - Advance to next part in Step 3
-   * Guarded by FSM - only works from part_active state
-   */
-  const goToNextPart = useCallback(() => {
-    dispatch({ type: "STEP3_PART_NEXT" });
-  }, []);
-
-  /**
-   * goToPrevPart - Go back to previous part in Step 3
-   */
-  const goToPrevPart = useCallback(() => {
-    dispatch({ type: "STEP3_PART_PREV" });
-  }, []);
-
-  /**
-   * setPartIndex - Jump to specific part index
-   */
-  const setPartIndex = useCallback((index: number) => {
-    dispatch({ type: "STEP3_PART_SET", index });
-  }, []);
-
-  /**
-   * hasDefaultsApplied - Check if defaults have been applied for a part
-   */
-  const hasDefaultsApplied = useCallback(
-    (partId: string): boolean => {
-      const templateId = state.step3Template?.id || "unknown";
-      const key = `${templateId}.${partId}`;
-      return state.step3DefaultsAppliedParts.includes(key);
-    },
-    [state.step3Template?.id, state.step3DefaultsAppliedParts]
-  );
-
-  // ============================================================
-  // Step 3 Defaults Helpers (SSOT-authoritative)
-  // ============================================================
-
-  /**
-   * partHasAnyDefaults - Check if a part has any defaults from any source
-   *
-   * Sources checked (in priority order):
-   * 1. template.defaults[questionId] - bulk template defaults
-   * 2. question.defaultValue - per-question fallback
-   *
-   * This is the SSOT-authoritative function. UI should NEVER reimplement this check.
-   */
-  const partHasAnyDefaults = useCallback(
-    (_partId: string): boolean => {
-      const template = state.step3Template;
-      if (!template) return false;
-
-      // Get questions for this part
-      // For "profile" (single-page view), all questions belong to that part
-      const questions = template.questions;
-      if (!questions || questions.length === 0) return false;
-
-      const templateDefaults = template.defaults ?? {};
-
-      // Check if ANY question has a default from either source
-      return questions.some(
-        (q) => templateDefaults[q.id] !== undefined || q.defaultValue !== undefined
-      );
-    },
-    [state.step3Template]
-  );
-
-  /**
-   * canApplyDefaults - Check if defaults can be applied (not yet applied)
-   *
-   * Returns true if:
-   * 1. Part has any defaults (from template.defaults or q.defaultValue)
-   * 2. Defaults haven't been applied yet for this templateId+partId
-   */
-  const canApplyDefaults = useCallback(
-    (partId: string): boolean => {
-      return partHasAnyDefaults(partId) && !hasDefaultsApplied(partId);
-    },
-    [partHasAnyDefaults, hasDefaultsApplied]
-  );
-
-  /**
-   * canResetToDefaults - Check if reset button should be shown
-   *
-   * Returns true if part has any defaults (from either source).
-   * Unlike canApplyDefaults, this doesn't check if already applied
-   * because user can always reset even after defaults were applied.
-   */
-  const canResetToDefaults = useCallback(
-    (partId: string): boolean => {
-      return partHasAnyDefaults(partId);
-    },
-    [partHasAnyDefaults]
-  );
-
-  /**
-   * getDefaultForQuestion - Get the default value for a specific question
-   *
-   * Priority:
-   * 1. template.defaults[questionId] (explicit template default)
-   * 2. question.defaultValue (per-question fallback)
-   * 3. null (no default)
-   */
-  const getDefaultForQuestion = useCallback(
-    (questionId: string): unknown => {
-      const template = state.step3Template;
-      if (!template) return null;
-
-      const templateDefaults = template.defaults ?? {};
-      if (templateDefaults[questionId] !== undefined) {
-        return templateDefaults[questionId];
-      }
-
-      const question = template.questions.find((q) => q.id === questionId);
-      if (question?.defaultValue !== undefined) {
-        return question.defaultValue;
-      }
-
-      return null;
-    },
-    [state.step3Template]
-  );
-
   /**
    * runPricingSafe - Phase 6: Non-blocking pricing with sanity checks
    *
@@ -3371,329 +3189,36 @@ export function useWizardV7() {
     throw lastError || new Error("All retry attempts failed");
   };
 
-  const submitStep3 = useCallback(
-    async (answersOverride?: Step3Answers) => {
-      // Diagnostic log (Step3→Step4 root cause analysis)
-      devLog("[submitStep3] start", {
-        step: state.step,
-        locationConfirmed: state.locationConfirmed,
-        goalsConfirmed: state.goalsConfirmed,
-        step3Complete: state.step3Complete,
-      });
-
-      // ✅ FIX (Feb 10, 2026): Check prerequisites and guide user to fix missing steps
-      if (!state.locationConfirmed) {
-        devError("[submitStep3] ❌ Blocked: Location not confirmed");
-        setError({
-          code: "PREREQUISITE",
-          message: "Please confirm your location on Step 1 first.",
-        });
-        setStep("location", "prerequisite_missing");
-        return;
-      }
-
-      if (!state.goalsConfirmed) {
-        devError("[submitStep3] ❌ Blocked: Goals not confirmed");
-        setError({
-          code: "PREREQUISITE",
-          message: "Please complete the goals section on Step 1 first.",
-        });
-        setStep("location", "prerequisite_missing");
-        return;
-      }
-
-      clearError();
-      abortOngoing();
-      dispatch({ type: "DEBUG_TAG", lastAction: "submitStep3" });
-
-      // ✅ SSOT FIX (Feb 10, 2026): Use TEMPLATE as SSOT for validation
-      // Template questions are what we rendered + seeded defaults for
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-      const effectiveIndustry =
-        (state.step3Template as any)?.effectiveIndustry ||
-        (state.step3Template as any)?.selectedIndustry ||
-        state.industry;
-
-      // ✅ SSOT: Get template questions (what was actually rendered)
-      const templateQuestions = (state.step3Template as any)?.questions ?? [];
-      const templateQuestionCount = templateQuestions.length;
-
-      // Required IDs from template (use template.required flag, or treat all as required)
-      const templateRequiredIds = templateQuestions
-        .filter((q: { required?: boolean }) => q.required !== false) // Default to required unless explicitly false
-        .map((q: { id: string }) => q.id);
-      /* eslint-enable @typescript-eslint/no-explicit-any */
-
-      devLog("[V7] submitStep3 called (TEMPLATE SSOT)", {
-        step: state.step,
-        industry: state.industry,
-        effectiveIndustry,
-        answersCount: Object.keys(state.step3Answers ?? {}).length,
-        templateQ: templateQuestionCount,
-        templateRequiredCount: templateRequiredIds.length,
-        step3Complete: state.step3Complete,
-        pricingStatus: state.pricingStatus,
-      });
-
-      // Guard: prevent double-submission while pricing is in flight
-      if (state.pricingStatus === "pending") {
-        devWarn("[V7] submitStep3 blocked: pricing already pending");
-        return;
-      }
-
-      // ✅ FIX (Feb 5, 2026): Accept ZIP-only minimal location
-      let location = state.location;
-      if (!location) {
-        location = buildMinimalLocationFromZip(state);
-        if (!location) {
-          setError({ code: "STATE", message: "ZIP code missing. Go back to Step 1." });
-          return;
-        }
-        // Hydrate so future checks pass
-        dispatch({ type: "SET_LOCATION", location });
-      }
-      if (state.industry === "auto") {
-        setError({ code: "STATE", message: "Industry missing. Go back to Step 2." });
-        return;
-      }
-      if (!state.step3Template || templateQuestionCount === 0) {
-        setError({ code: "STATE", message: "Profile template missing. Reload Step 3." });
-        return;
-      }
-
-      // ✅ SSOT: Validate against TEMPLATE (what we actually rendered)
-      const answers = answersOverride ?? state.step3Answers;
-      const missingIds = templateRequiredIds.filter((id: string) => {
-        const val = answers?.[id];
-        // Empty answer check
-        return val == null || val === "" || (Array.isArray(val) && val.length === 0);
-      });
-
-      if (missingIds.length > 0) {
-        // ✅ ENHANCED DEBUG: Log complete validation context
-        devWarn("[V7] submitStep3 blocked (TEMPLATE validation)", {
-          effectiveIndustry,
-          reason: "Missing required fields",
-          missingIds,
-          answersCount: Object.keys(answers ?? {}).length,
-          templateQ: templateQuestionCount,
-          templateRequiredCount: templateRequiredIds.length,
-          step: state.step,
-          step3Complete: state.step3Complete,
-        });
-
-        const fieldNames = missingIds
-          .map((id: string) => {
-            const q = templateQuestions.find((tq: { id: string }) => tq.id === id);
-            return q?.label || id;
-          })
-          .join(", ");
-
-        setError({ code: "VALIDATION", message: `Please complete required fields: ${fieldNames}` });
-        return;
-      }
-
-      devLog("[V7] submitStep3 validation PASSED ✅", {
-        effectiveIndustry,
-        answersCount: Object.keys(answers ?? {}).length,
-        willAdvanceTo: "results",
-      });
-
-      // ✅ Dispatch SUBMIT_STEP3_STARTED to signal retry attempt
-      dispatch({ type: "SUBMIT_STEP3_STARTED" });
-
-      try {
-        // Optional: Submit answers to backend with retry logic
-        // If api.submitStep3Answers exists, use it; otherwise skip
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (typeof (api as any)?.submitStep3Answers === "function") {
-          await retry(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            () => (api as any).submitStep3Answers({ industry: state.industry, answers }),
-            { attempts: 3, baseDelayMs: 250, timeoutMs: 9000 }
-          );
-        }
-
-        // ✅ Dispatch SUCCESS to transition to options step (6-step flow)
-        dispatch({ type: "SUBMIT_STEP3_SUCCESS" });
-        devLog("[V7] submitStep3 SUCCESS dispatched → reducer sets step='options'");
-        devLog("[submitStep3] end -> setting step", { nextStep: "options" });
-
-        // ✅ MERLIN MEMORY (Feb 11, 2026): Persist profile + sizing for Steps 4-6
-        // ⚠️ Use || undefined (not ?? 0) — state.quote may not have pricing yet
-        // (pricing runs async after this). Writing 0 would block the
-        // useMerlinData fallback chain from reading state.quote later.
-        const quoteOutput = state.quote;
-        merlinMemory.set("profile", {
-          answers: answers as Record<string, unknown>,
-          peakLoadKW: quoteOutput?.peakLoadKW ?? 0,
-          avgLoadKW: quoteOutput?.baseLoadKW || undefined,
-          energyKWhPerDay: quoteOutput?.energyKWhPerDay || undefined,
-        });
-        if (quoteOutput?.bessKWh) {
-          merlinMemory.set("sizing", {
-            bessKWh: quoteOutput.bessKWh,
-            bessKW: quoteOutput.bessKW ?? 0,
-            durationHours: quoteOutput.durationHours ?? 4,
-            solarKW: quoteOutput.solarKW,
-            generatorKW: quoteOutput.generatorKW,
-          });
-        }
-
-        // ✅ Run pricing in background (non-blocking)
-        // MagicFit will use these results to generate 3 tiers
-        // ✅ FIX: Pass step4AddOns so solar/wind/generator configured in Step 3 flows through
-        runPricingSafe({
-          industry: state.industry,
-          answers,
-          location: state.location ?? undefined,
-          locationIntel: state.locationIntel ?? undefined,
-          addOns: state.step4AddOns,
-        });
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        devError("[V7 SSOT] submitStep3 failed after retries:", errorMessage);
-
-        // ✅ Dispatch FAILED but still allow progression (non-blocking)
-        dispatch({
-          type: "SUBMIT_STEP3_FAILED",
-          error: { message: errorMessage, retries: 3 },
-        });
-
-        // ✅ Still transition to options even if backend submission failed
-        // (Local calculation can proceed without backend — user still sees Options + MagicFit)
-        dispatch({ type: "SET_STEP3_COMPLETE", complete: true });
-        setStep("options", "step3_complete_fallback");
-
-        // ✅ Run pricing in background regardless
-        // ✅ FIX: Pass step4AddOns so solar/wind/generator configured in Step 3 flows through
-        runPricingSafe({
-          industry: state.industry,
-          answers,
-          location: state.location ?? undefined,
-          locationIntel: state.locationIntel ?? undefined,
-          addOns: state.step4AddOns,
-        });
-      }
+  // ============================================================
+  // Step 3: Hook Invocation (Op1b - Feb 22, 2026)
+  // ============================================================
+  const step3Actions = useWizardStep3({
+    state: {
+      step: state.step,
+      industry: state.industry,
+      step3Answers: state.step3Answers,
+      step3AnswersMeta: state.step3AnswersMeta,
+      step3Template: state.step3Template || undefined,
+      step3DefaultsAppliedParts: state.step3DefaultsAppliedParts,
+      locationIntel: state.locationIntel || undefined,
+      businessCard: state.businessCard || undefined,
+      location: state.location || undefined,
+      locationConfirmed: state.locationConfirmed,
+      goalsConfirmed: state.goalsConfirmed,
+      step3Complete: state.step3Complete,
+      pricingStatus: state.pricingStatus,
+      step4AddOns: state.step4AddOns,
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- individual state fields listed for performance
-    [
-      abortOngoing,
-      clearError,
-      runPricingSafe,
-      setError,
-      setStep,
-      state.location,
-      state.locationIntel,
-      state.industry,
-      state.step3Template,
-      state.step3Answers,
-      state.step3AnswersMeta,
-      state.pricingStatus,
-      state.step4AddOns,
-    ]
-  );
-
-  /**
-   * submitStep3Partial - Escape hatch for incomplete Step 3
-   *
-   * Allows navigation to results with incomplete answers.
-   * - Runs Layer A with defaults + partial answers
-   * - Shows "provisional results" warning in Step 4
-   * - Keeps pricing disabled until minimum set is met
-   *
-   * This preserves non-blocking doctrine: founders never get trapped.
-   */
-  const submitStep3Partial = useCallback(
-    async () => {
-      clearError();
-      abortOngoing();
-      dispatch({ type: "DEBUG_TAG", lastAction: "submitStep3Partial" });
-
-      // Guard: prevent double-submission while pricing is in flight
-      if (state.pricingStatus === "pending") {
-        devWarn("[V7] submitStep3Partial blocked: pricing already pending");
-        return;
-      }
-
-      // ✅ FIX (Feb 5, 2026): Accept ZIP-only minimal location
-      let location = state.location;
-      if (!location) {
-        location = buildMinimalLocationFromZip(state);
-        if (!location) {
-          setError({ code: "STATE", message: "ZIP code missing. Go back to Step 1." });
-          return;
-        }
-        dispatch({ type: "SET_LOCATION", location });
-      }
-      if (state.industry === "auto") {
-        setError({ code: "STATE", message: "Industry missing. Go back to Step 2." });
-        return;
-      }
-      if (!state.step3Template) {
-        setError({ code: "STATE", message: "Profile template missing. Reload Step 3." });
-        return;
-      }
-
-      // ✅ Mark as partial (not complete) but allow navigation
-      dispatch({ type: "SET_STEP3_COMPLETE", complete: false });
-
-      // ✅ Navigate to Results IMMEDIATELY (non-blocking)
-      setStep("results", "step3_partial");
-
-      // ── PROVISIONAL PRICING: merge defaults + partial answers ──
-      // Build a complete answer set by filling gaps with defaults.
-      // Priority: user answer > template.defaults > question.defaultValue
-      const mergedAnswers: Record<string, unknown> = {};
-
-      // 1. Seed from template-level defaults
-      if (state.step3Template.defaults) {
-        for (const [key, val] of Object.entries(state.step3Template.defaults)) {
-          if (val !== undefined && val !== null) mergedAnswers[key] = val;
-        }
-      }
-
-      // 2. Overlay per-question defaultValues (slightly higher priority)
-      for (const q of state.step3Template.questions ?? []) {
-        if (q.defaultValue !== undefined && q.defaultValue !== null && !(q.id in mergedAnswers)) {
-          mergedAnswers[q.id] = q.defaultValue;
-        }
-      }
-
-      // 3. Overlay actual user answers (highest priority)
-      for (const [key, val] of Object.entries(state.step3Answers ?? {})) {
-        if (val !== undefined && val !== null) mergedAnswers[key] = val;
-      }
-
-      devLog("[V7] Partial submit - merged defaults + user answers, running provisional pricing");
-
-      // Fire-and-forget provisional pricing (non-blocking, user already on results page)
-      runPricingSafe({
-        industry: state.industry,
-        answers: mergedAnswers,
-        location,
-        locationIntel: state.locationIntel ?? undefined,
-        addOns: state.step4AddOns,
-      }).catch((err) => {
-        devLog("[V7] Provisional pricing failed (non-fatal):", err);
-      });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- state intentionally excluded (only uses specific fields)
-    [
-      abortOngoing,
-      clearError,
-      setError,
-      setStep,
-      runPricingSafe,
-      state.location,
-      state.locationIntel,
-      state.industry,
-      state.step3Template,
-      state.step3Answers,
-      state.pricingStatus,
-      state.step4AddOns,
-    ]
-  );
+    dispatch: dispatch as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    api: api as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    clearError,
+    setError,
+    abortOngoing,
+    setStep: setStep as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    runPricingSafe,
+    buildMinimalLocationFromZip: (minState) =>
+      buildMinimalLocationFromZip({ ...state, ...minState }),
+  });
 
   // Optional: hard jump with gate checks
   const goToStep = useCallback(
@@ -4113,26 +3638,8 @@ export function useWizardV7() {
     // step 2
     selectIndustry,
 
-    // step 3
-    setStep3Answer,
-    setStep3Answers,
-    applyIntelPatch, // Runtime intel updates (won't stomp user edits)
-    resetToDefaults, // Explicit reset with provenance rewrite
-    submitStep3,
-    submitStep3Partial, // Escape hatch: navigate with incomplete answers
-
-    // step 3 FSM controls
-    markDefaultsApplied, // Record defaults applied for a part
-    hasDefaultsApplied, // Check if defaults applied for a part
-    goToNextPart, // Advance to next part (guarded)
-    goToPrevPart, // Go back to previous part
-    setPartIndex, // Jump to specific part
-
-    // step 3 defaults helpers (SSOT-authoritative)
-    partHasAnyDefaults, // Check if part has ANY defaults (template or question)
-    canApplyDefaults, // partHasAnyDefaults && !hasDefaultsApplied
-    canResetToDefaults, // partHasAnyDefaults (always show reset if defaults exist)
-    getDefaultForQuestion, // Get default value for a specific question
+    // step 3 (extracted to useWizardStep3 hook - Op1b Feb 22, 2026)
+    ...step3Actions,
 
     // step 4: pricing (Phase 6: non-blocking)
     retryPricing, // Retry pricing from Results page
