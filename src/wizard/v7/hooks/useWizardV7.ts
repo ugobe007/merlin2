@@ -29,6 +29,9 @@ import { useWizardLifecycle } from "./useWizardLifecycle";
 // ✅ Op1e-1 (Feb 22, 2026): Extracted core state management
 import { useWizardReducer, runContractQuote, type ContractQuoteResult as CoreContractResult } from "./useWizardCore";
 
+// ✅ Op1e-2 (Feb 22, 2026): Extracted Step 2 industry selection
+import { useWizardStep2 } from "./useWizardStep2";
+
 // ✅ Wizard API (Feb 22, 2026): External service integrations
 import { wizardAPI as api } from "@/wizard/v7/api/wizardAPI";
 
@@ -907,194 +910,29 @@ export function useWizardV7() {
   });
 
   // ============================================================
-  // Step 2: Industry Selection
+  // Step 2: Industry Selection (Op1e-2 - Extracted Feb 22, 2026)
+  // ============================================================
+  // Extracted ~188 lines to useWizardStep2.ts
+  // - Template loading and validation
+  // - Schema + template + intel + business defaults merging
+  // - Fallback recovery path
+  // - Merlin Memory integration
   // ============================================================
 
-  // Step 2: user selects industry (SSOT)
-  const selectIndustry = useCallback(
-    async (industry: IndustrySlug) => {
-      clearError();
-      abortOngoing();
-      dispatch({ type: "DEBUG_TAG", lastAction: "selectIndustry" });
+  const step2Actions = useWizardStep2({
+    location: state.location,
+    locationIntel: state.locationIntel,
+    businessCard: state.businessCard,
+    dispatch,
+    clearError,
+    setBusy,
+    setError,
+    setStep,
+    abortOngoing,
+    abortRef,
+  });
 
-      if (!state.location) {
-        setError({ code: "STATE", message: "Location is missing. Go back to Step 1." });
-        return;
-      }
-      if (!industry || industry === "auto") {
-        setError({ code: "VALIDATION", message: "Please select an industry." });
-        return;
-      }
-
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      try {
-        setBusy(true, "Loading profile template...");
-        dispatch({ type: "SET_INDUSTRY", industry, locked: false });
-        dispatch({ type: "DEBUG_TAG", lastApi: "loadStep3Template" });
-
-        // ✅ MERLIN MEMORY (Feb 11, 2026): Persist industry selection
-        merlinMemory.set("industry", {
-          slug: industry,
-          inferred: false,
-        });
-
-        devLog("[V7 SSOT] selectIndustry: calling loadStep3Template for", industry);
-        const template = await api.loadStep3Template(industry, controller.signal);
-        devLog("[V7 SSOT] selectIndustry: template loaded", template?.id);
-        dispatch({ type: "SET_STEP3_TEMPLATE", template });
-        dispatch({ type: "SET_TEMPLATE_MODE", mode: "industry" });
-
-        // ✅ SSOT FIX (Feb 10, 2026): Seed defaults from BOTH template AND schema
-        // Template provides industry-specific defaults (e.g., 18 questions)
-        // Schema provides ALL curated fields (e.g., 27 questions)
-        // Merge ensures no question ID is left undefined
-
-        const effectiveIndustry =
-          (template as Record<string, unknown>).effectiveIndustry ||
-          template.selectedIndustry ||
-          industry;
-
-        const schema = resolveStep3Schema(String(effectiveIndustry));
-
-        // 1) Schema defaults (all questions get some value)
-        const schemaDefaults: Record<string, unknown> = {};
-        schema.questions.forEach((q) => {
-          if (q.smartDefault !== undefined) {
-            schemaDefaults[q.id] = q.smartDefault;
-          } else if (q.type === "select" || q.type === "button_cards") {
-            // Default to first option if no explicit default
-            if (q.options && q.options.length > 0) {
-              schemaDefaults[q.id] = q.options[0].value;
-            }
-          } else if (q.type === "number" || q.type === "number_stepper") {
-            // Default to min or 0
-            schemaDefaults[q.id] = q.validation?.min ?? 0;
-          } else if (q.type === "toggle") {
-            schemaDefaults[q.id] = false;
-          }
-        });
-
-        // 2) Template baseline defaults (industry-specific, may be subset)
-        const { answers: baselineAnswers } = api.computeSmartDefaults(template, null, null);
-
-        // 3) Intelligent defaults from location/business intel
-        const intelPatch = api.buildIntelPatch(state.locationIntel);
-        const businessPatch = api.buildBusinessPatch(state.businessCard);
-
-        // 4) Merge: schema → template → intel → business (later wins)
-        const mergedAnswers = {
-          ...schemaDefaults,
-          ...baselineAnswers,
-          ...intelPatch,
-          ...businessPatch,
-        };
-
-        devLog(
-          "[V7 SSOT] selectIndustry: applied baseline + intel + business patches (SCHEMA-aligned)",
-          {
-            industry,
-            effectiveIndustry,
-            schemaQ: schema.questions.length,
-            schemaDefaultsCount: Object.keys(schemaDefaults).length,
-            baselineCount: Object.keys(baselineAnswers).length,
-            intelCount: Object.keys(intelPatch).length,
-            businessCount: Object.keys(businessPatch).length,
-            mergedCount: Object.keys(mergedAnswers).length,
-          }
-        );
-
-        dispatch({
-          type: "SET_STEP3_ANSWERS",
-          answers: mergedAnswers,
-          source: "template_default",
-        });
-
-        setStep("profile", "industry_selected");
-        devLog("[V7 SSOT] selectIndustry: transitioned to profile step");
-      } catch (err: unknown) {
-        devError("[V7 SSOT] selectIndustry ERROR:", err);
-
-        // AbortError = user navigated away — just surface it
-        if (isAbort(err)) {
-          setError({ code: "ABORTED", message: "Request cancelled." });
-          return; // finally still runs
-        }
-
-        // ──────────────────────────────────────────────────────────
-        // RECOVERY: Template load failed → load generic fallback and
-        // navigate to Step 3 anyway. Merlin never gets stuck.
-        // ──────────────────────────────────────────────────────────
-        devWarn("[V7 SSOT] selectIndustry: template load failed — activating fallback path");
-        try {
-          const { getFallbackTemplate } = await import("@/wizard/v7/templates/templateIndex");
-          const genericTpl = getFallbackTemplate();
-
-          const fallbackTemplate: Step3Template = {
-            id: `generic.fallback`,
-            industry: "other" as IndustrySlug,
-            selectedIndustry: industry,
-            version: genericTpl.version,
-            questions: genericTpl.questions.map((q) => ({
-              id: q.id,
-              label: q.label,
-              type: q.type as Step3Template["questions"][number]["type"],
-              required: q.required,
-              options: q.options as Step3Template["questions"][number]["options"],
-              unit: q.unit,
-              hint: q.hint,
-              min: q.min,
-              max: q.max,
-              defaultValue: genericTpl.defaults?.[q.id] as
-                | string
-                | number
-                | boolean
-                | string[]
-                | undefined,
-            })),
-            defaults: genericTpl.defaults,
-            _effectiveTemplate: "generic",
-          };
-
-          dispatch({ type: "SET_STEP3_TEMPLATE", template: fallbackTemplate });
-          dispatch({ type: "SET_TEMPLATE_MODE", mode: "fallback" });
-
-          // Apply generic defaults
-          const { answers: fallbackAnswers } = api.computeSmartDefaults(
-            fallbackTemplate,
-            null,
-            null
-          );
-          dispatch({
-            type: "SET_STEP3_ANSWERS",
-            answers: fallbackAnswers,
-            source: "template_default",
-          });
-
-          devLog("[V7 SSOT] selectIndustry: fallback template loaded, navigating to profile");
-          setStep("profile", "industry_selected_fallback");
-        } catch (fallbackErr: unknown) {
-          // Even the fallback import failed — surface the original error
-          devError("[V7 SSOT] selectIndustry: fallback also failed", fallbackErr);
-          setError(err);
-        }
-      } finally {
-        setBusy(false);
-        abortRef.current = null;
-      }
-    },
-    [
-      abortOngoing,
-      clearError,
-      setBusy,
-      setError,
-      setStep,
-      state.location,
-      state.locationIntel,
-      state.businessCard,
-    ]
-  );
+  const { selectIndustry } = step2Actions;
 
   /**
    * runPricingSafe - Phase 6: Non-blocking pricing with sanity checks
