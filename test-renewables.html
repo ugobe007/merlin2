@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Testing AdvancedQuoteBuilder - Renewables Section</title>
+  <style>
+    body { 
+      font-family: system-ui; 
+      max-width: 1200px; 
+      margin: 20px auto; 
+      padding: 20px;
+      background: #0a0a0a;
+      color: white;
+    }
+    .test-status { 
+      padding: 20px; 
+      border-radius: 8px; 
+      margin: 20px 0;
+      border: 2px solid #333;
+    }
+    .pass { background: rgba(34, 197, 94, 0.1); border-color: #22c55e; }
+    .fail { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; }
+    .pending { background: rgba(234, 179, 8, 0.1); border-color: #eab308; }
+    h1 { color: #60a5fa; }
+    h2 { color: #a78bfa; margin-top: 30px; }
+    ul { line-height: 1.8; }
+    code { 
+      background: rgba(255,255,255,0.1); 
+      padding: 2px 6px; 
+      border-radius: 3px;
+      color: #fbbf24;
+    }
+    .step { margin: 15px 0; }
+    .step-num { 
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      background: #1e40af;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 30px;
+      margin-right: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 AdvancedQuoteBuilder Renewables Section Test</h1>
+  
+  <div class="test-status pending">
+    <h2>📋 Test Checklist</h2>
+    <div class="step">
+      <span class="step-num">1</span>
+      <strong>Navigate to ProQuote:</strong> Go to <code>http://localhost:5184/quote-builder</code>
+    </div>
+    <div class="step">
+      <span class="step-num">2</span>
+      <strong>Scroll down:</strong> Find the "Renewables & Alternative Power" section
+    </div>
+    <div class="step">
+      <span class="step-num">3</span>
+      <strong>Check master toggle:</strong> "Include Renewables" toggle should be visible
+    </div>
+    <div class="step">
+      <span class="step-num">4</span>
+      <strong>Verify 5 sub-systems render:</strong>
+      <ul>
+        <li>☀️ Solar PV System (installation type, capacity, tracking)</li>
+        <li>🌬️ Wind Turbine System (turbine specs, hub height, wind class)</li>
+        <li>⚡ Fuel Cell System (cell type, fuel type)</li>
+        <li>🔋 Generator System (fuel type, use cases, N+1 redundancy)</li>
+        <li>🚗 EV Chargers (Level 2, DCFC, HPC counts)</li>
+      </ul>
+    </div>
+    <div class="step">
+      <span class="step-num">5</span>
+      <strong>Test interactions:</strong>
+      <ul>
+        <li>Toggle master switch off → sections should collapse</li>
+        <li>Toggle back on → sections should expand</li>
+        <li>Change solar capacity → should update summary panel</li>
+        <li>Change EV charger counts → should show peak demand</li>
+      </ul>
+    </div>
+    <div class="step">
+      <span class="step-num">6</span>
+      <strong>Check summary panel:</strong> Should show:
+      <ul>
+        <li>Total Renewable kW</li>
+        <li>Total Generator kW</li>
+        <li>EV Peak Demand</li>
+        <li>Recommended BESS sizing</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="test-status pending">
+    <h2>🔍 What We're Testing</h2>
+    <ul>
+      <li><strong>Component renders:</strong> RenewablesSection loads without errors</li>
+      <li><strong>Sub-components work:</strong> All 5 config sections display properly</li>
+      <li><strong>Props flow correctly:</strong> State updates from parent to child</li>
+      <li><strong>Calculations work:</strong> Summary panel computes totals correctly</li>
+      <li><strong>No regressions:</strong> Rest of AdvancedQuoteBuilder still works</li>
+    </ul>
+  </div>
+
+  <div class="test-status pending">
+    <h2>⚙️ What Changed</h2>
+    <ul>
+      <li>Removed <code>2,129 lines</code> of inline JSX from AdvancedQuoteBuilder.tsx</li>
+      <li>Replaced with <code>&lt;RenewablesSection /&gt;</code> component (540 lines)</li>
+      <li>File size: <code>8,128 → 6,043 lines</code> (25.7% reduction)</li>
+      <li>50 props passed to component (all state + setters)</li>
+      <li>Sub-components: SolarPVConfig, WindTurbineConfig, FuelCellConfig, GeneratorConfig, EVChargersConfig</li>
+    </ul>
+  </div>
+
+  <div class="test-status pending">
+    <h2>✅ Expected Results</h2>
+    <ul>
+      <li>Page loads with no console errors</li>
+      <li>Renewables section renders identically to before extraction</li>
+      <li>All 5 sub-systems are interactive</li>
+      <li>Summary panel updates in real-time</li>
+      <li>Merlin tip shows solar + BESS guidance</li>
+    </ul>
+  </div>
+
+  <div class="test-status pending">
+    <h2>🚨 Red Flags to Watch For</h2>
+    <ul>
+      <li>❌ Section doesn't render at all</li>
+      <li>❌ Console errors about missing props</li>
+      <li>❌ Toggles don't work</li>
+      <li>❌ Input fields don't update state</li>
+      <li>❌ Summary calculations show NaN or 0</li>
+      <li>❌ Sub-components missing (should be 5 total)</li>
+    </ul>
+  </div>
+
+  <h2>🎯 Manual Testing Steps</h2>
+  <ol>
+    <li>Open browser developer tools (F12)</li>
+    <li>Navigate to <code>http://localhost:5184/quote-builder</code></li>
+    <li>Watch console for errors during page load</li>
+    <li>Scroll to Renewables section</li>
+    <li>Toggle "Include Renewables" on/off</li>
+    <li>Interact with each sub-system</li>
+    <li>Verify summary panel calculations</li>
+    <li>Take screenshots if anything looks broken</li>
+  </ol>
+
+  <hr style="margin: 40px 0; border-color: #333;">
+  
+  <p style="color: #888; font-size: 14px;">
+    <strong>Note:</strong> This is a manual UI test. Open this file in your browser alongside
+    <code>http://localhost:5184/quote-builder</code> and follow the checklist above.
+  </p>
+  
+  <p style="color: #888; font-size: 14px;">
+    Dev server running at: <code>http://localhost:5184/</code><br>
+    Test route: <code>/quote-builder</code> or <code>/proquote</code>
+  </p>
+</body>
+</html>

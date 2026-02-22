@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useEffect, useCallback } from "react";
 import badgeIcon from "@/assets/images/badge_icon.jpg";
 import {
   X,
@@ -29,7 +29,6 @@ import {
   FileEdit,
 } from "lucide-react";
 // InteractiveConfigDashboard moved to legacy - feature disabled for V5 cleanup
-import { type ProfessionalModelResult } from "@/services/professionalFinancialModel";
 // import type { QuoteResult } from "@/services/unifiedQuoteCalculator"; // Unused
 
 import merlinImage from "../assets/images/new_profile_merlin.png";
@@ -52,6 +51,9 @@ import { LandingView } from "./ProQuote/Views/LandingView";
 import { ProfessionalModelView } from "./ProQuote/Views/ProfessionalModelView";
 import { useSystemCalculation } from "@/hooks/useSystemCalculation";
 import { useWizardConfig } from "@/hooks/useWizardConfig";
+import { useProQuoteState } from "@/hooks/useProQuoteState";
+import { useConfigurationState } from "@/hooks/useConfigurationState";
+import { useRenewablesState } from "@/hooks/useRenewablesState";
 /**
  * ADVANCED QUOTE BUILDER - MERLIN EDITION
  *
@@ -123,133 +125,185 @@ export default function AdvancedQuoteBuilder({
   onGenerateQuote,
   initialView = "landing",
 }: AdvancedQuoteBuilderProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>(initialView);
-  const [showQuotePreview, setShowQuotePreview] = useState(false);
-  const [previewFormat, setPreviewFormat] = useState<"word" | "excel">("word");
-  const [showWelcomePopup, setShowWelcomePopup] = useState(true); // Welcome popup for first-time users
-  const [showHowItWorks, setShowHowItWorks] = useState(false);
-  const [showFinancialSummary, setShowFinancialSummary] = useState(false);
-  // showMobileCalc removed — calculator is now inline strip
-  // isExporting and exportSuccess moved to useQuoteExport hook
-  const [projectInfo, setProjectInfo] = useState<{
-    projectName?: string;
-    projectLocation?: string;
-    projectGoals?: string;
-    projectSchedule?: string;
-    userName?: string;
-    email?: string;
-    userId?: string;
-  } | null>(null);
+  // ═══ STATE MANAGEMENT HOOKS (Phase 1G, Feb 2026) ═══
+  // Extracted 60+ useState declarations into domain-organized hooks
 
-  // ✅ SSOT: Financial metrics from useSystemCalculation hook (database-driven)
-  // Calculation effect moved to custom hook (Phase 1F, Feb 2026)
+  // View/Modal/Professional Model State
+  const {
+    viewMode,
+    setViewMode,
+    showQuotePreview,
+    setShowQuotePreview,
+    previewFormat,
+    setPreviewFormat,
+    showWelcomePopup,
+    setShowWelcomePopup,
+    showHowItWorks,
+    setShowHowItWorks,
+    showFinancialSummary,
+    setShowFinancialSummary,
+    projectInfo,
+    setProjectInfo,
+    professionalModel,
+    setProfessionalModel,
+    isGeneratingModel,
+    setIsGeneratingModel,
+    selectedISORegion,
+    setSelectedISORegion,
+    projectLeverage,
+    setProjectLeverage,
+    interestRate,
+    setInterestRate,
+    loanTermYears,
+    solarMW,
+    setSolarMW,
+    windMW,
+    _setWindMW,
+    generatorMW,
+    setGeneratorMW,
+    extractedData,
+    setExtractedData,
+    _uploadedDocuments,
+    setUploadedDocuments,
+    showUploadSection,
+    setShowUploadSection,
+    showExtractionSuccessModal,
+    setShowExtractionSuccessModal,
+    pendingExtractedData,
+    setPendingExtractedData,
+    showDataReview,
+    setShowDataReview,
+  } = useProQuoteState(initialView);
 
-  // NEW: Professional Financial Model state
-  const [professionalModel, setProfessionalModel] = useState<ProfessionalModelResult | null>(null);
-  const [isGeneratingModel, setIsGeneratingModel] = useState(false);
-  const [selectedISORegion, setSelectedISORegion] = useState<
-    "CAISO" | "ERCOT" | "PJM" | "NYISO" | "ISO-NE" | "MISO" | "SPP"
-  >("CAISO");
-  const [projectLeverage, setProjectLeverage] = useState(60); // % debt
-  const [interestRate, setInterestRate] = useState(7); // %
-  const [loanTermYears, _setLoanTermYears] = useState(15);
+  // BESS Configuration State
+  const {
+    projectName,
+    setProjectName,
+    location,
+    setLocation,
+    applicationType,
+    setApplicationType,
+    useCase,
+    setUseCase,
+    chemistry,
+    setChemistry,
+    roundTripEfficiency,
+    warrantyYears,
+    setWarrantyYears,
+    cyclesPerYear,
+    setCyclesPerYear,
+    utilityRate,
+    setUtilityRate,
+    demandCharge,
+    setDemandCharge,
+    installationType,
+    setInstallationType,
+    gridConnection,
+    setGridConnection,
+    inverterEfficiency,
+    setInverterEfficiency,
+    systemVoltage,
+    setSystemVoltage,
+    dcVoltage,
+    setDcVoltage,
+    inverterType,
+    setInverterType,
+    inverterManufacturer,
+    setInverterManufacturer,
+    inverterRating,
+    setInverterRating,
+    pcsQuoteSeparately,
+    setPcsQuoteSeparately,
+    numberOfInvertersInput,
+    setNumberOfInvertersInput,
+    switchgearType,
+    switchgearRating,
+    bmsType,
+    _bmsManufacturer,
+    transformerRequired,
+    transformerRating,
+    transformerVoltage,
+    systemWattsInput,
+    setSystemWattsInput,
+    systemAmpsACInput,
+    setSystemAmpsACInput,
+    systemAmpsDCInput,
+    setSystemAmpsDCInput,
+  } = useConfigurationState();
 
-  // NEW: State for Interactive Dashboard integration
-  const [solarMW, setSolarMW] = useState(0);
-  const [windMW, _setWindMW] = useState(0);
-  const [generatorMW, setGeneratorMW] = useState(0);
-
-  // NEW: Document Upload / Path A state
-  const [extractedData, setExtractedData] = useState<ExtractedSpecsData | null>(null);
-  const [_uploadedDocuments, __setUploadedDocuments] = useState<ParsedDocument[]>([]);
-  const [showUploadSection, setShowUploadSection] = useState(true);
-  const [showExtractionSuccessModal, setShowExtractionSuccessModal] = useState(false);
-  const [pendingExtractedData, setPendingExtractedData] = useState<ExtractedSpecsData | null>(null);
-  const [showDataReview, setShowDataReview] = useState(false);
-
-  // Extended configuration state
-  const [projectName, setProjectName] = useState("");
-  const [location, setLocation] = useState("");
-  const [applicationType, setApplicationType] = useState("commercial");
-  const [useCase, setUseCase] = useState("peak-shaving");
-  const [chemistry, setChemistry] = useState("lfp");
-  const [roundTripEfficiency, _setRoundTripEfficiency] = useState(90);
-  const [warrantyYears, setWarrantyYears] = useState(10);
-  const [cyclesPerYear, setCyclesPerYear] = useState(365);
-  const [utilityRate, setUtilityRate] = useState(0.12);
-  const [demandCharge, setDemandCharge] = useState(15);
-  const [installationType, setInstallationType] = useState("outdoor");
-  const [gridConnection, setGridConnection] = useState("ac-coupled");
-  const [inverterEfficiency, setInverterEfficiency] = useState(96);
-
-  // NEW: Electrical Specifications
-  const [systemVoltage, setSystemVoltage] = useState(480); // Volts AC
-  const [dcVoltage, setDcVoltage] = useState(1000); // Volts DC
-  const [inverterType, setInverterType] = useState("bidirectional"); // bidirectional or unidirectional
-  const [inverterManufacturer, setInverterManufacturer] = useState("");
-  const [inverterRating, setInverterRating] = useState(2500); // kW per inverter
-  const [pcsQuoteSeparately, setPcsQuoteSeparately] = useState(false); // Quote PCS separately vs included
-  const [numberOfInvertersInput, setNumberOfInvertersInput] = useState(1); // Manual override
-  const [switchgearType, _setSwitchgearType] = useState("medium-voltage");
-  const [switchgearRating, _setSwitchgearRating] = useState(5000); // Amps
-  const [bmsType, _setBmsType] = useState("distributed");
-  const [_bmsManufacturer, _setBmsManufacturer] = useState("");
-  const [transformerRequired, _setTransformerRequired] = useState(true);
-  const [transformerRating, _setTransformerRating] = useState(3000); // kVA
-  const [transformerVoltage, _setTransformerVoltage] = useState("480V/12470V");
-
-  // NEW: User-specified electrical inputs (optional overrides)
-  const [systemWattsInput, setSystemWattsInput] = useState<number | "">(""); // User input for watts
-  const [systemAmpsACInput, setSystemAmpsACInput] = useState<number | "">(""); // User input for AC amps
-  const [systemAmpsDCInput, setSystemAmpsDCInput] = useState<number | "">(""); // User input for DC amps
-
-  // NEW: Renewables & Alternative Power — ALL PANELS DEFAULT OPEN for visibility
-  const [includeRenewables, setIncludeRenewables] = useState(true);
-  // Solar PV - expanded configuration
-  const [solarPVIncluded, setSolarPVIncluded] = useState(true);
-  const [solarCapacityKW, setSolarCapacityKW] = useState(1000);
-  const [solarPanelType, setSolarPanelType] = useState("monocrystalline");
-  const [solarPanelEfficiency, setSolarPanelEfficiency] = useState(21);
-  const [solarInverterType, setSolarInverterType] = useState("string");
-  const [solarInstallType, setSolarInstallType] = useState<
-    "rooftop" | "canopy" | "ground-mount" | "mixed"
-  >("rooftop");
-  const [solarRoofSpaceSqFt, setSolarRoofSpaceSqFt] = useState(10000);
-  const [solarCanopySqFt, setSolarCanopySqFt] = useState(5000);
-  const [solarGroundAcres, setSolarGroundAcres] = useState(2);
-  const [solarPeakSunHours, setSolarPeakSunHours] = useState(5);
-  const [solarTrackingType, setSolarTrackingType] = useState<"fixed" | "single-axis" | "dual-axis">(
-    "fixed"
-  );
-  // Wind - expanded configuration
-  const [windTurbineIncluded, setWindTurbineIncluded] = useState(true);
-  const [windCapacityKW, setWindCapacityKW] = useState(500);
-  const [windTurbineType, setWindTurbineType] = useState("horizontal");
-  const [windClassRating, setWindClassRating] = useState(3);
-  const [windTurbineCount, setWindTurbineCount] = useState(1);
-  const [windHubHeight, setWindHubHeight] = useState(80);
-  const [windTerrain, setWindTerrain] = useState<"open" | "suburban" | "coastal" | "complex">(
-    "open"
-  );
-  // Fuel Cell
-  const [fuelCellIncluded, setFuelCellIncluded] = useState(true);
-  const [fuelCellCapacityKW, setFuelCellCapacityKW] = useState(250);
-  const [fuelCellType, setFuelCellType] = useState("pem");
-  const [fuelType, setFuelType] = useState("hydrogen");
-  // Generator - unified (replaces separate diesel/natgas)
-  const [generatorIncluded, setGeneratorIncluded] = useState(true);
-  const [generatorCapacityKW, setGeneratorCapacityKW] = useState(500);
-  const [generatorFuelTypeSelected, setGeneratorFuelTypeSelected] = useState<string>("natural-gas");
-  const [generatorUseCases, setGeneratorUseCases] = useState<string[]>(["backup"]);
-  const [generatorRedundancy, setGeneratorRedundancy] = useState(false);
-  const [generatorSpaceAvailable, setGeneratorSpaceAvailable] = useState(true);
-  // EV Chargers (NEW)
-  const [evChargersIncluded, setEvChargersIncluded] = useState(true);
-  const [evLevel2Count, setEvLevel2Count] = useState(8);
-  const [evDCFCCount, setEvDCFCCount] = useState(4);
-  const [evHPCCount, setEvHPCCount] = useState(0);
-  const [evChargersPerStation, setEvChargersPerStation] = useState<number>(2);
-  const [evAdditionalPowerKW, setEvAdditionalPowerKW] = useState(0);
+  // Renewables & Alternative Power State
+  const {
+    includeRenewables,
+    setIncludeRenewables,
+    solarPVIncluded,
+    setSolarPVIncluded,
+    solarCapacityKW,
+    setSolarCapacityKW,
+    solarPanelType,
+    setSolarPanelType,
+    solarPanelEfficiency,
+    setSolarPanelEfficiency,
+    solarInverterType,
+    setSolarInverterType,
+    solarInstallType,
+    setSolarInstallType,
+    solarRoofSpaceSqFt,
+    setSolarRoofSpaceSqFt,
+    solarCanopySqFt,
+    setSolarCanopySqFt,
+    solarGroundAcres,
+    setSolarGroundAcres,
+    solarPeakSunHours,
+    setSolarPeakSunHours,
+    solarTrackingType,
+    setSolarTrackingType,
+    windTurbineIncluded,
+    setWindTurbineIncluded,
+    windCapacityKW,
+    setWindCapacityKW,
+    windTurbineType,
+    setWindTurbineType,
+    windClassRating,
+    setWindClassRating,
+    windTurbineCount,
+    setWindTurbineCount,
+    windHubHeight,
+    setWindHubHeight,
+    windTerrain,
+    setWindTerrain,
+    fuelCellIncluded,
+    setFuelCellIncluded,
+    fuelCellCapacityKW,
+    setFuelCellCapacityKW,
+    fuelCellType,
+    setFuelCellType,
+    fuelType,
+    setFuelType,
+    generatorIncluded,
+    setGeneratorIncluded,
+    generatorCapacityKW,
+    setGeneratorCapacityKW,
+    generatorFuelTypeSelected,
+    setGeneratorFuelTypeSelected,
+    generatorUseCases,
+    setGeneratorUseCases,
+    generatorRedundancy,
+    setGeneratorRedundancy,
+    generatorSpaceAvailable,
+    setGeneratorSpaceAvailable,
+    evChargersIncluded,
+    setEvChargersIncluded,
+    evLevel2Count,
+    setEvLevel2Count,
+    evDCFCCount,
+    setEvDCFCCount,
+    evHPCCount,
+    setEvHPCCount,
+    evChargersPerStation,
+    setEvChargersPerStation,
+    evAdditionalPowerKW,
+    setEvAdditionalPowerKW,
+  } = useRenewablesState();
 
   // Calculated values (with user input overrides)
   const storageSizeMWh = storageSizeMW * durationHours;
@@ -363,7 +417,19 @@ export default function AdvancedQuoteBuilder({
         setGeneratorCapacityKW(generatorMW * 1000); // Convert MW to kW
       }
     }
-  }, [viewMode, solarMW, windMW, generatorMW]);
+  }, [
+    viewMode,
+    solarMW,
+    windMW,
+    generatorMW,
+    setIncludeRenewables,
+    setSolarPVIncluded,
+    setSolarCapacityKW,
+    setWindTurbineIncluded,
+    setWindCapacityKW,
+    setGeneratorIncluded,
+    setGeneratorCapacityKW,
+  ]);
 
   // Reset to initialView when modal opens AND load wizard config if needed
   useEffect(() => {
@@ -385,7 +451,7 @@ export default function AdvancedQuoteBuilder({
         }, 100);
       }
     }
-  }, [show, initialView, loadWizardConfig]);
+  }, [show, initialView, loadWizardConfig, setViewMode, setShowUploadSection]);
 
   // Also load wizard config when viewMode changes to custom-config (backup)
   useEffect(() => {
@@ -407,12 +473,12 @@ export default function AdvancedQuoteBuilder({
       // Store pending data and show success modal
       setPendingExtractedData(data);
       setExtractedData(data);
-      __setUploadedDocuments(documents);
+      setUploadedDocuments(documents);
       setShowExtractionSuccessModal(true);
 
       // Don't auto-apply data yet - let user review first
     },
-    []
+    [setPendingExtractedData, setExtractedData, setUploadedDocuments, setShowExtractionSuccessModal]
   );
 
   // Apply extracted data to form (called after user reviews and confirms)
@@ -457,7 +523,23 @@ export default function AdvancedQuoteBuilder({
       setShowUploadSection(false);
       setViewMode("custom-config");
     },
-    [onStorageSizeChange]
+    [
+      onStorageSizeChange,
+      setLocation,
+      setUtilityRate,
+      setDemandCharge,
+      setSolarPVIncluded,
+      setIncludeRenewables,
+      setSolarCapacityKW,
+      setSolarMW,
+      setGeneratorIncluded,
+      setGeneratorCapacityKW,
+      setGeneratorMW,
+      setShowExtractionSuccessModal,
+      setShowDataReview,
+      setShowUploadSection,
+      setViewMode,
+    ]
   );
 
   if (!show) return null;
