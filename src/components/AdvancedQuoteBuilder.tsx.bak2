@@ -4,12 +4,14 @@ import {
   X,
   Zap,
   ArrowLeft,
+  ArrowRight,
   Building2,
   // MapPin, // Unused
   DollarSign,
   Battery,
   // Calendar, // Unused
   Sparkles,
+  Cpu,
   BarChart3,
   // Search, // Unused
   Landmark,
@@ -37,7 +39,6 @@ import SystemConfigSection from "./ProQuote/Forms/SystemConfigSection";
 import ApplicationUseCaseSection from "./ProQuote/Forms/ApplicationUseCaseSection";
 import FinancialParametersSection from "./ProQuote/Forms/FinancialParametersSection";
 import ElectricalSpecsSection from "./ProQuote/Forms/ElectricalSpecsSection";
-import ConfigurationOrchestrator from "./ProQuote/Forms/ConfigurationOrchestrator";
 
 import { useQuoteExport } from "@/hooks/useQuoteExport";
 import { QuotePreviewModal } from "./ProQuote/Export/QuotePreviewModal";
@@ -437,7 +438,7 @@ export default function AdvancedQuoteBuilder({
 
   // Export handler function
   // ═══ Merlin Advisor Tip Component ═══
-  const _MerlinTip = ({ tip, context }: { tip: string; context?: string }) => (
+  const MerlinTip = ({ tip, context }: { tip: string; context?: string }) => (
     <div
       className="flex items-start gap-2.5 rounded-lg px-3.5 py-2.5 mt-3 transition-all hover:brightness-110"
       style={{
@@ -778,143 +779,416 @@ export default function AdvancedQuoteBuilder({
                     setViewMode={setViewMode}
                   />
 
-                  {/* ────────────────────────────────────────────────
-                    SECTION: ELECTRICAL SPECIFICATIONS
-                    ──────────────────────────────────────────────── */}
-                  <ElectricalSpecsSection
-                    pcsQuoteSeparately={pcsQuoteSeparately}
-                    setPcsQuoteSeparately={setPcsQuoteSeparately}
-                    inverterType={inverterType}
-                    setInverterType={setInverterType}
-                    numberOfInvertersInput={numberOfInvertersInput}
-                    setNumberOfInvertersInput={setNumberOfInvertersInput}
-                    inverterRating={inverterRating}
-                    setInverterRating={setInverterRating}
-                    inverterManufacturer={inverterManufacturer}
-                    setInverterManufacturer={setInverterManufacturer}
-                    systemWattsInput={systemWattsInput}
-                    setSystemWattsInput={setSystemWattsInput}
-                    systemAmpsACInput={systemAmpsACInput}
-                    setSystemAmpsACInput={setSystemAmpsACInput}
-                    systemAmpsDCInput={systemAmpsDCInput}
-                    setSystemAmpsDCInput={setSystemAmpsDCInput}
-                    systemVoltage={systemVoltage}
-                    setSystemVoltage={setSystemVoltage}
-                    dcVoltage={dcVoltage}
-                    setDcVoltage={setDcVoltage}
-                    storageSizeMW={storageSizeMW}
-                    totalKW={totalKW}
-                    calculatedWatts={calculatedWatts}
-                    calculatedAmpsAC={calculatedAmpsAC}
-                    calculatedAmpsDC={calculatedAmpsDC}
-                    numberOfInverters={numberOfInverters}
-                    maxAmpsAC={maxAmpsAC}
-                    maxAmpsDC={maxAmpsDC}
-                  />
+                    {/* Renewables & Alternative Power Section */}
+                    <RenewablesSection
+                      includeRenewables={includeRenewables}
+                      setIncludeRenewables={setIncludeRenewables}
+                      solarPVIncluded={solarPVIncluded}
+                      setSolarPVIncluded={setSolarPVIncluded}
+                      solarCapacityKW={solarCapacityKW}
+                      setSolarCapacityKW={setSolarCapacityKW}
+                      solarPanelType={solarPanelType}
+                      setSolarPanelType={setSolarPanelType}
+                      solarPanelEfficiency={solarPanelEfficiency}
+                      setSolarPanelEfficiency={setSolarPanelEfficiency}
+                      solarInverterType={solarInverterType}
+                      setSolarInverterType={setSolarInverterType}
+                      solarInstallType={solarInstallType}
+                      setSolarInstallType={setSolarInstallType}
+                      solarRoofSpaceSqFt={solarRoofSpaceSqFt}
+                      setSolarRoofSpaceSqFt={setSolarRoofSpaceSqFt}
+                      solarCanopySqFt={solarCanopySqFt}
+                      setSolarCanopySqFt={setSolarCanopySqFt}
+                      solarGroundAcres={solarGroundAcres}
+                      setSolarGroundAcres={setSolarGroundAcres}
+                      solarPeakSunHours={solarPeakSunHours}
+                      setSolarPeakSunHours={setSolarPeakSunHours}
+                      solarTrackingType={solarTrackingType}
+                      setSolarTrackingType={setSolarTrackingType}
+                      windTurbineIncluded={windTurbineIncluded}
+                      setWindTurbineIncluded={setWindTurbineIncluded}
+                      windCapacityKW={windCapacityKW}
+                      setWindCapacityKW={setWindCapacityKW}
+                      windTurbineType={windTurbineType}
+                      setWindTurbineType={setWindTurbineType}
+                      windClassRating={windClassRating as 1 | 2 | 3 | 4}
+                      setWindClassRating={setWindClassRating}
+                      windTurbineCount={windTurbineCount}
+                      setWindTurbineCount={setWindTurbineCount}
+                      windHubHeight={windHubHeight}
+                      setWindHubHeight={setWindHubHeight}
+                      windTerrain={windTerrain}
+                      setWindTerrain={setWindTerrain}
+                      fuelCellIncluded={fuelCellIncluded}
+                      setFuelCellIncluded={setFuelCellIncluded}
+                      fuelCellCapacityKW={fuelCellCapacityKW}
+                      setFuelCellCapacityKW={setFuelCellCapacityKW}
+                      fuelCellType={fuelCellType}
+                      setFuelCellType={setFuelCellType}
+                      fuelType={fuelType}
+                      setFuelType={setFuelType}
+                      generatorIncluded={generatorIncluded}
+                      setGeneratorIncluded={setGeneratorIncluded}
+                      generatorCapacityKW={generatorCapacityKW}
+                      setGeneratorCapacityKW={setGeneratorCapacityKW}
+                      generatorFuelTypeSelected={generatorFuelTypeSelected}
+                      setGeneratorFuelTypeSelected={setGeneratorFuelTypeSelected}
+                      generatorUseCases={generatorUseCases}
+                      setGeneratorUseCases={setGeneratorUseCases}
+                      generatorRedundancy={generatorRedundancy}
+                      setGeneratorRedundancy={setGeneratorRedundancy}
+                      generatorSpaceAvailable={generatorSpaceAvailable}
+                      setGeneratorSpaceAvailable={setGeneratorSpaceAvailable}
+                      evChargersIncluded={evChargersIncluded}
+                      setEvChargersIncluded={setEvChargersIncluded}
+                      evLevel2Count={evLevel2Count}
+                      setEvLevel2Count={setEvLevel2Count}
+                      evDCFCCount={evDCFCCount}
+                      setEvDCFCCount={setEvDCFCCount}
+                      evHPCCount={evHPCCount}
+                      setEvHPCCount={setEvHPCCount}
+                      evChargersPerStation={evChargersPerStation}
+                      setEvChargersPerStation={setEvChargersPerStation}
+                      evAdditionalPowerKW={evAdditionalPowerKW}
+                      setEvAdditionalPowerKW={setEvAdditionalPowerKW}
+                      storageSizeMW={storageSizeMW}
+                      durationHours={durationHours}
+                    />
 
-                  {/* Renewables & Alternative Power Section */}
-                  <RenewablesSection
-                    includeRenewables={includeRenewables}
-                    setIncludeRenewables={setIncludeRenewables}
-                    solarPVIncluded={solarPVIncluded}
-                    setSolarPVIncluded={setSolarPVIncluded}
-                    solarCapacityKW={solarCapacityKW}
-                    setSolarCapacityKW={setSolarCapacityKW}
-                    solarPanelType={solarPanelType}
-                    setSolarPanelType={setSolarPanelType}
-                    solarPanelEfficiency={solarPanelEfficiency}
-                    setSolarPanelEfficiency={setSolarPanelEfficiency}
-                    solarInverterType={solarInverterType}
-                    setSolarInverterType={setSolarInverterType}
-                    solarInstallType={solarInstallType}
-                    setSolarInstallType={setSolarInstallType}
-                    solarRoofSpaceSqFt={solarRoofSpaceSqFt}
-                    setSolarRoofSpaceSqFt={setSolarRoofSpaceSqFt}
-                    solarCanopySqFt={solarCanopySqFt}
-                    setSolarCanopySqFt={setSolarCanopySqFt}
-                    solarGroundAcres={solarGroundAcres}
-                    setSolarGroundAcres={setSolarGroundAcres}
-                    solarPeakSunHours={solarPeakSunHours}
-                    setSolarPeakSunHours={setSolarPeakSunHours}
-                    solarTrackingType={solarTrackingType}
-                    setSolarTrackingType={setSolarTrackingType}
-                    windTurbineIncluded={windTurbineIncluded}
-                    setWindTurbineIncluded={setWindTurbineIncluded}
-                    windCapacityKW={windCapacityKW}
-                    setWindCapacityKW={setWindCapacityKW}
-                    windTurbineType={windTurbineType}
-                    setWindTurbineType={setWindTurbineType}
-                    windClassRating={windClassRating as 1 | 2 | 3 | 4}
-                    setWindClassRating={setWindClassRating}
-                    windTurbineCount={windTurbineCount}
-                    setWindTurbineCount={setWindTurbineCount}
-                    windHubHeight={windHubHeight}
-                    setWindHubHeight={setWindHubHeight}
-                    windTerrain={windTerrain}
-                    setWindTerrain={setWindTerrain}
-                    fuelCellIncluded={fuelCellIncluded}
-                    setFuelCellIncluded={setFuelCellIncluded}
-                    fuelCellCapacityKW={fuelCellCapacityKW}
-                    setFuelCellCapacityKW={setFuelCellCapacityKW}
-                    fuelCellType={fuelCellType}
-                    setFuelCellType={setFuelCellType}
-                    fuelType={fuelType}
-                    setFuelType={setFuelType}
-                    generatorIncluded={generatorIncluded}
-                    setGeneratorIncluded={setGeneratorIncluded}
-                    generatorCapacityKW={generatorCapacityKW}
-                    setGeneratorCapacityKW={setGeneratorCapacityKW}
-                    generatorFuelTypeSelected={generatorFuelTypeSelected}
-                    setGeneratorFuelTypeSelected={setGeneratorFuelTypeSelected}
-                    generatorUseCases={generatorUseCases}
-                    setGeneratorUseCases={setGeneratorUseCases}
-                    generatorRedundancy={generatorRedundancy}
-                    setGeneratorRedundancy={setGeneratorRedundancy}
-                    generatorSpaceAvailable={generatorSpaceAvailable}
-                    setGeneratorSpaceAvailable={setGeneratorSpaceAvailable}
-                    evChargersIncluded={evChargersIncluded}
-                    setEvChargersIncluded={setEvChargersIncluded}
-                    evLevel2Count={evLevel2Count}
-                    setEvLevel2Count={setEvLevel2Count}
-                    evDCFCCount={evDCFCCount}
-                    setEvDCFCCount={setEvDCFCCount}
-                    evHPCCount={evHPCCount}
-                    setEvHPCCount={setEvHPCCount}
-                    evChargersPerStation={evChargersPerStation}
-                    setEvChargersPerStation={setEvChargersPerStation}
-                    evAdditionalPowerKW={evAdditionalPowerKW}
-                    setEvAdditionalPowerKW={setEvAdditionalPowerKW}
-                    storageSizeMW={storageSizeMW}
-                    durationHours={durationHours}
-                  />
+                    {/* ProQuote™ Badge + Financial Summary */}
+                    <div
+                      className="rounded-xl p-6"
+                      style={{
+                        background: "rgba(59,130,246,0.04)",
+                        border: "1px solid rgba(59,130,246,0.12)",
+                      }}
+                    >
+                      {/* Badge row */}
+                      <div className="flex items-center gap-3 mb-5">
+                        <img
+                          src={badgeIcon}
+                          alt="ProQuote"
+                          className="w-10 h-10 object-contain"
+                          style={{ filter: "drop-shadow(0 2px 6px rgba(59,130,246,0.35))" }}
+                        />
+                        <div>
+                          <span className="text-base font-bold text-white tracking-tight">
+                            ProQuote™
+                          </span>
+                          <span
+                            className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                            style={{
+                              background: "rgba(59,130,246,0.2)",
+                              color: "rgb(147,197,253)",
+                            }}
+                          >
+                            VERIFIED
+                          </span>
+                        </div>
+                      </div>
 
-                  <ConfigurationOrchestrator
-                    financialMetrics={financialMetrics}
-                    isCalculating={isCalculating}
-                    localSystemCost={localSystemCost}
-                    estimatedAnnualSavings={estimatedAnnualSavings}
-                    paybackYears={paybackYears}
-                    storageSizeMW={storageSizeMW}
-                    storageSizeMWh={storageSizeMWh}
-                    durationHours={durationHours}
-                    applicationType={applicationType}
-                    useCase={useCase}
-                    projectName={projectName}
-                    location={location}
-                    chemistry={chemistry}
-                    installationType={installationType}
-                    gridConnection={gridConnection}
-                    inverterEfficiency={inverterEfficiency}
-                    roundTripEfficiency={roundTripEfficiency}
-                    cyclesPerYear={cyclesPerYear}
-                    utilityRate={utilityRate}
-                    demandCharge={demandCharge}
-                    warrantyYears={warrantyYears}
-                    setShowFinancialSummary={setShowFinancialSummary}
-                    setViewMode={setViewMode}
-                    onGenerateQuote={onGenerateQuote}
-                    onClose={onClose}
-                  />
+                      {/* Financial metrics strip */}
+                      {financialMetrics && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {/* Gross Cost */}
+                          <div>
+                            <p
+                              className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            >
+                              Total Investment
+                            </p>
+                            <p className="text-xl font-bold text-white">
+                              {localSystemCost >= 1_000_000
+                                ? `$${(localSystemCost / 1_000_000).toFixed(2)}M`
+                                : `$${(localSystemCost / 1_000).toFixed(0)}K`}
+                            </p>
+                          </div>
+                          {/* ITC Credit */}
+                          {(financialMetrics.taxCredit ?? 0) > 0 && (
+                            <div>
+                              <p
+                                className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                                style={{ color: "rgba(255,255,255,0.4)" }}
+                              >
+                                Federal ITC (30%)
+                              </p>
+                              <p className="text-xl font-bold text-emerald-400">
+                                −
+                                {financialMetrics.taxCredit >= 1_000_000
+                                  ? `$${(financialMetrics.taxCredit / 1_000_000).toFixed(2)}M`
+                                  : `$${(financialMetrics.taxCredit / 1_000).toFixed(0)}K`}
+                              </p>
+                            </div>
+                          )}
+                          {/* Net Cost */}
+                          <div>
+                            <p
+                              className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            >
+                              Net Cost
+                            </p>
+                            <p className="text-xl font-bold text-blue-400">
+                              {(financialMetrics.netCost ?? localSystemCost) >= 1_000_000
+                                ? `$${((financialMetrics.netCost ?? localSystemCost) / 1_000_000).toFixed(2)}M`
+                                : `$${((financialMetrics.netCost ?? localSystemCost) / 1_000).toFixed(0)}K`}
+                            </p>
+                          </div>
+                          {/* Annual Savings */}
+                          <div>
+                            <p
+                              className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            >
+                              Annual Savings
+                            </p>
+                            <p className="text-xl font-bold text-emerald-400">
+                              {estimatedAnnualSavings >= 1_000_000
+                                ? `$${(estimatedAnnualSavings / 1_000_000).toFixed(2)}M`
+                                : `$${(estimatedAnnualSavings / 1_000).toFixed(0)}K`}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Payback + ROI row */}
+                      {financialMetrics && (
+                        <div
+                          className="flex items-center gap-6 mt-4 pt-4"
+                          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="text-[11px] font-medium uppercase tracking-wider"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            >
+                              Payback
+                            </span>
+                            <span className="text-sm font-bold text-white">
+                              {paybackYears.toFixed(1)} yrs
+                            </span>
+                          </div>
+                          {(financialMetrics.npv ?? 0) > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="text-[11px] font-medium uppercase tracking-wider"
+                                style={{ color: "rgba(255,255,255,0.4)" }}
+                              >
+                                NPV
+                              </span>
+                              <span className="text-sm font-bold text-emerald-400">
+                                ${((financialMetrics.npv ?? 0) / 1_000_000).toFixed(1)}M
+                              </span>
+                            </div>
+                          )}
+                          {(financialMetrics.irr ?? 0) > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="text-[11px] font-medium uppercase tracking-wider"
+                                style={{ color: "rgba(255,255,255,0.4)" }}
+                              >
+                                IRR
+                              </span>
+                              <span className="text-sm font-bold text-blue-400">
+                                {(financialMetrics.irr ?? 0).toFixed(1)}%
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="text-[11px] font-medium uppercase tracking-wider"
+                              style={{ color: "rgba(255,255,255,0.4)" }}
+                            >
+                              25yr ROI
+                            </span>
+                            <span className="text-sm font-bold text-emerald-400">
+                              {(financialMetrics.roi25Year ?? 0).toFixed(0)}%
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => setShowFinancialSummary(true)}
+                            className="ml-auto text-[11px] font-semibold px-3 py-1 rounded-md transition-colors"
+                            style={{
+                              color: "rgb(147,197,253)",
+                              background: "rgba(59,130,246,0.1)",
+                              border: "1px solid rgba(59,130,246,0.2)",
+                            }}
+                          >
+                            View Full Breakdown →
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Loading state */}
+                      {!financialMetrics && isCalculating && (
+                        <div className="flex items-center gap-3 py-4">
+                          <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                          <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+                            Calculating financials…
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* System Summary */}
+                    <div
+                      className="rounded-xl p-8"
+                      style={{
+                        background: "rgba(255,255,255,0.02)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      <h3 className="text-lg font-semibold mb-6 text-white flex items-center gap-2">
+                        📊 System Summary
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div
+                          className="rounded-xl p-4"
+                          style={{
+                            background: "rgba(59,130,246,0.08)",
+                            border: "1px solid rgba(59,130,246,0.15)",
+                          }}
+                        >
+                          <p
+                            className="text-sm mb-1 font-medium"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                          >
+                            System Rating
+                          </p>
+                          <p className="text-3xl font-bold text-blue-400">
+                            {storageSizeMW.toFixed(1)} MW
+                          </p>
+                          <p
+                            className="text-lg font-bold"
+                            style={{ color: "rgba(255,255,255,0.6)" }}
+                          >
+                            {storageSizeMWh.toFixed(1)} MWh
+                          </p>
+                        </div>
+                        <div
+                          className="rounded-xl p-4"
+                          style={{
+                            background: "rgba(16,185,129,0.08)",
+                            border: "1px solid rgba(16,185,129,0.15)",
+                          }}
+                        >
+                          <p
+                            className="text-sm mb-1 font-medium"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                          >
+                            Total Cost
+                          </p>
+                          <p className="text-3xl font-bold text-emerald-400">
+                            ${(localSystemCost / 1000000).toFixed(2)}M
+                          </p>
+                          <p
+                            className="text-sm font-bold"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                          >
+                            ${(localSystemCost / (storageSizeMW * 1000)).toFixed(0)}/kW
+                          </p>
+                        </div>
+                        <div
+                          className="rounded-xl p-4"
+                          style={{
+                            background: "rgba(16,185,129,0.08)",
+                            border: "1px solid rgba(16,185,129,0.15)",
+                          }}
+                        >
+                          <p
+                            className="text-sm mb-1 font-medium"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                          >
+                            Application
+                          </p>
+                          <p className="text-xl font-bold text-emerald-400 capitalize">
+                            {applicationType}
+                          </p>
+                          <p
+                            className="text-sm font-bold capitalize"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                          >
+                            {useCase.replace("-", " ")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-4 pt-6">
+                      <button
+                        onClick={() => setViewMode("landing")}
+                        className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                      >
+                        ← Back to Tools
+                      </button>
+                      <button
+                        onClick={() => {
+                          const _configData = {
+                            projectName,
+                            location,
+                            storageSizeMW,
+                            durationHours,
+                            storageSizeMWh,
+                            systemCost: localSystemCost,
+                            applicationType,
+                            useCase,
+                            chemistry,
+                            installationType,
+                            gridConnection,
+                            inverterEfficiency,
+                            roundTripEfficiency,
+                            cyclesPerYear,
+                            utilityRate,
+                            demandCharge,
+                            warrantyYears,
+                          };
+                          onGenerateQuote?.();
+                          onClose();
+                        }}
+                        className="flex-1 px-6 py-3 rounded-lg font-semibold transition-all"
+                        style={{
+                          background: "transparent",
+                          color: "#34d399",
+                          border: "1px solid rgba(16,185,129,0.35)",
+                        }}
+                      >
+                        Generate Detailed Quote →
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Help Section */}
+                  <div
+                    className="mt-8 rounded-xl p-6"
+                    style={{
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    <h3 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
+                      💡 Configuration Guidelines
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="font-semibold text-white mb-1">Power & Duration:</p>
+                        <ul className="space-y-1 ml-4" style={{ color: "rgba(255,255,255,0.5)" }}>
+                          <li>• Peak shaving: 0.5-2 MW, 2-4 hrs</li>
+                          <li>• Backup power: 0.5-5 MW, 4-8 hrs</li>
+                          <li>• Utility scale: 10-100 MW, 2-4 hrs</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white mb-1">Battery Chemistry:</p>
+                        <ul className="space-y-1 ml-4" style={{ color: "rgba(255,255,255,0.5)" }}>
+                          <li>• LFP: Best for daily cycling, safest</li>
+                          <li>• NMC: Higher energy density, premium cost</li>
+                          <li>• LTO: 20,000+ cycles, fastest charge</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 {/* END CONFIGURATION FORM */}
               </div>
