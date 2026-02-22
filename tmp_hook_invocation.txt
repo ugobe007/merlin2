@@ -1,0 +1,34 @@
+
+  // ✅ Extracted: All Step 3 callbacks - Now in useWizardStep3 hook (Op1b - Feb 22, 2026)
+  // Total extracted: 15 functions, ~440 lines:
+  // - Answer management: setStep3Answer, setStep3Answers, applyIntelPatch, resetToDefaults
+  // - FSM actions: markDefaultsApplied, goToNextPart, goToPrevPart, setPartIndex, hasDefaultsApplied
+  // - Defaults helpers: partHasAnyDefaults, canApplyDefaults, canResetToDefaults, getDefaultForQuestion
+  // - Submission: submitStep3, submitStep3Partial
+
+  const step3Actions = useWizardStep3({
+    state: {
+      step: state.step,
+      industry: state.industry,
+      step3Answers: state.step3Answers,
+      step3AnswersMeta: state.step3AnswersMeta,
+      step3Template: state.step3Template || undefined,
+      step3DefaultsAppliedParts: state.step3DefaultsAppliedParts,
+      locationIntel: state.locationIntel || undefined,
+      businessCard: state.businessCard || undefined,
+      location: state.location || undefined,
+      locationConfirmed: state.locationConfirmed,
+      goalsConfirmed: state.goalsConfirmed,
+      step3Complete: state.step3Complete,
+      pricingStatus: state.pricingStatus,
+      step4AddOns: state.step4AddOns,
+    },
+    dispatch: dispatch as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    api,
+    clearError,
+    setError,
+    abortOngoing,
+    setStep,
+    runPricingSafe,
+    buildMinimalLocationFromZip,
+  });
