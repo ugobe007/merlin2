@@ -30,9 +30,7 @@ import {
 } from "lucide-react";
 // InteractiveConfigDashboard moved to legacy - feature disabled for V5 cleanup
 import { type ProfessionalModelResult } from "@/services/professionalFinancialModel";
-import { QuoteEngine } from "@/core/calculations";
 // import type { QuoteResult } from "@/services/unifiedQuoteCalculator"; // Unused
-import { type FinancialCalculationResult } from "@/services/centralizedCalculations";
 
 import merlinImage from "../assets/images/new_profile_merlin.png";
 import type { ExtractedSpecsData } from "@/services/openAIExtractionService";
@@ -52,6 +50,8 @@ import { QuotePreviewModal } from "./ProQuote/Export/QuotePreviewModal";
 import { UploadFirstView } from "./ProQuote/Views/UploadFirstView";
 import { LandingView } from "./ProQuote/Views/LandingView";
 import { ProfessionalModelView } from "./ProQuote/Views/ProfessionalModelView";
+import { useSystemCalculation } from "@/hooks/useSystemCalculation";
+import { useWizardConfig } from "@/hooks/useWizardConfig";
 /**
  * ADVANCED QUOTE BUILDER - MERLIN EDITION
  *
@@ -141,14 +141,8 @@ export default function AdvancedQuoteBuilder({
     userId?: string;
   } | null>(null);
 
-  // ✅ SSOT: Financial metrics from centralizedCalculations (database-driven)
-  const [financialMetrics, setFinancialMetrics] = useState<FinancialCalculationResult | null>(null);
-  const [isCalculating, setIsCalculating] = useState(false);
-
-  // Derived values from SSOT (with fallbacks during loading)
-  const localSystemCost = financialMetrics?.totalProjectCost ?? systemCost;
-  const estimatedAnnualSavings = financialMetrics?.annualSavings ?? 0;
-  const paybackYears = financialMetrics?.paybackYears ?? 0;
+  // ✅ SSOT: Financial metrics from useSystemCalculation hook (database-driven)
+  // Calculation effect moved to custom hook (Phase 1F, Feb 2026)
 
   // NEW: Professional Financial Model state
   const [professionalModel, setProfessionalModel] = useState<ProfessionalModelResult | null>(null);
@@ -299,92 +293,9 @@ export default function AdvancedQuoteBuilder({
     utilityRate,
   });
 
-  // ✅ SSOT: Use unifiedQuoteCalculator.calculateQuote() - THE TRUE SINGLE ENTRY POINT
-  // This properly combines:
-  // 1. equipmentCalculations.ts → Equipment costs (batteries, solar, wind, generators, EV)
-  // 2. centralizedCalculations.ts → Financial metrics (ROI, NPV, payback)
-  useEffect(() => {
-    const calculateFromSSoT = async () => {
-      // Guard: Don't calculate until user has configured BESS size
-      if (storageSizeMW <= 0 || durationHours <= 0) {
-        setFinancialMetrics(null);
-        return;
-      }
-
-      // ── NOTE: No quota check here. Recalculations are previews, not deliveries.
-      // Quota is tracked on EXPORT only (PDF/Word/Excel download). ──
-
-      setIsCalculating(true);
-      try {
-        // Calculate solar/wind/generator MW from kW if included
-        const solarMWFromConfig = solarPVIncluded ? solarCapacityKW / 1000 : 0;
-        const windMWFromConfig = windTurbineIncluded ? windCapacityKW / 1000 : 0;
-        const generatorMWFromConfig = generatorIncluded ? generatorCapacityKW / 1000 : 0;
-
-        // Calculate fuel cell MW from kW if included (NEW - Dec 2025)
-        const fuelCellMWFromConfig = fuelCellIncluded ? fuelCellCapacityKW / 1000 : 0;
-
-        // Determine generator fuel type from unified selector
-        const generatorFuelTypeForQuote =
-          generatorFuelTypeSelected === "linear"
-            ? ("natural-gas" as const)
-            : (generatorFuelTypeSelected as "diesel" | "natural-gas" | "dual-fuel");
-
-        // Map fuelType state to FuelCellType for SSOT
-        const fuelCellTypeForQuote =
-          fuelType === "natural-gas"
-            ? ("natural-gas-fc" as const)
-            : fuelType === "solid-oxide"
-              ? ("solid-oxide" as const)
-              : ("hydrogen" as const);
-
-        // Map gridConnection to valid type (hybrid → limited for quote calculator)
-        const mappedGridConnection =
-          gridConnection === "hybrid"
-            ? "limited"
-            : gridConnection === "ac-coupled" || gridConnection === "dc-coupled"
-              ? "on-grid"
-              : (gridConnection as "on-grid" | "off-grid" | "limited");
-
-        // ✅ SINGLE SOURCE OF TRUTH: QuoteEngine.generateQuote() orchestrates ALL calculations
-        const quoteResult = await QuoteEngine.generateQuote({
-          storageSizeMW,
-          durationHours,
-          solarMW: solarMWFromConfig,
-          windMW: windMWFromConfig,
-          generatorMW: generatorMWFromConfig,
-          generatorFuelType: generatorFuelTypeForQuote, // NEW: Pass fuel type to SSOT
-          fuelCellMW: fuelCellMWFromConfig, // NEW: Pass fuel cell MW to SSOT
-          fuelCellType: fuelCellTypeForQuote, // NEW: Pass fuel cell type to SSOT
-          location: location || "United States",
-          electricityRate: utilityRate,
-          gridConnection: mappedGridConnection,
-          useCase: useCase,
-        });
-
-        // Map QuoteResult to FinancialCalculationResult for compatibility
-        setFinancialMetrics({
-          ...quoteResult.financials,
-          equipmentCost: quoteResult.costs.equipmentCost,
-          installationCost: quoteResult.costs.installationCost,
-          shippingCost: 0, // Not in QuoteResult.costs - included in equipment already
-          tariffCost: 0, // Not in QuoteResult.costs - included in equipment already
-          totalProjectCost: quoteResult.costs.totalProjectCost,
-          taxCredit: quoteResult.costs.taxCredit,
-          netCost: quoteResult.costs.netCost,
-        } as FinancialCalculationResult);
-
-        // Notify parent component
-        onSystemCostChange(quoteResult.costs.totalProjectCost);
-      } catch (error) {
-        console.error("❌ Error calculating from SSOT:", error);
-      } finally {
-        setIsCalculating(false);
-      }
-    };
-
-    calculateFromSSoT();
-  }, [
+  // ═══ System Calculation Hook (Phase 1F, Feb 2026) ═══
+  // Extracted from inline useEffect - now uses QuoteEngine.generateQuote() SSOT
+  const { financialMetrics, isCalculating } = useSystemCalculation({
     storageSizeMW,
     durationHours,
     solarPVIncluded,
@@ -397,16 +308,36 @@ export default function AdvancedQuoteBuilder({
     fuelCellIncluded,
     fuelCellCapacityKW,
     fuelType,
-    evChargersIncluded,
-    evLevel2Count,
-    evDCFCCount,
-    evHPCCount,
     location,
     utilityRate,
     gridConnection,
     useCase,
     onSystemCostChange,
-  ]);
+  });
+
+  // ═══ Wizard Config Loading Hook (Phase 1F, Feb 2026) ═══
+  // Extracted from inline useEffect/useCallback - manages StreamlinedWizard config
+  const { hasWizardConfig, loadWizardConfig } = useWizardConfig({
+    show,
+    onStorageSizeChange,
+    onDurationChange,
+    setSolarMW,
+    setIncludeRenewables,
+    setSolarPVIncluded,
+    setSolarCapacityKW,
+    setGeneratorMW,
+    setGeneratorIncluded,
+    setGeneratorCapacityKW,
+    setLocation,
+    setUtilityRate,
+    setUseCase,
+    setProjectName,
+  });
+
+  // Derived values from SSOT (with fallbacks during loading)
+  const localSystemCost = financialMetrics?.totalProjectCost ?? systemCost;
+  const estimatedAnnualSavings = financialMetrics?.annualSavings ?? 0;
+  const paybackYears = financialMetrics?.paybackYears ?? 0;
 
   // Sync Interactive Dashboard renewable values to Custom Configuration form
   useEffect(() => {
@@ -433,79 +364,6 @@ export default function AdvancedQuoteBuilder({
       }
     }
   }, [viewMode, solarMW, windMW, generatorMW]);
-
-  // Check if wizard config exists in sessionStorage
-  const [hasWizardConfig, setHasWizardConfig] = useState(false);
-
-  useEffect(() => {
-    setHasWizardConfig(!!sessionStorage.getItem("advancedBuilderConfig"));
-  }, [show]);
-
-  // Load wizard values from sessionStorage when navigating to custom-config view
-  const loadWizardConfig = useCallback(() => {
-    try {
-      const configData = sessionStorage.getItem("advancedBuilderConfig");
-      if (configData) {
-        const config = JSON.parse(configData);
-        console.log("✅ Loading wizard config into Advanced Builder:", config);
-
-        // Set battery/storage values (convert kW to MW)
-        if (config.batteryKW) {
-          const batteryMW = config.batteryKW / 1000;
-          onStorageSizeChange(batteryMW);
-        }
-
-        // Set duration
-        if (config.durationHours) {
-          onDurationChange(config.durationHours);
-        }
-
-        // Set solar (convert kW to MW)
-        if (config.solarKW && config.solarKW > 0) {
-          setSolarMW(config.solarKW / 1000);
-          setIncludeRenewables(true);
-          setSolarPVIncluded(true);
-          setSolarCapacityKW(config.solarKW);
-        }
-
-        // Set generator (convert kW to MW and enable)
-        if (config.generatorKW && config.generatorKW > 0) {
-          setGeneratorMW(config.generatorKW / 1000);
-          setIncludeRenewables(true);
-          setGeneratorIncluded(true);
-          setGeneratorCapacityKW(config.generatorKW);
-        }
-
-        // Set location/state
-        if (config.state) {
-          setLocation(config.state);
-        }
-
-        // Set utility rate
-        if (config.electricityRate) {
-          setUtilityRate(config.electricityRate);
-        }
-
-        // Set use case
-        if (config.selectedIndustry) {
-          setUseCase(config.selectedIndustry.replace(/-/g, "-"));
-        }
-
-        // Set project name if available
-        if (config.selectedIndustry) {
-          setProjectName(
-            `${config.selectedIndustry.charAt(0).toUpperCase() + config.selectedIndustry.slice(1).replace(/-/g, " ")} Project`
-          );
-        }
-
-        // Clear sessionStorage after loading
-        sessionStorage.removeItem("advancedBuilderConfig");
-        setHasWizardConfig(false);
-      }
-    } catch (error) {
-      console.error("❌ Error loading wizard config:", error);
-    }
-  }, [onStorageSizeChange, onDurationChange]);
 
   // Reset to initialView when modal opens AND load wizard config if needed
   useEffect(() => {
