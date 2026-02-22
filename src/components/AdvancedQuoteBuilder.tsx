@@ -54,6 +54,8 @@ import { useWizardConfig } from "@/hooks/useWizardConfig";
 import { useProQuoteState } from "@/hooks/useProQuoteState";
 import { useConfigurationState } from "@/hooks/useConfigurationState";
 import { useRenewablesState } from "@/hooks/useRenewablesState";
+import { useProQuoteEffects } from "@/hooks/useProQuoteEffects";
+import { useToolCardsConfig } from "@/hooks/useToolCardsConfig";
 /**
  * ADVANCED QUOTE BUILDER - MERLIN EDITION
  *
@@ -393,267 +395,50 @@ export default function AdvancedQuoteBuilder({
   const estimatedAnnualSavings = financialMetrics?.annualSavings ?? 0;
   const paybackYears = financialMetrics?.paybackYears ?? 0;
 
-  // Sync Interactive Dashboard renewable values to Custom Configuration form
-  useEffect(() => {
-    if (viewMode === "custom-config") {
-      // If user set solar in Interactive Dashboard, enable solar in form
-      if (solarMW > 0) {
-        setIncludeRenewables(true);
-        setSolarPVIncluded(true);
-        setSolarCapacityKW(solarMW * 1000); // Convert MW to kW
-      }
-
-      // If user set wind in Interactive Dashboard, enable wind in form
-      if (windMW > 0) {
-        setIncludeRenewables(true);
-        setWindTurbineIncluded(true);
-        setWindCapacityKW(windMW * 1000); // Convert MW to kW
-      }
-
-      // If user set generator in Interactive Dashboard, enable diesel gen in form
-      if (generatorMW > 0) {
-        setIncludeRenewables(true);
-        setGeneratorIncluded(true);
-        setGeneratorCapacityKW(generatorMW * 1000); // Convert MW to kW
-      }
-    }
-  }, [
+  // ═══ EFFECTS & CALLBACKS (Phase 1G Part 2, Feb 2026) ═══
+  // Extracted all useEffect and useCallback logic into organized hook
+  const { handleExtractionComplete, applyExtractedData } = useProQuoteEffects({
+    show,
     viewMode,
+    initialView,
     solarMW,
     windMW,
     generatorMW,
+    setViewMode,
+    setShowUploadSection,
     setIncludeRenewables,
     setSolarPVIncluded,
     setSolarCapacityKW,
+    setSolarMW,
     setWindTurbineIncluded,
     setWindCapacityKW,
     setGeneratorIncluded,
     setGeneratorCapacityKW,
-  ]);
-
-  // Reset to initialView when modal opens AND load wizard config if needed
-  useEffect(() => {
-    if (show) {
-      // If upload mode, show dedicated upload-first view
-      if (initialView === "upload") {
-        setViewMode("upload-first");
-        setShowUploadSection(true);
-      } else {
-        setViewMode(initialView);
-      }
-      window.scrollTo(0, 0);
-
-      // Load wizard config immediately if we're going to custom-config view
-      if (initialView === "custom-config" || initialView === "upload") {
-        // Small delay to ensure state is set
-        setTimeout(() => {
-          loadWizardConfig();
-        }, 100);
-      }
-    }
-  }, [show, initialView, loadWizardConfig, setViewMode, setShowUploadSection]);
-
-  // Also load wizard config when viewMode changes to custom-config (backup)
-  useEffect(() => {
-    if (show && viewMode === "custom-config") {
-      const configData = sessionStorage.getItem("advancedBuilderConfig");
-      if (configData) {
-        loadWizardConfig();
-      }
-    }
-  }, [show, viewMode, loadWizardConfig]);
-
-  // Handler for document extraction completion (Path A)
-  const handleExtractionComplete = useCallback(
-    (data: ExtractedSpecsData, documents: ParsedDocument[]) => {
-      if (import.meta.env.DEV) {
-        console.log("📄 [AdvancedQuoteBuilder] Extraction complete:", data);
-      }
-
-      // Store pending data and show success modal
-      setPendingExtractedData(data);
-      setExtractedData(data);
-      setUploadedDocuments(documents);
-      setShowExtractionSuccessModal(true);
-
-      // Don't auto-apply data yet - let user review first
-    },
-    [setPendingExtractedData, setExtractedData, setUploadedDocuments, setShowExtractionSuccessModal]
-  );
-
-  // Apply extracted data to form (called after user reviews and confirms)
-  const applyExtractedData = useCallback(
-    (data: ExtractedSpecsData) => {
-      // Pre-populate form fields from extracted data
-      if (data.location?.state) {
-        setLocation(data.location.state);
-      }
-
-      if (data.powerRequirements?.peakDemandKW) {
-        // Convert kW to MW for storage size (rough estimate: BESS covers 50% of peak)
-        const demandMW = data.powerRequirements.peakDemandKW / 1000;
-        onStorageSizeChange(Math.ceil(demandMW * 0.5 * 10) / 10);
-      }
-
-      if (data.utilityInfo?.electricityRate) {
-        setUtilityRate(data.utilityInfo.electricityRate);
-      }
-
-      if (data.utilityInfo?.demandCharge) {
-        setDemandCharge(data.utilityInfo.demandCharge);
-      }
-
-      if (data.existingInfrastructure?.hasSolar && data.existingInfrastructure.solarKW) {
-        setSolarPVIncluded(true);
-        setIncludeRenewables(true);
-        setSolarCapacityKW(data.existingInfrastructure.solarKW);
-        setSolarMW(data.existingInfrastructure.solarKW / 1000);
-      }
-
-      if (data.existingInfrastructure?.hasGenerator && data.existingInfrastructure.generatorKW) {
-        setGeneratorIncluded(true);
-        setIncludeRenewables(true);
-        setGeneratorCapacityKW(data.existingInfrastructure.generatorKW);
-        setGeneratorMW(data.existingInfrastructure.generatorKW / 1000);
-      }
-
-      // Close modals and show config page
-      setShowExtractionSuccessModal(false);
-      setShowDataReview(false);
-      setShowUploadSection(false);
-      setViewMode("custom-config");
-    },
-    [
-      onStorageSizeChange,
-      setLocation,
-      setUtilityRate,
-      setDemandCharge,
-      setSolarPVIncluded,
-      setIncludeRenewables,
-      setSolarCapacityKW,
-      setSolarMW,
-      setGeneratorIncluded,
-      setGeneratorCapacityKW,
-      setGeneratorMW,
-      setShowExtractionSuccessModal,
-      setShowDataReview,
-      setShowUploadSection,
-      setViewMode,
-    ]
-  );
+    setGeneratorMW,
+    setPendingExtractedData,
+    setExtractedData,
+    setUploadedDocuments,
+    setShowExtractionSuccessModal,
+    setShowDataReview,
+    setLocation,
+    setUtilityRate,
+    setDemandCharge,
+    onStorageSizeChange,
+    loadWizardConfig,
+  });
 
   if (!show) return null;
 
-  // Tool cards configuration - organized into tiers
-  // CORE: Always available | PROFESSIONAL: Premium badge | PREMIUM: Locked/teased
-  const tools = [
-    // === CORE TOOLS (Row 1) ===
-    {
-      id: "custom-config",
-      icon: <Sliders className="w-8 h-8" />,
-      title: "System Configuration",
-      description:
-        "Design your complete BESS system with electrical specs, renewables, and detailed parameters",
-      color: "from-blue-500 via-teal-500 to-emerald-600",
-      action: () => setViewMode("custom-config"),
-      tier: "core",
-    },
-    {
-      id: "interactive-dashboard",
-      icon: <Gauge className="w-8 h-8" />,
-      title: "Interactive Dashboard",
-      description: "Fine-tune with real-time sliders and see instant cost & ROI updates",
-      color: "from-cyan-400 via-blue-500 to-indigo-600",
-      action: () => setViewMode("interactive-dashboard"),
-      tier: "core",
-    },
-    {
-      id: "financial-calculator",
-      icon: <PiggyBank className="w-8 h-8" />,
-      title: "Financial Calculator",
-      description: "Calculate ROI, payback period, NPV, and financing options",
-      color: "from-emerald-400 via-green-500 to-teal-600",
-      action: () => {
-        onClose();
-        onOpenFinancing?.();
-      },
-      tier: "core",
-    },
-    // === PROFESSIONAL TOOLS (Row 2) ===
-    {
-      id: "professional-financial",
-      icon: <Landmark className="w-8 h-8" />,
-      title: "Bank-Ready Model",
-      description: "3-Statement pro-forma with DSCR, LCOS, IRR, MACRS, and revenue stacking",
-      color: "from-emerald-400 via-teal-500 to-green-600",
-      action: () => setViewMode("professional-model"),
-      tier: "pro",
-      badge: "NEW",
-    },
-    {
-      id: "quote-preview",
-      icon: <FileSpreadsheet className="w-8 h-8" />,
-      title: "Quote Export",
-      description: "Generate professional quotes in Word and Excel formats",
-      color: "from-blue-400 via-teal-500 to-emerald-600",
-      action: () => setShowQuotePreview(true),
-      tier: "pro",
-    },
-    {
-      id: "custom-reports",
-      icon: <ScrollText className="w-8 h-8" />,
-      title: "Custom Reports",
-      description: "Generate detailed proposals, technical specs, and documentation",
-      color: "from-teal-400 via-cyan-500 to-sky-600",
-      action: () => {
-        onClose();
-        onOpenQuoteTemplates?.();
-      },
-      tier: "pro",
-    },
-    // === PREMIUM TOOLS (Row 3 - Teased/Locked) ===
-    {
-      id: "market-analytics",
-      icon: <BarChart3 className="w-8 h-8" />,
-      title: "Market Analytics",
-      description: "Market trends, pricing intelligence, and competitive analysis",
-      color: "from-blue-400 via-sky-500 to-cyan-600",
-      action: () => {
-        onClose();
-        onOpenMarketIntel?.();
-      },
-      tier: "premium",
-      locked: false, // Set to true to lock
-    },
-    {
-      id: "vendor-library",
-      icon: <Box className="w-8 h-8" />,
-      title: "Vendor Library",
-      description: "Browse batteries, inverters, solar panels, and BOS equipment",
-      color: "from-teal-400 via-emerald-500 to-green-600",
-      action: () => {
-        alert(
-          "🔧 Vendor Library\n\nBrowse and compare equipment from leading manufacturers.\n\n✨ Coming Q1 2026"
-        );
-      },
-      tier: "premium",
-      locked: true,
-      comingSoon: true,
-    },
-    {
-      id: "ai-optimization",
-      icon: <Wand2 className="w-8 h-8" />,
-      title: "AI Optimizer",
-      description: "Let AI analyze your facility and recommend optimal configurations",
-      color: "from-emerald-400 via-teal-500 to-cyan-600",
-      action: () => {
-        alert("🤖 AI Optimizer\n\nAdvanced AI-powered system optimization.\n\n✨ Coming Q1 2026");
-      },
-      tier: "premium",
-      locked: true,
-      comingSoon: true,
-    },
-  ];
+  // ═══ TOOL CARDS CONFIGURATION (Phase 1G Part 2, Feb 2026) ═══
+  // Extracted tool cards array into reusable hook
+  const tools = useToolCardsConfig({
+    setViewMode,
+    setShowQuotePreview,
+    onClose,
+    onOpenFinancing,
+    onOpenQuoteTemplates,
+    onOpenMarketIntel,
+  });
 
   // Export handler function
   // ═══ Merlin Advisor Tip Component ═══
