@@ -129,7 +129,7 @@ const INDUSTRIES: Array<{
   };
 });
 
-export default function Step2IndustryV7({ state, actions }: Props) {
+const Step2IndustryV7 = React.memo(function Step2IndustryV7({ state, actions }: Props) {
   const locationLine = useMemo(() => {
     if (!state.location) return "No location set.";
     const parts = [state.location.city, state.location.state, state.location.postalCode].filter(
@@ -249,4 +249,6 @@ export default function Step2IndustryV7({ state, actions }: Props) {
       </div>
     </div>
   );
-}
+});
+
+export default Step2IndustryV7;

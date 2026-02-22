@@ -5,6 +5,7 @@ const BessQuoteBuilder = lazy(() => import("./components/BessQuoteBuilder"));
 const ProQuoteConfigurationPage = lazy(() => import("./pages/ProQuoteConfigurationPage"));
 const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
 const VendorPortal = lazy(() => import("./components/VendorPortal"));
+const VendorAdminDashboard = lazy(() => import("./pages/admin/VendorAdminDashboard"));
 const CarWashEnergy = lazy(() => import("./components/verticals/CarWashEnergy"));
 const EVChargingEnergy = lazy(() => import("./components/verticals/EVChargingEnergy"));
 const HotelEnergy = lazy(() => import("./components/verticals/HotelEnergy"));
@@ -55,9 +56,11 @@ function App() {
   // Route detection for admin and vendor portal
   const isAdminRoute = pathname === "/admin" || adminParam === "true";
   const isVendorPortalRoute = pathname === "/vendor-portal" || pathname === "/vendor";
+  const isVendorAdminRoute = pathname === "/admin/vendors";
 
   const [showAdmin, setShowAdmin] = useState(isAdminRoute);
   const [showVendorPortal] = useState(isVendorPortalRoute);
+  const [showVendorAdmin] = useState(isVendorAdminRoute);
   // const [showWizard, setShowWizard] = useState(pathname === '/wizard'); // Unused
 
   // NEW: Direct /quote-builder route support
@@ -124,6 +127,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <AdminDashboard />
+      </Suspense>
+    );
+  }
+
+  // Access via /admin/vendors - Vendor Admin Dashboard (Feb 2026)
+  if (showVendorAdmin) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <VendorAdminDashboard />
       </Suspense>
     );
   }

@@ -159,7 +159,7 @@ const SOLAR_QUESTIONS_MOVED_TO_MODAL = new Set([
 // Questions wrongly categorized under 'solar' section — remap to 'goals'
 const REMAP_TO_GOALS = new Set(["primaryGoal", "budgetTimeline"]);
 
-export default function Step3ProfileV7Curated(props: Props) {
+const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: Props) {
   const { state, actions, updateState } = props;
 
   // ✅ CRITICAL FIX (Feb 10, 2026): Use effectiveIndustry from template (retail → hotel mapping)
@@ -1498,4 +1498,6 @@ export default function Step3ProfileV7Curated(props: Props) {
       />
     </div>
   );
-}
+});
+
+export default Step3ProfileV7Curated;
