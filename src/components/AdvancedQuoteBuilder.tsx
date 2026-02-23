@@ -676,7 +676,7 @@ export default function AdvancedQuoteBuilder({
             <div className="max-w-[1440px] mx-auto px-4 py-6 relative z-0">
               <div>
                 {/* FULL WIDTH: Configuration Form */}
-                <div className="space-y-6">
+                <div className="space-y-6 pb-32">
                   {/* ═══ PROQUOTE™ HERO BADGE PANEL ═══ */}
                   <button
                     type="button"
