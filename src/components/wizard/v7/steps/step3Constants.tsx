@@ -20,32 +20,32 @@ import agricultureImg from "@/assets/images/agriculture_1.jpg";
 import apartmentImg from "@/assets/images/apartment_building.jpg";
 import residentialImg from "@/assets/images/Residential1.jpg";
 import indoorFarmImg from "@/assets/images/indoor_farm1.jpg";
-import merlinIcon from "@/assets/images/new_small_profile_.png";
 
-export const INDUSTRY_IMAGES: Record<CanonicalIndustryKey | "other", string> = {
+// Keys MUST match CanonicalIndustryKey (hyphen-format from curatedFieldsResolver)
+export const INDUSTRY_IMAGES: Record<CanonicalIndustryKey, string> = {
   hotel: hotelImg,
-  car_wash: carWashImg,
+  "car-wash": carWashImg,
   manufacturing: manufacturingImg,
   warehouse: warehouseImg,
-  logistics: warehouseImg,
   office: officeImg,
   retail: retailImg,
   restaurant: restaurantImg,
   hospital: healthcareImg,
-  healthcare: healthcareImg,
-  data_center: dataCenterImg,
-  ev_charging: evChargingImg,
+  datacenter: dataCenterImg,
+  "ev-charging": evChargingImg,
   airport: airportImg,
   casino: casinoImg,
-  gas_station: gasStationImg,
-  truck_stop: gasStationImg,
+  "gas-station": gasStationImg,
   college: collegeImg,
   agriculture: agricultureImg,
+  "cold-storage": warehouseImg, // warehouse as fallback
   apartment: apartmentImg,
   residential: residentialImg,
-  indoor_farm: indoorFarmImg,
-  other: officeImg,
-} as Record<string, string>;
+  "indoor-farm": indoorFarmImg,
+  government: officeImg, // office building as proxy
+  other: hotelImg,
+  auto: hotelImg,
+};
 
 export const SECTION_ICONS: Record<string, React.ReactNode> = {
   facility: <Building2 className="w-4 h-4" />,
