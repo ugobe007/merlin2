@@ -457,11 +457,11 @@ export function useWizardStep3(deps: UseWizardStep3Dependencies) {
         return;
       }
 
-      // ✅ Mark complete and navigate
+      // ✅ Mark complete and navigate to next step (options)
       dispatch({ type: "SET_STEP3_COMPLETE", complete: true });
-      setStep("results", "step3_complete");
+      setStep("options", "step3_complete");
 
-      devLog("[V7] submitStep3 success - navigating to results", {
+      devLog("[V7] submitStep3 success - navigating to options (Step 4)", {
         answersCount: Object.keys(answers).length,
         templateQ: templateQuestionCount,
       });
