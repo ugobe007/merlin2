@@ -1,0 +1,25 @@
+// Auto-generated barrel — one export per industry calculator
+export { GENERIC_SSOT_ADAPTER } from "./generic";
+export { DC_LOAD_V1_SSOT } from "./dataCenter";
+export { HOTEL_LOAD_V1_SSOT } from "./hotel";
+export { CAR_WASH_LOAD_V1_SSOT } from "./carWash";
+export { OFFICE_LOAD_V1_SSOT } from "./office";
+export { RETAIL_LOAD_V1_SSOT } from "./retail";
+export { MANUFACTURING_LOAD_V1_SSOT } from "./manufacturing";
+export { HOSPITAL_LOAD_V1_SSOT } from "./hospital";
+export { WAREHOUSE_LOAD_V1_SSOT } from "./warehouse";
+export { EV_CHARGING_LOAD_V1_SSOT } from "./evCharging";
+export { RESTAURANT_LOAD_V1_SSOT } from "./restaurant";
+export { TRUCK_STOP_LOAD_V1_SSOT } from "./truckStop";
+export { GAS_STATION_LOAD_V1_SSOT } from "./gasStation";
+export { AIRPORT_LOAD_V1_SSOT } from "./airport";
+export { CASINO_LOAD_V1_SSOT } from "./casino";
+export { APARTMENT_LOAD_V1_SSOT } from "./apartment";
+export { COLLEGE_LOAD_V1_SSOT } from "./college";
+export { COLD_STORAGE_LOAD_V1_SSOT } from "./coldStorage";
+export { INDOOR_FARM_LOAD_V1_SSOT } from "./indoorFarm";
+export { AGRICULTURE_LOAD_V1_SSOT } from "./agriculture";
+export { RESIDENTIAL_LOAD_V1_SSOT } from "./residential";
+export { GOVERNMENT_LOAD_V1_SSOT } from "./government";
+export { SHOPPING_CENTER_LOAD_V1_SSOT } from "./shoppingCenter";
+export { MICROGRID_LOAD_V1_SSOT } from "./microgrid";
