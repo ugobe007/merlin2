@@ -29,6 +29,8 @@ import {
 } from "@/components/wizard/v7/shared/QuickQuoteModal";
 
 // 💾 Save & Resume Components (Feb 20, 2026)
+import { useAutoSave } from "@/wizard/v7/hooks/useAutoSave";
+import { ResumeProgressBanner } from "@/components/wizard/v7/shared/ResumeProgressBanner";
 
 // 🤖 AI Agent for self-healing monitoring
 import { wizardAIAgent } from "@/services/wizardAIAgentV2";
@@ -102,15 +104,15 @@ function WizardV7Page() {
   >("panel");
   const [showQuickQuoteModal, setShowQuickQuoteModal] = useState(false);
 
-  // 💾 Auto-Save & Resume (Feb 20, 2026) - TEMPORARILY DISABLED FOR TYPE ERRORS
-  // const autoSave = useAutoSave(state, {
-  //   goToStep: wizard.goToStep as any,
-  //   selectIndustry: wizard.selectIndustry as any,
-  //   setStep3Answers: wizard.setStep3Answers as any,
-  //   updateLocationRaw: wizard.updateLocationRaw,
-  // });
-  const [_showResumeBanner, _setShowResumeBanner] = useState(false);
-  const [_hasCheckedSavedProgress, _setHasCheckedSavedProgress] = useState(false);
+  // 💾 Auto-Save & Resume (Feb 20, 2026) - Re-enabled Feb 23, 2026
+  const autoSave = useAutoSave(state, {
+    goToStep: wizard.goToStep as (step: string) => void,
+    selectIndustry: wizard.selectIndustry as (industry: string) => void,
+    setStep3Answers: wizard.setStep3Answers as (answers: Record<string, unknown>) => void,
+    updateLocationRaw: wizard.updateLocationRaw,
+  });
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  const [hasCheckedSavedProgress, setHasCheckedSavedProgress] = useState(false);
 
   // 🤖 Start AI Agent for self-healing monitoring (Feb 4, 2026)
   useEffect(() => {
@@ -207,7 +209,8 @@ function WizardV7Page() {
     // Step 3: contextual label based on gate (computed inline from raw state to
     // avoid forward-reference to gateState / gate which are declared below)
     if (state.step === "profile") {
-      const profileReady = state.step3Complete ||
+      const profileReady =
+        state.step3Complete ||
         !!(state.step3Template?.questions ?? []).every(
           (q: { id: string; required?: boolean }) =>
             q.required === false ||
@@ -436,26 +439,26 @@ function WizardV7Page() {
     setQuickQuoteMode("guided");
   };
 
-  // 💾 Auto-Save Handlers (Feb 20, 2026) - DISABLED
-  // const handleResumeProgress = () => {
-  //   // autoSave.restoreProgress(); // DISABLED
-  //   setShowResumeBanner(false);
-  //   setQuickQuoteMode("guided");
-  // };
+  // 💾 Auto-Save Handlers (Feb 23, 2026)
+  const handleResumeProgress = () => {
+    autoSave.restoreProgress();
+    setShowResumeBanner(false);
+    setQuickQuoteMode("guided");
+  };
 
-  // const handleStartFresh = () => {
-  //   // autoSave.clearProgress(); // DISABLED
-  //   setShowResumeBanner(false);
-  //   setQuickQuoteMode("guided");
-  // };
+  const handleStartFresh = () => {
+    autoSave.clearProgress();
+    setShowResumeBanner(false);
+    setQuickQuoteMode("guided");
+  };
 
-  // Check for saved progress on mount (only once) - DISABLED
+  // Check for saved progress on mount (only once)
   useEffect(() => {
-    // if (!hasCheckedSavedProgress && autoSave.hasSavedProgress) { // DISABLED
-    //   setShowResumeBanner(true);
-    //   setHasCheckedSavedProgress(true);
-    // }
-  }, []);
+    if (!hasCheckedSavedProgress && autoSave.hasSavedProgress) {
+      setShowResumeBanner(true);
+      setHasCheckedSavedProgress(true);
+    }
+  }, [hasCheckedSavedProgress, autoSave.hasSavedProgress]);
 
   // TrueQuote verified status - true once we have results
   const isVerified = state.step === "results" && !state.isBusy;
@@ -857,7 +860,6 @@ function WizardV7Page() {
   return (
     <div data-wizard-version="v7" className="w-full h-full">
       {/* 💾 Resume Progress Banner (shows when saved progress exists) */}
-      {/* Resume banner DISABLED
       {showResumeBanner && autoSave.savedProgress && (
         <ResumeProgressBanner
           progress={autoSave.savedProgress}
@@ -866,7 +868,6 @@ function WizardV7Page() {
           onDismiss={() => setShowResumeBanner(false)}
         />
       )}
-      */}
 
       <WizardShellV7
         currentStep={currentStep} // 0-index internal
