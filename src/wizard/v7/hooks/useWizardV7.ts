@@ -32,6 +32,9 @@ import { useWizardReducer, runContractQuote, type ContractQuoteResult as CoreCon
 // ✅ Op1e-2 (Feb 22, 2026): Extracted Step 2 industry selection
 import { useWizardStep2 } from "./useWizardStep2";
 
+// ✅ Op1e-3 (Feb 22, 2026): Extracted pricing engine
+import { useWizardPricing, retry as retryWithBackoff } from "./useWizardPricing";
+
 // ✅ Wizard API (Feb 22, 2026): External service integrations
 import { wizardAPI as api } from "@/wizard/v7/api/wizardAPI";
 
@@ -1557,6 +1560,36 @@ export function useWizardV7() {
     throw lastError || new Error("All retry attempts failed");
   };
 
+  // ============================================================
+  // Pricing Engine (Op1e-3 - Extracted Feb 22, 2026)
+  // ============================================================
+  // Extracted ~560 lines to useWizardPricing.ts
+  // - runPricingSafe (Layer A + Layer B with timeout/retry)
+  // - retryPricing (retry from Results page)
+  // - retryTemplate (upgrade from fallback to industry template)
+  // - Request key generation for stale-write protection
+  // - Confidence scoring
+  // - Merlin Memory persistence
+  // ============================================================
+
+  const pricingActions = useWizardPricing({
+    industry: state.industry,
+    step3Answers: state.step3Answers,
+    step3AnswersMeta: state.step3AnswersMeta,
+    step3Template: state.step3Template,
+    location: state.location,
+    locationIntel: state.locationIntel,
+    templateMode: state.templateMode,
+    step4AddOns: state.step4AddOns,
+    dispatch,
+    setBusy,
+    abortRef,
+  });
+
+  const { runPricingSafe, retryPricing, retryTemplate } = pricingActions;
+
+  // ============================================================
+  // Navigation & Gate Validation
   // ============================================================
   // Step 3: Hook Invocation (Op1b - Feb 22, 2026)
   // ============================================================
