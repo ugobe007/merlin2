@@ -82,6 +82,16 @@ export default function SystemConfigSection({
   setGridConnection,
   setInverterEfficiency,
 }: SystemConfigSectionProps) {
+  const scrollNext = (sel: string, delay = 420) =>
+    setTimeout(
+      () =>
+        (sel.startsWith("[")
+          ? document.querySelector(sel)
+          : document.getElementById(sel)
+        )?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      delay
+    );
+
   return (
     <div
       data-section="system"
@@ -248,12 +258,14 @@ export default function SystemConfigSection({
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setChemistry(value)}
-                    className="flex flex-col items-start gap-1 p-3 rounded-xl text-left transition-all duration-150"
+                    onClick={() => {
+                      setChemistry(value);
+                      scrollNext("sys-install");
+                    }}
+                    className="flex flex-col items-start gap-1 p-3 rounded-xl text-left transition-all duration-200"
                     style={{
-                      background: active ? "rgba(59,130,246,0.12)" : "rgba(255,255,255,0.04)",
-                      border: `1px solid ${active ? "rgba(59,130,246,0.45)" : "rgba(255,255,255,0.08)"}`,
-                      outline: active ? "1px solid rgba(59,130,246,0.15)" : "none",
+                      background: "transparent",
+                      border: `${active ? "1.5px" : "1px"} solid ${active ? "rgba(96,165,250,0.85)" : "rgba(255,255,255,0.13)"}`,
                     }}
                   >
                     <div className="flex items-center gap-2 w-full">
@@ -284,7 +296,7 @@ export default function SystemConfigSection({
           </div>
 
           {/* Installation Type */}
-          <div>
+          <div id="sys-install" className="scroll-mt-24">
             <label
               className="block text-sm font-semibold mb-3"
               style={{ color: "rgba(255,255,255,0.6)" }}
@@ -298,11 +310,14 @@ export default function SystemConfigSection({
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setInstallationType(value)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150"
+                    onClick={() => {
+                      setInstallationType(value);
+                      scrollNext("sys-grid");
+                    }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200"
                     style={{
-                      background: active ? "rgba(99,102,241,0.12)" : "rgba(255,255,255,0.04)",
-                      border: `1px solid ${active ? "rgba(99,102,241,0.45)" : "rgba(255,255,255,0.08)"}`,
+                      background: "transparent",
+                      border: `${active ? "1.5px" : "1px"} solid ${active ? "rgba(129,140,248,0.85)" : "rgba(255,255,255,0.13)"}`,
                     }}
                   >
                     <Icon
@@ -330,7 +345,7 @@ export default function SystemConfigSection({
           </div>
 
           {/* Grid Connection */}
-          <div>
+          <div id="sys-grid" className="scroll-mt-24">
             <label
               className="block text-sm font-semibold mb-3"
               style={{ color: "rgba(255,255,255,0.6)" }}
@@ -344,11 +359,14 @@ export default function SystemConfigSection({
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setGridConnection(value)}
-                    className="flex flex-col items-start gap-1 p-3 rounded-xl text-left transition-all duration-150"
+                    onClick={() => {
+                      setGridConnection(value);
+                      scrollNext('[data-section="application"]');
+                    }}
+                    className="flex flex-col items-start gap-1 p-3 rounded-xl text-left transition-all duration-200"
                     style={{
-                      background: active ? "rgba(16,185,129,0.10)" : "rgba(255,255,255,0.04)",
-                      border: `1px solid ${active ? "rgba(16,185,129,0.40)" : "rgba(255,255,255,0.08)"}`,
+                      background: "transparent",
+                      border: `${active ? "1.5px" : "1px"} solid ${active ? "rgba(52,211,153,0.85)" : "rgba(255,255,255,0.13)"}`,
                     }}
                   >
                     <div className="flex items-center gap-2 w-full">

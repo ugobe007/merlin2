@@ -63,6 +63,16 @@ export default function ApplicationUseCaseSection({
   setProjectName,
   setLocation,
 }: ApplicationUseCaseSectionProps) {
+  const scrollNext = (sel: string, delay = 420) =>
+    setTimeout(
+      () =>
+        (sel.startsWith("[")
+          ? document.querySelector(sel)
+          : document.getElementById(sel)
+        )?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      delay
+    );
+
   return (
     <div
       data-section="application"
@@ -107,11 +117,14 @@ export default function ApplicationUseCaseSection({
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setApplicationType(value)}
-                    className="flex flex-col items-start gap-1 p-3 rounded-xl text-left transition-all duration-150"
+                    onClick={() => {
+                      setApplicationType(value);
+                      scrollNext("app-usecase");
+                    }}
+                    className="flex flex-col items-start gap-1 p-3 rounded-xl text-left transition-all duration-200"
                     style={{
-                      background: active ? "rgba(34,197,94,0.10)" : "rgba(255,255,255,0.04)",
-                      border: `1px solid ${active ? "rgba(34,197,94,0.40)" : "rgba(255,255,255,0.08)"}`,
+                      background: "transparent",
+                      border: `${active ? "1.5px" : "1px"} solid ${active ? "rgba(74,222,128,0.85)" : "rgba(255,255,255,0.13)"}`,
                     }}
                   >
                     <div className="flex items-center gap-2 w-full">
@@ -142,7 +155,7 @@ export default function ApplicationUseCaseSection({
           </div>
 
           {/* Primary Use Case */}
-          <div>
+          <div id="app-usecase" className="scroll-mt-24">
             <label
               className="block text-sm font-semibold mb-3"
               style={{ color: "rgba(255,255,255,0.6)" }}
@@ -156,11 +169,14 @@ export default function ApplicationUseCaseSection({
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setUseCase(value)}
-                    className="flex flex-col items-start gap-1 p-3 rounded-xl text-left transition-all duration-150"
+                    onClick={() => {
+                      setUseCase(value);
+                      scrollNext('[data-section="financial"]');
+                    }}
+                    className="flex flex-col items-start gap-1 p-3 rounded-xl text-left transition-all duration-200"
                     style={{
-                      background: active ? "rgba(99,102,241,0.12)" : "rgba(255,255,255,0.04)",
-                      border: `1px solid ${active ? "rgba(99,102,241,0.45)" : "rgba(255,255,255,0.08)"}`,
+                      background: "transparent",
+                      border: `${active ? "1.5px" : "1px"} solid ${active ? "rgba(129,140,248,0.85)" : "rgba(255,255,255,0.13)"}`,
                     }}
                   >
                     <div className="flex items-center gap-2 w-full">

@@ -36,7 +36,7 @@ export default function LiveFinancialSummaryStrip({
   storageSizeMWh,
 }: LiveFinancialSummaryStripProps) {
   return (
-    <div className="sticky top-[64px] z-20 -mx-4 px-4">
+    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-3rem)] max-w-5xl">
       <div
         className="rounded-xl overflow-hidden backdrop-blur-xl transition-all duration-500"
         style={{
