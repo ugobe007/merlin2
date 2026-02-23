@@ -654,20 +654,8 @@ export default function BessQuoteBuilder() {
           {/* HERO SECTION */}
           <HeroSection
             setShowAbout={setShowAbout}
-            setShowJoinModal={setShowJoinModal}
             setShowSmartWizard={setShowSmartWizard}
             setShowAdvancedQuoteBuilder={setShowAdvancedQuoteBuilderModal}
-            setShowCostSavingsModal={setShowCostSavingsModal}
-            setShowRevenueModal={setShowRevenueModal}
-            setShowSustainabilityModal={setShowSustainabilityModal}
-            setCurrentQuote={setCurrentQuote}
-            setShowQuotePreview={setShowQuotePreview}
-            selectedCountry={selectedCountry}
-            bosPercent={bosPercent}
-            epcPercent={epcPercent}
-            pcsKw={pcsKw}
-            setShowPowerAdjustmentModal={setShowPowerAdjustmentModal}
-            setSelectedUseCaseForAdjustment={setSelectedUseCaseForAdjustment}
           />
 
           {/* Quote Preview Modal for Use Case ROI */}
