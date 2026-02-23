@@ -33,7 +33,12 @@
 import { resolveIndustryContext } from "../industry/resolveIndustryContext";
 import { CALCULATORS_BY_ID } from "../calculators/registry";
 import { getTier1Blockers } from "../schema/curatedFieldsResolver";
-import type { CalcInputs, CalcRunResult, CalcValidation, ContributorKeys } from "../calculators/contract";
+import type {
+  CalcInputs,
+  CalcRunResult,
+  CalcValidation,
+  ContributorKeys,
+} from "../calculators/contract";
 import type {
   LoadProfileEnvelope,
   LoadContributor,
@@ -79,6 +84,19 @@ export function getAdapter(industrySlug: string): IndustryAdapter | null {
  */
 export function listAdapterSlugs(): string[] {
   return [...ADAPTER_REGISTRY.keys()];
+}
+
+/**
+ * Gateway: look up a CalculatorContract by ID without exposing CALCULATORS_BY_ID.
+ *
+ * This is the ONLY approved way for code outside step3Compute.ts to obtain
+ * a calculator reference. Direct imports of CALCULATORS_BY_ID from
+ * @/wizard/v7/calculators/registry are forbidden in all other files.
+ *
+ * Returns null if the ID is not registered.
+ */
+export function getCalculatorById(calculatorId: string): CalculatorContract | null {
+  return CALCULATORS_BY_ID[calculatorId] ?? null;
 }
 
 // ============================================================================
@@ -201,7 +219,8 @@ export function step3Compute(input: Step3ComputeInput): LoadProfileEnvelope {
       if (calcInputs[key] == null || calcInputs[key] === "") {
         // Check synonyms too
         const synMatch = Object.entries(contract.acceptedSynonyms).find(
-          ([syn, canonical]) => canonical === key && calcInputs[syn] != null && calcInputs[syn] !== ""
+          ([syn, canonical]) =>
+            canonical === key && calcInputs[syn] != null && calcInputs[syn] !== ""
         );
         if (!synMatch) {
           policy.missingInput(key, "(calculator default)");
@@ -216,7 +235,10 @@ export function step3Compute(input: Step3ComputeInput): LoadProfileEnvelope {
         if (!Number.isFinite(num)) {
           policy.nanSanitized(key, val, "(calculator default)");
         } else if (num < range.min || num > range.max) {
-          policy.rangeClamped(key, num, Math.max(range.min, Math.min(range.max, num)), [range.min, range.max]);
+          policy.rangeClamped(key, num, Math.max(range.min, Math.min(range.max, num)), [
+            range.min,
+            range.max,
+          ]);
         }
       }
     }
@@ -233,7 +255,8 @@ export function step3Compute(input: Step3ComputeInput): LoadProfileEnvelope {
       try {
         calcResult = genericCalc.compute(calcInputs as CalcInputs);
         policy.calculatorFallback(ctx.calculatorId, errMsg);
-        adapterWarning = (adapterWarning ?? "") +
+        adapterWarning =
+          (adapterWarning ?? "") +
           ` Calculator "${ctx.calculatorId}" threw: ${errMsg}. Used generic fallback.`;
       } catch {
         policy.calculatorFallback(ctx.calculatorId, errMsg);
@@ -252,20 +275,21 @@ export function step3Compute(input: Step3ComputeInput): LoadProfileEnvelope {
   // ── 5. Extract load metrics ──────────────────────────────────────────
   const peakKW = calcResult.peakLoadKW ?? 250;
   const baseLoadKW = calcResult.baseLoadKW ?? peakKW * 0.4;
-  const energyKWhPerDay = calcResult.energyKWhPerDay ?? peakKW * normalizedInputs.schedule.hoursPerDay * 0.5;
+  const energyKWhPerDay =
+    calcResult.energyKWhPerDay ?? peakKW * normalizedInputs.schedule.hoursPerDay * 0.5;
 
   const dutyCycle = peakKW > 0 ? baseLoadKW / peakKW : 0;
 
   // ── 6. Build contributors from CalcValidation ────────────────────────
   const contributors = buildContributors(calcResult.validation, peakKW);
   const contributorSumKW = contributors.reduce((sum, c) => sum + c.kW, 0);
-  const contributorDriftPct = peakKW > 0
-    ? Math.abs(contributorSumKW - peakKW) / peakKW
-    : 0;
+  const contributorDriftPct = peakKW > 0 ? Math.abs(contributorSumKW - peakKW) / peakKW : 0;
 
   // ── 7. Compute confidence ────────────────────────────────────────────
   const tier1Blockers = getTier1Blockers(ctx.canonicalSlug);
-  const answeredKeys = new Set(Object.keys(answers).filter((k) => answers[k] != null && answers[k] !== ""));
+  const answeredKeys = new Set(
+    Object.keys(answers).filter((k) => answers[k] != null && answers[k] !== "")
+  );
   const missingTier1 = tier1Blockers.filter((b) => !answeredKeys.has(b));
   const hasWarnings = (calcResult.warnings?.length ?? 0) > 0;
   const confidence = computeConfidence(missingTier1.length, tier1Blockers.length, hasWarnings);
@@ -386,23 +410,39 @@ function flattenForCalculator(
 
   // Scale
   switch (normalized.scale.kind) {
-    case "rooms": flat.roomCount = normalized.scale.value; break;
-    case "beds": flat.bedCount = normalized.scale.value; break;
-    case "bays": flat.bayTunnelCount = normalized.scale.value; break;
-    case "racks": flat.rackCount = normalized.scale.value; break;
+    case "rooms":
+      flat.roomCount = normalized.scale.value;
+      break;
+    case "beds":
+      flat.bedCount = normalized.scale.value;
+      break;
+    case "bays":
+      flat.bayTunnelCount = normalized.scale.value;
+      break;
+    case "racks":
+      flat.rackCount = normalized.scale.value;
+      break;
     case "seats":
       flat.seatingCapacity = normalized.scale.value; // restaurant_load_v1 reads seatingCapacity
-      flat.seatCount = normalized.scale.value;        // alias for compatibility
+      flat.seatCount = normalized.scale.value; // alias for compatibility
       break;
     case "pumps":
-      flat.fuelPumps = normalized.scale.value;       // gas_station_load_v1 reads fuelPumps
-      flat.fuelDispensers = normalized.scale.value;  // alias for compatibility
+      flat.fuelPumps = normalized.scale.value; // gas_station_load_v1 reads fuelPumps
+      flat.fuelDispensers = normalized.scale.value; // alias for compatibility
       break;
-    case "chargers": flat.totalChargers = normalized.scale.value; break;
-    case "units": flat.unitCount = normalized.scale.value; break;
-    case "passengers": flat.annualPassengers = normalized.scale.value; break;
+    case "chargers":
+      flat.totalChargers = normalized.scale.value;
+      break;
+    case "units":
+      flat.unitCount = normalized.scale.value;
+      break;
+    case "passengers":
+      flat.annualPassengers = normalized.scale.value;
+      break;
     case "sqft": // fallthrough
-    default: flat.squareFootage = normalized.scale.value; break;
+    default:
+      flat.squareFootage = normalized.scale.value;
+      break;
   }
 
   if (normalized.scale.subType) {
@@ -519,11 +559,13 @@ function buildFallbackEnvelope(
 
     schedule: { hoursPerDay: 10, daysPerWeek: 7, profileType: "commercial" },
 
-    invariants: [{
-      rule: "fallback-used",
-      passed: false,
-      detail: errorMessage,
-    }],
+    invariants: [
+      {
+        rule: "fallback-used",
+        passed: false,
+        detail: errorMessage,
+      },
+    ],
     invariantsAllPassed: false,
     conflicts: [],
     policyEvents: policy.seal(),

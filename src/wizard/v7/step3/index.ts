@@ -35,6 +35,8 @@
 export {
   step3Compute,
   type Step3ComputeInput,
+  // Approved gateway: look up a calculator without importing registry directly
+  getCalculatorById,
 } from "./step3Compute";
 
 // Types (pure type exports — zero runtime cost)
@@ -89,11 +91,7 @@ export {
 } from "./loadProfile";
 
 // Adapter registration (used by adapter modules + tests)
-export {
-  registerAdapter,
-  getAdapter,
-  listAdapterSlugs,
-} from "./step3Compute";
+export { registerAdapter, getAdapter, listAdapterSlugs } from "./step3Compute";
 
 // Gold-standard adapters (Move 2 — self-register on import)
 export { hotelAdapter } from "./adapters/hotel";

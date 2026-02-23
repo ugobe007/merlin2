@@ -14,7 +14,7 @@ import type {
 import { devLog, devWarn } from "@/wizard/v7/debug/devLog";
 import { getTemplate } from "@/wizard/v7/templates/templateIndex";
 import { applyTemplateMapping } from "@/wizard/v7/templates/applyMapping";
-import { CALCULATORS_BY_ID } from "@/wizard/v7/calculators/registry";
+import { getCalculatorById } from "@/wizard/v7/step3";
 import type { CalcInputs } from "@/wizard/v7/calculators/contract";
 import { resolveIndustryContext } from "@/wizard/v7/industry/resolveIndustryContext";
 import { getSizingDefaults } from "@/wizard/v7/pricing/pricingBridge";
@@ -91,8 +91,8 @@ export function runContractQuote(params: {
       };
     }
 
-    // 3. Get calculator contract using resolved calculatorId
-    const calc = CALCULATORS_BY_ID[ctx.calculatorId];
+    // 3. Get calculator contract via approved gateway (step3Compute.ts owns CALCULATORS_BY_ID)
+    const calc = getCalculatorById(ctx.calculatorId);
     if (!calc) {
       throw {
         code: "STATE",
