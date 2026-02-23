@@ -1,42 +1,34 @@
 // src/wizard/v7/hooks/useWizardV7.ts
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { getTemplate } from "@/wizard/v7/templates/templateIndex";
-import { sanityCheckQuote, type PricingSanity } from "@/wizard/v7/utils/pricingSanity";
-import { getTier1Blockers, resolveStep3Schema } from "@/wizard/v7/schema/curatedFieldsResolver";
+import { useCallback, useMemo, useRef } from "react";
+import { getTier1Blockers } from "@/wizard/v7/schema/curatedFieldsResolver";
 
 // Industry Context — SSOT resolver (Feb 7, 2026)
-import { resolveIndustryContext } from "@/wizard/v7/industry";
 
 // SSOT Pricing Bridge (Feb 3, 2026)
-import {
-  runPricingQuote,
-  getSizingDefaults,
-  generatePricingSnapshotId,
-  type ContractQuoteResult,
-  type PricingQuoteResult,
-  type PricingConfig,
-} from "@/wizard/v7/pricing/pricingBridge";
 
 // ✅ MERLIN MEMORY (Feb 11, 2026): Persistent store for cross-step data
 // Steps are momentary — memory is persistent. No more cross-step flag dependencies.
 import { merlinMemory } from "@/wizard/v7/memory";
-import { devLog, devWarn, devError } from "@/wizard/v7/debug/devLog";
 import { useWizardLocation } from "./useWizardLocation";
 import { useWizardStep3 } from "./useWizardStep3";
 import { useWizardAddOns } from "./useWizardAddOns";
 import { useWizardLifecycle } from "./useWizardLifecycle";
 
 // ✅ Op1e-1 (Feb 22, 2026): Extracted core state management
-import { useWizardReducer, runContractQuote, type ContractQuoteResult as CoreContractResult } from "./useWizardCore";
+import { useWizardReducer } from "./useWizardCore";
 
 // ✅ Op1e-2 (Feb 22, 2026): Extracted Step 2 industry selection
 import { useWizardStep2 } from "./useWizardStep2";
 
 // ✅ Op1e-3 (Feb 22, 2026): Extracted pricing engine
-import { useWizardPricing, retry as retryWithBackoff } from "./useWizardPricing";
+import { useWizardPricing } from "./useWizardPricing";
 
 // ✅ Op1e-4 (Feb 22, 2026): Extracted navigation logic
-import { useWizardNavigation, getNormalizedZip, buildMinimalLocationFromZip, stepCanProceed } from "./useWizardNavigation";
+import {
+  useWizardNavigation,
+  buildMinimalLocationFromZip,
+  stepCanProceed,
+} from "./useWizardNavigation";
 
 // ✅ Wizard API (Feb 22, 2026): External service integrations
 import { wizardAPI as api } from "@/wizard/v7/api/wizardAPI";
@@ -611,6 +603,7 @@ export type Intent =
   | { type: "SET_ERROR"; error: WizardError }
   | { type: "SET_STEP"; step: WizardStep; reason?: string }
   | { type: "PUSH_HISTORY"; step: WizardStep }
+  | { type: "GO_BACK" }
   | { type: "RESET_SESSION"; sessionId: string }
   | { type: "SET_LOCATION_RAW"; value: string }
   | { type: "SET_LOCATION"; location: LocationCard | null }
@@ -689,13 +682,13 @@ export type Intent =
 
 /**
  * getNormalizedZip - Extract and normalize ZIP code from wizard state
- * 
+ *
  * Priority order:
  * 1. state.location.postalCode (confirmed location)
  * 2. state.locationRawInput (user typing)
- * 
+ *
  * Returns: 5-digit ZIP (or fewer if incomplete)
- * 
+ *
  * This prevents "ZIP value drift" between state.location.zip/postalCode/locationRawInput
  */
 /* ============================================================
@@ -1162,7 +1155,7 @@ export function useWizardV7() {
           generatedAt: Date.now(),
         });
       },
-      [state.quote]
+      [state.quote, dispatch]
     ),
 
     // misc
@@ -1178,7 +1171,7 @@ export function useWizardV7() {
    Helpers
 ============================================================ */
 
-function normalizeError(err: unknown): WizardError {
+function _normalizeError(err: unknown): WizardError {
   if (!err) return { code: "UNKNOWN", message: "Unknown error." };
 
   // Type guard for object with properties
@@ -1202,7 +1195,7 @@ function normalizeError(err: unknown): WizardError {
   };
 }
 
-function isAbort(err: unknown): boolean {
+function _isAbort(err: unknown): boolean {
   if (!err || typeof err !== "object") return false;
   return ("name" in err && err.name === "AbortError") || ("code" in err && err.code === "ABORTED");
 }
