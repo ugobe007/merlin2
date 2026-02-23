@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import badgeIcon from "@/assets/images/badge_icon.jpg";
 import {
   X,
@@ -424,6 +424,28 @@ export default function AdvancedQuoteBuilder({
 
   // ═══ TOOL CARDS CONFIGURATION (Phase 1G Part 2, Feb 2026) ═══
   // Extracted tool cards array into reusable hook
+  // ─── Scroll-spy: track which config section is visible ────────────────────
+  const [activeTab, setActiveTab] = useState<string>("system");
+  useEffect(() => {
+    if (viewMode !== "custom-config") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Pick the entry closest to top of viewport
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) {
+          const id = visible[0].target.getAttribute("data-section");
+          if (id) setActiveTab(id);
+        }
+      },
+      { threshold: 0.15, rootMargin: "-80px 0px -55% 0px" }
+    );
+    const sections = document.querySelectorAll("[data-section]");
+    sections.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
+  }, [viewMode]);
+
   const tools = useToolCardsConfig({
     setViewMode,
     setShowQuotePreview,
@@ -603,19 +625,30 @@ export default function AdvancedQuoteBuilder({
                       label: "Renewables",
                       icon: <Sparkles className="w-4 h-4" />,
                     },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        const section = document.querySelector(`[data-section="${tab.id}"]`);
-                        section?.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all whitespace-nowrap"
-                    >
-                      {tab.icon}
-                      {tab.label}
-                    </button>
-                  ))}
+                  ].map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          const section = document.querySelector(`[data-section="${tab.id}"]`);
+                          section?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap relative"
+                        style={{
+                          color: isActive ? "#60a5fa" : "rgba(255,255,255,0.45)",
+                          background: isActive ? "rgba(59,130,246,0.08)" : "transparent",
+                          borderBottom: isActive
+                            ? "2px solid rgba(59,130,246,0.6)"
+                            : "2px solid transparent",
+                        }}
+                      >
+                        {tab.icon}
+                        {tab.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

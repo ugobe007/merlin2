@@ -1,10 +1,10 @@
 /**
  * System Configuration Section
  * Phase 1G Part 2c Operation 2 (Feb 2026)
- * 
+ *
  * Core BESS parameters configuration form
  * Extracted from AdvancedQuoteBuilder.tsx (~263 lines)
- * 
+ *
  * Features:
  * - Power capacity slider (0.1-10 MW) with numeric input
  * - Duration slider (0.5-12 hrs) with numeric input
@@ -15,8 +15,41 @@
  * - MerlinTip with intelligent sizing guidance
  */
 
-import { Battery } from "lucide-react";
+import {
+  Battery,
+  Zap,
+  Shield,
+  Leaf,
+  Package,
+  Lock,
+  Layers,
+  Globe,
+  Sun,
+  Shuffle,
+  WifiOff,
+} from "lucide-react";
 import { MerlinTip } from "@/components/ProQuote/Shared/MerlinTip";
+import type { LucideIcon } from "lucide-react";
+
+const CHEMISTRY_OPTIONS: { value: string; icon: LucideIcon; label: string; sub: string }[] = [
+  { value: "lfp", icon: Battery, label: "LFP", sub: "4,000+ cycles · Safest" },
+  { value: "nmc", icon: Zap, label: "NMC", sub: "High energy density" },
+  { value: "lto", icon: Shield, label: "LTO", sub: "20,000+ cycles · Premium" },
+  { value: "sodium-ion", icon: Leaf, label: "Na-Ion", sub: "Lowest cost · Emerging" },
+];
+
+const INSTALL_OPTIONS: { value: string; icon: LucideIcon; label: string; sub: string }[] = [
+  { value: "outdoor", icon: Package, label: "Outdoor", sub: "Containerized" },
+  { value: "indoor", icon: Lock, label: "Indoor", sub: "Room / Vault" },
+  { value: "rooftop", icon: Layers, label: "Rooftop", sub: "Space-saving" },
+];
+
+const GRID_OPTIONS: { value: string; icon: LucideIcon; label: string; sub: string }[] = [
+  { value: "ac-coupled", icon: Globe, label: "AC-Coupled", sub: "Grid-tied" },
+  { value: "dc-coupled", icon: Sun, label: "DC-Coupled", sub: "Solar integration" },
+  { value: "hybrid", icon: Shuffle, label: "Hybrid", sub: "AC + DC" },
+  { value: "off-grid", icon: WifiOff, label: "Off-Grid", sub: "Island mode" },
+];
 
 export interface SystemConfigSectionProps {
   storageSizeMW: number;
@@ -67,17 +100,11 @@ export default function SystemConfigSection({
         }}
       >
         <h3 className="text-lg font-semibold text-white flex items-center gap-3">
-          <div
-            className="p-2 rounded-lg"
-            style={{ background: "rgba(59,130,246,0.1)" }}
-          >
+          <div className="p-2 rounded-lg" style={{ background: "rgba(59,130,246,0.1)" }}>
             <Battery className="w-5 h-5 text-blue-400" />
           </div>
           System Configuration
-          <span
-            className="text-xs font-normal ml-auto"
-            style={{ color: "rgba(255,255,255,0.35)" }}
-          >
+          <span className="text-xs font-normal ml-auto" style={{ color: "rgba(255,255,255,0.35)" }}>
             Core BESS Parameters
           </span>
         </h3>
@@ -103,10 +130,7 @@ export default function SystemConfigSection({
             }}
           >
             <div className="flex items-center justify-between mb-3">
-              <label
-                className="text-sm font-semibold"
-                style={{ color: "rgba(255,255,255,0.7)" }}
-              >
+              <label className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
                 Power Capacity
               </label>
               <span
@@ -133,9 +157,7 @@ export default function SystemConfigSection({
                 <input
                   type="number"
                   value={storageSizeMW}
-                  onChange={(e) =>
-                    onStorageSizeChange(parseFloat(e.target.value) || 0.1)
-                  }
+                  onChange={(e) => onStorageSizeChange(parseFloat(e.target.value) || 0.1)}
                   step="0.1"
                   min="0.1"
                   max="50"
@@ -164,10 +186,7 @@ export default function SystemConfigSection({
             }}
           >
             <div className="flex items-center justify-between mb-3">
-              <label
-                className="text-sm font-semibold"
-                style={{ color: "rgba(255,255,255,0.7)" }}
-              >
+              <label className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
                 Duration
               </label>
               <span
@@ -194,9 +213,7 @@ export default function SystemConfigSection({
                 <input
                   type="number"
                   value={durationHours}
-                  onChange={(e) =>
-                    onDurationChange(parseFloat(e.target.value) || 0.5)
-                  }
+                  onChange={(e) => onDurationChange(parseFloat(e.target.value) || 0.5)}
                   step="0.5"
                   min="0.5"
                   max="24"
@@ -217,74 +234,148 @@ export default function SystemConfigSection({
           </div>
 
           {/* Battery Chemistry */}
-          <div>
+          <div className="lg:col-span-2">
             <label
-              className="block text-sm font-semibold mb-2"
+              className="block text-sm font-semibold mb-3"
               style={{ color: "rgba(255,255,255,0.6)" }}
             >
               Battery Chemistry
             </label>
-            <select
-              value={chemistry}
-              onChange={(e) => setChemistry(e.target.value)}
-              className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
-              <option value="lfp">LiFePO4 (LFP) - Long life, safe</option>
-              <option value="nmc">NMC - High energy density</option>
-              <option value="lto">LTO - Ultra-long life</option>
-              <option value="sodium-ion">Sodium-Ion - Low cost</option>
-            </select>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {CHEMISTRY_OPTIONS.map(({ value, icon: Icon, label, sub }) => {
+                const active = chemistry === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setChemistry(value)}
+                    className="flex flex-col items-start gap-1 p-3 rounded-xl text-left transition-all duration-150"
+                    style={{
+                      background: active ? "rgba(59,130,246,0.12)" : "rgba(255,255,255,0.04)",
+                      border: `1px solid ${active ? "rgba(59,130,246,0.45)" : "rgba(255,255,255,0.08)"}`,
+                      outline: active ? "1px solid rgba(59,130,246,0.15)" : "none",
+                    }}
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <Icon
+                        className="w-4 h-4 shrink-0"
+                        style={{ color: active ? "#60a5fa" : "rgba(255,255,255,0.4)" }}
+                      />
+                      <span
+                        className="text-sm font-bold"
+                        style={{ color: active ? "#93c5fd" : "rgba(255,255,255,0.75)" }}
+                      >
+                        {label}
+                      </span>
+                      {active && (
+                        <span className="ml-auto text-[10px] font-bold text-blue-400">✓</span>
+                      )}
+                    </div>
+                    <span
+                      className="text-[11px] leading-tight pl-6"
+                      style={{ color: "rgba(255,255,255,0.32)" }}
+                    >
+                      {sub}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Installation Type */}
           <div>
             <label
-              className="block text-sm font-semibold mb-2"
+              className="block text-sm font-semibold mb-3"
               style={{ color: "rgba(255,255,255,0.6)" }}
             >
               Installation Type
             </label>
-            <select
-              value={installationType}
-              onChange={(e) => setInstallationType(e.target.value)}
-              className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
-              <option value="outdoor">Outdoor (Containerized)</option>
-              <option value="indoor">Indoor (Room/Vault)</option>
-              <option value="rooftop">Rooftop</option>
-            </select>
+            <div className="flex flex-col gap-2">
+              {INSTALL_OPTIONS.map(({ value, icon: Icon, label, sub }) => {
+                const active = installationType === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setInstallationType(value)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150"
+                    style={{
+                      background: active ? "rgba(99,102,241,0.12)" : "rgba(255,255,255,0.04)",
+                      border: `1px solid ${active ? "rgba(99,102,241,0.45)" : "rgba(255,255,255,0.08)"}`,
+                    }}
+                  >
+                    <Icon
+                      className="w-4 h-4 shrink-0"
+                      style={{ color: active ? "#a5b4fc" : "rgba(255,255,255,0.35)" }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: active ? "#c7d2fe" : "rgba(255,255,255,0.7)" }}
+                      >
+                        {label}
+                      </span>
+                      <span className="ml-2 text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+                        {sub}
+                      </span>
+                    </div>
+                    {active && (
+                      <span className="text-[10px] font-bold text-indigo-400 shrink-0">✓</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Grid Connection */}
           <div>
             <label
-              className="block text-sm font-semibold mb-2"
+              className="block text-sm font-semibold mb-3"
               style={{ color: "rgba(255,255,255,0.6)" }}
             >
               Grid Connection
             </label>
-            <select
-              value={gridConnection}
-              onChange={(e) => setGridConnection(e.target.value)}
-              className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
-              <option value="ac-coupled">AC-Coupled (Grid-tied)</option>
-              <option value="dc-coupled">DC-Coupled (with Solar)</option>
-              <option value="hybrid">Hybrid (AC+DC)</option>
-              <option value="off-grid">Off-Grid/Island Mode</option>
-            </select>
+            <div className="grid grid-cols-2 gap-2">
+              {GRID_OPTIONS.map(({ value, icon: Icon, label, sub }) => {
+                const active = gridConnection === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setGridConnection(value)}
+                    className="flex flex-col items-start gap-1 p-3 rounded-xl text-left transition-all duration-150"
+                    style={{
+                      background: active ? "rgba(16,185,129,0.10)" : "rgba(255,255,255,0.04)",
+                      border: `1px solid ${active ? "rgba(16,185,129,0.40)" : "rgba(255,255,255,0.08)"}`,
+                    }}
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <Icon
+                        className="w-4 h-4 shrink-0"
+                        style={{ color: active ? "#34d399" : "rgba(255,255,255,0.4)" }}
+                      />
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: active ? "#6ee7b7" : "rgba(255,255,255,0.7)" }}
+                      >
+                        {label}
+                      </span>
+                      {active && (
+                        <span className="ml-auto text-[10px] font-bold text-emerald-400">✓</span>
+                      )}
+                    </div>
+                    <span
+                      className="text-[11px] leading-tight pl-6"
+                      style={{ color: "rgba(255,255,255,0.32)" }}
+                    >
+                      {sub}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Inverter Efficiency */}
@@ -298,9 +389,7 @@ export default function SystemConfigSection({
             <input
               type="number"
               value={inverterEfficiency}
-              onChange={(e) =>
-                setInverterEfficiency(parseFloat(e.target.value) || 90)
-              }
+              onChange={(e) => setInverterEfficiency(parseFloat(e.target.value) || 90)}
               min="85"
               max="99"
               step="0.5"
