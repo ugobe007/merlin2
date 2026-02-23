@@ -15,7 +15,7 @@
  */
 
 import React, { useMemo, useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles, Sun, Zap, Building2, Settings, Target } from "lucide-react";
+import { Sparkles, Sun } from "lucide-react";
 import SolarSizingModal, { type SolarSizingResult } from "./SolarSizingModal";
 import {
   resolveStep3Schema,
@@ -33,26 +33,10 @@ import {
 import { devLog, devWarn, devError } from "@/wizard/v7/debug/devLog";
 
 // Industry images (same as original)
-import hotelImg from "@/assets/images/hotel_motel_holidayinn_1.jpg";
-import carWashImg from "@/assets/images/car_wash_1.jpg";
-import manufacturingImg from "@/assets/images/manufacturing_1.jpg";
-import warehouseImg from "@/assets/images/logistics_1.jpg";
-import officeImg from "@/assets/images/office_building1.jpg";
-import retailImg from "@/assets/images/retail_1.jpg";
-import restaurantImg from "@/assets/images/restaurant_1.jpg";
-import healthcareImg from "@/assets/images/hospital_1.jpg";
-import dataCenterImg from "@/assets/images/data-center-1.jpg";
-import evChargingImg from "@/assets/images/ev_charging_station.jpg";
-import airportImg from "@/assets/images/airport_11.jpeg";
-import casinoImg from "@/assets/images/casino_gaming1.jpg";
-import gasStationImg from "@/assets/images/truck_stop.jpg";
-import collegeImg from "@/assets/images/college_1.jpg";
-import agricultureImg from "@/assets/images/agriculture_1.jpg";
-import apartmentImg from "@/assets/images/apartment_building.jpg";
-import residentialImg from "@/assets/images/Residential1.jpg";
-import indoorFarmImg from "@/assets/images/indoor_farm1.jpg";
-import merlinIcon from "@/assets/images/new_small_profile_.png";
 import QuestionCard from "./QuestionCard";
+import { INDUSTRY_IMAGES, SECTION_ICONS, SECTION_DESCRIPTIONS } from "./step3Constants";
+import { asString, isAnswered, isRequired, SOLAR_QUESTIONS_MOVED_TO_MODAL, REMAP_TO_GOALS } from "./step3Helpers";
+import merlinIcon from "@/assets/images/new_small_profile_.png";
 
 type Step3Answers = Record<string, unknown>;
 
@@ -72,93 +56,6 @@ type Props = {
 };
 
 // Image mapping (type-enforced against canonical keys - adding industry requires image)
-const INDUSTRY_IMAGES: Record<CanonicalIndustryKey, string> = {
-  "car-wash": carWashImg,
-  hotel: hotelImg,
-  "ev-charging": evChargingImg,
-  datacenter: dataCenterImg,
-  hospital: healthcareImg,
-  airport: airportImg,
-  casino: casinoImg,
-  warehouse: warehouseImg,
-  retail: retailImg,
-  "gas-station": gasStationImg,
-  office: officeImg,
-  manufacturing: manufacturingImg,
-  restaurant: restaurantImg,
-  college: collegeImg,
-  agriculture: agricultureImg,
-  "cold-storage": warehouseImg, // uses warehouse as fallback
-  apartment: apartmentImg,
-  residential: residentialImg,
-  "indoor-farm": indoorFarmImg,
-  government: officeImg, // office building as proxy for government
-  other: hotelImg,
-  auto: hotelImg,
-};
-
-function asString(v: unknown): string {
-  if (v === null || v === undefined) return "";
-  if (typeof v === "string") return v;
-  try {
-    return String(v);
-  } catch {
-    return "";
-  }
-}
-
-function isAnswered(value: unknown): boolean {
-  if (value === null || value === undefined) return false;
-  if (typeof value === "string") return value.trim().length > 0;
-  if (typeof value === "number") return Number.isFinite(value);
-  if (typeof value === "boolean") return true;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") return Object.keys(value as object).length > 0;
-  return true;
-}
-
-// Required check with validation fallback (guards against missing required flag)
-function isRequired(q: CuratedField): boolean {
-  return q.required ?? q.validation?.required ?? false;
-}
-
-// Section icon mapping — Lucide icons for professional look
-const SECTION_ICONS: Record<string, React.ReactNode> = {
-  facility: <Building2 className="w-4 h-4" />,
-  operations: <Settings className="w-4 h-4" />,
-  energy: <Zap className="w-4 h-4" />,
-  solar: <Sun className="w-4 h-4" />,
-  goals: <Target className="w-4 h-4" />,
-};
-
-// Section descriptions for contextual guidance
-const SECTION_DESCRIPTIONS: Record<string, string> = {
-  facility: "Tell us about your building or site",
-  operations: "How your facility operates day-to-day",
-  energy: "Your current energy setup and grid connection",
-  solar: "Solar generation potential and existing installations",
-  goals: "What you want to achieve with energy storage",
-};
-
-// Normalize field type - delegates to extracted utility
-function normalizeFieldType(t?: string): string {
-  return normalizeFieldTypeUtil(t);
-}
-
-// Solar questions now handled by SolarSizingModal popup (Feb 18, 2026)
-// All solar-specific questions moved to modal; primaryGoal/budgetTimeline remapped to 'goals'
-const SOLAR_QUESTIONS_MOVED_TO_MODAL = new Set([
-  "roofArea",
-  "canopyInterest",
-  "carportInterest",
-  "totalSiteArea",
-  "solarCapacityKW",
-  "existingSolar",
-  "sustainabilityMandate", // government config has this in solar section
-]);
-
-// Questions wrongly categorized under 'solar' section — remap to 'goals'
-const REMAP_TO_GOALS = new Set(["primaryGoal", "budgetTimeline"]);
 
 const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: Props) {
   const { state, actions, updateState } = props;
@@ -439,7 +336,7 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
     if (dupes.length) devError("[Step3Curated] Duplicate question ids:", dupes);
 
     for (const q of questions) {
-      const t = normalizeFieldType(q.type);
+      const t = normalizeFieldTypeUtil(q.type);
       if (!t) devError("[Step3Curated] Missing type:", q);
       if (isRequired(q) && !(q.title || q.label)) {
         devError("[Step3Curated] Required question missing label/title:", q.id);
