@@ -49,6 +49,7 @@ import type {
 import { checkEnvelopeInvariants, computeConfidence } from "./loadProfile";
 import { PolicyEventCollector } from "./policyTaxonomy";
 import { getCalculatorContract } from "./calculatorContracts";
+import type { CalculatorContract } from "../calculators/contract";
 
 // ============================================================================
 // Adapter Registry

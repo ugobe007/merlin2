@@ -227,7 +227,10 @@ export function runContractQuote(params: {
       energyKWhPerDay: loadProfile.energyKWhPerDay,
       storageToPeakRatio: sizingHints.storageToPeakRatio,
       durationHours: sizingHints.durationHours,
-      notes: [...(computed.assumptions ?? []), ...(computed.warnings ?? []).map((w) => `⚠️ ${w}`)],
+      notes: [
+        ...(computed.assumptions ?? []),
+        ...(computed.warnings ?? []).map((w: string) => `⚠️ ${w}`),
+      ],
       pricingComplete: false, // Will be set true after Layer B
 
       // TrueQuote™ validation envelope — persisted for export/audit
@@ -260,8 +263,8 @@ export function runContractQuote(params: {
       warningsCount: computed.warnings?.length ?? 0,
       assumptionsCount: computed.assumptions?.length ?? 0,
       missingInputs: computed.warnings
-        ?.filter((w) => w.toLowerCase().includes("missing"))
-        .map((w) => w.split(":")[0].trim()),
+        ?.filter((w: string) => w.toLowerCase().includes("missing"))
+        .map((w: string) => w.split(":")[0].trim()),
     });
 
     // Log warnings separately if present
