@@ -41,21 +41,24 @@ export default defineConfig({
           'vendor-supabase': ['@supabase/supabase-js'],
           // Note: lucide-react NOT chunked manually — tree-shaking only
           // bundles actually-used icons into each lazy chunk
-          
-          // App chunks - split by functionality
-          'wizard': [
-            './src/components/wizard/v6/WizardV6.tsx',
-          ],
+
+          // wizard-v7 chunk — V7 hook + calculator registry
           'wizard-v7': [
             './src/wizard/v7/hooks/useWizardV7.ts',
             './src/wizard/v7/calculators/registry.ts',
             './src/wizard/v7/pricing/pricingBridge.ts',
           ],
+          // Shared services chunk — used by many pages/chunks
           'services': [
             './src/services/centralizedCalculations.ts',
             './src/services/baselineService.ts',
             './src/services/useCaseService.ts',
+            './src/services/useCasePowerCalculations.ts',
+            './src/utils/equipmentCalculations.ts',
           ],
+          // NOTE: WizardV6 intentionally NOT in manualChunks — it is React.lazy()
+          // so Rollup creates a tree-shaken async chunk. Pinning it caused a
+          // 2.5 MB monolith chunk (fixed Feb 23 2026).
         },
       },
     },
