@@ -402,12 +402,16 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                 Couldn't generate options
               </p>
               <p className="text-slate-500 text-sm mb-4">{loadError}</p>
-              <button
-                onClick={actions?.goBack}
-                className="px-5 py-2.5 text-sm font-medium text-slate-400 hover:text-white transition-colors"
-              >
-                ← Back to Options
-              </button>
+              <div className="flex items-center gap-3 justify-center">
+                <button
+                  onClick={actions?.goBack}
+                  className="px-5 py-2.5 text-sm font-medium text-slate-400 hover:text-white transition-colors"
+                >
+                  ← Back to Options
+                </button>
+                <span className="text-slate-700 text-xs">or</span>
+                <p className="text-slate-500 text-xs">use <strong className="text-slate-400">Continue to Quote →</strong> above for a basic estimate</p>
+              </div>
             </>
           ) : (
             <>

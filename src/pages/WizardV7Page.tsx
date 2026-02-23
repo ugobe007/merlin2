@@ -204,6 +204,25 @@ function WizardV7Page() {
         return "Choose Industry →";
       }
     }
+    // Step 3: contextual label based on gate (computed inline from raw state to
+    // avoid forward-reference to gateState / gate which are declared below)
+    if (state.step === "profile") {
+      const profileReady = state.step3Complete ||
+        !!(state.step3Template?.questions ?? []).every(
+          (q: { id: string; required?: boolean }) =>
+            q.required === false ||
+            (state.step3Answers?.[q.id] != null && state.step3Answers[q.id] !== "")
+        );
+      return profileReady ? "See Options →" : "Answer required questions";
+    }
+    // MagicFit: label reflects tier selection status
+    if (state.step === "magicfit") {
+      if (state.quote?.pricingComplete) return "View My Quote →";
+      if (state.pricingStatus === "error" || state.pricingStatus === "timed_out") {
+        return "Continue to Quote →";
+      }
+      return "Select a System →";
+    }
     return (NEXT_LABELS[state.step as WizardStepId] ?? "Next Step") as string;
   }, [
     state.step,
@@ -211,6 +230,11 @@ function WizardV7Page() {
     state.goalsConfirmed,
     state.industryLocked,
     state.industry,
+    state.quote,
+    state.pricingStatus,
+    state.step3Complete,
+    state.step3Template,
+    state.step3Answers,
   ]);
 
   // ============================================================================
@@ -277,14 +301,22 @@ function WizardV7Page() {
       return false;
     }
 
-    // Step 3 uses its own submit button, so shell Next is disabled
+    // Step 3: shell Next enabled once gate passes (all required fields answered).
+    // handleNext for "profile" calls wizard.submitStep3() — so this Just Works.
+    // The inline "Continue to Options →" button is kept as a secondary affordance.
     if (state.step === "profile") {
-      return false;
+      return gate.canContinue;
     }
 
-    // MagicFit: enable Continue once user has selected a tier
+    // MagicFit: enable Continue once a tier has been selected (pricingComplete).
+    // Also allow proceeding when pricing failed so users aren't permanently stuck —
+    // Results page handles the no-pricing state gracefully with a retry banner.
     if (state.step === "magicfit") {
-      return !!state.quote?.pricingComplete;
+      return (
+        !!state.quote?.pricingComplete ||
+        state.pricingStatus === "error" ||
+        state.pricingStatus === "timed_out"
+      );
     }
 
     // Results step has no Next
@@ -300,6 +332,7 @@ function WizardV7Page() {
     state.businessCard,
     state.businessConfirmed,
     state.quote,
+    state.pricingStatus,
     gate.canContinue,
   ]);
 
