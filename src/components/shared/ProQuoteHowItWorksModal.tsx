@@ -30,7 +30,7 @@ interface ProQuoteHowItWorksModalProps {
 export default function ProQuoteHowItWorksModal({
   isOpen,
   onClose,
-  onOpenProQuote: _onOpenProQuote,
+  onOpenProQuote,
 }: ProQuoteHowItWorksModalProps) {
   const [animateIn, setAnimateIn] = useState(false);
 
@@ -57,7 +57,10 @@ export default function ProQuoteHowItWorksModal({
         style={{ background: "#0f1117", border: "1px solid rgba(255,255,255,0.08)" }}
       >
         {/* ── HEADER ── */}
-        <div className="relative px-6 pt-5 pb-4 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        <div
+          className="relative px-6 pt-5 pb-4 flex-shrink-0"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
+        >
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-1.5 rounded-md hover:bg-white/10 transition-colors"
@@ -66,14 +69,22 @@ export default function ProQuoteHowItWorksModal({
           </button>
 
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg" style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)" }}>
+            <div
+              className="p-2 rounded-lg"
+              style={{
+                background: "rgba(251,191,36,0.1)",
+                border: "1px solid rgba(251,191,36,0.2)",
+              }}
+            >
               <Sliders className="w-4 h-4 text-amber-400" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white">
                 How <span className="text-amber-400">ProQuote™</span> Works
               </h2>
-              <p className="text-sm text-slate-500">Professional-grade BESS configuration &amp; financial modeling</p>
+              <p className="text-sm text-slate-500">
+                Professional-grade BESS configuration &amp; financial modeling
+              </p>
             </div>
           </div>
         </div>
@@ -83,10 +94,13 @@ export default function ProQuoteHowItWorksModal({
           {/* What is ProQuote */}
           <div className="mb-5">
             <p className="text-sm text-slate-400 leading-relaxed">
-              ProQuote™ is Merlin's professional configuration tool for engineers, EPCs, and developers
-              who need <span className="text-slate-200 font-medium">full control over every system parameter</span>.
-              Design complete BESS systems with electrical specifications, renewable integration, and
-              bank-ready financial models — all powered by TrueQuote™ source-verified pricing.
+              ProQuote™ is Merlin's professional configuration tool for engineers, EPCs, and
+              developers who need{" "}
+              <span className="text-slate-200 font-medium">
+                full control over every system parameter
+              </span>
+              . Design complete BESS systems with electrical specifications, renewable integration,
+              and bank-ready financial models — all powered by TrueQuote™ source-verified pricing.
             </p>
           </div>
 
@@ -127,7 +141,10 @@ export default function ProQuoteHowItWorksModal({
                 <div
                   key={s.step}
                   className="flex items-start gap-4 p-4 rounded-lg"
-                  style={{ background: `rgba(${s.accent}, 0.03)`, border: `1px solid rgba(${s.accent}, 0.08)` }}
+                  style={{
+                    background: `rgba(${s.accent}, 0.03)`,
+                    border: `1px solid rgba(${s.accent}, 0.08)`,
+                  }}
                 >
                   <div
                     className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5"
@@ -154,15 +171,30 @@ export default function ProQuoteHowItWorksModal({
               {[
                 { icon: Sliders, title: "System Config", desc: "Full BESS parameter control" },
                 { icon: Zap, title: "Electrical Specs", desc: "PCS, inverters, transformers" },
-                { icon: Sparkles, title: "Renewables", desc: "Solar, wind, generators, fuel cells" },
+                {
+                  icon: Sparkles,
+                  title: "Renewables",
+                  desc: "Solar, wind, generators, fuel cells",
+                },
                 { icon: Calculator, title: "Live Pricing", desc: "Real-time cost calculations" },
-                { icon: Landmark, title: "Bank-Ready Model", desc: "3-statement, DSCR, IRR, MACRS" },
-                { icon: FileSpreadsheet, title: "Professional Export", desc: "Word, Excel, PDF reports" },
+                {
+                  icon: Landmark,
+                  title: "Bank-Ready Model",
+                  desc: "3-statement, DSCR, IRR, MACRS",
+                },
+                {
+                  icon: FileSpreadsheet,
+                  title: "Professional Export",
+                  desc: "Word, Excel, PDF reports",
+                },
               ].map((tool, i) => (
                 <div
                   key={i}
                   className="p-3 rounded-lg"
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
                 >
                   <tool.icon className="w-4 h-4 text-amber-400/60 mb-2" />
                   <h4 className="text-xs font-semibold text-white">{tool.title}</h4>
@@ -173,32 +205,74 @@ export default function ProQuoteHowItWorksModal({
           </div>
 
           {/* TrueQuote Integration */}
-          <div className="rounded-lg p-4" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.12)" }}>
+          <div
+            className="rounded-lg p-4"
+            style={{
+              background: "rgba(16,185,129,0.04)",
+              border: "1px solid rgba(16,185,129,0.12)",
+            }}
+          >
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-4 h-4 text-emerald-400" />
               <span className="text-sm font-semibold text-white">Powered by TrueQuote™</span>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Every ProQuote uses the same NREL ATB 2024, IEEE, and IRA 2022 benchmarks as TrueQuote™.
-              Equipment pricing, financial calculations, and tax credits are all source-verified and auditable.
-              ProQuote simply gives you more control over the inputs.
+              Every ProQuote uses the same NREL ATB 2024, IEEE, and IRA 2022 benchmarks as
+              TrueQuote™. Equipment pricing, financial calculations, and tax credits are all
+              source-verified and auditable. ProQuote simply gives you more control over the inputs.
             </p>
           </div>
         </div>
 
         {/* ── FOOTER ── */}
-        <div className="px-6 py-4 flex items-center justify-between flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-          <span className="text-xs text-slate-600">Professional configuration · TrueQuote™ verified</span>
+        <div
+          className="px-6 py-4 flex items-center justify-between flex-shrink-0"
+          style={{
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <span className="text-xs text-slate-600">
+            Professional configuration · TrueQuote™ verified
+          </span>
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all"
-              style={{ background: 'transparent', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(251,191,36,0.06)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all"
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.5)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
             >
-              Got It
+              Maybe Later
             </button>
+            {onOpenProQuote && (
+              <button
+                onClick={onOpenProQuote}
+                className="flex items-center gap-2 px-5 py-2 rounded-md text-sm font-semibold transition-all"
+                style={{
+                  background: "rgba(251,191,36,0.12)",
+                  border: "1px solid rgba(251,191,36,0.35)",
+                  color: "#fbbf24",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(251,191,36,0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(251,191,36,0.12)";
+                }}
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                Open ProQuote™ Configuration →
+              </button>
+            )}
           </div>
         </div>
       </div>
