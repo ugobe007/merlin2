@@ -18,6 +18,7 @@ import {
   Clock,
   CheckCircle2,
   FileEdit,
+  Plus,
 } from "lucide-react";
 // InteractiveConfigDashboard moved to legacy - feature disabled for V5 cleanup
 // import type { QuoteResult } from "@/services/unifiedQuoteCalculator"; // Unused
@@ -622,8 +623,8 @@ export default function AdvancedQuoteBuilder({
                     { id: "electrical", label: "Electrical", icon: <Zap className="w-4 h-4" /> },
                     {
                       id: "renewables",
-                      label: "Renewables",
-                      icon: <Sparkles className="w-4 h-4" />,
+                      label: "Add-Ons",
+                      icon: <Plus className="w-4 h-4" />,
                     },
                   ].map((tab) => {
                     const isActive = activeTab === tab.id;

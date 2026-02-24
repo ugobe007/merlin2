@@ -447,6 +447,59 @@ export const LandingView: React.FC<LandingViewProps> = ({
         </div>
       </div>
 
+      {/* ─── Vendor / EPC callout strip ─────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-6 pb-6">
+        <a
+          href="/vendor"
+          className="group flex items-center justify-between gap-4 p-5 rounded-xl no-underline transition-all duration-200"
+          style={{
+            background: "rgba(6,182,212,0.04)",
+            border: "1px solid rgba(6,182,212,0.22)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(6,182,212,0.09)";
+            e.currentTarget.style.borderColor = "rgba(6,182,212,0.45)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(6,182,212,0.04)";
+            e.currentTarget.style.borderColor = "rgba(6,182,212,0.22)";
+          }}
+        >
+          <div className="flex items-center gap-4">
+            <div
+              className="p-2.5 rounded-lg shrink-0"
+              style={{ background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.2)" }}
+            >
+              <Building2 className="w-5 h-5" style={{ color: "#67e8f9" }} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: "#67e8f9" }}>
+                Vendor &amp; EPC Portal
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.42)" }}>
+                Build branded client quotes using <strong style={{ color: "rgba(255,255,255,0.65)" }}>your own product specs and pricing</strong> — batteries, inverters, solar panels and more.
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 flex items-center gap-2">
+            <span
+              className="hidden sm:block text-[11px] font-semibold px-2.5 py-1 rounded-full"
+              style={{
+                background: "rgba(6,182,212,0.1)",
+                border: "1px solid rgba(6,182,212,0.25)",
+                color: "#67e8f9",
+              }}
+            >
+              For vendors &amp; EPCs
+            </span>
+            <ArrowRight
+              className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+              style={{ color: "#67e8f9" }}
+            />
+          </div>
+        </a>
+      </div>
+
       {/* Document Upload Section - Path A */}
       <div className="max-w-7xl mx-auto px-6 pb-8">
         <div
