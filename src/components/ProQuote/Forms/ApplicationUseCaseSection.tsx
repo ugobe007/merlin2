@@ -209,41 +209,41 @@ export default function ApplicationUseCaseSection({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
             <div>
               <label
-                className="block text-sm font-semibold mb-2"
+                className="block text-sm font-semibold mb-1"
                 style={{ color: "rgba(255,255,255,0.6)" }}
               >
                 Project Name
               </label>
+              <p className="text-[11px] mb-2" style={{ color: "rgba(255,255,255,0.28)" }}>
+                Used on quotes, exports, and saved proposals
+              </p>
               <input
                 type="text"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 placeholder="e.g., Downtown Hotel BESS"
-                className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder-white/20"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
+                className="w-full px-4 py-2.5 text-white rounded-xl focus:ring-1 focus:ring-emerald-500/60 focus:outline-none placeholder-white/20 transition-all"
+                style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.13)" }}
               />
             </div>
 
             <div>
               <label
-                className="block text-sm font-semibold mb-2"
+                className="block text-sm font-semibold mb-1"
                 style={{ color: "rgba(255,255,255,0.6)" }}
               >
                 Location
               </label>
+              <p className="text-[11px] mb-2" style={{ color: "rgba(52,211,153,0.6)" }}>
+                Affects utility rates, solar potential &amp; incentives
+              </p>
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="City, State"
-                className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder-white/20"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
+                className="w-full px-4 py-2.5 text-white rounded-xl focus:ring-1 focus:ring-emerald-500/60 focus:outline-none placeholder-white/20 transition-all"
+                style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.13)" }}
               />
             </div>
           </div>
