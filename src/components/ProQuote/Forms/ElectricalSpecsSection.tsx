@@ -308,107 +308,148 @@ export default function ElectricalSpecsSection({
           </div>
         </div>
 
-        {/* Electrical Parameters - override inputs */}
-        <p className="text-[11px] mb-3" style={{ color: "rgba(52,211,153,0.6)" }}>
-          ℹ️&nbsp;Values below are{" "}
-          <strong style={{ color: "rgba(255,255,255,0.55)" }}>auto-calculated</strong> from your
-          system size. Override only if you have specific requirements.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {/* System Watts */}
+        {/* ── Auto-Calculated Defaults Block ────────────────────────── */}
+        <div
+          className="rounded-xl mb-6 overflow-hidden"
+          style={{
+            border: "1.5px solid rgba(96,165,250,0.30)",
+            boxShadow: "0 0 0 4px rgba(96,165,250,0.04), inset 0 0 40px rgba(96,165,250,0.03)",
+          }}
+        >
+          {/* Banner header */}
           <div
-            className="rounded-xl p-4"
-            style={{ background: "transparent", border: "1px solid rgba(59,130,246,0.22)" }}
+            className="flex items-center justify-between px-4 py-2.5"
+            style={{ background: "rgba(96,165,250,0.10)", borderBottom: "1px solid rgba(96,165,250,0.18)" }}
           >
-            <label
-              className="block text-xs mb-1 font-semibold"
-              style={{ color: "rgba(255,255,255,0.5)" }}
+            <div className="flex items-center gap-2">
+              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="7" stroke="rgba(96,165,250,0.9)" strokeWidth="1.5"/>
+                <path d="M8 7v4M8 5.5v.5" stroke="rgba(96,165,250,0.9)" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <span className="text-[11px] font-semibold" style={{ color: "rgba(147,197,253,0.95)" }}>
+                Auto-Calculated Defaults
+              </span>
+              <span className="text-[11px]" style={{ color: "rgba(147,197,253,0.55)" }}>
+                — live values from your system size above
+              </span>
+            </div>
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+              style={{ background: "rgba(96,165,250,0.15)", border: "1px solid rgba(96,165,250,0.3)", color: "#93c5fd" }}
             >
-              System Power (Watts)
-            </label>
-            <p className="text-[11px] mb-2" style={{ color: "rgba(96,165,250,0.7)" }}>
-              Calculated · {calculatedWatts.toLocaleString()} W → {totalKW.toLocaleString()} kW
-            </p>
-            <input
-              type="number"
-              value={systemWattsInput}
-              onChange={(e) =>
-                setSystemWattsInput(e.target.value === "" ? "" : parseFloat(e.target.value))
-              }
-              placeholder={calculatedWatts.toLocaleString()}
-              className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-1 focus:ring-blue-500/40 focus:outline-none"
-              style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.11)" }}
-            />
+              OVERRIDE OPTIONAL
+            </span>
           </div>
 
-          {/* AC Amps */}
-          <div
-            className="rounded-xl p-4"
-            style={{ background: "transparent", border: "1px solid rgba(99,102,241,0.22)" }}
-          >
-            <label
-              className="block text-xs mb-1 font-semibold"
-              style={{ color: "rgba(255,255,255,0.5)" }}
-            >
-              AC Current (3-Phase)
-            </label>
-            <p className="text-[11px] mb-2" style={{ color: "rgba(129,140,248,0.7)" }}>
-              Calculated · {calculatedAmpsAC.toFixed(0)} A @ {systemVoltage}V AC
-            </p>
-            <input
-              type="number"
-              value={systemAmpsACInput}
-              onChange={(e) =>
-                setSystemAmpsACInput(e.target.value === "" ? "" : parseFloat(e.target.value))
-              }
-              placeholder={calculatedAmpsAC.toFixed(0)}
-              className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-1 focus:ring-indigo-500/40 focus:outline-none"
-              style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.11)" }}
-            />
-          </div>
+          {/* Fields */}
+          <div className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              {/* System Watts */}
+              <div
+                className="rounded-xl p-4"
+                style={{ background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.18)" }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>
+                    System Power (Watts)
+                  </label>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                    style={{ background: "rgba(96,165,250,0.15)", color: "#93c5fd", border: "1px solid rgba(96,165,250,0.25)" }}>
+                    AUTO
+                  </span>
+                </div>
+                <p className="text-[11px] mb-2 font-semibold" style={{ color: "rgba(96,165,250,0.85)" }}>
+                  {calculatedWatts.toLocaleString()} W → {totalKW.toLocaleString()} kW
+                </p>
+                <input
+                  type="number"
+                  value={systemWattsInput}
+                  onChange={(e) =>
+                    setSystemWattsInput(e.target.value === "" ? "" : parseFloat(e.target.value))
+                  }
+                  placeholder={calculatedWatts.toLocaleString()}
+                  className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-1 focus:ring-blue-500/40 focus:outline-none"
+                  style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.11)" }}
+                />
+              </div>
 
-          {/* DC Amps */}
-          <div
-            className="rounded-xl p-4"
-            style={{ background: "transparent", border: "1px solid rgba(59,130,246,0.22)" }}
-          >
-            <label
-              className="block text-xs mb-1 font-semibold"
-              style={{ color: "rgba(255,255,255,0.5)" }}
-            >
-              DC Current (Battery Side)
-            </label>
-            <p className="text-[11px] mb-2" style={{ color: "rgba(96,165,250,0.7)" }}>
-              Calculated · {calculatedAmpsDC.toFixed(0)} A @ {dcVoltage}V DC
-            </p>
-            <input
-              type="number"
-              value={systemAmpsDCInput}
-              onChange={(e) =>
-                setSystemAmpsDCInput(e.target.value === "" ? "" : parseFloat(e.target.value))
-              }
-              placeholder={calculatedAmpsDC.toFixed(0)}
-              className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-1 focus:ring-blue-500/40 focus:outline-none"
-              style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.11)" }}
-            />
-          </div>
-        </div>
+              {/* AC Amps */}
+              <div
+                className="rounded-xl p-4"
+                style={{ background: "rgba(99,102,241,0.04)", border: "1px solid rgba(99,102,241,0.18)" }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>
+                    AC Current (3-Phase)
+                  </label>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                    style={{ background: "rgba(99,102,241,0.15)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.25)" }}>
+                    AUTO
+                  </span>
+                </div>
+                <p className="text-[11px] mb-2 font-semibold" style={{ color: "rgba(129,140,248,0.85)" }}>
+                  {calculatedAmpsAC.toFixed(0)} A @ {systemVoltage}V AC
+                </p>
+                <input
+                  type="number"
+                  value={systemAmpsACInput}
+                  onChange={(e) =>
+                    setSystemAmpsACInput(e.target.value === "" ? "" : parseFloat(e.target.value))
+                  }
+                  placeholder={calculatedAmpsAC.toFixed(0)}
+                  className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-1 focus:ring-indigo-500/40 focus:outline-none"
+                  style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.11)" }}
+                />
+              </div>
 
-        {/* Voltage Configuration */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div
-            className="rounded-lg p-4"
-            style={{ background: "transparent", border: "1px solid rgba(99,102,241,0.18)" }}
-          >
-            <label
-              className="block text-sm font-semibold mb-1"
-              style={{ color: "rgba(255,255,255,0.6)" }}
-            >
-              AC System Voltage
-            </label>
-            <p className="text-[11px] mb-2" style={{ color: "rgba(129,140,248,0.65)" }}>
-              Default · 480V standard industrial
-            </p>
+              {/* DC Amps */}
+              <div
+                className="rounded-xl p-4"
+                style={{ background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.18)" }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>
+                    DC Current (Battery Side)
+                  </label>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                    style={{ background: "rgba(96,165,250,0.15)", color: "#93c5fd", border: "1px solid rgba(96,165,250,0.25)" }}>
+                    AUTO
+                  </span>
+                </div>
+                <p className="text-[11px] mb-2 font-semibold" style={{ color: "rgba(96,165,250,0.85)" }}>
+                  {calculatedAmpsDC.toFixed(0)} A @ {dcVoltage}V DC
+                </p>
+                <input
+                  type="number"
+                  value={systemAmpsDCInput}
+                  onChange={(e) =>
+                    setSystemAmpsDCInput(e.target.value === "" ? "" : parseFloat(e.target.value))
+                  }
+                  placeholder={calculatedAmpsDC.toFixed(0)}
+                  className="w-full px-3 py-2 rounded-lg text-white font-medium text-sm focus:ring-1 focus:ring-blue-500/40 focus:outline-none"
+                  style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.11)" }}
+                />
+              </div>
+            </div>
+
+            {/* Voltage Configuration */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div
+                className="rounded-lg p-4"
+                style={{ background: "rgba(99,102,241,0.04)", border: "1px solid rgba(99,102,241,0.15)" }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>
+                    AC System Voltage
+                  </label>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                    style={{ background: "rgba(99,102,241,0.15)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.25)" }}>
+                    DEFAULT
+                  </span>
+                </div>
+                <p className="text-[11px] mb-2" style={{ color: "rgba(129,140,248,0.65)" }}>
+                  Default · 480V standard industrial
+                </p>
             <select
               value={systemVoltage}
               onChange={(e) => setSystemVoltage(parseInt(e.target.value))}
@@ -435,14 +476,17 @@ export default function ElectricalSpecsSection({
 
           <div
             className="rounded-lg p-4"
-            style={{ background: "transparent", border: "1px solid rgba(59,130,246,0.18)" }}
+            style={{ background: "rgba(96,165,250,0.04)", border: "1px solid rgba(59,130,246,0.15)" }}
           >
-            <label
-              className="block text-sm font-semibold mb-1"
-              style={{ color: "rgba(255,255,255,0.6)" }}
-            >
-              DC Battery Voltage
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>
+                DC Battery Voltage
+              </label>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                style={{ background: "rgba(96,165,250,0.15)", color: "#93c5fd", border: "1px solid rgba(96,165,250,0.25)" }}>
+                DEFAULT
+              </span>
+            </div>
             <p className="text-[11px] mb-2" style={{ color: "rgba(96,165,250,0.65)" }}>
               Default · 1,000V DC — typical range 800–1,500V
             </p>
@@ -457,6 +501,8 @@ export default function ElectricalSpecsSection({
             />
           </div>
         </div>
+          </div>{/* /fields */}
+        </div>{/* /auto-calculated wrapper */}
 
         {/* Summary Card */}
         <div
