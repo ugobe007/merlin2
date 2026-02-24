@@ -71,63 +71,62 @@ export const LiveCostSummaryStrip = React.memo(function LiveCostSummaryStrip({
               {/* Divider */}
               <div className="w-px h-8 shrink-0" style={{ background: "rgba(255,255,255,0.08)" }} />
 
-              {/* Total Cost */}
+              {/* Equipment Cost */}
               <div className="flex flex-col items-center shrink-0 px-2">
                 <span
-                  className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
+                  className="text-[11px] font-bold uppercase tracking-widest mb-0.5"
                   style={{ color: "rgba(255,255,255,0.35)" }}
                 >
-                  Total
+                  Equipment
                 </span>
-                <span className="text-lg font-extrabold tabular-nums text-white leading-tight">
-                  {Math.abs(financialMetrics.totalProjectCost ?? 0) >= 1_000_000
-                    ? `$${((financialMetrics.totalProjectCost ?? 0) / 1_000_000).toFixed(2)}M`
-                    : `$${((financialMetrics.totalProjectCost ?? 0) / 1_000).toFixed(0)}K`}
+                <span className="text-xl font-extrabold tabular-nums text-white leading-tight">
+                  {(financialMetrics.equipmentCost ?? 0) >= 1_000_000
+                    ? `$${((financialMetrics.equipmentCost ?? 0) / 1_000_000).toFixed(2)}M`
+                    : `$${((financialMetrics.equipmentCost ?? 0) / 1_000).toFixed(0)}K`}
                 </span>
               </div>
 
-              {/* After ITC */}
-              {(financialMetrics.netCost ?? 0) > 0 &&
-                (financialMetrics.netCost ?? 0) !== (financialMetrics.totalProjectCost ?? 0) && (
-                  <>
-                    <div
-                      className="w-px h-8 shrink-0"
-                      style={{ background: "rgba(255,255,255,0.06)" }}
-                    />
-                    <div className="flex flex-col items-center shrink-0 px-2">
-                      <span
-                        className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
-                        style={{ color: "rgba(255,255,255,0.35)" }}
-                      >
-                        After ITC
-                      </span>
-                      <span
-                        className="text-lg font-extrabold tabular-nums leading-tight"
-                        style={{ color: "#34d399" }}
-                      >
-                        {Math.abs(financialMetrics.netCost ?? 0) >= 1_000_000
-                          ? `$${((financialMetrics.netCost ?? 0) / 1_000_000).toFixed(2)}M`
-                          : `$${((financialMetrics.netCost ?? 0) / 1_000).toFixed(0)}K`}
-                      </span>
-                    </div>
-                  </>
-                )}
+              {/* After ITC (equipment-only, 30% ITC) */}
+              {(financialMetrics.equipmentCost ?? 0) > 0 && (
+                <>
+                  <div
+                    className="w-px h-8 shrink-0"
+                    style={{ background: "rgba(255,255,255,0.06)" }}
+                  />
+                  <div className="flex flex-col items-center shrink-0 px-2">
+                    <span
+                      className="text-[11px] font-bold uppercase tracking-widest mb-0.5"
+                      style={{ color: "rgba(255,255,255,0.35)" }}
+                    >
+                      After ITC
+                    </span>
+                    <span
+                      className="text-xl font-extrabold tabular-nums leading-tight"
+                      style={{ color: "#34d399" }}
+                    >
+                      {(financialMetrics.equipmentCost ?? 0) * 0.7 >= 1_000_000
+                        ? `$${(((financialMetrics.equipmentCost ?? 0) * 0.7) / 1_000_000).toFixed(2)}M`
+                        : `$${(((financialMetrics.equipmentCost ?? 0) * 0.7) / 1_000).toFixed(0)}K`}
+                    </span>
+                  </div>
+                </>
+              )}
 
-              {/* $/kWh */}
+              {/* $/kWh (equipment only) */}
               <div className="w-px h-8 shrink-0" style={{ background: "rgba(255,255,255,0.06)" }} />
               <div className="flex flex-col items-center shrink-0 px-2">
                 <span
-                  className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
+                  className="text-[11px] font-bold uppercase tracking-widest mb-0.5"
                   style={{ color: "rgba(255,255,255,0.35)" }}
                 >
                   $/kWh
                 </span>
                 <span
-                  className="text-lg font-extrabold tabular-nums leading-tight"
+                  className="text-xl font-extrabold tabular-nums leading-tight"
                   style={{ color: "#38bdf8" }}
                 >
                   {storageSizeMWh > 0
-                    ? `$${((financialMetrics.totalProjectCost ?? 0) / (storageSizeMWh * 1000)).toFixed(0)}`
+                    ? `$${((financialMetrics.equipmentCost ?? 0) / (storageSizeMWh * 1000)).toFixed(0)}`
                     : "—"}
                 </span>
               </div>
@@ -136,13 +135,13 @@ export const LiveCostSummaryStrip = React.memo(function LiveCostSummaryStrip({
               <div className="w-px h-8 shrink-0" style={{ background: "rgba(255,255,255,0.06)" }} />
               <div className="flex flex-col items-center shrink-0 px-2">
                 <span
-                  className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
+                  className="text-[11px] font-bold uppercase tracking-widest mb-0.5"
                   style={{ color: "rgba(255,255,255,0.35)" }}
                 >
                   Payback
                 </span>
                 <span
-                  className="text-lg font-extrabold tabular-nums leading-tight"
+                  className="text-xl font-extrabold tabular-nums leading-tight"
                   style={{ color: "#34d399" }}
                 >
                   {financialMetrics.paybackYears != null
@@ -155,13 +154,13 @@ export const LiveCostSummaryStrip = React.memo(function LiveCostSummaryStrip({
               <div className="w-px h-8 shrink-0" style={{ background: "rgba(255,255,255,0.06)" }} />
               <div className="flex flex-col items-center shrink-0 px-2">
                 <span
-                  className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
+                  className="text-[11px] font-bold uppercase tracking-widest mb-0.5"
                   style={{ color: "rgba(255,255,255,0.35)" }}
                 >
                   Savings
                 </span>
                 <span
-                  className="text-lg font-extrabold tabular-nums leading-tight"
+                  className="text-xl font-extrabold tabular-nums leading-tight"
                   style={{ color: "#a78bfa" }}
                 >
                   {(financialMetrics.annualSavings ?? 0) > 0
@@ -181,13 +180,13 @@ export const LiveCostSummaryStrip = React.memo(function LiveCostSummaryStrip({
                   />
                   <div className="flex flex-col items-center shrink-0 px-2 hidden lg:flex">
                     <span
-                      className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
+                      className="text-[11px] font-bold uppercase tracking-widest mb-0.5"
                       style={{ color: "rgba(255,255,255,0.35)" }}
                     >
                       10yr ROI
                     </span>
                     <span
-                      className="text-lg font-extrabold tabular-nums leading-tight"
+                      className="text-xl font-extrabold tabular-nums leading-tight"
                       style={{ color: "#34d399" }}
                     >
                       {financialMetrics.roi10Year.toFixed(0)}%
