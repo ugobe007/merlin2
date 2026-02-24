@@ -65,27 +65,6 @@ export default function LiveFinancialSummaryStrip({
           {/* Metrics row */}
           {financialMetrics ? (
             <div className="flex items-center justify-center gap-3 lg:gap-5 overflow-x-auto scrollbar-none">
-              {/* System badge - left */}
-              <div className="flex items-center gap-2 shrink-0">
-                <div
-                  className={`w-2.5 h-2.5 rounded-full ${isCalculating ? "bg-blue-400 animate-pulse" : "bg-emerald-400"}`}
-                  style={{
-                    boxShadow: isCalculating
-                      ? "0 0 8px rgba(59,130,246,0.5)"
-                      : "0 0 8px rgba(52,211,153,0.5)",
-                  }}
-                />
-                <span
-                  className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline"
-                  style={{ color: "rgba(52,211,153,0.7)" }}
-                >
-                  {isCalculating ? "Updating" : "Live"}
-                </span>
-              </div>
-
-              {/* Divider */}
-              <div className="w-px h-8 shrink-0" style={{ background: "rgba(255,255,255,0.08)" }} />
-
               {/* Total Cost */}
               <div className="flex flex-col items-center shrink-0 px-2">
                 <span
