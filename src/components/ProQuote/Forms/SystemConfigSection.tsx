@@ -399,11 +399,14 @@ export default function SystemConfigSection({
           {/* Inverter Efficiency */}
           <div>
             <label
-              className="block text-sm font-semibold mb-2"
+              className="block text-sm font-semibold mb-1"
               style={{ color: "rgba(255,255,255,0.6)" }}
             >
               Inverter Efficiency (%)
             </label>
+            <p className="text-[11px] mb-2" style={{ color: "rgba(52,211,153,0.6)" }}>
+              Default · 96% — industry standard (range 94–98.5%)
+            </p>
             <input
               type="number"
               value={inverterEfficiency}
@@ -411,11 +414,8 @@ export default function SystemConfigSection({
               min="85"
               max="99"
               step="0.5"
-              className="w-full px-4 py-3 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
+              className="w-full px-4 py-2.5 text-white rounded-xl focus:ring-1 focus:ring-blue-500/40 focus:outline-none transition-all"
+              style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.13)" }}
             />
           </div>
         </div>
