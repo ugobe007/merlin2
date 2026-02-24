@@ -10,6 +10,7 @@
  * Phase 1G Part 2c Operation 6 - Final extraction
  */
 
+import { useState } from "react";
 import badgeIcon from "@/assets/images/badge_icon.jpg";
 
 interface ConfigurationOrchestratorProps {
@@ -111,66 +112,71 @@ export default function ConfigurationOrchestrator({
         {/* Financial metrics strip */}
         {financialMetrics && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Gross Cost */}
+            {/* Equipment Quote */}
             <div>
               <p
-                className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                className="text-xs font-medium uppercase tracking-wider mb-1"
                 style={{ color: "rgba(255,255,255,0.4)" }}
               >
-                Total Investment
+                Equipment Quote
               </p>
-              <p className="text-xl font-bold text-white">
-                {localSystemCost >= 1_000_000
-                  ? `$${(localSystemCost / 1_000_000).toFixed(2)}M`
-                  : `$${(localSystemCost / 1_000).toFixed(0)}K`}
+              <p className="text-2xl font-bold text-white">
+                {(financialMetrics.equipmentCost ?? 0) >= 1_000_000
+                  ? `$${((financialMetrics.equipmentCost ?? 0) / 1_000_000).toFixed(2)}M`
+                  : `$${((financialMetrics.equipmentCost ?? 0) / 1_000).toFixed(0)}K`}
               </p>
             </div>
-            {/* ITC Credit */}
-            {(financialMetrics.taxCredit ?? 0) > 0 && (
+            {/* ITC Credit (on equipment) */}
+            {(financialMetrics.equipmentCost ?? 0) > 0 && (
               <div>
                 <p
-                  className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                  className="text-xs font-medium uppercase tracking-wider mb-1"
                   style={{ color: "rgba(255,255,255,0.4)" }}
                 >
                   Federal ITC (30%)
                 </p>
-                <p className="text-xl font-bold text-emerald-400">
+                <p className="text-2xl font-bold text-emerald-400">
                   −
-                  {financialMetrics.taxCredit >= 1_000_000
-                    ? `$${(financialMetrics.taxCredit / 1_000_000).toFixed(2)}M`
-                    : `$${(financialMetrics.taxCredit / 1_000).toFixed(0)}K`}
+                  {(financialMetrics.equipmentCost ?? 0) * 0.3 >= 1_000_000
+                    ? `$${(((financialMetrics.equipmentCost ?? 0) * 0.3) / 1_000_000).toFixed(2)}M`
+                    : `$${(((financialMetrics.equipmentCost ?? 0) * 0.3) / 1_000).toFixed(0)}K`}
                 </p>
               </div>
             )}
-            {/* Net Cost */}
+            {/* Net Equipment Cost */}
             <div>
               <p
-                className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                className="text-xs font-medium uppercase tracking-wider mb-1"
                 style={{ color: "rgba(255,255,255,0.4)" }}
               >
-                Net Cost
+                Net Equipment Cost
               </p>
-              <p className="text-xl font-bold text-blue-400">
-                {(financialMetrics.netCost ?? localSystemCost) >= 1_000_000
-                  ? `$${((financialMetrics.netCost ?? localSystemCost) / 1_000_000).toFixed(2)}M`
-                  : `$${((financialMetrics.netCost ?? localSystemCost) / 1_000).toFixed(0)}K`}
+              <p className="text-2xl font-bold text-blue-400">
+                {(financialMetrics.equipmentCost ?? 0) * 0.7 >= 1_000_000
+                  ? `$${(((financialMetrics.equipmentCost ?? 0) * 0.7) / 1_000_000).toFixed(2)}M`
+                  : `$${(((financialMetrics.equipmentCost ?? 0) * 0.7) / 1_000).toFixed(0)}K`}
               </p>
             </div>
             {/* Annual Savings */}
             <div>
               <p
-                className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                className="text-xs font-medium uppercase tracking-wider mb-1"
                 style={{ color: "rgba(255,255,255,0.4)" }}
               >
                 Annual Savings
               </p>
-              <p className="text-xl font-bold text-emerald-400">
+              <p className="text-2xl font-bold text-emerald-400">
                 {estimatedAnnualSavings >= 1_000_000
                   ? `$${(estimatedAnnualSavings / 1_000_000).toFixed(2)}M`
                   : `$${(estimatedAnnualSavings / 1_000).toFixed(0)}K`}
               </p>
             </div>
           </div>
+        )}
+
+        {/* ── Equipment Cost Breakdown ─────────────────────────── */}
+        {financialMetrics && (financialMetrics.equipmentCost ?? 0) > 0 && (
+          <EquipmentBreakdown equipmentCost={financialMetrics.equipmentCost ?? 0} />
         )}
 
         {/* Payback + ROI row */}
@@ -181,7 +187,7 @@ export default function ConfigurationOrchestrator({
           >
             <div className="flex items-center gap-2">
               <span
-                className="text-[11px] font-medium uppercase tracking-wider"
+                className="text-xs font-medium uppercase tracking-wider"
                 style={{ color: "rgba(255,255,255,0.4)" }}
               >
                 Payback
@@ -191,7 +197,7 @@ export default function ConfigurationOrchestrator({
             {(financialMetrics.npv ?? 0) > 0 && (
               <div className="flex items-center gap-2">
                 <span
-                  className="text-[11px] font-medium uppercase tracking-wider"
+                  className="text-xs font-medium uppercase tracking-wider"
                   style={{ color: "rgba(255,255,255,0.4)" }}
                 >
                   NPV
@@ -204,7 +210,7 @@ export default function ConfigurationOrchestrator({
             {(financialMetrics.irr ?? 0) > 0 && (
               <div className="flex items-center gap-2">
                 <span
-                  className="text-[11px] font-medium uppercase tracking-wider"
+                  className="text-xs font-medium uppercase tracking-wider"
                   style={{ color: "rgba(255,255,255,0.4)" }}
                 >
                   IRR
@@ -216,7 +222,7 @@ export default function ConfigurationOrchestrator({
             )}
             <div className="flex items-center gap-2">
               <span
-                className="text-[11px] font-medium uppercase tracking-wider"
+                className="text-xs font-medium uppercase tracking-wider"
                 style={{ color: "rgba(255,255,255,0.4)" }}
               >
                 25yr ROI
@@ -285,13 +291,17 @@ export default function ConfigurationOrchestrator({
             }}
           >
             <p className="text-sm mb-1 font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>
-              Total Cost
+              Equipment Cost
             </p>
             <p className="text-3xl font-bold text-emerald-400">
-              ${(localSystemCost / 1000000).toFixed(2)}M
+              {financialMetrics?.equipmentCost != null
+                ? `$${(financialMetrics.equipmentCost / 1_000_000).toFixed(2)}M`
+                : `$${(localSystemCost / 1000000).toFixed(2)}M`}
             </p>
             <p className="text-sm font-bold" style={{ color: "rgba(255,255,255,0.5)" }}>
-              ${(localSystemCost / (storageSizeMW * 1000)).toFixed(0)}/kW
+              {financialMetrics?.equipmentCost != null
+                ? `$${(financialMetrics.equipmentCost / (storageSizeMW * 1000)).toFixed(0)}/kW`
+                : `$${(localSystemCost / (storageSizeMW * 1000)).toFixed(0)}/kW`}
             </p>
           </div>
           <div
@@ -386,5 +396,120 @@ export default function ConfigurationOrchestrator({
         </div>
       </div>
     </>
+  );
+}
+
+// ── Equipment Cost Breakdown sub-component ────────────────────────────────────
+const BREAKDOWN_LINES = [
+  { label: "Battery Storage (LFP cells)", pct: 0.55, color: "#34d399" },
+  { label: "Power Conversion System (PCS)", pct: 0.18, color: "#38bdf8" },
+  { label: "Balance of System (BMS, enclosure, cabling)", pct: 0.12, color: "#a78bfa" },
+  { label: "EMS / Energy Management Controls", pct: 0.08, color: "#f59e0b" },
+  { label: "Transformer & Grid Interconnect", pct: 0.07, color: "#fb923c" },
+] as const;
+
+function EquipmentBreakdown({ equipmentCost }: { equipmentCost: number }) {
+  const [expanded, setExpanded] = useState(true);
+
+  const fmt = (v: number) =>
+    v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M` : `$${(v / 1_000).toFixed(0)}K`;
+
+  return (
+    <div
+      className="mt-4 rounded-xl overflow-hidden"
+      style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+    >
+      {/* Header */}
+      <button
+        onClick={() => setExpanded((p) => !p)}
+        className="w-full flex items-center justify-between px-4 py-2.5 transition-colors hover:bg-white/5"
+        style={{ background: "rgba(255,255,255,0.03)" }}
+      >
+        <div className="flex items-center gap-2.5">
+          <span
+            className="text-xs font-bold uppercase tracking-wider"
+            style={{ color: "rgba(255,255,255,0.55)" }}
+          >
+            Equipment Cost Breakdown
+          </span>
+          <span
+            className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+            style={{ background: "rgba(52,211,153,0.1)", color: "#34d399" }}
+          >
+            Hardware only · No installation
+          </span>
+        </div>
+        <span className="text-white/30 text-sm">{expanded ? "▲" : "▼"}</span>
+      </button>
+
+      {/* Line items */}
+      {expanded && (
+        <>
+          <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+            {BREAKDOWN_LINES.map(({ label, pct, color }) => {
+              const cost = equipmentCost * pct;
+              return (
+                <div key={label} className="flex items-center justify-between px-4 py-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+                    <span
+                      className="text-[13px] font-medium truncate"
+                      style={{ color: "rgba(255,255,255,0.7)" }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 shrink-0 pl-4">
+                    <span
+                      className="text-[11px] tabular-nums w-9 text-right"
+                      style={{ color: "rgba(255,255,255,0.28)" }}
+                    >
+                      {(pct * 100).toFixed(0)}%
+                    </span>
+                    <span className="text-[13px] font-semibold tabular-nums text-white w-24 text-right">
+                      {fmt(cost)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Total row */}
+          <div
+            className="flex items-center justify-between px-4 py-3"
+            style={{
+              background: "rgba(52,211,153,0.06)",
+              borderTop: "1px solid rgba(52,211,153,0.12)",
+            }}
+          >
+            <span className="text-[13px] font-bold text-white/80">Total Equipment</span>
+            <span className="text-base font-bold tabular-nums" style={{ color: "#34d399" }}>
+              {fmt(equipmentCost)}
+            </span>
+          </div>
+
+          {/* Disclaimer */}
+          <div
+            className="flex items-start gap-2 px-4 py-2.5"
+            style={{
+              background: "rgba(251,191,36,0.03)",
+              borderTop: "1px solid rgba(251,191,36,0.08)",
+            }}
+          >
+            <span className="text-[12px] mt-0.5" style={{ color: "rgba(251,191,36,0.5)" }}>
+              ⚠
+            </span>
+            <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
+              Installation, EPC & commissioning (typically 35–40% additional) are{" "}
+              <strong className="font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>
+                not included
+              </strong>{" "}
+              above and are quoted separately by your EPC contractor.
+            </p>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
