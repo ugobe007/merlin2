@@ -26,6 +26,7 @@ export interface LiveFinancialSummaryStripProps {
   storageSizeMW: number;
   durationHours: number;
   storageSizeMWh: number;
+  onReset?: () => void;
 }
 
 export default function LiveFinancialSummaryStrip({
@@ -34,6 +35,7 @@ export default function LiveFinancialSummaryStrip({
   storageSizeMW,
   durationHours,
   storageSizeMWh,
+  onReset,
 }: LiveFinancialSummaryStripProps) {
   return (
     <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-3rem)] max-w-5xl">
@@ -226,6 +228,54 @@ export default function LiveFinancialSummaryStrip({
                   {durationHours > 0 ? `${durationHours}h` : "—"}
                 </span>
               </div>
+
+              {/* Reset button */}
+              {onReset && (
+                <>
+                  <div
+                    className="w-px h-8 shrink-0"
+                    style={{ background: "rgba(255,255,255,0.08)" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={onReset}
+                    title="Reset to defaults"
+                    className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all hover:brightness-125 active:scale-95"
+                    style={{
+                      background: "rgba(239,68,68,0.07)",
+                      border: "1px solid rgba(239,68,68,0.20)",
+                      color: "rgba(252,165,165,0.75)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(239,68,68,0.14)";
+                      e.currentTarget.style.borderColor = "rgba(239,68,68,0.38)";
+                      e.currentTarget.style.color = "#fca5a5";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(239,68,68,0.07)";
+                      e.currentTarget.style.borderColor = "rgba(239,68,68,0.20)";
+                      e.currentTarget.style.color = "rgba(252,165,165,0.75)";
+                    }}
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    <span className="text-[10px] font-bold uppercase tracking-wide hidden sm:inline">
+                      Reset
+                    </span>
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <div className="flex items-center justify-center gap-3 py-1">
