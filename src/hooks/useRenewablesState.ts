@@ -15,10 +15,10 @@ import { useState } from "react";
 
 export function useRenewablesState() {
   // ═══ General Renewables Toggle ═══
-  const [includeRenewables, setIncludeRenewables] = useState(true);
+  const [includeRenewables, setIncludeRenewables] = useState(false);
 
   // ═══ Solar PV Configuration ═══
-  const [solarPVIncluded, setSolarPVIncluded] = useState(true);
+  const [solarPVIncluded, setSolarPVIncluded] = useState(false);
   const [solarCapacityKW, setSolarCapacityKW] = useState(1000);
   const [solarPanelType, setSolarPanelType] = useState("monocrystalline");
   const [solarPanelEfficiency, setSolarPanelEfficiency] = useState(21);
@@ -35,7 +35,7 @@ export function useRenewablesState() {
   );
 
   // ═══ Wind Turbine Configuration ═══
-  const [windTurbineIncluded, setWindTurbineIncluded] = useState(true);
+  const [windTurbineIncluded, setWindTurbineIncluded] = useState(false);
   const [windCapacityKW, setWindCapacityKW] = useState(500);
   const [windTurbineType, setWindTurbineType] = useState("horizontal");
   const [windClassRating, setWindClassRating] = useState(3);
@@ -46,13 +46,13 @@ export function useRenewablesState() {
   );
 
   // ═══ Fuel Cell Configuration ═══
-  const [fuelCellIncluded, setFuelCellIncluded] = useState(true);
+  const [fuelCellIncluded, setFuelCellIncluded] = useState(false);
   const [fuelCellCapacityKW, setFuelCellCapacityKW] = useState(250);
   const [fuelCellType, setFuelCellType] = useState("pem");
   const [fuelType, setFuelType] = useState("hydrogen");
 
   // ═══ Generator Configuration (Unified: diesel/natural-gas/dual-fuel) ═══
-  const [generatorIncluded, setGeneratorIncluded] = useState(true);
+  const [generatorIncluded, setGeneratorIncluded] = useState(false);
   const [generatorCapacityKW, setGeneratorCapacityKW] = useState(500);
   const [generatorFuelTypeSelected, setGeneratorFuelTypeSelected] = useState<string>("natural-gas");
   const [generatorUseCases, setGeneratorUseCases] = useState<string[]>(["backup"]);
@@ -60,7 +60,7 @@ export function useRenewablesState() {
   const [generatorSpaceAvailable, setGeneratorSpaceAvailable] = useState(true);
 
   // ═══ EV Charger Configuration ═══
-  const [evChargersIncluded, setEvChargersIncluded] = useState(true);
+  const [evChargersIncluded, setEvChargersIncluded] = useState(false);
   const [evLevel2Count, setEvLevel2Count] = useState(8);
   const [evDCFCCount, setEvDCFCCount] = useState(4);
   const [evHPCCount, setEvHPCCount] = useState(0);
