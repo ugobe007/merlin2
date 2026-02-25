@@ -109,6 +109,7 @@ export type LocationIntel = {
   utilityProvider?: string;
   weatherRisk?: string; // "Frequent heatwaves", "Harsh winters", etc.
   weatherProfile?: string; // "Hot & Humid", "Cold & Dry", "Temperate", etc.
+  avgTempF?: number; // Average temperature °F for climate context
   solarGrade?: string;
 
   // Per-source fetch status (enables progressive hydration)

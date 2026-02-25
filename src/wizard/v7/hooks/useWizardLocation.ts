@@ -29,7 +29,7 @@ interface WizardAPI {
     input: string
   ) => Promise<{ rate?: number; demandCharge?: number; provider?: string }>;
   fetchSolar: (input: string) => Promise<{ peakSunHours?: number; grade?: string }>;
-  fetchWeather: (input: string) => Promise<{ risk?: string; profile?: string }>;
+  fetchWeather: (input: string) => Promise<{ risk?: string; profile?: string; avgTempF?: number }>;
   inferIndustry: (
     location: LocationCard,
     signal?: AbortSignal,
@@ -203,6 +203,7 @@ export function useWizardLocation(params: UseWizardLocationParams): WizardLocati
       if (weatherRes.status === "fulfilled") {
         intel.weatherRisk = weatherRes.value.risk;
         intel.weatherProfile = weatherRes.value.profile;
+        intel.avgTempF = weatherRes.value.avgTempF;
         intel.weatherStatus = "ready";
       } else {
         intel.weatherStatus = "error";

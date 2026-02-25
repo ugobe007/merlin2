@@ -18,6 +18,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { WizardState as WizardV7State, EnergyGoal } from "@/wizard/v7/hooks/useWizardV7";
 import IntelStripInline from "../shared/IntelStripInline";
 import BusinessProfileCard from "../shared/BusinessProfileCard";
+import LocationMapTile from "../shared/LocationMapTile";
 import GoalsModal from "./GoalsModal";
 import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanonical";
 import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
@@ -47,7 +48,11 @@ interface Props {
   onGoalsConfirmedAdvance?: () => void;
 }
 
-const Step1LocationV7 = React.memo(function Step1LocationV7({ state, actions, onGoalsConfirmedAdvance }: Props) {
+const Step1LocationV7 = React.memo(function Step1LocationV7({
+  state,
+  actions,
+  onGoalsConfirmedAdvance,
+}: Props) {
   const {
     updateLocationRaw,
     submitLocation,
@@ -348,6 +353,19 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({ state, actions, on
 
       {/* ✅ Location Intelligence — inline data row */}
       {showIntel && <IntelStripInline intel={state.locationIntel} />}
+
+      {/* ✅ Google Maps satellite tile — appears once lat/lng resolved */}
+      {state.location?.lat && state.location?.lng && (
+        <LocationMapTile
+          lat={state.location.lat}
+          lng={state.location.lng}
+          label={
+            state.location.city && state.location.state
+              ? `${state.location.city}, ${state.location.state}`
+              : state.location.formattedAddress
+          }
+        />
+      )}
 
       {/* ✅ Primary input block MUST be immediately after headline */}
       <div style={{ position: "relative", zIndex: 1 }}>
