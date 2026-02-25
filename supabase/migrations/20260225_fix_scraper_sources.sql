@@ -36,101 +36,76 @@ WHERE feed_url IS NOT NULL
 -- ─────────────────────────────────────────────────────────────────────────────
 -- ISSUE 1: Add price-focused RSS sources
 -- These sources regularly publish articles with $/kWh, $/W, $/kW pricing data
+-- Uses INSERT ... WHERE NOT EXISTS to avoid duplicates (no unique constraint on feed_url)
 -- ─────────────────────────────────────────────────────────────────────────────
 
 INSERT INTO market_data_sources (
-  name,
-  url,
-  feed_url,
-  source_type,
-  content_type,
-  equipment_categories,
-  is_active,
-  reliability_score,
-  data_frequency,
-  regions
+  name, url, feed_url, source_type, content_type,
+  equipment_categories, is_active, reliability_score, data_frequency, regions
 )
-VALUES
-  -- EIA Today in Energy: U.S. Energy Information Administration news feed.
-  -- Frequently publishes $/MWh, $/kWh cost data and market price reports.
+SELECT * FROM (VALUES
   (
     'EIA Today in Energy',
     'https://www.eia.gov/todayinenergy/',
     'https://www.eia.gov/rss/todayinenergy.xml',
-    'government',
-    'pricing',
+    'government', 'pricing',
     ARRAY['bess', 'solar', 'wind', 'generator']::text[],
-    true,
-    5,
-    'daily',
+    true, 5, 'daily',
     ARRAY['north-america']::text[]
   ),
-
-  -- NREL News: National Renewable Energy Laboratory press releases.
-  -- Publishes BESS cost benchmarks ($/kWh), solar $/W data from ATB reports.
   (
     'NREL News',
     'https://www.nrel.gov/news/',
     'https://www.nrel.gov/news/rss.xml',
-    'government',
-    'mixed',
+    'government', 'mixed',
     ARRAY['bess', 'solar', 'wind', 'ev-charger']::text[],
-    true,
-    5,
-    'weekly',
+    true, 5, 'weekly',
     ARRAY['north-america']::text[]
   ),
-
-  -- PV Tech: Leading global solar industry publication.
-  -- Articles frequently cite $/W module prices, installation costs.
   (
     'PV Tech',
     'https://www.pv-tech.org',
     'https://www.pv-tech.org/feed/',
-    'rss_feed',
-    'mixed',
+    'rss_feed', 'mixed',
     ARRAY['solar', 'bess', 'inverter']::text[],
-    true,
-    4,
-    'daily',
+    true, 4, 'daily',
     ARRAY['global']::text[]
   ),
-
-  -- Utility Dive: Energy industry trade publication.
-  -- Covers BESS contracts, solar PPAs with $/MWh and $/kWh data.
   (
     'Utility Dive',
     'https://www.utilitydive.com',
     'https://www.utilitydive.com/feeds/news/',
-    'rss_feed',
-    'mixed',
+    'rss_feed', 'mixed',
     ARRAY['bess', 'solar', 'wind']::text[],
-    true,
-    4,
-    'daily',
+    true, 4, 'daily',
     ARRAY['north-america']::text[]
   ),
-
-  -- Canary Media: Clean energy journalism with regular cost benchmarking.
-  -- Strong coverage of BESS $/kWh trends and solar cost breakdowns.
   (
     'Canary Media',
     'https://www.canarymedia.com',
     'https://www.canarymedia.com/feed',
-    'rss_feed',
-    'mixed',
+    'rss_feed', 'mixed',
     ARRAY['bess', 'solar', 'ev-charger', 'wind']::text[],
-    true,
-    4,
-    'daily',
+    true, 4, 'daily',
     ARRAY['north-america']::text[]
   )
-ON CONFLICT (feed_url)
-  DO UPDATE SET
-    is_active = true,
-    reliability_score = EXCLUDED.reliability_score,
-    updated_at = now()
-  WHERE market_data_sources.is_active = false;
+) AS v(name, url, feed_url, source_type, content_type,
+       equipment_categories, is_active, reliability_score, data_frequency, regions)
+WHERE NOT EXISTS (
+  SELECT 1 FROM market_data_sources m WHERE m.feed_url = v.feed_url
+);
+
+-- Re-activate any of the above that already existed but were disabled
+UPDATE market_data_sources
+SET is_active = true, updated_at = now()
+WHERE feed_url IN (
+  'https://www.eia.gov/rss/todayinenergy.xml',
+  'https://www.nrel.gov/news/rss.xml',
+  'https://www.pv-tech.org/feed/',
+  'https://www.utilitydive.com/feeds/news/',
+  'https://www.canarymedia.com/feed'
+)
+AND is_active = false;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- VERIFICATION QUERIES (run after migration to confirm)
