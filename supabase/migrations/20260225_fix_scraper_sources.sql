@@ -43,12 +43,12 @@ INSERT INTO market_data_sources (
   url,
   feed_url,
   source_type,
+  content_type,
   equipment_categories,
   is_active,
   reliability_score,
-  data_freshness,
-  regions,
-  fetch_interval_hours
+  data_frequency,
+  regions
 )
 VALUES
   -- EIA Today in Energy: U.S. Energy Information Administration news feed.
@@ -57,13 +57,13 @@ VALUES
     'EIA Today in Energy',
     'https://www.eia.gov/todayinenergy/',
     'https://www.eia.gov/rss/todayinenergy.xml',
-    'rss_feed',
+    'government',
+    'pricing',
     ARRAY['bess', 'solar', 'wind', 'generator']::text[],
     true,
-    0.95,
+    5,
     'daily',
-    ARRAY['north-america']::text[],
-    24
+    ARRAY['north-america']::text[]
   ),
 
   -- NREL News: National Renewable Energy Laboratory press releases.
@@ -72,13 +72,13 @@ VALUES
     'NREL News',
     'https://www.nrel.gov/news/',
     'https://www.nrel.gov/news/rss.xml',
-    'rss_feed',
-    ARRAY['bess', 'solar', 'wind', 'ev-charger', 'microgrid']::text[],
+    'government',
+    'mixed',
+    ARRAY['bess', 'solar', 'wind', 'ev-charger']::text[],
     true,
-    0.95,
+    5,
     'weekly',
-    ARRAY['north-america']::text[],
-    48
+    ARRAY['north-america']::text[]
   ),
 
   -- PV Tech: Leading global solar industry publication.
@@ -88,12 +88,12 @@ VALUES
     'https://www.pv-tech.org',
     'https://www.pv-tech.org/feed/',
     'rss_feed',
+    'mixed',
     ARRAY['solar', 'bess', 'inverter']::text[],
     true,
-    0.88,
+    4,
     'daily',
-    ARRAY['global']::text[],
-    12
+    ARRAY['global']::text[]
   ),
 
   -- Utility Dive: Energy industry trade publication.
@@ -103,12 +103,12 @@ VALUES
     'https://www.utilitydive.com',
     'https://www.utilitydive.com/feeds/news/',
     'rss_feed',
-    ARRAY['bess', 'solar', 'wind', 'microgrid']::text[],
+    'mixed',
+    ARRAY['bess', 'solar', 'wind']::text[],
     true,
-    0.87,
+    4,
     'daily',
-    ARRAY['north-america']::text[],
-    12
+    ARRAY['north-america']::text[]
   ),
 
   -- Canary Media: Clean energy journalism with regular cost benchmarking.
@@ -118,12 +118,12 @@ VALUES
     'https://www.canarymedia.com',
     'https://www.canarymedia.com/feed',
     'rss_feed',
+    'mixed',
     ARRAY['bess', 'solar', 'ev-charger', 'wind']::text[],
     true,
-    0.82,
+    4,
     'daily',
-    ARRAY['north-america']::text[],
-    12
+    ARRAY['north-america']::text[]
   )
 ON CONFLICT (feed_url)
   DO UPDATE SET
