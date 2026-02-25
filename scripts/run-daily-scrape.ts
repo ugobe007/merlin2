@@ -14,6 +14,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { parseRSSFeed, classifyContent, extractPrices } from '../src/services/marketDataParser';
 
 // ============================================================================
 // CONFIGURATION
@@ -41,294 +42,9 @@ if (!isServiceRole) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ============================================================================
-// EQUIPMENT KEYWORDS
-// ============================================================================
-
-const EQUIPMENT_KEYWORDS: Record<string, string[]> = {
-  bess: ['battery energy storage', 'bess', 'battery storage', 'lithium-ion', 'lfp', 'nmc', 'megapack'],
-  solar: ['solar', 'pv', 'photovoltaic', 'solar panel', 'solar module', 'bifacial'],
-  wind: ['wind turbine', 'wind farm', 'wind power', 'offshore wind', 'onshore wind'],
-  generator: ['generator', 'diesel generator', 'natural gas generator', 'genset'],
-  'linear-generator': ['linear generator', 'mainspring', 'fuel cell', 'bloom energy'],
-  inverter: ['inverter', 'solar inverter', 'microinverter', 'string inverter'],
-  transformer: ['transformer', 'power transformer', 'distribution transformer'],
-  switchgear: ['switchgear', 'circuit breaker', 'mv switchgear'],
-  'ev-charger': ['ev charger', 'charging station', 'dcfc', 'dc fast', 'level 2', 'supercharger'],
-  bms: ['battery management system', 'bms', 'cell balancing'],
-  microgrid: ['microgrid', 'micro-grid', 'islanded', 'grid-forming'],
-  'hybrid-system': ['hybrid system', 'solar+storage', 'co-located']
-};
-
-// ============================================================================
-// RSS PARSER
-// ============================================================================
-
-function parseRSSFeed(xml: string): Array<{
-  title: string;
-  link: string;
-  description: string;
-  pubDate: string;
-  content: string;
-}> {
-  const items: Array<{
-    title: string;
-    link: string;
-    description: string;
-    pubDate: string;
-    content: string;
-  }> = [];
-  
-  // RSS 2.0 format
-  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-  let match;
-  
-  while ((match = itemRegex.exec(xml)) !== null) {
-    const itemXml = match[1];
-    items.push({
-      title: extractTag(itemXml, 'title'),
-      link: extractTag(itemXml, 'link') || extractAttr(itemXml, 'link', 'href'),
-      description: extractTag(itemXml, 'description'),
-      pubDate: extractTag(itemXml, 'pubDate'),
-      content: extractTag(itemXml, 'content:encoded') || extractTag(itemXml, 'description')
-    });
-  }
-  
-  // Atom format
-  const entryRegex = /<entry>([\s\S]*?)<\/entry>/gi;
-  while ((match = entryRegex.exec(xml)) !== null) {
-    const entryXml = match[1];
-    items.push({
-      title: extractTag(entryXml, 'title'),
-      link: extractAttr(entryXml, 'link', 'href'),
-      description: extractTag(entryXml, 'summary'),
-      pubDate: extractTag(entryXml, 'published') || extractTag(entryXml, 'updated'),
-      content: extractTag(entryXml, 'content') || extractTag(entryXml, 'summary')
-    });
-  }
-  
-  return items;
-}
-
-function extractTag(xml: string, tag: string): string {
-  const cdataRegex = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>`, 'i');
-  const simpleRegex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i');
-  
-  const cdataMatch = cdataRegex.exec(xml);
-  if (cdataMatch) return cdataMatch[1].trim();
-  
-  const simpleMatch = simpleRegex.exec(xml);
-  return simpleMatch ? simpleMatch[1].trim() : '';
-}
-
-function extractAttr(xml: string, tag: string, attr: string): string {
-  const regex = new RegExp(`<${tag}[^>]*${attr}=["']([^"']+)["']`, 'i');
-  const match = regex.exec(xml);
-  return match ? match[1] : '';
-}
-
-// ============================================================================
-// CONTENT CLASSIFIER
-// ============================================================================
-
-function classifyContent(text: string): {
-  equipment: string[];
-  topics: string[];
-  relevanceScore: number;
-} {
-  const textLower = text.toLowerCase();
-  const equipment: string[] = [];
-  const topics: string[] = [];
-  let relevanceScore = 0;
-  
-  for (const [category, keywords] of Object.entries(EQUIPMENT_KEYWORDS)) {
-    const matches = keywords.filter(kw => textLower.includes(kw.toLowerCase()));
-    if (matches.length > 0) {
-      equipment.push(category);
-      relevanceScore += matches.length * 0.1;
-    }
-  }
-  
-  if (textLower.includes('price') || textLower.includes('cost') || textLower.includes('$/')) {
-    topics.push('pricing');
-    relevanceScore += 0.3;
-  }
-  if (textLower.includes('regulation') || textLower.includes('policy') || textLower.includes('incentive')) {
-    topics.push('policy');
-    relevanceScore += 0.2;
-  }
-  if (textLower.includes('tariff') || textLower.includes('trade')) {
-    topics.push('tariffs');
-    relevanceScore += 0.2;
-  }
-  if (textLower.includes('market') || textLower.includes('forecast')) {
-    topics.push('market_trends');
-  }
-  
-  return { equipment, topics, relevanceScore: Math.min(1, relevanceScore) };
-}
-
-// ============================================================================
-// PRICE EXTRACTOR
-// ============================================================================
-
-function extractPrices(text: string, equipment: string[]): Array<{
-  equipment: string;
-  price: number;
-  unit: string;
-  context: string;
-  confidence: number;
-}> {
-  const prices: Array<{
-    equipment: string;
-    price: number;
-    unit: string;
-    context: string;
-    confidence: number;
-  }> = [];
-  
-  // BESS $/kWh
-  if (equipment.includes('bess')) {
-    const bessRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kWh/gi;
-    let match;
-    while ((match = bessRegex.exec(text)) !== null) {
-      const price = parseFloat(match[1].replace(/,/g, ''));
-      if (price > 50 && price < 2000) {
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        prices.push({
-          equipment: 'bess',
-          price,
-          unit: 'kWh',
-          context: text.slice(start, end),
-          confidence: 0.8
-        });
-      }
-    }
-  }
-  
-  // Solar $/W
-  if (equipment.includes('solar')) {
-    const solarRegex = /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per)\s*[Ww](?:att)?/gi;
-    let match;
-    while ((match = solarRegex.exec(text)) !== null) {
-      const price = parseFloat(match[1]);
-      if (price > 0.10 && price < 5) {
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        prices.push({
-          equipment: 'solar',
-          price,
-          unit: 'W',
-          context: text.slice(start, end),
-          confidence: 0.8
-        });
-      }
-    }
-  }
-  
-  // Generator $/kW
-  if (equipment.includes('generator')) {
-    const genRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kw(?!h)/gi;
-    let match;
-    while ((match = genRegex.exec(text)) !== null) {
-      const price = parseFloat(match[1].replace(/,/g, ''));
-      if (price > 200 && price < 2000) {
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        prices.push({
-          equipment: 'generator',
-          price,
-          unit: 'kW',
-          context: text.slice(start, end),
-          confidence: 0.7
-        });
-      }
-    }
-  }
-
-  // Wind $/kW
-  if (equipment.includes('wind')) {
-    const windRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kw(?!h)/gi;
-    let match;
-    while ((match = windRegex.exec(text)) !== null) {
-      const price = parseFloat(match[1].replace(/,/g, ''));
-      if (price > 500 && price < 5000) {
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        prices.push({
-          equipment: 'wind',
-          price,
-          unit: 'kW',
-          context: text.slice(start, end),
-          confidence: 0.65
-        });
-      }
-    }
-  }
-
-  // Inverter $/kW
-  if (equipment.includes('inverter')) {
-    const invRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kw(?!h)/gi;
-    let match;
-    while ((match = invRegex.exec(text)) !== null) {
-      const price = parseFloat(match[1].replace(/,/g, ''));
-      if (price > 30 && price < 500) {
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        prices.push({
-          equipment: 'inverter',
-          price,
-          unit: 'kW',
-          context: text.slice(start, end),
-          confidence: 0.65
-        });
-      }
-    }
-  }
-
-  // Transformer $/kVA
-  if (equipment.includes('transformer')) {
-    const xfmrRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kva/gi;
-    let match;
-    while ((match = xfmrRegex.exec(text)) !== null) {
-      const price = parseFloat(match[1].replace(/,/g, ''));
-      if (price > 15 && price < 200) {
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        prices.push({
-          equipment: 'transformer',
-          price,
-          unit: 'kVA',
-          context: text.slice(start, end),
-          confidence: 0.6
-        });
-      }
-    }
-  }
-
-  // EV Charger $/unit
-  if (equipment.includes('ev-charger')) {
-    const evRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*(?:charger|unit|station|port)/gi;
-    let match;
-    while ((match = evRegex.exec(text)) !== null) {
-      const price = parseFloat(match[1].replace(/,/g, ''));
-      if (price > 100 && price < 500000) {
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        prices.push({
-          equipment: 'ev-charger',
-          price,
-          unit: 'unit',
-          context: text.slice(start, end),
-          confidence: 0.7
-        });
-      }
-    }
-  }
-  
-  return prices;
-}
+// Parsing functions (parseRSSFeed, classifyContent, extractPrices) are now
+// imported from ../src/services/marketDataParser - the canonical zero-dependency
+// implementation shared by both this script and marketDataScraper.ts (browser).
 
 // ============================================================================
 // MAIN SCRAPE FUNCTION
@@ -462,7 +178,18 @@ async function runDailyScrape() {
         .eq('id', source.id);
       
       results.sourcesProcessed++;
-      
+
+      // Update scrape_jobs tracking (Issue 3 fix — this table was orphaned)
+      await supabase.from('scrape_jobs').upsert({
+        source_id: source.id,
+        last_run_at: new Date().toISOString(),
+        last_run_status: 'success',
+        items_found: items.length,
+        items_new: savedCount,
+        prices_extracted: pricesCount,
+        last_error: null,
+      }, { onConflict: 'source_id' });
+
       // Rate limiting
       await new Promise(resolve => setTimeout(resolve, 1500));
       
@@ -480,6 +207,14 @@ async function runDailyScrape() {
           fetch_error_count: (source.fetch_error_count || 0) + 1
         })
         .eq('id', source.id);
+
+      // Update scrape_jobs tracking (Issue 3 fix)
+      await supabase.from('scrape_jobs').upsert({
+        source_id: source.id,
+        last_run_at: new Date().toISOString(),
+        last_run_status: 'failed',
+        last_error: errorMsg,
+      }, { onConflict: 'source_id' });
     }
   }
   
