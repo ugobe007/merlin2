@@ -27,6 +27,8 @@ import {
   classifyContent,
   extractPrices,
   extractRegulations,
+  type ExtractedPrice,
+  type ExtractedRegulation,
 } from "./marketDataParser";
 export type { RSSItem, ExtractedPrice, ExtractedRegulation } from "./marketDataParser";
 export {

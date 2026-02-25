@@ -9,7 +9,7 @@
  */
 
 import React from "react";
-import { Sun, Snowflake } from "lucide-react";
+import { Sun, Snowflake, Thermometer } from "lucide-react";
 
 /** Fetch status for individual intel data points */
 type FetchStatus = "idle" | "fetching" | "ready" | "error";
@@ -21,6 +21,7 @@ interface IntelData {
   peakSunHours?: number;
   solarGrade?: string;
   weatherProfile?: string;
+  avgTempF?: number;
   utilityProvider?: string;
   utilityStatus?: FetchStatus;
   solarStatus?: FetchStatus;
@@ -158,6 +159,15 @@ export default function IntelStripInline({ intel }: Props) {
             color="rgba(147, 197, 253, 0.9)"
             status={intel.weatherStatus}
           />
+        </>
+      )}
+      {intel.avgTempF !== undefined && intel.weatherStatus === "ready" && (
+        <>
+          <Dot />
+          <Thermometer className="w-3.5 h-3.5" style={{ color: "rgba(251, 146, 60, 0.9)" }} />
+          <span style={{ color: "rgba(251, 146, 60, 0.9)", fontWeight: 600, whiteSpace: "nowrap" }}>
+            {Math.round(intel.avgTempF)}°F
+          </span>
         </>
       )}
       {intel.utilityProvider && intel.utilityStatus === "ready" && (

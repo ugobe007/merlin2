@@ -1,9 +1,9 @@
 /**
  * Wizard V7 API Functions
- * 
+ *
  * All API calls and external service integrations for the wizard flow.
  * Extracted from useWizardV7.ts for better organization and testability.
- * 
+ *
  * @module wizard/v7/api/wizardAPI
  */
 
@@ -23,7 +23,7 @@ import { validateTemplate, formatValidationResult } from "@/wizard/v7/validation
 
 /**
  * Resolve user location input -> LocationCard
- * 
+ *
  * Uses Google Places API via backend to geocode location.
  * Handles ZIP-only inputs, validates US state presence.
  */
@@ -112,7 +112,7 @@ export async function resolveLocation(input: string, signal?: AbortSignal): Prom
 
 /**
  * Fetch utility rate data by ZIP code
- * 
+ *
  * Progressive hydration: enriches location with utility data.
  */
 export async function fetchUtility(
@@ -146,10 +146,12 @@ export async function fetchUtility(
 
 /**
  * Fetch solar resource data by ZIP code
- * 
+ *
  * Progressive hydration: enriches location with solar potential.
  */
-export async function fetchSolar(zipOrInput: string): Promise<{ peakSunHours?: number; grade?: string }> {
+export async function fetchSolar(
+  zipOrInput: string
+): Promise<{ peakSunHours?: number; grade?: string }> {
   const zip = zipOrInput.replace(/\D/g, "").slice(0, 5);
   if (!zip || zip.length < 5) {
     return { peakSunHours: undefined, grade: undefined };
@@ -190,10 +192,12 @@ export async function fetchSolar(zipOrInput: string): Promise<{ peakSunHours?: n
 
 /**
  * Fetch weather profile data by ZIP code
- * 
+ *
  * Progressive hydration: enriches location with climate data.
  */
-export async function fetchWeather(zipOrInput: string): Promise<{ risk?: string; profile?: string }> {
+export async function fetchWeather(
+  zipOrInput: string
+): Promise<{ risk?: string; profile?: string; avgTempF?: number }> {
   const zip = zipOrInput.replace(/\D/g, "").slice(0, 5);
   if (!zip || zip.length < 5) {
     return { risk: undefined, profile: undefined };
@@ -212,6 +216,7 @@ export async function fetchWeather(zipOrInput: string): Promise<{ risk?: string;
     return {
       risk: data.extremes, // "Frequent heatwaves", "Harsh winters", etc.
       profile: data.profile, // "Hot & Humid", "Cold & Dry", "Temperate", etc.
+      avgTempF: data.avgTempF, // Average temperature °F for climate context
     };
   } catch (e) {
     devError("[V7] Weather fetch error:", e);
@@ -221,7 +226,7 @@ export async function fetchWeather(zipOrInput: string): Promise<{ risk?: string;
 
 /**
  * Infer industry from location and business card
- * 
+ *
  * Uses keyword matching on business name, address, and location.
  * Returns industry slug with confidence score.
  */
@@ -289,15 +294,18 @@ export async function inferIndustry(
 
 /**
  * Load Step 3 template by industry
- * 
+ *
  * RESILIENCE: API is an enhancement, not a dependency.
  * Falls back to local JSON templates if backend unavailable.
- * 
+ *
  * @param industry - Industry slug to load template for
  * @param signal - AbortSignal for cancellation
  * @returns Step3Template with validated structure
  */
-export async function loadStep3Template(industry: IndustrySlug, signal?: AbortSignal): Promise<Step3Template> {
+export async function loadStep3Template(
+  industry: IndustrySlug,
+  signal?: AbortSignal
+): Promise<Step3Template> {
   // Resolve industry context via SSOT catalog (replaces inline templateMapping)
   const ctx = resolveIndustryContext(industry);
   const selected = industry;
@@ -499,17 +507,17 @@ export async function loadStep3Template(industry: IndustrySlug, signal?: AbortSi
 
 /**
  * Compute smart defaults for Step 3 initial load
- * 
+ *
  * TEMPLATE-DRIVEN (no hardcoded industryDefaults magic object).
- * 
+ *
  * Sources (in priority order, last wins within each category):
  * 1. template.defaults (canonical defaults from JSON/DB)
  * 2. question.defaultValue (legacy per-question defaults)
- * 
+ *
  * IMPORTANT: Does NOT include locationIntel or businessDetection.
  * Those are "override patches" applied separately via PATCH_STEP3_ANSWERS
  * to avoid stomping user edits on re-hydration.
- * 
+ *
  * @returns { answers, meta } with provenance tracking
  */
 export function computeSmartDefaults(
@@ -546,10 +554,10 @@ export function computeSmartDefaults(
 
 /**
  * Build a patch object from locationIntel
- * 
+ *
  * Maps intel fields to Step 3 question IDs.
  * Returns only the fields that have data (sparse patch).
- * 
+ *
  * This is applied via PATCH_STEP3_ANSWERS with source="location_intel"
  * so it won't stomp user edits.
  */
@@ -576,10 +584,10 @@ export function buildIntelPatch(locationIntel: LocationIntel | null): Step3Answe
 
 /**
  * Build a patch object from businessCard detection
- * 
+ *
  * Maps business detection fields to Step 3 question IDs.
  * Returns only the fields that have data (sparse patch).
- * 
+ *
  * This is applied via PATCH_STEP3_ANSWERS with source="business_detection"
  * so it won't stomp user edits.
  */
@@ -604,9 +612,9 @@ export function buildBusinessPatch(businessCard: BusinessCard | null): Step3Answ
 
 /**
  * Run pricing quote calculation
- * 
+ *
  * Delegates to pricingBridge.ts for actual implementation.
- * 
+ *
  * @param contract - Contract quote result from truequote engine
  * @param config - Pricing configuration
  * @returns Pricing quote result with financials
@@ -622,7 +630,7 @@ export async function runPricingQuote(
 
 /**
  * Wizard API object
- * 
+ *
  * All API functions in a single exportable object for backward compatibility.
  */
 export const wizardAPI = {
