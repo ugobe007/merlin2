@@ -344,18 +344,40 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
           HERO SAVINGS — Big number, compelling
       ================================================================ */}
       {quoteReady && quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
-        <div className="relative rounded-xl overflow-hidden">
-          <div className="absolute inset-0 bg-white/[0.02]" />
+        <div
+          className="relative rounded-xl overflow-hidden"
+          style={{
+            boxShadow:
+              "0 0 0 1px rgba(52,211,153,0.14), 0 0 50px rgba(52,211,153,0.12), 0 8px 32px rgba(0,0,0,0.35)",
+          }}
+        >
+          <div className="absolute inset-0" style={{ background: "rgba(52,211,153,0.025)" }} />
 
-          <div className="relative p-8 border border-[#3ECF8E]/20 rounded-xl">
+          <div
+            className="relative p-8 rounded-xl"
+            style={{
+              border: "2px solid rgba(52,211,153,0.40)",
+              background: "rgba(52,211,153,0.03)",
+            }}
+          >
             <div className="text-center">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 mb-4">
+              <div
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4"
+                style={{
+                  background: "rgba(62,207,142,0.12)",
+                  border: "1px solid rgba(62,207,142,0.38)",
+                  boxShadow: "0 0 18px rgba(62,207,142,0.18)",
+                }}
+              >
                 <div className="w-2 h-2 bg-[#3ECF8E] rounded-full animate-pulse" />
                 <span className="text-[#3ECF8E] font-semibold text-xs uppercase tracking-wider">
                   Projected Annual Savings
                 </span>
               </div>
-              <div className="text-5xl md:text-6xl font-bold text-[#3ECF8E] leading-none">
+              <div
+                className="text-5xl md:text-6xl font-bold text-[#3ECF8E] leading-none"
+                style={{ textShadow: "0 0 40px rgba(62,207,142,0.40)" }}
+              >
                 {fmtUSD(quote.annualSavingsUSD as number | null)}
               </div>
               <div className="text-lg text-slate-400 mt-1.5">per year</div>
