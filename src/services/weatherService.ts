@@ -1,17 +1,17 @@
 /**
  * Weather Service
- * 
+ *
  * Fetches weather data from Visual Crossing and National Weather Service
  * to provide climate context for energy system sizing.
- * 
+ *
  * Created: Jan 17, 2026
  * Updated: Jan 25, 2026 - Added safe fetch to handle 429 rate limiting
  */
 
-import { getCoordinatesFromZip } from './geocodingService';
-import { fetchOptionalJSON } from '@/utils/safeFetch';
+import { getCoordinatesFromZip } from "./geocodingService";
+import { fetchOptionalJSON } from "@/utils/safeFetch";
 
-const VISUAL_CROSSING_API_KEY = 'HQLBWQ3D3YLYKF2NLJL68EW4C';
+const VISUAL_CROSSING_API_KEY = import.meta.env.VITE_VISUAL_CROSSING_API_KEY || "";
 
 export interface WeatherData {
   profile: string; // "Hot & Humid", "Cold & Dry", "Temperate", etc.
@@ -21,7 +21,7 @@ export interface WeatherData {
   avgLowF?: number;
   heatingDegreeDays?: number;
   coolingDegreeDays?: number;
-  source: 'visual-crossing' | 'nws' | 'cache';
+  source: "visual-crossing" | "nws" | "cache";
 }
 
 interface VisualCrossingResponse {
@@ -66,7 +66,7 @@ function determineProfile(avgTemp: number, avgHigh: number, avgLow: number): str
  */
 function determineExtremes(avgHigh: number, avgLow: number, avgTemp: number): string {
   const range = avgHigh - avgLow;
-  
+
   if (avgHigh > 95) {
     return "Frequent heatwaves";
   } else if (avgLow < 20) {
@@ -100,18 +100,18 @@ function calculateDegreeDays(avgTemp: number): { heating: number; cooling: numbe
 async function fetchVisualCrossing(zipCode: string): Promise<WeatherData | null> {
   try {
     const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${zipCode}/last30days?unitGroup=us&key=${VISUAL_CROSSING_API_KEY}&include=days`;
-    
+
     // Use safe fetch with 10-minute cache (weather doesn't change that often)
     const data = await fetchOptionalJSON<VisualCrossingResponse>(url, { ttlMs: 10 * 60_000 });
-    
+
     if (!data || !data.days || data.days.length === 0) {
       return null;
     }
 
     // Calculate averages from last 30 days
-    const temps = data.days.map(d => d.temp);
-    const highs = data.days.map(d => d.tempmax);
-    const lows = data.days.map(d => d.tempmin);
+    const temps = data.days.map((d) => d.temp);
+    const highs = data.days.map((d) => d.tempmax);
+    const lows = data.days.map((d) => d.tempmin);
 
     const avgTemp = temps.reduce((a, b) => a + b, 0) / temps.length;
     const avgHigh = highs.reduce((a, b) => a + b, 0) / highs.length;
@@ -127,10 +127,10 @@ async function fetchVisualCrossing(zipCode: string): Promise<WeatherData | null>
       avgLowF: Math.round(avgLow),
       heatingDegreeDays: Math.round(heating),
       coolingDegreeDays: Math.round(cooling),
-      source: 'visual-crossing',
+      source: "visual-crossing",
     };
   } catch (error) {
-    console.error('Visual Crossing fetch error:', error);
+    console.error("Visual Crossing fetch error:", error);
     return null;
   }
 }
@@ -144,11 +144,11 @@ async function fetchNWS(lat: number, lon: number): Promise<WeatherData | null> {
     // Step 1: Get forecast grid point
     const pointUrl = `https://api.weather.gov/points/${lat.toFixed(4)},${lon.toFixed(4)}`;
     const pointResponse = await fetch(pointUrl, {
-      headers: { 'User-Agent': 'Merlin Energy Advisor (contact@merlinbess.com)' },
+      headers: { "User-Agent": "Merlin Energy Advisor (contact@merlinbess.com)" },
     });
 
     if (!pointResponse.ok) {
-      console.warn('NWS points API error:', pointResponse.status);
+      console.warn("NWS points API error:", pointResponse.status);
       return null;
     }
 
@@ -173,17 +173,17 @@ async function fetchNWS(lat: number, lon: number): Promise<WeatherData | null> {
       avgLowF: Math.round(avgLow),
       heatingDegreeDays: Math.round(heating),
       coolingDegreeDays: Math.round(cooling),
-      source: 'nws',
+      source: "nws",
     };
   } catch (error) {
-    console.error('NWS fetch error:', error);
+    console.error("NWS fetch error:", error);
     return null;
   }
 }
 
 /**
  * Get weather data for a location
- * 
+ *
  * Strategy:
  * 1. Try Visual Crossing with ZIP code (30-day history)
  * 2. If that fails, geocode ZIP to get coordinates
@@ -226,13 +226,13 @@ export async function getWeatherData(
  */
 function getRegionFromZipPrefix(prefix: string): string {
   const p = parseInt(prefix);
-  if (p >= 330 && p <= 349) return 'southeast'; // FL, GA, AL
-  if (p >= 850 && p <= 865) return 'southwest'; // AZ, NM
-  if (p >= 900 && p <= 961) return 'west-coast'; // CA
-  if (p >= 970 && p <= 999) return 'northwest'; // OR, WA
-  if (p >= 600 && p <= 629) return 'midwest'; // IL, IN
-  if (p >= 100 && p <= 149) return 'northeast'; // NY, MA
-  return 'central';
+  if (p >= 330 && p <= 349) return "southeast"; // FL, GA, AL
+  if (p >= 850 && p <= 865) return "southwest"; // AZ, NM
+  if (p >= 900 && p <= 961) return "west-coast"; // CA
+  if (p >= 970 && p <= 999) return "northwest"; // OR, WA
+  if (p >= 600 && p <= 629) return "midwest"; // IL, IN
+  if (p >= 100 && p <= 149) return "northeast"; // NY, MA
+  return "central";
 }
 
 /**
@@ -240,77 +240,77 @@ function getRegionFromZipPrefix(prefix: string): string {
  */
 function getDefaultWeatherForRegion(region: string): WeatherData {
   const defaults: Record<string, WeatherData> = {
-    'southeast': {
-      profile: 'Hot & Humid',
-      extremes: 'High cooling load',
+    southeast: {
+      profile: "Hot & Humid",
+      extremes: "High cooling load",
       avgTempF: 72,
       avgHighF: 85,
       avgLowF: 60,
       heatingDegreeDays: 1500,
       coolingDegreeDays: 2500,
-      source: 'cache',
+      source: "cache",
     },
-    'southwest': {
-      profile: 'Hot & Dry',
-      extremes: 'Frequent heatwaves',
+    southwest: {
+      profile: "Hot & Dry",
+      extremes: "Frequent heatwaves",
       avgTempF: 75,
       avgHighF: 92,
       avgLowF: 58,
       heatingDegreeDays: 1200,
       coolingDegreeDays: 3000,
-      source: 'cache',
+      source: "cache",
     },
-    'west-coast': {
-      profile: 'Temperate',
-      extremes: 'Mild year-round',
+    "west-coast": {
+      profile: "Temperate",
+      extremes: "Mild year-round",
       avgTempF: 65,
       avgHighF: 75,
       avgLowF: 55,
       heatingDegreeDays: 1800,
       coolingDegreeDays: 800,
-      source: 'cache',
+      source: "cache",
     },
-    'northwest': {
-      profile: 'Cool & Wet',
-      extremes: 'Moderate climate',
+    northwest: {
+      profile: "Cool & Wet",
+      extremes: "Moderate climate",
       avgTempF: 55,
       avgHighF: 65,
       avgLowF: 45,
       heatingDegreeDays: 3500,
       coolingDegreeDays: 200,
-      source: 'cache',
+      source: "cache",
     },
-    'midwest': {
-      profile: 'High Variability',
-      extremes: 'Extreme temperature swings',
+    midwest: {
+      profile: "High Variability",
+      extremes: "Extreme temperature swings",
       avgTempF: 55,
       avgHighF: 75,
       avgLowF: 35,
       heatingDegreeDays: 5000,
       coolingDegreeDays: 1000,
-      source: 'cache',
+      source: "cache",
     },
-    'northeast': {
-      profile: 'Cold & Dry',
-      extremes: 'Harsh winters',
+    northeast: {
+      profile: "Cold & Dry",
+      extremes: "Harsh winters",
       avgTempF: 50,
       avgHighF: 65,
       avgLowF: 35,
       heatingDegreeDays: 5500,
       coolingDegreeDays: 800,
-      source: 'cache',
+      source: "cache",
     },
-    'central': {
-      profile: 'Moderate',
-      extremes: 'Moderate climate',
+    central: {
+      profile: "Moderate",
+      extremes: "Moderate climate",
       avgTempF: 60,
       avgHighF: 75,
       avgLowF: 45,
       heatingDegreeDays: 3000,
       coolingDegreeDays: 1500,
-      source: 'cache',
+      source: "cache",
     },
   };
 
-  return defaults[region] || defaults['central'];
+  return defaults[region] || defaults["central"];
 }
