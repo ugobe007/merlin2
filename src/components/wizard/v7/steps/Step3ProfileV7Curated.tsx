@@ -26,16 +26,18 @@ import {
   type CanonicalIndustryKey,
 } from "@/wizard/v7/schema/curatedFieldsResolver";
 import type { WizardState as WizardV7State } from "@/wizard/v7/hooks/useWizardV7";
-import {
-  normalizeFieldType as normalizeFieldTypeUtil,
-  chooseRendererForQuestion,
-} from "./Step3RendererLogic";
+import { normalizeFieldType as normalizeFieldTypeUtil } from "./Step3RendererLogic";
 import { devLog, devWarn, devError } from "@/wizard/v7/debug/devLog";
 
 // Industry images (same as original)
 import QuestionCard from "./QuestionCard";
 import { INDUSTRY_IMAGES, SECTION_ICONS, SECTION_DESCRIPTIONS } from "./step3Constants";
-import { asString, isAnswered, isRequired, SOLAR_QUESTIONS_MOVED_TO_MODAL, REMAP_TO_GOALS } from "./step3Helpers";
+import {
+  isAnswered,
+  isRequired,
+  SOLAR_QUESTIONS_MOVED_TO_MODAL,
+  REMAP_TO_GOALS,
+} from "./step3Helpers";
 import merlinIcon from "@/assets/images/new_small_profile_.png";
 
 type Step3Answers = Record<string, unknown>;
@@ -343,7 +345,6 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
       }
     }
   }
-
 
   // Filter visible questions (memoized to avoid render churn)
   // ✅ Also filter out questions with missing IDs (prevents React key errors)
@@ -676,7 +677,17 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
               <div className="p-4 space-y-4">
                 {group.questions.map((q, qIdx) => {
                   const globalIdx = sectionStartIndexes[group.id] + qIdx;
-                  return <QuestionCard key={q.id} q={q} index={globalIdx} answers={answers} defaultFilledIds={defaultFilledIds} onAnswer={setAnswer} getOptions={getOptions} />;
+                  return (
+                    <QuestionCard
+                      key={q.id}
+                      q={q}
+                      index={globalIdx}
+                      answers={answers}
+                      defaultFilledIds={defaultFilledIds}
+                      onAnswer={setAnswer}
+                      getOptions={getOptions}
+                    />
+                  );
                 })}
               </div>
             </div>
@@ -753,8 +764,8 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
 
       {/* Continue — single clean flow (Feb 11, 2026) */}
       <div className="mt-6 flex flex-col items-end gap-3">
-        {/* Confirmation banner — only when defaults were auto-filled and not yet reviewed */}
-        {isComplete && defaultFilledIds.size > 0 && !defaultsReviewed && (
+        {/* Merlin completion banner — shown for ALL industries when questionnaire is complete */}
+        {isComplete && !defaultsReviewed && (
           <div
             className="w-full rounded-xl border border-cyan-500/30 p-4"
             style={{ background: "rgba(6, 182, 212, 0.08)" }}
@@ -763,12 +774,14 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
               <img src={merlinIcon} alt="Merlin" className="w-7 h-7 rounded-lg flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-sm font-bold text-cyan-200">
-                  Merlin pre-filled {defaultFilledIds.size} answers using industry defaults
+                  {defaultFilledIds.size > 0
+                    ? `Merlin pre-filled ${defaultFilledIds.size} answer${defaultFilledIds.size === 1 ? "" : "s"} using industry defaults`
+                    : "Looking good — your profile is complete"}
                 </p>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  These are typical values for your industry. You can scroll up to review and adjust
-                  anything that doesn't match your facility, or continue with these defaults for a
-                  fast estimate.
+                  {defaultFilledIds.size > 0
+                    ? "These are typical values for your industry. You can scroll up to review and adjust anything that doesn't match your facility, or continue with these defaults for a fast estimate."
+                    : "Your answers are ready. Continue to see your custom BESS options, or scroll up to review your inputs."}
                 </p>
                 <div className="flex gap-3 mt-3">
                   <button
@@ -783,24 +796,26 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
                   >
                     Looks good — Continue →
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDefaultsReviewed(true);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className="px-4 py-2.5 rounded-lg font-medium text-sm border border-white/[0.1] text-slate-300 hover:bg-white/[0.04] transition-all"
-                  >
-                    Let me review first
-                  </button>
+                  {defaultFilledIds.size > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDefaultsReviewed(true);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="px-4 py-2.5 rounded-lg font-medium text-sm border border-white/[0.1] text-slate-300 hover:bg-white/[0.04] transition-all"
+                    >
+                      Let me review first
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Single Continue button — only shown when defaults reviewed (or no defaults) */}
-        {(defaultFilledIds.size === 0 || defaultsReviewed) && (
+        {/* Plain Continue button — only after Merlin banner has been dismissed */}
+        {defaultsReviewed && (
           <button
             type="button"
             data-testid="step3-continue"

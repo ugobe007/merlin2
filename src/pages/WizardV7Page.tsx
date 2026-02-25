@@ -16,6 +16,7 @@ import { V7_ENABLE_GATED_STEP3, V7_USE_CURATED_STEP3 } from "@/wizard/v7/feature
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 import WizardErrorBoundary from "@/components/wizard/v7/shared/WizardErrorBoundary";
 import V7AdvisorPanel from "@/components/wizard/v7/shared/V7AdvisorPanel";
+import LocationIntelSummary from "@/components/wizard/v7/shared/LocationIntelSummary";
 import { resolveStep3Schema } from "@/wizard/v7/schema/curatedFieldsResolver";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
@@ -645,13 +646,16 @@ function WizardV7Page() {
       }
 
       return (
-        <V7AdvisorPanel
-          title="Merlin Advisor"
-          subtitle="Your TrueQuote™ Results"
-          badges={badges}
-          bullets={bullets}
-          progressPct={pricingComplete ? 100 : pricingStatus === "pending" ? 50 : 25}
-        />
+        <>
+          <V7AdvisorPanel
+            title="Merlin Advisor"
+            subtitle="Your TrueQuote™ Results"
+            badges={badges}
+            bullets={bullets}
+            progressPct={pricingComplete ? 100 : pricingStatus === "pending" ? 50 : 25}
+          />
+          <LocationIntelSummary location={state.location} intel={state.locationIntel} />
+        </>
       );
     }
 
@@ -676,19 +680,22 @@ function WizardV7Page() {
       }
 
       return (
-        <V7AdvisorPanel
-          title="Merlin Advisor"
-          subtitle={step3Advisor.schema.displayName}
-          badges={[
-            {
-              label: `${step3Advisor.answeredCount}/${step3Advisor.visibleRequiredCount} complete`,
-              tone: step3Advisor.missing.length ? "amber" : "green",
-            },
-          ]}
-          progressPct={step3Advisor.progressPct}
-          bullets={bullets}
-          missing={step3Advisor.missing.slice(0, 6)}
-        />
+        <>
+          <V7AdvisorPanel
+            title="Merlin Advisor"
+            subtitle={step3Advisor.schema.displayName}
+            badges={[
+              {
+                label: `${step3Advisor.answeredCount}/${step3Advisor.visibleRequiredCount} complete`,
+                tone: step3Advisor.missing.length ? "amber" : "green",
+              },
+            ]}
+            progressPct={step3Advisor.progressPct}
+            bullets={bullets}
+            missing={step3Advisor.missing.slice(0, 6)}
+          />
+          <LocationIntelSummary location={state.location} intel={state.locationIntel} />
+        </>
       );
     }
 
@@ -817,13 +824,16 @@ function WizardV7Page() {
     }
 
     return (
-      <V7AdvisorPanel
-        title="Merlin Advisor"
-        subtitle={insights.subtitle}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        badges={insights.badges as any}
-        bullets={fallbackBullets.slice(0, 5)}
-      />
+      <>
+        <V7AdvisorPanel
+          title="Merlin Advisor"
+          subtitle={insights.subtitle}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          badges={insights.badges as any}
+          bullets={fallbackBullets.slice(0, 5)}
+        />
+        <LocationIntelSummary location={state.location} intel={state.locationIntel} />
+      </>
     );
   }, [
     state.step,
