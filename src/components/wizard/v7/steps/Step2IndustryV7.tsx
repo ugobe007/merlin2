@@ -51,9 +51,9 @@ const IMAGE_MAP: Record<string, string> = {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const DARK = {
   bgGradient: "transparent",
-  cardBg: "rgba(255,255,255,0.03)",
-  cardBorder: "rgba(255,255,255,0.05)",
-  cardHoverBg: "rgba(255,255,255,0.05)",
+  cardBg: "rgba(255,255,255,0.05)",
+  cardBorder: "rgba(255,255,255,0.09)",
+  cardHoverBg: "rgba(255,255,255,0.08)",
   textPrimary: "#ffffff",
   textSecondary: "rgba(255,255,255,0.60)",
   textMuted: "rgba(255,255,255,0.35)",
@@ -152,8 +152,18 @@ const Step2IndustryV7 = React.memo(function Step2IndustryV7({ state, actions }: 
         <div>
           <div style={{ fontSize: 14, color: DARK.textSecondary, lineHeight: 1.6 }}>
             Select your industry
-            <span style={{ color: "rgba(232,235,243,0.25)", margin: "0 8px" }} className="hidden sm:inline">·</span>
-            <span style={{ fontSize: 13, color: "rgba(232,235,243,0.35)" }} className="hidden sm:inline">📍 {locationLine}</span>
+            <span
+              style={{ color: "rgba(232,235,243,0.25)", margin: "0 8px" }}
+              className="hidden sm:inline"
+            >
+              ·
+            </span>
+            <span
+              style={{ fontSize: 13, color: "rgba(232,235,243,0.35)" }}
+              className="hidden sm:inline"
+            >
+              📍 {locationLine}
+            </span>
           </div>
           <div style={{ fontSize: 12, color: "rgba(232,235,243,0.35)", marginTop: 4 }}>
             This determines your facility's energy profile and custom questions.
@@ -176,74 +186,122 @@ const Step2IndustryV7 = React.memo(function Step2IndustryV7({ state, actions }: 
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-            {INDUSTRIES.map((it) => (
-              <button
-                key={it.slug}
-                data-testid={`industry-card-${it.slug.replace(/_/g, "-")}`}
-                disabled={disabled}
-                onClick={() => {
-                  if (!disabled) {
-                    actions.selectIndustry(it.slug);
-                  }
-                }}
-                className="rounded-xl text-left overflow-hidden transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                style={{
-                  border: `1px solid ${DARK.cardBorder}`,
-                  padding: 0,
-                  background: DARK.cardBg,
-                  cursor: disabled ? "not-allowed" : "pointer",
-                  opacity: disabled ? 0.5 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (!disabled) {
-                    e.currentTarget.style.background = DARK.cardHoverBg;
-                    e.currentTarget.style.borderColor = DARK.accent;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = DARK.cardBg;
-                  e.currentTarget.style.borderColor = DARK.cardBorder;
-                }}
-              >
-                {/* Image Section */}
-                {it.image ? (
-                  <div
-                    className="h-20 sm:h-28 md:h-[120px] overflow-hidden"
-                    style={{
-                      borderBottom: `1px solid ${DARK.cardBorder}`,
-                    }}
-                  >
-                    <img
-                      src={it.image}
-                      alt={it.label}
-                      className="w-full h-full object-cover"
-                    />
+            {INDUSTRIES.map((it) => {
+              const isSelected = state.industry === it.slug;
+              return (
+                <button
+                  key={it.slug}
+                  data-testid={`industry-card-${it.slug.replace(/_/g, "-")}`}
+                  disabled={disabled}
+                  onClick={() => {
+                    if (!disabled) {
+                      actions.selectIndustry(it.slug);
+                    }
+                  }}
+                  className="rounded-xl text-left overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                  style={{
+                    border: `${isSelected ? "1.5px" : "1px"} solid ${
+                      isSelected ? "rgba(62,207,142,0.65)" : DARK.cardBorder
+                    }`,
+                    padding: 0,
+                    background: isSelected ? "rgba(62,207,142,0.08)" : DARK.cardBg,
+                    boxShadow: isSelected
+                      ? "0 0 0 1px rgba(62,207,142,0.12), 0 0 28px rgba(62,207,142,0.14)"
+                      : "none",
+                    cursor: disabled ? "not-allowed" : "pointer",
+                    opacity: disabled ? 0.5 : 1,
+                    position: "relative",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!disabled && !isSelected) {
+                      e.currentTarget.style.background = DARK.cardHoverBg;
+                      e.currentTarget.style.borderColor = DARK.accent;
+                      e.currentTarget.style.boxShadow =
+                        "0 0 0 1px rgba(62,207,142,0.10), 0 4px 18px rgba(0,0,0,0.3)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.background = DARK.cardBg;
+                      e.currentTarget.style.borderColor = DARK.cardBorder;
+                      e.currentTarget.style.boxShadow = "none";
+                    }
+                  }}
+                >
+                  {/* Selected checkmark */}
+                  {isSelected && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        width: 22,
+                        height: 22,
+                        borderRadius: "50%",
+                        background: "rgba(62,207,142,0.90)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "#0f1117",
+                        zIndex: 10,
+                        boxShadow: "0 0 10px rgba(62,207,142,0.55)",
+                      }}
+                    >
+                      ✓
+                    </div>
+                  )}
+                  {/* Image Section */}
+                  {it.image ? (
+                    <div
+                      className="relative h-20 sm:h-28 md:h-[120px] overflow-hidden"
+                      style={{
+                        borderBottom: `1px solid ${
+                          isSelected ? "rgba(62,207,142,0.35)" : DARK.cardBorder
+                        }`,
+                      }}
+                    >
+                      <img src={it.image} alt={it.label} className="w-full h-full object-cover" />
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            "linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 65%)",
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="h-20 sm:h-28 md:h-[120px] flex items-center justify-center text-3xl sm:text-5xl"
+                      style={{
+                        background: `linear-gradient(135deg, ${DARK.accent}33 0%, ${DARK.cardBg} 100%)`,
+                        borderBottom: `1px solid ${DARK.cardBorder}`,
+                      }}
+                    >
+                      {it.emoji}
+                    </div>
+                  )}
+                  {/* Text Section */}
+                  <div className="p-2.5 sm:p-4">
+                    <div
+                      className="text-xs sm:text-sm md:text-base font-semibold flex items-center gap-1.5 sm:gap-2"
+                      style={{
+                        color: DARK.textPrimary,
+                      }}
+                    >
+                      <span className="text-sm sm:text-base">{it.emoji}</span> {it.label}
+                    </div>
+                    <div
+                      className="mt-1 sm:mt-1.5 text-[11px] sm:text-xs md:text-[13px] line-clamp-2"
+                      style={{ color: DARK.textMuted }}
+                    >
+                      {it.desc}
+                    </div>
                   </div>
-                ) : (
-                  <div
-                    className="h-20 sm:h-28 md:h-[120px] flex items-center justify-center text-3xl sm:text-5xl"
-                    style={{
-                      background: `linear-gradient(135deg, ${DARK.accent}33 0%, ${DARK.cardBg} 100%)`,
-                      borderBottom: `1px solid ${DARK.cardBorder}`,
-                    }}
-                  >
-                    {it.emoji}
-                  </div>
-                )}
-                {/* Text Section */}
-                <div className="p-2.5 sm:p-4">
-                  <div
-                    className="text-xs sm:text-sm md:text-base font-semibold flex items-center gap-1.5 sm:gap-2"
-                    style={{
-                      color: DARK.textPrimary,
-                    }}
-                  >
-                    <span className="text-sm sm:text-base">{it.emoji}</span> {it.label}
-                  </div>
-                  <div className="mt-1 sm:mt-1.5 text-[11px] sm:text-xs md:text-[13px] line-clamp-2" style={{ color: DARK.textMuted }}>{it.desc}</div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </Card>
       </div>
