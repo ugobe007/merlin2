@@ -4,7 +4,6 @@
  */
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 import type { EnergyGoal, QuoteOutput } from "@/wizard/v7/hooks/useWizardV7";
-import { applyMarginToQuote } from "@/wizard/v7/pricing/pricingBridge";
 import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
 
@@ -89,13 +88,15 @@ export type QuoteWithMargin = QuoteResult & { _margin?: MarginData };
 
 export function formatCurrency(value: number | undefined | null): string {
   if (value == null || !Number.isFinite(value)) return "$0";
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(2)}M`;
+  if (value >= 1_000_000) {
+    // Strip trailing zeros: $2.00M → $2M, $1.50M → $1.5M, $1.23M → $1.23M
+    const m = parseFloat((value / 1_000_000).toFixed(2));
+    return `$${m}M`;
   }
-  if (value >= 1000) {
-    return `$${(value / 1000).toFixed(0)}K`;
+  if (value >= 1_000) {
+    return `$${Math.round(value / 1_000)}K`;
   }
-  return `$${value.toFixed(0)}`;
+  return `$${Math.round(value)}`;
 }
 
 export function formatNumber(value: number | undefined | null): string {
@@ -257,7 +258,12 @@ export function scaleTier(
   // Solar scaling: cap to physical building constraints (roof + canopy)
   // Vineet: "Solar 165kW will not fit in an automated car wash" — respect physics
   let solarScale = config.solarMultiplier;
-  if (maxRoofSolarMW && maxRoofSolarMW > 0 && baseEquipment.solar && baseEquipment.solar.totalMW > 0) {
+  if (
+    maxRoofSolarMW &&
+    maxRoofSolarMW > 0 &&
+    baseEquipment.solar &&
+    baseEquipment.solar.totalMW > 0
+  ) {
     const rawScaledMW = baseEquipment.solar.totalMW * config.solarMultiplier;
     if (config.solarMultiplier < 1.0) {
       // Starter: use roof-only solar (physically meaningful, not arbitrary fraction)
@@ -269,7 +275,12 @@ export function scaleTier(
   }
 
   // Hard cap: total solar (roof + canopy) must not exceed physical building limit
-  if (maxTotalSolarMW && maxTotalSolarMW > 0 && baseEquipment.solar && baseEquipment.solar.totalMW > 0) {
+  if (
+    maxTotalSolarMW &&
+    maxTotalSolarMW > 0 &&
+    baseEquipment.solar &&
+    baseEquipment.solar.totalMW > 0
+  ) {
     const scaledMW = baseEquipment.solar.totalMW * solarScale;
     if (scaledMW > maxTotalSolarMW) {
       solarScale = maxTotalSolarMW / baseEquipment.solar.totalMW;
@@ -657,4 +668,3 @@ export function buildQuoteResultFromState(
     },
   };
 }
-

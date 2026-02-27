@@ -188,6 +188,7 @@ export function SystemAddOnsCards({
     const s = new Set<string>();
     if (currentAddOns.includeSolar) s.add("solar");
     if (currentAddOns.includeGenerator) s.add("generator");
+    if (currentAddOns.includeEV) s.add("ev");
     return s;
   });
   // ✅ If solar was sized in Step 3 modal, default to "custom" tier (Feb 2026)

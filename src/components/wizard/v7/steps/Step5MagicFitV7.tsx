@@ -779,7 +779,9 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                   <div className="text-center p-2 bg-white/[0.03] rounded-lg">
                     <div className="text-[10px] text-slate-500 font-medium">5yr ROI</div>
                     <div className={`text-sm font-bold ${tier.config.accentColor}`}>
-                      {safeFixed(quote.financials?.roi5Year, 0)}%
+                      {(quote.financials?.roi5Year ?? 0) >= 0
+                        ? `${safeFixed(quote.financials?.roi5Year, 0)}%`
+                        : "—"}
                     </div>
                   </div>
                 </div>
