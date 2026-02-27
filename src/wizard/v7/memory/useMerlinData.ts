@@ -1,21 +1,21 @@
 /**
  * useMerlinData() — Memory-First Data Access Hook
  * ==================================================
- * 
+ *
  * THE BRIDGE: Steps 4/5/6 use this hook to read cross-step data.
  * It reads from Merlin Memory first, falls back to reducer state.
- * 
+ *
  * WHY:
  *   The reducer carries 80+ fields of step-specific UI state (isBusy,
  *   locationConfirmed, goalsModalRequested, etc.). Steps 4/5/6 only need
  *   ~15 durable data fields (peakLoadKW, goals, industry, location, quote).
  *   This hook gives them exactly that — clean, typed, from the SSOT.
- * 
+ *
  * MIGRATION PATH:
  *   Phase 1 (now): Steps call useMerlinData(state) — Memory-first, state fallback
  *   Phase 2 (future): Steps call useMerlinData() — Memory only, no reducer
  *   Phase 3 (future): Reducer shrinks to UI-only state (isBusy, step, errors)
- * 
+ *
  * USAGE:
  *   const data = useMerlinData(state);
  *   data.peakLoadKW       // from Memory profile or reducer quote
@@ -26,7 +26,7 @@
  *   data.addOns           // from Memory addOns or reducer step4AddOns
  *   data.isMemoryBacked   // true if Memory has the data (not falling back)
  *   data.report           // latest TrueQuote™ validation report
- * 
+ *
  * Created: Feb 11, 2026
  */
 
@@ -50,15 +50,15 @@ export interface MerlinData {
     lat?: number;
     lng?: number;
   };
-  utilityRate: number;       // $/kWh
-  demandCharge: number;      // $/kW
+  utilityRate: number; // $/kWh
+  demandCharge: number; // $/kW
   peakSunHours: number;
 
   // ── Goals ───────────────────────────────────────────────────────────────
   goals: string[];
 
   // ── Industry ────────────────────────────────────────────────────────────
-  industry: string;          // canonical slug
+  industry: string; // canonical slug
   industryInferred: boolean;
   industryConfidence: number;
 
@@ -84,6 +84,8 @@ export interface MerlinData {
     generatorFuelType: string;
     includeWind: boolean;
     windKW: number;
+    includeEV: boolean;
+    evChargerKW: number;
   };
 
   // ── Quote ───────────────────────────────────────────────────────────────
@@ -99,8 +101,8 @@ export interface MerlinData {
 
   // ── Weather & Climate (NEW Feb 11, 2026) ────────────────────────────────
   weather: {
-    profile: string;           // "Hot & Humid", "Temperate", etc.
-    extremes: string;          // "Frequent heatwaves", etc.
+    profile: string; // "Hot & Humid", "Temperate", etc.
+    extremes: string; // "Frequent heatwaves", etc.
     avgTempF?: number;
     heatingDegreeDays?: number;
     coolingDegreeDays?: number;
@@ -109,8 +111,8 @@ export interface MerlinData {
   // ── Solar Resource (NEW Feb 11, 2026) ───────────────────────────────────
   solar: {
     peakSunHours: number;
-    capacityFactor: number;    // 0-1
-    grade: string;             // "A", "A-", "B+", etc.
+    capacityFactor: number; // 0-1
+    grade: string; // "A", "A-", "B+", etc.
     annualProductionKWh?: number;
     monthlyProductionKWh?: number[];
     annualIrradiance?: number;
@@ -152,14 +154,14 @@ export interface MerlinData {
     quoteGenerations: number;
     addOnChanges: number;
     lastActiveAt: number;
-    durationSec: number;       // computed: lastActiveAt - startedAt
+    durationSec: number; // computed: lastActiveAt - startedAt
   } | null;
 
   // ── Meta ─────────────────────────────────────────────────────────────────
-  isMemoryBacked: boolean;     // true = Memory has data (not falling back)
-  filledSlots: string[];       // which Memory slots are populated
+  isMemoryBacked: boolean; // true = Memory has data (not falling back)
+  filledSlots: string[]; // which Memory slots are populated
   report: TrueQuoteReport | null; // latest TrueQuote™ validation
-  checksum: string | null;     // memory state hash
+  checksum: string | null; // memory state hash
 }
 
 // ============================================================================
@@ -207,7 +209,7 @@ function extractQuoteFromState(state: any) {
 
 /**
  * Memory-first data access for wizard steps.
- * 
+ *
  * @param state - The reducer state (Phase 1 fallback). Will be optional in Phase 2.
  * @returns MerlinData — clean, typed, always-populated data surface
  */
@@ -278,15 +280,20 @@ export function useMerlinData(state?: any): MerlinData {
           generatorFuelType: memAddOns.generatorFuelType ?? "natural-gas",
           includeWind: memAddOns.includeWind,
           windKW: memAddOns.windKW,
+          includeEV: memAddOns.includeEV ?? false,
+          evChargerKW: memAddOns.evChargerKW ?? 0,
         }
       : {
           includeSolar: state?.step4AddOns?.includeSolar ?? state?.includeSolar ?? false,
           solarKW: state?.step4AddOns?.solarKW ?? 0,
-          includeGenerator: state?.step4AddOns?.includeGenerator ?? state?.includeGenerator ?? false,
+          includeGenerator:
+            state?.step4AddOns?.includeGenerator ?? state?.includeGenerator ?? false,
           generatorKW: state?.step4AddOns?.generatorKW ?? 0,
           generatorFuelType: state?.step4AddOns?.generatorFuelType ?? "natural-gas",
           includeWind: state?.step4AddOns?.includeWind ?? state?.includeWind ?? false,
           windKW: state?.step4AddOns?.windKW ?? 0,
+          includeEV: state?.step4AddOns?.includeEV ?? state?.includeEV ?? false,
+          evChargerKW: state?.step4AddOns?.evChargerKW ?? 0,
         };
 
     // ── Quote (Memory → State fallback) ─────────────────────────────────
@@ -331,7 +338,8 @@ export function useMerlinData(state?: any): MerlinData {
     const solar = memSolar
       ? {
           peakSunHours: memSolar.peakSunHours ?? peakSunHours,
-          capacityFactor: memSolar.capacityFactor ?? (memSolar.peakSunHours ? memSolar.peakSunHours / 24 : 0.17),
+          capacityFactor:
+            memSolar.capacityFactor ?? (memSolar.peakSunHours ? memSolar.peakSunHours / 24 : 0.17),
           grade: memSolar.grade ?? "B",
           annualProductionKWh: memSolar.annualProductionKWh,
           monthlyProductionKWh: memSolar.monthlyProductionKWh,
@@ -405,7 +413,20 @@ export function useMerlinData(state?: any): MerlinData {
       report: merlinMemory.lastReport,
       checksum: merlinMemory.checksum,
     };
-  }, [memLocation, memGoals, memIndustry, memProfile, memSizing, memAddOns, memQuote, memWeather, memSolar, memFinancials, memSession, state]);
+  }, [
+    memLocation,
+    memGoals,
+    memIndustry,
+    memProfile,
+    memSizing,
+    memAddOns,
+    memQuote,
+    memWeather,
+    memSolar,
+    memFinancials,
+    memSession,
+    state,
+  ]);
 }
 
 // ============================================================================
@@ -415,9 +436,9 @@ export function useMerlinData(state?: any): MerlinData {
 /**
  * Get initial values for ProQuote/AdvancedQuoteBuilder from Merlin Memory.
  * Call this when opening ProQuote to pre-fill fields from the wizard session.
- * 
+ *
  * Returns null if no Memory data exists (cold start).
- * 
+ *
  * @example
  * const seed = getProQuoteSeed();
  * if (seed) {

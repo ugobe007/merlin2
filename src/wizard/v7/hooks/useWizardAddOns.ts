@@ -16,7 +16,13 @@
  */
 
 import { useCallback } from "react";
-import type { EnergyGoal, SystemAddOns, LocationCard, LocationIntel, Step3Answers } from "./useWizardV7";
+import type {
+  EnergyGoal,
+  SystemAddOns,
+  LocationCard,
+  LocationIntel,
+  Step3Answers,
+} from "./useWizardV7";
 import { merlinMemory } from "@/wizard/v7/memory";
 import { devWarn } from "@/wizard/v7/debug/devLog";
 
@@ -56,7 +62,13 @@ export interface UseWizardAddOnsDependencies {
     location?: LocationCard;
     locationIntel?: LocationIntel;
     addOns?: SystemAddOns;
-  }) => Promise<{ ok: boolean; error?: string; freeze?: unknown; quote?: unknown; warnings?: string[] }>;
+  }) => Promise<{
+    ok: boolean;
+    error?: string;
+    freeze?: unknown;
+    quote?: unknown;
+    warnings?: string[];
+  }>;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -159,10 +171,13 @@ export function useWizardAddOns(deps: UseWizardAddOnsDependencies) {
   /**
    * confirmAddOns - User confirms add-ons selection (or skips)
    */
-  const confirmAddOns = useCallback((value: boolean) => {
-    dispatch({ type: "SET_ADDONS_CONFIRMED", confirmed: value });
-    dispatch({ type: "DEBUG_NOTE", note: `Add-ons ${value ? "confirmed" : "skipped"} by user` });
-  }, [dispatch]);
+  const confirmAddOns = useCallback(
+    (value: boolean) => {
+      dispatch({ type: "SET_ADDONS_CONFIRMED", confirmed: value });
+      dispatch({ type: "DEBUG_NOTE", note: `Add-ons ${value ? "confirmed" : "skipped"} by user` });
+    },
+    [dispatch]
+  );
 
   // ============================================================
   // Pricing Recalculation
@@ -200,6 +215,8 @@ export function useWizardAddOns(deps: UseWizardAddOnsDependencies) {
         generatorFuelType: addOns.generatorFuelType,
         includeWind: addOns.includeWind,
         windKW: addOns.windKW,
+        includeEV: addOns.includeEV,
+        evChargerKW: addOns.evChargerKW,
         // itcBonuses: addOns.itcBonuses, // DISABLED
         updatedAt: Date.now(),
       });
@@ -214,7 +231,14 @@ export function useWizardAddOns(deps: UseWizardAddOnsDependencies) {
         addOns,
       });
     },
-    [dispatch, runPricingSafe, state.industry, state.step3Answers, state.location, state.locationIntel]
+    [
+      dispatch,
+      runPricingSafe,
+      state.industry,
+      state.step3Answers,
+      state.location,
+      state.locationIntel,
+    ]
   );
 
   // ============================================================
