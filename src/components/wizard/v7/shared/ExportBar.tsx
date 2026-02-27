@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { Lock, FileText, Bookmark } from "lucide-react";
+import { Lock, FileText, Bookmark, Share2 } from "lucide-react";
 import type { WizardState as WizardV7State } from "@/wizard/v7/hooks/useWizardV7";
 import { buildV7ExportData } from "@/utils/buildV7ExportData";
 import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
@@ -26,7 +26,7 @@ import { TrueQuoteBadgeCanonical } from "@/components/shared/TrueQuoteBadgeCanon
 import { supabase } from "@/services/supabaseClient";
 import AuthModal from "@/components/AuthModal";
 import { devInfo, devError } from "@/wizard/v7/debug/devLog";
-// import { ShareQuoteModal } from "./ShareQuoteModal"; // TEMP DISABLED - needs DB types
+import { ShareQuoteModal } from "./ShareQuoteModal";
 
 type ExportFormat = "pdf" | "word" | "excel";
 
@@ -37,7 +37,7 @@ export default function ExportBar({
   state: WizardV7State;
   onTrueQuoteClick?: () => void;
 }) {
-  // const [showShareModal, setShowShareModal] = useState(false); // TEMP DISABLED
+  const [showShareModal, setShowShareModal] = useState(false);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [_quotaBlocked, setQuotaBlocked] = useState(false);
@@ -264,8 +264,8 @@ export default function ExportBar({
             </button>
           ))}
 
-          {/* Share Button - TEMP DISABLED until DB types regenerated */}
-          {/* {state.quote && (
+          {/* Share Button */}
+          {state.quote && (
             <button
               type="button"
               onClick={() => setShowShareModal(true)}
@@ -291,7 +291,7 @@ export default function ExportBar({
               <Share2 className="w-4 h-4" />
               <span>Share</span>
             </button>
-          )} */}
+          )}
         </div>
       </div>
 
@@ -405,13 +405,14 @@ export default function ExportBar({
         defaultMode="signup"
       />
 
-      {/* ── SHARE QUOTE MODAL ── TEMP DISABLED */}
-      {/* {showShareModal && state.quote && (
+      {/* ── SHARE QUOTE MODAL ── */}
+      {showShareModal && state.quote && (
         <ShareQuoteModal
-          quote={state.quote}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          quote={state.quote as any}
           onClose={() => setShowShareModal(false)}
         />
-      )} */}
+      )}
     </div>
   );
 }

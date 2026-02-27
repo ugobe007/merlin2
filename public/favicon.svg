@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <!-- Emerald top → deep navy bottom -->
+    <linearGradient id="mfill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a9968"/>
+      <stop offset="30%" stop-color="#0b4872"/>
+      <stop offset="70%" stop-color="#030f28"/>
+      <stop offset="100%" stop-color="#010810"/>
+    </linearGradient>
+    <!-- Neon glow filter for border + nub -->
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Soft letter glow -->
+    <filter id="textglow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Very dark navy background -->
+  <rect width="100" height="100" rx="16" fill="#040b18"/>
+  <!-- Terminal nub with neon glow -->
+  <rect x="37" y="3" width="26" height="9" rx="3" fill="#3ECF8E" filter="url(#glow)"/>
+  <!-- Border glow bloom layer -->
+  <rect x="14" y="11" width="72" height="86" rx="8" fill="none" stroke="#3ECF8E" stroke-width="5" opacity="0.3" filter="url(#glow)"/>
+  <!-- Battery body -->
+  <rect x="14" y="11" width="72" height="86" rx="8" fill="#010810" stroke="#3ECF8E" stroke-width="2.2"/>
+  <!-- Gradient fill -->
+  <rect x="16.5" y="13.5" width="67" height="81" rx="6" fill="url(#mfill)"/>
+  <!-- Bottom blue glow pool -->
+  <ellipse cx="50" cy="90" rx="26" ry="5" fill="#1a5fcc" opacity="0.45"/>
+  <!-- Letters M-E-R-L-I-N with glow -->
+  <text x="50" y="20.5" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="12" filter="url(#textglow)">M</text>
+  <text x="50" y="34" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="12" filter="url(#textglow)">E</text>
+  <text x="50" y="47.5" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="12" filter="url(#textglow)">R</text>
+  <text x="50" y="61" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="12" filter="url(#textglow)">L</text>
+  <text x="50" y="74.5" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="12" filter="url(#textglow)">I</text>
+  <text x="50" y="88" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="12" filter="url(#textglow)">N</text>
+</svg>

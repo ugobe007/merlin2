@@ -163,7 +163,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
 
   // Apply goal-based intelligence to sizing (from frozen snapshot)
   const goalModifiers = useMemo(
-    () => getGoalBasedMultipliers(snap.goals),
+    () => getGoalBasedMultipliers(snap.goals ?? []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [] // Never recompute — goals are frozen at mount
   );

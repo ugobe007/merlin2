@@ -138,12 +138,10 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.businessDraft?.name, state.businessDraft?.address]);
 
-  // Keep ZIP UI in sync if SSOT changes externally
-  useEffect(() => {
-    const ssot = (state.locationRawInput ?? "").trim();
-    if (ssot && ssot !== zipValue) setZipValue(ssot);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.locationRawInput]);
+  // NOTE: No "sync ZIP from SSOT" effect here — that created a feedback loop:
+  // SET_LOCATION_RAW → state.locationRawInput changes → setZipValue → normalizedZip changes
+  // → updateLocationRaw → SET_LOCATION_RAW again → infinite jitter.
+  // The UI (zipValue) is the source of truth for typing; SSOT follows it, not vice versa.
 
   const normalizedZip = useMemo(() => {
     const raw = zipValue.trim();
@@ -157,21 +155,24 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
   }, [country, normalizedZip]);
 
   // ZIP change → sync to SSOT + debounced intel hydration
+  // IMPORTANT: state.locationRawInput is intentionally NOT in the dep array.
+  // This effect is the sole writer of locationRawInput (via updateLocationRaw).
+  // Adding it as a dep would cause: write → state changes → effect re-runs → write again → loop.
   useEffect(() => {
-    const ssotRaw = (state.locationRawInput ?? "").trim();
-    if (ssotRaw !== normalizedZip) updateLocationRaw(normalizedZip);
+    updateLocationRaw(normalizedZip);
 
     if (zipDebounceRef.current) clearTimeout(zipDebounceRef.current);
     if (!isValidZip) return;
 
     zipDebounceRef.current = setTimeout(() => {
       primeLocationIntel(normalizedZip);
-    }, 250);
+    }, 300);
 
     return () => {
       if (zipDebounceRef.current) clearTimeout(zipDebounceRef.current);
     };
-  }, [normalizedZip, isValidZip, updateLocationRaw, primeLocationIntel, state.locationRawInput]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [normalizedZip, isValidZip]);
 
   const handleBusinessLookup = async () => {
     const name = businessValue.trim();
