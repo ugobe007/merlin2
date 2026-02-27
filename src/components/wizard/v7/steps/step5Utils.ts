@@ -122,7 +122,7 @@ export function getIndustryLabel(slug: string): string {
  * - Solar sizing (reduce_carbon, energy_independence → more solar)
  * - Generator sizing (backup_power → larger backup)
  */
-export function getGoalBasedMultipliers(goals: EnergyGoal[]) {
+export function getGoalBasedMultipliers(goals: EnergyGoal[] | undefined) {
   const modifiers = {
     bessMultiplier: 1.0,
     durationMultiplier: 1.0,
@@ -132,8 +132,8 @@ export function getGoalBasedMultipliers(goals: EnergyGoal[]) {
     goalHints: [] as string[],
   };
 
-  // No goals selected → return defaults
-  if (goals.length === 0) {
+  // No goals selected (or snapshot not yet frozen) → return defaults
+  if (!goals || goals.length === 0) {
     return modifiers;
   }
 

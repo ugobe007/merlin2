@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+    font-family: Inter, -apple-system, "Helvetica Neue", sans-serif;
+    background: linear-gradient(135deg, #020c1e 0%, #030f28 40%, #040d20 70%, #010810 100%);
+    position: relative;
+  }
+
+  /* Grid overlay */
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(62,207,142,0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(62,207,142,0.07) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Left emerald glow */
+  .glow-left {
+    position: absolute;
+    left: -120px; top: -100px;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(62,207,142,0.12) 0%, transparent 70%);
+  }
+
+  /* Right blue glow */
+  .glow-right {
+    position: absolute;
+    right: 160px; bottom: -150px;
+    width: 700px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(14,80,160,0.20) 0%, transparent 65%);
+  }
+
+  /* ── Left text section ── */
+  .left {
+    position: absolute;
+    left: 72px;
+    top: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 560px;
+    gap: 0;
+  }
+
+  .logo-merlin { font-size: 70px; font-weight: 900; color: #fff; letter-spacing: -2px; line-height: 1; }
+  .logo-energy { color: #3ECF8E; }
+
+  .tagline-italic {
+    font-size: 21px;
+    color: #3ECF8E;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    margin-top: 10px;
+    opacity: 0.90;
+  }
+
+  .tagline-main {
+    font-size: 24px;
+    color: rgba(255,255,255,0.80);
+    line-height: 1.45;
+    font-weight: 400;
+    margin-top: 22px;
+    margin-bottom: 26px;
+  }
+  .tagline-main em { color: #3ECF8E; font-weight: 600; font-style: normal; }
+
+  /* Pill badges */
+  .pills { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pill {
+    padding: 5px 15px;
+    border-radius: 100px;
+    border: 1px solid rgba(62,207,142,0.35);
+    background: rgba(62,207,142,0.08);
+    color: rgba(255,255,255,0.72);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  /* ── Wizard image ── */
+  .wizard {
+    position: absolute;
+    right: -20px;
+    bottom: -20px;
+    height: 580px;
+    width: 580px;
+    object-fit: contain;
+    opacity: 0.92;
+    filter: drop-shadow(0 0 40px rgba(62,207,142,0.25)) drop-shadow(0 0 80px rgba(90,80,200,0.30));
+  }
+
+  /* ── Quote card ── */
+  .card {
+    position: absolute;
+    right: 230px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 330px;
+    background: rgba(6, 16, 44, 0.94);
+    border: 1px solid rgba(62,207,142,0.28);
+    border-radius: 18px;
+    padding: 20px 24px;
+    box-shadow: 0 0 60px rgba(62,207,142,0.08), 0 24px 64px rgba(0,0,0,0.65), inset 0 1px 0 rgba(62,207,142,0.10);
+  }
+
+  /* Card header */
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #3ECF8E; box-shadow: 0 0 8px rgba(62,207,142,0.9); flex-shrink: 0; }
+  .card-title { font-size: 10px; color: #3ECF8E; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; margin-left: 7px; }
+  .verified-badge {
+    font-size: 9px; color: #3ECF8E; border: 1px solid rgba(62,207,142,0.35);
+    border-radius: 6px; padding: 2px 7px; font-weight: 700; letter-spacing: 0.05em;
+  }
+  .source-line { font-size: 9px; color: rgba(255,255,255,0.22); letter-spacing: 0.03em; margin-bottom: 12px; }
+
+  /* Industry label */
+  .industry-name { font-size: 14px; color: rgba(255,255,255,0.95); font-weight: 700; margin-bottom: 2px; }
+  .industry-sub { font-size: 11px; color: rgba(255,255,255,0.36); margin-bottom: 12px; }
+
+  /* Hero savings */
+  .hero-savings {
+    background: rgba(62,207,142,0.07);
+    border: 1px solid rgba(62,207,142,0.20);
+    border-radius: 10px;
+    padding: 11px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hero-label { font-size: 11px; color: rgba(255,255,255,0.45); font-weight: 500; }
+  .hero-value { font-size: 28px; font-weight: 900; color: #3ECF8E; letter-spacing: -0.5px; line-height: 1; }
+  .hero-unit { font-size: 11px; font-weight: 400; color: rgba(62,207,142,0.60); margin-left: 3px; }
+
+  /* Metrics grid — 2×2 */
+  .metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 14px;
+    margin-bottom: 12px;
+  }
+  .metric {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .metric-label { font-size: 10px; color: rgba(255,255,255,0.32); }
+  .metric-value { font-size: 16px; font-weight: 800; color: rgba(255,255,255,0.88); }
+  .metric-value.green { color: #3ECF8E; }
+
+  /* Card footer */
+  .card-footer {
+    padding-top: 10px;
+    border-top: 1px solid rgba(62,207,142,0.10);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .net-cost { font-size: 9px; color: rgba(255,255,255,0.22); }
+  .verified-text { font-size: 9px; color: #3ECF8E; font-weight: 700; opacity: 0.65; letter-spacing: 0.05em; }
+
+  /* URL watermark */
+  .url {
+    position: absolute;
+    bottom: 24px;
+    right: 70px;
+    color: rgba(255,255,255,0.30);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <div class="glow-left"></div>
+  <div class="glow-right"></div>
+
+  <!-- Left text -->
+  <div class="left">
+    <div class="logo-merlin">Merlin<span class="logo-energy"> Energy</span></div>
+    <div class="tagline-italic">Energy intelligence, instantly conjured.</div>
+    <div class="tagline-main">
+      Bankable energy quotes for any project —
+      <em> TrueQuote™ verified</em>.<br/>
+      From site to investor-ready proposal in 90 seconds.
+    </div>
+    <div class="pills">
+      <span class="pill">NREL ATB 2024</span>
+      <span class="pill">IRA 2022 ITC</span>
+      <span class="pill">Monte Carlo P10/P50/P90</span>
+      <span class="pill">15+ Industries</span>
+      <span class="pill">Free Forever Tier</span>
+    </div>
+  </div>
+
+  <!-- Wizard -->
+  <img class="wizard" src="file:///WIZARD_PATH" alt="" />
+
+  <!-- Quote card -->
+  <div class="card">
+    <div class="card-header">
+      <div style="display:flex;align-items:center">
+        <div class="dot"></div>
+        <span class="card-title">TrueQuote™ Result</span>
+      </div>
+      <span class="verified-badge">✓ VERIFIED</span>
+    </div>
+    <div class="source-line">NREL ATB 2024 · IRA 2022</div>
+
+    <div class="industry-name">Tunnel Car Wash</div>
+    <div class="industry-sub">Los Angeles, CA · 0.7 MW / 2.6 MWh BESS</div>
+
+    <div class="hero-savings">
+      <span class="hero-label">Annual Savings</span>
+      <span class="hero-value">$193K<span class="hero-unit">/yr</span></span>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <span class="metric-label">Payback Period</span>
+        <span class="metric-value">1.5 yrs</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">25-yr ROI</span>
+        <span class="metric-value green">565%</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">ITC Credit</span>
+        <span class="metric-value">$125K</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">NPV (25-yr)</span>
+        <span class="metric-value green">$1.8M</span>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <span class="net-cost">Net Cost After ITC: $291K</span>
+      <span class="verified-text">✓ VERIFIED</span>
+    </div>
+  </div>
+
+  <div class="url">merlinenergy.net</div>
+</body>
+</html>

@@ -16,6 +16,15 @@ export { evChargingConfig } from './evCharging';
 export { dataCenterConfig } from './dataCenter';
 export { hospitalConfig } from './hospital';
 export { manufacturingConfig } from './manufacturing';
+export { retailConfig } from './retail';
+export { warehouseConfig } from './warehouse';
+export { officeConfig } from './office';
+export { gasStationConfig } from './gasStation';
+export { coldStorageConfig } from './coldStorage';
+export { shoppingCenterConfig } from './shoppingCenter';
+export { casinoConfig } from './casino';
+export { airportConfig } from './airport';
+export { collegeConfig } from './college';
 
 // Re-export registry helpers
 export {

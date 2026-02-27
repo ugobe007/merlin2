@@ -561,42 +561,24 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               </div>
             </div>
 
-            {/* 2-column grid layout */}
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-              {/* Total Investment */}
-              <div className="flex flex-col">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
-                  Total Investment
-                </span>
-                <span className="text-lg font-bold text-white tabular-nums">
+            {/* ── Inline row list — Supabase-style, no padded cards ── */}
+            <div className="divide-y divide-white/[0.04] -mx-4 px-4">
+              {/* Cost group */}
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-[11px] text-slate-500 font-medium">Total Investment</span>
+                <span className="text-sm font-semibold text-white tabular-nums">
                   {fmtUSD((quote.grossCost ?? quote.capexUSD) as number | null)}
                 </span>
               </div>
 
-              {/* Annual Savings */}
-              <div className="flex flex-col">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
-                  Annual Savings
-                </span>
-                <span className="text-lg font-bold text-emerald-400 tabular-nums">
-                  {fmtUSD(quote.annualSavingsUSD as number | null)}
-                </span>
-              </div>
-
-              {/* Federal ITC */}
               {(quote.grossCost ?? quote.capexUSD) != null &&
                 Number(quote.grossCost ?? quote.capexUSD) > 0 && (
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
-                      Federal ITC (
-                      {quote.itcRate != null
-                        ? `${Math.round(Number(quote.itcRate) * 100)}%`
-                        : "30%"}
-                      )
+                  <div className="py-2 flex items-center justify-between">
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      Federal ITC ({quote.itcRate != null ? `${Math.round(Number(quote.itcRate) * 100)}%` : "30%"})
                     </span>
-                    <span className="text-base font-bold text-emerald-400 tabular-nums">
-                      −
-                      {fmtUSD(
+                    <span className="text-sm font-semibold text-[#3ECF8E] tabular-nums">
+                      −{fmtUSD(
                         quote.itcAmount != null
                           ? Number(quote.itcAmount)
                           : Number(quote.grossCost ?? quote.capexUSD ?? 0) * 0.3
@@ -605,69 +587,65 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                   </div>
                 )}
 
-              {/* Monthly Savings */}
-              {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
-                    Monthly Savings
-                  </span>
-                  <span className="text-base font-bold text-slate-300 tabular-nums">
-                    {fmtUSD(Number(quote.annualSavingsUSD) / 12)}
-                  </span>
-                </div>
-              )}
-
-              {/* Net Cost */}
+              {/* NET COST — hero row */}
               {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
-                <div className="flex flex-col col-span-2 pt-3 mt-2 border-t-2 border-emerald-500/20">
-                  <span className="text-[11px] text-emerald-300 uppercase tracking-wider mb-1.5 font-bold">
+                <div className="py-3 flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#3ECF8E] uppercase tracking-wider">
                     Net Cost
                   </span>
-                  <span className="text-xl font-bold text-white tabular-nums">
+                  <span className="text-2xl font-black text-white tabular-nums tracking-tight"
+                    style={{ textShadow: "0 0 20px rgba(255,255,255,0.12)" }}>
                     {fmtUSD(quote.capexUSD as number | null)}
                   </span>
                 </div>
               )}
 
-              {/* Simple Payback */}
-              <div className="flex flex-col">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
-                  Simple Payback
-                </span>
-                <span className="text-base font-bold text-white tabular-nums">
+              {/* Savings group */}
+              {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
+                <div className="py-2 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500 font-medium">Annual Savings</span>
+                  <span className="text-sm font-semibold text-[#3ECF8E] tabular-nums">
+                    {fmtUSD(quote.annualSavingsUSD as number | null)}
+                  </span>
+                </div>
+              )}
+
+              {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
+                <div className="py-2 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500 font-medium">Monthly Savings</span>
+                  <span className="text-sm font-semibold text-slate-300 tabular-nums">
+                    {fmtUSD(Number(quote.annualSavingsUSD) / 12)}
+                  </span>
+                </div>
+              )}
+
+              {/* Returns group */}
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-[11px] text-slate-500 font-medium">Simple Payback</span>
+                <span className="text-sm font-semibold text-white tabular-nums">
                   {quote.roiYears != null && Number(quote.roiYears) > 0
                     ? `${parseFloat(Number(quote.roiYears).toFixed(1))} years`
                     : "—"}
                 </span>
               </div>
 
-              {/* NPV (25yr) */}
               {quote.npv != null && (
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
-                    NPV (25yr)
-                  </span>
-                  <span
-                    className={`text-base font-bold tabular-nums ${Number(quote.npv) >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                  >
+                <div className="py-2 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500 font-medium">NPV (25yr)</span>
+                  <span className={`text-sm font-semibold tabular-nums ${Number(quote.npv) >= 0 ? "text-[#3ECF8E]" : "text-red-400"}`}>
                     {fmtUSD(quote.npv as number | null)}
                   </span>
                 </div>
               )}
 
-              {/* IRR */}
               {quote.irr != null && (
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
-                    IRR
-                  </span>
-                  <span
-                    className={`text-base font-bold tabular-nums ${(() => {
-                      const raw = Number(quote.irr);
-                      const pct = raw > 1 ? raw : raw * 100;
-                      return pct >= 8 ? "text-emerald-400" : "text-amber-400";
-                    })()}`}
-                  >
+                <div className="py-2 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500 font-medium">IRR</span>
+                  <span className={`text-sm font-semibold tabular-nums ${(() => {
+                    const raw = Number(quote.irr);
+                    const pct = raw > 1 ? raw : raw * 100;
+                    return pct >= 8 ? "text-[#3ECF8E]" : "text-amber-400";
+                  })()}`}>
                     {(() => {
                       const raw = Number(quote.irr);
                       if (!Number.isFinite(raw)) return "—";
@@ -679,25 +657,19 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                 </div>
               )}
 
-              {/* Discounted Payback */}
               {quote.paybackYears != null && Number(quote.paybackYears) > 0 && (
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
-                    Discounted Payback
-                  </span>
-                  <span className="text-base font-bold text-white tabular-nums">
+                <div className="py-2 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500 font-medium">Discounted Payback</span>
+                  <span className="text-sm font-semibold text-white tabular-nums">
                     {parseFloat(Number(quote.paybackYears).toFixed(1))} years
                   </span>
                 </div>
               )}
 
-              {/* 10yr Cumulative Savings */}
               {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">
-                    10yr Cumulative
-                  </span>
-                  <span className="text-base font-bold text-emerald-400 tabular-nums">
+                <div className="py-2 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500 font-medium">10yr Cumulative</span>
+                  <span className="text-sm font-semibold text-[#3ECF8E] tabular-nums">
                     {fmtUSD(Number(quote.annualSavingsUSD) * 10)}
                   </span>
                 </div>

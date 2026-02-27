@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/services/supabaseClient";
 
 interface PortfolioQuote {
   id: string;
@@ -44,80 +45,68 @@ export default function Portfolio({ onClose, onLoadQuote }: PortfolioProps) {
   const fetchQuotes = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("auth_token");
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (!token) {
+      if (!session?.user) {
         setError("Please sign in to view your portfolio");
         setLoading(false);
         return;
       }
 
-      // Load quotes from localStorage
-      const savedQuotes = localStorage.getItem("merlin_quotes");
-      if (savedQuotes) {
-        const allQuotes = JSON.parse(savedQuotes);
-        // Filter quotes for current user
-        const userQuotes = allQuotes.filter((q: PortfolioQuote) => q.user_id === token);
-        setQuotes(userQuotes);
-      } else {
-        setQuotes([]);
-      }
+      const { data, error } = await supabase
+        .from('saved_quotes')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
 
+      if (error) throw error;
+
+      // Map saved_quotes rows to PortfolioQuote interface
+      const mapped: PortfolioQuote[] = (data ?? []).map((row: any) => ({
+        id: row.id,
+        user_id: row.user_id,
+        project_name: row.project_name ?? 'Unnamed Project',
+        inputs: row.quote_data?.inputs ?? {},
+        assumptions: row.quote_data?.assumptions ?? {},
+        outputs: row.quote_data?.outputs ?? row.quote_data ?? {},
+        tags: row.tags ?? '',
+        notes: row.notes ?? '',
+        is_favorite: row.is_favorite ?? false,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      }));
+
+      setQuotes(mapped);
       setError(null);
     } catch (err: any) {
-      setError(err.message || "Failed to load portfolio");
+      setError(err.message || 'Failed to load portfolio');
     } finally {
       setLoading(false);
     }
   };
 
   const deleteQuote = async (quoteId: string) => {
-    if (!confirm("Are you sure you want to delete this quote?")) return;
-
+    if (!confirm('Are you sure you want to delete this quote?')) return;
     try {
-      const _token = localStorage.getItem("auth_token");
-
-      // Load all quotes from localStorage
-      const savedQuotes = localStorage.getItem("merlin_quotes");
-      if (!savedQuotes) return;
-
-      const allQuotes = JSON.parse(savedQuotes);
-      // Remove the quote
-      const updatedQuotes = allQuotes.filter((q: PortfolioQuote) => q.id !== quoteId);
-
-      // Save back to localStorage
-      localStorage.setItem("merlin_quotes", JSON.stringify(updatedQuotes));
-
-      // Update UI
+      const { error } = await supabase.from('saved_quotes').delete().eq('id', quoteId);
+      if (error) throw error;
       setQuotes(quotes.filter((q) => q.id !== quoteId));
-      alert("Quote deleted successfully");
+      alert('Quote deleted successfully');
     } catch (err: any) {
-      alert(`Failed to delete quote: ${err.message}`);
+      alert('Failed to delete quote: ' + err.message);
     }
   };
 
   const toggleFavorite = async (quoteId: string) => {
     try {
-      const _token = localStorage.getItem("auth_token");
-
-      // Load all quotes from localStorage
-      const savedQuotes = localStorage.getItem("merlin_quotes");
-      if (!savedQuotes) return;
-
-      const allQuotes = JSON.parse(savedQuotes);
-
-      // Toggle favorite
-      const updatedQuotes = allQuotes.map((q: PortfolioQuote) =>
-        q.id === quoteId ? { ...q, is_favorite: !q.is_favorite } : q
-      );
-
-      // Save back to localStorage
-      localStorage.setItem("merlin_quotes", JSON.stringify(updatedQuotes));
-
-      // Update UI
-      setQuotes(quotes.map((q) => (q.id === quoteId ? { ...q, is_favorite: !q.is_favorite } : q)));
+      const current = quotes.find((q) => q.id === quoteId);
+      if (!current) return;
+      const newVal = !current.is_favorite;
+      const { error } = await supabase.from('saved_quotes').update({ is_favorite: newVal }).eq('id', quoteId);
+      if (error) throw error;
+      setQuotes(quotes.map((q) => (q.id === quoteId ? { ...q, is_favorite: newVal } : q)));
     } catch (err: any) {
-      alert(`Failed to update favorite: ${err.message}`);
+      alert('Failed to update favorite: ' + err.message);
     }
   };
 

@@ -52,7 +52,23 @@ export function VerticalLandingPage({
   // ─── Page meta ──────────────────────────────────────────────────────
   useEffect(() => {
     if (config.pageTitle) document.title = config.pageTitle;
-  }, [config.pageTitle]);
+    // Dynamic OG / meta description for each vertical
+    const setMeta = (sel: string, attr: string, val: string) => {
+      const el = document.querySelector(sel);
+      if (el) el.setAttribute(attr, val);
+    };
+    const desc = config.metaDescription ?? '';
+    const title = config.pageTitle ?? 'Merlin BESS Quote Builder';
+    const url = `https://merlinenergy.net/${config.slug}`;
+    setMeta('meta[name="description"]', 'content', desc);
+    setMeta('meta[property="og:title"]', 'content', title);
+    setMeta('meta[property="og:description"]', 'content', desc);
+    setMeta('meta[property="og:url"]', 'content', url);
+    setMeta('meta[name="twitter:title"]', 'content', title);
+    setMeta('meta[name="twitter:description"]', 'content', desc);
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (canonical) canonical.href = url;
+  }, [config.pageTitle, config.metaDescription, config.slug]);
 
   // ─── Modal state ────────────────────────────────────────────────────
   const [showLeadForm, setShowLeadForm] = useState(false);

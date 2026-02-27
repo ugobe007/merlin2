@@ -12,6 +12,21 @@ const HotelEnergy = lazy(() => import("./components/verticals/HotelEnergy"));
 const DataCenterEnergy = lazy(() => import("./components/verticals/DataCenterEnergy"));
 const HospitalEnergy = lazy(() => import("./components/verticals/HospitalEnergy"));
 const ManufacturingEnergy = lazy(() => import("./components/verticals/ManufacturingEnergy"));
+const RetailEnergy = lazy(() => import("./components/verticals/RetailEnergy"));
+const WarehouseEnergy = lazy(() => import("./components/verticals/WarehouseEnergy"));
+const OfficeEnergy = lazy(() => import("./components/verticals/OfficeEnergy"));
+const GasStationEnergy = lazy(() => import("./components/verticals/GasStationEnergy"));
+const ColdStorageEnergy = lazy(() => import("./components/verticals/ColdStorageEnergy"));
+const ShoppingCenterEnergy = lazy(() => import("./components/verticals/ShoppingCenterEnergy"));
+const CasinoEnergy = lazy(() => import("./components/verticals/CasinoEnergy"));
+const AirportEnergy = lazy(() => import("./components/verticals/AirportEnergy"));
+const CollegeEnergy = lazy(() => import("./components/verticals/CollegeEnergy"));
+const HomePage = lazy(() => import("./pages/HomePage"));
+const LaunchPage = lazy(() => import("./pages/LaunchPage"));
+const PressKit = lazy(() => import("./pages/PressKit"));
+const ReferralPage = lazy(() => import("./pages/ReferralPage"));
+const IconPreview = lazy(() => import("./pages/IconPreview"));
+const TwitterBanner = lazy(() => import("./pages/TwitterBanner"));
 const WizardV6 = lazy(() => import("./components/wizard/v6/WizardV6"));
 const WizardV7Page = lazy(() => import("./pages/WizardV7Page"));
 const WizardVNextPage = lazy(() => import("./pages/WizardVNextPage"));
@@ -22,8 +37,10 @@ const AccountPage = lazy(() => import("./pages/AccountPage"));
 const SupportFAQ = lazy(() => import("./components/SupportFAQ"));
 const PricingPage = lazy(() => import("./components/pricing/PricingPage"));
 const CheckoutCallback = lazy(() => import("./components/pricing/CheckoutCallback"));
+const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
 // const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
 import { QuoteProvider } from "./contexts/QuoteContext";
+import { trackPageView } from "./services/analyticsService";
 
 // Test calculations temporarily disabled for production build
 // import { testCalculations } from './utils/testCalculations';
@@ -86,8 +103,31 @@ function App() {
                     ? "hospital"
                     : pathname === "/manufacturing" || pathname === "/manufacturing-energy"
                       ? "manufacturing"
-                      : null)
+                      : pathname === "/retail" || pathname === "/retail-energy"
+                        ? "retail"
+                        : pathname === "/warehouse" || pathname === "/warehouse-energy"
+                          ? "warehouse"
+                          : pathname === "/office" || pathname === "/office-energy"
+                            ? "office"
+                            : pathname === "/gas-station" || pathname === "/gas-station-energy"
+                              ? "gasstation"
+                              : pathname === "/cold-storage" || pathname === "/cold-storage-energy"
+                                ? "coldstorage"
+                                : pathname === "/shopping-center" || pathname === "/shopping-center-energy" || pathname === "/mall"
+                                  ? "shoppingcenter"
+                                  : pathname === "/casino" || pathname === "/casino-energy"
+                                    ? "casino"
+                                    : pathname === "/airport" || pathname === "/airport-energy"
+                                      ? "airport"
+                                      : pathname === "/college" || pathname === "/university" || pathname === "/college-energy"
+                                        ? "college"
+                                        : null)
   );
+
+  // Track page view on every route
+  useEffect(() => {
+    trackPageView(pathname).catch(() => {});
+  }, [pathname]);
 
   // Keyboard shortcut: Ctrl+Shift+A for admin access
   useEffect(() => {
@@ -204,6 +244,34 @@ function App() {
     );
   }
 
+  if (activeVertical === "retail") {
+    return (<Suspense fallback={<PageLoader />}><RetailEnergy /></Suspense>);
+  }
+  if (activeVertical === "warehouse") {
+    return (<Suspense fallback={<PageLoader />}><WarehouseEnergy /></Suspense>);
+  }
+  if (activeVertical === "office") {
+    return (<Suspense fallback={<PageLoader />}><OfficeEnergy /></Suspense>);
+  }
+  if (activeVertical === "gasstation") {
+    return (<Suspense fallback={<PageLoader />}><GasStationEnergy /></Suspense>);
+  }
+  if (activeVertical === "coldstorage") {
+    return (<Suspense fallback={<PageLoader />}><ColdStorageEnergy /></Suspense>);
+  }
+  if (activeVertical === "shoppingcenter") {
+    return (<Suspense fallback={<PageLoader />}><ShoppingCenterEnergy /></Suspense>);
+  }
+  if (activeVertical === "casino") {
+    return (<Suspense fallback={<PageLoader />}><CasinoEnergy /></Suspense>);
+  }
+  if (activeVertical === "airport") {
+    return (<Suspense fallback={<PageLoader />}><AirportEnergy /></Suspense>);
+  }
+  if (activeVertical === "college") {
+    return (<Suspense fallback={<PageLoader />}><CollegeEnergy /></Suspense>);
+  }
+
   // Access via /meta or /meta-calculations - TrueQuote Meta Calculations Dashboard
   if (pathname === "/meta" || pathname === "/meta-calculations" || pathname === "/ssot") {
     return (
@@ -307,6 +375,69 @@ function App() {
   // if (pathname.startsWith("/q/")) {
   //   return <Suspense fallback={<PageLoader />}><SharedQuotePage /></Suspense>;
   // }
+
+  // Marketing home page
+  if (pathname === "/home" || pathname === "/about") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <HomePage />
+      </Suspense>
+    );
+  }
+
+  // Product Hunt / HN launch page
+  if (pathname === "/launch" || pathname === "/producthunt" || pathname === "/ph") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <LaunchPage />
+      </Suspense>
+    );
+  }
+
+  // Press & Promotion Kit — /press /kit /press-kit
+  if (pathname === "/press" || pathname === "/kit" || pathname === "/promo" || pathname === "/press-kit") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <PressKit />
+      </Suspense>
+    );
+  }
+
+  // Referral landing page — /r/:handle
+  if (pathname.startsWith("/r/") && pathname.length > 3) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <ReferralPage />
+      </Suspense>
+    );
+  }
+
+  // Icon preview / design lab
+  if (pathname === "/icon-preview" || pathname === "/icon-lab" || pathname === "/icon") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <IconPreview />
+      </Suspense>
+    );
+  }
+
+  // Analytics dashboard — password-gated
+  if (pathname === "/analytics" || pathname === "/stats") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AnalyticsDashboard />
+      </Suspense>
+    );
+  }
+
+  // Twitter / X banner generator
+  if (pathname === "/banner" || pathname === "/twitter-banner") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <TwitterBanner />
+      </Suspense>
+    );
+  }
 
   // Access via /quote-builder - ProQuote Configuration Page (AdvancedQuoteBuilder)
   if (

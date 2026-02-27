@@ -52,6 +52,9 @@ export function LeadCaptureModal({ config, isOpen, onClose }: LeadCaptureModalPr
         phone: leadInfo.phone,
         source: leadSourceTag,
         format: 'consultation',
+        notes: leadInfo.notes || null,
+        source_url: window.location.href,
+        industry: config.slug,
       }]);
       setLeadSubmitted(true);
     } catch (error) {
@@ -169,22 +172,51 @@ export function LeadCaptureModal({ config, isOpen, onClose }: LeadCaptureModalPr
             </form>
           </>
         ) : (
-          <div className="text-center py-8">
-            <div className={`w-24 h-24 bg-gradient-to-br ${theme.ctaGradient} rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-${theme.accent}-500/40 animate-pulse`}>
-              <CheckCircle className="w-12 h-12 text-white" />
+          <div className="text-center py-6">
+            <div className={`w-16 h-16 bg-gradient-to-br ${theme.ctaGradient} rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xl shadow-${theme.accent}-500/30`}>
+              <CheckCircle className="w-8 h-8 text-white" />
             </div>
-            <h3 className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-${theme.accent}-300 to-${theme.accentSecondary}-300 mb-3`}>
-              🎉 Thank You!
+            <h3 className={`text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-${theme.accent}-300 to-${theme.accentSecondary}-300 mb-2`}>
+              Quote Request Sent!
             </h3>
-            <p className={`text-${theme.accent}-200 mb-6 font-medium`}>
-              We'll send your detailed quote to <span className={`text-${theme.accent}-300 font-bold`}>{leadInfo.email}</span> within 24 hours.
+            <p className={`text-${theme.accent}-200/80 text-sm mb-5`}>
+              Check <span className={`text-${theme.accent}-300 font-bold`}>{leadInfo.email}</span> — we'll be in touch within 24 hours.
             </p>
-            <button
-              onClick={handleClose}
-              className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-all"
-            >
-              Close
-            </button>
+
+            {/* Next steps */}
+            <div className="text-left bg-white/5 rounded-xl border border-white/10 p-4 mb-5 space-y-3">
+              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">What happens next</div>
+              {[
+                { n: "1", text: "Confirmation email on its way to your inbox" },
+                { n: "2", text: "Our analyst reviews your facility profile" },
+                { n: "3", text: "Custom savings report delivered within 24 hrs" },
+              ].map((step) => (
+                <div key={step.n} className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full bg-${theme.accent}-500/20 border border-${theme.accent}-500/30 flex items-center justify-center flex-shrink-0 text-${theme.accent}-400 font-bold text-[10px]`}>
+                    {step.n}
+                  </div>
+                  <span className="text-sm text-slate-300">{step.text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* While you wait CTA */}
+            <div className="flex flex-col gap-2">
+              <a
+                href="/wizard"
+                className={`w-full py-3 rounded-xl bg-gradient-to-r ${theme.ctaGradient} text-white font-bold text-sm flex items-center justify-center gap-2`}
+              >
+                <Sparkles className="w-4 h-4" />
+                Explore the Full Wizard
+                <ArrowRight className="w-4 h-4" />
+              </a>
+              <button
+                onClick={handleClose}
+                className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
       </div>

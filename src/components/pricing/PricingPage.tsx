@@ -348,8 +348,8 @@ export default function PricingPage() {
       {/* PLANS SECTION */}
       {activeSection === 'plans' && (
         <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {PLANS.map((plan) => {
+          <div className="grid md:grid-cols-3 gap-5">
+            {PLANS.filter(p => p.id !== 'advanced').map((plan) => {
               const price = getPrice(plan);
               const savings = getAnnualSavings(plan);
               const Icon = plan.icon;
@@ -444,6 +444,54 @@ export default function PricingPage() {
               );
             })}
           </div>
+
+          {/* Advanced — Inline Panel */}
+          {(() => {
+            const adv = PLANS.find(p => p.id === 'advanced')!;
+            return (
+              <div className="mt-4 rounded-xl border border-cyan-500/15 bg-white/[0.025] px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:bg-white/[0.04] hover:border-cyan-500/25 transition-all">
+                {/* Label */}
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                    <Building2 className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-white">Advanced</span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20">Best Value</span>
+                    </div>
+                    <p className="text-xs text-white/40">
+                      {billingCycle === 'annual' ? `$${Math.round(adv.annualPrice / 12)}/mo · billed annually` : '$99/mo'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Feature pills */}
+                <div className="flex-1 flex flex-wrap gap-1.5 min-w-0">
+                  {['Monte Carlo risk', '8760 dispatch sim', 'Battery degradation', 'Dynamic ITC (IRA 2022)', 'Real-time market intel', 'Team workspace (5)', 'Unlimited projects', 'White-label branding', 'Bank-ready models', 'API access'].map((f) => (
+                    <span key={f} className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-[11px] text-white/50 whitespace-nowrap">{f}</span>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <button
+                  onClick={() => handleSelectPlan('advanced')}
+                  disabled={checkoutLoading !== null || 'advanced' === currentTier}
+                  className={`shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    'advanced' === currentTier
+                      ? 'border border-white/20 text-white/40 cursor-default'
+                      : checkoutLoading === 'advanced'
+                        ? 'border border-white/20 text-white/60 cursor-wait'
+                        : 'border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50'
+                  }`}
+                >
+                  {'advanced' === currentTier ? 'Current Plan' : checkoutLoading === 'advanced'
+                    ? <span className="inline-flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" />Processing…</span>
+                    : 'Start Advanced Trial →'}
+                </button>
+              </div>
+            );
+          })()}
 
           {/* Business / Enterprise CTA */}
           <div className="mt-10 rounded-2xl border border-blue-500/20 bg-gradient-to-r from-blue-500/[0.04] to-cyan-500/[0.04] p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
