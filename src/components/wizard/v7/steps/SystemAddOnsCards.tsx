@@ -12,6 +12,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import type { SystemAddOns, PricingStatus, WizardState } from "@/wizard/v7/hooks/useWizardV7";
+import { merlinMemory } from "@/wizard/v7/memory";
 import {
   calculateSolarPreview,
   calculateEvPreview,
@@ -244,6 +245,22 @@ export function SystemAddOnsCards({
     }
     // Keep ref up-to-date so unmount flush always has latest selections
     latestAddOnsRef.current = addOns;
+
+    // ✅ IMMEDIATE MEMORY WRITE: Write selections to merlinMemory synchronously
+    // so Step 5 snapshot reads the correct addOns on first render, regardless
+    // of React's effect cleanup ordering (flush fires AFTER Step 5 renders).
+    merlinMemory.set("addOns", {
+      includeSolar: addOns.includeSolar,
+      solarKW: addOns.solarKW,
+      includeGenerator: addOns.includeGenerator,
+      generatorKW: addOns.generatorKW,
+      generatorFuelType: addOns.generatorFuelType,
+      includeWind: addOns.includeWind,
+      windKW: addOns.windKW,
+      includeEV: addOns.includeEV,
+      evChargerKW: addOns.evChargerKW,
+      updatedAt: Date.now(),
+    });
 
     autoApplyTimerRef.current = setTimeout(async () => {
       setBusy(true);
