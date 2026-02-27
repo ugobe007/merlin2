@@ -223,12 +223,10 @@ export function SystemAddOnsCards({
       isFirstRenderRef.current = false;
       return;
     }
-    if (!onRecalculate || busy || pricingStatus === "pending") return;
-
-    // Clear previous timer
-    if (autoApplyTimerRef.current) clearTimeout(autoApplyTimerRef.current);
-
-    // Build the addOns object once; store it for potential flush-on-unmount
+    // ── Always build addOns + write memory BEFORE any guard ───────────────
+    // latestAddOnsRef and merlinMemory must stay current even when pricing is
+    // "pending" or onRecalculate is absent — otherwise the flush-on-unmount
+    // and Step 5's first-render snapshot both miss the latest EV/Solar/Gen.
     const addOns: SystemAddOns = {
       includeSolar: selectedOptions.has("solar"),
       solarKW: selectedOptions.has("solar") ? (curSolar?.sizeKw ?? 0) : 0,
@@ -261,6 +259,10 @@ export function SystemAddOnsCards({
       evChargerKW: addOns.evChargerKW,
       updatedAt: Date.now(),
     });
+
+    // Guard: only trigger pricing debounce when recalculate fn is ready
+    if (!onRecalculate || busy) return;
+    if (autoApplyTimerRef.current) clearTimeout(autoApplyTimerRef.current);
 
     autoApplyTimerRef.current = setTimeout(async () => {
       setBusy(true);
