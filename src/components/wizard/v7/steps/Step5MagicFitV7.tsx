@@ -29,7 +29,7 @@ import type {
 } from "@/wizard/v7/hooks/useWizardV7";
 import TrueQuoteFinancialModal from "@/components/wizard/v7/shared/TrueQuoteFinancialModal";
 import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
-import { devLog, devError } from '@/wizard/v7/debug/devLog';
+import { devLog, devError } from "@/wizard/v7/debug/devLog";
 
 // SSOT calculation engine — only used as fallback when Step 4 pricing is missing
 import { calculateQuote } from "@/services/unifiedQuoteCalculator";
@@ -37,8 +37,17 @@ import { applyMarginToQuote, getSizingDefaults } from "@/wizard/v7/pricing/prici
 import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
 import { getFacilityConstraints } from "@/services/useCasePowerCalculations";
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
-import type { TierKey, TierConfig, TierQuote, MarginData, QuoteWithMargin } from "./step5Utils";
-import { TIER_CONFIG, formatCurrency, formatNumber, safeFixed, getIndustryLabel, getGoalBasedMultipliers, scaleTier, buildQuoteResultFromState } from "./step5Utils";
+import type { TierKey, TierQuote, QuoteWithMargin } from "./step5Utils";
+import {
+  TIER_CONFIG,
+  formatCurrency,
+  formatNumber,
+  safeFixed,
+  getIndustryLabel,
+  getGoalBasedMultipliers,
+  scaleTier,
+  buildQuoteResultFromState,
+} from "./step5Utils";
 
 interface Props {
   state: WizardV7State;
@@ -49,7 +58,6 @@ interface Props {
   };
 }
 
-
 export default function Step5MagicFitV7({ state, actions }: Props) {
   const [tiers, setTiers] = useState<TierQuote[]>([]);
   const [selectedTier, setSelectedTier] = useState<TierKey | null>(null);
@@ -59,6 +67,21 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
 
   // ✅ MERLIN MEMORY: Read cross-step data from Memory first, fall back to state
   const data = useMerlinData(state);
+
+  // ── TrueQuote Compliance: Defer snapshot until in-flight pricing settles ──
+  // If the user changed add-ons in Step 4 and navigated before the debounce
+  // fired, recalculateWithAddOns starts runPricingSafe (async). We must NOT
+  // snapshot until TrueQuote verification completes — otherwise tier financials
+  // are built from a stale prior quote that excludes the new add-ons.
+  const pricingStatus = state?.pricingStatus ?? "idle";
+  const [readyToFreeze, setReadyToFreeze] = useState(() => pricingStatus !== "pending");
+
+  useEffect(() => {
+    // Once pricing settles (ok, error, timed_out, idle) unblock the snapshot.
+    if (pricingStatus !== "pending") {
+      setReadyToFreeze(true);
+    }
+  }, [pricingStatus]);
 
   // ══════════════════════════════════════════════════════════════════════════
   // SNAPSHOT: Freeze all sizing inputs at mount time.
@@ -73,6 +96,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     solarKW: number;
     generatorKW: number;
     windKW: number;
+    evChargerKW: number;
     location: string;
     utilityRate: number;
     demandCharge: number;
@@ -85,8 +109,8 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }>({ frozen: false } as any);
 
-  // Only capture on FIRST render (frozen === false)
-  if (!snapshotRef.current.frozen) {
+  // Only capture once pricing has settled AND snapshot hasn't been taken yet
+  if (readyToFreeze && !snapshotRef.current.frozen) {
     const rawBESSKW =
       data.bessKW > 0 ? data.bessKW : data.peakLoadKW || state?.quote?.peakLoadKW || 200;
     // ✅ FIX Feb 2026: Use industry-specific duration defaults (car wash = 2h, hotel = 4h)
@@ -113,16 +137,23 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
           ? data.addOns.windKW
           : rawBESSKW * 0.3
         : 0,
+      evChargerKW: data.addOns.includeEV
+        ? data.addOns.evChargerKW > 0
+          ? data.addOns.evChargerKW
+          : 0
+        : 0,
       location: data.location.state || "CA",
       utilityRate: data.utilityRate || 0.12,
       demandCharge: data.demandCharge || 0,
       industry: data.industry || "commercial",
       goals: data.goals as EnergyGoal[],
       addOns: { ...data.addOns },
-      roofSolarKW: Number(
-        (state as Record<string, unknown>)?.step3Answers &&
-        ((state as Record<string, unknown>).step3Answers as Record<string, unknown>)?.roofSolarKW
-      ) || 0,
+      roofSolarKW:
+        Number(
+          (state as Record<string, unknown>)?.step3Answers &&
+            ((state as Record<string, unknown>).step3Answers as Record<string, unknown>)
+              ?.roofSolarKW
+        ) || 0,
       stateQuote: state?.quote ? { ...state.quote } : undefined,
       stateQuoteMargin: state?.quote?.margin ? { ...state.quote.margin } : undefined,
     };
@@ -148,7 +179,9 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   const maxPhysicalSolarKW = facilityConstraints?.totalRealisticSolarKW ?? Infinity;
   const baseSolarKW = Math.min(uncappedSolarKW, maxPhysicalSolarKW);
   if (uncappedSolarKW > maxPhysicalSolarKW) {
-    devLog(`[Step5 MagicFit] Solar capped from ${Math.round(uncappedSolarKW)} kW to ${maxPhysicalSolarKW} kW (${snap.industry} building constraint)`);
+    devLog(
+      `[Step5 MagicFit] Solar capped from ${Math.round(uncappedSolarKW)} kW to ${maxPhysicalSolarKW} kW (${snap.industry} building constraint)`
+    );
   }
 
   const baseGeneratorKW = snap.generatorKW * goalModifiers.generatorMultiplier;
@@ -160,6 +193,8 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   const hasRunRef = useRef(false);
 
   useEffect(() => {
+    // Wait for TrueQuote pricing to settle before snapshotting
+    if (!readyToFreeze || !snapshotRef.current.frozen) return;
     // Run exactly ONCE
     if (hasRunRef.current) return;
     hasRunRef.current = true;
@@ -302,10 +337,19 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         const results: TierQuote[] = [];
         const maxRoofMW = snap.roofSolarKW > 0 ? snap.roofSolarKW / 1000 : undefined;
         // Physical solar cap from INDUSTRY_FACILITY_CONSTRAINTS (prevents oversizing)
-        const maxTotalSolarMW = maxPhysicalSolarKW < Infinity ? maxPhysicalSolarKW / 1000 : undefined;
+        const maxTotalSolarMW =
+          maxPhysicalSolarKW < Infinity ? maxPhysicalSolarKW / 1000 : undefined;
         for (const tierKey of ["starter", "perfectFit", "beastMode"] as const) {
           results.push(
-            scaleTier(baseQuoteResult, tierKey, TIER_CONFIG[tierKey], baseDuration, baseMargin, maxRoofMW, maxTotalSolarMW)
+            scaleTier(
+              baseQuoteResult,
+              tierKey,
+              TIER_CONFIG[tierKey],
+              baseDuration,
+              baseMargin,
+              maxRoofMW,
+              maxTotalSolarMW
+            )
           );
         }
 
@@ -337,7 +381,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run ONCE on mount — all inputs frozen in snapshotRef
+  }, [readyToFreeze]); // Fires once pricing settles — all inputs frozen in snapshotRef by then
 
   const handleSelectTier = (tierKey: TierKey) => {
     setSelectedTier(tierKey);
@@ -410,16 +454,32 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                   ← Back to Options
                 </button>
                 <span className="text-slate-700 text-xs">or</span>
-                <p className="text-slate-500 text-xs">use <strong className="text-slate-400">Continue to Quote →</strong> above for a basic estimate</p>
+                <p className="text-slate-500 text-xs">
+                  use <strong className="text-slate-400">Continue to Quote →</strong> above for a
+                  basic estimate
+                </p>
               </div>
             </>
           ) : (
             <>
               <Loader2 className="w-10 h-10 text-slate-400 animate-spin mx-auto mb-4" />
-              <p className="text-slate-300 text-base font-medium">
-                Generating your custom system options...
-              </p>
-              <p className="text-slate-500 text-sm mt-2">Analyzing facility profile and goals</p>
+              {!readyToFreeze ? (
+                <>
+                  <p className="text-slate-300 text-base font-medium">Verifying with TrueQuote™…</p>
+                  <p className="text-slate-500 text-sm mt-2">
+                    Confirming your configuration is cite-ready
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-slate-300 text-base font-medium">
+                    Generating your custom system options...
+                  </p>
+                  <p className="text-slate-500 text-sm mt-2">
+                    Analyzing facility profile and goals
+                  </p>
+                </>
+              )}
             </>
           )}
         </div>
@@ -763,6 +823,9 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
               <Fuel className="w-3 h-3" /> Generator
             </span>
           )}
+          {data.addOns.includeEV && (
+            <span className="flex items-center gap-1.5">⚡ EV Charging</span>
+          )}
         </div>
       </div>
 
@@ -770,4 +833,3 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     </div>
   );
 }
-

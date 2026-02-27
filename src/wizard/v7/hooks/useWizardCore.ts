@@ -116,6 +116,8 @@ export function initialState(): WizardState {
       generatorFuelType: "natural-gas",
       includeWind: false,
       windKW: 0,
+      includeEV: false,
+      evChargerKW: 0,
     },
 
     // Pricing (Phase 6: non-blocking)

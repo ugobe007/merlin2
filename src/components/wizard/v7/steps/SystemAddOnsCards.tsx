@@ -87,11 +87,7 @@ function calcEv(name: string, l2: number, dc: number): EvTier {
   return { ...result };
 }
 
-function calcGen(
-  name: string,
-  kw: number,
-  fuel: "diesel" | "natural-gas"
-): GeneratorTier {
+function calcGen(name: string, kw: number, fuel: "diesel" | "natural-gas"): GeneratorTier {
   const result = calculateGeneratorPreview({ sizeKw: kw, fuelType: fuel }, name);
   return { ...result };
 }
@@ -184,7 +180,7 @@ export function SystemAddOnsCards({
   currentAddOns,
   onRecalculate,
   pricingStatus,
-  showGenerateButton: _showGenerateButton = false, // eslint-disable-line @typescript-eslint/no-unused-vars
+  showGenerateButton: _showGenerateButton = false,
   merlinData,
 }: SystemAddOnsCardsProps) {
   // Selections
@@ -201,13 +197,23 @@ export function SystemAddOnsCards({
   const [evTier, setEvTier] = useState<string>("standard");
   const [generatorTier, setGeneratorTier] = useState<string>("standard");
   // ✅ All cards start expanded by default
-  const [expandedCards, setExpandedCards] = useState<Set<string>>(() => new Set(["solar", "ev", "generator"]));
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(
+    () => new Set(["solar", "ev", "generator"])
+  );
   const [busy, setBusy] = useState(false);
 
   // ── Auto-apply add-on changes (Feb 11, 2026) ──
   // When user toggles an option or changes a tier, auto-recalculate after a brief debounce
   const autoApplyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRenderRef = useRef(true);
+
+  // ── Latest-addOns ref (Feb 27, 2026) ──
+  // Always tracks the current UI selection so we can flush synchronously on unmount.
+  // Fixes bug: user selects generator → clicks "See MagicFit →" within 600ms debounce window
+  // → Step 5 snapshot froze before recalculateWithAddOns wrote to merlinMemory.
+  const latestAddOnsRef = useRef<SystemAddOns | null>(null);
+  const onRecalculateRef = useRef(onRecalculate);
+  onRecalculateRef.current = onRecalculate;
 
   useEffect(() => {
     // Skip auto-apply on first render (initial state matches currentAddOns)
@@ -220,19 +226,25 @@ export function SystemAddOnsCards({
     // Clear previous timer
     if (autoApplyTimerRef.current) clearTimeout(autoApplyTimerRef.current);
 
+    // Build the addOns object once; store it for potential flush-on-unmount
+    const addOns: SystemAddOns = {
+      includeSolar: selectedOptions.has("solar"),
+      solarKW: selectedOptions.has("solar") ? (curSolar?.sizeKw ?? 0) : 0,
+      includeGenerator: selectedOptions.has("generator"),
+      generatorKW: selectedOptions.has("generator") ? (curGen?.sizeKw ?? 0) : 0,
+      generatorFuelType: curGen?.fuelType === "Diesel" ? "diesel" : "natural-gas",
+      includeWind: false,
+      windKW: 0,
+      includeEV: selectedOptions.has("ev"),
+      evChargerKW: selectedOptions.has("ev") ? (curEv?.totalPowerKw ?? 0) : 0,
+    };
+    if (selectedOptions.has("ev") && curEv) {
+      addOns.solarKW = Math.max(addOns.solarKW, curEv.totalPowerKw);
+    }
+    // Keep ref up-to-date so unmount flush always has latest selections
+    latestAddOnsRef.current = addOns;
+
     autoApplyTimerRef.current = setTimeout(async () => {
-      const addOns: SystemAddOns = {
-        includeSolar: selectedOptions.has("solar"),
-        solarKW: selectedOptions.has("solar") ? (curSolar?.sizeKw ?? 0) : 0,
-        includeGenerator: selectedOptions.has("generator"),
-        generatorKW: selectedOptions.has("generator") ? (curGen?.sizeKw ?? 0) : 0,
-        generatorFuelType: curGen?.fuelType === "Diesel" ? "diesel" : "natural-gas",
-        includeWind: false,
-        windKW: 0,
-      };
-      if (selectedOptions.has("ev") && curEv) {
-        addOns.solarKW = Math.max(addOns.solarKW, curEv.totalPowerKw);
-      }
       setBusy(true);
       await onRecalculate(addOns);
       setBusy(false);
@@ -241,60 +253,76 @@ export function SystemAddOnsCards({
     return () => {
       if (autoApplyTimerRef.current) clearTimeout(autoApplyTimerRef.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOptions, solarTier, evTier, generatorTier]);
+
+  // ── Flush on unmount (Feb 27, 2026) ──
+  // If user navigates away (clicks "See MagicFit →") before the 600ms debounce fires,
+  // we flush the latest selections synchronously so merlinMemory is updated before
+  // Step 5 mounts and freezes its snapshot.
+  useEffect(() => {
+    return () => {
+      if (autoApplyTimerRef.current) {
+        // Debounce was still pending — cancel it and flush immediately
+        clearTimeout(autoApplyTimerRef.current);
+        autoApplyTimerRef.current = null;
+        if (onRecalculateRef.current && latestAddOnsRef.current) {
+          onRecalculateRef.current(latestAddOnsRef.current);
+        }
+      }
+    };
+  }, []);
 
   // ✅ MERLIN MEMORY: Pull from Memory first, fall back to state
   const peakLoadKW = merlinData?.peakLoadKW || state.quote?.peakLoadKW || 300;
-  const energyKWhDay = merlinData?.energyKWhPerDay || state.quote?.energyKWhPerDay || peakLoadKW * 10;
+  const energyKWhDay =
+    merlinData?.energyKWhPerDay || state.quote?.energyKWhPerDay || peakLoadKW * 10;
   const annualUsageKwh = energyKWhDay * 365;
   const sunHours = merlinData?.peakSunHours || state.locationIntel?.peakSunHours || 5.5;
   const industryLabel =
     (merlinData?.industry || state.industry || "")
-      .replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-    || "Commercial";
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase()) || "Commercial";
 
   // ── Compute tiers ──
   // ✅ Custom tier from Step 3 Solar Sizing Modal (Feb 2026)
   const step3SolarKW = currentAddOns.solarKW;
 
-  const solarOpts = useMemo(
-    () => {
-      const opts: Record<string, SolarTier> = {
-        starter: calcSolar("Starter", 0.15, annualUsageKwh, sunHours),
-        recommended: {
-          ...calcSolar("Recommended", 0.3, annualUsageKwh, sunHours),
-          tag: "Best ROI",
-        },
-        maximum: {
-          ...calcSolar("Maximum", 0.5, annualUsageKwh, sunHours),
-          tag: "Max Savings",
-        },
-      };
+  const solarOpts = useMemo(() => {
+    const opts: Record<string, SolarTier> = {
+      starter: calcSolar("Starter", 0.15, annualUsageKwh, sunHours),
+      recommended: {
+        ...calcSolar("Recommended", 0.3, annualUsageKwh, sunHours),
+        tag: "Best ROI",
+      },
+      maximum: {
+        ...calcSolar("Maximum", 0.5, annualUsageKwh, sunHours),
+        tag: "Max Savings",
+      },
+    };
 
-      // If solar was sized in Step 3 modal, create a custom tier using that exact value
-      if (step3SolarKW > 0) {
-        // Reverse-engineer coverage percent from the sized kW
-        const customCoverage = annualUsageKwh > 0
+    // If solar was sized in Step 3 modal, create a custom tier using that exact value
+    if (step3SolarKW > 0) {
+      // Reverse-engineer coverage percent from the sized kW
+      const customCoverage =
+        annualUsageKwh > 0
           ? Math.min(1.0, (step3SolarKW * sunHours * 365 * 0.85) / annualUsageKwh)
           : 0.3;
-        const customResult = calcSolar("Your Solar Sizing", customCoverage, annualUsageKwh, sunHours);
-        // Override sizeKw to match exact modal value (avoid rounding drift)
-        opts.custom = {
-          ...customResult,
-          sizeKw: step3SolarKW,
-          sizeLabel: `${step3SolarKW.toLocaleString()} kW`,
-          panelCount: Math.ceil((step3SolarKW * 1000) / 500),
-          annualProductionKwh: Math.round(step3SolarKW * sunHours * 365 * 0.85),
-          annualSavings: Math.round(step3SolarKW * sunHours * 365 * 0.85 * 0.12),
-          tag: "Sized in Step 3",
-        };
-      }
+      const customResult = calcSolar("Your Solar Sizing", customCoverage, annualUsageKwh, sunHours);
+      // Override sizeKw to match exact modal value (avoid rounding drift)
+      opts.custom = {
+        ...customResult,
+        sizeKw: step3SolarKW,
+        sizeLabel: `${step3SolarKW.toLocaleString()} kW`,
+        panelCount: Math.ceil((step3SolarKW * 1000) / 500),
+        annualProductionKwh: Math.round(step3SolarKW * sunHours * 365 * 0.85),
+        annualSavings: Math.round(step3SolarKW * sunHours * 365 * 0.85 * 0.12),
+        tag: "Sized in Step 3",
+      };
+    }
 
-      return opts;
-    },
-    [annualUsageKwh, sunHours, step3SolarKW]
-  );
+    return opts;
+  }, [annualUsageKwh, sunHours, step3SolarKW]);
 
   const evOpts = useMemo(
     () => ({
@@ -310,11 +338,7 @@ export function SystemAddOnsCards({
       essential: calcGen("Essential", 150, "diesel"),
       standard: { ...calcGen("Standard", 300, "natural-gas"), tag: "Recommended" },
       full: {
-        ...calcGen(
-          "Full Backup",
-          Math.round((peakLoadKW * 1.1) / 50) * 50 || 500,
-          "natural-gas"
-        ),
+        ...calcGen("Full Backup", Math.round((peakLoadKW * 1.1) / 50) * 50 || 500, "natural-gas"),
         tag: "Full Coverage",
       },
     }),
@@ -325,39 +349,33 @@ export function SystemAddOnsCards({
   const curSolar = selectedOptions.has("solar")
     ? solarOpts[solarTier as keyof typeof solarOpts]
     : null;
-  const curEv = selectedOptions.has("ev")
-    ? evOpts[evTier as keyof typeof evOpts]
-    : null;
+  const curEv = selectedOptions.has("ev") ? evOpts[evTier as keyof typeof evOpts] : null;
   const curGen = selectedOptions.has("generator")
     ? genOpts[generatorTier as keyof typeof genOpts]
     : null;
 
   // 10-year combined value
   const _tenYearValue =
-    (curSolar ? curSolar.annualSavings * 10 : 0) +
-    (curEv ? curEv.tenYearRevenue : 0);
+    (curSolar ? curSolar.annualSavings * 10 : 0) + (curEv ? curEv.tenYearRevenue : 0);
 
   // Max potential for stats
   const maxSolarSavings = solarOpts.maximum.annualSavings;
   const _maxEvRevenue = evOpts.premium.monthlyRevenue * 12;
 
   // ── Toggle handler ──
-  const toggleOption = useCallback(
-    (id: string) => {
-      setSelectedOptions((prev) => {
-        const next = new Set(prev);
-        if (next.has(id)) {
-          next.delete(id);
-        } else {
-          next.add(id);
-          // Auto-expand when first selected
-          setExpandedCards(prev => new Set(prev).add(id));
-        }
-        return next;
-      });
-    },
-    []
-  );
+  const toggleOption = useCallback((id: string) => {
+    setSelectedOptions((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+        // Auto-expand when first selected
+        setExpandedCards((prev) => new Set(prev).add(id));
+      }
+      return next;
+    });
+  }, []);
 
   // ── Apply selections → recalculateWithAddOns ──
   const _handleApply = useCallback(async () => {
@@ -369,10 +387,11 @@ export function SystemAddOnsCards({
       solarKW: curSolar?.sizeKw ?? 0,
       includeGenerator: selectedOptions.has("generator"),
       generatorKW: curGen?.sizeKw ?? 0,
-      generatorFuelType:
-        curGen?.fuelType === "Diesel" ? "diesel" : "natural-gas",
+      generatorFuelType: curGen?.fuelType === "Diesel" ? "diesel" : "natural-gas",
       includeWind: false,
       windKW: 0,
+      includeEV: selectedOptions.has("ev"),
+      evChargerKW: selectedOptions.has("ev") ? (curEv?.totalPowerKw ?? 0) : 0,
     };
 
     // Include EV as solar capacity bump (EV chargers drive solar sizing up)
@@ -416,7 +435,17 @@ export function SystemAddOnsCards({
           isSelected={selectedOptions.has("solar")}
           isExpanded={expandedCards.has("solar")}
           onToggle={() => toggleOption("solar")}
-          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); if (n.has("solar")) { n.delete("solar"); } else { n.add("solar"); } return n; })}
+          onExpand={() =>
+            setExpandedCards((prev) => {
+              const n = new Set(prev);
+              if (n.has("solar")) {
+                n.delete("solar");
+              } else {
+                n.add("solar");
+              }
+              return n;
+            })
+          }
         >
           <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
             <div
@@ -431,7 +460,13 @@ export function SystemAddOnsCards({
             >
               📈 Choose configuration based on {(annualUsageKwh / 1e6).toFixed(2)}M kWh usage:
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: solarOpts.custom ? "1fr 1fr 1fr 1fr" : "1fr 1fr 1fr", gap: 10 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: solarOpts.custom ? "1fr 1fr 1fr 1fr" : "1fr 1fr 1fr",
+                gap: 10,
+              }}
+            >
               {/* Show custom tier first when available (sized in Step 3 modal) */}
               {solarOpts.custom && (
                 <TierCard
@@ -444,11 +479,24 @@ export function SystemAddOnsCards({
                   accent="amber"
                   metrics={[
                     { label: "System", value: `${solarOpts.custom.sizeKw.toLocaleString()} kW` },
-                    { label: "Production", value: `${solarOpts.custom.annualProductionKwh.toLocaleString()} kWh` },
-                    { label: "Savings", value: fmtUSD(solarOpts.custom.annualSavings), highlight: true, color: "emerald" },
+                    {
+                      label: "Production",
+                      value: `${solarOpts.custom.annualProductionKwh.toLocaleString()} kWh`,
+                    },
+                    {
+                      label: "Savings",
+                      value: fmtUSD(solarOpts.custom.annualSavings),
+                      highlight: true,
+                      color: "emerald",
+                    },
                     { label: "Payback", value: `${solarOpts.custom.paybackYears} years` },
                     { label: "Cost", value: fmtUSD(solarOpts.custom.installCost) },
-                    { label: "After ITC", value: fmtUSD(solarOpts.custom.netCostAfterITC), highlight: true, color: "amber" },
+                    {
+                      label: "After ITC",
+                      value: fmtUSD(solarOpts.custom.netCostAfterITC),
+                      highlight: true,
+                      color: "amber",
+                    },
                   ]}
                 />
               )}
@@ -466,11 +514,24 @@ export function SystemAddOnsCards({
                     accent="amber"
                     metrics={[
                       { label: "Coverage", value: `${Math.round(o.coveragePercent * 100)}%` },
-                      { label: "Production", value: `${o.annualProductionKwh.toLocaleString()} kWh` },
-                      { label: "Savings", value: fmtUSD(o.annualSavings), highlight: true, color: "emerald" },
+                      {
+                        label: "Production",
+                        value: `${o.annualProductionKwh.toLocaleString()} kWh`,
+                      },
+                      {
+                        label: "Savings",
+                        value: fmtUSD(o.annualSavings),
+                        highlight: true,
+                        color: "emerald",
+                      },
                       { label: "Payback", value: `${o.paybackYears} years` },
                       { label: "Cost", value: fmtUSD(o.installCost) },
-                      { label: "After ITC", value: fmtUSD(o.netCostAfterITC), highlight: true, color: "amber" },
+                      {
+                        label: "After ITC",
+                        value: fmtUSD(o.netCostAfterITC),
+                        highlight: true,
+                        color: "amber",
+                      },
                     ]}
                   />
                 );
@@ -489,17 +550,23 @@ export function SystemAddOnsCards({
           badge="Revenue Generator"
           badgeColor="rgba(52,211,153,0.9)"
           badgeBg="rgba(52,211,153,0.12)"
-          value={
-            curEv
-              ? fmtK(curEv.tenYearRevenue)
-              : fmtK(evOpts.premium.tenYearRevenue) + "+"
-          }
+          value={curEv ? fmtK(curEv.tenYearRevenue) : fmtK(evOpts.premium.tenYearRevenue) + "+"}
           valueLabel={curEv ? "10yr Revenue" : "Up to 10yr"}
           accent="cyan"
           isSelected={selectedOptions.has("ev")}
           isExpanded={expandedCards.has("ev")}
           onToggle={() => toggleOption("ev")}
-          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); if (n.has("ev")) { n.delete("ev"); } else { n.add("ev"); } return n; })}
+          onExpand={() =>
+            setExpandedCards((prev) => {
+              const n = new Set(prev);
+              if (n.has("ev")) {
+                n.delete("ev");
+              } else {
+                n.add("ev");
+              }
+              return n;
+            })
+          }
         >
           <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
             <div
@@ -531,9 +598,19 @@ export function SystemAddOnsCards({
                     metrics={[
                       { label: "Power", value: `${o.totalPowerKw} kW` },
                       { label: "Cars/Day", value: o.carsPerDay },
-                      { label: "Monthly Rev", value: fmtUSD(o.monthlyRevenue), highlight: true, color: "emerald" },
+                      {
+                        label: "Monthly Rev",
+                        value: fmtUSD(o.monthlyRevenue),
+                        highlight: true,
+                        color: "emerald",
+                      },
                       { label: "Install Cost", value: fmtUSD(o.installCost) },
-                      { label: "10yr Revenue", value: fmtK(o.tenYearRevenue), highlight: true, color: "cyan" },
+                      {
+                        label: "10yr Revenue",
+                        value: fmtK(o.tenYearRevenue),
+                        highlight: true,
+                        color: "cyan",
+                      },
                     ]}
                   />
                 );
@@ -549,10 +626,24 @@ export function SystemAddOnsCards({
                 borderRadius: 12,
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(232,235,243,0.7)", marginBottom: 10 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "rgba(232,235,243,0.7)",
+                  marginBottom: 10,
+                }}
+              >
                 ⚡ Charger Types
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, fontSize: 11 }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: 12,
+                  fontSize: 11,
+                }}
+              >
                 <div>
                   <div style={{ fontWeight: 700, color: "#06b6d4" }}>Level 2 (L2)</div>
                   <div style={{ color: "rgba(232,235,243,0.4)" }}>7.7 kW • 4-8 hr charge</div>
@@ -563,7 +654,9 @@ export function SystemAddOnsCards({
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, color: "#06b6d4" }}>Revenue Est.</div>
-                  <div style={{ color: "rgba(232,235,243,0.4)" }}>L2: ~$150/mo • DCFC: ~$800/mo</div>
+                  <div style={{ color: "rgba(232,235,243,0.4)" }}>
+                    L2: ~$150/mo • DCFC: ~$800/mo
+                  </div>
                 </div>
               </div>
             </div>
@@ -586,7 +679,17 @@ export function SystemAddOnsCards({
           isSelected={selectedOptions.has("generator")}
           isExpanded={expandedCards.has("generator")}
           onToggle={() => toggleOption("generator")}
-          onExpand={() => setExpandedCards(prev => { const n = new Set(prev); if (n.has("generator")) { n.delete("generator"); } else { n.add("generator"); } return n; })}
+          onExpand={() =>
+            setExpandedCards((prev) => {
+              const n = new Set(prev);
+              if (n.has("generator")) {
+                n.delete("generator");
+              } else {
+                n.add("generator");
+              }
+              return n;
+            })
+          }
         >
           <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
             <div
@@ -619,7 +722,12 @@ export function SystemAddOnsCards({
                       { label: "Fuel", value: o.fuelType },
                       { label: "Runtime", value: `${o.runtimeHours} hrs` },
                       { label: "Install", value: fmtUSD(o.installCost) },
-                      { label: "After Credits", value: fmtUSD(o.netCostAfterITC), highlight: true, color: "emerald" },
+                      {
+                        label: "After Credits",
+                        value: fmtUSD(o.netCostAfterITC),
+                        highlight: true,
+                        color: "emerald",
+                      },
                       { label: "Maintenance", value: `${fmtUSD(o.annualMaintenance)}/yr` },
                     ]}
                   />
@@ -657,15 +765,7 @@ export function SystemAddOnsCards({
 // SUB-COMPONENTS
 // ============================================================================
 
-function _StatCell({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: string;
-  color: string;
-}) {
+function _StatCell({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ textAlign: "center", padding: "0 20px", flex: 1 }}>
       <div
@@ -687,9 +787,7 @@ function _StatCell({
 }
 
 function _Divider() {
-  return (
-    <div style={{ width: 1, background: "rgba(255,255,255,0.06)", alignSelf: "stretch" }} />
-  );
+  return <div style={{ width: 1, background: "rgba(255,255,255,0.06)", alignSelf: "stretch" }} />;
 }
 
 function _SelectionItem({
@@ -709,9 +807,7 @@ function _SelectionItem({
       <div style={{ fontSize: 15, fontWeight: 800, color: "rgba(232,235,243,0.95)", marginTop: 2 }}>
         {title}
       </div>
-      <div style={{ fontSize: 13, fontWeight: 700, color: valueColor, marginTop: 2 }}>
-        {value}
-      </div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: valueColor, marginTop: 2 }}>{value}</div>
     </div>
   );
 }
@@ -767,9 +863,7 @@ function OptionCard({
         overflow: "hidden",
         transition: "all 0.2s",
         border: `1px solid ${isSelected ? a.border : "rgba(255,255,255,0.08)"}`,
-        boxShadow: isSelected
-          ? `0 0 0 1px ${a.ring}`
-          : "none",
+        boxShadow: isSelected ? `0 0 0 1px ${a.ring}` : "none",
         background: "rgba(255,255,255,0.03)",
       }}
     >
@@ -872,9 +966,7 @@ function OptionCard({
               letterSpacing: "0.01em",
               cursor: "pointer",
               transition: "all 0.2s",
-              background: isSelected
-                ? "transparent"
-                : "transparent",
+              background: isSelected ? "transparent" : "transparent",
               color: isSelected ? "#34d399" : "rgba(232,235,243,0.5)",
               boxShadow: "none",
             }}
@@ -915,14 +1007,7 @@ interface TierCardProps {
   metrics: Metric[];
 }
 
-function TierCard({
-  tier,
-  isSelected,
-  onClick,
-  accent,
-  sizeLabel,
-  metrics,
-}: TierCardProps) {
+function TierCard({ tier, isSelected, onClick, accent, sizeLabel, metrics }: TierCardProps) {
   const a = ACCENT[accent];
 
   return (
@@ -934,31 +1019,32 @@ function TierCard({
         borderRadius: 10,
         cursor: "pointer",
         transition: "all 0.2s",
-        background: isSelected
-          ? `${a.bg}` : "transparent",
-        border: isSelected
-          ? `2px solid ${a.border}`
-          : "1px solid rgba(255,255,255,0.08)",
+        background: isSelected ? `${a.bg}` : "transparent",
+        border: isSelected ? `2px solid ${a.border}` : "1px solid rgba(255,255,255,0.08)",
         boxShadow: isSelected ? `0 0 12px ${a.border}40` : "none",
       }}
     >
       {/* Selected indicator */}
       {isSelected && (
-        <div style={{
-          position: "absolute",
-          top: 6,
-          left: 6,
-          width: 18,
-          height: 18,
-          borderRadius: "50%",
-          background: a.border,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 10,
-          color: "#fff",
-          fontWeight: 900,
-        }}>✓</div>
+        <div
+          style={{
+            position: "absolute",
+            top: 6,
+            left: 6,
+            width: 18,
+            height: 18,
+            borderRadius: "50%",
+            background: a.border,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 10,
+            color: "#fff",
+            fontWeight: 900,
+          }}
+        >
+          ✓
+        </div>
       )}
 
       {/* Tag */}

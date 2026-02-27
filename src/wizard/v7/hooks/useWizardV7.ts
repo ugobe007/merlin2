@@ -184,6 +184,9 @@ export type SystemAddOns = {
   generatorFuelType: "natural-gas" | "diesel" | "dual-fuel";
   includeWind: boolean;
   windKW: number;
+  /** EV charging add-on */
+  includeEV: boolean;
+  evChargerKW: number;
   /** ITC bonus qualifications (IRA 2022) — drives dynamic ITC rate */
   itcBonuses?: ITCBonuses;
 };
@@ -203,6 +206,8 @@ export const DEFAULT_ADD_ONS: SystemAddOns = {
   generatorFuelType: "natural-gas",
   includeWind: false,
   windKW: 0,
+  includeEV: false,
+  evChargerKW: 0,
   itcBonuses: DEFAULT_ITC_BONUSES,
 };
 
