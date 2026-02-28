@@ -188,9 +188,13 @@ export function SystemAddOnsCards({
   // Selections
   const [selectedOptions, setSelectedOptions] = useState<Set<string>>(() => {
     const s = new Set<string>();
-    if (currentAddOns.includeSolar) s.add("solar");
-    if (currentAddOns.includeGenerator) s.add("generator");
-    if (currentAddOns.includeEV) s.add("ev");
+    // TrueQuoteTemp-first init: written synchronously in click handlers,
+    // so survives any remount within the 600ms debounce window.
+    const tqt = TrueQuoteTemp.get();
+    const src = tqt.updatedAt > 0 ? tqt : currentAddOns;
+    if (src.includeSolar) s.add("solar");
+    if (src.includeGenerator) s.add("generator");
+    if (src.includeEV) s.add("ev");
     return s;
   });
   // ✅ If solar was sized in Step 3 modal, default to "custom" tier (Feb 2026)
@@ -404,19 +408,34 @@ export function SystemAddOnsCards({
   // The auto-apply useEffect below handles all writes after state settles.
   const toggleOption = useCallback(
     (id: string) => {
+      // Write to TrueQuoteTemp synchronously (safe from event handlers per design).
+      // This protects selectedOptions re-initialization against remounts within
+      // the 600ms debounce window.
+      const tqt = TrueQuoteTemp.get();
+      const adding = !selectedOptions.has(id);
+      TrueQuoteTemp.writeAddOns({
+        includeSolar: id === "solar" ? adding : tqt.includeSolar,
+        solarKW: id === "solar" && !adding ? 0 : tqt.solarKW,
+        includeGenerator: id === "generator" ? adding : tqt.includeGenerator,
+        generatorKW: id === "generator" && !adding ? 0 : tqt.generatorKW,
+        generatorFuelType: tqt.generatorFuelType || "natural-gas",
+        includeWind: tqt.includeWind ?? false,
+        windKW: tqt.windKW ?? 0,
+        includeEV: id === "ev" ? adding : tqt.includeEV,
+        evChargerKW: id === "ev" && !adding ? 0 : tqt.evChargerKW,
+      });
       setSelectedOptions((prev) => {
         const next = new Set(prev);
         if (next.has(id)) {
           next.delete(id);
         } else {
           next.add(id);
-          // Auto-expand when first selected
-          setExpandedCards((p) => new Set(p).add(id));
         }
         return next;
       });
+      if (adding) setExpandedCards((p) => new Set(p).add(id));
     },
-    [] // no deps needed — pure set toggle
+    [selectedOptions] // needs selectedOptions to compute `adding`
   );
 
   // ── Apply selections → recalculateWithAddOns ──
@@ -515,6 +534,12 @@ export function SystemAddOnsCards({
                   tier={solarOpts.custom}
                   isSelected={solarTier === "custom" && selectedOptions.has("solar")}
                   onClick={() => {
+                    const tqt = TrueQuoteTemp.get();
+                    TrueQuoteTemp.writeAddOns({
+                      ...tqt,
+                      includeSolar: true,
+                      solarKW: solarOpts.custom?.sizeKw ?? tqt.solarKW,
+                    });
                     setSolarTier("custom");
                     if (!selectedOptions.has("solar")) {
                       setSelectedOptions((prev) => new Set(prev).add("solar"));
@@ -555,6 +580,12 @@ export function SystemAddOnsCards({
                       tier={o}
                       isSelected={solarTier === k && selectedOptions.has("solar")}
                       onClick={() => {
+                        const tqt = TrueQuoteTemp.get();
+                        TrueQuoteTemp.writeAddOns({
+                          ...tqt,
+                          includeSolar: true,
+                          solarKW: o?.sizeKw ?? tqt.solarKW,
+                        });
                         setSolarTier(k);
                         if (!selectedOptions.has("solar")) {
                           setSelectedOptions((prev) => new Set(prev).add("solar"));
@@ -640,6 +671,12 @@ export function SystemAddOnsCards({
                     tier={o}
                     isSelected={evTier === k && selectedOptions.has("ev")}
                     onClick={() => {
+                      const tqt = TrueQuoteTemp.get();
+                      TrueQuoteTemp.writeAddOns({
+                        ...tqt,
+                        includeEV: true,
+                        evChargerKW: o?.totalPowerKw ?? tqt.evChargerKW,
+                      });
                       setEvTier(k);
                       if (!selectedOptions.has("ev")) {
                         setSelectedOptions((prev) => new Set(prev).add("ev"));
@@ -766,6 +803,12 @@ export function SystemAddOnsCards({
                     tier={o}
                     isSelected={generatorTier === k && selectedOptions.has("generator")}
                     onClick={() => {
+                      const tqt = TrueQuoteTemp.get();
+                      TrueQuoteTemp.writeAddOns({
+                        ...tqt,
+                        includeGenerator: true,
+                        generatorKW: o?.sizeKw ?? tqt.generatorKW,
+                      });
                       setGeneratorTier(k);
                       if (!selectedOptions.has("generator")) {
                         setSelectedOptions((prev) => new Set(prev).add("generator"));
