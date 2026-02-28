@@ -104,6 +104,8 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     generatorKW: number;
     windKW: number;
     evChargerKW: number;
+    evInstallCost: number;
+    evMonthlyRevenue: number;
     location: string;
     utilityRate: number;
     demandCharge: number;
@@ -141,8 +143,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     };
     // Fall back to merlinMemory/state if TrueQuoteTemp hasn't been written yet
     // (e.g. user navigated directly to Step 5 without going through Step 4).
-    const addOnsSrc =
-      tqt.updatedAt > 0 ? tqtAddOns : data.addOns;
+    const addOnsSrc = tqt.updatedAt > 0 ? tqtAddOns : data.addOns;
 
     snapshotRef.current = {
       frozen: true,
@@ -166,6 +167,12 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       evChargerKW: addOnsSrc.includeEV
         ? addOnsSrc.evChargerKW > 0
           ? addOnsSrc.evChargerKW
+          : 0
+        : 0,
+      evInstallCost: addOnsSrc.includeEV ? (tqt.updatedAt > 0 ? (tqt.evInstallCost ?? 0) : 0) : 0,
+      evMonthlyRevenue: addOnsSrc.includeEV
+        ? tqt.updatedAt > 0
+          ? (tqt.evMonthlyRevenue ?? 0)
           : 0
         : 0,
       location: data.location.state || "CA",
@@ -374,7 +381,15 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
               baseDuration,
               baseMargin,
               maxRoofMW,
-              maxTotalSolarMW
+              maxTotalSolarMW,
+              snap.evChargerKW > 0
+                ? {
+                    includeEV: true,
+                    evChargerKW: snap.evChargerKW,
+                    evInstallCost: snap.evInstallCost,
+                    evMonthlyRevenue: snap.evMonthlyRevenue,
+                  }
+                : undefined
             )
           );
         }
@@ -436,6 +451,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         bessKW,
         solarKW,
         generatorKW: genKW,
+        evChargerKW: snap.evChargerKW > 0 ? snap.evChargerKW : undefined,
         capexUSD: netCost,
         grossCost,
         itcAmount,
@@ -451,6 +467,11 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         pricingComplete: true,
         notes: [
           `MagicFit tier: ${TIER_CONFIG[tierKey].name} (${TIER_CONFIG[tierKey].multiplier}x)`,
+          ...(snap.evChargerKW > 0
+            ? [
+                `EV Charging: ${Math.round(snap.evChargerKW)} kW (+$${Math.round(snap.evInstallCost / 1000)}K install, +$${Math.round((snap.evMonthlyRevenue * 12) / 1000)}K/yr revenue)`,
+              ]
+            : []),
           ...(margin
             ? [`Margin: ${margin.marginBand} (${(margin.marginPercent * 100).toFixed(1)}%)`]
             : []),
@@ -841,17 +862,17 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
           <span className="flex items-center gap-1.5">
             <Battery className="w-3 h-3" /> BESS
           </span>
-          {data.addOns.includeSolar && (
+          {snap.solarKW > 0 && (
             <span className="flex items-center gap-1.5">
               <Sun className="w-3 h-3" /> Solar
             </span>
           )}
-          {data.addOns.includeGenerator && (
+          {snap.generatorKW > 0 && (
             <span className="flex items-center gap-1.5">
               <Fuel className="w-3 h-3" /> Generator
             </span>
           )}
-          {data.addOns.includeEV && (
+          {snap.evChargerKW > 0 && (
             <span className="flex items-center gap-1.5">⚡ EV Charging</span>
           )}
         </div>

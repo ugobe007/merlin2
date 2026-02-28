@@ -416,6 +416,12 @@ export function SystemAddOnsCards({
         const solSelected = id === "solar" ? !prev.has("solar") : next.has("solar");
         const genSelected = id === "generator" ? !prev.has("generator") : next.has("generator");
         const evKw = evSelected ? (evOpts[evTier as keyof typeof evOpts]?.totalPowerKw ?? 0) : 0;
+        const evInstCost = evSelected
+          ? (evOpts[evTier as keyof typeof evOpts]?.installCost ?? 0)
+          : 0;
+        const evMonRevenue = evSelected
+          ? (evOpts[evTier as keyof typeof evOpts]?.monthlyRevenue ?? 0)
+          : 0;
         const solKw = solSelected
           ? (solarOpts[solarTier as keyof typeof solarOpts]?.sizeKw ?? 0)
           : 0;
@@ -432,6 +438,8 @@ export function SystemAddOnsCards({
           windKW: 0,
           includeEV: evSelected,
           evChargerKW: evKw,
+          evInstallCost: evInstCost,
+          evMonthlyRevenue: evMonRevenue,
         });
         // Keep merlinMemory in sync for legacy consumers
         merlinMemory.set("addOns", {

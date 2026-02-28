@@ -211,12 +211,63 @@ export function scaleTier(
     netCost: number;
   } | null,
   maxRoofSolarMW?: number, // Cap from solar sizing (roof-only, no canopy)
-  maxTotalSolarMW?: number // Cap from INDUSTRY_FACILITY_CONSTRAINTS (roof + canopy physical limit)
+  maxTotalSolarMW?: number, // Cap from INDUSTRY_FACILITY_CONSTRAINTS (roof + canopy physical limit)
+  evOptions?: {
+    includeEV: boolean;
+    evChargerKW: number;
+    evInstallCost: number; // Flat add-on cost (doesn't scale with BESS tier)
+    evMonthlyRevenue: number; // Monthly charger revenue (doesn't scale with BESS tier)
+  }
 ): TierQuote {
   // For perfectFit (1.0x multipliers), just return the base directly
+  // BUT still apply EV add-ons if present (flat cost/revenue, not affected by tier scaling)
   if (config.multiplier === 1.0 && config.solarMultiplier === 1.0 && config.genMultiplier === 1.0) {
-    // Attach margin as-is
-    if (baseMargin) {
+    const evAddOnCost = evOptions?.includeEV ? (evOptions.evInstallCost ?? 0) : 0;
+    const evAnnualRevenue = evOptions?.includeEV ? (evOptions.evMonthlyRevenue ?? 0) * 12 : 0;
+    if (evAddOnCost > 0 || evAnnualRevenue > 0) {
+      // Patch base quote in-place with EV additions
+      const origCost = base.costs.totalProjectCost;
+      const origTaxCredit = base.costs.taxCredit;
+      const origNetCost = base.costs.netCost;
+      const evWithCost = origCost + evAddOnCost;
+      const itcRate = origCost > 0 ? origTaxCredit / origCost : 0.3;
+      const evTaxCredit = evWithCost * itcRate;
+      base.costs = {
+        ...base.costs,
+        totalProjectCost: evWithCost,
+        taxCredit: evTaxCredit,
+        netCost: evWithCost - evTaxCredit,
+      };
+      base.equipment.totals = {
+        ...base.equipment.totals,
+        totalProjectCost: evWithCost,
+        totalCapex: evWithCost,
+      };
+      const origSavings = base.financials.annualSavings;
+      const evNetCost = evWithCost - evTaxCredit;
+      const evAnnSav = origSavings + evAnnualRevenue;
+      base.financials = {
+        ...base.financials,
+        annualSavings: evAnnSav,
+        paybackYears:
+          evAnnSav > 0 ? Math.min(evNetCost / evAnnSav, 99) : (base.financials.paybackYears ?? 99),
+      };
+      // Update margin if present
+      if (baseMargin) {
+        const scaledSell = evWithCost * (1 + baseMargin.marginPercent);
+        const scaledITC = scaledSell * baseMargin.itcRate;
+        (base as QuoteWithMargin)._margin = {
+          ...baseMargin,
+          sellPriceTotal: scaledSell,
+          baseCostTotal: evWithCost,
+          marginDollars: scaledSell - evWithCost,
+          itcAmount: scaledITC,
+          netCost: scaledSell - scaledITC,
+        };
+      }
+      // Restore original cost for the "before EV" netCost ref
+      void origNetCost;
+    } else if (baseMargin) {
       (base as QuoteWithMargin)._margin = { ...baseMargin };
     }
     return { tierKey, config, quote: base, loading: false, error: null };
@@ -317,7 +368,9 @@ export function scaleTier(
   const installRatio =
     baseCosts.equipmentCost > 0 ? baseCosts.installationCost / baseCosts.equipmentCost : 0.25; // sensible fallback: 25%
   const scaledInstallCost = scaledEquipmentCost * installRatio;
-  const scaledTotalCost = scaledEquipmentCost + scaledInstallCost;
+  // EV chargers: flat add-on (user chose a specific tier in Step 4 — doesn't scale with BESS tier)
+  const evAddOnCost = evOptions?.includeEV ? (evOptions.evInstallCost ?? 0) : 0;
+  const scaledTotalCost = scaledEquipmentCost + scaledInstallCost + evAddOnCost;
 
   // ITC rate stays the same
   const itcRate =
@@ -335,7 +388,9 @@ export function scaleTier(
     (baseBESSCost / baseTotal) * config.multiplier +
     (baseSolarCost / baseTotal) * config.solarMultiplier +
     (baseGenCost / baseTotal) * config.genMultiplier;
-  const scaledAnnualSavings = baseFinancials.annualSavings * savingsMultiplier;
+  // EV revenue: flat add-on (charger revenue doesn't depend on BESS tier size)
+  const evAnnualRevenue = evOptions?.includeEV ? (evOptions.evMonthlyRevenue ?? 0) * 12 : 0;
+  const scaledAnnualSavings = baseFinancials.annualSavings * savingsMultiplier + evAnnualRevenue;
 
   // Payback recalculated from scaled values
   const scaledPayback =
