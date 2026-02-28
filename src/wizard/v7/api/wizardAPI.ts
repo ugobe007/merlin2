@@ -158,33 +158,56 @@ export async function fetchSolar(
     return { peakSunHours: undefined, grade: undefined };
   }
 
+  // Helper: derive grade from peak sun hours
+  function gradeFromPSH(psh: number): string {
+    if (psh >= 5.5) return "A";
+    if (psh >= 5.0) return "A-";
+    if (psh >= 4.5) return "B+";
+    if (psh >= 4.0) return "B";
+    if (psh >= 3.5) return "B-";
+    return "C";
+  }
+
   try {
-    // Wire to real pvWattsService
-    const { estimateSolarProduction: _estimateSolarProduction, REGIONAL_CAPACITY_FACTORS } =
+    const { getPVWattsEstimate, REGIONAL_CAPACITY_FACTORS } =
       await import("@/services/pvWattsService");
     const { getUtilityRatesByZip } = await import("@/services/utilityRateService");
 
-    // Get state from ZIP for capacity factor lookup
+    // ── Phase 1: Try the real NREL PVWatts API (1 kW reference system) ──────
+    try {
+      const pvResult = await getPVWattsEstimate({
+        systemCapacityKW: 1,
+        zipCode: zip,
+        arrayType: 1, // Fixed roof-mount (most common commercial)
+        moduleType: 0, // Standard module
+        systemLosses: 14,
+      });
+
+      // PVWatts returns capacityFactor as a percentage (e.g., 20.4 = 20.4%)
+      // Peak sun hours per day = capacityFactor% / 100 × 24 h
+      const rawPSH = (pvResult.capacityFactor / 100) * 24;
+      const peakSunHours = Math.round(rawPSH * 10) / 10;
+
+      devLog(
+        `[V7 PVWatts] ZIP=${zip} → capacityFactor=${pvResult.capacityFactor}% → PSH=${peakSunHours} h/day`
+      );
+
+      return { peakSunHours, grade: gradeFromPSH(peakSunHours) };
+    } catch (pvErr) {
+      // PVWatts unavailable or rate-limited — fall through to regional estimate
+      devWarn("[V7] PVWatts API unavailable, using regional estimate:", pvErr);
+    }
+
+    // ── Phase 2: Regional fallback via state capacity factors ─────────────────
     const utilityData = await getUtilityRatesByZip(zip);
     const stateCode = utilityData?.stateCode || "CA";
-
-    // Get capacity factor and calculate peak sun hours
     const capacityFactor = REGIONAL_CAPACITY_FACTORS[stateCode] ?? 0.17;
-    // Peak sun hours ≈ capacity factor × 24 (simplified)
-    const peakSunHours = capacityFactor * 24;
+    const peakSunHours = Math.round(capacityFactor * 24 * 10) / 10;
 
-    // Solar grade based on capacity factor
-    let grade: string;
-    if (capacityFactor >= 0.21) grade = "A";
-    else if (capacityFactor >= 0.18) grade = "A-";
-    else if (capacityFactor >= 0.16) grade = "B+";
-    else if (capacityFactor >= 0.14) grade = "B";
-    else grade = "C";
-
-    return {
-      peakSunHours: Math.round(peakSunHours * 10) / 10,
-      grade,
-    };
+    devLog(
+      `[V7 Solar] Regional fallback: state=${stateCode}, CF=${capacityFactor}, PSH=${peakSunHours}`
+    );
+    return { peakSunHours, grade: gradeFromPSH(peakSunHours) };
   } catch (e) {
     devError("[V7] Solar data fetch error:", e);
     throw e;

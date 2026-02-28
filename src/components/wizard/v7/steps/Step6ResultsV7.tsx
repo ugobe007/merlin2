@@ -31,6 +31,7 @@ import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import { useMerlinData } from "@/wizard/v7/memory";
 import TrueQuoteFinancialModal from "../shared/TrueQuoteFinancialModal";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
+import { TrueQuoteTemp } from "@/wizard/v7/trueQuoteTemp";
 
 // Extracted child components (Feb 2026 — bloat decomposition)
 import { resolveBadge, getTopContributors, formatContributorKey } from "../shared/badgeResolver";
@@ -155,6 +156,15 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
   // ProQuote™ upsell modal state
   const [showProQuoteModal, setShowProQuoteModal] = useState(false);
 
+  // ============================================================================
+  // SANITY CHECK — runs every render when pricing is complete
+  // Surfaces amber warnings / hard errors before quote numbers are shown
+  // ============================================================================
+  const sanityResult = useMemo(() => {
+    if (pricingStatus !== "ok") return null;
+    return TrueQuoteTemp.verifySanity();
+  }, [pricingStatus]);
+
   return (
     <div className="max-w-5xl mx-auto space-y-5">
       {/* ================================================================
@@ -193,6 +203,46 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
           </button>
         </div>
       </div>
+
+      {/* ================================================================
+          TRUEQUOTE™ SANITY CHECK BANNER — shown when warnings/errors exist
+          Surfaces calculation anomalies before the user sees quote numbers
+      ================================================================ */}
+      {sanityResult && !sanityResult.ok && sanityResult.errors.length > 0 && (
+        <div className="flex items-start gap-3 p-4 rounded-xl border border-red-500/30 bg-red-500/[0.06]">
+          <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-red-300 mb-1">
+              Quote calculation issue detected
+            </p>
+            <ul className="space-y-0.5">
+              {sanityResult.errors.map((err, i) => (
+                <li key={i} className="text-xs text-red-400">
+                  {err}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-red-500/70 mt-1.5">
+              Numbers shown may be inaccurate. Try adjusting your inputs or restarting the quote.
+            </p>
+          </div>
+        </div>
+      )}
+      {sanityResult && sanityResult.ok && sanityResult.warnings.length > 0 && (
+        <div className="flex items-start gap-3 p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/[0.05]">
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs font-semibold text-amber-300 mb-1">Quote review notes</p>
+            <ul className="space-y-0.5">
+              {sanityResult.warnings.map((w, i) => (
+                <li key={i} className="text-xs text-amber-400/80">
+                  {w}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       {/* ================================================================
           TRUEQUOTE™ GOLD BADGE — Always visible at top, opens financial modal
