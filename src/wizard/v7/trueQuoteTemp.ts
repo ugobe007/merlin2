@@ -45,6 +45,7 @@ export interface TrueQuoteTempData {
 
   // ── Step 3: Profile ─────────────────────────────────────────────────────
   peakLoadKW: number;
+  bessKWh: number; // Actual BESS energy capacity (written by pricing after sizing)
   durationHours: number;
   goals: string[];
 
@@ -91,6 +92,7 @@ const DEFAULTS: TrueQuoteTempData = {
   peakSunHours: 5,
   industry: "",
   peakLoadKW: 0,
+  bessKWh: 0,
   durationHours: 4,
   goals: [],
   includeSolar: false,
@@ -222,6 +224,7 @@ class TrueQuoteTempStore {
     roi25Year: number;
     npv: number;
     irr: number;
+    bessKWh?: number; // Actual BESS energy capacity from equipment breakdown
   }): void {
     this.patch(v);
   }
@@ -306,17 +309,22 @@ class TrueQuoteTempStore {
         warnings.push("Annual savings is $0 — utility rate or load data may be incorrect");
       }
 
-      // ── Cost per kWh market bounds ──────────────────────────────────────────
-      const bessKWh = d.peakLoadKW > 0 ? d.peakLoadKW * d.durationHours : 0;
-      if (bessKWh > 0 && d.grossCost > 0) {
-        const costPerKWh = d.grossCost / bessKWh;
+      // ── Cost per kWh market bounds ───────────────────────────────────────────────
+      // Use actual BESS kWh from pricing (if available), else estimate from peak load.
+      // Exclude EV install cost — EVs are add-ons, not part of BESS cost.
+      const sanityBessKWh =
+        d.bessKWh > 0 ? d.bessKWh : d.peakLoadKW > 0 ? d.peakLoadKW * d.durationHours : 0;
+      const sanityBessCost = d.grossCost - (d.evInstallCost ?? 0);
+      if (sanityBessKWh > 0 && sanityBessCost > 0) {
+        const costPerKWh = sanityBessCost / sanityBessKWh;
         if (costPerKWh < 50) {
           warnings.push(
             `System cost $${costPerKWh.toFixed(0)}/kWh is below NREL market floor ($50/kWh) — pricing may be misconfigured`
           );
-        } else if (costPerKWh > 1_500) {
+        } else if (costPerKWh > 3_000) {
+          // $3,000/kWh ceiling covers full system (BESS + solar + generator)
           warnings.push(
-            `System cost $${costPerKWh.toFixed(0)}/kWh exceeds market ceiling ($1,500/kWh) — verify system size`
+            `System cost $${costPerKWh.toFixed(0)}/kWh exceeds market ceiling ($3,000/kWh) — verify system size`
           );
         }
       }

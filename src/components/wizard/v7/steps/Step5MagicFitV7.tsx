@@ -20,7 +20,17 @@
  */
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Check, Loader2, AlertTriangle, Battery, Sun, Fuel, Clock, Shield } from "lucide-react";
+import {
+  Check,
+  Loader2,
+  AlertTriangle,
+  Battery,
+  Sun,
+  Fuel,
+  Clock,
+  Shield,
+  Zap,
+} from "lucide-react";
 import type {
   WizardState as WizardV7State,
   EnergyGoal,
@@ -512,10 +522,17 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
               <Loader2 className="w-10 h-10 text-slate-400 animate-spin mx-auto mb-4" />
               {!readyToFreeze ? (
                 <>
-                  <p className="text-slate-300 text-base font-medium">Verifying with TrueQuote™…</p>
-                  <p className="text-slate-500 text-sm mt-2">
-                    Confirming your configuration is cite-ready
+                  <p className="text-slate-300 text-base font-medium">
+                    Recalculating with your add-ons…
                   </p>
+                  <p className="text-slate-500 text-sm mt-2">
+                    Applying your solar, storage and generator selections
+                  </p>
+                  <div className="mt-4 flex gap-1.5 justify-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60 animate-bounce [animation-delay:0ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60 animate-bounce [animation-delay:150ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60 animate-bounce [animation-delay:300ms]" />
+                  </div>
                 </>
               ) : (
                 <>
@@ -771,6 +788,17 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                       </span>
                       <span className="text-white font-semibold tabular-nums">
                         {formatNumber(Math.round(genKW))} kW
+                      </span>
+                    </div>
+                  )}
+
+                  {snap.evChargerKW > 0 && (
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1.5 text-slate-400">
+                        <Zap className="w-3 h-3" /> EV Charging
+                      </span>
+                      <span className="text-white font-semibold tabular-nums">
+                        {formatNumber(Math.round(snap.evChargerKW))} kW
                       </span>
                     </div>
                   )}
