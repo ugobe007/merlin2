@@ -348,6 +348,7 @@ export type QuoteOutput = {
   bessKW?: number;
   solarKW?: number;
   generatorKW?: number;
+  evChargerKW?: number;
 
   // Equipment cost breakdown (from Layer B) — for unit economics display
   equipmentCosts?: {
