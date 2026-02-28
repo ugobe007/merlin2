@@ -393,9 +393,31 @@ export function SystemAddOnsCards({
         // Auto-expand when first selected
         setExpandedCards((prev) => new Set(prev).add(id));
       }
+
+      // ✅ CRITICAL: Write to merlinMemory synchronously inside the setState
+      // updater — this runs before any re-render and before navigation, so
+      // Step 5's snapshot always captures the latest selection instantly.
+      const evSelected = id === "ev" ? !prev.has("ev") : next.has("ev");
+      const solSelected = id === "solar" ? !prev.has("solar") : next.has("solar");
+      const genSelected = id === "generator" ? !prev.has("generator") : next.has("generator");
+      const evKw = evSelected ? (evOpts[evTier as keyof typeof evOpts]?.totalPowerKw ?? 0) : 0;
+      const solKw = solSelected ? (solarOpts[solarTier as keyof typeof solarOpts]?.sizeKw ?? 0) : 0;
+      const genKw = genSelected ? (genOpts[generatorTier as keyof typeof genOpts]?.sizeKw ?? 0) : 0;
+      merlinMemory.set("addOns", {
+        includeSolar: solSelected,
+        solarKW: solKw,
+        includeGenerator: genSelected,
+        generatorKW: genKw,
+        generatorFuelType: "natural-gas",
+        includeWind: false,
+        windKW: 0,
+        includeEV: evSelected,
+        evChargerKW: evKw,
+        updatedAt: Date.now(),
+      });
       return next;
     });
-  }, []);
+  }, [evOpts, solarOpts, genOpts, evTier, solarTier, generatorTier]);
 
   // ── Apply selections → recalculateWithAddOns ──
   const _handleApply = useCallback(async () => {
