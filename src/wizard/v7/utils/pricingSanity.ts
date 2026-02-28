@@ -1,11 +1,11 @@
 /**
  * Pricing Sanity Checker — Math Poison Detector (Feb 1, 2026)
- * 
+ *
  * DOCTRINE:
  * - Pricing failures NEVER block navigation
  * - Bad math (NaN/Infinity/negative totals) becomes visible warnings
  * - This is a firewall, not a validator
- * 
+ *
  * We don't need perfect domain knowledge — we just prevent garbage
  * from silently shipping to the user.
  */
@@ -50,12 +50,12 @@ function scanNumbers(
 
 /**
  * Defensive sanity checks that DO NOT throw.
- * 
+ *
  * Catches:
  * - NaN/Infinity anywhere in the quote
  * - Negative totals
  * - Zero where impossible (storage size, duration)
- * 
+ *
  * Returns warnings array instead of blocking.
  */
 export function sanityCheckQuote(quote: unknown): PricingSanity {
@@ -207,9 +207,9 @@ export type DisplayQuote = {
 
   // --- Primary money numbers (null = render "—") ---
   capexUSD: number | null;
-  grossCost: number | null;          // Total project cost BEFORE ITC
-  itcAmount: number | null;          // ITC credit dollar amount
-  itcRate: number | null;            // ITC rate applied (e.g. 0.30)
+  grossCost: number | null; // Total project cost BEFORE ITC
+  itcAmount: number | null; // ITC credit dollar amount
+  itcRate: number | null; // ITC rate applied (e.g. 0.30)
   annualSavingsUSD: number | null;
   roiYears: number | null;
   npv: number | null;
@@ -220,6 +220,7 @@ export type DisplayQuote = {
   // --- Optional system add-ons (0 = not included, null = unknown) ---
   solarKW: number | null;
   generatorKW: number | null;
+  evChargerKW: number | null;
 
   // --- Equipment cost breakdown for unit economics (Feb 2026) ---
   equipmentCosts: {
@@ -393,6 +394,7 @@ function emptyDisplayQuote(): DisplayQuote {
     demandChargeSavings: null,
     solarKW: null,
     generatorKW: null,
+    evChargerKW: null,
     equipmentCosts: null,
     confidence: null,
     trueQuoteValidation: null,
@@ -451,8 +453,14 @@ export function sanitizeQuoteForDisplay(quote: unknown): DisplayQuote {
   // If a value is exactly 0 and it's a "must-have" field, set to null
   // so Step 4 renders "—" instead of "$0" or "0 kW"
   const noSilentZeroFields = [
-    "capexUSD", "annualSavingsUSD", "roiYears", "npv",
-    "paybackYears", "bessKWh", "bessKW", "peakLoadKW",
+    "capexUSD",
+    "annualSavingsUSD",
+    "roiYears",
+    "npv",
+    "paybackYears",
+    "bessKWh",
+    "bessKW",
+    "peakLoadKW",
   ];
   for (const field of noSilentZeroFields) {
     if (sanitized[field] === 0) {
@@ -481,12 +489,30 @@ export function sanitizeQuoteForDisplay(quote: unknown): DisplayQuote {
 
   // ── 5. Build typed DisplayQuote — known fields only, extras in _extra ──
   const KNOWN_KEYS = new Set<string>([
-    "pricingComplete", "peakLoadKW", "baseLoadKW", "bessKWh", "bessKW",
-    "durationHours", "capexUSD", "grossCost", "itcAmount", "itcRate",
-    "annualSavingsUSD", "roiYears", "npv",
-    "irr", "paybackYears", "demandChargeSavings", "solarKW", "generatorKW",
+    "pricingComplete",
+    "peakLoadKW",
+    "baseLoadKW",
+    "bessKWh",
+    "bessKW",
+    "durationHours",
+    "capexUSD",
+    "grossCost",
+    "itcAmount",
+    "itcRate",
+    "annualSavingsUSD",
+    "roiYears",
+    "npv",
+    "irr",
+    "paybackYears",
+    "demandChargeSavings",
+    "solarKW",
+    "generatorKW",
+    "evChargerKW",
     "equipmentCosts",
-    "confidence", "trueQuoteValidation", "notes", "missingInputs",
+    "confidence",
+    "trueQuoteValidation",
+    "notes",
+    "missingInputs",
     "metadata",
     "_displayHints",
   ]);
@@ -501,23 +527,24 @@ export function sanitizeQuoteForDisplay(quote: unknown): DisplayQuote {
 
   const result: DisplayQuote = {
     pricingComplete: (sanitized.pricingComplete as boolean) ?? false,
-    peakLoadKW: sanitized.peakLoadKW as number | null ?? null,
-    baseLoadKW: sanitized.baseLoadKW as number | null ?? null,
-    bessKWh: sanitized.bessKWh as number | null ?? null,
-    bessKW: sanitized.bessKW as number | null ?? null,
-    durationHours: sanitized.durationHours as number | null ?? null,
-    capexUSD: sanitized.capexUSD as number | null ?? null,
-    grossCost: sanitized.grossCost as number | null ?? null,
-    itcAmount: sanitized.itcAmount as number | null ?? null,
-    itcRate: sanitized.itcRate as number | null ?? null,
-    annualSavingsUSD: sanitized.annualSavingsUSD as number | null ?? null,
-    roiYears: sanitized.roiYears as number | null ?? null,
-    npv: sanitized.npv as number | null ?? null,
-    irr: sanitized.irr as number | null ?? null,
-    paybackYears: sanitized.paybackYears as number | null ?? null,
-    demandChargeSavings: sanitized.demandChargeSavings as number | null ?? null,
-    solarKW: sanitized.solarKW as number | null ?? null,
-    generatorKW: sanitized.generatorKW as number | null ?? null,
+    peakLoadKW: (sanitized.peakLoadKW as number | null) ?? null,
+    baseLoadKW: (sanitized.baseLoadKW as number | null) ?? null,
+    bessKWh: (sanitized.bessKWh as number | null) ?? null,
+    bessKW: (sanitized.bessKW as number | null) ?? null,
+    durationHours: (sanitized.durationHours as number | null) ?? null,
+    capexUSD: (sanitized.capexUSD as number | null) ?? null,
+    grossCost: (sanitized.grossCost as number | null) ?? null,
+    itcAmount: (sanitized.itcAmount as number | null) ?? null,
+    itcRate: (sanitized.itcRate as number | null) ?? null,
+    annualSavingsUSD: (sanitized.annualSavingsUSD as number | null) ?? null,
+    roiYears: (sanitized.roiYears as number | null) ?? null,
+    npv: (sanitized.npv as number | null) ?? null,
+    irr: (sanitized.irr as number | null) ?? null,
+    paybackYears: (sanitized.paybackYears as number | null) ?? null,
+    demandChargeSavings: (sanitized.demandChargeSavings as number | null) ?? null,
+    solarKW: (sanitized.solarKW as number | null) ?? null,
+    generatorKW: (sanitized.generatorKW as number | null) ?? null,
+    evChargerKW: (sanitized.evChargerKW as number | null) ?? null,
     equipmentCosts: sanitized.equipmentCosts
       ? (() => {
           const ec = sanitized.equipmentCosts as Record<string, unknown>;
@@ -543,10 +570,12 @@ export function sanitizeQuoteForDisplay(quote: unknown): DisplayQuote {
       : null,
     confidence: (sanitized.confidence as DisplayConfidence) ?? null,
     trueQuoteValidation: (sanitized.trueQuoteValidation as DisplayTrueQuoteValidation) ?? null,
-    notes: Array.isArray(sanitized.notes) ? sanitized.notes as string[] : [],
-    missingInputs: Array.isArray(sanitized.missingInputs) ? sanitized.missingInputs as string[] : [],
+    notes: Array.isArray(sanitized.notes) ? (sanitized.notes as string[]) : [],
+    missingInputs: Array.isArray(sanitized.missingInputs)
+      ? (sanitized.missingInputs as string[])
+      : [],
     // Rich metadata — passed through without sanitization (already typed upstream)
-    metadata: sanitized.metadata as DisplayQuote["metadata"] ?? undefined,
+    metadata: (sanitized.metadata as DisplayQuote["metadata"]) ?? undefined,
     _displayHints: displayHints,
     _extra: Object.keys(extra).length > 0 ? extra : undefined,
   };

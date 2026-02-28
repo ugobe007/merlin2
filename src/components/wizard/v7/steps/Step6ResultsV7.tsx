@@ -528,6 +528,20 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                 </div>
               )}
 
+              {(quote.evChargerKW as number) > 0 && (
+                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                  <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                      EV Charging
+                    </span>
+                    <span className="text-xs font-bold text-white tabular-nums">
+                      {fmtNum(Math.round(quote.evChargerKW as number))} kW
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {quote.peakLoadKW && (
                 <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                   <Zap className="w-3.5 h-3.5 text-emerald-400" />
@@ -575,10 +589,15 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                 Number(quote.grossCost ?? quote.capexUSD) > 0 && (
                   <div className="py-2 flex items-center justify-between">
                     <span className="text-[11px] text-slate-500 font-medium">
-                      Federal ITC ({quote.itcRate != null ? `${Math.round(Number(quote.itcRate) * 100)}%` : "30%"})
+                      Federal ITC (
+                      {quote.itcRate != null
+                        ? `${Math.round(Number(quote.itcRate) * 100)}%`
+                        : "30%"}
+                      )
                     </span>
                     <span className="text-sm font-semibold text-[#3ECF8E] tabular-nums">
-                      −{fmtUSD(
+                      −
+                      {fmtUSD(
                         quote.itcAmount != null
                           ? Number(quote.itcAmount)
                           : Number(quote.grossCost ?? quote.capexUSD ?? 0) * 0.3
@@ -593,8 +612,10 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                   <span className="text-[11px] font-bold text-[#3ECF8E] uppercase tracking-wider">
                     Net Cost
                   </span>
-                  <span className="text-2xl font-black text-white tabular-nums tracking-tight"
-                    style={{ textShadow: "0 0 20px rgba(255,255,255,0.12)" }}>
+                  <span
+                    className="text-2xl font-black text-white tabular-nums tracking-tight"
+                    style={{ textShadow: "0 0 20px rgba(255,255,255,0.12)" }}
+                  >
                     {fmtUSD(quote.capexUSD as number | null)}
                   </span>
                 </div>
@@ -632,7 +653,9 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               {quote.npv != null && (
                 <div className="py-2 flex items-center justify-between">
                   <span className="text-[11px] text-slate-500 font-medium">NPV (25yr)</span>
-                  <span className={`text-sm font-semibold tabular-nums ${Number(quote.npv) >= 0 ? "text-[#3ECF8E]" : "text-red-400"}`}>
+                  <span
+                    className={`text-sm font-semibold tabular-nums ${Number(quote.npv) >= 0 ? "text-[#3ECF8E]" : "text-red-400"}`}
+                  >
                     {fmtUSD(quote.npv as number | null)}
                   </span>
                 </div>
@@ -641,11 +664,13 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               {quote.irr != null && (
                 <div className="py-2 flex items-center justify-between">
                   <span className="text-[11px] text-slate-500 font-medium">IRR</span>
-                  <span className={`text-sm font-semibold tabular-nums ${(() => {
-                    const raw = Number(quote.irr);
-                    const pct = raw > 1 ? raw : raw * 100;
-                    return pct >= 8 ? "text-[#3ECF8E]" : "text-amber-400";
-                  })()}`}>
+                  <span
+                    className={`text-sm font-semibold tabular-nums ${(() => {
+                      const raw = Number(quote.irr);
+                      const pct = raw > 1 ? raw : raw * 100;
+                      return pct >= 8 ? "text-[#3ECF8E]" : "text-amber-400";
+                    })()}`}
+                  >
                     {(() => {
                       const raw = Number(quote.irr);
                       if (!Number.isFinite(raw)) return "—";

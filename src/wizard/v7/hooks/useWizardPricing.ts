@@ -375,6 +375,11 @@ export function useWizardPricing(params: UseWizardPricingParams): UseWizardPrici
           energyKWhPerDay: loadProfile.energyKWhPerDay,
           storageToPeakRatio: sizingHints.storageToPeakRatio,
           durationHours: sizingHints.durationHours,
+          // EV charger — sourced directly from args.addOns (SSOT calculateQuote doesn't model EV as add-on)
+          evChargerKW:
+            args.addOns?.includeEV && (args.addOns?.evChargerKW ?? 0) > 0
+              ? args.addOns.evChargerKW
+              : undefined,
 
           ...(pricingResult?.ok && pricingResult.data
             ? {

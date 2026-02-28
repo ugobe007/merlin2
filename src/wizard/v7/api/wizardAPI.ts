@@ -8,6 +8,7 @@
  */
 
 import { devLog, devWarn, devError } from "@/wizard/v7/debug/devLog";
+import { V7_USE_CURATED_STEP3 } from "@/wizard/v7/featureFlags";
 import type {
   LocationCard,
   BusinessCard,
@@ -317,55 +318,58 @@ export async function loadStep3Template(
 
   // ============================================================
   // Phase 1: Try remote API (preferred — freshest data)
+  // Skipped when V7_USE_CURATED_STEP3=true (default) — all templates are
+  // bundled locally. The remote endpoint returns 410 Gone.
   // ============================================================
   let remoteTemplate: Step3Template | null = null;
   let _apiError: unknown = null;
 
-  try {
-    const { apiCall, API_ENDPOINTS } = await import("@/config/api");
+  if (!V7_USE_CURATED_STEP3)
+    try {
+      const { apiCall, API_ENDPOINTS } = await import("@/config/api");
 
-    const response = await apiCall<{
-      ok: boolean;
-      template?: Step3Template;
-      reason?: string;
-      notes?: string[];
-      requestedIndustry?: string;
-      availableIndustries?: string[];
-    }>(API_ENDPOINTS.TEMPLATE_LOAD, {
-      method: "POST",
-      body: JSON.stringify({ industry: effective }),
-      signal,
-    });
+      const response = await apiCall<{
+        ok: boolean;
+        template?: Step3Template;
+        reason?: string;
+        notes?: string[];
+        requestedIndustry?: string;
+        availableIndustries?: string[];
+      }>(API_ENDPOINTS.TEMPLATE_LOAD, {
+        method: "POST",
+        body: JSON.stringify({ industry: effective }),
+        signal,
+      });
 
-    if (response.ok && response.template) {
-      remoteTemplate = response.template;
-    } else {
-      _apiError = {
-        code: "API",
-        message: response.notes?.join(" ") || `Template not found for ${selected}`,
-        reason: response.reason,
-      };
+      if (response.ok && response.template) {
+        remoteTemplate = response.template;
+      } else {
+        _apiError = {
+          code: "API",
+          message: response.notes?.join(" ") || `Template not found for ${selected}`,
+          reason: response.reason,
+        };
 
-      if (import.meta.env.DEV) {
-        devWarn(
-          `[V7 SSOT] Template API returned {ok:false}:`,
-          `reason=${response.reason}`,
-          `industry=${response.requestedIndustry ?? effective}`,
-          `available=[${response.availableIndustries?.join(", ") ?? "?"}]`
-        );
+        if (import.meta.env.DEV) {
+          devWarn(
+            `[V7 SSOT] Template API returned {ok:false}:`,
+            `reason=${response.reason}`,
+            `industry=${response.requestedIndustry ?? effective}`,
+            `available=[${response.availableIndustries?.join(", ") ?? "?"}]`
+          );
+        }
       }
-    }
-  } catch (err: unknown) {
-    // AbortError should propagate immediately — user navigated away
-    if (signal?.aborted || (err instanceof DOMException && err.name === "AbortError")) {
-      throw err;
-    }
-    _apiError = err;
-    devWarn(
-      `[V7 SSOT] Template API failed (will try local fallback):`,
-      err instanceof Error ? err.message : err
-    );
-  }
+    } catch (err: unknown) {
+      // AbortError should propagate immediately — user navigated away
+      if (signal?.aborted || (err instanceof DOMException && err.name === "AbortError")) {
+        throw err;
+      }
+      _apiError = err;
+      devWarn(
+        `[V7 SSOT] Template API failed (will try local fallback):`,
+        err instanceof Error ? err.message : err
+      );
+    } // end if (!V7_USE_CURATED_STEP3)
 
   // ============================================================
   // Phase 2: Resolve template (remote OR local fallback OR generic)
