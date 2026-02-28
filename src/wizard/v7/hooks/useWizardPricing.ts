@@ -29,7 +29,7 @@
  * - wizardAPI (for template loading)
  */
 
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { runContractQuote } from "./useWizardCore";
 import {
   runPricingQuote,
@@ -89,10 +89,12 @@ export interface UseWizardPricingResult {
     locationIntel?: LocationIntel;
     addOns?: SystemAddOns;
   }) => Promise<
-    { ok: true; freeze: PricingFreeze; quote: QuoteOutput; warnings: string[] } | { ok: false; error: string }
+    | { ok: true; freeze: PricingFreeze; quote: QuoteOutput; warnings: string[] }
+    | { ok: false; error: string }
   >;
   retryPricing: () => Promise<
-    { ok: true; freeze: PricingFreeze; quote: QuoteOutput; warnings: string[] } | { ok: false; error: string }
+    | { ok: true; freeze: PricingFreeze; quote: QuoteOutput; warnings: string[] }
+    | { ok: false; error: string }
   >;
   retryTemplate: () => Promise<void>;
 }
@@ -263,8 +265,14 @@ export function useWizardPricing(params: UseWizardPricingParams): UseWizardPrici
           PRICING_TIMEOUT_MS / 2
         );
 
-        const { freeze, quote: baseQuote, sessionId, loadProfile, sizingHints, inputsUsed } =
-          contractResult;
+        const {
+          freeze,
+          quote: baseQuote,
+          sessionId,
+          loadProfile,
+          sizingHints,
+          inputsUsed,
+        } = contractResult;
 
         // Persist load profile immediately (even if Layer B fails)
         merlinMemory.patch("profile", {
