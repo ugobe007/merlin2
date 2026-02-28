@@ -546,7 +546,7 @@ export function SystemAddOnsCards({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: solarOpts.custom ? "1fr 1fr 1fr 1fr" : "1fr 1fr 1fr",
+                gridTemplateColumns: "1fr 1fr 1fr",
                 gap: 10,
               }}
             >
@@ -583,42 +583,44 @@ export function SystemAddOnsCards({
                   ]}
                 />
               )}
-              {(["starter", "recommended", "maximum"] as const).map((k) => {
-                const o = solarOpts[k];
-                return (
-                  <TierCard
-                    key={k}
-                    tier={o}
-                    isSelected={solarTier === k && selectedOptions.has("solar")}
-                    onClick={() => {
-                      setSolarTier(k);
-                      if (!selectedOptions.has("solar")) toggleOption("solar");
-                    }}
-                    accent="amber"
-                    metrics={[
-                      { label: "Coverage", value: `${Math.round(o.coveragePercent * 100)}%` },
-                      {
-                        label: "Production",
-                        value: `${o.annualProductionKwh.toLocaleString()} kWh`,
-                      },
-                      {
-                        label: "Savings",
-                        value: fmtUSD(o.annualSavings),
-                        highlight: true,
-                        color: "emerald",
-                      },
-                      { label: "Payback", value: `${o.paybackYears} years` },
-                      { label: "Cost", value: fmtUSD(o.installCost) },
-                      {
-                        label: "After ITC",
-                        value: fmtUSD(o.netCostAfterITC),
-                        highlight: true,
-                        color: "amber",
-                      },
-                    ]}
-                  />
-                );
-              })}
+              {(["starter", "recommended", "maximum"] as const)
+                .filter((k) => !(k === "starter" && solarOpts.custom))
+                .map((k) => {
+                  const o = solarOpts[k];
+                  return (
+                    <TierCard
+                      key={k}
+                      tier={o}
+                      isSelected={solarTier === k && selectedOptions.has("solar")}
+                      onClick={() => {
+                        setSolarTier(k);
+                        if (!selectedOptions.has("solar")) toggleOption("solar");
+                      }}
+                      accent="amber"
+                      metrics={[
+                        { label: "Coverage", value: `${Math.round(o.coveragePercent * 100)}%` },
+                        {
+                          label: "Production",
+                          value: `${o.annualProductionKwh.toLocaleString()} kWh`,
+                        },
+                        {
+                          label: "Savings",
+                          value: fmtUSD(o.annualSavings),
+                          highlight: true,
+                          color: "emerald",
+                        },
+                        { label: "Payback", value: `${o.paybackYears} years` },
+                        { label: "Cost", value: fmtUSD(o.installCost) },
+                        {
+                          label: "After ITC",
+                          value: fmtUSD(o.netCostAfterITC),
+                          highlight: true,
+                          color: "amber",
+                        },
+                      ]}
+                    />
+                  );
+                })}
             </div>
           </div>
         </OptionCard>

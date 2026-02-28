@@ -598,6 +598,11 @@ export function useWizardPricing(params: UseWizardPricingParams): UseWizardPrici
             roi25Year: fin?.roi25Year ?? 0,
             npv: fin?.npv ?? 0,
             irr: fin?.irr ?? 0,
+            bessKWh: pricingResult.data.breakdown?.batteries
+              ? pricingResult.data.breakdown.batteries.unitEnergyMWh *
+                pricingResult.data.breakdown.batteries.quantity *
+                1000
+              : undefined,
           });
 
           const session = merlinMemory.get("session");

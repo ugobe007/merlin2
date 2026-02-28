@@ -194,6 +194,15 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
           </button>
+          {actions.retryPricing && (
+            <button
+              onClick={() => void actions.retryPricing?.()}
+              className="h-9 px-3.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-300 hover:bg-white/[0.06] font-medium text-sm flex items-center gap-1.5 transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Refresh Quote
+            </button>
+          )}
           <button
             onClick={actions.resetSession}
             className="h-9 px-3.5 rounded-lg border border-red-500/20 bg-red-500/[0.08] text-red-400 hover:bg-red-500/[0.12] font-medium text-sm flex items-center gap-1.5 transition-colors"
@@ -608,44 +617,47 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
             </div>
           </div>
 
-          {/* Financial — 2-column grid layout */}
+          {/* Financial — tighter grouped layout */}
           <div className="p-4 bg-gradient-to-br from-slate-800/30 to-slate-900/30">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <div className="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
                 </div>
                 <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
                   Financials
                 </span>
               </div>
               <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/20">
-                <Shield className="w-3.5 h-3.5 text-amber-400" />
+                <Shield className="w-3 h-3 text-amber-400" />
                 <span className="text-amber-400 font-bold text-[10px]">TrueQuote™</span>
               </div>
             </div>
 
-            {/* ── Inline row list — Supabase-style, no padded cards ── */}
-            <div className="divide-y divide-white/[0.04] -mx-4 px-4">
-              {/* Cost group */}
-              <div className="py-2 flex items-center justify-between">
-                <span className="text-[11px] text-slate-500 font-medium">Total Investment</span>
+            {/* ── INVESTMENT group ── */}
+            <div className="mb-1.5">
+              <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+                Investment
+              </span>
+            </div>
+            <div className="space-y-0">
+              <div className="flex items-center justify-between py-1.5">
+                <span className="text-xs text-slate-400">Total Investment</span>
                 <span className="text-sm font-semibold text-white tabular-nums">
                   {fmtUSD((quote.grossCost ?? quote.capexUSD) as number | null)}
                 </span>
               </div>
-
               {(quote.grossCost ?? quote.capexUSD) != null &&
                 Number(quote.grossCost ?? quote.capexUSD) > 0 && (
-                  <div className="py-2 flex items-center justify-between">
-                    <span className="text-[11px] text-slate-500 font-medium">
+                  <div className="flex items-center justify-between py-1.5">
+                    <span className="text-xs text-slate-400">
                       Federal ITC (
                       {quote.itcRate != null
                         ? `${Math.round(Number(quote.itcRate) * 100)}%`
                         : "30%"}
                       )
                     </span>
-                    <span className="text-sm font-semibold text-[#3ECF8E] tabular-nums">
+                    <span className="text-sm font-semibold text-emerald-400 tabular-nums">
                       −
                       {fmtUSD(
                         quote.itcAmount != null
@@ -655,96 +667,96 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                     </span>
                   </div>
                 )}
+            </div>
 
-              {/* NET COST — hero row */}
-              {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
-                <div className="py-3 flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-[#3ECF8E] uppercase tracking-wider">
-                    Net Cost
-                  </span>
-                  <span
-                    className="text-2xl font-black text-white tabular-nums tracking-tight"
-                    style={{ textShadow: "0 0 20px rgba(255,255,255,0.12)" }}
-                  >
-                    {fmtUSD(quote.capexUSD as number | null)}
-                  </span>
-                </div>
-              )}
+            {/* NET COST — hero row with visible separator */}
+            {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
+              <div className="flex items-baseline justify-between py-2 border-t border-b border-white/[0.10] my-1.5">
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+                  Net Cost
+                </span>
+                <span className="text-xl font-black text-white tabular-nums tracking-tight">
+                  {fmtUSD(quote.capexUSD as number | null)}
+                </span>
+              </div>
+            )}
 
-              {/* Savings group */}
+            {/* ── RETURNS group ── */}
+            <div className="mt-2.5 mb-1.5">
+              <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+                Returns
+              </span>
+            </div>
+            <div className="space-y-0">
               {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
-                <div className="py-2 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-medium">Annual Savings</span>
-                  <span className="text-sm font-semibold text-[#3ECF8E] tabular-nums">
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-xs text-slate-400">Annual Savings</span>
+                  <span className="text-sm font-semibold text-emerald-400 tabular-nums">
                     {fmtUSD(quote.annualSavingsUSD as number | null)}
                   </span>
                 </div>
               )}
 
-              {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
-                <div className="py-2 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-medium">Monthly Savings</span>
-                  <span className="text-sm font-semibold text-slate-300 tabular-nums">
-                    {fmtUSD(Number(quote.annualSavingsUSD) / 12)}
-                  </span>
+              {/* Payback + IRR — side-by-side stat pills */}
+              <div className="grid grid-cols-2 gap-2 py-1.5">
+                <div className="bg-slate-800/50 rounded-lg px-2.5 py-2 text-center border border-white/[0.05]">
+                  <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider mb-0.5">
+                    Payback
+                  </div>
+                  <div className="text-sm font-bold text-white tabular-nums">
+                    {quote.roiYears != null && Number(quote.roiYears) > 0
+                      ? `${parseFloat(Number(quote.roiYears).toFixed(1))} yr`
+                      : "—"}
+                  </div>
                 </div>
-              )}
-
-              {/* Returns group */}
-              <div className="py-2 flex items-center justify-between">
-                <span className="text-[11px] text-slate-500 font-medium">Simple Payback</span>
-                <span className="text-sm font-semibold text-white tabular-nums">
-                  {quote.roiYears != null && Number(quote.roiYears) > 0
-                    ? `${parseFloat(Number(quote.roiYears).toFixed(1))} years`
-                    : "—"}
-                </span>
-              </div>
-
-              {quote.npv != null && (
-                <div className="py-2 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-medium">NPV (25yr)</span>
-                  <span
-                    className={`text-sm font-semibold tabular-nums ${Number(quote.npv) >= 0 ? "text-[#3ECF8E]" : "text-red-400"}`}
-                  >
-                    {fmtUSD(quote.npv as number | null)}
-                  </span>
-                </div>
-              )}
-
-              {quote.irr != null && (
-                <div className="py-2 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-medium">IRR</span>
-                  <span
-                    className={`text-sm font-semibold tabular-nums ${(() => {
+                <div className="bg-slate-800/50 rounded-lg px-2.5 py-2 text-center border border-white/[0.05]">
+                  <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider mb-0.5">
+                    IRR
+                  </div>
+                  <div
+                    className={`text-sm font-bold tabular-nums ${(() => {
+                      if (quote.irr == null) return "text-slate-400";
                       const raw = Number(quote.irr);
                       const pct = raw > 1 ? raw : raw * 100;
-                      return pct >= 8 ? "text-[#3ECF8E]" : "text-amber-400";
+                      return pct >= 8 ? "text-emerald-400" : "text-amber-400";
                     })()}`}
                   >
                     {(() => {
+                      if (quote.irr == null) return "—";
                       const raw = Number(quote.irr);
                       if (!Number.isFinite(raw)) return "—";
                       const pct = raw > 1 ? raw : raw * 100;
                       if (pct > 200) return ">200%";
                       return `${pct.toFixed(1)}%`;
                     })()}
+                  </div>
+                </div>
+              </div>
+
+              {quote.npv != null && (
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-xs text-slate-400">NPV (25yr)</span>
+                  <span
+                    className={`text-sm font-semibold tabular-nums ${Number(quote.npv) >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                  >
+                    {fmtUSD(quote.npv as number | null)}
                   </span>
                 </div>
               )}
 
               {quote.paybackYears != null && Number(quote.paybackYears) > 0 && (
-                <div className="py-2 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-medium">Discounted Payback</span>
-                  <span className="text-sm font-semibold text-white tabular-nums">
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-xs text-slate-400">Discounted Payback</span>
+                  <span className="text-sm font-semibold text-slate-300 tabular-nums">
                     {parseFloat(Number(quote.paybackYears).toFixed(1))} years
                   </span>
                 </div>
               )}
 
               {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
-                <div className="py-2 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-medium">10yr Cumulative</span>
-                  <span className="text-sm font-semibold text-[#3ECF8E] tabular-nums">
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-xs text-slate-400">10yr Cumulative</span>
+                  <span className="text-sm font-semibold text-emerald-400 tabular-nums">
                     {fmtUSD(Number(quote.annualSavingsUSD) * 10)}
                   </span>
                 </div>

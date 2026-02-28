@@ -876,17 +876,17 @@ async function logMarginAudit(
   try {
     // margin_audit_log column names (from DB schema, Feb 2026)
     await (supabase as any).from("margin_audit_log").insert({
-      quote_id: snapshotId,
+      // quote_id intentionally omitted — snapshotId is a deterministic hash, not a UUID.
+      // The column is nullable; it's only set when a quote is formally saved.
       total_base_cost: result.baseCostTotal,
       total_sell_price: result.sellPriceTotal,
       total_margin_dollars: result.totalMarginDollars,
       blended_margin_percent: result.blendedMarginPercent,
       margin_band_id: result.marginBandId,
       policy_version: result.policyVersion,
-      pricing_as_of: new Date().toISOString(),
+      pricing_as_of: new Date().toISOString().slice(0, 10), // DATE column (YYYY-MM-DD)
       line_items: { industry, count: result.lineItems.length },
       clamp_events: result.clampEvents,
-      created_at: new Date().toISOString(),
     });
   } catch (err) {
     // Non-blocking — log failure but don't break the quote
