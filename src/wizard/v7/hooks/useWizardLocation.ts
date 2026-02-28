@@ -18,6 +18,7 @@
 import { useCallback } from "react";
 import { merlinMemory } from "@/wizard/v7/memory";
 import { devLog, devWarn } from "@/wizard/v7/debug/devLog";
+import { TrueQuoteTemp } from "@/wizard/v7/trueQuoteTemp";
 
 import type { LocationCard, LocationIntel, BusinessCard, WizardState } from "./useWizardV7";
 
@@ -433,6 +434,24 @@ export function useWizardLocation(params: UseWizardLocationParams): WizardLocati
           demandCharge: (intel as Record<string, unknown>).demandCharge as number | undefined,
           peakSunHours: (intel as Record<string, unknown>).peakSunHours as number | undefined,
         });
+
+        // ✅ TRUEQUOTE CANONICAL WRITE (Step 1): Wire real location intel into TrueQuoteTemp
+        // This is the SSOT write for Steps 5/6 pricing — ensures real rates are used,
+        // not the defaults (0.12 $/kWh, 15 $/kW, 5 PSH).
+        TrueQuoteTemp.writeLocation({
+          state: location.state ?? "",
+          zip: location.postalCode || normalizedZip || "",
+          city: location.city ?? "",
+          utilityRate: (intel.utilityRate as number | undefined) ?? 0.12,
+          demandCharge: (intel.demandCharge as number | undefined) ?? 15,
+          peakSunHours: (intel.peakSunHours as number | undefined) ?? 5,
+        });
+        devLog(
+          `[TrueQuoteTemp] writeLocation: state=${location.state}, zip=${location.postalCode || normalizedZip}, ` +
+            `utilityRate=${intel.utilityRate ?? 0.12}, demandCharge=${intel.demandCharge ?? 15}, ` +
+            `peakSunHours=${intel.peakSunHours ?? 5}`
+        );
+
         if (newBusinessCard) {
           merlinMemory.set("business", {
             name: newBusinessCard.name,
