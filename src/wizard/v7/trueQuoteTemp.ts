@@ -58,6 +58,8 @@ export interface TrueQuoteTempData {
   windKW: number;
   includeEV: boolean;
   evChargerKW: number;
+  evInstallCost: number;
+  evMonthlyRevenue: number;
 
   // ── Pricing output ──────────────────────────────────────────────────────
   pricingComplete: boolean;
@@ -100,6 +102,8 @@ const DEFAULTS: TrueQuoteTempData = {
   windKW: 0,
   includeEV: false,
   evChargerKW: 0,
+  evInstallCost: 0,
+  evMonthlyRevenue: 0,
   pricingComplete: false,
   grossCost: 0,
   taxCredit: 0,
@@ -200,6 +204,8 @@ class TrueQuoteTempStore {
     windKW: number;
     includeEV: boolean;
     evChargerKW: number;
+    evInstallCost?: number;
+    evMonthlyRevenue?: number;
   }): void {
     this.patch(v);
   }
