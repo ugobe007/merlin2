@@ -550,7 +550,7 @@ export default function AdvancedQuoteBuilder({
                     <img src={merlinImage} alt="Merlin" className="w-8 h-8" />
                     <div>
                       <h1 className="text-xl font-bold text-white">System Configuration</h1>
-                      <p className="text-xs text-slate-500">Pro Mode • Direct Input</p>
+                      <p className="text-xs text-slate-500">ProQuote™ • Direct Input</p>
                     </div>
                   </div>
                 </div>
@@ -700,9 +700,6 @@ export default function AdvancedQuoteBuilder({
                   <div className="flex items-center gap-2.5 mb-1">
                     <span className="text-xl font-bold text-blue-400 tracking-tight">
                       ProQuote™
-                    </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400/70 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
-                      Pro Mode
                     </span>
                   </div>
                   <p className="text-sm leading-snug" style={{ color: "rgba(255,255,255,0.5)" }}>
