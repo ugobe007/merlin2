@@ -39,6 +39,7 @@ import {
 } from "@/wizard/v7/pricing/pricingBridge";
 import { sanityCheckQuote, type PricingSanity } from "@/wizard/v7/utils/pricingSanity";
 import { merlinMemory } from "@/wizard/v7/memory";
+import { TrueQuoteTemp } from "@/wizard/v7/trueQuoteTemp";
 import { wizardAPI as api } from "@/wizard/v7/api/wizardAPI";
 import { devLog, devWarn, devError } from "@/wizard/v7/debug/devLog";
 
@@ -560,6 +561,22 @@ export function useWizardPricing(params: UseWizardPricingParams): UseWizardPrici
             itcAmount: pd.itcAmount,
             pricingSnapshotId: pd.pricingSnapshotId,
             calculatedAt: Date.now(),
+          });
+
+          // ✅ CANONICAL WRITE: TrueQuoteTemp is the single source of truth for
+          // pricing results. Step 5 and Step 6 read from here, not merlinMemory.
+          TrueQuoteTemp.writePricing({
+            pricingComplete: true,
+            grossCost: pd.grossCost,
+            taxCredit: pd.itcAmount,
+            netCost: pd.capexUSD,
+            annualSavings: pd.annualSavingsUSD,
+            paybackYears: pd.roiYears,
+            roi5Year: fin?.roi10Year ? Math.round(fin.roi10Year * 0.42 * 100) / 100 : 0,
+            roi10Year: fin?.roi10Year ?? 0,
+            roi25Year: fin?.roi25Year ?? 0,
+            npv: fin?.npv ?? 0,
+            irr: fin?.irr ?? 0,
           });
 
           const session = merlinMemory.get("session");

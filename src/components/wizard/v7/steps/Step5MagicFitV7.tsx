@@ -35,6 +35,7 @@ import { devLog, devError } from "@/wizard/v7/debug/devLog";
 import { calculateQuote } from "@/services/unifiedQuoteCalculator";
 import { applyMarginToQuote, getSizingDefaults } from "@/wizard/v7/pricing/pricingBridge";
 import { useMerlinData } from "@/wizard/v7/memory/useMerlinData";
+import { useTrueQuoteTemp } from "@/wizard/v7/hooks/useTrueQuoteTemp";
 import { getFacilityConstraints } from "@/services/useCasePowerCalculations";
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
 import type { TierKey, TierQuote, QuoteWithMargin } from "./step5Utils";
@@ -64,6 +65,12 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
+
+  // ✅ TRUEQUOTE TEMP — canonical source for add-ons (written synchronously by toggleOption).
+  // Because TrueQuoteTemp is written in the event handler BEFORE navigation fires,
+  // its values are always current when Step 5 mounts — no snapshot acrobatics needed
+  // for the add-ons layer.
+  const tqt = useTrueQuoteTemp();
 
   // ✅ MERLIN MEMORY: Read cross-step data from Memory first, fall back to state
   const data = useMerlinData(state);
@@ -118,28 +125,47 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
     const industryDefaults = getSizingDefaults(data.industry || "commercial");
     const ssotDuration = data.durationHours > 0 ? data.durationHours : industryDefaults.hours;
 
+    // ✅ CANONICAL ADD-ONS: Read from TrueQuoteTemp (written synchronously by toggleOption).
+    // This replaces the previous pattern of reading data.addOns (from merlinMemory via
+    // useMerlinData) which was subject to React effect-ordering races.
+    const tqtAddOns = {
+      includeSolar: tqt.includeSolar,
+      solarKW: tqt.solarKW,
+      includeGenerator: tqt.includeGenerator,
+      generatorKW: tqt.generatorKW,
+      generatorFuelType: tqt.generatorFuelType,
+      includeWind: tqt.includeWind,
+      windKW: tqt.windKW,
+      includeEV: tqt.includeEV,
+      evChargerKW: tqt.evChargerKW,
+    };
+    // Fall back to merlinMemory/state if TrueQuoteTemp hasn't been written yet
+    // (e.g. user navigated directly to Step 5 without going through Step 4).
+    const addOnsSrc =
+      tqt.updatedAt > 0 ? tqtAddOns : data.addOns;
+
     snapshotRef.current = {
       frozen: true,
       rawBESSKW,
       ssotDuration,
-      solarKW: data.addOns.includeSolar
-        ? data.addOns.solarKW > 0
-          ? data.addOns.solarKW
+      solarKW: addOnsSrc.includeSolar
+        ? addOnsSrc.solarKW > 0
+          ? addOnsSrc.solarKW
           : rawBESSKW * 0.5
         : 0,
-      generatorKW: data.addOns.includeGenerator
-        ? data.addOns.generatorKW > 0
-          ? data.addOns.generatorKW
+      generatorKW: addOnsSrc.includeGenerator
+        ? addOnsSrc.generatorKW > 0
+          ? addOnsSrc.generatorKW
           : rawBESSKW * 0.75
         : 0,
-      windKW: data.addOns.includeWind
-        ? data.addOns.windKW > 0
-          ? data.addOns.windKW
+      windKW: addOnsSrc.includeWind
+        ? addOnsSrc.windKW > 0
+          ? addOnsSrc.windKW
           : rawBESSKW * 0.3
         : 0,
-      evChargerKW: data.addOns.includeEV
-        ? data.addOns.evChargerKW > 0
-          ? data.addOns.evChargerKW
+      evChargerKW: addOnsSrc.includeEV
+        ? addOnsSrc.evChargerKW > 0
+          ? addOnsSrc.evChargerKW
           : 0
         : 0,
       location: data.location.state || "CA",
@@ -147,7 +173,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       demandCharge: data.demandCharge || 0,
       industry: data.industry || "commercial",
       goals: data.goals as EnergyGoal[],
-      addOns: { ...data.addOns },
+      addOns: { ...addOnsSrc },
       roofSolarKW:
         Number(
           (state as Record<string, unknown>)?.step3Answers &&
