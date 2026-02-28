@@ -396,6 +396,12 @@ export function SystemAddOnsCards({
   const _maxEvRevenue = evOpts.premium.monthlyRevenue * 12;
 
   // ── Toggle handler ──
+  // IMPORTANT: No side effects (TrueQuoteTemp / merlinMemory) inside the
+  // setSelectedOptions updater — React 18 concurrent mode can call updaters
+  // multiple times, and calling merlinMemory.set inside an updater triggers
+  // useSyncExternalStore mid-render, causing React to discard & retry the
+  // render. This produced the "click registers then forgets" double-click bug.
+  // The auto-apply useEffect below handles all writes after state settles.
   const toggleOption = useCallback(
     (id: string) => {
       setSelectedOptions((prev) => {
@@ -405,59 +411,12 @@ export function SystemAddOnsCards({
         } else {
           next.add(id);
           // Auto-expand when first selected
-          setExpandedCards((prev) => new Set(prev).add(id));
+          setExpandedCards((p) => new Set(p).add(id));
         }
-
-        // ✅ CANONICAL EVENT HANDLER WRITE — TrueQuoteTemp is the SSOT for add-ons.
-        // This fires synchronously on user click (inside setState updater), so
-        // Step 5 reads the correct values immediately at mount — no race conditions,
-        // no snapshot freeze, no flush-on-unmount acrobatics needed.
-        const evSelected = id === "ev" ? !prev.has("ev") : next.has("ev");
-        const solSelected = id === "solar" ? !prev.has("solar") : next.has("solar");
-        const genSelected = id === "generator" ? !prev.has("generator") : next.has("generator");
-        const evKw = evSelected ? (evOpts[evTier as keyof typeof evOpts]?.totalPowerKw ?? 0) : 0;
-        const evInstCost = evSelected
-          ? (evOpts[evTier as keyof typeof evOpts]?.installCost ?? 0)
-          : 0;
-        const evMonRevenue = evSelected
-          ? (evOpts[evTier as keyof typeof evOpts]?.monthlyRevenue ?? 0)
-          : 0;
-        const solKw = solSelected
-          ? (solarOpts[solarTier as keyof typeof solarOpts]?.sizeKw ?? 0)
-          : 0;
-        const genKw = genSelected
-          ? (genOpts[generatorTier as keyof typeof genOpts]?.sizeKw ?? 0)
-          : 0;
-        TrueQuoteTemp.writeAddOns({
-          includeSolar: solSelected,
-          solarKW: solKw,
-          includeGenerator: genSelected,
-          generatorKW: genKw,
-          generatorFuelType: "natural-gas",
-          includeWind: false,
-          windKW: 0,
-          includeEV: evSelected,
-          evChargerKW: evKw,
-          evInstallCost: evInstCost,
-          evMonthlyRevenue: evMonRevenue,
-        });
-        // Keep merlinMemory in sync for legacy consumers
-        merlinMemory.set("addOns", {
-          includeSolar: solSelected,
-          solarKW: solKw,
-          includeGenerator: genSelected,
-          generatorKW: genKw,
-          generatorFuelType: "natural-gas",
-          includeWind: false,
-          windKW: 0,
-          includeEV: evSelected,
-          evChargerKW: evKw,
-          updatedAt: Date.now(),
-        });
         return next;
       });
     },
-    [evOpts, solarOpts, genOpts, evTier, solarTier, generatorTier]
+    [] // no deps needed — pure set toggle
   );
 
   // ── Apply selections → recalculateWithAddOns ──
@@ -557,7 +516,10 @@ export function SystemAddOnsCards({
                   isSelected={solarTier === "custom" && selectedOptions.has("solar")}
                   onClick={() => {
                     setSolarTier("custom");
-                    if (!selectedOptions.has("solar")) toggleOption("solar");
+                    if (!selectedOptions.has("solar")) {
+                      setSelectedOptions((prev) => new Set(prev).add("solar"));
+                      setExpandedCards((prev) => new Set(prev).add("solar"));
+                    }
                   }}
                   accent="amber"
                   metrics={[
@@ -594,7 +556,10 @@ export function SystemAddOnsCards({
                       isSelected={solarTier === k && selectedOptions.has("solar")}
                       onClick={() => {
                         setSolarTier(k);
-                        if (!selectedOptions.has("solar")) toggleOption("solar");
+                        if (!selectedOptions.has("solar")) {
+                          setSelectedOptions((prev) => new Set(prev).add("solar"));
+                          setExpandedCards((prev) => new Set(prev).add("solar"));
+                        }
                       }}
                       accent="amber"
                       metrics={[
@@ -676,7 +641,10 @@ export function SystemAddOnsCards({
                     isSelected={evTier === k && selectedOptions.has("ev")}
                     onClick={() => {
                       setEvTier(k);
-                      if (!selectedOptions.has("ev")) toggleOption("ev");
+                      if (!selectedOptions.has("ev")) {
+                        setSelectedOptions((prev) => new Set(prev).add("ev"));
+                        setExpandedCards((prev) => new Set(prev).add("ev"));
+                      }
                     }}
                     accent="cyan"
                     sizeLabel={o.chargersLabel}
@@ -799,7 +767,10 @@ export function SystemAddOnsCards({
                     isSelected={generatorTier === k && selectedOptions.has("generator")}
                     onClick={() => {
                       setGeneratorTier(k);
-                      if (!selectedOptions.has("generator")) toggleOption("generator");
+                      if (!selectedOptions.has("generator")) {
+                        setSelectedOptions((prev) => new Set(prev).add("generator"));
+                        setExpandedCards((prev) => new Set(prev).add("generator"));
+                      }
                     }}
                     accent="red"
                     metrics={[
