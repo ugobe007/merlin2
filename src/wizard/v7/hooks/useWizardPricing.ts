@@ -281,6 +281,14 @@ export function useWizardPricing(params: UseWizardPricingParams): UseWizardPrici
           energyKWhPerDay: loadProfile.energyKWhPerDay,
         });
 
+        // ✅ CANONICAL WRITE: TrueQuoteTemp profile — peakLoadKW is the key
+        // sizing signal consumed by verifySanity() in Step 6.
+        TrueQuoteTemp.writeProfile({
+          peakLoadKW: loadProfile.peakLoadKW,
+          durationHours: sizingHints.durationHours,
+          goals: (args as { goals?: string[] }).goals ?? [],
+        });
+
         // Layer B: Pricing bridge (financial metrics)
         let pricingResult: PricingQuoteResult | null = null;
         const allWarnings: string[] = [

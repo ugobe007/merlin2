@@ -1,21 +1,21 @@
 /**
  * Equipment Pricing Tiers Service
- * 
+ *
  * ✅ SSOT for ALL equipment pricing across Merlin
  * ✅ Integrates with TrueQuote™ for source attribution
  * ✅ Market data sync from collected_market_prices
  * ✅ Connected to equipmentCalculations.ts (main SSOT)
- * 
+ *
  * PRICING PRIORITY ORDER:
  * 1. Live market data (collected_market_prices with is_verified=true)
  * 2. Database tiers (equipment_pricing_tiers - admin editable)
  * 3. Hardcoded fallbacks (only if database unavailable)
- * 
+ *
  * @created 2026-01-14
  * @updated 2026-01-14 - Added market data integration, SSOT connection
  */
 
-import { supabase } from '@/services/supabaseClient';
+import { supabase } from "@/services/supabaseClient";
 
 // ============================================================================
 // CACHE FOR PERFORMANCE
@@ -27,7 +27,7 @@ interface PriceCache {
 
 const priceCache: PriceCache = {
   data: new Map(),
-  expiry: 0
+  expiry: 0,
 };
 
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
@@ -36,27 +36,34 @@ const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 // TYPES
 // ============================================================================
 
-export type EquipmentType = 
-  | 'bess'
-  | 'solar'
-  | 'inverter_pcs'
-  | 'transformer'
-  | 'switchgear'
-  | 'microgrid_controller'
-  | 'dc_patch_panel'
-  | 'ac_patch_panel'
-  | 'bms'
-  | 'ess_enclosure'
-  | 'scada'
-  | 'ems_software'
-  | 'ev_charger'
-  | 'generator'
-  | 'fuel_cell'
-  | 'wind';
+export type EquipmentType =
+  | "bess"
+  | "solar"
+  | "inverter_pcs"
+  | "transformer"
+  | "switchgear"
+  | "microgrid_controller"
+  | "dc_patch_panel"
+  | "ac_patch_panel"
+  | "bms"
+  | "ess_enclosure"
+  | "scada"
+  | "ems_software"
+  | "ev_charger"
+  | "generator"
+  | "fuel_cell"
+  | "wind";
 
-export type PricingTier = 'economy' | 'standard' | 'premium' | 'enterprise';
-export type PriceUnit = 'per_kWh' | 'per_kW' | 'per_W' | 'per_unit' | 'per_kVA' | 'per_point' | 'flat';
-export type ConfidenceLevel = 'high' | 'medium' | 'low' | 'estimate';
+export type PricingTier = "economy" | "standard" | "premium" | "enterprise";
+export type PriceUnit =
+  | "per_kWh"
+  | "per_kW"
+  | "per_W"
+  | "per_unit"
+  | "per_kVA"
+  | "per_point"
+  | "flat";
+export type ConfidenceLevel = "high" | "medium" | "low" | "estimate";
 
 export interface EquipmentPricingTier {
   id: string;
@@ -98,7 +105,7 @@ export interface TrueQuoteAttribution {
 }
 
 export interface EquipmentPrice {
-  price: number;          // Base cost price
+  price: number; // Base cost price
   priceWithMarkup: number; // Price with Merlin markup (customer-facing)
   markupPercentage: number; // Applied markup %
   unit: PriceUnit;
@@ -106,7 +113,7 @@ export interface EquipmentPrice {
   manufacturer?: string;
   model?: string;
   trueQuote: TrueQuoteAttribution;
-  sourceType: 'market_data' | 'database_tier' | 'fallback';
+  sourceType: "market_data" | "database_tier" | "fallback";
 }
 
 // ============================================================================
@@ -121,7 +128,7 @@ interface MarkupConfig {
 const markupCache: MarkupConfig = {
   data: new Map(),
   expiry: 0,
-  tableUnavailable: false
+  tableUnavailable: false,
 };
 
 // ✅ FIX Feb 7, 2026: Deduplication lock prevents parallel calls from ALL hitting DB
@@ -137,14 +144,11 @@ async function probeMarkupTable(): Promise<boolean> {
 
   markupProbeInFlight = (async () => {
     try {
-      const { error } = await supabase
-        .from('pricing_markup_config')
-        .select('config_key')
-        .limit(1);
+      const { error } = await supabase.from("pricing_markup_config").select("config_key").limit(1);
 
       if (error) {
         if (import.meta.env.DEV) {
-          console.debug('[MarkupService] pricing_markup_config table unavailable, using defaults');
+          console.debug("[MarkupService] pricing_markup_config table unavailable, using defaults");
         }
         markupCache.tableUnavailable = true;
         return false;
@@ -164,7 +168,7 @@ async function probeMarkupTable(): Promise<boolean> {
 /**
  * Get markup percentage for equipment type
  * Priority: item-specific > equipment-type > global default
- * 
+ *
  * ✅ FIX Feb 7, 2026: Probes table existence ONCE; all parallel calls share result.
  * Eliminates 404 spam when pricing_markup_config table doesn't exist.
  */
@@ -176,12 +180,12 @@ export async function getMarkupPercentage(
   if (itemMarkup !== undefined && itemMarkup !== null) {
     return itemMarkup;
   }
-  
+
   // Check cache
   if (Date.now() < markupCache.expiry && markupCache.data.has(equipmentType)) {
     return markupCache.data.get(equipmentType)!;
   }
-  
+
   const DEFAULT_MARKUP = 15;
 
   // ✅ Probe table existence (deduplicated — only ONE network request ever)
@@ -191,39 +195,40 @@ export async function getMarkupPercentage(
     markupCache.expiry = Date.now() + CACHE_DURATION_MS;
     return DEFAULT_MARKUP;
   }
-  
+
   try {
     // Try equipment-specific markup first
     const { data: typeMarkup, error: typeError } = await supabase
-      .from('pricing_markup_config')
-      .select('markup_percentage')
-      .eq('config_key', equipmentType)
-      .eq('is_active', true)
-      .single();
-    
+      .from("pricing_markup_config")
+      .select("markup_percentage")
+      .eq("config_key", equipmentType)
+      .eq("is_active", true)
+      .maybeSingle();
+
     if (!typeError && typeMarkup) {
       markupCache.data.set(equipmentType, typeMarkup.markup_percentage);
       markupCache.expiry = Date.now() + CACHE_DURATION_MS;
       return typeMarkup.markup_percentage;
     }
-    
+
     // Fall back to global default
     const { data: globalMarkup } = await supabase
-      .from('pricing_markup_config')
-      .select('markup_percentage')
-      .eq('config_key', 'global_default')
-      .eq('is_active', true)
-      .single();
-    
+      .from("pricing_markup_config")
+      .select("markup_percentage")
+      .eq("config_key", "global_default")
+      .eq("is_active", true)
+      .maybeSingle();
+
     const markup = globalMarkup?.markup_percentage ?? DEFAULT_MARKUP;
     markupCache.data.set(equipmentType, markup);
     markupCache.expiry = Date.now() + CACHE_DURATION_MS;
     return markup;
-    
   } catch (error) {
     // Silently fail - these are optional features
     if (import.meta.env.DEV) {
-      console.debug(`[MarkupService] Optional pricing table unavailable, using ${DEFAULT_MARKUP}% default`);
+      console.debug(
+        `[MarkupService] Optional pricing table unavailable, using ${DEFAULT_MARKUP}% default`
+      );
     }
     markupCache.tableUnavailable = true;
     return DEFAULT_MARKUP;
@@ -246,26 +251,27 @@ export async function updateMarkupConfig(
   description?: string
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('pricing_markup_config')
-      .upsert({
+    const { error } = await supabase.from("pricing_markup_config").upsert(
+      {
         config_key: configKey,
         markup_percentage: markupPercentage,
         description: description,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'config_key'
-      });
-    
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "config_key",
+      }
+    );
+
     if (error) throw error;
-    
+
     // Clear cache
     markupCache.data.clear();
     markupCache.expiry = 0;
-    
+
     return true;
   } catch (error) {
-    console.error('[MarkupService] Error updating markup:', error);
+    console.error("[MarkupService] Error updating markup:", error);
     return false;
   }
 }
@@ -273,22 +279,24 @@ export async function updateMarkupConfig(
 /**
  * Get all markup configurations (for admin panel)
  */
-export async function getAllMarkupConfigs(): Promise<Array<{
-  config_key: string;
-  markup_percentage: number;
-  description: string | null;
-  is_active: boolean | null;
-}>> {
+export async function getAllMarkupConfigs(): Promise<
+  Array<{
+    config_key: string;
+    markup_percentage: number;
+    description: string | null;
+    is_active: boolean | null;
+  }>
+> {
   try {
     const { data, error } = await supabase
-      .from('pricing_markup_config')
-      .select('config_key, markup_percentage, description, is_active')
-      .order('config_key');
-    
+      .from("pricing_markup_config")
+      .select("config_key, markup_percentage, description, is_active")
+      .order("config_key");
+
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('[MarkupService] Error fetching markup configs:', error);
+    console.error("[MarkupService] Error fetching markup configs:", error);
     return [];
   }
 }
@@ -300,130 +308,133 @@ export async function getAllMarkupConfigs(): Promise<Array<{
 // HARMONIZED Feb 2026 — aligned with equipmentCalculations.ts, marketIntelligence.ts, and NREL ATB 2024
 // See copilot-instructions.md §PRICING for authoritative source hierarchy
 const FALLBACK_PRICING: Partial<Record<EquipmentType, { price: number; unit: PriceUnit }>> = {
-  microgrid_controller: { price: 15000, unit: 'per_unit' },
-  dc_patch_panel: { price: 4500, unit: 'per_unit' },
-  ac_patch_panel: { price: 3500, unit: 'per_unit' },
-  bms: { price: 15000, unit: 'per_unit' },
-  ess_enclosure: { price: 35000, unit: 'per_unit' },
-  scada: { price: 45000, unit: 'flat' },
-  ems_software: { price: 15000, unit: 'per_unit' },
-  transformer: { price: 65, unit: 'per_kVA' },    // Harmonized: midpoint of NREL $50 and equipmentCalc $80
-  inverter_pcs: { price: 100, unit: 'per_kW' },    // Harmonized: midpoint of NREL $80 and market intel $120
-  switchgear: { price: 50, unit: 'per_kW' },        // Harmonized: matches equipmentCalculations.ts (C&I = $30, utility = $50)
-  bess: { price: 130, unit: 'per_kWh' },            // Harmonized: matches NREL ATB 2024 + BNEF Q1 2026 (C&I containerized)
-  solar: { price: 0.85, unit: 'per_W' },
-  ev_charger: { price: 35000, unit: 'per_unit' },
-  generator: { price: 700, unit: 'per_kW' },
-  fuel_cell: { price: 2500, unit: 'per_kW' },
-  wind: { price: 1200, unit: 'per_kW' },
+  microgrid_controller: { price: 15000, unit: "per_unit" },
+  dc_patch_panel: { price: 4500, unit: "per_unit" },
+  ac_patch_panel: { price: 3500, unit: "per_unit" },
+  bms: { price: 15000, unit: "per_unit" },
+  ess_enclosure: { price: 35000, unit: "per_unit" },
+  scada: { price: 45000, unit: "flat" },
+  ems_software: { price: 15000, unit: "per_unit" },
+  transformer: { price: 65, unit: "per_kVA" }, // Harmonized: midpoint of NREL $50 and equipmentCalc $80
+  inverter_pcs: { price: 100, unit: "per_kW" }, // Harmonized: midpoint of NREL $80 and market intel $120
+  switchgear: { price: 50, unit: "per_kW" }, // Harmonized: matches equipmentCalculations.ts (C&I = $30, utility = $50)
+  bess: { price: 130, unit: "per_kWh" }, // Harmonized: matches NREL ATB 2024 + BNEF Q1 2026 (C&I containerized)
+  solar: { price: 0.85, unit: "per_W" },
+  ev_charger: { price: 35000, unit: "per_unit" },
+  generator: { price: 700, unit: "per_kW" },
+  fuel_cell: { price: 2500, unit: "per_kW" },
+  wind: { price: 1200, unit: "per_kW" },
 };
 
 // ============================================================================
 // EQUIPMENT TYPE METADATA
 // ============================================================================
 
-export const EQUIPMENT_TYPE_META: Record<EquipmentType, { 
-  label: string; 
-  description: string; 
-  icon: string;
-  defaultUnit: PriceUnit;
-}> = {
-  bess: { 
-    label: 'Battery Energy Storage', 
-    description: 'BESS cells, modules, and racks',
-    icon: '🔋',
-    defaultUnit: 'per_kWh'
-  },
-  solar: { 
-    label: 'Solar PV', 
-    description: 'Solar panels and mounting',
-    icon: '☀️',
-    defaultUnit: 'per_W'
-  },
-  inverter_pcs: { 
-    label: 'Inverter / PCS', 
-    description: 'Power conversion systems',
-    icon: '⚡',
-    defaultUnit: 'per_kW'
-  },
-  transformer: { 
-    label: 'Transformer', 
-    description: 'Step-up/step-down transformers',
-    icon: '🔌',
-    defaultUnit: 'per_kVA'
-  },
-  switchgear: { 
-    label: 'Switchgear', 
-    description: 'Medium/high voltage switchgear',
-    icon: '🔲',
-    defaultUnit: 'per_kW'
-  },
-  microgrid_controller: { 
-    label: 'Microgrid Controller', 
-    description: 'Microgrid management systems',
-    icon: '🎛️',
-    defaultUnit: 'per_unit'
-  },
-  dc_patch_panel: { 
-    label: 'DC Patch Panel', 
-    description: 'DC distribution and switching',
-    icon: '📊',
-    defaultUnit: 'per_unit'
-  },
-  ac_patch_panel: { 
-    label: 'AC Patch Panel', 
-    description: 'AC distribution panels',
-    icon: '📈',
-    defaultUnit: 'per_unit'
-  },
-  bms: { 
-    label: 'Battery Management System', 
-    description: 'BMS hardware and software',
-    icon: '🖥️',
-    defaultUnit: 'per_unit'
-  },
-  ess_enclosure: { 
-    label: 'ESS Enclosure', 
-    description: 'Containers and cabinets',
-    icon: '📦',
-    defaultUnit: 'per_unit'
-  },
-  scada: { 
-    label: 'SCADA System', 
-    description: 'Supervisory control systems',
-    icon: '📡',
-    defaultUnit: 'flat'
-  },
-  ems_software: { 
-    label: 'EMS Software', 
-    description: 'Energy management software',
-    icon: '💻',
-    defaultUnit: 'per_unit'
-  },
-  ev_charger: { 
-    label: 'EV Charger', 
-    description: 'Electric vehicle charging equipment',
-    icon: '🚗',
-    defaultUnit: 'per_unit'
-  },
-  generator: { 
-    label: 'Generator', 
-    description: 'Backup power generators',
-    icon: '⛽',
-    defaultUnit: 'per_kW'
-  },
-  fuel_cell: { 
-    label: 'Fuel Cell', 
-    description: 'Hydrogen and natural gas fuel cells',
-    icon: '🔬',
-    defaultUnit: 'per_kW'
-  },
-  wind: { 
-    label: 'Wind Turbine', 
-    description: 'Wind power generation',
-    icon: '💨',
-    defaultUnit: 'per_kW'
+export const EQUIPMENT_TYPE_META: Record<
+  EquipmentType,
+  {
+    label: string;
+    description: string;
+    icon: string;
+    defaultUnit: PriceUnit;
   }
+> = {
+  bess: {
+    label: "Battery Energy Storage",
+    description: "BESS cells, modules, and racks",
+    icon: "🔋",
+    defaultUnit: "per_kWh",
+  },
+  solar: {
+    label: "Solar PV",
+    description: "Solar panels and mounting",
+    icon: "☀️",
+    defaultUnit: "per_W",
+  },
+  inverter_pcs: {
+    label: "Inverter / PCS",
+    description: "Power conversion systems",
+    icon: "⚡",
+    defaultUnit: "per_kW",
+  },
+  transformer: {
+    label: "Transformer",
+    description: "Step-up/step-down transformers",
+    icon: "🔌",
+    defaultUnit: "per_kVA",
+  },
+  switchgear: {
+    label: "Switchgear",
+    description: "Medium/high voltage switchgear",
+    icon: "🔲",
+    defaultUnit: "per_kW",
+  },
+  microgrid_controller: {
+    label: "Microgrid Controller",
+    description: "Microgrid management systems",
+    icon: "🎛️",
+    defaultUnit: "per_unit",
+  },
+  dc_patch_panel: {
+    label: "DC Patch Panel",
+    description: "DC distribution and switching",
+    icon: "📊",
+    defaultUnit: "per_unit",
+  },
+  ac_patch_panel: {
+    label: "AC Patch Panel",
+    description: "AC distribution panels",
+    icon: "📈",
+    defaultUnit: "per_unit",
+  },
+  bms: {
+    label: "Battery Management System",
+    description: "BMS hardware and software",
+    icon: "🖥️",
+    defaultUnit: "per_unit",
+  },
+  ess_enclosure: {
+    label: "ESS Enclosure",
+    description: "Containers and cabinets",
+    icon: "📦",
+    defaultUnit: "per_unit",
+  },
+  scada: {
+    label: "SCADA System",
+    description: "Supervisory control systems",
+    icon: "📡",
+    defaultUnit: "flat",
+  },
+  ems_software: {
+    label: "EMS Software",
+    description: "Energy management software",
+    icon: "💻",
+    defaultUnit: "per_unit",
+  },
+  ev_charger: {
+    label: "EV Charger",
+    description: "Electric vehicle charging equipment",
+    icon: "🚗",
+    defaultUnit: "per_unit",
+  },
+  generator: {
+    label: "Generator",
+    description: "Backup power generators",
+    icon: "⛽",
+    defaultUnit: "per_kW",
+  },
+  fuel_cell: {
+    label: "Fuel Cell",
+    description: "Hydrogen and natural gas fuel cells",
+    icon: "🔬",
+    defaultUnit: "per_kW",
+  },
+  wind: {
+    label: "Wind Turbine",
+    description: "Wind power generation",
+    icon: "💨",
+    defaultUnit: "per_kW",
+  },
 };
 
 // ============================================================================
@@ -439,18 +450,18 @@ export async function getEquipmentPricing(
 ): Promise<EquipmentPricingTier[]> {
   try {
     let query = supabase
-      .from('equipment_pricing_tiers')
-      .select('*')
-      .eq('equipment_type', equipmentType)
-      .order('tier_name')
-      .order('size_min', { nullsFirst: true });
-    
+      .from("equipment_pricing_tiers")
+      .select("*")
+      .eq("equipment_type", equipmentType)
+      .order("tier_name")
+      .order("size_min", { nullsFirst: true });
+
     if (!options?.includeInactive) {
-      query = query.eq('is_active', true);
+      query = query.eq("is_active", true);
     }
-    
+
     const { data, error } = await query;
-    
+
     if (error) throw error;
     return (data || []) as unknown as EquipmentPricingTier[];
   } catch (error) {
@@ -465,31 +476,31 @@ export async function getEquipmentPricing(
 export async function getEquipmentPrice(query: PricingQuery): Promise<EquipmentPrice | null> {
   try {
     let dbQuery = supabase
-      .from('equipment_pricing_tiers')
-      .select('*')
-      .eq('equipment_type', query.equipmentType)
-      .eq('is_active', true);
-    
+      .from("equipment_pricing_tiers")
+      .select("*")
+      .eq("equipment_type", query.equipmentType)
+      .eq("is_active", true);
+
     // Filter by tier if specified
     if (query.tier) {
-      dbQuery = dbQuery.eq('tier_name', query.tier);
+      dbQuery = dbQuery.eq("tier_name", query.tier);
     }
-    
+
     // Filter by manufacturer if specified
     if (query.manufacturer) {
-      dbQuery = dbQuery.ilike('manufacturer', `%${query.manufacturer}%`);
+      dbQuery = dbQuery.ilike("manufacturer", `%${query.manufacturer}%`);
     }
-    
-    const { data: rawData, error } = await dbQuery.order('tier_name');
-    
+
+    const { data: rawData, error } = await dbQuery.order("tier_name");
+
     if (error) throw error;
     if (!rawData || rawData.length === 0) return null;
-    
+
     const data = rawData as unknown as EquipmentPricingTier[];
-    
+
     // Find best match based on size
     let bestMatch: EquipmentPricingTier | undefined;
-    
+
     if (query.size !== undefined) {
       // Find tier that matches the size range
       bestMatch = data.find((tier) => {
@@ -498,19 +509,20 @@ export async function getEquipmentPrice(query: PricingQuery): Promise<EquipmentP
         return query.size! >= min && query.size! <= max;
       });
     }
-    
+
     // Fall back to first matching tier if no size match
     if (!bestMatch) {
       bestMatch = data[0];
     }
-    
+
     // At this point bestMatch is guaranteed to exist because data.length > 0
     const match = bestMatch as EquipmentPricingTier;
-    
+
     // Get markup for this equipment type (check item-level override first)
-    const itemMarkup = (match as EquipmentPricingTier & { markup_percentage?: number }).markup_percentage;
+    const itemMarkup = (match as EquipmentPricingTier & { markup_percentage?: number })
+      .markup_percentage;
     const markupPct = await getMarkupPercentage(query.equipmentType, itemMarkup);
-    
+
     return {
       price: match.base_price,
       priceWithMarkup: applyMarkup(match.base_price, markupPct),
@@ -519,17 +531,20 @@ export async function getEquipmentPrice(query: PricingQuery): Promise<EquipmentP
       tier: match.tier_name as PricingTier,
       manufacturer: match.manufacturer || undefined,
       model: match.model || undefined,
-      sourceType: 'database_tier' as const,
+      sourceType: "database_tier" as const,
       trueQuote: {
         source: match.data_source,
         sourceUrl: match.source_url || undefined,
         sourceDate: match.source_date || undefined,
         confidence: match.confidence_level as ConfidenceLevel,
-        methodology: generateMethodologyText(match)
-      }
+        methodology: generateMethodologyText(match),
+      },
     };
   } catch (error) {
-    console.error(`[EquipmentPricingService] Error getting price for ${query.equipmentType}:`, error);
+    console.error(
+      `[EquipmentPricingService] Error getting price for ${query.equipmentType}:`,
+      error
+    );
     return null;
   }
 }
@@ -540,80 +555,82 @@ export async function getEquipmentPrice(query: PricingQuery): Promise<EquipmentP
 export async function calculateEquipmentCost(
   equipmentType: EquipmentType,
   quantity: number,
-  tier: PricingTier = 'standard',
+  tier: PricingTier = "standard",
   sizeKw?: number
-): Promise<{ 
-  totalCost: number; 
-  unitPrice: number; 
+): Promise<{
+  totalCost: number;
+  unitPrice: number;
   unit: PriceUnit;
   trueQuote: TrueQuoteAttribution;
 } | null> {
   const priceData = await getEquipmentPrice({
     equipmentType,
     tier,
-    size: sizeKw
+    size: sizeKw,
   });
-  
+
   if (!priceData) return null;
-  
+
   let totalCost: number;
-  
+
   switch (priceData.unit) {
-    case 'per_kWh':
+    case "per_kWh":
       totalCost = priceData.price * quantity; // quantity in kWh
       break;
-    case 'per_kW':
-    case 'per_kVA':
+    case "per_kW":
+    case "per_kVA":
       totalCost = priceData.price * quantity; // quantity in kW or kVA
       break;
-    case 'per_W':
+    case "per_W":
       totalCost = priceData.price * quantity * 1000; // quantity in kW, price per W
       break;
-    case 'per_unit':
+    case "per_unit":
       totalCost = priceData.price * Math.ceil(quantity);
       break;
-    case 'flat':
+    case "flat":
       totalCost = priceData.price;
       break;
     default:
       totalCost = priceData.price * quantity;
   }
-  
+
   return {
     totalCost: Math.round(totalCost * 100) / 100,
     unitPrice: priceData.price,
     unit: priceData.unit,
-    trueQuote: priceData.trueQuote
+    trueQuote: priceData.trueQuote,
   };
 }
 
 /**
  * Get all equipment types with their latest pricing
  */
-export async function getAllEquipmentPricing(): Promise<Record<EquipmentType, EquipmentPricingTier[]>> {
+export async function getAllEquipmentPricing(): Promise<
+  Record<EquipmentType, EquipmentPricingTier[]>
+> {
   try {
     const { data, error } = await supabase
-      .from('equipment_pricing_tiers')
-      .select('*')
-      .eq('is_active', true)
-      .order('equipment_type')
-      .order('tier_name');
-    
+      .from("equipment_pricing_tiers")
+      .select("*")
+      .eq("is_active", true)
+      .order("equipment_type")
+      .order("tier_name");
+
     if (error) throw error;
-    
+
     // Group by equipment type
     const grouped: Record<string, EquipmentPricingTier[]> = {};
-    
+
     for (const tier of (data || []) as unknown as EquipmentPricingTier[]) {
       if (!grouped[tier.equipment_type]) {
         grouped[tier.equipment_type] = [];
       }
       grouped[tier.equipment_type].push(tier);
     }
-    
+
     return grouped as Record<EquipmentType, EquipmentPricingTier[]>;
   } catch (error) {
-    console.error('[EquipmentPricingService] Error fetching all pricing:', error);
+    console.error("[EquipmentPricingService] Error fetching all pricing:", error);
     return {} as Record<EquipmentType, EquipmentPricingTier[]>;
   }
 }
@@ -623,18 +640,18 @@ export async function getAllEquipmentPricing(): Promise<Record<EquipmentType, Eq
  */
 export async function updateEquipmentPricing(
   id: string,
-  updates: Partial<Omit<EquipmentPricingTier, 'id' | 'created_at' | 'updated_at'>>
+  updates: Partial<Omit<EquipmentPricingTier, "id" | "created_at" | "updated_at">>
 ): Promise<boolean> {
   try {
     const { error } = await supabase
-      .from('equipment_pricing_tiers')
+      .from("equipment_pricing_tiers")
       .update(updates as any)
-      .eq('id', id);
-    
+      .eq("id", id);
+
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('[EquipmentPricingService] Error updating pricing:', error);
+    console.error("[EquipmentPricingService] Error updating pricing:", error);
     return false;
   }
 }
@@ -643,19 +660,19 @@ export async function updateEquipmentPricing(
  * Create new equipment pricing tier
  */
 export async function createEquipmentPricing(
-  tier: Omit<EquipmentPricingTier, 'id' | 'created_at' | 'updated_at'>
+  tier: Omit<EquipmentPricingTier, "id" | "created_at" | "updated_at">
 ): Promise<string | null> {
   try {
     const { data, error } = await supabase
-      .from('equipment_pricing_tiers')
+      .from("equipment_pricing_tiers")
       .insert(tier as any)
-      .select('id')
+      .select("id")
       .single();
-    
+
     if (error) throw error;
     return data?.id || null;
   } catch (error) {
-    console.error('[EquipmentPricingService] Error creating pricing:', error);
+    console.error("[EquipmentPricingService] Error creating pricing:", error);
     return null;
   }
 }
@@ -666,14 +683,14 @@ export async function createEquipmentPricing(
 export async function deleteEquipmentPricing(id: string): Promise<boolean> {
   try {
     const { error } = await supabase
-      .from('equipment_pricing_tiers')
+      .from("equipment_pricing_tiers")
       .update({ is_active: false })
-      .eq('id', id);
-    
+      .eq("id", id);
+
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('[EquipmentPricingService] Error deleting pricing:', error);
+    console.error("[EquipmentPricingService] Error deleting pricing:", error);
     return false;
   }
 }
@@ -684,12 +701,12 @@ export async function deleteEquipmentPricing(id: string): Promise<boolean> {
 
 /**
  * ✅ MASTER SSOT FUNCTION: Get equipment price with market data priority
- * 
+ *
  * PRIORITY ORDER:
  * 1. Live market data (collected_market_prices, verified, recent)
  * 2. Database pricing tiers (equipment_pricing_tiers)
  * 3. Hardcoded fallbacks (only if database unavailable)
- * 
+ *
  * This is the function that equipmentCalculations.ts should call.
  */
 export async function getMarketAdjustedPrice(
@@ -702,120 +719,138 @@ export async function getMarketAdjustedPrice(
     maxAgedays?: number;
   }
 ): Promise<EquipmentPrice> {
-  const cacheKey = `${equipmentType}-${options?.tier || 'standard'}-${options?.sizeKw || 0}`;
-  
+  const cacheKey = `${equipmentType}-${options?.tier || "standard"}-${options?.sizeKw || 0}`;
+
   // Check cache first
   if (Date.now() < priceCache.expiry && priceCache.data.has(cacheKey)) {
     return priceCache.data.get(cacheKey)!;
   }
-  
-  const tier = options?.tier || 'standard';
+
+  const tier = options?.tier || "standard";
   const maxAgeDays = options?.maxAgedays || 30;
-  
+
   // Step 1: Try live market data first (optional table)
   try {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - maxAgeDays);
-    
+
     const { data: marketPrices, error: marketError } = await supabase
-      .from('collected_market_prices')
-      .select('*')
-      .eq('equipment_type', equipmentType)
-      .eq('is_verified', true)
-      .gte('price_date', cutoffDate.toISOString())
-      .order('price_date', { ascending: false })
+      .from("collected_market_prices")
+      .select("*")
+      .eq("equipment_type", equipmentType)
+      .eq("is_verified", true)
+      .gte("price_date", cutoffDate.toISOString())
+      .order("price_date", { ascending: false })
       .limit(5);
-    
+
     // Silently handle missing table - this is an optional market intelligence feature
-    if (marketError && (marketError.code === 'PGRST116' || marketError.message?.includes('404') || marketError.message?.includes('400'))) {
+    if (
+      marketError &&
+      (marketError.code === "PGRST116" ||
+        marketError.message?.includes("404") ||
+        marketError.message?.includes("400"))
+    ) {
       // Table doesn't exist or bad request - skip to fallback pricing
       if (import.meta.env.DEV) {
-        console.debug('[PricingService] Market pricing table not available, using fallback');
+        console.debug("[PricingService] Market pricing table not available, using fallback");
       }
       // Fall through to Step 2 (database pricing tables)
     } else if (!marketError && marketPrices && marketPrices.length > 0) {
       // Calculate weighted average from market data
-      interface MarketPrice { price: number; confidence?: number; price_date: string; source_name?: string; }
+      interface MarketPrice {
+        price: number;
+        confidence?: number;
+        price_date: string;
+        source_name?: string;
+      }
       const prices = marketPrices as unknown as MarketPrice[];
-      
+
       // Weight by recency (newer = higher weight)
       let totalWeight = 0;
       let weightedSum = 0;
-      
+
       prices.forEach((p, index) => {
         const weight = 1 / (index + 1); // First result gets weight 1, second gets 0.5, etc.
         totalWeight += weight;
         weightedSum += p.price * weight;
       });
-      
+
       const avgPrice = weightedSum / totalWeight;
       const latestSource = prices[0];
-      
+
       // Get markup for this equipment type
       const markupPct = await getMarkupPercentage(equipmentType);
       const basePrice = Math.round(avgPrice * 100) / 100;
-      
+
       const result: EquipmentPrice = {
         price: basePrice,
         priceWithMarkup: applyMarkup(basePrice, markupPct),
         markupPercentage: markupPct,
         unit: EQUIPMENT_TYPE_META[equipmentType].defaultUnit,
         tier: tier,
-        sourceType: 'market_data',
+        sourceType: "market_data",
         trueQuote: {
           source: `Market data (${prices.length} sources)`,
-          sourceDate: latestSource.price_date?.split('T')[0],
-          confidence: prices.length >= 3 ? 'high' : 'medium',
-          methodology: `Weighted average from ${prices.length} verified market sources, most recent: ${latestSource.source_name || 'Unknown'}`
-        }
+          sourceDate: latestSource.price_date?.split("T")[0],
+          confidence: prices.length >= 3 ? "high" : "medium",
+          methodology: `Weighted average from ${prices.length} verified market sources, most recent: ${latestSource.source_name || "Unknown"}`,
+        },
       };
-      
+
       // Update cache
       priceCache.data.set(cacheKey, result);
       priceCache.expiry = Date.now() + CACHE_DURATION_MS;
-      
+
       return result;
     }
   } catch (error) {
-    console.warn(`[EquipmentPricingService] Market data lookup failed for ${equipmentType}:`, error);
+    console.warn(
+      `[EquipmentPricingService] Market data lookup failed for ${equipmentType}:`,
+      error
+    );
   }
-  
+
   // Step 2: Try database pricing tiers
   const dbPrice = await getEquipmentPrice({
     equipmentType,
     tier,
     size: options?.sizeKw,
-    manufacturer: options?.manufacturer
+    manufacturer: options?.manufacturer,
   });
-  
+
   if (dbPrice) {
     priceCache.data.set(cacheKey, dbPrice);
     priceCache.expiry = Date.now() + CACHE_DURATION_MS;
     return dbPrice;
   }
-  
+
   // Step 3: Hardcoded fallback (last resort)
-  console.warn(`[EquipmentPricingService] Using fallback pricing for ${equipmentType} - database unavailable`);
-  
-  const fallback = FALLBACK_PRICING[equipmentType] || { price: 10000, unit: 'per_unit' as PriceUnit };
-  
+  console.warn(
+    `[EquipmentPricingService] Using fallback pricing for ${equipmentType} - database unavailable`
+  );
+
+  const fallback = FALLBACK_PRICING[equipmentType] || {
+    price: 10000,
+    unit: "per_unit" as PriceUnit,
+  };
+
   // Get markup even for fallback
   const markupPct = await getMarkupPercentage(equipmentType);
-  
+
   const fallbackResult: EquipmentPrice = {
     price: fallback.price,
     priceWithMarkup: applyMarkup(fallback.price, markupPct),
     markupPercentage: markupPct,
     unit: fallback.unit,
-    tier: 'standard',
-    sourceType: 'fallback',
+    tier: "standard",
+    sourceType: "fallback",
     trueQuote: {
-      source: 'Hardcoded fallback',
-      confidence: 'estimate',
-      methodology: 'Fallback pricing used due to database unavailability'
-    }
+      source: "Hardcoded fallback",
+      confidence: "estimate",
+      methodology: "Fallback pricing used due to database unavailability",
+    },
   };
-  
+
   return fallbackResult;
 }
 
@@ -828,53 +863,57 @@ export async function syncPricingFromMarketData(
 ): Promise<{ updated: number; errors: string[] }> {
   const errors: string[] = [];
   let updated = 0;
-  
+
   try {
     // Get latest market prices
     const { data: marketPrices, error: marketError } = await supabase
-      .from('collected_market_prices')
-      .select('*')
-      .eq('equipment_type', equipmentType)
-      .eq('is_verified', true)
-      .order('price_date', { ascending: false })
+      .from("collected_market_prices")
+      .select("*")
+      .eq("equipment_type", equipmentType)
+      .eq("is_verified", true)
+      .order("price_date", { ascending: false })
       .limit(10);
-    
+
     if (marketError) {
       errors.push(`Market data fetch error: ${marketError.message}`);
       return { updated, errors };
     }
-    
+
     if (!marketPrices || marketPrices.length === 0) {
-      return { updated, errors: ['No verified market prices found'] };
+      return { updated, errors: ["No verified market prices found"] };
     }
-    
+
     // Calculate weighted average
-    interface MarketPrice { price: number; [key: string]: unknown; }
-    const avgPrice = (marketPrices as unknown as MarketPrice[]).reduce((sum, p) => sum + p.price, 0) / marketPrices.length;
-    
+    interface MarketPrice {
+      price: number;
+      [key: string]: unknown;
+    }
+    const avgPrice =
+      (marketPrices as unknown as MarketPrice[]).reduce((sum, p) => sum + p.price, 0) /
+      marketPrices.length;
+
     // Update standard tier pricing
     const { error: updateError } = await supabase
-      .from('equipment_pricing_tiers')
+      .from("equipment_pricing_tiers")
       .update({
         base_price: Math.round(avgPrice * 100) / 100,
         data_source: `Market average (${marketPrices.length} sources)`,
-        source_date: new Date().toISOString().split('T')[0],
-        confidence_level: marketPrices.length >= 5 ? 'high' : 'medium'
+        source_date: new Date().toISOString().split("T")[0],
+        confidence_level: marketPrices.length >= 5 ? "high" : "medium",
       })
-      .eq('equipment_type', equipmentType)
-      .eq('tier_name', 'standard')
-      .is('size_min', null);
-    
+      .eq("equipment_type", equipmentType)
+      .eq("tier_name", "standard")
+      .is("size_min", null);
+
     if (updateError) {
       errors.push(`Update error: ${updateError.message}`);
     } else {
       updated++;
     }
-    
   } catch (error) {
     errors.push(`Sync error: ${error}`);
   }
-  
+
   return { updated, errors };
 }
 
@@ -884,49 +923,46 @@ export async function syncPricingFromMarketData(
 
 function generateMethodologyText(tier: EquipmentPricingTier): string {
   const parts: string[] = [];
-  
+
   if (tier.manufacturer && tier.model) {
     parts.push(`Based on ${tier.manufacturer} ${tier.model} pricing`);
   }
-  
+
   if (tier.source_date) {
     const date = new Date(tier.source_date);
-    parts.push(`as of ${date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`);
+    parts.push(`as of ${date.toLocaleDateString("en-US", { month: "long", year: "numeric" })}`);
   }
-  
-  if (tier.confidence_level === 'high') {
-    parts.push('(verified manufacturer pricing)');
-  } else if (tier.confidence_level === 'estimate') {
-    parts.push('(industry estimate)');
+
+  if (tier.confidence_level === "high") {
+    parts.push("(verified manufacturer pricing)");
+  } else if (tier.confidence_level === "estimate") {
+    parts.push("(industry estimate)");
   }
-  
-  return parts.join(' ') || 'Standard industry pricing';
+
+  return parts.join(" ") || "Standard industry pricing";
 }
 
 /**
  * Get pricing summary for TrueQuote™ display
  */
-export function formatPriceForDisplay(
-  price: number,
-  unit: PriceUnit
-): string {
-  const formatted = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+export function formatPriceForDisplay(price: number, unit: PriceUnit): string {
+  const formatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   }).format(price);
-  
+
   const unitLabels: Record<PriceUnit, string> = {
-    per_kWh: '/kWh',
-    per_kW: '/kW',
-    per_W: '/W',
-    per_kVA: '/kVA',
-    per_unit: ' each',
-    per_point: '/point',
-    flat: ' (one-time)'
+    per_kWh: "/kWh",
+    per_kW: "/kW",
+    per_W: "/W",
+    per_kVA: "/kVA",
+    per_unit: " each",
+    per_point: "/point",
+    flat: " (one-time)",
   };
-  
+
   return `${formatted}${unitLabels[unit]}`;
 }
 
@@ -938,24 +974,24 @@ export default {
   // Core pricing functions
   getEquipmentPricing,
   getEquipmentPrice,
-  getMarketAdjustedPrice,  // ✅ NEW: Master SSOT function with market data
+  getMarketAdjustedPrice, // ✅ NEW: Master SSOT function with market data
   calculateEquipmentCost,
   getAllEquipmentPricing,
-  
+
   // Admin functions
   updateEquipmentPricing,
   createEquipmentPricing,
   deleteEquipmentPricing,
-  
+
   // Market data sync
   syncPricingFromMarketData,
-  
+
   // Display helpers
   formatPriceForDisplay,
-  
+
   // Metadata
   EQUIPMENT_TYPE_META,
-  FALLBACK_PRICING
+  FALLBACK_PRICING,
 };
 
 // ============================================================================
@@ -965,80 +1001,92 @@ export default {
 /**
  * Get microgrid controller price (NEW equipment type)
  */
-export async function getMicrogridControllerPrice(tier: PricingTier = 'standard'): Promise<number> {
-  const result = await getMarketAdjustedPrice('microgrid_controller', { tier });
+export async function getMicrogridControllerPrice(tier: PricingTier = "standard"): Promise<number> {
+  const result = await getMarketAdjustedPrice("microgrid_controller", { tier });
   return result.price;
 }
 
 /**
  * Get BMS price by system size
  */
-export async function getBMSPrice(systemKWh: number, tier: PricingTier = 'standard'): Promise<number> {
-  const result = await getMarketAdjustedPrice('bms', { tier, sizeKw: systemKWh });
+export async function getBMSPrice(
+  systemKWh: number,
+  tier: PricingTier = "standard"
+): Promise<number> {
+  const result = await getMarketAdjustedPrice("bms", { tier, sizeKw: systemKWh });
   return result.price;
 }
 
 /**
  * Get SCADA system price
  */
-export async function getSCADAPrice(tier: PricingTier = 'standard'): Promise<number> {
-  const result = await getMarketAdjustedPrice('scada', { tier });
+export async function getSCADAPrice(tier: PricingTier = "standard"): Promise<number> {
+  const result = await getMarketAdjustedPrice("scada", { tier });
   return result.price;
 }
 
 /**
  * Get EMS software price
  */
-export async function getEMSSoftwarePrice(tier: PricingTier = 'standard'): Promise<number> {
-  const result = await getMarketAdjustedPrice('ems_software', { tier });
+export async function getEMSSoftwarePrice(tier: PricingTier = "standard"): Promise<number> {
+  const result = await getMarketAdjustedPrice("ems_software", { tier });
   return result.price;
 }
 
 /**
  * Get DC patch panel price
  */
-export async function getDCPatchPanelPrice(tier: PricingTier = 'standard'): Promise<number> {
-  const result = await getMarketAdjustedPrice('dc_patch_panel', { tier });
+export async function getDCPatchPanelPrice(tier: PricingTier = "standard"): Promise<number> {
+  const result = await getMarketAdjustedPrice("dc_patch_panel", { tier });
   return result.price;
 }
 
 /**
  * Get AC patch panel price
  */
-export async function getACPatchPanelPrice(tier: PricingTier = 'standard'): Promise<number> {
-  const result = await getMarketAdjustedPrice('ac_patch_panel', { tier });
+export async function getACPatchPanelPrice(tier: PricingTier = "standard"): Promise<number> {
+  const result = await getMarketAdjustedPrice("ac_patch_panel", { tier });
   return result.price;
 }
 
 /**
  * Get ESS enclosure price by capacity
  */
-export async function getESSEnclosurePrice(capacityKWh: number, tier: PricingTier = 'standard'): Promise<number> {
-  const result = await getMarketAdjustedPrice('ess_enclosure', { tier, sizeKw: capacityKWh });
+export async function getESSEnclosurePrice(
+  capacityKWh: number,
+  tier: PricingTier = "standard"
+): Promise<number> {
+  const result = await getMarketAdjustedPrice("ess_enclosure", { tier, sizeKw: capacityKWh });
   return result.price;
 }
 
 /**
  * Get transformer price per kVA
  */
-export async function getTransformerPricePerKVA(sizeKVA: number, tier: PricingTier = 'standard'): Promise<number> {
-  const result = await getMarketAdjustedPrice('transformer', { tier, sizeKw: sizeKVA });
+export async function getTransformerPricePerKVA(
+  sizeKVA: number,
+  tier: PricingTier = "standard"
+): Promise<number> {
+  const result = await getMarketAdjustedPrice("transformer", { tier, sizeKw: sizeKVA });
   return result.price;
 }
 
 /**
  * Get inverter/PCS price per kW
  */
-export async function getInverterPricePerKW(sizeKW: number, tier: PricingTier = 'standard'): Promise<number> {
-  const result = await getMarketAdjustedPrice('inverter_pcs', { tier, sizeKw: sizeKW });
+export async function getInverterPricePerKW(
+  sizeKW: number,
+  tier: PricingTier = "standard"
+): Promise<number> {
+  const result = await getMarketAdjustedPrice("inverter_pcs", { tier, sizeKw: sizeKW });
   return result.price;
 }
 
 /**
  * Get switchgear price per kW
  */
-export async function getSwitchgearPricePerKW(tier: PricingTier = 'standard'): Promise<number> {
-  const result = await getMarketAdjustedPrice('switchgear', { tier });
+export async function getSwitchgearPricePerKW(tier: PricingTier = "standard"): Promise<number> {
+  const result = await getMarketAdjustedPrice("switchgear", { tier });
   return result.price;
 }
 
@@ -1048,5 +1096,5 @@ export async function getSwitchgearPricePerKW(tier: PricingTier = 'standard'): P
 export function clearPriceCache(): void {
   priceCache.data.clear();
   priceCache.expiry = 0;
-  console.log('[EquipmentPricingService] Price cache cleared');
+  console.log("[EquipmentPricingService] Price cache cleared");
 }

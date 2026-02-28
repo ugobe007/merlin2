@@ -34,7 +34,7 @@ import {
 import type { EquipmentBreakdown } from "@/utils/equipmentCalculations";
 import { getMockBehavior, delay, logMockMode } from "./mockPricingControl";
 import { estimateITC } from "@/services/itcCalculator";
-import { devLog, devWarn } from '../debug/devLog';
+import { devLog, devWarn } from "../debug/devLog";
 
 // ─── MARGIN POLICY ENGINE (Feb 2026) ───
 // This is how Merlin makes money. Every quote must include margin.
@@ -124,9 +124,9 @@ export interface PricingConfig {
   /** ITC bonus qualifications (IRA 2022) — from Step 4 user inputs */
   itcBonuses?: {
     prevailingWage?: boolean;
-    energyCommunity?: boolean | 'coal-closure' | 'brownfield' | 'fossil-fuel-employment';
+    energyCommunity?: boolean | "coal-closure" | "brownfield" | "fossil-fuel-employment";
     domesticContent?: boolean;
-    lowIncome?: boolean | 'located-in' | 'serves';
+    lowIncome?: boolean | "located-in" | "serves";
   };
 }
 
@@ -501,7 +501,7 @@ export async function runPricingQuote(
 
     // Dynamic ITC calculation per IRA 2022 (replaces hardcoded 0.30)
     const hasSolar = (contract.inputsUsed.solarMW ?? 0) > 0;
-    const itcProjectType = hasSolar ? "hybrid" as const : "bess" as const;
+    const itcProjectType = hasSolar ? ("hybrid" as const) : ("bess" as const);
     const pwa = config.itcBonuses?.prevailingWage ?? true; // Default: most commercial projects meet PWA
     const itcEstimate = estimateITC(itcProjectType, sellPriceTotal, storageSizeMW, pwa, {
       energyCommunity: config.itcBonuses?.energyCommunity,
@@ -520,7 +520,7 @@ export async function runPricingQuote(
       `Sizing: ${ratio.toFixed(2)}x peak × ${hours}h = ${energyMWh.toFixed(2)} MWh`,
       `Pricing snapshot: ${config.snapshotId}`,
       `Margin: ${marginResult.marginBandDescription} (${(marginResult.blendedMarginPercent * 100).toFixed(1)}%)`,
-      `ITC: ${(itcRate * 100).toFixed(0)}% (${itcEstimate.notes.join('; ')})`,
+      `ITC: ${(itcRate * 100).toFixed(0)}% (${itcEstimate.notes.join("; ")})`,
     ];
 
     // Recalculate payback with sell price
@@ -562,41 +562,49 @@ export async function runPricingQuote(
         },
         // ─── METADATA: Rich analysis passthrough (Feb 2026) ───
         metadata: {
-          itcDetails: quoteResult.metadata?.itcDetails ? {
-            totalRate: quoteResult.metadata.itcDetails.totalRate,
-            baseRate: quoteResult.metadata.itcDetails.baseRate,
-            creditAmount: quoteResult.metadata.itcDetails.creditAmount,
-            qualifications: quoteResult.metadata.itcDetails.qualifications,
-            source: quoteResult.metadata.itcDetails.source,
-          } : undefined,
-          utilityRates: quoteResult.metadata?.utilityRates ? {
-            electricityRate: quoteResult.metadata.utilityRates.electricityRate,
-            demandCharge: quoteResult.metadata.utilityRates.demandCharge,
-            utilityName: quoteResult.metadata.utilityRates.utilityName,
-            rateName: quoteResult.metadata.utilityRates.rateName,
-            source: quoteResult.metadata.utilityRates.source,
-            confidence: quoteResult.metadata.utilityRates.confidence,
-            zipCode: quoteResult.metadata.utilityRates.zipCode,
-            state: quoteResult.metadata.utilityRates.state,
-          } : undefined,
-          degradation: quoteResult.metadata?.degradation ? {
-            chemistry: quoteResult.metadata.degradation.chemistry,
-            yearlyCapacityPct: quoteResult.metadata.degradation.yearlyCapacityPct,
-            year10CapacityPct: quoteResult.metadata.degradation.year10CapacityPct,
-            year25CapacityPct: quoteResult.metadata.degradation.year25CapacityPct,
-            warrantyPeriod: quoteResult.metadata.degradation.warrantyPeriod,
-            expectedWarrantyCapacity: quoteResult.metadata.degradation.expectedWarrantyCapacity,
-            financialImpactPct: quoteResult.metadata.degradation.financialImpactPct,
-            source: quoteResult.metadata.degradation.source,
-          } : undefined,
-          solarProduction: quoteResult.metadata?.solarProduction ? {
-            annualProductionKWh: quoteResult.metadata.solarProduction.annualProductionKWh,
-            capacityFactorPct: quoteResult.metadata.solarProduction.capacityFactorPct,
-            source: quoteResult.metadata.solarProduction.source,
-            arrayType: quoteResult.metadata.solarProduction.arrayType,
-            state: quoteResult.metadata.solarProduction.state,
-            monthlyProductionKWh: quoteResult.metadata.solarProduction.monthlyProductionKWh,
-          } : undefined,
+          itcDetails: quoteResult.metadata?.itcDetails
+            ? {
+                totalRate: quoteResult.metadata.itcDetails.totalRate,
+                baseRate: quoteResult.metadata.itcDetails.baseRate,
+                creditAmount: quoteResult.metadata.itcDetails.creditAmount,
+                qualifications: quoteResult.metadata.itcDetails.qualifications,
+                source: quoteResult.metadata.itcDetails.source,
+              }
+            : undefined,
+          utilityRates: quoteResult.metadata?.utilityRates
+            ? {
+                electricityRate: quoteResult.metadata.utilityRates.electricityRate,
+                demandCharge: quoteResult.metadata.utilityRates.demandCharge,
+                utilityName: quoteResult.metadata.utilityRates.utilityName,
+                rateName: quoteResult.metadata.utilityRates.rateName,
+                source: quoteResult.metadata.utilityRates.source,
+                confidence: quoteResult.metadata.utilityRates.confidence,
+                zipCode: quoteResult.metadata.utilityRates.zipCode,
+                state: quoteResult.metadata.utilityRates.state,
+              }
+            : undefined,
+          degradation: quoteResult.metadata?.degradation
+            ? {
+                chemistry: quoteResult.metadata.degradation.chemistry,
+                yearlyCapacityPct: quoteResult.metadata.degradation.yearlyCapacityPct,
+                year10CapacityPct: quoteResult.metadata.degradation.year10CapacityPct,
+                year25CapacityPct: quoteResult.metadata.degradation.year25CapacityPct,
+                warrantyPeriod: quoteResult.metadata.degradation.warrantyPeriod,
+                expectedWarrantyCapacity: quoteResult.metadata.degradation.expectedWarrantyCapacity,
+                financialImpactPct: quoteResult.metadata.degradation.financialImpactPct,
+                source: quoteResult.metadata.degradation.source,
+              }
+            : undefined,
+          solarProduction: quoteResult.metadata?.solarProduction
+            ? {
+                annualProductionKWh: quoteResult.metadata.solarProduction.annualProductionKWh,
+                capacityFactorPct: quoteResult.metadata.solarProduction.capacityFactorPct,
+                source: quoteResult.metadata.solarProduction.source,
+                arrayType: quoteResult.metadata.solarProduction.arrayType,
+                state: quoteResult.metadata.solarProduction.state,
+                monthlyProductionKWh: quoteResult.metadata.solarProduction.monthlyProductionKWh,
+              }
+            : undefined,
           advancedAnalysis: quoteResult.metadata?.advancedAnalysis ?? undefined,
         },
       },
@@ -838,7 +846,10 @@ export function applyMarginToQuote(
 
   // Customer segment: from user profile or default to 'direct'
   const customerSegment = (context?.customerSegment ?? "direct") as
-    | "direct" | "epc_partner" | "government" | "strategic";
+    | "direct"
+    | "epc_partner"
+    | "government"
+    | "strategic";
 
   const marginInput: MarginPolicyInput = {
     lineItems,
@@ -863,20 +874,18 @@ async function logMarginAudit(
   industry: string
 ): Promise<void> {
   try {
-    // margin_audit_log may not be in generated Supabase types yet — use rpc or cast
+    // margin_audit_log column names (from DB schema, Feb 2026)
     await (supabase as any).from("margin_audit_log").insert({
-      snapshot_id: snapshotId,
-      industry,
-      base_cost_total: result.baseCostTotal,
-      sell_price_total: result.sellPriceTotal,
-      margin_dollars: result.totalMarginDollars,
-      margin_percent: result.blendedMarginPercent,
+      quote_id: snapshotId,
+      total_base_cost: result.baseCostTotal,
+      total_sell_price: result.sellPriceTotal,
+      total_margin_dollars: result.totalMarginDollars,
+      blended_margin_percent: result.blendedMarginPercent,
       margin_band_id: result.marginBandId,
       policy_version: result.policyVersion,
-      line_item_count: result.lineItems.length,
-      clamp_events: result.clampEvents.length,
-      needs_review: result.needsHumanReview,
-      warnings: result.quoteLevelWarnings,
+      pricing_as_of: new Date().toISOString(),
+      line_items: { industry, count: result.lineItems.length },
+      clamp_events: result.clampEvents,
       created_at: new Date().toISOString(),
     });
   } catch (err) {
