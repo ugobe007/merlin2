@@ -181,7 +181,7 @@ export function SystemAddOnsCards({
   state,
   currentAddOns,
   onRecalculate,
-  pricingStatus,
+  pricingStatus: _pricingStatus,
   showGenerateButton: _showGenerateButton = false,
   merlinData,
 }: SystemAddOnsCardsProps) {
@@ -396,54 +396,61 @@ export function SystemAddOnsCards({
   const _maxEvRevenue = evOpts.premium.monthlyRevenue * 12;
 
   // ── Toggle handler ──
-  const toggleOption = useCallback((id: string) => {
-    setSelectedOptions((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-        // Auto-expand when first selected
-        setExpandedCards((prev) => new Set(prev).add(id));
-      }
+  const toggleOption = useCallback(
+    (id: string) => {
+      setSelectedOptions((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+          // Auto-expand when first selected
+          setExpandedCards((prev) => new Set(prev).add(id));
+        }
 
-      // ✅ CANONICAL EVENT HANDLER WRITE — TrueQuoteTemp is the SSOT for add-ons.
-      // This fires synchronously on user click (inside setState updater), so
-      // Step 5 reads the correct values immediately at mount — no race conditions,
-      // no snapshot freeze, no flush-on-unmount acrobatics needed.
-      const evSelected = id === "ev" ? !prev.has("ev") : next.has("ev");
-      const solSelected = id === "solar" ? !prev.has("solar") : next.has("solar");
-      const genSelected = id === "generator" ? !prev.has("generator") : next.has("generator");
-      const evKw = evSelected ? (evOpts[evTier as keyof typeof evOpts]?.totalPowerKw ?? 0) : 0;
-      const solKw = solSelected ? (solarOpts[solarTier as keyof typeof solarOpts]?.sizeKw ?? 0) : 0;
-      const genKw = genSelected ? (genOpts[generatorTier as keyof typeof genOpts]?.sizeKw ?? 0) : 0;
-      TrueQuoteTemp.writeAddOns({
-        includeSolar: solSelected,
-        solarKW: solKw,
-        includeGenerator: genSelected,
-        generatorKW: genKw,
-        generatorFuelType: "natural-gas",
-        includeWind: false,
-        windKW: 0,
-        includeEV: evSelected,
-        evChargerKW: evKw,
+        // ✅ CANONICAL EVENT HANDLER WRITE — TrueQuoteTemp is the SSOT for add-ons.
+        // This fires synchronously on user click (inside setState updater), so
+        // Step 5 reads the correct values immediately at mount — no race conditions,
+        // no snapshot freeze, no flush-on-unmount acrobatics needed.
+        const evSelected = id === "ev" ? !prev.has("ev") : next.has("ev");
+        const solSelected = id === "solar" ? !prev.has("solar") : next.has("solar");
+        const genSelected = id === "generator" ? !prev.has("generator") : next.has("generator");
+        const evKw = evSelected ? (evOpts[evTier as keyof typeof evOpts]?.totalPowerKw ?? 0) : 0;
+        const solKw = solSelected
+          ? (solarOpts[solarTier as keyof typeof solarOpts]?.sizeKw ?? 0)
+          : 0;
+        const genKw = genSelected
+          ? (genOpts[generatorTier as keyof typeof genOpts]?.sizeKw ?? 0)
+          : 0;
+        TrueQuoteTemp.writeAddOns({
+          includeSolar: solSelected,
+          solarKW: solKw,
+          includeGenerator: genSelected,
+          generatorKW: genKw,
+          generatorFuelType: "natural-gas",
+          includeWind: false,
+          windKW: 0,
+          includeEV: evSelected,
+          evChargerKW: evKw,
+        });
+        // Keep merlinMemory in sync for legacy consumers
+        merlinMemory.set("addOns", {
+          includeSolar: solSelected,
+          solarKW: solKw,
+          includeGenerator: genSelected,
+          generatorKW: genKw,
+          generatorFuelType: "natural-gas",
+          includeWind: false,
+          windKW: 0,
+          includeEV: evSelected,
+          evChargerKW: evKw,
+          updatedAt: Date.now(),
+        });
+        return next;
       });
-      // Keep merlinMemory in sync for legacy consumers
-      merlinMemory.set("addOns", {
-        includeSolar: solSelected,
-        solarKW: solKw,
-        includeGenerator: genSelected,
-        generatorKW: genKw,
-        generatorFuelType: "natural-gas",
-        includeWind: false,
-        windKW: 0,
-        includeEV: evSelected,
-        evChargerKW: evKw,
-        updatedAt: Date.now(),
-      });
-      return next;
-    });
-  }, [evOpts, solarOpts, genOpts, evTier, solarTier, generatorTier]);
+    },
+    [evOpts, solarOpts, genOpts, evTier, solarTier, generatorTier]
+  );
 
   // ── Apply selections → recalculateWithAddOns ──
   const _handleApply = useCallback(async () => {
