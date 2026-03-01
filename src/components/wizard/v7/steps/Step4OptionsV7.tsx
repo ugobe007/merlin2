@@ -24,7 +24,113 @@ import { GeneratorCard } from "./GeneratorCard";
 import ITCBonusCard from "../shared/ITCBonusCard";
 import { useMerlinData } from "@/wizard/v7/memory";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
+import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
+
+// ── Industry Power Resilience Narrative ─────────────────────────────────────
+// Each industry's urgency level and risk copy is grounded in IEEE 446, NEC,
+// and LADWP guidelines — the same sources that back the critical load %.
+
+const INDUSTRY_URGENCY: Record<string, { label: string; badgeClass: string; headline: string }> = {
+  hospital: {
+    label: "CRITICAL",
+    badgeClass: "bg-red-500/10 text-red-400 border-red-500/25",
+    headline:
+      "Life safety systems require uninterrupted power. NEC Article 700 mandates emergency backup for all patient care facilities.",
+  },
+  healthcare: {
+    label: "CRITICAL",
+    badgeClass: "bg-red-500/10 text-red-400 border-red-500/25",
+    headline:
+      "Life safety systems require uninterrupted power. NEC Article 700 mandates emergency backup for all patient care facilities.",
+  },
+  data_center: {
+    label: "CRITICAL",
+    badgeClass: "bg-red-500/10 text-red-400 border-red-500/25",
+    headline:
+      "Every minute of downtime carries SLA penalties and reputational damage. BESS bridges micro-outages — a generator sustains operation through extended grid events.",
+  },
+  airport: {
+    label: "HIGH",
+    badgeClass: "bg-orange-500/10 text-orange-400 border-orange-500/25",
+    headline:
+      "FAA regulations require backup power for safety-critical navigation and security systems. Disruption affects hundreds of passengers simultaneously.",
+  },
+  manufacturing: {
+    label: "HIGH",
+    badgeClass: "bg-orange-500/10 text-orange-400 border-orange-500/25",
+    headline:
+      "Unplanned production stoppages multiply costs fast — restart procedures, scrap, and missed shipments can exceed a generator's entire lifecycle cost in a single incident.",
+  },
+  cold_storage: {
+    label: "HIGH",
+    badgeClass: "bg-orange-500/10 text-orange-400 border-orange-500/25",
+    headline:
+      "Temperature chain disruption means product loss. A 4-hour outage can spoil inventory worth more than the generator itself.",
+  },
+  hotel: {
+    label: "MODERATE",
+    badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/25",
+    headline:
+      "Guests expect lights, elevators, and climate control around the clock. Outages trigger early checkouts, negative reviews, and potential liability.",
+  },
+  casino: {
+    label: "MODERATE",
+    badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/25",
+    headline:
+      "Gaming floors, security systems, and hotel operations must stay online. Outages expose significant regulatory and revenue risk.",
+  },
+  office: {
+    label: "MODERATE",
+    badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/25",
+    headline:
+      "Server rooms, access control, and emergency lighting are non-negotiable. Most general lighting and HVAC can be shed — your critical systems cannot.",
+  },
+  government: {
+    label: "MODERATE",
+    badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/25",
+    headline:
+      "Continuity of operations is often mandated, not optional. Public safety functions must remain available regardless of grid status.",
+  },
+  retail: {
+    label: "LOWER",
+    badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25",
+    headline:
+      "POS systems and refrigeration are the priority. BESS alone may cover short outages — a generator extends protection beyond battery duration.",
+  },
+  warehouse: {
+    label: "LOWER",
+    badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25",
+    headline:
+      "Operations can pause — but cold storage and security cannot. A generator protects the critical subset of loads that can't stop.",
+  },
+  car_wash: {
+    label: "OPTIONAL",
+    badgeClass: "bg-slate-500/10 text-slate-400 border-slate-500/25",
+    headline:
+      "A car wash can close during an outage. A generator is an operational upgrade — it keeps you open and earning when competitors go dark.",
+  },
+  ev_charging: {
+    label: "LOWER",
+    badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25",
+    headline:
+      "EV charging is convenience infrastructure. Backup power keeps priority chargers available and protects your grid interconnection equipment.",
+  },
+};
+
+function getUrgencyConfig(industry: string) {
+  const key = industry.toLowerCase().replace(/-/g, "_");
+  return (
+    INDUSTRY_URGENCY[key] ?? {
+      label: "MODERATE",
+      badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/25",
+      headline:
+        "Adding backup generation to your BESS system provides resilience when the grid goes down for an extended period.",
+    }
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 type Props = {
   state: WizardV7State;
@@ -75,19 +181,77 @@ export default function Step4OptionsV7({ state, actions }: Props) {
   const industryLabel = (industryMeta.label as string) || "Commercial";
   const isPricingPending = pricingStatus === "pending";
 
+  // ── Power risk analysis — TrueQuote™ sourced ──
+  // getCriticalLoadWithSource() traces critical load % back to IEEE 446, NEC,
+  // and LADWP — the same authoritative sources shown in the TrueQuote audit.
+  const criticalLoadInfo = getCriticalLoadWithSource(data.industry || "default");
+  const criticalLoadPct = criticalLoadInfo.percentage;
+  const criticalLoadKW = peakKW > 0 ? Math.max(0, Math.round(peakKW * criticalLoadPct)) : 0;
+  const recommendedGenKW =
+    criticalLoadKW > 0 ? Math.max(100, Math.round((criticalLoadKW * 1.25) / 50) * 50) : 0;
+  const urgency = getUrgencyConfig(data.industry || "default");
+
   return (
     <div className="max-w-5xl mx-auto space-y-5">
-      {/* ── Intro ── */}
-      <div className="space-y-2.5">
-        <p className="text-sm leading-relaxed text-slate-400">
-          Your <span className="text-slate-200 font-medium">{industryLabel}</span> BESS quote
-          {peakKW > 0 && <span className="text-slate-500"> · {Math.round(peakKW)} kW peak</span>} is
-          ready. Add a backup generator if you need power during outages.
-        </p>
-        <p className="text-xs text-slate-500">
-          Skip this step if BESS alone meets your needs. Solar and EV add-ons are available after
-          you see your quote.
-        </p>
+      {/* ── Power Risk Assessment ── */}
+      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+        {/* Header */}
+        <div className="px-5 py-4 flex items-start gap-3">
+          <span className="text-2xl shrink-0 leading-none mt-0.5">
+            {typeof industryMeta.icon === "string" ? industryMeta.icon : "⚡"}
+          </span>
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+              <span className="text-sm font-semibold text-slate-100">
+                {industryLabel} · Power Resilience
+              </span>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                  urgency.badgeClass
+                }`}
+              >
+                {urgency.label}
+              </span>
+            </div>
+            <p className="text-sm text-slate-400 leading-relaxed">{urgency.headline}</p>
+          </div>
+        </div>
+
+        {/* Critical load metrics — only once data is available */}
+        {peakKW > 0 && (
+          <div className="grid grid-cols-3 divide-x divide-white/[0.04] border-t border-white/[0.04]">
+            {[
+              {
+                label: "Facility Peak",
+                value: `${Math.round(peakKW).toLocaleString()} kW`,
+                sub: "from your profile",
+                accent: "text-slate-100",
+              },
+              {
+                label: "Critical Load",
+                value: `${criticalLoadKW.toLocaleString()} kW`,
+                sub: `${Math.round(criticalLoadPct * 100)}% of peak · ${
+                  criticalLoadInfo.source?.name || "IEEE 446"
+                }`,
+                accent: "text-amber-400",
+              },
+              {
+                label: "Merlin Recommends",
+                value: recommendedGenKW > 0 ? `${recommendedGenKW.toLocaleString()} kW` : "—",
+                sub: "critical load + 25% reserve",
+                accent: "text-[#3ECF8E]",
+              },
+            ].map((m) => (
+              <div key={m.label} className="px-5 py-3">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">
+                  {m.label}
+                </div>
+                <div className={`text-lg font-bold tabular-nums ${m.accent}`}>{m.value}</div>
+                <div className="text-[10px] text-slate-600 mt-0.5">{m.sub}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Pricing status indicator */}
@@ -103,6 +267,8 @@ export default function Step4OptionsV7({ state, actions }: Props) {
       <GeneratorCard
         state={state}
         peakLoadKW={peakKW}
+        criticalLoadKW={criticalLoadKW}
+        industryType={data.industry || "default"}
         currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
         onRecalculate={handleAddOnsConfirmed}
       />
