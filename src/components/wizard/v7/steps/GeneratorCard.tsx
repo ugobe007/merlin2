@@ -31,6 +31,10 @@ interface GenTier {
 interface GeneratorCardProps {
   state: WizardState;
   peakLoadKW: number;
+  /** Industry-calculated critical load kW (from getCriticalLoadWithSource in Step4). */
+  criticalLoadKW?: number;
+  /** Industry slug — drives default fuel type and coverage copy. */
+  industryType?: string;
   currentAddOns: SystemAddOns;
   onRecalculate?: (addOns: SystemAddOns) => Promise<{ ok: boolean; error?: string }>;
 }
@@ -45,28 +49,35 @@ function fmtUSD(n: number) {
   }).format(n);
 }
 
-function calcGen(key: GenTier["key"], sizeKw: number, fuelType: string, peakKW: number): GenTier {
-  const coveragePct = peakKW > 0 ? sizeKw / peakKW : 0;
-  const coverage =
-    coveragePct >= 0.9
-      ? "Full facility backup"
-      : coveragePct >= 0.5
-        ? "Partial backup"
-        : "Essential loads only";
+// Hospitals and life-safety facilities use diesel for proven reliability in emergencies.
+// All others default to natural gas — quieter, lower emissions, better for customer-facing.
+const INDUSTRY_FUEL_DEFAULTS: Record<string, "diesel" | "natural-gas"> = {
+  hospital: "diesel",
+  healthcare: "diesel",
+  default: "natural-gas",
+};
+
+function calcGen(key: GenTier["key"], sizeKw: number, fuelType: "diesel" | "natural-gas"): GenTier {
   const perKw = fuelType === "diesel" ? 800 : 700;
   const installCost = Math.round(sizeKw * perKw);
   const names: Record<GenTier["key"], string> = {
     essential: "Essential",
-    standard: "Standard",
+    standard: "Recommended",
     full: "Full Backup",
   };
-  const tags: Partial<Record<GenTier["key"], string>> = { standard: "Recommended" };
+  // Coverage copy is tied to what the tier means, not a raw ratio
+  const coverageText: Record<GenTier["key"], string> = {
+    essential: "Critical systems only",
+    standard: "Critical + 25% reserve",
+    full: "Full facility coverage",
+  };
+  const tags: Partial<Record<GenTier["key"], string>> = { standard: "✦ Merlin Pick" };
   return {
     key,
     name: names[key],
     sizeKw,
     tag: tags[key],
-    coverage,
+    coverage: coverageText[key],
     fuelType: fuelType === "diesel" ? "Diesel" : "Natural Gas",
     runtimeHours: 72,
     installCost,
@@ -77,7 +88,13 @@ function calcGen(key: GenTier["key"], sizeKw: number, fuelType: string, peakKW: 
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export function GeneratorCard({ peakLoadKW, currentAddOns, onRecalculate }: GeneratorCardProps) {
+export function GeneratorCard({
+  peakLoadKW,
+  criticalLoadKW = 0,
+  industryType = "default",
+  currentAddOns,
+  onRecalculate,
+}: GeneratorCardProps) {
   // ── State (TrueQuoteTemp-first init: survives any parent re-render race) ──
   const [enabled, setEnabled] = useState<boolean>(() => {
     const tqt = TrueQuoteTemp.get();
@@ -89,15 +106,23 @@ export function GeneratorCard({ peakLoadKW, currentAddOns, onRecalculate }: Gene
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRef = useRef(true);
 
-  // ── Tier options ──
+  // ── Tier options — sized to actual critical load (IEEE 446 method) ──
+  // - Essential  = critical load only (no reserve)
+  // - Recommended = critical load × 1.25 (25% reserve per IEEE 446 / WPP Guide)
+  // - Full Backup = full facility (peak × 1.1)
+  // Falls back to 40% of peak if criticalLoadKW not yet available.
   const tiers = useMemo((): Record<GenTier["key"], GenTier> => {
-    const fullSizeKw = Math.max(300, Math.round((peakLoadKW * 1.1) / 50) * 50);
+    const base = criticalLoadKW > 0 ? criticalLoadKW : Math.round(peakLoadKW * 0.4);
+    const essentialKw = Math.max(50, Math.round(base / 50) * 50);
+    const standardKw = Math.max(100, Math.round((base * 1.25) / 50) * 50);
+    const fullKw = Math.max(300, Math.round((peakLoadKW * 1.1) / 50) * 50);
+    const fuel = INDUSTRY_FUEL_DEFAULTS[industryType] ?? "natural-gas";
     return {
-      essential: calcGen("essential", 150, "diesel", peakLoadKW),
-      standard: calcGen("standard", 300, "natural-gas", peakLoadKW),
-      full: calcGen("full", fullSizeKw, "natural-gas", peakLoadKW),
+      essential: calcGen("essential", essentialKw, fuel),
+      standard: calcGen("standard", standardKw, fuel),
+      full: calcGen("full", fullKw, fuel),
     };
-  }, [peakLoadKW]);
+  }, [peakLoadKW, criticalLoadKW, industryType]);
 
   // Refs so the useEffect dep array stays stable — prevents render loop when
   // peakLoadKW fluctuates (which creates new tiers objects) or when the parent
@@ -222,7 +247,10 @@ export function GeneratorCard({ peakLoadKW, currentAddOns, onRecalculate }: Gene
               </span>
             </div>
             <div style={{ fontSize: 12, color: "rgba(232,235,243,0.45)", marginTop: 3 }}>
-              Keep the lights on during outages · natural gas or diesel
+              Sized to your{" "}
+              {criticalLoadKW > 0
+                ? `${criticalLoadKW.toLocaleString()} kW critical load`
+                : "industry standard critical load"}
             </div>
           </div>
         </div>
@@ -279,7 +307,11 @@ export function GeneratorCard({ peakLoadKW, currentAddOns, onRecalculate }: Gene
       {isExpanded && (
         <div style={{ padding: "0 18px 18px" }}>
           <div style={{ fontSize: 13, color: "rgba(232,235,243,0.5)", marginBottom: 10 }}>
-            🔥 Choose backup power (Peak: ~{Math.round(peakLoadKW)} kW):
+            Select backup capacity — critical load{" "}
+            {criticalLoadKW > 0
+              ? `${criticalLoadKW.toLocaleString()} kW`
+              : `~${Math.round(peakLoadKW * 0.4)} kW`}
+            :
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
             {(["essential", "standard", "full"] as const).map((k) => {
@@ -312,7 +344,8 @@ export function GeneratorCard({ peakLoadKW, currentAddOns, onRecalculate }: Gene
                         borderRadius: 6,
                         fontSize: 9,
                         fontWeight: 800,
-                        background: "rgba(239,68,68,0.9)",
+                        background:
+                          t.key === "standard" ? "rgba(62,207,142,0.9)" : "rgba(239,68,68,0.9)",
                         color: "#fff",
                         whiteSpace: "nowrap",
                       }}
