@@ -10,7 +10,7 @@
  * Flow: Step 3 (Profile) → Step 4 (Backup Power) → Step 5 (MagicFit) → Step 6 (Quote + Upgrades)
  */
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
 import type {
   WizardState as WizardV7State,
@@ -25,6 +25,7 @@ import ITCBonusCard from "../shared/ITCBonusCard";
 import { useMerlinData } from "@/wizard/v7/memory";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
 import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
+import { TrueQuoteTemp } from "@/wizard/v7/trueQuoteTemp";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
 
 // ── Industry Power Resilience Narrative ─────────────────────────────────────
@@ -146,6 +147,28 @@ export default function Step4OptionsV7({ state, actions }: Props) {
   const data = useMerlinData(state);
   const pricingStatus: PricingStatus = state.pricingStatus ?? "idle";
   const [showProQuoteModal, setShowProQuoteModal] = useState(false);
+
+  // Clear stale Solar / EV / Wind from TrueQuoteTemp on Step 4 mount.
+  // Step 4 now only owns the generator; if a previous session had Solar or EV
+  // toggled on (via the old SystemAddOnsCards), those values persist in
+  // sessionStorage and bleed into Step 5's snapshot, showing equipment the
+  // user never selected.  Zero them out immediately on entry.
+  useEffect(() => {
+    TrueQuoteTemp.writeAddOns({
+      includeSolar: false,
+      solarKW: 0,
+      includeWind: false,
+      windKW: 0,
+      includeEV: false,
+      evChargerKW: 0,
+      evInstallCost: 0,
+      evMonthlyRevenue: 0,
+      // generator fields are preserved by GeneratorCard on first interaction
+      includeGenerator: TrueQuoteTemp.get().includeGenerator,
+      generatorKW: TrueQuoteTemp.get().generatorKW,
+      generatorFuelType: TrueQuoteTemp.get().generatorFuelType,
+    });
+  }, []); // once on mount
 
   // ITC bonus qualifications state (IRA 2022)
   const [itcBonuses, setItcBonuses] = useState<ITCBonuses>(
