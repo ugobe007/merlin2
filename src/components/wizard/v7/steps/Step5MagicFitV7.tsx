@@ -292,7 +292,9 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
           // Step 4's runPricingSafe already computed everything we need.
           // ═══════════════════════════════════════════════════════════════
           devLog("[Step5 MagicFit] ✅ Using Step 4 cached quote (zero DB calls)");
-          baseQuoteResult = buildQuoteResultFromState(sq, data);
+          // Pass baseSolarKW so stale sq.solarKW (from a previous tier selection) is ignored.
+          // Step 4 always clears TrueQuoteTemp solar on mount → baseSolarKW=0 when user has no solar.
+          baseQuoteResult = buildQuoteResultFromState(sq, data, baseSolarKW);
 
           // Reconstruct margin from state.quote.margin
           const m = snap.stateQuoteMargin;
