@@ -21,6 +21,7 @@ import type {
   PricingStatus,
   SystemAddOns,
 } from "@/wizard/v7/hooks/useWizardV7";
+import { DEFAULT_ADD_ONS } from "@/wizard/v7/hooks/useWizardV7";
 import { sanitizeQuoteForDisplay, type DisplayQuote } from "@/wizard/v7/utils/pricingSanity";
 import { getEffectiveTier } from "@/services/subscriptionService";
 import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
@@ -37,6 +38,7 @@ import { TrueQuoteTemp } from "@/wizard/v7/trueQuoteTemp";
 import { resolveBadge, getTopContributors, formatContributorKey } from "../shared/badgeResolver";
 import AdvisorRecommendations from "../shared/AdvisorRecommendations";
 import ExportBar from "../shared/ExportBar";
+import AddOnsPanelStep6 from "./AddOnsPanelStep6";
 import ProTeaserPanels from "../shared/ProTeaserPanels";
 import AdvancedAnalyticsPanels from "../shared/AdvancedAnalyticsPanels";
 import ScenarioComparison from "../shared/ScenarioComparison";
@@ -1115,6 +1117,20 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
             ))}
           </ul>
         </details>
+      )}
+
+      {/* ================================================================
+          ADD-ONS — Solar PV and EV Charging (post-quote, industry-tailored)
+          Industry-specific packages. User adds after seeing base BESS quote.
+      ================================================================ */}
+      {quoteReady && (
+        <AddOnsPanelStep6
+          industry={data.industry || ""}
+          currentSolarKW={Number(quote.solarKW ?? 0)}
+          currentEVKW={Number(quote.evChargerKW ?? 0)}
+          currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
+          recalculateWithAddOns={actions.recalculateWithAddOns}
+        />
       )}
 
       {/* ================================================================
