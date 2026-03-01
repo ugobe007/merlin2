@@ -73,7 +73,7 @@ export default function Step4OptionsV7({ state, actions }: Props) {
   const peakKW = data.peakLoadKW;
   const industryMeta = getIndustryMeta(data.industry);
   const industryLabel = (industryMeta.label as string) || "Commercial";
-  const isPricingPending = pricingStatus === "pending" || pricingStatus === "idle";
+  const isPricingPending = pricingStatus === "pending";
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
