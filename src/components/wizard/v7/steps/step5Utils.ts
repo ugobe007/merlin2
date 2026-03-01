@@ -521,13 +521,17 @@ export function scaleTier(
  */
 export function buildQuoteResultFromState(
   q: QuoteOutput,
-  data: ReturnType<typeof useMerlinData>
+  data: ReturnType<typeof useMerlinData>,
+  snapSolarKW?: number // When provided (from TrueQuoteTemp snapshot), overrides stale q.solarKW
 ): QuoteResult {
   const bessKW = q.bessKW ?? 0;
   const bessKWh = q.bessKWh ?? 0;
-  // ✅ FIX: Fall back to data.addOns.solarKW if quote didn't capture solar
-  // This ensures solar configured in Step 3 isn't lost even if pricing ran without addOns
-  const solarKW = q.solarKW ?? (data.addOns.includeSolar ? data.addOns.solarKW : 0);
+  // ✅ FIX Mar 2026: If caller provides snapSolarKW (from TrueQuoteTemp which Step 4 zeroes),
+  // use it to prevent stale q.solarKW (from a previous tier selection) bleeding into new tiers.
+  const solarKW =
+    snapSolarKW !== undefined
+      ? snapSolarKW
+      : (q.solarKW ?? (data.addOns.includeSolar ? data.addOns.solarKW : 0));
   const genKW = q.generatorKW ?? (data.addOns.includeGenerator ? data.addOns.generatorKW : 0);
   const _duration = q.durationHours ?? 4;
 
