@@ -1200,6 +1200,114 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
       </div>
 
       {/* ================================================================
+          MAXIMIZE YOUR SAVINGS — Post-quote Solar & EV add-ons
+          Shown after the user has seen their BESS savings.
+          Solar and EV are revenue/savings add-ons, not part of the core quote.
+      ================================================================ */}
+      {quoteReady && quote && (quote.solarKW as number) === 0 && (
+        <div
+          style={{
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(255,255,255,0.02)",
+            padding: "20px 22px",
+          }}
+        >
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "rgba(232,235,243,0.9)" }}>
+              💡 Want to save even more?
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(232,235,243,0.4)", marginTop: 4 }}>
+              Your BESS quote is locked in. These add-ons can stack additional savings on top.
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {/* Solar */}
+            <div
+              style={{
+                borderRadius: 10,
+                border: "1px solid rgba(251,191,36,0.2)",
+                background: "rgba(251,191,36,0.04)",
+                padding: "16px 18px",
+              }}
+            >
+              <div style={{ fontSize: 22, marginBottom: 6 }}>☀️</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "rgba(232,235,243,0.9)" }}>
+                Solar PV System
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(232,235,243,0.45)", margin: "4px 0 12px" }}>
+                Pair solar with your BESS to slash electricity costs year-round.
+              </div>
+              {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
+                <div style={{ fontSize: 12, color: "#fbbf24", fontWeight: 700, marginBottom: 12 }}>
+                  +
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                    maximumFractionDigits: 0,
+                  }).format(Number(quote.annualSavingsUSD) * 0.4)}
+                  /yr estimated additional savings
+                </div>
+              )}
+              <a
+                href="/quote-builder"
+                style={{
+                  display: "inline-block",
+                  padding: "7px 14px",
+                  borderRadius: 8,
+                  background: "rgba(251,191,36,0.12)",
+                  border: "1px solid rgba(251,191,36,0.3)",
+                  color: "#fbbf24",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+              >
+                Add Solar →
+              </a>
+            </div>
+
+            {/* EV Charging */}
+            <div
+              style={{
+                borderRadius: 10,
+                border: "1px solid rgba(34,211,238,0.2)",
+                background: "rgba(34,211,238,0.04)",
+                padding: "16px 18px",
+              }}
+            >
+              <div style={{ fontSize: 22, marginBottom: 6 }}>⚡</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "rgba(232,235,243,0.9)" }}>
+                EV Charging Hub
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(232,235,243,0.45)", margin: "4px 0 12px" }}>
+                Add EV chargers to generate revenue from tenants, employees, or customers.
+              </div>
+              <div style={{ fontSize: 12, color: "#22d3ee", fontWeight: 700, marginBottom: 12 }}>
+                $15K–$80K/yr revenue potential
+              </div>
+              <a
+                href="/quote-builder"
+                style={{
+                  display: "inline-block",
+                  padding: "7px 14px",
+                  borderRadius: 8,
+                  background: "rgba(34,211,238,0.1)",
+                  border: "1px solid rgba(34,211,238,0.25)",
+                  color: "#22d3ee",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+              >
+                Add EV Charging →
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================
           EXPORT / DOWNLOAD — TrueQuote™ branded exports
           Available whenever we have at least a load profile (Layer A)
       ================================================================ */}

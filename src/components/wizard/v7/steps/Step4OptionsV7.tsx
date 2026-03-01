@@ -1,15 +1,13 @@
 /**
- * STEP 4: OPTIONS — System Add-Ons Configuration
- * ================================================
- * User configures solar, generators, EV chargers before MagicFit.
- * Thin wrapper around SystemAddOnsCards with clear navigation.
+ * STEP 4: BACKUP POWER — Optional Generator Configuration
+ * =========================================================
+ * BESS quote is built from Steps 1-3. Step 4 lets the user optionally add
+ * a backup generator to the core quote (affects total cost + resilience).
  *
- * Flow: Step 3 (Profile) → Step 4 (Options) → Step 5 (MagicFit)
+ * Solar, Wind, EV Chargers are post-quote add-ons shown in Step 6
+ * ("Maximize Your Savings") AFTER the user sees their BESS savings.
  *
- * Updated Feb 11, 2026:
- * - Pulls all data from Merlin Memory (not state.quote file paths)
- * - Supabase-style inline intro text at top
- * - Cards render in full expanded display by default
+ * Flow: Step 3 (Profile) → Step 4 (Backup Power) → Step 5 (MagicFit) → Step 6 (Quote + Upgrades)
  */
 
 import React, { useCallback, useState } from "react";
@@ -22,7 +20,7 @@ import type {
   ITCBonuses,
 } from "@/wizard/v7/hooks/useWizardV7";
 import { DEFAULT_ADD_ONS, DEFAULT_ITC_BONUSES } from "@/wizard/v7/hooks/useWizardV7";
-import { SystemAddOnsCards } from "./SystemAddOnsCards";
+import { GeneratorCard } from "./GeneratorCard";
 import ITCBonusCard from "../shared/ITCBonusCard";
 import { useMerlinData } from "@/wizard/v7/memory";
 import { getIndustryMeta } from "@/wizard/v7/industryMeta";
@@ -49,22 +47,28 @@ export default function Step4OptionsV7({ state, actions }: Props) {
   );
 
   // Wrap callback to always include ITC bonuses in add-ons
-  const handleAddOnsConfirmed = useCallback(async (addOns: SystemAddOns) => {
-    if (actions.recalculateWithAddOns) {
-      const result = await actions.recalculateWithAddOns({ ...addOns, itcBonuses });
-      return result;
-    }
-    return { ok: true };
-  }, [actions, itcBonuses]);
+  const handleAddOnsConfirmed = useCallback(
+    async (addOns: SystemAddOns) => {
+      if (actions.recalculateWithAddOns) {
+        const result = await actions.recalculateWithAddOns({ ...addOns, itcBonuses });
+        return result;
+      }
+      return { ok: true };
+    },
+    [actions, itcBonuses]
+  );
 
   // When ITC bonuses change, trigger recalculation
-  const handleITCChange = useCallback((newBonuses: ITCBonuses) => {
-    setItcBonuses(newBonuses);
-    if (actions.recalculateWithAddOns) {
-      const currentAddOns = state.step4AddOns ?? DEFAULT_ADD_ONS;
-      actions.recalculateWithAddOns({ ...currentAddOns, itcBonuses: newBonuses });
-    }
-  }, [actions, state.step4AddOns]);
+  const handleITCChange = useCallback(
+    (newBonuses: ITCBonuses) => {
+      setItcBonuses(newBonuses);
+      if (actions.recalculateWithAddOns) {
+        const currentAddOns = state.step4AddOns ?? DEFAULT_ADD_ONS;
+        actions.recalculateWithAddOns({ ...currentAddOns, itcBonuses: newBonuses });
+      }
+    },
+    [actions, state.step4AddOns]
+  );
 
   const peakKW = data.peakLoadKW;
   const industryMeta = getIndustryMeta(data.industry);
@@ -73,21 +77,16 @@ export default function Step4OptionsV7({ state, actions }: Props) {
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
-
-      {/* ── Inline guidance ── */}
+      {/* ── Intro ── */}
       <div className="space-y-2.5">
         <p className="text-sm leading-relaxed text-slate-400">
-          Optional add-ons for your{" "}
-          <span className="text-slate-200 font-medium">{industryLabel}</span> site
-          {peakKW > 0 && (
-            <span className="text-slate-500">{" "}· {Math.round(peakKW)} kW peak</span>
-          )}
-          {data.peakSunHours > 0 && (
-            <span className="text-slate-500">{" "}· {data.peakSunHours} sun hrs/day</span>
-          )}
+          Your <span className="text-slate-200 font-medium">{industryLabel}</span> BESS quote
+          {peakKW > 0 && <span className="text-slate-500"> · {Math.round(peakKW)} kW peak</span>} is
+          ready. Add a backup generator if you need power during outages.
         </p>
         <p className="text-xs text-slate-500">
-          Toggle any card to include it, choose a tier, or skip to continue.
+          Skip this step if BESS alone meets your needs. Solar and EV add-ons are available after
+          you see your quote.
         </p>
       </div>
 
@@ -95,25 +94,24 @@ export default function Step4OptionsV7({ state, actions }: Props) {
       {isPricingPending && (
         <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#3ECF8E]/[0.08] border border-[#3ECF8E]/15">
           <Loader2 className="w-4 h-4 text-[#3ECF8E] animate-spin" />
-          <span className="text-sm text-[#3ECF8E] font-medium">Calculating your system sizing…</span>
+          <span className="text-sm text-[#3ECF8E] font-medium">
+            Calculating your system sizing…
+          </span>
         </div>
       )}
-
-      {/* System Add-Ons Cards — pulls from Merlin Memory via merlinData prop */}
-      <SystemAddOnsCards
+      {/* Generator — optional backup power, included in core quote */}
+      <GeneratorCard
         state={state}
+        peakLoadKW={peakKW}
         currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
         onRecalculate={handleAddOnsConfirmed}
-        pricingStatus={pricingStatus}
-        showGenerateButton={false}
-        merlinData={data}
       />
 
       {/* ── ITC Bonus Qualifications (IRA 2022) ── */}
       <ITCBonusCard
         bonuses={itcBonuses}
         onChange={handleITCChange}
-        capacityMW={peakKW > 0 ? peakKW / 1000 * 0.4 : 1}
+        capacityMW={peakKW > 0 ? (peakKW / 1000) * 0.4 : 1}
       />
 
       {/* ── ProQuote™ upsell — Merlin as salesman ── */}
