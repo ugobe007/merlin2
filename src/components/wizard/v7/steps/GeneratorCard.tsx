@@ -99,6 +99,14 @@ export function GeneratorCard({ peakLoadKW, currentAddOns, onRecalculate }: Gene
     };
   }, [peakLoadKW]);
 
+  // Refs so the useEffect dep array stays stable — prevents render loop when
+  // peakLoadKW fluctuates (which creates new tiers objects) or when the parent
+  // recreates onRecalculate (when itcBonuses/actions change).
+  const tiersRef = useRef(tiers);
+  tiersRef.current = tiers;
+  const onRecalculateRef = useRef(onRecalculate);
+  onRecalculateRef.current = onRecalculate;
+
   const curTier = tiers[tier];
 
   // ── Write TrueQuoteTemp synchronously ──
@@ -113,17 +121,20 @@ export function GeneratorCard({ peakLoadKW, currentAddOns, onRecalculate }: Gene
     });
   }
 
-  // ── Debounced recalculate ──
+  // ── Debounced recalculate — only fires on real user interaction ──
+  // tiers + onRecalculate accessed via refs; NOT in dep array.
+  // This prevents the loop: peakLoadKW change → new tiers ref → effect fires
+  // → recalculate → new peakLoadKW → new tiers ref → repeat.
   useEffect(() => {
     if (isFirstRef.current) {
       isFirstRef.current = false;
       return;
     }
-    if (!onRecalculate) return;
+    if (!onRecalculateRef.current) return;
     if (timerRef.current) clearTimeout(timerRef.current);
-    const t = tiers[tier];
+    const t = tiersRef.current[tier];
     timerRef.current = setTimeout(async () => {
-      await onRecalculate({
+      await onRecalculateRef.current!({
         includeSolar: false,
         solarKW: 0,
         includeGenerator: enabled,
@@ -138,7 +149,7 @@ export function GeneratorCard({ peakLoadKW, currentAddOns, onRecalculate }: Gene
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [enabled, tier, tiers, onRecalculate]);
+  }, [enabled, tier]); // Only user-interaction deps — no tiers/onRecalculate
 
   // ── Handlers ──
   function handleToggle() {
