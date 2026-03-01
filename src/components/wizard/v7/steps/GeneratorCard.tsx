@@ -102,6 +102,8 @@ export function GeneratorCard({
   });
   const [tier, setTier] = useState<GenTier["key"]>("standard");
   const [isExpanded, setIsExpanded] = useState(true);
+  // Brief confirmation state: shows '✓ Added to quote' for 1.5s after a tier click
+  const [confirmingTier, setConfirmingTier] = useState<GenTier["key"] | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRef = useRef(true);
@@ -135,14 +137,23 @@ export function GeneratorCard({
   const curTier = tiers[tier];
 
   // ── Write TrueQuoteTemp synchronously ──
+  // Explicit set of every add-on field — no ...tqt spread.
+  // Spreading tqt would silently preserve stale includeEV/includeSolar
+  // values from a previous session, which leaks into Step 5's snapshot.
   function writeTQT(nextEnabled: boolean, nextTier: GenTier["key"]) {
     const t = tiers[nextTier];
-    const tqt = TrueQuoteTemp.get();
     TrueQuoteTemp.writeAddOns({
-      ...tqt,
+      includeSolar: false,
+      solarKW: 0,
       includeGenerator: nextEnabled,
       generatorKW: nextEnabled ? t.sizeKw : 0,
       generatorFuelType: t.fuelType === "Diesel" ? "diesel" : "natural-gas",
+      includeWind: false,
+      windKW: 0,
+      includeEV: false,
+      evChargerKW: 0,
+      evInstallCost: 0,
+      evMonthlyRevenue: 0,
     });
   }
 
@@ -187,6 +198,9 @@ export function GeneratorCard({
     writeTQT(true, k); // selecting a tier implicitly enables
     setTier(k);
     if (!enabled) setEnabled(true);
+    // Show '✓ Added to quote' confirmation for 1.5 s
+    setConfirmingTier(k);
+    setTimeout(() => setConfirmingTier((prev) => (prev === k ? null : prev)), 1500);
   }
 
   // ── Render ──
@@ -317,6 +331,7 @@ export function GeneratorCard({
             {(["essential", "standard", "full"] as const).map((k) => {
               const t = tiers[k];
               const isSel = tier === k && enabled;
+              const isConfirming = confirmingTier === k;
               return (
                 <div
                   key={k}
@@ -327,10 +342,11 @@ export function GeneratorCard({
                     borderRadius: 10,
                     cursor: "pointer",
                     border: isSel
-                      ? "2px solid rgba(239,68,68,0.7)"
+                      ? "2px solid rgba(62,207,142,0.7)" // emerald when selected
                       : "1px solid rgba(255,255,255,0.08)",
-                    background: isSel ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.02)",
+                    background: isSel ? "rgba(62,207,142,0.06)" : "rgba(255,255,255,0.02)",
                     transition: "all 0.15s",
+                    boxShadow: isSel ? "0 0 0 1px rgba(62,207,142,0.15)" : "none",
                   }}
                 >
                   {t.tag && (
@@ -357,7 +373,7 @@ export function GeneratorCard({
                     style={{
                       fontSize: 12,
                       fontWeight: 700,
-                      color: isSel ? "#f87171" : "rgba(232,235,243,0.7)",
+                      color: isSel ? "#34d399" : "rgba(232,235,243,0.7)",
                       marginBottom: 6,
                     }}
                   >
@@ -367,7 +383,7 @@ export function GeneratorCard({
                     style={{
                       fontSize: 18,
                       fontWeight: 800,
-                      color: isSel ? "#f87171" : "rgba(232,235,243,0.9)",
+                      color: isSel ? "#34d399" : "rgba(232,235,243,0.9)",
                       fontFamily: "Outfit, sans-serif",
                     }}
                   >
@@ -412,6 +428,26 @@ export function GeneratorCard({
                       </div>
                     ))}
                   </div>
+                  {/* Confirmation label — shows immediately on click, stays while selected */}
+                  {(isSel || isConfirming) && (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                        marginTop: 10,
+                        padding: "5px 8px",
+                        borderRadius: 6,
+                        background: "rgba(62,207,142,0.1)",
+                        border: "1px solid rgba(62,207,142,0.25)",
+                      }}
+                    >
+                      <span style={{ fontSize: 12, color: "#34d399" }}>✓</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "#34d399" }}>
+                        Added to quote
+                      </span>
+                    </div>
+                  )}
                 </div>
               );
             })}
