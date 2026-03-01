@@ -518,6 +518,43 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
       )}
 
       {/* ================================================================
+          ADD-ONS — Solar PV and EV Charging, placed prominently above
+          Equipment Summary so user sees revised numbers immediately.
+      ================================================================ */}
+      {quoteReady && (
+        <div
+          className="rounded-xl overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(245,158,11,0.07) 0%, rgba(6,182,212,0.07) 100%)",
+            border: "1.5px solid rgba(245,158,11,0.22)",
+          }}
+        >
+          <div
+            className="flex items-center gap-2 px-4 py-3 border-b"
+            style={{ borderColor: "rgba(245,158,11,0.15)", background: "rgba(0,0,0,0.2)" }}
+          >
+            <span style={{ fontSize: 15 }}>⚡</span>
+            <span className="text-xs font-bold text-amber-300 uppercase tracking-widest">
+              Enhance Your Investment
+            </span>
+            <span className="ml-auto text-[10px] text-slate-500">
+              Add solar or EV charging — quote updates instantly above
+            </span>
+          </div>
+          <div className="p-3">
+            <AddOnsPanelStep6
+              industry={data.industry || ""}
+              currentSolarKW={Number(quote.solarKW ?? 0)}
+              currentEVKW={Number(quote.evChargerKW ?? 0)}
+              currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
+              recalculateWithAddOns={actions.recalculateWithAddOns}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================
           EQUIPMENT & FINANCIAL SUMMARY — Horizontal layout
       ================================================================ */}
       {quoteReady && (
@@ -1117,20 +1154,6 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
             ))}
           </ul>
         </details>
-      )}
-
-      {/* ================================================================
-          ADD-ONS — Solar PV and EV Charging (post-quote, industry-tailored)
-          Industry-specific packages. User adds after seeing base BESS quote.
-      ================================================================ */}
-      {quoteReady && (
-        <AddOnsPanelStep6
-          industry={data.industry || ""}
-          currentSolarKW={Number(quote.solarKW ?? 0)}
-          currentEVKW={Number(quote.evChargerKW ?? 0)}
-          currentAddOns={state.step4AddOns ?? DEFAULT_ADD_ONS}
-          recalculateWithAddOns={actions.recalculateWithAddOns}
-        />
       )}
 
       {/* ================================================================

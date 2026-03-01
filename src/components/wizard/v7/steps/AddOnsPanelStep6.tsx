@@ -624,7 +624,10 @@ const AddOnsPanelStep6 = React.memo(function AddOnsPanelStep6({
       solarKW: pkg.kW,
     });
     setIsAddingSolar(false);
-    if (result.ok) setActivePanel(null);
+    if (result.ok) {
+      setActivePanel(null);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
   async function handleRemoveSolar() {
@@ -672,7 +675,10 @@ const AddOnsPanelStep6 = React.memo(function AddOnsPanelStep6({
       evChargerKW: ev.totalPowerKw,
     });
     setIsAddingEV(false);
-    if (result.ok) setActivePanel(null);
+    if (result.ok) {
+      setActivePanel(null);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
   async function handleRemoveEV() {
@@ -1159,18 +1165,6 @@ const AddOnsPanelStep6 = React.memo(function AddOnsPanelStep6({
 
   return (
     <div>
-      {/* Section header */}
-      <div className="flex items-center gap-3 mb-3">
-        <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.06)" }} />
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
-          Enhance Your Investment
-        </span>
-        <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.06)" }} />
-      </div>
-      <p className="text-xs text-slate-600 text-center mb-4">
-        Optional add-ons — extend savings and create new revenue streams
-      </p>
-
       {/* Two add-on panels stacked */}
       <div className="space-y-3">
         {renderSolarCard()}
