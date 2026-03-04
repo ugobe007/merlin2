@@ -1,0 +1,905 @@
+/**
+ * WIZARD V8 — STEP 6: QUOTE RESULTS (COMPLETE V7 PARITY)
+ *
+ * Full V7 feature parity:
+ * - TrueQuote™ gold badge (clickable) → opens financial modal
+ * - PDF/Word/Excel export buttons with lead capture gate
+ * - ProQuote™ upsell banner
+ * - Detailed equipment & financial breakdown
+ * - Hero savings display
+ * - System specs stats bar
+ */
+
+import React, { useState, useCallback } from "react";
+import type { WizardState, WizardActions } from "../wizardState";
+import { 
+  Battery, 
+  Sun, 
+  Zap, 
+  Fuel, 
+  TrendingUp, 
+  MapPin, 
+  Building2, 
+  Sparkles,
+  RefreshCw,
+  ArrowLeft,
+  Shield,
+  Download,
+  FileText,
+  Bookmark,
+  X,
+} from "lucide-react";
+import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
+import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
+import { buildV8ExportData } from "../utils/buildV8ExportData";
+import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
+import {
+  isUserAuthenticated,
+  peekQuotaRemaining,
+  trackQuoteGenerated,
+} from "@/services/subscriptionService";
+import { supabase } from "@/services/supabaseClient";
+
+const DARK = {
+  cardBg: "rgba(255,255,255,0.04)",
+  cardBorder: "rgba(255,255,255,0.09)",
+  textPrimary: "#ffffff",
+  textSecondary: "rgba(255,255,255,0.60)",
+  textMuted: "rgba(255,255,255,0.35)",
+  accent: "#3ECF8E",
+};
+
+function fmt$(n: number | null | undefined): string {
+  if (n === null || n === undefined || !Number.isFinite(n)) return "—";
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(n);
+  } catch {
+    return `$${Math.round(n)}`;
+  }
+}
+
+function fmtNum(n: number | null | undefined, fallback = "—"): string {
+  if (n === null || n === undefined || !Number.isFinite(n)) return fallback;
+  return String(Math.round(n));
+}
+
+interface StatItemProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  accent?: string;
+}
+
+function StatItem({ icon, label, value, accent }: StatItemProps) {
+  return (
+    <div className="flex items-center gap-2 whitespace-nowrap">
+      <span className={accent || "text-slate-500"}>{icon}</span>
+      <span className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
+        {label}
+      </span>
+      <span className="text-sm font-bold text-slate-100 tabular-nums">{value}</span>
+    </div>
+  );
+}
+
+interface Props {
+  state: WizardState;
+  actions: WizardActions;
+}
+
+export default function Step5V8({ state, actions }: Props) {
+  const { tiers, selectedTierIndex, location, industry } = state;
+  const tier = tiers && selectedTierIndex !== null ? tiers[selectedTierIndex] : undefined;
+
+  // Modal states
+  const [showFinancialModal, setShowFinancialModal] = useState(false);
+  const [showProQuoteModal, setShowProQuoteModal] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState<'pdf' | 'word' | 'excel' | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  // ── LEAD CAPTURE GATE ────────────────────────────────────────────
+  const [showLeadGate, setShowLeadGate] = useState(false);
+  const [pendingFormat, setPendingFormat] = useState<'pdf' | 'word' | 'excel' | null>(null);
+  const [leadCaptured, setLeadCaptured] = useState(() => {
+    return isUserAuthenticated() || sessionStorage.getItem("merlin_lead_captured") === "true";
+  });
+  const [leadForm, setLeadForm] = useState({ name: "", email: "", company: "" });
+  const [leadSubmitting, setLeadSubmitting] = useState(false);
+
+  const handleLeadSubmit = useCallback(async () => {
+    if (!leadForm.email || !leadForm.name) return;
+    setLeadSubmitting(true);
+    try {
+      await supabase.from("leads").insert([
+        {
+          name: leadForm.name,
+          email: leadForm.email,
+          company: leadForm.company || null,
+          source: `wizard-v8-${state.industry || "unknown"}`,
+          format: pendingFormat || "pdf",
+        },
+      ]);
+    } catch {
+      // Don't block UX on lead capture failure
+    }
+    setLeadCaptured(true);
+    sessionStorage.setItem("merlin_lead_captured", "true");
+    setShowLeadGate(false);
+    setLeadSubmitting(false);
+  }, [leadForm, pendingFormat, state.industry]);
+
+  const handleSkipLead = useCallback(() => {
+    setLeadCaptured(true);
+    sessionStorage.setItem("merlin_lead_captured", "true");
+    setShowLeadGate(false);
+  }, []);
+
+  // Export handler with real export integration
+  const handleExport = useCallback(async (format: 'pdf' | 'word' | 'excel', bypassLeadGate = false) => {
+    setExportError(null);
+
+    // ── LEAD CAPTURE GATE: Show form before first export for guests ──
+    if (!bypassLeadGate && !leadCaptured && !isUserAuthenticated()) {
+      setPendingFormat(format);
+      setShowLeadGate(true);
+      return;
+    }
+
+    // ── QUOTA CHECK: Only exports count as "delivered quotes" ──
+    const quota = peekQuotaRemaining("quote");
+    if (!quota.allowed) {
+      setExportError(`You've used all ${quota.limit} free quote exports this session. Sign up for more!`);
+      return;
+    }
+
+    setExportingFormat(format);
+
+    try {
+      const data = buildV8ExportData(state);
+
+      switch (format) {
+        case "pdf":
+          await exportQuoteAsPDF(data);
+          break;
+        case "word":
+          await exportQuoteAsWord(data);
+          break;
+        case "excel":
+          await exportQuoteAsExcel(data);
+          break;
+      }
+
+      // ✅ Track AFTER successful export — this is a "delivered quote"
+      trackQuoteGenerated();
+    } catch (err) {
+      setExportError(`Export failed — ${(err as Error).message || "please try again"}`);
+    } finally {
+      setExportingFormat(null);
+    }
+  }, [state, leadCaptured]);
+
+  // ── Auto-trigger pending export after lead capture completes ──
+  React.useEffect(() => {
+    if (leadCaptured && pendingFormat && !showLeadGate && !exportingFormat) {
+      const fmt = pendingFormat;
+      setPendingFormat(null);
+      handleExport(fmt, true);
+    }
+  }, [leadCaptured, pendingFormat, showLeadGate, exportingFormat, handleExport]);
+
+  if (!tier) {
+    return (
+      <div
+        style={{
+          textAlign: "center",
+          padding: "60px 24px",
+          color: DARK.textSecondary,
+          fontSize: 15,
+        }}
+      >
+        No quote available.{" "}
+        <button
+          onClick={() => actions.goToStep(1)}
+          style={{
+            color: DARK.accent,
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            textDecoration: "underline",
+            fontSize: 15,
+          }}
+        >
+          Start over
+        </button>
+      </div>
+    );
+  }
+
+  const locationLine = location
+    ? [location.city, location.state].filter(Boolean).join(", ")
+    : "";
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-5 p-4">
+      {/* ================================================================
+          HEADER — Industry + Location + Navigation
+      ================================================================ */}
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-2 text-slate-400 mb-2">
+            <Building2 className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              {industry?.replace(/_/g, " ") || "Industry"}
+            </span>
+            <span className="text-slate-600">•</span>
+            <MapPin className="w-4 h-4" />
+            <span className="text-sm">{locationLine || "—"}</span>
+          </div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
+            <Zap className="w-5 h-5 text-[#3ECF8E]" />
+            Your Energy Quote
+          </h1>
+        </div>
+        <div className="flex gap-2.5">
+          <button
+            onClick={() => actions.goToStep(4)}
+            className="h-9 px-3.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-300 hover:bg-white/[0.06] font-medium text-sm flex items-center gap-1.5 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back
+          </button>
+          <button
+            onClick={() => actions.goToStep(1)}
+            className="h-9 px-3.5 rounded-lg border border-red-500/20 bg-red-500/[0.08] text-red-400 hover:bg-red-500/[0.12] font-medium text-sm flex items-center gap-1.5 transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Reset
+          </button>
+        </div>
+      </div>
+
+      {/* ================================================================
+          TRUEQUOTE™ GOLD BADGE — Always visible at top, opens financial modal
+      ================================================================ */}
+      <button
+        type="button"
+        onClick={() => setShowFinancialModal(true)}
+        className="group w-full flex items-center gap-4 p-4 rounded-xl border-2 border-amber-500/30 bg-amber-500/[0.04] hover:border-amber-400/50 hover:bg-amber-500/[0.08] transition-all duration-300 cursor-pointer"
+        aria-label="Open TrueQuote financial summary"
+      >
+        <div className="shrink-0">
+          <img
+            src={badgeGoldIcon}
+            alt="TrueQuote Verified"
+            className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
+          />
+        </div>
+        <div className="flex-1 text-left">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-xl font-bold text-amber-400 tracking-tight">TrueQuote™</span>
+            <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+              Verified
+            </span>
+          </div>
+          <p className="text-sm text-slate-400 leading-snug">
+            Every number is sourced. Click to view full financial projection, ROI analysis, and
+            payback timeline.
+          </p>
+        </div>
+        <div className="shrink-0 text-amber-500/50 group-hover:text-amber-400 group-hover:translate-x-1 transition-all duration-300">
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </button>
+
+      {/* ================================================================
+          HERO SAVINGS — Big number, compelling
+      ================================================================ */}
+      {tier.annualSavings > 0 && (
+        <div
+          className="relative rounded-xl overflow-hidden"
+          style={{
+            boxShadow:
+              "0 0 0 1px rgba(52,211,153,0.14), 0 0 50px rgba(52,211,153,0.12), 0 8px 32px rgba(0,0,0,0.35)",
+          }}
+        >
+          <div className="absolute inset-0" style={{ background: "rgba(52,211,153,0.025)" }} />
+
+          <div
+            className="relative p-8 rounded-xl"
+            style={{
+              border: "2px solid rgba(52,211,153,0.40)",
+              background: "rgba(52,211,153,0.03)",
+            }}
+          >
+            <div className="text-center">
+              <div
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4"
+                style={{
+                  background: "rgba(62,207,142,0.12)",
+                  border: "1px solid rgba(62,207,142,0.38)",
+                  boxShadow: "0 0 18px rgba(62,207,142,0.18)",
+                }}
+              >
+                <div className="w-2 h-2 bg-[#3ECF8E] rounded-full animate-pulse" />
+                <span className="text-[#3ECF8E] font-semibold text-xs uppercase tracking-wider">
+                  Projected Annual Savings
+                </span>
+              </div>
+              <div
+                className="text-5xl md:text-6xl font-bold text-[#3ECF8E] leading-none"
+                style={{ textShadow: "0 0 40px rgba(62,207,142,0.40)" }}
+              >
+                {fmt$(tier.annualSavings)}
+              </div>
+              <div className="text-lg text-slate-400 mt-1.5">per year</div>
+
+              {/* ROI snapshot below hero */}
+              <div className="mt-5 inline-flex items-center gap-4 px-5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <TrendingUp className="w-4 h-4 text-[#3ECF8E]" />
+                <span className="text-sm text-slate-300">
+                  Payback in{" "}
+                  <strong className="text-[#3ECF8E]">
+                    {tier.paybackYears.toFixed(1)} years
+                  </strong>
+                </span>
+                <span className="text-slate-600">|</span>
+                <span className="text-sm text-slate-300">
+                  10yr ROI <strong className="text-[#3ECF8E]">{tier.roi10Year.toFixed(0)}%</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================
+          STATS BAR — Key metrics at a glance
+      ================================================================ */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 border-b border-white/[0.06]">
+        <StatItem
+          icon={<Zap className="w-3.5 h-3.5" />}
+          label="Base"
+          value={`${fmtNum(state.baseLoadKW)} kW`}
+          accent="text-amber-400"
+        />
+        <StatItem
+          icon={<Battery className="w-3.5 h-3.5" />}
+          label="BESS"
+          value={`${fmtNum(tier.bessKWh)} kWh`}
+          accent="text-violet-400"
+        />
+        <StatItem
+          icon={<Zap className="w-3.5 h-3.5" />}
+          label="Duration"
+          value={`${fmtNum(tier.durationHours)} hrs`}
+          accent="text-blue-400"
+        />
+        {tier.solarKW > 0 && (
+          <StatItem
+            icon={<Sun className="w-3.5 h-3.5" />}
+            label="Solar"
+            value={`${fmtNum(tier.solarKW)} kW`}
+            accent="text-yellow-400"
+          />
+        )}
+        {tier.generatorKW > 0 && (
+          <StatItem
+            icon={<Fuel className="w-3.5 h-3.5" />}
+            label="Gen"
+            value={`${fmtNum(tier.generatorKW)} kW`}
+            accent="text-red-400"
+          />
+        )}
+      </div>
+
+      {/* ================================================================
+          EQUIPMENT & FINANCIAL SUMMARY — Horizontal layout
+      ================================================================ */}
+      <div className="border border-white/[0.06] rounded-lg overflow-hidden space-y-0">
+        {/* Equipment — horizontal row */}
+        <div className="p-4 border-b border-white/[0.06]">
+          <div className="flex items-center gap-1.5 mb-3">
+            <Battery className="w-3.5 h-3.5 text-slate-500" />
+            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              Equipment
+            </span>
+          </div>
+
+          {/* Horizontal badge row */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
+              <Battery className="w-3.5 h-3.5 text-violet-400" />
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                  Battery
+                </span>
+                <span className="text-xs font-bold text-white tabular-nums">
+                  {fmtNum(tier.bessKWh)} kWh
+                </span>
+              </div>
+            </div>
+
+            <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <Zap className="w-3.5 h-3.5 text-blue-400" />
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                  Duration
+                </span>
+                <span className="text-xs font-bold text-white tabular-nums">
+                  {fmtNum(tier.durationHours)} hrs
+                </span>
+              </div>
+            </div>
+
+            {tier.solarKW > 0 && (
+              <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                    Solar
+                  </span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {fmtNum(tier.solarKW)} kW
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {tier.generatorKW > 0 && (
+              <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                <Zap className="w-3.5 h-3.5 text-red-400" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                    Generator
+                  </span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {fmtNum(tier.generatorKW)} kW
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {tier.evChargerKW > 0 && (
+              <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                    EV Charging
+                  </span>
+                  <span className="text-xs font-bold text-white tabular-nums">
+                    {fmtNum(tier.evChargerKW)} kW
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Financial — tighter grouped layout */}
+        <div className="p-4 bg-gradient-to-br from-slate-800/30 to-slate-900/30">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Financials
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/20">
+              <Shield className="w-3 h-3 text-amber-400" />
+              <span className="text-amber-400 font-bold text-[10px]">TrueQuote™</span>
+            </div>
+          </div>
+
+          {/* ── INVESTMENT group ── */}
+          <div className="mb-1.5">
+            <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+              Investment
+            </span>
+          </div>
+          <div className="space-y-0">
+            <div className="flex items-center justify-between py-1.5">
+              <span className="text-xs text-slate-400">Total Investment</span>
+              <span className="text-sm font-semibold text-white tabular-nums">
+                {fmt$(tier.grossCost)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-1.5">
+              <span className="text-xs text-slate-400">
+                Federal ITC ({Math.round(tier.itcRate * 100)}%)
+              </span>
+              <span className="text-sm font-semibold text-emerald-400 tabular-nums">
+                −{fmt$(tier.itcAmount)}
+              </span>
+            </div>
+          </div>
+
+          {/* NET COST — hero row with visible separator */}
+          <div className="flex items-baseline justify-between py-2 border-t border-b border-white/[0.10] my-1.5">
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+              Net Cost
+            </span>
+            <span className="text-xl font-black text-white tabular-nums tracking-tight">
+              {fmt$(tier.netCost)}
+            </span>
+          </div>
+
+          {/* ── RETURNS group ── */}
+          <div className="mt-2.5 mb-1.5">
+            <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+              Returns
+            </span>
+          </div>
+          <div className="space-y-0">
+            <div className="flex items-center justify-between py-1.5">
+              <span className="text-xs text-slate-400">Annual Savings</span>
+              <span className="text-sm font-semibold text-emerald-400 tabular-nums">
+                {fmt$(tier.annualSavings)}
+              </span>
+            </div>
+
+            {/* Payback + ROI — side-by-side stat pills */}
+            <div className="grid grid-cols-2 gap-2 py-1.5">
+              <div className="bg-slate-800/50 rounded-lg px-2.5 py-2 text-center border border-white/[0.05]">
+                <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider mb-0.5">
+                  Payback
+                </div>
+                <div className="text-sm font-bold text-white tabular-nums">
+                  {tier.paybackYears.toFixed(1)} yr
+                </div>
+              </div>
+              <div className="bg-slate-800/50 rounded-lg px-2.5 py-2 text-center border border-white/[0.05]">
+                <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider mb-0.5">
+                  10yr ROI
+                </div>
+                <div className="text-sm font-bold text-emerald-400 tabular-nums">
+                  {tier.roi10Year.toFixed(0)}%
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between py-1.5">
+              <span className="text-xs text-slate-400">NPV (25yr)</span>
+              <span className={`text-sm font-semibold tabular-nums ${tier.npv >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {fmt$(tier.npv)}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between py-1.5">
+              <span className="text-xs text-slate-400">10yr Cumulative</span>
+              <span className="text-sm font-semibold text-emerald-400 tabular-nums">
+                {fmt$(tier.annualSavings * 10)}
+              </span>
+            </div>
+          </div>
+
+          {/* Financial projection CTA */}
+          <button
+            onClick={() => setShowFinancialModal(true)}
+            className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 rounded-md border border-amber-500/20 bg-amber-500/[0.04] hover:bg-amber-500/[0.08] transition-all group"
+          >
+            <TrendingUp className="w-3.5 h-3.5 text-amber-400 group-hover:text-amber-300" />
+            <span className="text-[11px] font-semibold text-amber-400 group-hover:text-amber-300">
+              View 10-Year Financial Projection
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* ================================================================
+          EXPORT / DOWNLOAD — PDF, Word, Excel
+      ================================================================ */}
+      <div className="rounded-xl border-2 border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] p-4 sm:p-6">
+        <div className="flex flex-wrap justify-between items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="text-lg font-bold text-slate-100 tracking-tight mb-1">
+              Download Quote
+            </div>
+            <p className="text-sm text-slate-400">
+              kW breakdown, confidence score & methodology included
+            </p>
+          </div>
+
+          <div className="flex gap-2 flex-shrink-0 flex-wrap">
+            {(['pdf', 'word', 'excel'] as const).map((format) => (
+              <button
+                key={format}
+                type="button"
+                onClick={() => handleExport(format)}
+                disabled={exportingFormat !== null}
+                className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border-2 border-[#3ECF8E]/30 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/50 hover:bg-[#3ECF8E]/[0.10] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {exportingFormat === format ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin text-[#3ECF8E]" />
+                    <span className="text-sm font-semibold text-[#3ECF8E]">
+                      ...
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 text-[#3ECF8E]" />
+                    <span className="text-sm font-semibold text-[#3ECF8E]">
+                      {format.toUpperCase()}
+                    </span>
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Export error */}
+        {exportError && (
+          <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400 text-center">
+            {exportError}
+          </div>
+        )}
+      </div>
+
+      {/* ================================================================
+          LEAD CAPTURE MODAL
+      ================================================================ */}
+      {showLeadGate && (
+        <div
+          className="fixed inset-0 bg-black/85 z-[9999] flex items-center justify-center p-5"
+          onClick={() => setShowLeadGate(false)}
+        >
+          <div
+            className="bg-slate-900 rounded-2xl max-w-md w-full p-8 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowLeadGate(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-2">
+              <FileText className="w-6 h-6 text-[#3ECF8E]" />
+              <h2 className="text-xl font-bold text-slate-100">
+                Get Your Quote
+              </h2>
+            </div>
+
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              Enter your details to download your {pendingFormat?.toUpperCase()} quote.
+              We'll save it to your account so you can access it anytime.
+            </p>
+
+            <div className="flex flex-col gap-3.5 mb-5">
+              <input
+                type="text"
+                placeholder="Your name *"
+                value={leadForm.name}
+                onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
+                className="px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3ECF8E]/30"
+              />
+              <input
+                type="email"
+                placeholder="Email address *"
+                value={leadForm.email}
+                onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+                className="px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3ECF8E]/30"
+              />
+              <input
+                type="text"
+                placeholder="Company (optional)"
+                value={leadForm.company}
+                onChange={(e) => setLeadForm({ ...leadForm, company: e.target.value })}
+                className="px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3ECF8E]/30"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleLeadSubmit}
+                disabled={!leadForm.name || !leadForm.email || leadSubmitting}
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#3ECF8E]/90 transition-colors"
+              >
+                {leadSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="w-4 h-4" />
+                    Get Quote
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleSkipLead}
+                className="px-5 py-3 rounded-lg border border-slate-700 text-slate-400 font-semibold text-sm hover:bg-slate-800 transition-colors"
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================
+          PROQUOTE™ UPSELL — Merlin is the salesman
+      ================================================================ */}
+      <div className="rounded-xl border-2 border-white/[0.08] bg-white/[0.03] p-4 sm:p-6 hover:border-white/[0.12] transition-all">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
+          <div className="shrink-0 hidden sm:block">
+            <img src={badgeProQuoteIcon} alt="ProQuote" className="w-14 h-14 object-contain" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-base font-bold text-slate-100 tracking-tight">
+              Want to go deeper?
+            </div>
+            <div className="text-sm text-slate-400 mt-1 leading-relaxed">
+              ProQuote™ gives you full engineering control — custom equipment, fuel cells, financial
+              modeling, and bank-ready exports.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowProQuoteModal(true)}
+            className="flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl border-2 border-[#3ECF8E]/30 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/50 hover:bg-[#3ECF8E]/[0.12] transition-all w-full sm:w-auto sm:shrink-0 group"
+          >
+            <Sparkles className="w-4 h-4 text-[#3ECF8E]" />
+            <span className="text-sm font-bold text-[#3ECF8E] tracking-wide">Open ProQuote™</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ================================================================
+          BOTTOM NAVIGATION
+      ================================================================ */}
+      <div className="flex justify-between items-center pt-8 mt-8 border-t border-white/[0.08]">
+        <button
+          onClick={() => actions.goToStep(4)}
+          className="px-6 py-3 bg-white/5 text-slate-300 rounded-xl hover:bg-white/10 transition-all border border-white/10 flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Tiers
+        </button>
+        <button
+          onClick={() => actions.goToStep(1)}
+          className="px-8 py-4 rounded-xl font-bold text-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+        >
+          <RefreshCw className="w-5 h-5" />
+          Start Over
+        </button>
+      </div>
+
+      {/* ================================================================
+          TRUEQUOTE™ FINANCIAL PROJECTION MODAL (placeholder)
+      ================================================================ */}
+      {showFinancialModal && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowFinancialModal(false)}
+        >
+          <div
+            className="bg-slate-800 rounded-xl p-6 max-w-2xl w-full border-2 border-amber-500/30"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <img src={badgeGoldIcon} alt="TrueQuote" className="w-12 h-12" />
+              <div>
+                <h3 className="text-xl font-bold text-amber-400">TrueQuote™ Financial Projection</h3>
+                <p className="text-sm text-slate-400">10-year cash flow analysis</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-white/[0.04] rounded-lg border border-white/[0.06]">
+                <div className="text-sm font-semibold text-slate-300 mb-2">Total Investment</div>
+                <div className="text-2xl font-bold text-white">{fmt$(tier.grossCost)}</div>
+              </div>
+
+              <div className="p-4 bg-emerald-500/[0.06] rounded-lg border border-emerald-500/20">
+                <div className="text-sm font-semibold text-emerald-300 mb-2">Annual Savings</div>
+                <div className="text-2xl font-bold text-emerald-400">{fmt$(tier.annualSavings)}/yr</div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/[0.04]">
+                  <div className="text-xs text-slate-500 mb-1">Payback Period</div>
+                  <div className="text-lg font-bold text-white">{tier.paybackYears.toFixed(1)} years</div>
+                </div>
+                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/[0.04]">
+                  <div className="text-xs text-slate-500 mb-1">10-Year ROI</div>
+                  <div className="text-lg font-bold text-emerald-400">{tier.roi10Year.toFixed(0)}%</div>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-500 mt-4">
+                * Projections based on industry-standard assumptions. Actual savings may vary based on
+                usage patterns and utility rates.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowFinancialModal(false)}
+              className="mt-6 w-full py-2.5 rounded-lg border border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.06] text-slate-300 font-medium transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================
+          PROQUOTE™ MODAL (placeholder)
+      ================================================================ */}
+      {showProQuoteModal && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowProQuoteModal(false)}
+        >
+          <div
+            className="bg-slate-800 rounded-xl p-6 max-w-2xl w-full border-2 border-[#3ECF8E]/30"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <img src={badgeProQuoteIcon} alt="ProQuote" className="w-12 h-12" />
+              <div>
+                <h3 className="text-xl font-bold text-[#3ECF8E]">ProQuote™</h3>
+                <p className="text-sm text-slate-400">Full engineering control</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm text-slate-300">
+                ProQuote gives you access to advanced features:
+              </p>
+              <ul className="space-y-2">
+                {[
+                  "Custom equipment selection and sizing",
+                  "Fuel cell and hydrogen integration",
+                  "Advanced financial modeling (DCF, IRR, NPV)",
+                  "Bank-ready Word/Excel exports",
+                  "Detailed engineering specifications",
+                  "Vendor comparison tools",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-slate-400">
+                    <span className="text-[#3ECF8E] mt-0.5">✓</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  window.location.href = "/quote-builder";
+                }}
+                className="flex-1 py-2.5 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold hover:bg-[#35b87a] transition-colors"
+              >
+                Open ProQuote™
+              </button>
+              <button
+                onClick={() => setShowProQuoteModal(false)}
+                className="px-6 py-2.5 rounded-lg border border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.06] text-slate-300 font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
