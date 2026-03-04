@@ -32,6 +32,7 @@ export const INDUSTRY_IMAGES: Record<CanonicalIndustryKey, string> = {
   restaurant: restaurantImg,
   hospital: healthcareImg,
   datacenter: dataCenterImg,
+  "data-center": dataCenterImg, // V8 uses data_center → data-center
   "ev-charging": evChargingImg,
   airport: airportImg,
   casino: casinoImg,
