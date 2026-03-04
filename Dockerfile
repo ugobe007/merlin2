@@ -28,6 +28,9 @@ COPY package*.json ./
 # Install dependencies (no cache to ensure fresh install)
 RUN npm ci --no-audit --prefer-offline
 
+# Cache bust for source files
+ARG CACHEBUST=1
+
 # Copy source code
 COPY . .
 
