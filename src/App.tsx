@@ -30,6 +30,7 @@ const TwitterBanner = lazy(() => import("./pages/TwitterBanner"));
 const WizardV6 = lazy(() => import("./components/wizard/v6/WizardV6"));
 const WizardV7Page = lazy(() => import("./pages/WizardV7Page"));
 const WizardVNextPage = lazy(() => import("./pages/WizardVNextPage"));
+const WizardV8Page = lazy(() => import("./wizard/v8/WizardV8Page"));
 const MetaCalculationsPage = lazy(() => import("./pages/MetaCalculationsPage"));
 const MarketIntelligencePage = lazy(() => import("./pages/MarketIntelligencePage"));
 const QuoteTemplatePage = lazy(() => import("./pages/QuoteTemplatePage"));
@@ -339,9 +340,21 @@ function App() {
     );
   }
 
-  // Access via /wizard or /wizard-v7 - V7 SSOT Wizard (Feb 1, 2026 - NOW THE DEFAULT)
+  // Access via /wizard or /v8 - V8 PRODUCTION WIZARD (March 4, 2026 - NOW THE DEFAULT)
   if (
     pathname === "/wizard" ||
+    pathname === "/wizard-v8" ||
+    pathname === "/v8"
+  ) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <WizardV8Page />
+      </Suspense>
+    );
+  }
+
+  // Access via /wizard-v7 or /v7 - V7 Legacy (Feb 1, 2026)
+  if (
     pathname === "/wizard-v7" ||
     pathname === "/v7" ||
     pathname === "/wizard/v7"
