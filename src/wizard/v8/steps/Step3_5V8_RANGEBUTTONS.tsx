@@ -25,13 +25,13 @@ interface RangeButtonProps {
   isRecommended?: boolean;
 }
 
-const RangeButton: React.FC<RangeButtonProps> = ({ 
-  label, 
-  value, 
-  isSelected, 
+const RangeButton: React.FC<RangeButtonProps> = ({
+  label,
+  value,
+  isSelected,
   onClick,
   color = "purple",
-  isRecommended = false
+  isRecommended = false,
 }) => {
   const colorClasses = {
     amber: {
@@ -62,14 +62,17 @@ const RangeButton: React.FC<RangeButtonProps> = ({
       className={`
         relative px-4 py-3 rounded-lg border-2 transition-all duration-200
         font-semibold text-sm
-        ${isRecommended && !isSelected ? colors.recommendedBg : '!bg-transparent'}
-        ${isSelected 
-          ? 'border-emerald-400 text-emerald-400 shadow-[0_0_35px_rgba(52,211,153,0.9)]' 
-          : `${colors.border} ${colors.text} ${colors.hoverShadow}`
+        ${isRecommended && !isSelected ? colors.recommendedBg : "!bg-transparent"}
+        ${
+          isSelected
+            ? "border-emerald-400 text-emerald-400 shadow-[0_0_35px_rgba(52,211,153,0.9)]"
+            : `${colors.border} ${colors.text} ${colors.hoverShadow}`
         }
         hover:scale-105 active:scale-95
       `}
-      style={{ backgroundColor: isRecommended && !isSelected ? undefined : 'transparent !important' }}
+      style={{
+        backgroundColor: isRecommended && !isSelected ? undefined : "transparent !important",
+      }}
     >
       {/* Merlin Recommends badge */}
       {isRecommended && !isSelected && (
@@ -77,35 +80,29 @@ const RangeButton: React.FC<RangeButtonProps> = ({
           ⭐ MERLIN RECOMMENDS
         </div>
       )}
-      
+
       {/* Green checkmark when selected */}
       {isSelected && (
         <div className="absolute -top-2 -right-2 bg-emerald-500 rounded-full p-1 animate-bounce shadow-[0_0_15px_rgba(52,211,153,1)]">
           <Check className="w-3 h-3 text-white" />
         </div>
       )}
-      <div>
-        {label}
-      </div>
+      <div>{label}</div>
     </button>
   );
 };
 
 export default function Step3_5V8({ state, actions }: Props) {
-  const { wantsSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry } = state;
-
-  // Local confirmation states
-  const [solarConfirmed, setSolarConfirmed] = React.useState(false);
-  const [generatorConfirmed, setGeneratorConfirmed] = React.useState(false);
-  const [evConfirmed, setEvConfirmed] = React.useState(false);
+  const { wantsSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry } =
+    state;
   const [isGeneratingTiers, setIsGeneratingTiers] = React.useState(false);
 
   // Generate ranges for solar (based on PHYSICAL SPACE CONSTRAINTS by industry)
   const getSolarRanges = () => {
-    const industrySlug = industry?.toLowerCase().replace(/[_\s-]+/g, '-') || '';
-    
+    const industrySlug = industry?.toLowerCase().replace(/[_\s-]+/g, "-") || "";
+
     // Car Wash: Limited roof space - 30-100 kW realistic
-    if (industrySlug.includes('car-wash') || industrySlug.includes('carwash')) {
+    if (industrySlug.includes("car-wash") || industrySlug.includes("carwash")) {
       return [
         { label: "30-50 kW", value: 40, desc: "Roof Only (Small)" },
         { label: "50-70 kW", value: 60, desc: "⭐ Roof Only (Standard)" },
@@ -113,9 +110,9 @@ export default function Step3_5V8({ state, actions }: Props) {
         { label: "85-100 kW", value: 92, desc: "Max Coverage" },
       ];
     }
-    
+
     // Hotel: Roof + optional parking canopies
-    if (industrySlug.includes('hotel') || industrySlug.includes('hospitality')) {
+    if (industrySlug.includes("hotel") || industrySlug.includes("hospitality")) {
       return [
         { label: "50-100 kW", value: 75, desc: "Roof Only" },
         { label: "100-200 kW", value: 150, desc: "⭐ Roof + Small Canopy" },
@@ -123,9 +120,9 @@ export default function Step3_5V8({ state, actions }: Props) {
         { label: "350-500 kW", value: 425, desc: "Full Parking Coverage" },
       ];
     }
-    
+
     // Office: Roof + optional parking canopies
-    if (industrySlug.includes('office')) {
+    if (industrySlug.includes("office")) {
       return [
         { label: "75-150 kW", value: 112, desc: "Roof Only" },
         { label: "150-300 kW", value: 225, desc: "⭐ Roof + Canopy" },
@@ -133,9 +130,9 @@ export default function Step3_5V8({ state, actions }: Props) {
         { label: "500-750 kW", value: 625, desc: "Full Lot Coverage" },
       ];
     }
-    
+
     // Retail/Shopping: Large flat roofs
-    if (industrySlug.includes('retail') || industrySlug.includes('shopping')) {
+    if (industrySlug.includes("retail") || industrySlug.includes("shopping")) {
       return [
         { label: "100-200 kW", value: 150, desc: "Partial Roof" },
         { label: "200-400 kW", value: 300, desc: "⭐ Full Roof" },
@@ -143,9 +140,9 @@ export default function Step3_5V8({ state, actions }: Props) {
         { label: "600-1000 kW", value: 800, desc: "Max Coverage" },
       ];
     }
-    
+
     // Data Center: Large roofs + ground mount possible
-    if (industrySlug.includes('data-center') || industrySlug.includes('datacenter')) {
+    if (industrySlug.includes("data-center") || industrySlug.includes("datacenter")) {
       return [
         { label: "200-500 kW", value: 350, desc: "Roof Only" },
         { label: "500-1000 kW", value: 750, desc: "⭐ Roof + Carport" },
@@ -153,9 +150,9 @@ export default function Step3_5V8({ state, actions }: Props) {
         { label: "2-5 MW", value: 3500, desc: "Ground Mount" },
       ];
     }
-    
+
     // Hospital: Large roofs, strict regulations
-    if (industrySlug.includes('hospital') || industrySlug.includes('healthcare')) {
+    if (industrySlug.includes("hospital") || industrySlug.includes("healthcare")) {
       return [
         { label: "150-300 kW", value: 225, desc: "Roof Only" },
         { label: "300-600 kW", value: 450, desc: "⭐ Roof + Canopy" },
@@ -163,9 +160,9 @@ export default function Step3_5V8({ state, actions }: Props) {
         { label: "1-2 MW", value: 1500, desc: "Full Campus" },
       ];
     }
-    
+
     // Warehouse: HUGE roof space potential
-    if (industrySlug.includes('warehouse') || industrySlug.includes('logistics')) {
+    if (industrySlug.includes("warehouse") || industrySlug.includes("logistics")) {
       return [
         { label: "200-400 kW", value: 300, desc: "Partial Roof" },
         { label: "400-800 kW", value: 600, desc: "⭐ Half Roof" },
@@ -173,9 +170,9 @@ export default function Step3_5V8({ state, actions }: Props) {
         { label: "1.5-3 MW", value: 2250, desc: "Roof + Ground" },
       ];
     }
-    
+
     // Manufacturing: Large industrial roofs
-    if (industrySlug.includes('manufacturing') || industrySlug.includes('factory')) {
+    if (industrySlug.includes("manufacturing") || industrySlug.includes("factory")) {
       return [
         { label: "300-600 kW", value: 450, desc: "Partial Roof" },
         { label: "600-1200 kW", value: 900, desc: "⭐ Full Roof" },
@@ -183,7 +180,7 @@ export default function Step3_5V8({ state, actions }: Props) {
         { label: "2-5 MW", value: 3500, desc: "Ground Mount" },
       ];
     }
-    
+
     // Default fallback: Use conservative roof-only estimates
     return [
       { label: "50-100 kW", value: 75, desc: "Small Roof" },
@@ -192,17 +189,40 @@ export default function Step3_5V8({ state, actions }: Props) {
       { label: "400-750 kW", value: 575, desc: "Roof + Canopy" },
     ];
   };
-  
+
   const solarRanges = getSolarRanges();
 
   // Generate ranges for generator (based on critical vs full load)
-  const isCriticalFacility = industry ? ['hospital', 'healthcare', 'data-center', 'data_center', 'cold-storage', 'cold_storage', 'manufacturing'].includes(industry) : false;
-  const targetLoadKW = (!isCriticalFacility && criticalLoadKW && criticalLoadKW > 0) ? criticalLoadKW : peakLoadKW;
-  
+  const isCriticalFacility = industry
+    ? [
+        "hospital",
+        "healthcare",
+        "data-center",
+        "data_center",
+        "cold-storage",
+        "cold_storage",
+        "manufacturing",
+      ].includes(industry)
+    : false;
+  const targetLoadKW =
+    !isCriticalFacility && criticalLoadKW && criticalLoadKW > 0 ? criticalLoadKW : peakLoadKW;
+
   const generatorRanges = [
-    { label: `${Math.round(targetLoadKW * 0.8)}-${Math.round(targetLoadKW)} kW`, value: Math.round(targetLoadKW * 0.9), desc: "Min (80-100%)" },
-    { label: `${Math.round(targetLoadKW)}-${Math.round(targetLoadKW * 1.25)} kW`, value: Math.round(targetLoadKW * 1.125), desc: "⭐ Standard (100-125%)" },
-    { label: `${Math.round(targetLoadKW * 1.25)}-${Math.round(targetLoadKW * 1.5)} kW`, value: Math.round(targetLoadKW * 1.375), desc: "High (125-150%)" },
+    {
+      label: `${Math.round(targetLoadKW * 0.8)}-${Math.round(targetLoadKW)} kW`,
+      value: Math.round(targetLoadKW * 0.9),
+      desc: "Min (80-100%)",
+    },
+    {
+      label: `${Math.round(targetLoadKW)}-${Math.round(targetLoadKW * 1.25)} kW`,
+      value: Math.round(targetLoadKW * 1.125),
+      desc: "⭐ Standard (100-125%)",
+    },
+    {
+      label: `${Math.round(targetLoadKW * 1.25)}-${Math.round(targetLoadKW * 1.5)} kW`,
+      value: Math.round(targetLoadKW * 1.375),
+      desc: "High (125-150%)",
+    },
   ];
 
   // EV charger options
@@ -225,11 +245,6 @@ export default function Step3_5V8({ state, actions }: Props) {
       setIsGeneratingTiers(false);
     }
   };
-
-  // Check if user can continue
-  const canContinue = (!wantsSolar || solarConfirmed) && 
-                      (!wantsGenerator || generatorConfirmed) && 
-                      (!wantsEVCharging || evConfirmed);
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -260,7 +275,9 @@ export default function Step3_5V8({ state, actions }: Props) {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Solar PV Array</h3>
-                <p className="text-slate-400 text-sm">Merlin recommends ⭐ Standard — Choose your preferred range</p>
+                <p className="text-slate-400 text-sm">
+                  Merlin recommends ⭐ Standard — Choose your preferred range
+                </p>
               </div>
             </div>
 
@@ -278,44 +295,23 @@ export default function Step3_5V8({ state, actions }: Props) {
                   />
                 ))}
               </div>
-              
+
               <div className="flex justify-center gap-4 text-xs text-slate-500">
                 {solarRanges.map((range, idx) => (
-                  <span key={idx} className="text-center">{range.desc}</span>
+                  <span key={idx} className="text-center">
+                    {range.desc}
+                  </span>
                 ))}
               </div>
 
               {/* Selected value display */}
               <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-amber-400">{state.solarKW.toLocaleString()} kW</div>
+                <div className="text-3xl font-bold text-amber-400">
+                  {state.solarKW.toLocaleString()} kW
+                </div>
                 <div className="text-sm text-slate-400 mt-1">
                   {((state.solarKW / peakLoadKW) * 100).toFixed(0)}% of peak load
                 </div>
-              </div>
-
-              {/* Confirm Button */}
-              <div className="flex justify-center mt-4">
-                <button
-                  onClick={() => setSolarConfirmed(true)}
-                  disabled={solarConfirmed}
-                  className={`
-                    px-10 py-4 rounded-lg font-semibold text-base uppercase tracking-wide transition-all duration-300
-                    flex items-center gap-2 relative
-                    ${solarConfirmed 
-                      ? 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-300 cursor-default' 
-                      : 'border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 hover:scale-105 active:scale-95 animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.5)]'
-                    }
-                  `}
-                >
-                  {solarConfirmed ? (
-                    <>
-                      <Check className="w-5 h-5" />
-                      Solar Confirmed
-                    </>
-                  ) : (
-                    'Confirm Solar Capacity'
-                  )}
-                </button>
               </div>
             </div>
           </div>
@@ -330,7 +326,9 @@ export default function Step3_5V8({ state, actions }: Props) {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Backup Generator</h3>
-                <p className="text-slate-400 text-sm">Merlin recommends ⭐ Standard — Choose your preferred range</p>
+                <p className="text-slate-400 text-sm">
+                  Merlin recommends ⭐ Standard — Choose your preferred range
+                </p>
               </div>
             </div>
 
@@ -348,16 +346,20 @@ export default function Step3_5V8({ state, actions }: Props) {
                   />
                 ))}
               </div>
-              
+
               <div className="flex justify-center gap-4 text-xs text-slate-500">
                 {generatorRanges.map((range, idx) => (
-                  <span key={idx} className="text-center">{range.desc}</span>
+                  <span key={idx} className="text-center">
+                    {range.desc}
+                  </span>
                 ))}
               </div>
 
               {/* Selected value display */}
               <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-orange-400">{state.generatorKW.toLocaleString()} kW</div>
+                <div className="text-3xl font-bold text-orange-400">
+                  {state.generatorKW.toLocaleString()} kW
+                </div>
                 <div className="text-sm text-slate-400 mt-1">
                   {isCriticalFacility ? "Full facility backup" : "Critical loads only"}
                 </div>
@@ -369,37 +371,14 @@ export default function Step3_5V8({ state, actions }: Props) {
                   <div className="flex gap-2 text-sm">
                     <Info className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
                     <div className="text-slate-300 leading-relaxed">
-                      <strong className="text-orange-400">Critical Loads Sizing:</strong> Generator sized for {criticalLoadKW.toLocaleString()} kW critical loads 
-                      vs {peakLoadKW.toLocaleString()} kW full facility load. This saves ~${Math.round((peakLoadKW - criticalLoadKW) * 0.7).toLocaleString()}K.
+                      <strong className="text-orange-400">Critical Loads Sizing:</strong> Generator
+                      sized for {criticalLoadKW.toLocaleString()} kW critical loads vs{" "}
+                      {peakLoadKW.toLocaleString()} kW full facility load. This saves ~$
+                      {Math.round((peakLoadKW - criticalLoadKW) * 0.7).toLocaleString()}K.
                     </div>
                   </div>
                 </div>
               )}
-
-              {/* Confirm Button */}
-              <div className="flex justify-center mt-4">
-                <button
-                  onClick={() => setGeneratorConfirmed(true)}
-                  disabled={generatorConfirmed}
-                  className={`
-                    px-10 py-4 rounded-lg font-semibold text-base uppercase tracking-wide transition-all duration-300
-                    flex items-center gap-2 relative
-                    ${generatorConfirmed 
-                      ? 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-300 cursor-default' 
-                      : 'border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 hover:scale-105 active:scale-95 animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.5)]'
-                    }
-                  `}
-                >
-                  {generatorConfirmed ? (
-                    <>
-                      <Check className="w-5 h-5" />
-                      Generator Confirmed
-                    </>
-                  ) : (
-                    'Confirm Generator Setup'
-                  )}
-                </button>
-              </div>
             </div>
           </div>
         )}
@@ -413,7 +392,9 @@ export default function Step3_5V8({ state, actions }: Props) {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">EV Charging</h3>
-                <p className="text-slate-400 text-sm">Select your preferred charging configuration</p>
+                <p className="text-slate-400 text-sm">
+                  Select your preferred charging configuration
+                </p>
               </div>
             </div>
 
@@ -424,19 +405,26 @@ export default function Step3_5V8({ state, actions }: Props) {
                     key={idx}
                     label={option.label}
                     value={0}
-                    isSelected={state.level2Chargers === option.value.level2 && state.dcfcChargers === option.value.dcfc}
-                    onClick={() => actions.setAddonConfig({ 
-                      level2Chargers: option.value.level2, 
-                      dcfcChargers: option.value.dcfc 
-                    })}
+                    isSelected={
+                      state.level2Chargers === option.value.level2 &&
+                      state.dcfcChargers === option.value.dcfc
+                    }
+                    onClick={() =>
+                      actions.setAddonConfig({
+                        level2Chargers: option.value.level2,
+                        dcfcChargers: option.value.dcfc,
+                      })
+                    }
                     color="cyan"
                   />
                 ))}
               </div>
-              
+
               <div className="flex justify-center gap-4 text-xs text-slate-500">
                 {evOptions.map((option, idx) => (
-                  <span key={idx} className="text-center">{option.desc}</span>
+                  <span key={idx} className="text-center">
+                    {option.desc}
+                  </span>
                 ))}
               </div>
 
@@ -447,34 +435,9 @@ export default function Step3_5V8({ state, actions }: Props) {
                   {state.dcfcChargers > 0 && ` + ${state.dcfcChargers} DC Fast Chargers`}
                 </div>
                 <div className="text-sm text-slate-400 mt-1">
-                  Total charging power: {Math.round(state.level2Chargers * 7.2 + state.dcfcChargers * 150)} kW
+                  Total charging power:{" "}
+                  {Math.round(state.level2Chargers * 7.2 + state.dcfcChargers * 150)} kW
                 </div>
-              </div>
-
-              {/* Confirm Button */}
-              <div className="flex justify-center mt-4">
-                <button
-                  onClick={() => setEvConfirmed(true)}
-                  disabled={evConfirmed}
-                  className={`
-                    px-8 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-200
-                    flex items-center gap-2
-                    ${evConfirmed 
-                      ? 'bg-emerald-500/30 border-2 border-emerald-500 text-emerald-300 cursor-default scale-95' 
-                      : 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30 hover:scale-105 active:scale-95'
-                    }
-                    shadow-lg
-                  `}
-                >
-                  {evConfirmed ? (
-                    <>
-                      <Check className="w-5 h-5" />
-                      EV Charging Confirmed
-                    </>
-                  ) : (
-                    'Confirm EV Configuration'
-                  )}
-                </button>
               </div>
             </div>
           </div>
@@ -485,13 +448,14 @@ export default function Step3_5V8({ state, actions }: Props) {
       <div className="flex justify-center pt-6">
         <button
           onClick={handleContinue}
-          disabled={!canContinue || isGeneratingTiers}
+          disabled={isGeneratingTiers}
           className={`
             px-12 py-4 rounded-xl font-bold text-lg uppercase tracking-wider
             transition-all duration-200 flex items-center gap-3
-            ${canContinue && !isGeneratingTiers
-              ? 'border-2 border-emerald-500 bg-transparent text-emerald-400 hover:bg-emerald-500/20 hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/30'
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed border-2 border-slate-700'
+            ${
+              !isGeneratingTiers
+                ? "border-2 border-emerald-500 bg-transparent text-emerald-400 hover:bg-emerald-500/20 hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/30"
+                : "bg-slate-800 text-slate-500 cursor-not-allowed border-2 border-slate-700"
             }
           `}
         >
@@ -501,17 +465,10 @@ export default function Step3_5V8({ state, actions }: Props) {
               Generating Your Options...
             </>
           ) : (
-            'Continue to MagicFit'
+            "Continue to MagicFit"
           )}
         </button>
       </div>
-
-      {!canContinue && (
-        <div className="text-center text-amber-400 text-sm">
-          <Info className="w-4 h-4 inline mr-1" />
-          Please confirm all your add-on selections to continue
-        </div>
-      )}
     </div>
   );
 }
