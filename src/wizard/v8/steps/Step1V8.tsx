@@ -123,6 +123,12 @@ export function Step1V8({ state, actions }: Step1Props) {
 
   const { intel, intelStatus, locationRaw, locationStatus, location, error, isBusy } = state;
 
+  // Derived state
+  const locationConfirmed = location !== null;
+  const normalizedZip =
+    country === "US" ? locationRaw.replace(/\D/g, "").slice(0, 5) : locationRaw.trim();
+  const isValidZip = country === "US" ? /^\d{5}$/.test(normalizedZip) : normalizedZip.length >= 3;
+
   useEffect(() => {
     zipRef.current?.focus();
   }, []);
@@ -133,8 +139,10 @@ export function Step1V8({ state, actions }: Step1Props) {
       hasBusinessInput: !!businessInputRef.current,
       hasAutocomplete: !!autocompleteRef.current,
       country,
+      locationConfirmed,
     });
 
+    // Early return if input not rendered yet (locationConfirmed=false)
     if (!businessInputRef.current || autocompleteRef.current) return;
 
     const initAutocomplete = async () => {
@@ -206,15 +214,8 @@ export function Step1V8({ state, actions }: Step1Props) {
 
     void initAutocomplete();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [country]);
+  }, [country, locationConfirmed]);
 
-  // Normalise ZIP whenever country changes
-  const normalizedZip =
-    country === "US" ? locationRaw.replace(/\D/g, "").slice(0, 5) : locationRaw.trim();
-
-  const isValidZip = country === "US" ? /^\d{5}$/.test(normalizedZip) : normalizedZip.length >= 3;
-
-  const locationConfirmed = location !== null;
   const isFetching = locationStatus === "fetching" || isBusy;
 
   const showIntelStrip =
