@@ -73,10 +73,15 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
             Welcome to Merlin Energy.
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Choose your path: Get a {hi("free AI-powered quote")} in 3 minutes, or access {hi("ProQuote™")} for full engineering control over your energy system.
+            Choose your path: Get a {hi("free AI-powered quote")} in 3 minutes, or access{" "}
+            {hi("ProQuote™")} for full engineering control over your energy system.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
-            {["Guided Wizard is always free", "ProQuote™ for complex projects", "All quotes include TrueQuote™ sources"].map(bullet)}
+            {[
+              "Guided Wizard is always free",
+              "ProQuote™ for complex projects",
+              "All quotes include TrueQuote™ sources",
+            ].map(bullet)}
           </div>
         </div>
       );
@@ -92,7 +97,9 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
             {hi("solar irradiance")} — two of the biggest factors in your savings estimate.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
-            {["Utility rates by zip code", "Peak demand windows", "Solar potential score"].map(bullet)}
+            {["Utility rates by zip code", "Peak demand windows", "Solar potential score"].map(
+              bullet
+            )}
           </div>
         </div>
       );
@@ -104,11 +111,13 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
             Choose your industry.
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Each industry has distinct energy patterns. I'll apply the right{" "}
-            {hi("load benchmarks")} and sizing standards for your facility type.
+            Each industry has distinct energy patterns. I'll apply the right {hi("load benchmarks")}{" "}
+            and sizing standards for your facility type.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
-            {["ASHRAE load benchmarks", "CBECS energy intensity", "Industry-specific defaults"].map(bullet)}
+            {["ASHRAE load benchmarks", "CBECS energy intensity", "Industry-specific defaults"].map(
+              bullet
+            )}
           </div>
         </div>
       );
@@ -240,7 +249,9 @@ const NEXT_HINTS: Partial<Record<number, string>> = {
 // ── Spinner fallback ──────────────────────────────────────────────────────────
 function SpinnerFallback() {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0" }}>
+    <div
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0" }}
+    >
       <div
         style={{
           width: 24,
@@ -259,6 +270,13 @@ function SpinnerFallback() {
 export default function WizardV8Page() {
   const { state, actions } = useWizardV8();
   const step = state.step;
+
+  // DEBUG: Log step and state
+  console.log("[V8 WizardV8Page render] step:", step, {
+    hasLocation: !!state.location,
+    hasBusiness: !!state.business,
+    hasIndustry: !!state.industry,
+  });
 
   return (
     <div style={{ position: "relative" }}>
@@ -299,11 +317,20 @@ export default function WizardV8Page() {
           e.currentTarget.style.color = "rgba(255,255,255,0.65)";
         }}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-          <path d="M21 3v5h-5"/>
-          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-          <path d="M3 21v-5h5"/>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+          <path d="M3 21v-5h5" />
         </svg>
         Start Over
       </button>
@@ -319,50 +346,61 @@ export default function WizardV8Page() {
         nextHint={NEXT_HINTS[step]}
         advisorContent={getAdvisorContent(step, state)}
       >
-      {/* Error banner */}
-      {state.error && (
-        <div
-          style={{
-            marginBottom: 16,
-            padding: "10px 14px",
-            background: "rgba(239,68,68,0.10)",
-            border: "1px solid rgba(239,68,68,0.25)",
-            borderRadius: 10,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <span style={{ color: "#f87171", fontSize: 13, flex: 1 }}>{state.error.message}</span>
-          <button
-            onClick={actions.clearError}
-            style={{ color: "#f87171", fontSize: 18, lineHeight: 1, background: "none", border: "none", cursor: "pointer" }}
+        {/* Error banner */}
+        {state.error && (
+          <div
+            style={{
+              marginBottom: 16,
+              padding: "10px 14px",
+              background: "rgba(239,68,68,0.10)",
+              border: "1px solid rgba(239,68,68,0.25)",
+              borderRadius: 10,
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}
           >
-            ×
-          </button>
-        </div>
-      )}
+            <span style={{ color: "#f87171", fontSize: 13, flex: 1 }}>{state.error.message}</span>
+            <button
+              onClick={actions.clearError}
+              style={{
+                color: "#f87171",
+                fontSize: 18,
+                lineHeight: 1,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )}
 
-      {/* Step router */}
-      <Suspense fallback={<SpinnerFallback />}>
-        {step === 0 && <Step0V8_ModeSelect onSelectMode={(mode) => {
-          if (mode === "wizard") {
-            actions.goToStep(1 as WizardStep);
-          } else if (mode === "proquote") {
-            window.location.href = "/pro-quote";
-          } else if (mode === "upload") {
-            // TODO: Implement upload flow
-            alert("Upload quote feature coming soon!");
-          }
-        }} />}
-        {step === 1 && <Step1V8 state={state} actions={actions} />}
-        {step === 2 && <Step2V8 state={state} actions={actions} />}
-        {step === 3 && <Step3V8 state={state} actions={actions} />}
-        {step === 3.5 && <Step3_5V8 state={state} actions={actions} />}
-        {step === 4 && <Step4V8 state={state} actions={actions} />}
-        {step === 5 && <Step5V8 state={state} actions={actions} />}
-      </Suspense>
-    </WizardShellV7>
+        {/* Step router */}
+        <Suspense fallback={<SpinnerFallback />}>
+          {step === 0 && (
+            <Step0V8_ModeSelect
+              onSelectMode={(mode) => {
+                if (mode === "wizard") {
+                  actions.goToStep(1 as WizardStep);
+                } else if (mode === "proquote") {
+                  window.location.href = "/pro-quote";
+                } else if (mode === "upload") {
+                  // TODO: Implement upload flow
+                  alert("Upload quote feature coming soon!");
+                }
+              }}
+            />
+          )}
+          {step === 1 && <Step1V8 state={state} actions={actions} />}
+          {step === 2 && <Step2V8 state={state} actions={actions} />}
+          {step === 3 && <Step3V8 state={state} actions={actions} />}
+          {step === 3.5 && <Step3_5V8 state={state} actions={actions} />}
+          {step === 4 && <Step4V8 state={state} actions={actions} />}
+          {step === 5 && <Step5V8 state={state} actions={actions} />}
+        </Suspense>
+      </WizardShellV7>
     </div>
   );
 }
