@@ -106,6 +106,7 @@ async function runDailyScrape() {
       
       let savedCount = 0;
       let pricesCount = 0;
+      let skippedCount = 0;  // Track duplicates
       
       for (const item of items) {
         // Check if already exists
@@ -115,7 +116,10 @@ async function runDailyScrape() {
           .eq('url', item.link)
           .single();
         
-        if (existing) continue;
+        if (existing) {
+          skippedCount++;
+          continue;
+        }
         
         // Classify content
         const fullText = `${item.title} ${item.content}`;
@@ -165,7 +169,7 @@ async function runDailyScrape() {
         }
       }
       
-      console.log(`  Saved ${savedCount} new articles, ${pricesCount} prices`);
+      console.log(`  Saved ${savedCount} new articles, ${pricesCount} prices (skipped ${skippedCount} duplicates)`);
       results.articlesSaved += savedCount;
       results.pricesExtracted += pricesCount;
       
