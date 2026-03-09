@@ -131,6 +131,9 @@ async function runDailyScrape() {
         const classification = classifyContent(fullText);
         const prices = extractPrices(fullText, classification.equipment);
         
+        // DEBUG: Log before INSERT to verify we reach this point
+        console.log(`  → Attempting INSERT for: ${item.title?.slice(0, 40)}...`);
+        
         // Save article with aggressive error catching
         try {
           const { data, error: insertError } = await supabase
