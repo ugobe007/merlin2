@@ -71,16 +71,7 @@
 export type SolarGrade = "A" | "A-" | "B+" | "B" | "B-" | "C+" | "C" | "D";
 
 /** Ordered from worst → best so indexOf comparisons work correctly */
-const SOLAR_GRADE_ORDER: SolarGrade[] = [
-  "D",
-  "C",
-  "C+",
-  "B-",
-  "B",
-  "B+",
-  "A-",
-  "A",
-];
+const SOLAR_GRADE_ORDER: SolarGrade[] = ["D", "C", "C+", "B-", "B", "B+", "A-", "A"];
 
 /**
  * Solar feasibility gate (Decision Log #8, March 2026)
@@ -89,9 +80,7 @@ const SOLAR_GRADE_ORDER: SolarGrade[] = [
  */
 export function isSolarFeasible(grade: SolarGrade | null): boolean {
   if (!grade) return false;
-  return (
-    SOLAR_GRADE_ORDER.indexOf(grade) >= SOLAR_GRADE_ORDER.indexOf("B-")
-  );
+  return SOLAR_GRADE_ORDER.indexOf(grade) >= SOLAR_GRADE_ORDER.indexOf("B-");
 }
 
 // ── Domain types ─────────────────────────────────────────────────────────────
@@ -167,17 +156,17 @@ export interface BusinessData {
 
 export interface LocationIntel {
   // Utility (from fetchUtility)
-  utilityRate: number;      // $/kWh, e.g. 0.10
-  demandCharge: number;     // $/kW/month, e.g. 10.00
-  utilityProvider: string;  // "NV Energy"
+  utilityRate: number; // $/kWh, e.g. 0.10
+  demandCharge: number; // $/kW/month, e.g. 10.00
+  utilityProvider: string; // "NV Energy"
   // Solar (from fetchSolar → NREL PVWatts or regional fallback)
-  solarGrade: SolarGrade;   // "B+"
-  solarFeasible: boolean;   // computed: grade >= B-  (THRESHOLD B-)
-  peakSunHours: number;     // 4.9
+  solarGrade: SolarGrade; // "B+"
+  solarFeasible: boolean; // computed: grade >= B-  (THRESHOLD B-)
+  peakSunHours: number; // 4.9
   // Climate (from fetchWeather)
-  weatherRisk: string;      // "Low" | "Moderate" | "High" | or raw risk string
-  weatherProfile: string;   // "Hot & Dry"
-  avgTempF: number;         // 75
+  weatherRisk: string; // "Low" | "Moderate" | "High" | or raw risk string
+  weatherProfile: string; // "Hot & Dry"
+  avgTempF: number; // 75
 }
 
 // ── Quote tier ───────────────────────────────────────────────────────────────
@@ -187,21 +176,21 @@ export interface QuoteTier {
   // Sizing
   bessKWh: number;
   bessKW: number;
-  solarKW: number;         // 0 when not feasible or goal doesn't include solar
-  generatorKW: number;     // always > 0 (all tiers include generator)
-  generatorFuelType?: 'diesel' | 'natural-gas' | 'dual-fuel';  // Fuel type from Step 3.5
-  evChargerKW: number;     // 0 if no EV configured
+  solarKW: number; // 0 when not feasible or goal doesn't include solar
+  generatorKW: number; // always > 0 (all tiers include generator)
+  generatorFuelType?: "diesel" | "natural-gas" | "dual-fuel"; // Fuel type from Step 3.5
+  evChargerKW: number; // 0 if no EV configured
   durationHours: number;
   // Costs (sell prices — margin already applied via Margin Policy Engine)
-  grossCost: number;       // before ITC
-  itcRate: number;         // IRA 2022 dynamic (0.06 – 0.70)
+  grossCost: number; // before ITC
+  itcRate: number; // IRA 2022 dynamic (0.06 – 0.70)
   itcAmount: number;
-  netCost: number;         // grossCost − itcAmount
+  netCost: number; // grossCost − itcAmount
   // Financial outcomes
-  annualSavings: number;   // peak shaving + solar offset + EV revenue
+  annualSavings: number; // peak shaving + solar offset + EV revenue
   evRevenuePerYear: number; // subset of annualSavings (for display isolation)
   paybackYears: number;
-  roi10Year: number;       // percent, e.g. 185.0
+  roi10Year: number; // percent, e.g. 185.0
   npv: number;
   // TrueQuote™ audit trail
   notes: string[];
@@ -215,9 +204,9 @@ export interface WizardState {
 
   // ── Step 1: Location ─────────────────────────────────────────────────────
   // Written by Step 1. Read by all subsequent steps (rate, grade, climate).
-  locationRaw: string;          // raw input while user types
+  locationRaw: string; // raw input while user types
   location: LocationData | null;
-  locationStatus: FetchStatus;  // geocode API status
+  locationStatus: FetchStatus; // geocode API status
   business: BusinessData | null; // Business name + detected industry
   intel: LocationIntel | null;
   intelStatus: {
@@ -225,41 +214,41 @@ export interface WizardState {
     solar: FetchStatus;
     weather: FetchStatus;
   };
-  gridReliability: 'reliable' | 'occasional-outages' | 'frequent-outages' | 'unreliable' | null;
+  gridReliability: "reliable" | "occasional-outages" | "frequent-outages" | "unreliable" | null;
 
   // ── Step 2: Industry ─────────────────────────────────────────────────────
   // Written by Step 2. Meta derived immediately from industry slug.
   industry: IndustrySlug | null;
-  solarPhysicalCapKW: number;  // getFacilityConstraints().totalRealisticSolarKW
-  criticalLoadPct: number;     // getCriticalLoadWithSource() — IEEE 446 / NEC
+  solarPhysicalCapKW: number; // getFacilityConstraints().totalRealisticSolarKW
+  criticalLoadPct: number; // getCriticalLoadWithSource() — IEEE 446 / NEC
 
   // ── Step 3: Infrastructure Profile ──────────────────────────────────────
   // Written by Step 3. baseLoadKW is the Layer A power profile result.
   step3Answers: Record<string, unknown>;
   evChargers: { type: EVChargerType; count: number } | null;
-  baseLoadKW: number;          // calculateUseCasePower() avg load
-  peakLoadKW: number;          // calculateUseCasePower() peak (used for sizing)
-  criticalLoadKW: number;      // Critical loads only (for generator sizing in non-critical facilities)
-  evRevenuePerYear: number;    // evChargingCalculations.ts, 0 when no EV
-  
+  baseLoadKW: number; // calculateUseCasePower() avg load
+  peakLoadKW: number; // calculateUseCasePower() peak (used for sizing)
+  criticalLoadKW: number; // Critical loads only (for generator sizing in non-critical facilities)
+  evRevenuePerYear: number; // evChargingCalculations.ts, 0 when no EV
+
   // ── Step 1: Add-on Preferences (asked upfront for optimization) ─────────
-  wantsSolar: boolean;         // User wants solar in their quote
-  wantsEVCharging: boolean;    // User wants EV charging in their quote
-  wantsGenerator: boolean;     // User wants backup generator
+  wantsSolar: boolean; // User wants solar in their quote
+  wantsEVCharging: boolean; // User wants EV charging in their quote
+  wantsGenerator: boolean; // User wants backup generator
 
   // ── Step 4: Add-on Configuration (shown if any addon flags are true) ─────
-  solarKW: number;             // Solar array size in kW
-  generatorKW: number;         // Generator capacity in kW
-  generatorFuelType: 'diesel' | 'natural-gas' | 'dual-fuel';
-  level2Chargers: number;      // Count of Level 2 EV chargers (7-22 kW)
-  dcfcChargers: number;        // Count of DC Fast Chargers (50-150 kW)
-  hpcChargers: number;         // Count of High Power Chargers (250-350 kW)
+  solarKW: number; // Solar array size in kW
+  generatorKW: number; // Generator capacity in kW
+  generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+  level2Chargers: number; // Count of Level 2 EV chargers (7-22 kW)
+  dcfcChargers: number; // Count of DC Fast Chargers (50-150 kW)
+  hpcChargers: number; // Count of High Power Chargers (250-350 kW)
 
   // ── Step 4: MagicFit Tiers ───────────────────────────────────────────────
   // 3 configurations optimized for savings (STARTER/PERFECT FIT/BEAST MODE)
   tiersStatus: FetchStatus;
   tiers: [QuoteTier, QuoteTier, QuoteTier] | null;
-  selectedTierIndex: 0 | 1 | 2 | null;  // User must select, no pre-selection
+  selectedTierIndex: 0 | 1 | 2 | null; // User must select, no pre-selection
 
   // ── System ───────────────────────────────────────────────────────────────
   isBusy: boolean;
@@ -274,7 +263,10 @@ export type WizardIntent =
   | { type: "SET_LOCATION_RAW"; value: string }
   | { type: "SET_LOCATION"; location: LocationData }
   | { type: "SET_LOCATION_STATUS"; status: FetchStatus }
-  | { type: "SET_GRID_RELIABILITY"; reliability: 'reliable' | 'occasional-outages' | 'frequent-outages' | 'unreliable' }
+  | {
+      type: "SET_GRID_RELIABILITY";
+      reliability: "reliable" | "occasional-outages" | "frequent-outages" | "unreliable";
+    }
   | { type: "SET_BUSINESS"; business: BusinessData }
   | { type: "SET_BUSINESS_ADDRESS"; address: string }
   | { type: "CONFIRM_BUSINESS" } // Confirms business and advances
@@ -297,14 +289,17 @@ export type WizardIntent =
   | { type: "SET_ANSWER"; key: string; value: unknown }
   | { type: "SET_EV_CHARGERS"; chargers: WizardState["evChargers"] }
   | { type: "SET_ADDON_PREFERENCE"; addon: "solar" | "ev" | "generator"; value: boolean }
-  | { type: "SET_ADDON_CONFIG"; config: Partial<{
-      solarKW: number;
-      generatorKW: number;
-      generatorFuelType: 'diesel' | 'natural-gas' | 'dual-fuel';
-      level2Chargers: number;
-      dcfcChargers: number;
-      hpcChargers: number;
-    }> }
+  | {
+      type: "SET_ADDON_CONFIG";
+      config: Partial<{
+        solarKW: number;
+        generatorKW: number;
+        generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+        level2Chargers: number;
+        dcfcChargers: number;
+        hpcChargers: number;
+      }>;
+    }
   | {
       type: "SET_BASE_LOAD";
       baseLoadKW: number;
@@ -353,7 +348,7 @@ export function initialState(): WizardState {
     // Addon config defaults (Step 3.5)
     solarKW: 0,
     generatorKW: 0,
-    generatorFuelType: 'natural-gas',
+    generatorFuelType: "natural-gas",
     level2Chargers: 0,
     dcfcChargers: 0,
     hpcChargers: 0,
@@ -382,10 +377,7 @@ function emptyIntel(): LocationIntel {
   };
 }
 
-export function reducer(
-  state: WizardState,
-  intent: WizardIntent
-): WizardState {
+export function reducer(state: WizardState, intent: WizardIntent): WizardState {
   switch (intent.type) {
     // ── Step 1 ───────────────────────────────────────────────────────────
 
@@ -404,7 +396,8 @@ export function reducer(
 
     case "SET_GRID_RELIABILITY": {
       // Auto-enable generator if grid is unreliable or has frequent outages
-      const autoEnableGenerator = intent.reliability === 'unreliable' || intent.reliability === 'frequent-outages';
+      const autoEnableGenerator =
+        intent.reliability === "unreliable" || intent.reliability === "frequent-outages";
       return {
         ...state,
         gridReliability: intent.reliability,
@@ -418,27 +411,26 @@ export function reducer(
     case "SET_BUSINESS_ADDRESS":
       return {
         ...state,
-        business: state.business
-          ? { ...state.business, address: intent.address }
-          : null,
+        business: state.business ? { ...state.business, address: intent.address } : null,
       };
 
     case "CONFIRM_BUSINESS": {
       // Auto-skip to Step 3 if industry detected with confidence >= 0.75
-      const hasIndustry = state.business?.detectedIndustry && (state.business?.confidence ?? 0) >= 0.75;
+      const hasIndustry =
+        state.business?.detectedIndustry && (state.business?.confidence ?? 0) >= 0.75;
       const nextStep = hasIndustry ? 3 : 2;
-      
+
       // DEBUG: Log what's happening
-      if (import.meta.env.DEV) {
-        console.log('[CONFIRM_BUSINESS] Debug:', {
-          detectedIndustry: state.business?.detectedIndustry,
-          confidence: state.business?.confidence,
-          hasIndustry,
-          nextStep,
-          willSetIndustry: hasIndustry ? state.business?.detectedIndustry : 'no'
-        });
-      }
-      
+      console.log("[V8 CONFIRM_BUSINESS] Transitioning:", {
+        detectedIndustry: state.business?.detectedIndustry,
+        confidence: state.business?.confidence,
+        hasIndustry,
+        currentStep: state.step,
+        nextStep,
+        willSetIndustry: hasIndustry ? state.business?.detectedIndustry : "no",
+        timestamp: new Date().toISOString(),
+      });
+
       return {
         ...state,
         step: nextStep as WizardStep,
@@ -447,8 +439,7 @@ export function reducer(
     }
 
     case "PATCH_INTEL": {
-      const { utilityStatus, solarStatus, weatherStatus, ...intelFields } =
-        intent.patch;
+      const { utilityStatus, solarStatus, weatherStatus, ...intelFields } = intent.patch;
       const newIntelStatus = {
         utility: utilityStatus ?? state.intelStatus.utility,
         solar: solarStatus ?? state.intelStatus.solar,
@@ -459,9 +450,7 @@ export function reducer(
       const newIntel: LocationIntel = { ...base, ...intelFields };
       // Derive solarFeasible whenever solarGrade changes
       if (intelFields.solarGrade !== undefined) {
-        newIntel.solarFeasible = isSolarFeasible(
-          intelFields.solarGrade as SolarGrade
-        );
+        newIntel.solarFeasible = isSolarFeasible(intelFields.solarGrade as SolarGrade);
       }
       return { ...state, intel: newIntel, intelStatus: newIntelStatus };
     }
@@ -566,14 +555,19 @@ export interface WizardActions {
   // Step 1
   setLocationRaw: (value: string) => void;
   submitLocation: () => Promise<void>;
-  setGridReliability: (reliability: 'reliable' | 'occasional-outages' | 'frequent-outages' | 'unreliable') => void;
-  setBusiness: (name: string, placesData?: {
-    placeId?: string;
-    formattedAddress?: string;
-    photoUrl?: string;
-    lat?: number;
-    lng?: number;
-  }) => void;
+  setGridReliability: (
+    reliability: "reliable" | "occasional-outages" | "frequent-outages" | "unreliable"
+  ) => void;
+  setBusiness: (
+    name: string,
+    placesData?: {
+      placeId?: string;
+      formattedAddress?: string;
+      photoUrl?: string;
+      lat?: number;
+      lng?: number;
+    }
+  ) => void;
   setBusinessAddress: (address: string) => void;
   confirmBusiness: () => void;
   // Step 2
@@ -581,20 +575,18 @@ export interface WizardActions {
   // Step 3
   setAnswer: (key: string, value: unknown) => void;
   setAddonPreference: (addon: "solar" | "ev" | "generator", value: boolean) => void;
-  setAddonConfig: (config: Partial<{
-    solarKW: number;
-    generatorKW: number;
-    generatorFuelType: 'diesel' | 'natural-gas' | 'dual-fuel';
-    level2Chargers: number;
-    dcfcChargers: number;
-    hpcChargers: number;
-  }>) => void;
-  setEVChargers: (chargers: WizardState["evChargers"]) => void;
-  setBaseLoad: (
-    baseLoadKW: number,
-    peakLoadKW: number,
-    evRevenuePerYear?: number
+  setAddonConfig: (
+    config: Partial<{
+      solarKW: number;
+      generatorKW: number;
+      generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+      level2Chargers: number;
+      dcfcChargers: number;
+      hpcChargers: number;
+    }>
   ) => void;
+  setEVChargers: (chargers: WizardState["evChargers"]) => void;
+  setBaseLoad: (baseLoadKW: number, peakLoadKW: number, evRevenuePerYear?: number) => void;
   // Step 4: MagicFit
   setTiers: (tiers: [QuoteTier, QuoteTier, QuoteTier]) => void;
   setTiersStatus: (status: WizardState["tiersStatus"]) => void;
@@ -623,16 +615,16 @@ export const UX_POLICY = {
     headline: "Where is your facility?",
     subheadline: null,
     maxCopyBlocks: 0,
-    revealTrigger: "validZip",      // show intel cards on 5-digit ZIP
+    revealTrigger: "validZip", // show intel cards on 5-digit ZIP
     progressiveReveal: ["utility", "solar", "weather"] as const,
-    advisorVoice: null,              // no advisor on step 1 — cards speak for themselves
+    advisorVoice: null, // no advisor on step 1 — cards speak for themselves
     continueLabel: "Confirm Location →",
   },
   step2: {
     headline: "What type of facility?",
     subheadline: null,
     maxCopyBlocks: 0,
-    revealTrigger: "pageLoad",       // cards show immediately
+    revealTrigger: "pageLoad", // cards show immediately
     advisorVoice: "{industry} facilities in {state} typically need {typicalBESS}.",
     continueLabel: "Continue →",
   },
@@ -640,7 +632,7 @@ export const UX_POLICY = {
     headline: "Tell us about your operation",
     subheadline: null,
     maxCopyBlocks: 0,
-    revealTrigger: "firstAnswer",    // live power gauge activates on first answer
+    revealTrigger: "firstAnswer", // live power gauge activates on first answer
     advisorVoice: "Your estimated peak: {peakLoadKW} kW",
     questionHelper: "One-line tooltip per question (why we ask).",
     continueLabel: "Build my quote →",
@@ -648,17 +640,17 @@ export const UX_POLICY = {
   step4: {
     headline: "What's your energy priority?",
     subheadline: "We've pre-built three outcomes from your profile.",
-    maxCopyBlocks: 1,               // subheadline counts as 1
+    maxCopyBlocks: 1, // subheadline counts as 1
     revealTrigger: "pageLoad",
     advisorVoice:
       "For a {industry} in {city}, {state} with {solarGrade} solar, we recommend Save Most.",
-    continueLabel: null,            // goal card tap IS the continue
+    continueLabel: null, // goal card tap IS the continue
   },
   step5: {
-    headline: null,                  // tier cards ARE the headline
+    headline: null, // tier cards ARE the headline
     subheadline: null,
     maxCopyBlocks: 0,
-    revealTrigger: "immediate",      // tiers are pre-built, render on mount
+    revealTrigger: "immediate", // tiers are pre-built, render on mount
     advisorVoice:
       "Based on your profile, the Recommended tier fits {percentOfFacilities}% of {industry} facilities.",
     continueLabel: "This is my quote →",
