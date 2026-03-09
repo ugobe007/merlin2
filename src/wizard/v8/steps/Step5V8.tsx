@@ -12,14 +12,14 @@
 
 import React, { useState, useCallback } from "react";
 import type { WizardState, WizardActions } from "../wizardState";
-import { 
-  Battery, 
-  Sun, 
-  Zap, 
-  Fuel, 
-  TrendingUp, 
-  MapPin, 
-  Building2, 
+import {
+  Battery,
+  Sun,
+  Zap,
+  Fuel,
+  TrendingUp,
+  MapPin,
+  Building2,
   Sparkles,
   RefreshCw,
   ArrowLeft,
@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
+import TrueQuoteFinancialModal from "@/components/wizard/v7/shared/TrueQuoteFinancialModal";
 import { buildV8ExportData } from "../utils/buildV8ExportData";
 import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
 import {
@@ -98,12 +99,12 @@ export default function Step5V8({ state, actions }: Props) {
   // Modal states
   const [showFinancialModal, setShowFinancialModal] = useState(false);
   const [showProQuoteModal, setShowProQuoteModal] = useState(false);
-  const [exportingFormat, setExportingFormat] = useState<'pdf' | 'word' | 'excel' | null>(null);
+  const [exportingFormat, setExportingFormat] = useState<"pdf" | "word" | "excel" | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
 
   // ── LEAD CAPTURE GATE ────────────────────────────────────────────
   const [showLeadGate, setShowLeadGate] = useState(false);
-  const [pendingFormat, setPendingFormat] = useState<'pdf' | 'word' | 'excel' | null>(null);
+  const [pendingFormat, setPendingFormat] = useState<"pdf" | "word" | "excel" | null>(null);
   const [leadCaptured, setLeadCaptured] = useState(() => {
     return isUserAuthenticated() || sessionStorage.getItem("merlin_lead_captured") === "true";
   });
@@ -139,48 +140,53 @@ export default function Step5V8({ state, actions }: Props) {
   }, []);
 
   // Export handler with real export integration
-  const handleExport = useCallback(async (format: 'pdf' | 'word' | 'excel', bypassLeadGate = false) => {
-    setExportError(null);
+  const handleExport = useCallback(
+    async (format: "pdf" | "word" | "excel", bypassLeadGate = false) => {
+      setExportError(null);
 
-    // ── LEAD CAPTURE GATE: Show form before first export for guests ──
-    if (!bypassLeadGate && !leadCaptured && !isUserAuthenticated()) {
-      setPendingFormat(format);
-      setShowLeadGate(true);
-      return;
-    }
-
-    // ── QUOTA CHECK: Only exports count as "delivered quotes" ──
-    const quota = peekQuotaRemaining("quote");
-    if (!quota.allowed) {
-      setExportError(`You've used all ${quota.limit} free quote exports this session. Sign up for more!`);
-      return;
-    }
-
-    setExportingFormat(format);
-
-    try {
-      const data = buildV8ExportData(state);
-
-      switch (format) {
-        case "pdf":
-          await exportQuoteAsPDF(data);
-          break;
-        case "word":
-          await exportQuoteAsWord(data);
-          break;
-        case "excel":
-          await exportQuoteAsExcel(data);
-          break;
+      // ── LEAD CAPTURE GATE: Show form before first export for guests ──
+      if (!bypassLeadGate && !leadCaptured && !isUserAuthenticated()) {
+        setPendingFormat(format);
+        setShowLeadGate(true);
+        return;
       }
 
-      // ✅ Track AFTER successful export — this is a "delivered quote"
-      trackQuoteGenerated();
-    } catch (err) {
-      setExportError(`Export failed — ${(err as Error).message || "please try again"}`);
-    } finally {
-      setExportingFormat(null);
-    }
-  }, [state, leadCaptured]);
+      // ── QUOTA CHECK: Only exports count as "delivered quotes" ──
+      const quota = peekQuotaRemaining("quote");
+      if (!quota.allowed) {
+        setExportError(
+          `You've used all ${quota.limit} free quote exports this session. Sign up for more!`
+        );
+        return;
+      }
+
+      setExportingFormat(format);
+
+      try {
+        const data = buildV8ExportData(state);
+
+        switch (format) {
+          case "pdf":
+            await exportQuoteAsPDF(data);
+            break;
+          case "word":
+            await exportQuoteAsWord(data);
+            break;
+          case "excel":
+            await exportQuoteAsExcel(data);
+            break;
+        }
+
+        // ✅ Track AFTER successful export — this is a "delivered quote"
+        trackQuoteGenerated();
+      } catch (err) {
+        setExportError(`Export failed — ${(err as Error).message || "please try again"}`);
+      } finally {
+        setExportingFormat(null);
+      }
+    },
+    [state, leadCaptured]
+  );
 
   // ── Auto-trigger pending export after lead capture completes ──
   React.useEffect(() => {
@@ -219,9 +225,7 @@ export default function Step5V8({ state, actions }: Props) {
     );
   }
 
-  const locationLine = location
-    ? [location.city, location.state].filter(Boolean).join(", ")
-    : "";
+  const locationLine = location ? [location.city, location.state].filter(Boolean).join(", ") : "";
 
   return (
     <div className="max-w-5xl mx-auto space-y-5 p-4">
@@ -350,9 +354,7 @@ export default function Step5V8({ state, actions }: Props) {
                 <TrendingUp className="w-4 h-4 text-[#3ECF8E]" />
                 <span className="text-sm text-slate-300">
                   Payback in{" "}
-                  <strong className="text-[#3ECF8E]">
-                    {tier.paybackYears.toFixed(1)} years
-                  </strong>
+                  <strong className="text-[#3ECF8E]">{tier.paybackYears.toFixed(1)} years</strong>
                 </span>
                 <span className="text-slate-600">|</span>
                 <span className="text-sm text-slate-300">
@@ -422,9 +424,7 @@ export default function Step5V8({ state, actions }: Props) {
             <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
               <Battery className="w-3.5 h-3.5 text-violet-400" />
               <div className="flex flex-col">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider">
-                  Battery
-                </span>
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider">Battery</span>
                 <span className="text-xs font-bold text-white tabular-nums">
                   {fmtNum(tier.bessKWh)} kWh
                 </span>
@@ -447,9 +447,7 @@ export default function Step5V8({ state, actions }: Props) {
               <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
                 <Sun className="w-3.5 h-3.5 text-amber-400" />
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">
-                    Solar
-                  </span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">Solar</span>
                   <span className="text-xs font-bold text-white tabular-nums">
                     {fmtNum(tier.solarKW)} kW
                   </span>
@@ -573,7 +571,9 @@ export default function Step5V8({ state, actions }: Props) {
 
             <div className="flex items-center justify-between py-1.5">
               <span className="text-xs text-slate-400">NPV (25yr)</span>
-              <span className={`text-sm font-semibold tabular-nums ${tier.npv >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              <span
+                className={`text-sm font-semibold tabular-nums ${tier.npv >= 0 ? "text-emerald-400" : "text-red-400"}`}
+              >
                 {fmt$(tier.npv)}
               </span>
             </div>
@@ -614,7 +614,7 @@ export default function Step5V8({ state, actions }: Props) {
           </div>
 
           <div className="flex gap-2 flex-shrink-0 flex-wrap">
-            {(['pdf', 'word', 'excel'] as const).map((format) => (
+            {(["pdf", "word", "excel"] as const).map((format) => (
               <button
                 key={format}
                 type="button"
@@ -625,9 +625,7 @@ export default function Step5V8({ state, actions }: Props) {
                 {exportingFormat === format ? (
                   <>
                     <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin text-[#3ECF8E]" />
-                    <span className="text-sm font-semibold text-[#3ECF8E]">
-                      ...
-                    </span>
+                    <span className="text-sm font-semibold text-[#3ECF8E]">...</span>
                   </>
                 ) : (
                   <>
@@ -671,14 +669,12 @@ export default function Step5V8({ state, actions }: Props) {
 
             <div className="flex items-center gap-3 mb-2">
               <FileText className="w-6 h-6 text-[#3ECF8E]" />
-              <h2 className="text-xl font-bold text-slate-100">
-                Get Your Quote
-              </h2>
+              <h2 className="text-xl font-bold text-slate-100">Get Your Quote</h2>
             </div>
 
             <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-              Enter your details to download your {pendingFormat?.toUpperCase()} quote.
-              We'll save it to your account so you can access it anytime.
+              Enter your details to download your {pendingFormat?.toUpperCase()} quote. We'll save
+              it to your account so you can access it anytime.
             </p>
 
             <div className="flex flex-col gap-3.5 mb-5">
@@ -783,62 +779,24 @@ export default function Step5V8({ state, actions }: Props) {
       </div>
 
       {/* ================================================================
-          TRUEQUOTE™ FINANCIAL PROJECTION MODAL (placeholder)
+          TRUEQUOTE™ FINANCIAL PROJECTION MODAL (V7 comprehensive version)
       ================================================================ */}
-      {showFinancialModal && (
-        <div
-          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
-          onClick={() => setShowFinancialModal(false)}
-        >
-          <div
-            className="bg-slate-800 rounded-xl p-6 max-w-2xl w-full border-2 border-amber-500/30"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <img src={badgeGoldIcon} alt="TrueQuote" className="w-12 h-12" />
-              <div>
-                <h3 className="text-xl font-bold text-amber-400">TrueQuote™ Financial Projection</h3>
-                <p className="text-sm text-slate-400">10-year cash flow analysis</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="p-4 bg-white/[0.04] rounded-lg border border-white/[0.06]">
-                <div className="text-sm font-semibold text-slate-300 mb-2">Total Investment</div>
-                <div className="text-2xl font-bold text-white">{fmt$(tier.grossCost)}</div>
-              </div>
-
-              <div className="p-4 bg-emerald-500/[0.06] rounded-lg border border-emerald-500/20">
-                <div className="text-sm font-semibold text-emerald-300 mb-2">Annual Savings</div>
-                <div className="text-2xl font-bold text-emerald-400">{fmt$(tier.annualSavings)}/yr</div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/[0.04]">
-                  <div className="text-xs text-slate-500 mb-1">Payback Period</div>
-                  <div className="text-lg font-bold text-white">{tier.paybackYears.toFixed(1)} years</div>
-                </div>
-                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/[0.04]">
-                  <div className="text-xs text-slate-500 mb-1">10-Year ROI</div>
-                  <div className="text-lg font-bold text-emerald-400">{tier.roi10Year.toFixed(0)}%</div>
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-500 mt-4">
-                * Projections based on industry-standard assumptions. Actual savings may vary based on
-                usage patterns and utility rates.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setShowFinancialModal(false)}
-              className="mt-6 w-full py-2.5 rounded-lg border border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.06] text-slate-300 font-medium transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      <TrueQuoteFinancialModal
+        isOpen={showFinancialModal}
+        onClose={() => setShowFinancialModal(false)}
+        totalInvestment={tier.grossCost}
+        federalITC={tier.grossCost - tier.netCost}
+        netInvestment={tier.netCost}
+        annualSavings={tier.annualSavings}
+        bessKWh={tier.bessKWh}
+        solarKW={tier.solarKW}
+        industry={state.industry || undefined}
+        location={
+          state.location?.city && state.location?.state
+            ? `${state.location.city}, ${state.location.state}`
+            : undefined
+        }
+      />
 
       {/* ================================================================
           PROQUOTE™ MODAL (placeholder)
