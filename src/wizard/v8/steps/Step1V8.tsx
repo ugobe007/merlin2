@@ -37,18 +37,28 @@ let isScriptLoaded = false;
 
 // Load Google Places API with proper async loading
 function loadGoogleMapsScript(): Promise<void> {
+  console.log("[Step1V8] loadGoogleMapsScript called", {
+    isScriptLoaded,
+    isScriptLoading,
+    hasGoogle: !!window.google,
+    hasPlaces: !!window.google?.maps?.places,
+  });
+
   if (typeof window === "undefined") return Promise.resolve();
   if (isScriptLoaded || window.google?.maps?.places) {
     isScriptLoaded = true;
+    console.log("[Step1V8] Google Maps already loaded");
     return Promise.resolve();
   }
   if (isScriptLoading) {
+    console.log("[Step1V8] Google Maps already loading, waiting...");
     // Already loading, wait for it
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
         if (window.google?.maps?.places) {
           clearInterval(checkInterval);
           isScriptLoaded = true;
+          console.log("[Step1V8] Google Maps loaded (via wait)");
           resolve();
         }
       }, 100);
@@ -56,6 +66,7 @@ function loadGoogleMapsScript(): Promise<void> {
   }
 
   isScriptLoading = true;
+  console.log("[Step1V8] Loading Google Maps script...");
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
@@ -64,10 +75,12 @@ function loadGoogleMapsScript(): Promise<void> {
     script.onload = () => {
       isScriptLoaded = true;
       isScriptLoading = false;
+      console.log("[Step1V8] Google Maps script loaded successfully");
       resolve();
     };
-    script.onerror = () => {
+    script.onerror = (err) => {
       isScriptLoading = false;
+      console.error("[Step1V8] Google Maps script failed to load:", err);
       reject(new Error("Failed to load Google Maps API"));
     };
     document.head.appendChild(script);
@@ -116,15 +129,33 @@ export function Step1V8({ state, actions }: Step1Props) {
 
   // Initialize Google Places Autocomplete
   useEffect(() => {
+    console.log("[Step1V8] Autocomplete useEffect triggered", {
+      hasBusinessInput: !!businessInputRef.current,
+      hasAutocomplete: !!autocompleteRef.current,
+      country,
+    });
+
     if (!businessInputRef.current || autocompleteRef.current) return;
 
     const initAutocomplete = async () => {
       try {
+        console.log("[Step1V8] Starting autocomplete initialization...");
         // Ensure Google Maps API is loaded
         await loadGoogleMapsScript();
 
-        if (!window.google?.maps?.places || !businessInputRef.current) return;
+        console.log("[Step1V8] After loadGoogleMapsScript, checking window.google...", {
+          hasGoogle: !!window.google,
+          hasMaps: !!window.google?.maps,
+          hasPlaces: !!window.google?.maps?.places,
+          hasInput: !!businessInputRef.current,
+        });
 
+        if (!window.google?.maps?.places || !businessInputRef.current) {
+          console.warn("[Step1V8] Cannot initialize autocomplete - missing dependencies");
+          return;
+        }
+
+        console.log("[Step1V8] Creating Autocomplete instance...");
         const autocomplete = new window.google.maps.places.Autocomplete(businessInputRef.current, {
           types: ["establishment"],
           componentRestrictions: country === "US" ? { country: "us" } : undefined,
