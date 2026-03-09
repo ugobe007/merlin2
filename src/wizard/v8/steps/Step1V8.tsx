@@ -12,9 +12,15 @@
  *
  * NOTE: Google Places API
  * - Currently using legacy `Autocomplete` (deprecated March 2025)
+ * - ⚠️ Browser will show deprecation warning (safe to ignore for now)
  * - Migration to `PlaceAutocompleteElement` planned for v8.1
  * - Legacy API will continue to work with 12 months notice before discontinuation
  * - See: https://developers.google.com/maps/documentation/javascript/places-migration-overview
+ *
+ * PERFORMANCE NOTE (March 9, 2026):
+ * - Fixed excessive re-renders by removing `actions` from useEffect deps
+ * - Added explicit fields parameter for better data extraction
+ * - Added comprehensive error handling and logging
  */
 
 import React, { useRef, useEffect, useState } from "react";
