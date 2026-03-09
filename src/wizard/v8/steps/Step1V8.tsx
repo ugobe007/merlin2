@@ -892,6 +892,7 @@ export function Step1V8({ state, actions }: Step1Props) {
               Business Name
             </label>
             <input
+              ref={businessInputRef}
               type="text"
               value={businessName}
               onChange={(e) => {
@@ -902,6 +903,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 if (e.key === "Enter") handleBusinessSearch();
               }}
               placeholder="e.g., Wow Car Wash, Sunset Hotel, City Hospital"
+              autoComplete="off"
               style={{
                 width: "100%",
                 height: 42,
