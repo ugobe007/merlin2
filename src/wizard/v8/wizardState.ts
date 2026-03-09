@@ -420,17 +420,7 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
         state.business?.detectedIndustry && (state.business?.confidence ?? 0) >= 0.75;
       const nextStep = hasIndustry ? 3 : 2;
 
-      // DEBUG: Log what's happening
-      console.log("[V8 CONFIRM_BUSINESS] Transitioning:", {
-        detectedIndustry: state.business?.detectedIndustry,
-        confidence: state.business?.confidence,
-        hasIndustry,
-        currentStep: state.step,
-        nextStep,
-        willSetIndustry: hasIndustry ? state.business?.detectedIndustry : "no",
-        timestamp: new Date().toISOString(),
-      });
-
+      // Skip to Step 3 (questionnaire) if industry detected, else Step 2 (industry selection)
       return {
         ...state,
         step: nextStep as WizardStep,

@@ -271,12 +271,8 @@ export default function WizardV8Page() {
   const { state, actions } = useWizardV8();
   const step = state.step;
 
-  // DEBUG: Log step and state
-  console.log("[V8 WizardV8Page render] step:", step, {
-    hasLocation: !!state.location,
-    hasBusiness: !!state.business,
-    hasIndustry: !!state.industry,
-  });
+  // DEBUG: Removed excessive logging - caused 20+ renders per step
+  // TODO: Memoize actions object in useWizardV8 to prevent re-render cascade
 
   return (
     <div style={{ position: "relative" }}>

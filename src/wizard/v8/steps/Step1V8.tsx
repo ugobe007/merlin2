@@ -9,6 +9,12 @@
  *  • "Find My Business" section (optional – local state only, improves display accuracy)
  *
  * RULE 3: No API calls here. All fetching stays in useWizardV8.ts.
+ *
+ * NOTE: Google Places API
+ * - Currently using legacy `Autocomplete` (deprecated March 2025)
+ * - Migration to `PlaceAutocompleteElement` planned for v8.1
+ * - Legacy API will continue to work with 12 months notice before discontinuation
+ * - See: https://developers.google.com/maps/documentation/javascript/places-migration-overview
  */
 
 import React, { useRef, useEffect, useState } from "react";
@@ -116,10 +122,27 @@ export function Step1V8({ state, actions }: Step1Props) {
         const autocomplete = new window.google.maps.places.Autocomplete(businessInputRef.current, {
           types: ["establishment"],
           componentRestrictions: country === "US" ? { country: "us" } : undefined,
+          fields: [
+            "name",
+            "formatted_address",
+            "address_components",
+            "geometry",
+            "photos",
+            "place_id",
+            "types",
+          ],
         });
 
         autocomplete.addListener("place_changed", () => {
           const place = autocomplete.getPlace();
+          console.log("[Step1V8] Place selected:", {
+            name: place.name,
+            hasAddress: !!place.formatted_address,
+            hasPhotos: !!place.photos?.length,
+            hasGeometry: !!place.geometry,
+            types: place.types,
+          });
+
           if (place.formatted_address) {
             setSelectedPlace(place);
             setBusinessName(place.name || "");
@@ -132,17 +155,21 @@ export function Step1V8({ state, actions }: Step1Props) {
             if (zipComponent) {
               actions.setLocationRaw(zipComponent.short_name);
             }
+          } else {
+            console.warn("[Step1V8] Place missing formatted_address");
           }
         });
 
         autocompleteRef.current = autocomplete;
+        console.log("[Step1V8] Google Places Autocomplete initialized");
       } catch (err) {
-        console.error("Failed to load Google Maps API:", err);
+        console.error("[Step1V8] Failed to load Google Maps API:", err);
       }
     };
 
     void initAutocomplete();
-  }, [country, actions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [country]);
 
   // Normalise ZIP whenever country changes
   const normalizedZip =
@@ -202,16 +229,31 @@ export function Step1V8({ state, actions }: Step1Props) {
 
     // Use selected place from autocomplete if available
     if (selectedPlace) {
-      const photoUrl = selectedPlace.photos?.[0]?.getUrl({ maxWidth: 400, maxHeight: 300 });
+      let photoUrl: string | undefined;
+      try {
+        photoUrl = selectedPlace.photos?.[0]?.getUrl({ maxWidth: 400, maxHeight: 300 });
+      } catch (err) {
+        console.warn("[Step1V8] Failed to get photo URL:", err);
+      }
 
-      actions.setBusiness(selectedPlace.name || businessName.trim(), {
+      const businessData = {
         placeId: selectedPlace.place_id,
         formattedAddress: selectedPlace.formatted_address,
         photoUrl,
         lat: selectedPlace.geometry?.location?.lat(),
         lng: selectedPlace.geometry?.location?.lng(),
+      };
+
+      console.log("[Step1V8] Setting business with data:", {
+        name: selectedPlace.name || businessName.trim(),
+        hasPhoto: !!photoUrl,
+        hasLocation: !!(businessData.lat && businessData.lng),
+        address: businessData.formattedAddress,
       });
+
+      actions.setBusiness(selectedPlace.name || businessName.trim(), businessData);
     } else {
+      console.log("[Step1V8] Setting business without Google Place data");
       // Fallback: use manual input without Google data
       actions.setBusiness(businessName.trim());
     }
