@@ -88,6 +88,7 @@ export function isSolarFeasible(grade: SolarGrade | null): boolean {
 export type WizardStep = 0 | 1 | 2 | 3 | 3.5 | 4 | 5;
 
 // Step mapping:
+// 0 = Mode selection
 // 1 = Location + addon preferences
 // 2 = Industry selection
 // 3 = Questionnaire (industry-specific)
@@ -510,7 +511,7 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
       return { ...state, step: intent.step, error: null };
 
     case "GO_BACK": {
-      const prev = Math.max(1, state.step - 1) as WizardStep;
+      const prev = Math.max(0, state.step - 1) as WizardStep;
       return { ...state, step: prev };
     }
 
