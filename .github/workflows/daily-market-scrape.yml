@@ -47,12 +47,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          echo "=== RUNNING TEST SCRIPT FIRST (PostgreSQL Direct) ==="
-          npx tsx scripts/test-scraper-pg.ts
-          echo ""
-          echo "=== NOW RUNNING ACTUAL SCRAPER ==="
-          npx tsx scripts/run-daily-scrape.ts
+        run: npx tsx scripts/run-daily-scrape.ts
       
       - name: Upload logs on failure
         if: failure()
