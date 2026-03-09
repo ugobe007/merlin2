@@ -39,9 +39,10 @@ async function testInsert() {
   
   console.log('   Article:', JSON.stringify(testArticle, null, 2));
   
-  // Use Supabase connection pooler (port 6543, publicly accessible)
-  // Direct database (port 5432) is firewalled
-  const connectionString = `postgresql://postgres.${projectRef}:${DB_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true`;
+  // Use Supabase Session Pooler (publicly accessible)
+  // Region: aws-1-us-east-2 (not us-west-1)
+  // Port: 5432 (Session pooler uses 5432, Transaction pooler uses 6543)
+  const connectionString = `postgresql://postgres.${projectRef}:${DB_PASSWORD}@aws-1-us-east-2.pooler.supabase.com:5432/postgres?pgbouncer=true`;
   const client = new Client({ connectionString });
   
   try {
