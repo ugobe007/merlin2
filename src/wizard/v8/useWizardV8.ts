@@ -37,11 +37,7 @@ import {
 // Intel fetches (utility, solar, weather) use local services — no backend needed.
 // Location resolution is V8-native: direct ZIP lookup (zippopotam.us) with
 // utility-rate-service fallback. No dependency on V7's backend /api/location/resolve.
-import {
-  fetchUtility,
-  fetchSolar,
-  fetchWeather,
-} from "@/wizard/v7/api/wizardAPI";
+import { fetchUtility, fetchSolar, fetchWeather } from "@/wizard/v7/api/wizardAPI";
 
 import { getFacilityConstraints } from "@/services/useCasePowerCalculations";
 import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
@@ -68,10 +64,7 @@ interface ZippopotamResponse {
   places: ZippopotamPlace[];
 }
 
-async function resolveZip(
-  zip: string,
-  signal?: AbortSignal
-): Promise<LocationData> {
+async function resolveZip(zip: string, signal?: AbortSignal): Promise<LocationData> {
   // ── Primary: zippopotam.us ─────────────────────────────────────────────
   try {
     const res = await fetch(`https://api.zippopotam.us/us/${zip}`, { signal });
@@ -101,7 +94,7 @@ async function resolveZip(
     if (utility?.state) {
       return {
         zip,
-        city: zip,                        // best we can do without geocoder
+        city: zip, // best we can do without geocoder
         state: utility.state,
         formattedAddress: `${zip}, ${utility.state}`,
       };
@@ -241,7 +234,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     } else {
       dispatch({ type: "PATCH_INTEL", patch: { weatherStatus: "error" } });
     }
-  }, []);  
+  }, []);
 
   /**
    * submitLocation — geocode the typed ZIP to a named location card.
@@ -261,68 +254,108 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       dispatch({
         type: "SET_ERROR",
         code: "GEOCODE_FAILED",
-        message:
-          e instanceof Error ? e.message : "Could not find that ZIP code.",
+        message: e instanceof Error ? e.message : "Could not find that ZIP code.",
       });
     }
   }, [state.locationRaw]);
 
-  const setGridReliability = useCallback((reliability: 'reliable' | 'occasional-outages' | 'frequent-outages' | 'unreliable') => {
-    dispatch({ type: "SET_GRID_RELIABILITY", reliability });
-  }, []);
+  const setGridReliability = useCallback(
+    (reliability: "reliable" | "occasional-outages" | "frequent-outages" | "unreliable") => {
+      dispatch({ type: "SET_GRID_RELIABILITY", reliability });
+    },
+    []
+  );
 
   /**
    * detectIndustryFromName — simple keyword-based industry detection
    */
-  const detectIndustryFromName = (name: string): { industry: IndustrySlug | null; confidence: number } => {
+  const detectIndustryFromName = (
+    name: string
+  ): { industry: IndustrySlug | null; confidence: number } => {
     const lowerName = name.toLowerCase();
-    
+
     // DEBUG: Log what we're detecting
     if (import.meta.env.DEV) {
-      console.log('[detectIndustryFromName] Input:', name, '→ lowercase:', lowerName);
+      console.log("[detectIndustryFromName] Input:", name, "→ lowercase:", lowerName);
     }
-    
+
     // Industry detection rules (confidence 0-1)
     // Car Wash: enhanced with common brands
-    if (/car\s*wash|carwash|auto\s*wash|auto\s*spa|detail\s*center|mister\s*car\s*wash|take\s*5|zips\s*car\s*wash/i.test(lowerName)) {
+    if (
+      /car\s*wash|carwash|auto\s*wash|auto\s*spa|detail\s*center|mister\s*car\s*wash|take\s*5|zips\s*car\s*wash/i.test(
+        lowerName
+      )
+    ) {
       return { industry: "car_wash", confidence: 0.95 };
     }
     // Truck Stop: travel centers and major brands
-    if (/truck\s*stop|truckstop|travel\s*center|travel\s*plaza|love'?s|pilot|flying\s*j|ta\s*travel|petro/i.test(lowerName)) {
-      return { industry: "truck_stop", confidence: 0.90 };
+    if (
+      /truck\s*stop|truckstop|travel\s*center|travel\s*plaza|love'?s|pilot|flying\s*j|ta\s*travel|petro/i.test(
+        lowerName
+      )
+    ) {
+      return { industry: "truck_stop", confidence: 0.9 };
     }
     // Casino/Gaming: major brands and common terms
-    if (/casino|gaming|mgm|caesars|wynn|bellagio|venetian|aria|station\s*casinos|golden\s*nugget/i.test(lowerName)) {
+    if (
+      /casino|gaming|mgm|caesars|wynn|bellagio|venetian|aria|station\s*casinos|golden\s*nugget/i.test(
+        lowerName
+      )
+    ) {
       return { industry: "casino", confidence: 0.95 };
     }
-    if (/hotel|motel|inn|resort|hospitality|hilton|marriott|hyatt|sheraton|holiday\s*inn|courtyard|hampton/i.test(lowerName)) {
-      return { industry: "hotel", confidence: 0.90 };
+    if (
+      /hotel|motel|inn|resort|hospitality|hilton|marriott|hyatt|sheraton|holiday\s*inn|courtyard|hampton/i.test(
+        lowerName
+      )
+    ) {
+      return { industry: "hotel", confidence: 0.9 };
     }
-    if (/data\s*center|datacenter|server\s*farm|cloud|switch|equinix|digitalrealty|coresite|cyxtera|qts|vantage|iron\s*mountain/i.test(lowerName)) {
+    if (
+      /data\s*center|datacenter|server\s*farm|cloud|switch|equinix|digitalrealty|coresite|cyxtera|qts|vantage|iron\s*mountain/i.test(
+        lowerName
+      )
+    ) {
       if (import.meta.env.DEV) {
-        console.log('[detectIndustryFromName] ✅ MATCHED data_center');
+        console.log("[detectIndustryFromName] ✅ MATCHED data_center");
       }
       return { industry: "data_center", confidence: 0.95 };
     }
     // Hospital/Healthcare: match common patterns
-    if (/hospital|medical\s*center|health\s*center|healthcare|health\s*system|clinic|dignity\s*health|kaiser|sutter|providence|mayo|cleveland\s*clinic/i.test(lowerName)) {
-      return { industry: "hospital", confidence: 0.90 };
+    if (
+      /hospital|medical\s*center|health\s*center|healthcare|health\s*system|clinic|dignity\s*health|kaiser|sutter|providence|mayo|cleveland\s*clinic/i.test(
+        lowerName
+      )
+    ) {
+      return { industry: "hospital", confidence: 0.9 };
     }
     // Office Building: enhanced with building types
-    if (/office|corporate|headquarters|hq|office\s*building|office\s*tower|office\s*park|business\s*center|corporate\s*center|plaza|high\s*rise/i.test(lowerName)) {
+    if (
+      /office|corporate|headquarters|hq|office\s*building|office\s*tower|office\s*park|business\s*center|corporate\s*center|plaza|high\s*rise/i.test(
+        lowerName
+      )
+    ) {
       return { industry: "office", confidence: 0.75 };
     }
-    if (/charging|ev\s*station|electric\s*vehicle|electrify\s*america|chargepoint|evgo/i.test(lowerName)) {
-      return { industry: "ev_charging", confidence: 0.90 };
+    if (
+      /charging|ev\s*station|electric\s*vehicle|electrify\s*america|chargepoint|evgo/i.test(
+        lowerName
+      )
+    ) {
+      return { industry: "ev_charging", confidence: 0.9 };
     }
-    if (/gas\s*station|fuel|convenience\s*store|7-eleven|circle\s*k|shell|chevron|bp/i.test(lowerName)) {
+    if (
+      /gas\s*station|fuel|convenience\s*store|7-eleven|circle\s*k|shell|chevron|bp/i.test(lowerName)
+    ) {
       return { industry: "gas_station", confidence: 0.85 };
     }
     if (/warehouse|distribution|logistics|fulfillment|amazon|fedex|ups|dhl/i.test(lowerName)) {
       return { industry: "warehouse", confidence: 0.85 };
     }
-    if (/retail|store|shop|mall|shopping|walmart|target|costco|home\s*depot|lowes/i.test(lowerName)) {
-      return { industry: "retail", confidence: 0.70 };
+    if (
+      /retail|store|shop|mall|shopping|walmart|target|costco|home\s*depot|lowes/i.test(lowerName)
+    ) {
+      return { industry: "retail", confidence: 0.7 };
     }
     if (/restaurant|cafe|diner|bistro|eatery/i.test(lowerName)) {
       return { industry: "restaurant", confidence: 0.85 };
@@ -333,9 +366,9 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     if (/manufacturing|factory|plant|production/i.test(lowerName)) {
       return { industry: "manufacturing", confidence: 0.85 };
     }
-    
+
     if (import.meta.env.DEV) {
-      console.log('[detectIndustryFromName] ❌ No match found for:', lowerName);
+      console.log("[detectIndustryFromName] ❌ No match found for:", lowerName);
     }
     return { industry: null, confidence: 0 };
   };
@@ -343,63 +376,71 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   /**
    * setBusiness — sets business name, auto-detects industry, estimates roof space
    */
-  const setBusiness = useCallback((name: string, placesData?: {
-    placeId?: string;
-    formattedAddress?: string;
-    photoUrl?: string;
-    lat?: number;
-    lng?: number;
-  }) => {
-    if (import.meta.env.DEV) {
-      console.log('[setBusiness] Called with name:', name, 'placesData:', placesData);
-    }
-    
-    const { industry, confidence } = detectIndustryFromName(name);
-    
-    if (import.meta.env.DEV) {
-      console.log('[setBusiness] Detection result:', { industry, confidence });
-    }
-    
-    // Industry-based roof space estimates (typical commercial buildings)
-    const INDUSTRY_ROOF_ESTIMATES: Record<string, number> = {
-      'car_wash': 5000,         // Small building with bay canopy
-      'gas_station': 8000,      // Station + canopy
-      'retail': 12000,          // Strip mall unit
-      'restaurant': 6000,       // Single-story commercial
-      'office': 20000,          // Multi-story office building
-      'hotel': 30000,           // Large multi-story with rooftop
-      'warehouse': 50000,       // Large flat industrial roof
-      'manufacturing': 60000,   // Industrial facility
-      'data_center': 40000,     // Large commercial tech facility
-      'hospital': 50000,        // Large institutional building
-      'healthcare': 25000,      // Medical office building
-      'ev_charging': 10000,     // Station with covered parking
-      'shopping_center': 80000, // Large retail complex
-      'apartment': 25000,       // Multi-family residential
-      'college': 70000,         // Campus building
-      'airport': 100000,        // Large terminal
-      'casino': 60000,          // Large entertainment complex
-      'cold_storage': 45000,    // Industrial warehouse
-      'indoor_farm': 40000,     // Controlled environment agriculture
-      'truck_stop': 15000,      // Large service station
-      'microgrid': 30000,       // Multi-building complex
-      'government': 35000,      // Public building
-      'agricultural': 20000,    // Farm building
-    };
-    
-    const estimatedRoofSpaceSqFt = industry ? (INDUSTRY_ROOF_ESTIMATES[industry] || 15000) : undefined;
-    
-    dispatch({
-      type: "SET_BUSINESS",
-      business: {
-        name,
-        detectedIndustry: industry,
-        confidence,
-        estimatedRoofSpaceSqFt,
-        ...placesData,
-      },
-    });
-  }, []);
+  const setBusiness = useCallback(
+    (
+      name: string,
+      placesData?: {
+        placeId?: string;
+        formattedAddress?: string;
+        photoUrl?: string;
+        lat?: number;
+        lng?: number;
+      }
+    ) => {
+      if (import.meta.env.DEV) {
+        console.log("[setBusiness] Called with name:", name, "placesData:", placesData);
+      }
+
+      const { industry, confidence } = detectIndustryFromName(name);
+
+      if (import.meta.env.DEV) {
+        console.log("[setBusiness] Detection result:", { industry, confidence });
+      }
+
+      // Industry-based roof space estimates (typical commercial buildings)
+      const INDUSTRY_ROOF_ESTIMATES: Record<string, number> = {
+        car_wash: 5000, // Small building with bay canopy
+        gas_station: 8000, // Station + canopy
+        retail: 12000, // Strip mall unit
+        restaurant: 6000, // Single-story commercial
+        office: 20000, // Multi-story office building
+        hotel: 30000, // Large multi-story with rooftop
+        warehouse: 50000, // Large flat industrial roof
+        manufacturing: 60000, // Industrial facility
+        data_center: 40000, // Large commercial tech facility
+        hospital: 50000, // Large institutional building
+        healthcare: 25000, // Medical office building
+        ev_charging: 10000, // Station with covered parking
+        shopping_center: 80000, // Large retail complex
+        apartment: 25000, // Multi-family residential
+        college: 70000, // Campus building
+        airport: 100000, // Large terminal
+        casino: 60000, // Large entertainment complex
+        cold_storage: 45000, // Industrial warehouse
+        indoor_farm: 40000, // Controlled environment agriculture
+        truck_stop: 15000, // Large service station
+        microgrid: 30000, // Multi-building complex
+        government: 35000, // Public building
+        agricultural: 20000, // Farm building
+      };
+
+      const estimatedRoofSpaceSqFt = industry
+        ? INDUSTRY_ROOF_ESTIMATES[industry] || 15000
+        : undefined;
+
+      dispatch({
+        type: "SET_BUSINESS",
+        business: {
+          name,
+          detectedIndustry: industry,
+          confidence,
+          estimatedRoofSpaceSqFt,
+          ...placesData,
+        },
+      });
+    },
+    []
+  );
 
   const setBusinessAddress = useCallback((address: string) => {
     dispatch({ type: "SET_BUSINESS_ADDRESS", address });
@@ -430,13 +471,13 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
     try {
       const result = calculateUseCasePower(ssotSlug, answers as Record<string, unknown>);
-      
+
       // PowerCalculationResult returns powerMW (megawatts), convert to kW
       // Legacy results may have averageLoadKW/baseLoadKW/peakLoadKW
       let baseKW = 0;
       let peakKW = 0;
       let source = "";
-      
+
       // PowerCalculationResult only has powerMW field (standardized Dec 2025)
       baseKW = result.powerMW * 1000;
       peakKW = baseKW * 1.3; // Assume 30% peak factor
@@ -446,12 +487,10 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         console.log("[useWizardV8] Parsed power:", {
           baseKW: Math.round(baseKW),
           peakKW: Math.round(peakKW),
-          criticalLoadKW: result.criticalLoadKW,
-          criticalLoadPercent: result.criticalLoadPercent 
-            ? `${(result.criticalLoadPercent * 100).toFixed(1)}%` 
-            : 'N/A',
+          // criticalLoadKW: result.criticalLoadKW, // TODO: Add to PowerCalculationResult type
+          // criticalLoadPercent: result.criticalLoadPercent,
           source,
-          rawResult: result
+          rawResult: result,
         });
       }
 
@@ -460,7 +499,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
           type: "SET_BASE_LOAD",
           baseLoadKW: Math.round(baseKW),
           peakLoadKW: Math.round(peakKW),
-          criticalLoadKW: result.criticalLoadKW, // Pass critical load for generator sizing
+          // criticalLoadKW: result.criticalLoadKW, // TODO: Re-enable when PowerCalculationResult includes this
         });
       } else {
         // No valid power calculated - log for debugging
@@ -476,7 +515,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       }
       // baseLoadKW stays at 0 until enough answers are present
     }
-  }, [state.step3Answers, state.industry]);  
+  }, [state.step3Answers, state.industry]);
 
   // ── Step 2: Industry selection ─────────────────────────────────────────
 
@@ -513,33 +552,29 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     dispatch({ type: "SET_ANSWER", key, value });
   }, []);
 
-  const setAddonPreference = useCallback(
-    (addon: "solar" | "ev" | "generator", value: boolean) => {
-      dispatch({ type: "SET_ADDON_PREFERENCE", addon, value });
-    },
-    []
-  );
+  const setAddonPreference = useCallback((addon: "solar" | "ev" | "generator", value: boolean) => {
+    dispatch({ type: "SET_ADDON_PREFERENCE", addon, value });
+  }, []);
 
   const setAddonConfig = useCallback(
-    (config: Partial<{
-      solarKW: number;
-      generatorKW: number;
-      generatorFuelType: 'diesel' | 'natural-gas' | 'dual-fuel';
-      level2Chargers: number;
-      dcfcChargers: number;
-      hpcChargers: number;
-    }>) => {
+    (
+      config: Partial<{
+        solarKW: number;
+        generatorKW: number;
+        generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+        level2Chargers: number;
+        dcfcChargers: number;
+        hpcChargers: number;
+      }>
+    ) => {
       dispatch({ type: "SET_ADDON_CONFIG", config });
     },
     []
   );
 
-  const setEVChargers = useCallback(
-    (chargers: WizardState["evChargers"]) => {
-      dispatch({ type: "SET_EV_CHARGERS", chargers });
-    },
-    []
-  );
+  const setEVChargers = useCallback((chargers: WizardState["evChargers"]) => {
+    dispatch({ type: "SET_EV_CHARGERS", chargers });
+  }, []);
 
   const setBaseLoad = useCallback(
     (baseLoadKW: number, peakLoadKW: number, evRevenuePerYear?: number) => {
@@ -555,12 +590,9 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
   // ── Step 4 ────────────────────────────────────────────────────────────────
 
-  const setTiers = useCallback(
-    (tiers: [QuoteTier, QuoteTier, QuoteTier]) => {
-      dispatch({ type: "SET_TIERS", tiers });
-    },
-    []
-  );
+  const setTiers = useCallback((tiers: [QuoteTier, QuoteTier, QuoteTier]) => {
+    dispatch({ type: "SET_TIERS", tiers });
+  }, []);
 
   const setTiersStatus = useCallback((status: WizardState["tiersStatus"]) => {
     dispatch({ type: "SET_TIERS_STATUS", status });
@@ -574,58 +606,64 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
   // ── Navigation ────────────────────────────────────────────────────────────
 
-  const goToStep = useCallback(async (step: WizardStep) => {
-    // Special handling after Step 3: Check if addons need configuration
-    if (step === 4 && state.step === 3) {
-      const needsAddonConfig = 
-        state.wantsSolar || 
-        state.wantsEVCharging || 
-        state.wantsGenerator;
-      
-      if (needsAddonConfig) {
-        // Redirect to Step 3.5 first to configure addons
-        dispatch({ type: "GO_TO_STEP", step: 3.5 });
-        return;
+  const goToStep = useCallback(
+    async (step: WizardStep) => {
+      // Special handling after Step 3: Check if addons need configuration
+      if (step === 4 && state.step === 3) {
+        const needsAddonConfig = state.wantsSolar || state.wantsEVCharging || state.wantsGenerator;
+
+        if (needsAddonConfig) {
+          // Redirect to Step 3.5 first to configure addons
+          dispatch({ type: "GO_TO_STEP", step: 3.5 });
+          return;
+        }
+        // If no addons, fall through to Step 4 and generate tiers
       }
-      // If no addons, fall through to Step 4 and generate tiers
-    }
-    
-    // From Step 3.5 to Step 4: Generate tiers with addon configs
-    if (step === 4 && state.step === 3.5) {
-      // Navigate to Step 4 first to show loading screen
-      dispatch({ type: "GO_TO_STEP", step: 4 });
-      dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
-      
-      try {
-        const tiers = await buildTiers(state);
-        dispatch({ type: "SET_TIERS", tiers });
-        dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
-      } catch (error) {
-        console.error("Tier generation failed:", error);
-        dispatch({ type: "SET_TIERS_STATUS", status: "error" });
+
+      // From Step 3.5 to Step 4: Generate tiers with addon configs
+      if (step === 4 && state.step === 3.5) {
+        // Navigate to Step 4 first to show loading screen
+        dispatch({ type: "GO_TO_STEP", step: 4 });
+        dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
+
+        try {
+          const tiers = await buildTiers(state);
+          dispatch({ type: "SET_TIERS", tiers });
+          dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
+        } catch (error) {
+          console.error("Tier generation failed:", error);
+          dispatch({ type: "SET_TIERS_STATUS", status: "error" });
+        }
+        return; // Don't execute the final dispatch
       }
-      return; // Don't execute the final dispatch
-    }
-    
-    // From Step 3 to Step 4 (no addons): Generate tiers
-    if (step === 4 && state.step === 3 && !state.wantsSolar && !state.wantsEVCharging && !state.wantsGenerator) {
-      // Navigate to Step 4 first to show loading screen
-      dispatch({ type: "GO_TO_STEP", step: 4 });
-      dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
-      
-      try {
-        const tiers = await buildTiers(state);
-        dispatch({ type: "SET_TIERS", tiers });
-        dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
-      } catch (error) {
-        console.error("Tier generation failed:", error);
-        dispatch({ type: "SET_TIERS_STATUS", status: "error" });
+
+      // From Step 3 to Step 4 (no addons): Generate tiers
+      if (
+        step === 4 &&
+        state.step === 3 &&
+        !state.wantsSolar &&
+        !state.wantsEVCharging &&
+        !state.wantsGenerator
+      ) {
+        // Navigate to Step 4 first to show loading screen
+        dispatch({ type: "GO_TO_STEP", step: 4 });
+        dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
+
+        try {
+          const tiers = await buildTiers(state);
+          dispatch({ type: "SET_TIERS", tiers });
+          dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
+        } catch (error) {
+          console.error("Tier generation failed:", error);
+          dispatch({ type: "SET_TIERS_STATUS", status: "error" });
+        }
+        return; // Don't execute the final dispatch
       }
-      return; // Don't execute the final dispatch
-    }
-    
-    dispatch({ type: "GO_TO_STEP", step });
-  }, [state]);
+
+      dispatch({ type: "GO_TO_STEP", step });
+    },
+    [state]
+  );
 
   const goBack = useCallback(() => {
     dispatch({ type: "GO_BACK" });
