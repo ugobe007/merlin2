@@ -1004,6 +1004,10 @@ export function Step1V8({ state, actions }: Step1Props) {
               onChange={(e) => {
                 setBusinessName(e.target.value);
                 setBusinessError(null);
+                // Clear selectedPlace when user types manually
+                if (selectedPlace) {
+                  setSelectedPlace(null);
+                }
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -1034,6 +1038,30 @@ export function Step1V8({ state, actions }: Step1Props) {
                 boxSizing: "border-box",
               }}
             />
+
+            {/* Helper text - show when typing but no selection */}
+            {businessName.trim() && !selectedPlace && autocompleteRef.current && (
+              <div
+                style={{
+                  marginTop: 8,
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  background: "rgba(59,130,246,0.08)",
+                  border: "1px solid rgba(59,130,246,0.25)",
+                  fontSize: 11,
+                  color: "rgba(59,130,246,0.9)",
+                  display: "flex",
+                  gap: 6,
+                  alignItems: "flex-start",
+                }}
+              >
+                <span>ℹ️</span>
+                <span>
+                  <strong>Select from the dropdown</strong> to get business photo, map, and verified
+                  address
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Street Address */}
@@ -1090,24 +1118,36 @@ export function Step1V8({ state, actions }: Step1Props) {
           <button
             type="button"
             onClick={handleBusinessSearch}
-            disabled={!businessName.trim() || isFetching}
+            disabled={
+              !businessName.trim() || isFetching || (!!autocompleteRef.current && !selectedPlace)
+            }
             style={{
               width: "100%",
               padding: "11px 18px",
               borderRadius: 8,
               border:
-                !businessName.trim() || isFetching
+                !businessName.trim() || isFetching || (!!autocompleteRef.current && !selectedPlace)
                   ? "2px solid rgba(255,255,255,0.08)"
                   : "2px solid #10b981",
               background: "transparent",
-              color: !businessName.trim() || isFetching ? "rgba(232,235,243,0.25)" : "#10b981",
+              color:
+                !businessName.trim() || isFetching || (!!autocompleteRef.current && !selectedPlace)
+                  ? "rgba(232,235,243,0.25)"
+                  : "#10b981",
               fontSize: 13,
               fontWeight: 600,
-              cursor: !businessName.trim() || isFetching ? "not-allowed" : "pointer",
+              cursor:
+                !businessName.trim() || isFetching || (!!autocompleteRef.current && !selectedPlace)
+                  ? "not-allowed"
+                  : "pointer",
               transition: "all 0.15s ease",
             }}
           >
-            {isFetching ? "Detecting..." : "Find My Business"}
+            {isFetching
+              ? "Detecting..."
+              : selectedPlace
+                ? "Continue with " + selectedPlace.name
+                : "Select from dropdown to continue"}
           </button>
 
           {/* Skip button */}
