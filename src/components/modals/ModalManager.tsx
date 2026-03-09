@@ -11,7 +11,7 @@ import AccountSetup from "./AccountSetup";
 import EnhancedProfile from "../EnhancedProfile";
 import JoinMerlinModal from "./JoinMerlinModal";
 // V8 Wizard (Feb 2026 - V8 is production wizard)
-import WizardV8Page from "../../pages/WizardV8Page";
+import WizardV8Page from "../../wizard/v8/WizardV8Page";
 import CalculationModal from "./CalculationModal";
 import SaveProjectModal from "./SaveProjectModal";
 import LoadProjectModal from "./LoadProjectModal";
