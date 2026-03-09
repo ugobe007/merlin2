@@ -189,16 +189,12 @@ export async function saveScrapedArticles(
       url: article.url,
       author: article.author,
       published_at: article.published_at,
-      summary: article.summary,
-      full_content: article.full_content,
+      excerpt: article.summary, // FIXED: map to 'excerpt' column
+      content: article.full_content, // FIXED: map to 'content' column
       topics: article.topics,
       equipment_mentioned: article.equipment_mentioned,
-      regions_mentioned: article.regions_mentioned,
-      companies_mentioned: article.companies_mentioned,
       prices_extracted: article.prices_extracted,
-      regulations_mentioned: article.regulations_mentioned,
       relevance_score: article.relevance_score,
-      sentiment: article.sentiment,
       is_processed: article.is_processed,
     });
 
