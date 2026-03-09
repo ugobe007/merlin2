@@ -26,24 +26,28 @@ console.log('');
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function testInsert() {
-  console.log('📝 Attempting test INSERT...');
+  console.log('📝 Attempting test INSERT via RPC function (bypasses PostgREST cache)...');
   
   const testArticle = {
-    title: 'Test Article ' + new Date().toISOString(),
-    url: 'https://test.com/article-' + Date.now(),
-    excerpt: 'Test excerpt',
-    content: 'Test content',
-    equipment_mentioned: ['bess'],
-    relevance_score: 0.5,
-    is_processed: true
+    p_source_id: null,
+    p_title: 'Test Article ' + new Date().toISOString(),
+    p_url: 'https://test.com/article-' + Date.now(),
+    p_author: null,
+    p_published_at: new Date().toISOString(),
+    p_excerpt: 'Test excerpt',
+    p_content: 'Test content',
+    p_topics: [],
+    p_equipment_mentioned: ['bess'],
+    p_relevance_score: 0.5,
+    p_is_processed: true,
+    p_prices_extracted: [],
+    p_regulations_mentioned: []
   };
   
   console.log('   Article:', JSON.stringify(testArticle, null, 2));
   
   const { data, error } = await supabase
-    .from('scraped_articles')
-    .insert(testArticle)
-    .select();
+    .rpc('insert_scraped_article', testArticle);
   
   if (error) {
     console.error('❌ INSERT FAILED!');

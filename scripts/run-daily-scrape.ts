@@ -140,22 +140,23 @@ async function runDailyScrape() {
         // DEBUG: Log before INSERT to verify we reach this point
         console.log(`  → Attempting INSERT for: ${item.title?.slice(0, 40)}...`);
         
-        // Save article with aggressive error catching
+        // Save article using RPC function (bypasses PostgREST schema cache)
         try {
           const { data, error: insertError } = await supabase
-            .from('scraped_articles')
-            .insert({
-              source_id: source.id,
-              title: item.title,
-              url: item.link,
-              published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
-              excerpt: item.description?.slice(0, 500),  // FIXED: was 'summary'
-              content: item.content,  // FIXED: was 'full_content'
-              topics: classification.topics,
-              equipment_mentioned: classification.equipment,
-              prices_extracted: prices,
-              relevance_score: classification.relevanceScore,
-              is_processed: true
+            .rpc('insert_scraped_article', {
+              p_source_id: source.id,
+              p_title: item.title || 'Untitled',
+              p_url: item.link,
+              p_author: null,
+              p_published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
+              p_excerpt: item.description?.slice(0, 500) || '',
+              p_content: item.content || '',
+              p_topics: classification.topics || [],
+              p_equipment_mentioned: classification.equipment || [],
+              p_relevance_score: classification.relevanceScore || 0.5,
+              p_is_processed: true,
+              p_prices_extracted: prices || [],
+              p_regulations_mentioned: []
             });
           
           if (insertError) {
