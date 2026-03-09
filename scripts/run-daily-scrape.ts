@@ -109,12 +109,17 @@ async function runDailyScrape() {
       let skippedCount = 0;  // Track duplicates
       
       for (const item of items) {
-        // Check if already exists
-        const { data: existing } = await supabase
+        // Check if already exists (maybeSingle returns null if not found, no error)
+        const { data: existing, error: checkError } = await supabase
           .from('scraped_articles')
           .select('id')
           .eq('url', item.link)
-          .single();
+          .maybeSingle();  // FIXED: was .single() which errors on 0 rows
+        
+        if (checkError) {
+          console.error(`  ⚠️ Error checking duplicate for ${item.link}: ${checkError.message}`);
+          continue;
+        }
         
         if (existing) {
           skippedCount++;
