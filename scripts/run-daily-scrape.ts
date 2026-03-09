@@ -157,6 +157,11 @@ async function runDailyScrape() {
             });
             pricesCount++;
           }
+        } else {
+          // Log INSERT errors for debugging
+          console.error(`  ❌ Failed to insert article: ${item.title?.slice(0, 50)}...`);
+          console.error(`     Error: ${insertError.message}`);
+          console.error(`     Details: ${JSON.stringify(insertError, null, 2)}`);
         }
       }
       
