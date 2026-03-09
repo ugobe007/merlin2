@@ -114,13 +114,17 @@ function App() {
                               ? "gasstation"
                               : pathname === "/cold-storage" || pathname === "/cold-storage-energy"
                                 ? "coldstorage"
-                                : pathname === "/shopping-center" || pathname === "/shopping-center-energy" || pathname === "/mall"
+                                : pathname === "/shopping-center" ||
+                                    pathname === "/shopping-center-energy" ||
+                                    pathname === "/mall"
                                   ? "shoppingcenter"
                                   : pathname === "/casino" || pathname === "/casino-energy"
                                     ? "casino"
                                     : pathname === "/airport" || pathname === "/airport-energy"
                                       ? "airport"
-                                      : pathname === "/college" || pathname === "/university" || pathname === "/college-energy"
+                                      : pathname === "/college" ||
+                                          pathname === "/university" ||
+                                          pathname === "/college-energy"
                                         ? "college"
                                         : null)
   );
@@ -246,31 +250,67 @@ function App() {
   }
 
   if (activeVertical === "retail") {
-    return (<Suspense fallback={<PageLoader />}><RetailEnergy /></Suspense>);
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <RetailEnergy />
+      </Suspense>
+    );
   }
   if (activeVertical === "warehouse") {
-    return (<Suspense fallback={<PageLoader />}><WarehouseEnergy /></Suspense>);
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <WarehouseEnergy />
+      </Suspense>
+    );
   }
   if (activeVertical === "office") {
-    return (<Suspense fallback={<PageLoader />}><OfficeEnergy /></Suspense>);
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <OfficeEnergy />
+      </Suspense>
+    );
   }
   if (activeVertical === "gasstation") {
-    return (<Suspense fallback={<PageLoader />}><GasStationEnergy /></Suspense>);
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <GasStationEnergy />
+      </Suspense>
+    );
   }
   if (activeVertical === "coldstorage") {
-    return (<Suspense fallback={<PageLoader />}><ColdStorageEnergy /></Suspense>);
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <ColdStorageEnergy />
+      </Suspense>
+    );
   }
   if (activeVertical === "shoppingcenter") {
-    return (<Suspense fallback={<PageLoader />}><ShoppingCenterEnergy /></Suspense>);
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <ShoppingCenterEnergy />
+      </Suspense>
+    );
   }
   if (activeVertical === "casino") {
-    return (<Suspense fallback={<PageLoader />}><CasinoEnergy /></Suspense>);
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <CasinoEnergy />
+      </Suspense>
+    );
   }
   if (activeVertical === "airport") {
-    return (<Suspense fallback={<PageLoader />}><AirportEnergy /></Suspense>);
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AirportEnergy />
+      </Suspense>
+    );
   }
   if (activeVertical === "college") {
-    return (<Suspense fallback={<PageLoader />}><CollegeEnergy /></Suspense>);
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <CollegeEnergy />
+      </Suspense>
+    );
   }
 
   // Access via /meta or /meta-calculations - TrueQuote Meta Calculations Dashboard
@@ -340,21 +380,9 @@ function App() {
     );
   }
 
-  // Access via /wizard or /v8 - V8 PRODUCTION WIZARD (March 4, 2026 - NOW THE DEFAULT)
+  // Access via /wizard or /wizard-v7 or /v7 - V7 PRODUCTION WIZARD (Jan 2026)
   if (
     pathname === "/wizard" ||
-    pathname === "/wizard-v8" ||
-    pathname === "/v8"
-  ) {
-    return (
-      <Suspense fallback={<PageLoader />}>
-        <WizardV8Page />
-      </Suspense>
-    );
-  }
-
-  // Access via /wizard-v7 or /v7 - V7 Legacy (Feb 1, 2026)
-  if (
     pathname === "/wizard-v7" ||
     pathname === "/v7" ||
     pathname === "/wizard/v7"
@@ -362,6 +390,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <WizardV7Page />
+      </Suspense>
+    );
+  }
+
+  // Access via /wizard-v8 or /v8 - V8 BETA (March 2026 - Behind feature flag)
+  if (pathname === "/wizard-v8" || pathname === "/v8") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <WizardV8Page />
       </Suspense>
     );
   }
@@ -408,7 +445,12 @@ function App() {
   }
 
   // Press & Promotion Kit — /press /kit /press-kit
-  if (pathname === "/press" || pathname === "/kit" || pathname === "/promo" || pathname === "/press-kit") {
+  if (
+    pathname === "/press" ||
+    pathname === "/kit" ||
+    pathname === "/promo" ||
+    pathname === "/press-kit"
+  ) {
     return (
       <Suspense fallback={<PageLoader />}>
         <PressKit />
