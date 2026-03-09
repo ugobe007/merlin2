@@ -8,16 +8,16 @@ console.log('============================================================');
 console.log('');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const DB_PASSWORD = process.env.SUPABASE_DB_PASSWORD;
 
-if (!SUPABASE_URL || !SUPABASE_KEY) {
+if (!SUPABASE_URL || !DB_PASSWORD) {
   console.error('❌ Missing Supabase credentials');
   process.exit(1);
 }
 
 console.log('✅ Credentials found');
 console.log(`   URL: ${SUPABASE_URL}`);
-console.log(`   Key: ${SUPABASE_KEY.slice(0, 20)}...`);
+console.log(`   Password: ${DB_PASSWORD.slice(0, 4)}...`);
 console.log('');
 
 // Extract database connection from Supabase URL
@@ -39,8 +39,8 @@ async function testInsert() {
   
   console.log('   Article:', JSON.stringify(testArticle, null, 2));
   
-  // Use Supabase connection pooler
-  const connectionString = `postgresql://postgres.${projectRef}:${SUPABASE_KEY}@aws-0-us-west-1.pooler.supabase.com:6543/postgres`;
+  // Use direct database connection (not pooler)
+  const connectionString = `postgresql://postgres:${DB_PASSWORD}@db.${projectRef}.supabase.co:5432/postgres`;
   const client = new Client({ connectionString });
   
   try {

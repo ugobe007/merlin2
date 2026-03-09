@@ -34,7 +34,7 @@ jobs:
       - name: Test PostgreSQL direct connection
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: npx tsx scripts/test-scraper-pg.ts
       
       - name: Run main scraper
