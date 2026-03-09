@@ -380,25 +380,20 @@ function App() {
     );
   }
 
-  // Access via /wizard or /wizard-v7 or /v7 - V7 PRODUCTION WIZARD (Jan 2026)
-  if (
-    pathname === "/wizard" ||
-    pathname === "/wizard-v7" ||
-    pathname === "/v7" ||
-    pathname === "/wizard/v7"
-  ) {
+  // Access via /wizard or /wizard-v8 or /v8 - V8 PRODUCTION WIZARD (March 2026)
+  if (pathname === "/wizard" || pathname === "/wizard-v8" || pathname === "/v8") {
     return (
       <Suspense fallback={<PageLoader />}>
-        <WizardV7Page />
+        <WizardV8Page />
       </Suspense>
     );
   }
 
-  // Access via /wizard-v8 or /v8 - V8 BETA (March 2026 - Behind feature flag)
-  if (pathname === "/wizard-v8" || pathname === "/v8") {
+  // Access via /wizard-v7 or /v7 - V7 LEGACY (Jan 2026 - kept for reference)
+  if (pathname === "/wizard-v7" || pathname === "/v7" || pathname === "/wizard/v7") {
     return (
       <Suspense fallback={<PageLoader />}>
-        <WizardV8Page />
+        <WizardV7Page />
       </Suspense>
     );
   }
