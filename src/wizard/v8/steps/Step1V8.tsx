@@ -994,6 +994,7 @@ export function Step1V8({ state, actions }: Step1Props) {
           {/* Header with photo and basic info - V6 style */}
           <div style={{ padding: 24, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <div style={{ display: "flex", alignItems: "start", gap: 16 }}>
+              {/* Photo */}
               {state.business.photoUrl ? (
                 <img
                   src={state.business.photoUrl}
@@ -1006,6 +1007,10 @@ export function Step1V8({ state, actions }: Step1Props) {
                     border: "2px solid rgba(62,207,142,0.3)",
                     boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
                     flexShrink: 0,
+                  }}
+                  onError={(e) => {
+                    // Hide image if it fails to load
+                    e.currentTarget.style.display = "none";
                   }}
                 />
               ) : (
@@ -1354,6 +1359,26 @@ export function Step1V8({ state, actions }: Step1Props) {
                 >
                   Industry not detected — you'll select manually on the next step
                 </div>
+              </div>
+            )}
+
+            {/* Google Maps Static Map */}
+            {state.business.lat && state.business.lng && (
+              <div style={{ marginBottom: 20, borderRadius: 12, overflow: "hidden" }}>
+                <img
+                  src={`https://maps.googleapis.com/maps/api/staticmap?center=${state.business.lat},${state.business.lng}&zoom=15&size=600x200&scale=2&maptype=roadmap&markers=color:0x3ecf8e|${state.business.lat},${state.business.lng}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""}&style=feature:all|element:labels|visibility:on&style=feature:road|element:geometry|color:0x2d3748&style=feature:landscape|element:geometry|color:0x1a202c&style=feature:water|element:geometry|color:0x0f172a`}
+                  alt="Business location map"
+                  style={{
+                    width: "100%",
+                    height: 200,
+                    objectFit: "cover",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                  onError={(e) => {
+                    // Hide map if it fails to load
+                    e.currentTarget.parentElement!.style.display = "none";
+                  }}
+                />
               </div>
             )}
 
