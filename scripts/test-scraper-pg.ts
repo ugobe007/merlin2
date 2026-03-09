@@ -39,8 +39,9 @@ async function testInsert() {
   
   console.log('   Article:', JSON.stringify(testArticle, null, 2));
   
-  // Use direct database connection (not pooler)
-  const connectionString = `postgresql://postgres:${DB_PASSWORD}@db.${projectRef}.supabase.co:5432/postgres`;
+  // Use Supabase connection pooler (port 6543, publicly accessible)
+  // Direct database (port 5432) is firewalled
+  const connectionString = `postgresql://postgres.${projectRef}:${DB_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true`;
   const client = new Client({ connectionString });
   
   try {
