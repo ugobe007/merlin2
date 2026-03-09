@@ -1020,7 +1020,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 }
               }}
               placeholder="e.g., Wow Car Wash, Sunset Hotel, City Hospital"
-              autoComplete="off"
+              autoComplete="new-password"
               style={{
                 width: "100%",
                 height: 42,
