@@ -199,6 +199,33 @@ export function Step1V8({ state, actions }: Step1Props) {
             if (zipComponent) {
               actions.setLocationRaw(zipComponent.short_name);
             }
+
+            // Auto-submit business after selection
+            setTimeout(() => {
+              let photoUrl: string | undefined;
+              try {
+                photoUrl = place.photos?.[0]?.getUrl({ maxWidth: 400, maxHeight: 300 });
+              } catch (err) {
+                console.warn("[Step1V8] Failed to get photo URL:", err);
+              }
+
+              const businessData = {
+                placeId: place.place_id,
+                formattedAddress: place.formatted_address,
+                photoUrl,
+                lat: place.geometry?.location?.lat(),
+                lng: place.geometry?.location?.lng(),
+              };
+
+              console.log("[Step1V8] Auto-submitting business with Google Place data:", {
+                name: place.name || "",
+                hasPhoto: !!photoUrl,
+                hasLocation: !!(businessData.lat && businessData.lng),
+                address: businessData.formattedAddress,
+              });
+
+              actions.setBusiness(place.name || "", businessData);
+            }, 100);
           } else {
             console.warn("[Step1V8] Place missing formatted_address");
           }
