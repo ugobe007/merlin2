@@ -140,26 +140,19 @@ async function runDailyScrape() {
         // DEBUG: Log before INSERT to verify we reach this point
         console.log(`  → Attempting INSERT for: ${item.title?.slice(0, 40)}...`);
         
-        // Save article directly (schema cache should be fine now that we fixed column names)
+        // Use raw SQL function to completely bypass PostgREST schema cache
         const { data, error: insertError } = await supabase
-          .from('scraped_articles')
-          .insert({
-            source_id: source.id,
-            title: item.title || 'Untitled',
-            url: item.link,
-            author: null,
-            published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
-            excerpt: item.description?.slice(0, 500) || '',  // FIXED: was 'summary'
-            content: item.content || '',  // FIXED: was 'full_content'
-            topics: classification.topics || [],
-            equipment_mentioned: classification.equipment || [],
-            relevance_score: classification.relevanceScore || 0.5,
-            is_processed: true,
-            prices_extracted: prices || [],
-            regulations_mentioned: []
-          })
-          .select()
-          .single();
+          .rpc('insert_article_raw', {
+            p_source_id: source.id,
+            p_title: item.title || 'Untitled',
+            p_url: item.link,
+            p_excerpt: item.description?.slice(0, 500) || '',
+            p_content: item.content || '',
+            p_published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
+            p_equipment_mentioned: classification.equipment || [],
+            p_topics: classification.topics || [],
+            p_relevance_score: classification.relevanceScore || 0.5
+          });
         
         if (insertError) {
           // Log INSERT errors for debugging
