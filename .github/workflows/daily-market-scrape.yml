@@ -48,7 +48,10 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          echo "Starting daily market data scrape..."
+          echo "=== RUNNING TEST SCRIPT FIRST ==="
+          npx tsx scripts/test-scraper.ts
+          echo ""
+          echo "=== NOW RUNNING ACTUAL SCRAPER ==="
           npx tsx scripts/run-daily-scrape.ts
       
       - name: Upload logs on failure
