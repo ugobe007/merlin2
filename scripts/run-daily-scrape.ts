@@ -126,46 +126,59 @@ async function runDailyScrape() {
         const classification = classifyContent(fullText);
         const prices = extractPrices(fullText, classification.equipment);
         
-        // Save article
-        const { error: insertError } = await supabase
-          .from('scraped_articles')
-          .insert({
-            source_id: source.id,
-            title: item.title,
-            url: item.link,
-            published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
-            excerpt: item.description?.slice(0, 500),  // FIXED: was 'summary'
-            content: item.content,  // FIXED: was 'full_content'
-            topics: classification.topics,
-            equipment_mentioned: classification.equipment,
-            prices_extracted: prices,
-            relevance_score: classification.relevanceScore,
-            is_processed: true
-          });
-        
-        if (!insertError) {
-          savedCount++;
-          
-          // Save extracted prices
-          for (const price of prices) {
-            await supabase.from('collected_market_prices').insert({
+        // Save article with aggressive error catching
+        try {
+          const { data, error: insertError } = await supabase
+            .from('scraped_articles')
+            .insert({
               source_id: source.id,
-              equipment_type: price.equipment,
-              price_per_unit: price.price,
-              unit: price.unit,
-              currency: 'USD',
-              confidence_score: price.confidence,
-              price_date: item.pubDate ? new Date(item.pubDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-              raw_text: price.context,
-              extraction_method: 'regex'
+              title: item.title,
+              url: item.link,
+              published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
+              excerpt: item.description?.slice(0, 500),  // FIXED: was 'summary'
+              content: item.content,  // FIXED: was 'full_content'
+              topics: classification.topics,
+              equipment_mentioned: classification.equipment,
+              prices_extracted: prices,
+              relevance_score: classification.relevanceScore,
+              is_processed: true
             });
-            pricesCount++;
+          
+          if (insertError) {
+            // Log INSERT errors for debugging
+            console.error(`\n  ❌ INSERT FAILED for: ${item.title?.slice(0, 60)}...`);
+            console.error(`     URL: ${item.link}`);
+            console.error(`     Error message: ${insertError.message}`);
+            console.error(`     Error code: ${insertError.code}`);
+            console.error(`     Error details: ${JSON.stringify(insertError.details)}`);
+            console.error(`     Error hint: ${insertError.hint}`);
+            console.error(`     Full error: ${JSON.stringify(insertError, null, 2)}\n`);
+            continue;
           }
-        } else {
-          // Log INSERT errors for debugging
-          console.error(`  ❌ Failed to insert article: ${item.title?.slice(0, 50)}...`);
-          console.error(`     Error: ${insertError.message}`);
-          console.error(`     Details: ${JSON.stringify(insertError, null, 2)}`);
+          
+          if (data) {
+            savedCount++;
+            
+            // Save extracted prices
+            for (const price of prices) {
+              await supabase.from('collected_market_prices').insert({
+                source_id: source.id,
+                equipment_type: price.equipment,
+                price_per_unit: price.price,
+                unit: price.unit,
+                currency: 'USD',
+                confidence_score: price.confidence,
+                price_date: item.pubDate ? new Date(item.pubDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                raw_text: price.context,
+                extraction_method: 'regex'
+              });
+              pricesCount++;
+            }
+          }
+        } catch (err) {
+          console.error(`\n  ❌ EXCEPTION during INSERT: ${item.title?.slice(0, 60)}...`);
+          console.error(`     Exception: ${err}`);
+          console.error(`     Stack: ${err instanceof Error ? err.stack : 'no stack'}\n`);
         }
       }
       
