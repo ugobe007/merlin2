@@ -40,16 +40,15 @@ async function testInsert() {
   console.log('   Article:', JSON.stringify(testArticle, null, 2));
   console.log('');
   
-  // Use Supabase Transaction Pooler (port 6543)
-  // Username: postgres (simple, not qualified with project ref)
-  // Host includes project ref: db.PROJECT_REF.supabase.co
-  const connectionString = `postgresql://postgres:${DB_PASSWORD}@db.${projectRef}.supabase.co:6543/postgres`;
+  // Use Supabase Session Pooler with simple postgres username
+  // The pooler might not require the project-qualified username
+  const connectionString = `postgresql://postgres:${DB_PASSWORD}@aws-1-us-east-2.pooler.supabase.com:5432/postgres`;
   
   // Debug: Show what we're attempting (mask password)
   console.log('🔍 Connection Details:');
   console.log(`   Project Ref: ${projectRef}`);
-  console.log(`   Username: postgres`);
-  console.log(`   Host: db.${projectRef}.supabase.co:6543`);
+  console.log(`   Username: postgres (simple, not qualified)`);
+  console.log(`   Host: aws-1-us-east-2.pooler.supabase.com:5432`);
   console.log(`   Database: postgres`);
   console.log('');
   
