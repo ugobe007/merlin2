@@ -48,61 +48,87 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12">
-      {/* Header - Minimal */}
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-semibold text-white mb-2">Create your quote</h1>
-        <p className="text-sm text-slate-400">Choose your workflow</p>
+    <div className="max-w-3xl mx-auto px-6 py-14">
+      {/* Header - Professional */}
+      <div className="text-center mb-10">
+        <h1 className="text-3xl font-bold text-white mb-3">Create Your BESS Quote</h1>
+        <p className="text-sm text-slate-400">Select your preferred workflow</p>
       </div>
 
-      {/* Compact Horizontal Buttons - Supabase Style */}
-      <div className="flex flex-col gap-2 mb-6">
+      {/* Professional Cards with Gradient Borders */}
+      <div className="flex flex-col gap-3 mb-8">
         {modes.map((mode) => {
           const Icon = mode.icon;
           return (
             <button
               key={mode.id}
               onClick={() => onSelectMode(mode.id)}
-              className="group relative bg-slate-900/60 hover:bg-slate-800/80 border-2 hover:shadow-xl rounded-lg px-4 py-3 text-left transition-all duration-200 hover:scale-[1.01]"
+              className="group relative overflow-hidden rounded-xl transition-all duration-300"
               style={{
-                borderColor: mode.accent + "30",
-                boxShadow: `0 0 0 0 ${mode.accent}00`,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = mode.accent + "60";
-                e.currentTarget.style.boxShadow = `0 8px 24px -4px ${mode.accent}20`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = mode.accent + "30";
-                e.currentTarget.style.boxShadow = `0 0 0 0 ${mode.accent}00`;
+                background:
+                  "linear-gradient(135deg, rgba(15,23,42,0.9) 0%, rgba(30,41,59,0.8) 100%)",
               }}
             >
-              <div className="flex items-center gap-3">
-                {/* Icon - Compact */}
-                <div
-                  className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0"
-                  style={{
-                    backgroundColor: `${mode.accent}10`,
-                    border: `1px solid ${mode.accent}30`,
-                  }}
-                >
-                  <Icon className="w-4 h-4" style={{ color: mode.accent }} />
-                </div>
-
-                {/* Content - Inline */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <h3 className="text-sm font-semibold text-white">{mode.title}</h3>
-                    <span className="text-xs font-medium" style={{ color: mode.accent }}>
-                      {mode.subtitle}
-                    </span>
+              {/* Gradient border effect */}
+              <div
+                className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: `linear-gradient(135deg, ${mode.accent}40 0%, ${mode.accent}10 100%)`,
+                  padding: "2px",
+                }}
+              />
+              <div
+                className="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-5 border-2 transition-all duration-300"
+                style={{
+                  borderColor: mode.accent + "20",
+                  boxShadow: `0 4px 12px -2px ${mode.accent}10`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = mode.accent + "50";
+                  e.currentTarget.style.boxShadow = `0 12px 32px -4px ${mode.accent}30, 0 0 0 1px ${mode.accent}20`;
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = mode.accent + "20";
+                  e.currentTarget.style.boxShadow = `0 4px 12px -2px ${mode.accent}10`;
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                <div className="flex items-center gap-4">
+                  {/* Icon - Premium */}
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background: `linear-gradient(135deg, ${mode.accent}15 0%, ${mode.accent}05 100%)`,
+                      border: `1.5px solid ${mode.accent}30`,
+                      boxShadow: `0 0 20px ${mode.accent}10`,
+                    }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: mode.accent }} />
                   </div>
-                  <p className="text-xs text-slate-500 leading-snug">{mode.description}</p>
-                </div>
 
-                {/* Arrow - Minimal */}
-                <div className="flex-shrink-0 opacity-50 group-hover:opacity-100 transition-opacity">
-                  <ArrowRight className="w-4 h-4 text-slate-400" />
+                  {/* Content - Professional */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2.5 mb-1">
+                      <h3 className="text-base font-bold text-white">{mode.title}</h3>
+                      <span
+                        className="text-xs font-semibold px-2 py-0.5 rounded-md"
+                        style={{
+                          color: mode.accent,
+                          backgroundColor: `${mode.accent}15`,
+                          border: `1px solid ${mode.accent}25`,
+                        }}
+                      >
+                        {mode.subtitle}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-400 leading-relaxed">{mode.description}</p>
+                  </div>
+
+                  {/* Arrow - Premium */}
+                  <div className="flex-shrink-0 transition-all duration-300 group-hover:translate-x-1 opacity-60 group-hover:opacity-100">
+                    <ArrowRight className="w-5 h-5" style={{ color: mode.accent }} />
+                  </div>
                 </div>
               </div>
             </button>
