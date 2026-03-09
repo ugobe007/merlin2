@@ -69,9 +69,8 @@ function loadGoogleMapsScript(): Promise<void> {
   console.log("[Step1V8] Loading Google Maps script...");
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
     script.async = true;
-    script.defer = true;
     script.onload = () => {
       isScriptLoaded = true;
       isScriptLoading = false;

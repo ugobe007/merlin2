@@ -63,7 +63,19 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
             <button
               key={mode.id}
               onClick={() => onSelectMode(mode.id)}
-              className="group relative bg-slate-900/50 hover:bg-slate-800/60 border border-slate-700/60 hover:border-slate-600 rounded-lg px-4 py-3 text-left transition-all duration-150"
+              className="group relative bg-slate-900/60 hover:bg-slate-800/80 border-2 hover:shadow-xl rounded-lg px-4 py-3 text-left transition-all duration-200 hover:scale-[1.01]"
+              style={{
+                borderColor: mode.accent + "30",
+                boxShadow: `0 0 0 0 ${mode.accent}00`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = mode.accent + "60";
+                e.currentTarget.style.boxShadow = `0 8px 24px -4px ${mode.accent}20`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = mode.accent + "30";
+                e.currentTarget.style.boxShadow = `0 0 0 0 ${mode.accent}00`;
+              }}
             >
               <div className="flex items-center gap-3">
                 {/* Icon - Compact */}
