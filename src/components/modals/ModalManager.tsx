@@ -10,8 +10,8 @@ import WelcomeModal from "./WelcomeModal";
 import AccountSetup from "./AccountSetup";
 import EnhancedProfile from "../EnhancedProfile";
 import JoinMerlinModal from "./JoinMerlinModal";
-// V7 Wizard (Feb 2026 - V7 is now default, V6 retired from modal layer)
-import WizardV7Page from "../../pages/WizardV7Page";
+// V8 Wizard (Feb 2026 - V8 is production wizard)
+import WizardV8Page from "../../pages/WizardV8Page";
 import CalculationModal from "./CalculationModal";
 import SaveProjectModal from "./SaveProjectModal";
 import LoadProjectModal from "./LoadProjectModal";
@@ -217,25 +217,20 @@ function WizardModalOverlay({ onClose }: { onClose: () => void }) {
   // Lock body scroll while wizard is mounted
   React.useEffect(() => {
     const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9999]" style={{ isolation: 'isolate' }}>
+    <div className="fixed inset-0 z-[9999]" style={{ isolation: "isolate" }}>
       {/* Backdrop — fully opaque, prevents hero bleed-through */}
-      <div
-        className="absolute inset-0"
-        style={{ background: '#080b14' }}
-        onClick={onClose}
-      />
+      <div className="absolute inset-0" style={{ background: "#080b14" }} onClick={onClose} />
       {/* Wizard scroll container */}
       <div className="absolute inset-0 pointer-events-none flex">
-        <div
-          data-wizard-scroll
-          className="pointer-events-auto w-full h-full overflow-y-auto"
-        >
-          <WizardV7Page />
+        <div data-wizard-scroll className="pointer-events-auto w-full h-full overflow-y-auto">
+          <WizardV8Page />
         </div>
       </div>
     </div>
@@ -460,9 +455,7 @@ export default function ModalManager(props: ModalManagerProps) {
       />
 
       {/* V7 Wizard (Feb 2026 - V7 is now default) */}
-      {showSmartWizard && (
-        <WizardModalOverlay onClose={() => setShowSmartWizard(false)} />
-      )}
+      {showSmartWizard && <WizardModalOverlay onClose={() => setShowSmartWizard(false)} />}
 
       {/* Calculation Modal */}
       {showCalculationModal && (
