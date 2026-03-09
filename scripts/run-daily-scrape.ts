@@ -108,13 +108,19 @@ async function runDailyScrape() {
       let pricesCount = 0;
       let skippedCount = 0;  // Track duplicates
       
+      console.log(`  Processing ${items.length} items from this source...`);
+      
       for (const item of items) {
+        console.log(`  [LOOP] Processing item: ${item.title?.slice(0, 30)}...`);
+        
         // Check if already exists (maybeSingle returns null if not found, no error)
         const { data: existing, error: checkError } = await supabase
           .from('scraped_articles')
           .select('id')
           .eq('url', item.link)
           .maybeSingle();  // FIXED: was .single() which errors on 0 rows
+        
+        console.log(`  [DUP CHECK] existing=${!!existing}, checkError=${!!checkError}`);
         
         if (checkError) {
           console.error(`  ⚠️ Error checking duplicate for ${item.link}: ${checkError.message}`);
