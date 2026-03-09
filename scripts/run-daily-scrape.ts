@@ -140,60 +140,57 @@ async function runDailyScrape() {
         // DEBUG: Log before INSERT to verify we reach this point
         console.log(`  → Attempting INSERT for: ${item.title?.slice(0, 40)}...`);
         
-        // Save article using RPC function (bypasses PostgREST schema cache)
-        try {
-          const { data, error: insertError } = await supabase
-            .rpc('insert_scraped_article', {
-              p_source_id: source.id,
-              p_title: item.title || 'Untitled',
-              p_url: item.link,
-              p_author: null,
-              p_published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
-              p_excerpt: item.description?.slice(0, 500) || '',
-              p_content: item.content || '',
-              p_topics: classification.topics || [],
-              p_equipment_mentioned: classification.equipment || [],
-              p_relevance_score: classification.relevanceScore || 0.5,
-              p_is_processed: true,
-              p_prices_extracted: prices || [],
-              p_regulations_mentioned: []
+        // Save article directly (schema cache should be fine now that we fixed column names)
+        const { data, error: insertError } = await supabase
+          .from('scraped_articles')
+          .insert({
+            source_id: source.id,
+            title: item.title || 'Untitled',
+            url: item.link,
+            author: null,
+            published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
+            excerpt: item.description?.slice(0, 500) || '',  // FIXED: was 'summary'
+            content: item.content || '',  // FIXED: was 'full_content'
+            topics: classification.topics || [],
+            equipment_mentioned: classification.equipment || [],
+            relevance_score: classification.relevanceScore || 0.5,
+            is_processed: true,
+            prices_extracted: prices || [],
+            regulations_mentioned: []
+          })
+          .select()
+          .single();
+        
+        if (insertError) {
+          // Log INSERT errors for debugging
+          console.error(`\n  ❌ INSERT FAILED for: ${item.title?.slice(0, 60)}...`);
+          console.error(`     URL: ${item.link}`);
+          console.error(`     Error message: ${insertError.message}`);
+          console.error(`     Error code: ${insertError.code}`);
+          console.error(`     Error details: ${JSON.stringify(insertError.details)}`);
+          console.error(`     Error hint: ${insertError.hint}`);
+          console.error(`     Full error: ${JSON.stringify(insertError, null, 2)}\n`);
+          continue;
+        }
+        
+        if (data) {
+          savedCount++;
+          
+          // Save extracted prices
+          for (const price of prices) {
+            await supabase.from('collected_market_prices').insert({
+              source_id: source.id,
+              equipment_type: price.equipment,
+              price_per_unit: price.price,
+              unit: price.unit,
+              currency: 'USD',
+              confidence_score: price.confidence,
+              price_date: item.pubDate ? new Date(item.pubDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+              raw_text: price.context,
+              extraction_method: 'regex'
             });
-          
-          if (insertError) {
-            // Log INSERT errors for debugging
-            console.error(`\n  ❌ INSERT FAILED for: ${item.title?.slice(0, 60)}...`);
-            console.error(`     URL: ${item.link}`);
-            console.error(`     Error message: ${insertError.message}`);
-            console.error(`     Error code: ${insertError.code}`);
-            console.error(`     Error details: ${JSON.stringify(insertError.details)}`);
-            console.error(`     Error hint: ${insertError.hint}`);
-            console.error(`     Full error: ${JSON.stringify(insertError, null, 2)}\n`);
-            continue;
+            pricesCount++;
           }
-          
-          if (data) {
-            savedCount++;
-            
-            // Save extracted prices
-            for (const price of prices) {
-              await supabase.from('collected_market_prices').insert({
-                source_id: source.id,
-                equipment_type: price.equipment,
-                price_per_unit: price.price,
-                unit: price.unit,
-                currency: 'USD',
-                confidence_score: price.confidence,
-                price_date: item.pubDate ? new Date(item.pubDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-                raw_text: price.context,
-                extraction_method: 'regex'
-              });
-              pricesCount++;
-            }
-          }
-        } catch (err) {
-          console.error(`\n  ❌ EXCEPTION during INSERT: ${item.title?.slice(0, 60)}...`);
-          console.error(`     Exception: ${err}`);
-          console.error(`     Stack: ${err instanceof Error ? err.stack : 'no stack'}\n`);
         }
       }
       
