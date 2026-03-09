@@ -19,13 +19,47 @@ import IntelStripInline from "@/components/wizard/v7/shared/IntelStripInline";
 const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyB9VeakhIGZQgCKmTiZ3ml0RvnvlT0dNrY";
 
-// Load Google Places API
-if (typeof window !== "undefined" && !window.google?.maps?.places) {
-  const script = document.createElement("script");
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-  script.async = true;
-  script.defer = true;
-  document.head.appendChild(script);
+// Track if script is loading to prevent duplicate loads
+let isScriptLoading = false;
+let isScriptLoaded = false;
+
+// Load Google Places API with proper async loading
+function loadGoogleMapsScript(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (isScriptLoaded || window.google?.maps?.places) {
+    isScriptLoaded = true;
+    return Promise.resolve();
+  }
+  if (isScriptLoading) {
+    // Already loading, wait for it
+    return new Promise((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (window.google?.maps?.places) {
+          clearInterval(checkInterval);
+          isScriptLoaded = true;
+          resolve();
+        }
+      }, 100);
+    });
+  }
+
+  isScriptLoading = true;
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      isScriptLoaded = true;
+      isScriptLoading = false;
+      resolve();
+    };
+    script.onerror = () => {
+      isScriptLoading = false;
+      reject(new Error("Failed to load Google Maps API"));
+    };
+    document.head.appendChild(script);
+  });
 }
 
 // ── Design tokens (match V7/Supabase dark) ────────────────────────────────────
@@ -72,48 +106,42 @@ export function Step1V8({ state, actions }: Step1Props) {
   useEffect(() => {
     if (!businessInputRef.current || autocompleteRef.current) return;
 
-    const initAutocomplete = () => {
-      if (!window.google?.maps?.places) return;
+    const initAutocomplete = async () => {
+      try {
+        // Ensure Google Maps API is loaded
+        await loadGoogleMapsScript();
 
-      const autocomplete = new window.google.maps.places.Autocomplete(businessInputRef.current!, {
-        types: ["establishment"],
-        componentRestrictions: country === "US" ? { country: "us" } : undefined,
-      });
+        if (!window.google?.maps?.places || !businessInputRef.current) return;
 
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (place.formatted_address) {
-          setSelectedPlace(place);
-          setBusinessName(place.name || "");
-          setBusinessError(null);
+        const autocomplete = new window.google.maps.places.Autocomplete(businessInputRef.current, {
+          types: ["establishment"],
+          componentRestrictions: country === "US" ? { country: "us" } : undefined,
+        });
 
-          // Extract ZIP from address components
-          const zipComponent = place.address_components?.find((comp) =>
-            comp.types.includes("postal_code")
-          );
-          if (zipComponent) {
-            actions.setLocationRaw(zipComponent.short_name);
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (place.formatted_address) {
+            setSelectedPlace(place);
+            setBusinessName(place.name || "");
+            setBusinessError(null);
+
+            // Extract ZIP from address components
+            const zipComponent = place.address_components?.find((comp) =>
+              comp.types.includes("postal_code")
+            );
+            if (zipComponent) {
+              actions.setLocationRaw(zipComponent.short_name);
+            }
           }
-        }
-      });
+        });
 
-      autocompleteRef.current = autocomplete;
+        autocompleteRef.current = autocomplete;
+      } catch (err) {
+        console.error("Failed to load Google Maps API:", err);
+      }
     };
 
-    if (window.google?.maps?.places) {
-      initAutocomplete();
-    } else {
-      const checkInterval = setInterval(() => {
-        if (window.google?.maps?.places) {
-          initAutocomplete();
-          clearInterval(checkInterval);
-        }
-      }, 100);
-
-      return () => clearInterval(checkInterval);
-    }
-
-    return undefined;
+    void initAutocomplete();
   }, [country, actions]);
 
   // Normalise ZIP whenever country changes
