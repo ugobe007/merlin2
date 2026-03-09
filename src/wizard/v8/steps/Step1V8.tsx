@@ -1006,7 +1006,18 @@ export function Step1V8({ state, actions }: Step1Props) {
                 setBusinessError(null);
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleBusinessSearch();
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  // Only allow Enter if autocomplete dropdown is not open
+                  // This prevents bypassing autocomplete selection
+                  if (selectedPlace || !autocompleteRef.current) {
+                    handleBusinessSearch();
+                  } else {
+                    console.log(
+                      "[Step1V8] Enter blocked - please select from autocomplete dropdown"
+                    );
+                  }
+                }
               }}
               placeholder="e.g., Wow Car Wash, Sunset Hotel, City Hospital"
               autoComplete="off"
@@ -1052,7 +1063,12 @@ export function Step1V8({ state, actions }: Step1Props) {
                 actions.setBusinessAddress(e.target.value);
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleBusinessSearch();
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (selectedPlace || !autocompleteRef.current) {
+                    handleBusinessSearch();
+                  }
+                }
               }}
               placeholder="e.g., 1234 S Maryland Parkway"
               style={{
