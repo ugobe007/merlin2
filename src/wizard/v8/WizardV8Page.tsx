@@ -26,6 +26,7 @@ import React, { Suspense, lazy } from "react";
 import { useWizardV8 } from "./useWizardV8";
 import type { WizardStep } from "./wizardState";
 import { Step1V8 } from "./steps/Step1V8";
+import { Step0V8_ModeSelect } from "./steps/Step0V8_ModeSelect";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 
 // Lazy-load steps 2–5 so Step 1 renders instantly on first visit
@@ -35,8 +36,8 @@ const Step3_5V8 = lazy(() => import("./steps/Step3_5V8_RANGEBUTTONS")); // NEW: 
 const Step4V8 = lazy(() => import("./steps/Step4V8"));
 const Step5V8 = lazy(() => import("./steps/Step5V8"));
 
-// Step labels — index 0 = step 1 (WizardShellV7 is 0-indexed internally)
-const STEP_LABELS = ["Location", "Industry", "Profile", "MagicFit", "Quote"];
+// Step labels — index 0 = step 0 (Mode Select), index 1 = step 1 (Location), etc.
+const STEP_LABELS = ["Mode", "Location", "Industry", "Profile", "MagicFit", "Quote"];
 
 // ── Accent helpers ────────────────────────────────────────────────────────────
 const ACCENT = "#3ECF8E";
@@ -65,6 +66,21 @@ type S = ReturnType<typeof useWizardV8>["state"];
 
 function getAdvisorContent(step: number, state: S): React.ReactNode {
   switch (step) {
+    case 0:
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
+            Welcome to Merlin Energy.
+          </div>
+          <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
+            Choose your path: Get a {hi("free AI-powered quote")} in 3 minutes, or access {hi("ProQuote™")} for full engineering control over your energy system.
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+            {["Guided Wizard is always free", "ProQuote™ for complex projects", "All quotes include TrueQuote™ sources"].map(bullet)}
+          </div>
+        </div>
+      );
+
     case 1:
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -293,9 +309,9 @@ export default function WizardV8Page() {
       </button>
 
       <WizardShellV7
-        currentStep={step - 1} // WizardShellV7 is 0-indexed; V8 steps are 1-indexed
+        currentStep={step} // Now steps align: 0=Mode, 1=Location, etc.
         stepLabels={STEP_LABELS}
-        canGoBack={step > 1}
+        canGoBack={step > 0}
         canGoNext={resolveCanGoNext(step, state)}
         onBack={actions.goBack}
         onNext={() => actions.goToStep((step + 1) as WizardStep)}
@@ -329,6 +345,16 @@ export default function WizardV8Page() {
 
       {/* Step router */}
       <Suspense fallback={<SpinnerFallback />}>
+        {step === 0 && <Step0V8_ModeSelect onSelectMode={(mode) => {
+          if (mode === "wizard") {
+            actions.goToStep(1 as WizardStep);
+          } else if (mode === "proquote") {
+            window.location.href = "/pro-quote";
+          } else if (mode === "upload") {
+            // TODO: Implement upload flow
+            alert("Upload quote feature coming soon!");
+          }
+        }} />}
         {step === 1 && <Step1V8 state={state} actions={actions} />}
         {step === 2 && <Step2V8 state={state} actions={actions} />}
         {step === 3 && <Step3V8 state={state} actions={actions} />}

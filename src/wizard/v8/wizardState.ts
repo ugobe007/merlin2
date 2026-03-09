@@ -96,7 +96,7 @@ export function isSolarFeasible(grade: SolarGrade | null): boolean {
 
 // ── Domain types ─────────────────────────────────────────────────────────────
 
-export type WizardStep = 1 | 2 | 3 | 3.5 | 4 | 5;
+export type WizardStep = 0 | 1 | 2 | 3 | 3.5 | 4 | 5;
 
 // Step mapping:
 // 1 = Location + addon preferences
@@ -330,7 +330,7 @@ export type WizardIntent =
 
 export function initialState(): WizardState {
   return {
-    step: 1,
+    step: 0, // Start at Step 0 (Mode Selection)
     locationRaw: "",
     location: null,
     locationStatus: "idle",
