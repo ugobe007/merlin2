@@ -72,7 +72,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
+    <div className="max-w-4xl mx-auto px-6 py-16">
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-white mb-4">
@@ -83,71 +83,69 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
         </p>
       </div>
 
-      {/* Mode Cards */}
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
+      {/* Horizontal Buttons */}
+      <div className="flex flex-col gap-4 mb-8">
         {modes.map((mode) => {
           const Icon = mode.icon;
           return (
             <button
               key={mode.id}
               onClick={() => onSelectMode(mode.id)}
-              className="group relative bg-slate-800/40 hover:bg-slate-800/60 border border-slate-700/50 hover:border-slate-600 rounded-2xl p-8 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20"
-              style={
-                {
-                  "--accent": mode.accent,
-                } as React.CSSProperties
-              }
+              className="group relative bg-slate-800/40 hover:bg-slate-800/70 border-2 border-slate-700/50 hover:border-slate-600 rounded-xl p-6 text-left transition-all duration-200 hover:scale-[1.01] hover:shadow-lg"
+              style={{ borderColor: mode.accent + "40" }}
             >
-              {/* Icon */}
-              <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110"
-                style={{
-                  backgroundColor: `${mode.accent}15`,
-                  border: `2px solid ${mode.accent}40`,
-                }}
-              >
-                <Icon className="w-7 h-7" style={{ color: mode.accent }} />
-              </div>
+              <div className="flex items-center gap-6">
+                {/* Icon */}
+                <div
+                  className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110"
+                  style={{
+                    backgroundColor: `${mode.accent}15`,
+                    border: `2px solid ${mode.accent}60`,
+                  }}
+                >
+                  <Icon className="w-8 h-8" style={{ color: mode.accent }} />
+                </div>
 
-              {/* Title */}
-              <h2 className="text-2xl font-bold text-white mb-2">{mode.title}</h2>
-              <p className="text-sm font-semibold mb-4" style={{ color: mode.accent }}>
-                {mode.subtitle}
-              </p>
+                {/* Content */}
+                <div className="flex-1">
+                  <div className="flex items-baseline gap-3 mb-2">
+                    <h2 className="text-2xl font-bold text-white">{mode.title}</h2>
+                    <span className="text-sm font-semibold" style={{ color: mode.accent }}>
+                      {mode.subtitle}
+                    </span>
+                  </div>
+                  <p className="text-slate-400 text-sm leading-relaxed mb-3">{mode.description}</p>
 
-              {/* Description */}
-              <p className="text-slate-400 text-sm leading-relaxed mb-6">{mode.description}</p>
+                  {/* Features inline */}
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {mode.features.map((feature, idx) => (
+                      <span key={idx} className="flex items-center gap-1.5 text-xs text-slate-400">
+                        <span
+                          className="w-1 h-1 rounded-full"
+                          style={{ backgroundColor: mode.accent }}
+                        />
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
 
-              {/* Features */}
-              <ul className="space-y-3 mb-8">
-                {mode.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
-                    <span
-                      className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: mode.accent }}
-                    />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA */}
-              <div
-                className="flex items-center justify-between px-5 py-3 rounded-lg font-semibold text-sm transition-all group-hover:gap-3"
-                style={{
-                  backgroundColor: `${mode.accent}20`,
-                  color: mode.accent,
-                }}
-              >
-                <span>{mode.cta}</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                {/* Arrow */}
+                <div className="flex-shrink-0">
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-transform group-hover:translate-x-1"
+                    style={{ backgroundColor: `${mode.accent}20` }}
+                  >
+                    <ArrowRight className="w-5 h-5" style={{ color: mode.accent }} />
+                  </div>
+                </div>
               </div>
 
               {/* Hover glow effect */}
               <div
-                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
                 style={{
-                  background: `radial-gradient(circle at 50% 0%, ${mode.accent}15, transparent 70%)`,
+                  background: `linear-gradient(90deg, ${mode.accent}08, transparent)`,
                 }}
               />
             </button>
