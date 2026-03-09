@@ -1149,27 +1149,6 @@ export function Step1V8({ state, actions }: Step1Props) {
                 ? "Continue with " + selectedPlace.name
                 : "Select from dropdown to continue"}
           </button>
-
-          {/* Skip button */}
-          <button
-            type="button"
-            onClick={() => actions.goToStep(2)}
-            style={{
-              width: "100%",
-              marginTop: 10,
-              padding: "9px 18px",
-              borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "transparent",
-              color: T.textSub,
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-          >
-            Skip — I'll select my industry manually
-          </button>
         </div>
       ) : state.business && locationConfirmed ? (
         /* Business confirmation card - V6 pattern */
