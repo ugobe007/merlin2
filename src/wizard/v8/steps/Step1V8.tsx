@@ -11,11 +11,10 @@
  * RULE 3: No API calls here. All fetching stays in useWizardV8.ts.
  *
  * NOTE: Google Places API
- * - Currently using legacy `Autocomplete` (deprecated March 2025)
- * - ⚠️ Browser will show deprecation warning (safe to ignore for now)
- * - Migration to `PlaceAutocompleteElement` planned for v8.1
- * - Legacy API will continue to work with 12 months notice before discontinuation
- * - See: https://developers.google.com/maps/documentation/javascript/places-migration-overview
+ * - Uses the new programmatic Places Autocomplete flow
+ * - Suggestions: AutocompleteSuggestion.fetchAutocompleteSuggestions()
+ * - Selection: PlacePrediction.toPlace() + Place.fetchFields()
+ * - This preserves Merlin's custom UI without relying on the legacy widget
  *
  * PERFORMANCE NOTE (March 9, 2026):
  * - Fixed excessive re-renders by removing `actions` from useEffect deps
@@ -35,30 +34,71 @@ const GOOGLE_MAPS_API_KEY =
 let isScriptLoading = false;
 let isScriptLoaded = false;
 
+type GooglePlacesLibrary = {
+  AutocompleteSuggestion: {
+    fetchAutocompleteSuggestions: (request: Record<string, unknown>) => Promise<{
+      suggestions?: Array<{
+        placePrediction?: {
+          placeId: string;
+          text?: { text: string };
+          mainText?: { text: string };
+          secondaryText?: { text: string };
+          toPlace: () => {
+            fetchFields: (request: { fields: string[] }) => Promise<void>;
+            id?: string;
+            displayName?: string | { text?: string };
+            formattedAddress?: string;
+            location?: { lat?: number | (() => number); lng?: number | (() => number) };
+            photos?: Array<{
+              getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
+            }>;
+          };
+        };
+      }>;
+    }>;
+  };
+  AutocompleteSessionToken: new () => unknown;
+};
+
+type BusinessSuggestion = {
+  placeId: string;
+  label: string;
+  primaryText: string;
+  secondaryText?: string;
+  prediction: {
+    toPlace: () => {
+      fetchFields: (request: { fields: string[] }) => Promise<void>;
+      id?: string;
+      displayName?: string | { text?: string };
+      formattedAddress?: string;
+      location?: { lat?: number | (() => number); lng?: number | (() => number) };
+      photos?: Array<{ getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string }>;
+    };
+  };
+};
+
+type ResolvedBusinessPlace = {
+  name: string;
+  formattedAddress?: string;
+  placeId?: string;
+  photoUrl?: string;
+  lat?: number;
+  lng?: number;
+};
+
 // Load Google Places API with proper async loading
 function loadGoogleMapsScript(): Promise<void> {
-  console.log("[Step1V8] loadGoogleMapsScript called", {
-    isScriptLoaded,
-    isScriptLoading,
-    hasGoogle: !!window.google,
-    hasPlaces: !!window.google?.maps?.places,
-  });
-
   if (typeof window === "undefined") return Promise.resolve();
   if (isScriptLoaded || window.google?.maps?.places) {
     isScriptLoaded = true;
-    console.log("[Step1V8] Google Maps already loaded");
     return Promise.resolve();
   }
   if (isScriptLoading) {
-    console.log("[Step1V8] Google Maps already loading, waiting...");
-    // Already loading, wait for it
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
         if (window.google?.maps?.places) {
           clearInterval(checkInterval);
           isScriptLoaded = true;
-          console.log("[Step1V8] Google Maps loaded (via wait)");
           resolve();
         }
       }, 100);
@@ -66,20 +106,17 @@ function loadGoogleMapsScript(): Promise<void> {
   }
 
   isScriptLoading = true;
-  console.log("[Step1V8] Loading Google Maps script...");
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&loading=async&v=weekly`;
     script.async = true;
     script.onload = () => {
       isScriptLoaded = true;
       isScriptLoading = false;
-      console.log("[Step1V8] Google Maps script loaded successfully");
       resolve();
     };
     script.onerror = (err) => {
       isScriptLoading = false;
-      console.error("[Step1V8] Google Maps script failed to load:", err);
       reject(new Error("Failed to load Google Maps API"));
     };
     document.head.appendChild(script);
@@ -111,15 +148,19 @@ interface Step1Props {
 export function Step1V8({ state, actions }: Step1Props) {
   const zipRef = useRef<HTMLInputElement>(null);
   const businessInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const addressValueRef = useRef("");
+  const placesLibraryRef = useRef<GooglePlacesLibrary | null>(null);
+  const sessionTokenRef = useRef<unknown | null>(null);
+  const suggestionsRequestRef = useRef(0);
 
   // Local UI state — no impact on wizard SSOT state until submitLocation is called
   const [country, setCountry] = useState<Country>("US");
   const [businessName, setBusinessName] = useState("");
   const [addressValue, setAddressValue] = useState("");
   const [businessError, setBusinessError] = useState<string | null>(null);
-  const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState<ResolvedBusinessPlace | null>(null);
+  const [businessSuggestions, setBusinessSuggestions] = useState<BusinessSuggestion[]>([]);
+  const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
   const [isResolvingBusiness, setIsResolvingBusiness] = useState(false);
 
   const { intel, intelStatus, locationRaw, locationStatus, location, error, isBusy } = state;
@@ -138,116 +179,90 @@ export function Step1V8({ state, actions }: Step1Props) {
     addressValueRef.current = addressValue;
   }, [addressValue]);
 
-  // Initialize Google Places Autocomplete
+  const ensurePlacesLibrary = async (): Promise<GooglePlacesLibrary | null> => {
+    try {
+      await loadGoogleMapsScript();
+      if (!window.google?.maps?.importLibrary) return null;
+      if (!placesLibraryRef.current) {
+        placesLibraryRef.current = (await window.google.maps.importLibrary(
+          "places"
+        )) as GooglePlacesLibrary;
+      }
+      return placesLibraryRef.current;
+    } catch {
+      return null;
+    }
+  };
+
   useEffect(() => {
-    console.log("[Step1V8] Autocomplete useEffect triggered", {
-      hasBusinessInput: !!businessInputRef.current,
-      hasAutocomplete: !!autocompleteRef.current,
-      country,
-      locationConfirmed,
-    });
+    if (!locationConfirmed || !businessInputRef.current) return;
+    void ensurePlacesLibrary();
+  }, [country, locationConfirmed]);
 
-    // Early return if input not rendered yet (locationConfirmed=false)
-    if (!businessInputRef.current || autocompleteRef.current) return;
+  useEffect(() => {
+    if (!locationConfirmed || !businessName.trim() || selectedPlace) {
+      setBusinessSuggestions([]);
+      setIsSuggestionsLoading(false);
+      return;
+    }
 
-    const initAutocomplete = async () => {
+    const requestId = suggestionsRequestRef.current + 1;
+    suggestionsRequestRef.current = requestId;
+    const timer = globalThis.setTimeout(async () => {
+      const placesLibrary = await ensurePlacesLibrary();
+      if (!placesLibrary) return;
+
+      const query = businessName.trim();
+      if (!query) return;
+
+      if (!sessionTokenRef.current) {
+        sessionTokenRef.current = new placesLibrary.AutocompleteSessionToken();
+      }
+
+      setIsSuggestionsLoading(true);
+
       try {
-        console.log("[Step1V8] Starting autocomplete initialization...");
-        // Ensure Google Maps API is loaded
-        await loadGoogleMapsScript();
-
-        console.log("[Step1V8] After loadGoogleMapsScript, checking window.google...", {
-          hasGoogle: !!window.google,
-          hasMaps: !!window.google?.maps,
-          hasPlaces: !!window.google?.maps?.places,
-          hasInput: !!businessInputRef.current,
-        });
-
-        if (!window.google?.maps?.places || !businessInputRef.current) {
-          console.warn("[Step1V8] Cannot initialize autocomplete - missing dependencies");
-          return;
-        }
-
-        console.log("[Step1V8] Creating Autocomplete instance...");
-        const autocomplete = new window.google.maps.places.Autocomplete(businessInputRef.current, {
-          types: ["establishment"],
-          componentRestrictions: country === "US" ? { country: "us" } : undefined,
-          fields: [
-            "name",
-            "formatted_address",
-            "address_components",
-            "geometry",
-            "photos",
-            "place_id",
-            "types",
-          ],
-        });
-
-        autocomplete.addListener("place_changed", () => {
-          const place = autocomplete.getPlace();
-          console.log("[Step1V8] Place selected:", {
-            name: place.name,
-            hasAddress: !!place.formatted_address,
-            hasPhotos: !!place.photos?.length,
-            hasGeometry: !!place.geometry,
-            types: place.types,
+        const { suggestions = [] } =
+          await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+            input: query,
+            includedRegionCodes: country === "US" ? ["US"] : undefined,
+            inputOffset: query.length,
+            sessionToken: sessionTokenRef.current,
           });
 
-          if (place.formatted_address) {
-            setSelectedPlace(place);
-            setBusinessName(place.name || "");
-            setBusinessError(null);
+        if (suggestionsRequestRef.current !== requestId) return;
 
-            // Extract ZIP from address components
-            const zipComponent = place.address_components?.find((comp) =>
-              comp.types.includes("postal_code")
-            );
-            if (zipComponent) {
-              actions.setLocationRaw(zipComponent.short_name);
-            }
+        const nextSuggestions = suggestions
+          .map((suggestion) => {
+            const prediction = suggestion.placePrediction;
+            if (!prediction) return null;
+            return {
+              placeId: prediction.placeId,
+              label: prediction.text?.text || prediction.mainText?.text || "",
+              primaryText: prediction.mainText?.text || prediction.text?.text || "",
+              secondaryText: prediction.secondaryText?.text,
+              prediction,
+            } satisfies BusinessSuggestion;
+          })
+          .filter((suggestion): suggestion is BusinessSuggestion => !!suggestion)
+          .slice(0, 5);
 
-            // Auto-submit business after selection
-            setTimeout(() => {
-              let photoUrl: string | undefined;
-              try {
-                photoUrl = place.photos?.[0]?.getUrl({ maxWidth: 400, maxHeight: 300 });
-              } catch (err) {
-                console.warn("[Step1V8] Failed to get photo URL:", err);
-              }
-
-              const businessData = {
-                address: addressValueRef.current.trim() || undefined,
-                placeId: place.place_id,
-                formattedAddress: place.formatted_address,
-                photoUrl,
-                lat: place.geometry?.location?.lat(),
-                lng: place.geometry?.location?.lng(),
-              };
-
-              console.log("[Step1V8] Auto-submitting business with Google Place data:", {
-                name: place.name || "",
-                hasPhoto: !!photoUrl,
-                hasLocation: !!(businessData.lat && businessData.lng),
-                address: businessData.formattedAddress,
-              });
-
-              actions.setBusiness(place.name || "", businessData);
-            }, 100);
-          } else {
-            console.warn("[Step1V8] Place missing formatted_address");
-          }
-        });
-
-        autocompleteRef.current = autocomplete;
-        console.log("[Step1V8] Google Places Autocomplete initialized");
-      } catch (err) {
-        console.error("[Step1V8] Failed to load Google Maps API:", err);
+        setBusinessSuggestions(nextSuggestions);
+      } catch {
+        if (suggestionsRequestRef.current === requestId) {
+          setBusinessSuggestions([]);
+        }
+      } finally {
+        if (suggestionsRequestRef.current === requestId) {
+          setIsSuggestionsLoading(false);
+        }
       }
-    };
+    }, 220);
 
-    void initAutocomplete();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [country, locationConfirmed]);
+    return () => {
+      globalThis.clearTimeout(timer);
+    };
+  }, [businessName, country, locationConfirmed, selectedPlace]);
 
   const isFetching = locationStatus === "fetching" || isBusy;
   const isBusinessSubmitting = isFetching || isResolvingBusiness;
@@ -290,68 +305,105 @@ export function Step1V8({ state, actions }: Step1Props) {
     void actions.submitLocation();
   };
 
-  const resolveBusinessFromQuery = async () => {
-    if (!businessName.trim()) return null;
+  const fetchPlaceDetails = async (
+    suggestion: BusinessSuggestion
+  ): Promise<ResolvedBusinessPlace | null> => {
+    try {
+      const place = suggestion.prediction.toPlace();
+      await place.fetchFields({
+        fields: ["displayName", "formattedAddress", "location", "photos", "id"],
+      });
+
+      const getCoordinate = (value?: number | (() => number)) =>
+        typeof value === "function" ? value() : value;
+
+      let photoUrl: string | undefined;
+      try {
+        photoUrl = place.photos?.[0]?.getURI?.({ maxWidth: 400, maxHeight: 300 });
+      } catch {
+        photoUrl = undefined;
+      }
+
+      const name =
+        typeof place.displayName === "string"
+          ? place.displayName
+          : place.displayName?.text || suggestion.primaryText || businessName.trim();
+
+      return {
+        name,
+        formattedAddress: place.formattedAddress,
+        placeId: place.id || suggestion.placeId,
+        photoUrl,
+        lat: getCoordinate(place.location?.lat),
+        lng: getCoordinate(place.location?.lng),
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const handleSelectSuggestion = async (suggestion: BusinessSuggestion) => {
+    setBusinessError(null);
+    setBusinessSuggestions([]);
+    setIsResolvingBusiness(true);
 
     try {
-      await loadGoogleMapsScript();
-    } catch (err) {
-      console.warn("[Step1V8] Google Maps unavailable for manual business lookup:", err);
-      return null;
-    }
+      const place = await fetchPlaceDetails(suggestion);
+      if (!place) return;
 
-    if (!window.google?.maps?.places) {
-      return null;
-    }
+      setSelectedPlace(place);
+      setBusinessName(place.name);
 
-    const queryParts = [businessName.trim(), addressValue.trim(), location?.city, location?.state]
+      actions.setBusiness(place.name, {
+        address: addressValueRef.current.trim() || undefined,
+        placeId: place.placeId,
+        formattedAddress: place.formattedAddress,
+        photoUrl: place.photoUrl,
+        lat: place.lat,
+        lng: place.lng,
+      });
+    } finally {
+      sessionTokenRef.current = null;
+      setIsResolvingBusiness(false);
+    }
+  };
+
+  const resolveBusinessFromQuery = async () => {
+    const placesLibrary = await ensurePlacesLibrary();
+    if (!placesLibrary || !businessName.trim()) return null;
+
+    const query = [businessName.trim(), addressValue.trim(), location?.city, location?.state]
       .filter(Boolean)
       .join(", ");
+    if (!query) return null;
 
-    if (!queryParts) return null;
-
-    return new Promise<google.maps.places.PlaceResult | null>((resolve) => {
-      const service = new window.google.maps.places.PlacesService(document.createElement("div"));
-      let settled = false;
-
-      const finish = (result: google.maps.places.PlaceResult | null) => {
-        if (settled) return;
-        settled = true;
-        window.clearTimeout(timeoutId);
-        resolve(result);
-      };
-
-      // Google Places lookups can stall for several seconds. Fall back quickly to manual entry.
-      const timeoutId = window.setTimeout(() => {
-        console.warn("[Step1V8] Manual business lookup timed out, using typed business", {
-          query: queryParts,
-        });
-        finish(null);
-      }, 1500);
-
-      service.findPlaceFromQuery(
-        {
-          query: queryParts,
-          fields: ["name", "formatted_address", "geometry", "photos", "place_id"],
-        },
-        (results, status) => {
-          if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            results &&
-            results.length > 0
-          ) {
-            finish(results[0]);
-            return;
-          }
-
-          console.warn("[Step1V8] Manual business lookup returned no Google Place", {
-            query: queryParts,
-            status,
-          });
-          finish(null);
-        }
-      );
+    const sessionToken = new placesLibrary.AutocompleteSessionToken();
+    const timeoutPromise = new Promise<null>((resolve) => {
+      globalThis.setTimeout(() => resolve(null), 1500);
     });
+
+    const lookupPromise = (async () => {
+      const { suggestions = [] } =
+        await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: query,
+          includedRegionCodes: country === "US" ? ["US"] : undefined,
+          inputOffset: query.length,
+          sessionToken,
+        });
+
+      const match = suggestions[0]?.placePrediction;
+      if (!match) return null;
+
+      return fetchPlaceDetails({
+        placeId: match.placeId,
+        label: match.text?.text || match.mainText?.text || query,
+        primaryText: match.mainText?.text || match.text?.text || query,
+        secondaryText: match.secondaryText?.text,
+        prediction: match,
+      });
+    })().catch(() => null);
+
+    return Promise.race([lookupPromise, timeoutPromise]);
   };
 
   const handleBusinessSearch = async () => {
@@ -368,33 +420,16 @@ export function Step1V8({ state, actions }: Step1Props) {
       // Use selected place from autocomplete if available
       const place = selectedPlace ?? (await resolveBusinessFromQuery());
       if (place) {
-        let photoUrl: string | undefined;
-        try {
-          photoUrl = place.photos?.[0]?.getUrl({ maxWidth: 400, maxHeight: 300 });
-        } catch (err) {
-          console.warn("[Step1V8] Failed to get photo URL:", err);
-        }
-
-        const businessData = {
-          address: addressValue.trim() || undefined,
-          placeId: place.place_id,
-          formattedAddress: place.formatted_address,
-          photoUrl,
-          lat: place.geometry?.location?.lat(),
-          lng: place.geometry?.location?.lng(),
-        };
-
-        console.log("[Step1V8] Setting business with data:", {
-          name: place.name || businessName.trim(),
-          hasPhoto: !!photoUrl,
-          hasLocation: !!(businessData.lat && businessData.lng),
-          address: businessData.formattedAddress,
-        });
-
         setSelectedPlace(place);
-        actions.setBusiness(place.name || businessName.trim(), businessData);
+        actions.setBusiness(place.name || businessName.trim(), {
+          address: addressValue.trim() || undefined,
+          placeId: place.placeId,
+          formattedAddress: place.formattedAddress,
+          photoUrl: place.photoUrl,
+          lat: place.lat,
+          lng: place.lng,
+        });
       } else {
-        console.log("[Step1V8] Setting business without Google Place data");
         // Fallback: use manual input without Google data
         actions.setBusiness(businessName.trim(), {
           address: addressValue.trim() || undefined,
@@ -406,6 +441,7 @@ export function Step1V8({ state, actions }: Step1Props) {
         void actions.submitLocation();
       }
     } finally {
+      sessionTokenRef.current = null;
       setIsResolvingBusiness(false);
     }
   };
@@ -1090,6 +1126,10 @@ export function Step1V8({ state, actions }: Step1Props) {
               onChange={(e) => {
                 setBusinessName(e.target.value);
                 setBusinessError(null);
+                if (!e.target.value.trim()) {
+                  sessionTokenRef.current = null;
+                  setBusinessSuggestions([]);
+                }
                 // Clear selectedPlace when user types manually
                 if (selectedPlace) {
                   setSelectedPlace(null);
@@ -1117,8 +1157,48 @@ export function Step1V8({ state, actions }: Step1Props) {
               }}
             />
 
+            {businessSuggestions.length > 0 && !selectedPlace && (
+              <div
+                style={{
+                  marginTop: 8,
+                  borderRadius: 8,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(8,11,20,0.98)",
+                  overflow: "hidden",
+                }}
+              >
+                {businessSuggestions.map((suggestion, index) => (
+                  <button
+                    key={suggestion.placeId}
+                    type="button"
+                    onClick={() => void handleSelectSuggestion(suggestion)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      border: "none",
+                      borderTop: index === 0 ? "none" : "1px solid rgba(255,255,255,0.06)",
+                      background: "transparent",
+                      color: T.textPrimary,
+                      textAlign: "left",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 3,
+                    }}
+                  >
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{suggestion.primaryText}</span>
+                    {suggestion.secondaryText && (
+                      <span style={{ fontSize: 11, color: T.textSub }}>
+                        {suggestion.secondaryText}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Helper text - show when typing but no selection */}
-            {businessName.trim() && !selectedPlace && autocompleteRef.current && (
+            {businessName.trim() && !selectedPlace && (
               <div
                 style={{
                   marginTop: 8,
@@ -1135,8 +1215,16 @@ export function Step1V8({ state, actions }: Step1Props) {
               >
                 <span>ℹ️</span>
                 <span>
-                  <strong>Select from the dropdown</strong> to get business photo, map, and verified
-                  address
+                  {isSuggestionsLoading ? (
+                    <>Searching Google Places for matching businesses…</>
+                  ) : businessSuggestions.length > 0 ? (
+                    <>
+                      <strong>Select from the dropdown</strong> to get business photo, map, and
+                      verified address
+                    </>
+                  ) : (
+                    <>You can continue with a typed business name if no match appears.</>
+                  )}
                 </span>
               </div>
             )}
