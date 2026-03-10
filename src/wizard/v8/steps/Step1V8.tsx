@@ -22,17 +22,14 @@
  * - Added comprehensive error handling and logging
  */
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
+import { GoogleMap, MarkerF, useJsApiLoader } from "@react-google-maps/api";
 import type { WizardState, WizardActions } from "../wizardState";
 import IntelStripInline from "@/components/wizard/v7/shared/IntelStripInline";
 
 // Google Maps API key from environment
 const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyB9VeakhIGZQgCKmTiZ3ml0RvnvlT0dNrY";
-
-// Track if script is loading to prevent duplicate loads
-let isScriptLoading = false;
-let isScriptLoaded = false;
 
 type GooglePlacesLibrary = {
   AutocompleteSuggestion: {
@@ -86,43 +83,6 @@ type ResolvedBusinessPlace = {
   lng?: number;
 };
 
-// Load Google Places API with proper async loading
-function loadGoogleMapsScript(): Promise<void> {
-  if (typeof window === "undefined") return Promise.resolve();
-  if (isScriptLoaded || window.google?.maps?.places) {
-    isScriptLoaded = true;
-    return Promise.resolve();
-  }
-  if (isScriptLoading) {
-    return new Promise((resolve) => {
-      const checkInterval = setInterval(() => {
-        if (window.google?.maps?.places) {
-          clearInterval(checkInterval);
-          isScriptLoaded = true;
-          resolve();
-        }
-      }, 100);
-    });
-  }
-
-  isScriptLoading = true;
-  return new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&loading=async&v=weekly`;
-    script.async = true;
-    script.onload = () => {
-      isScriptLoaded = true;
-      isScriptLoading = false;
-      resolve();
-    };
-    script.onerror = (err) => {
-      isScriptLoading = false;
-      reject(new Error("Failed to load Google Maps API"));
-    };
-    document.head.appendChild(script);
-  });
-}
-
 // ── Design tokens (match V7/Supabase dark) ────────────────────────────────────
 const T = {
   bg: "#080b14",
@@ -162,6 +122,12 @@ export function Step1V8({ state, actions }: Step1Props) {
   const [businessSuggestions, setBusinessSuggestions] = useState<BusinessSuggestion[]>([]);
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
   const [isResolvingBusiness, setIsResolvingBusiness] = useState(false);
+  const { isLoaded: isGoogleMapsReady, loadError: googleMapsLoadError } = useJsApiLoader({
+    id: "merlin-v8-google-maps",
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: ["places"],
+    version: "weekly",
+  });
 
   const { intel, intelStatus, locationRaw, locationStatus, location, error, isBusy } = state;
 
@@ -179,10 +145,9 @@ export function Step1V8({ state, actions }: Step1Props) {
     addressValueRef.current = addressValue;
   }, [addressValue]);
 
-  const ensurePlacesLibrary = async (): Promise<GooglePlacesLibrary | null> => {
+  const ensurePlacesLibrary = useCallback(async (): Promise<GooglePlacesLibrary | null> => {
     try {
-      await loadGoogleMapsScript();
-      if (!window.google?.maps?.importLibrary) return null;
+      if (!isGoogleMapsReady || !window.google?.maps?.importLibrary) return null;
       if (!placesLibraryRef.current) {
         placesLibraryRef.current = (await window.google.maps.importLibrary(
           "places"
@@ -192,12 +157,12 @@ export function Step1V8({ state, actions }: Step1Props) {
     } catch {
       return null;
     }
-  };
+  }, [isGoogleMapsReady]);
 
   useEffect(() => {
     if (!locationConfirmed || !businessInputRef.current) return;
     void ensurePlacesLibrary();
-  }, [country, locationConfirmed]);
+  }, [country, ensurePlacesLibrary, isGoogleMapsReady, locationConfirmed]);
 
   useEffect(() => {
     if (!locationConfirmed || !businessName.trim() || selectedPlace) {
@@ -262,7 +227,7 @@ export function Step1V8({ state, actions }: Step1Props) {
     return () => {
       globalThis.clearTimeout(timer);
     };
-  }, [businessName, country, locationConfirmed, selectedPlace]);
+  }, [businessName, country, ensurePlacesLibrary, locationConfirmed, selectedPlace]);
 
   const isFetching = locationStatus === "fetching" || isBusy;
   const isBusinessSubmitting = isFetching || isResolvingBusiness;
@@ -1690,25 +1655,53 @@ export function Step1V8({ state, actions }: Step1Props) {
               </div>
             )}
 
-            {/* Google Maps Static Map */}
-            {state.business.lat && state.business.lng && (
-              <div style={{ marginBottom: 20, borderRadius: 12, overflow: "hidden" }}>
-                <img
-                  src={`https://maps.googleapis.com/maps/api/staticmap?center=${state.business.lat},${state.business.lng}&zoom=15&size=600x200&scale=2&maptype=roadmap&markers=color:0x3ecf8e|${state.business.lat},${state.business.lng}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""}&style=feature:all|element:labels|visibility:on&style=feature:road|element:geometry|color:0x2d3748&style=feature:landscape|element:geometry|color:0x1a202c&style=feature:water|element:geometry|color:0x0f172a`}
-                  alt="Business location map"
+            {/* Live Google Map */}
+            {state.business.lat &&
+              state.business.lng &&
+              isGoogleMapsReady &&
+              !googleMapsLoadError && (
+                <div
                   style={{
-                    width: "100%",
-                    height: 200,
-                    objectFit: "cover",
+                    marginBottom: 20,
+                    borderRadius: 12,
+                    overflow: "hidden",
                     border: "1px solid rgba(255,255,255,0.08)",
                   }}
-                  onError={(e) => {
-                    // Hide map if it fails to load
-                    e.currentTarget.parentElement!.style.display = "none";
-                  }}
-                />
-              </div>
-            )}
+                >
+                  <GoogleMap
+                    mapContainerStyle={{ width: "100%", height: "200px" }}
+                    center={{ lat: state.business.lat, lng: state.business.lng }}
+                    zoom={15}
+                    options={{
+                      disableDefaultUI: true,
+                      zoomControl: true,
+                      clickableIcons: false,
+                      styles: [
+                        { elementType: "geometry", stylers: [{ color: "#0f172a" }] },
+                        { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
+                        { elementType: "labels.text.stroke", stylers: [{ color: "#0f172a" }] },
+                        {
+                          featureType: "road",
+                          elementType: "geometry",
+                          stylers: [{ color: "#1e293b" }],
+                        },
+                        {
+                          featureType: "poi",
+                          elementType: "geometry",
+                          stylers: [{ color: "#111827" }],
+                        },
+                        {
+                          featureType: "water",
+                          elementType: "geometry",
+                          stylers: [{ color: "#020617" }],
+                        },
+                      ],
+                    }}
+                  >
+                    <MarkerF position={{ lat: state.business.lat, lng: state.business.lng }} />
+                  </GoogleMap>
+                </div>
+              )}
 
             {/* Location info */}
             <div
