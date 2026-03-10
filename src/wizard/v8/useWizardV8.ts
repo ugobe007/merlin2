@@ -116,6 +116,44 @@ async function resolveZip(zip: string, signal?: AbortSignal): Promise<LocationDa
 
 const ZIP_DEBOUNCE_MS = 350;
 
+type TierBuildCache = {
+  key: string;
+  promise: Promise<[QuoteTier, QuoteTier, QuoteTier]>;
+};
+
+function createTierBuildKey(state: WizardState): string {
+  return JSON.stringify({
+    step: state.step,
+    location: state.location
+      ? {
+          zip: state.location.zip,
+          state: state.location.state,
+        }
+      : null,
+    industry: state.industry,
+    baseLoadKW: state.baseLoadKW,
+    peakLoadKW: state.peakLoadKW,
+    criticalLoadPct: state.criticalLoadPct,
+    solarPhysicalCapKW: state.solarPhysicalCapKW,
+    wantsSolar: state.wantsSolar,
+    wantsEVCharging: state.wantsEVCharging,
+    wantsGenerator: state.wantsGenerator,
+    solarKW: state.solarKW,
+    generatorKW: state.generatorKW,
+    generatorFuelType: state.generatorFuelType,
+    evChargers: state.evChargers,
+    evRevenuePerYear: state.evRevenuePerYear,
+    step3Answers: state.step3Answers,
+    intel: {
+      utilityRate: state.intel?.utilityRate,
+      demandCharge: state.intel?.demandCharge,
+      solarFeasible: state.intel?.solarFeasible,
+      peakSunHours: state.intel?.peakSunHours,
+      solarGrade: state.intel?.solarGrade,
+    },
+  });
+}
+
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useWizardV8(): { state: WizardState; actions: WizardActions } {
@@ -124,6 +162,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   // Refs for debounce and abort — never trigger re-renders
   const zipDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const tierBuildRef = useRef<TierBuildCache | null>(null);
 
   // ── Step 1: Raw input → debounced intel fetch ───────────────────────────
 
@@ -611,6 +650,17 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     dispatch({ type: "SET_TIERS_STATUS", status });
   }, []);
 
+  const getOrStartTierBuild = useCallback((nextState: WizardState) => {
+    const key = createTierBuildKey(nextState);
+    if (tierBuildRef.current?.key === key) {
+      return tierBuildRef.current.promise;
+    }
+
+    const promise = buildTiers(nextState);
+    tierBuildRef.current = { key, promise };
+    return promise;
+  }, []);
+
   // ── Step 5 ────────────────────────────────────────────────────────────────
 
   const selectTier = useCallback((index: 0 | 1 | 2) => {
@@ -640,7 +690,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
 
         try {
-          const tiers = await buildTiers(state);
+          const tiers = await getOrStartTierBuild(state);
           dispatch({ type: "SET_TIERS", tiers });
           dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
         } catch (error) {
@@ -663,7 +713,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
 
         try {
-          const tiers = await buildTiers(state);
+          const tiers = await getOrStartTierBuild(state);
           dispatch({ type: "SET_TIERS", tiers });
           dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
         } catch (error) {
@@ -675,7 +725,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
       dispatch({ type: "GO_TO_STEP", step });
     },
-    [state]
+    [getOrStartTierBuild, state]
   );
 
   const goBack = useCallback(() => {
@@ -685,8 +735,29 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   const reset = useCallback(() => {
     if (abortRef.current) abortRef.current.abort();
     if (zipDebounceRef.current) clearTimeout(zipDebounceRef.current);
+    tierBuildRef.current = null;
     dispatch({ type: "RESET" });
   }, []);
+
+  useEffect(() => {
+    const canBuildFromStep3 =
+      state.step === 3 &&
+      state.baseLoadKW > 0 &&
+      !!state.location &&
+      !state.wantsSolar &&
+      !state.wantsEVCharging &&
+      !state.wantsGenerator;
+
+    const canBuildFromStep35 = state.step === 3.5 && state.baseLoadKW > 0 && !!state.location;
+
+    if (!canBuildFromStep3 && !canBuildFromStep35) return;
+
+    void getOrStartTierBuild(state).catch(() => {
+      if (tierBuildRef.current?.key === createTierBuildKey(state)) {
+        tierBuildRef.current = null;
+      }
+    });
+  }, [getOrStartTierBuild, state]);
 
   const clearError = useCallback(() => {
     dispatch({ type: "CLEAR_ERROR" });
