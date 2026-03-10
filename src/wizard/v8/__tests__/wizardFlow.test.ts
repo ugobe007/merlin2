@@ -202,6 +202,39 @@ describe("Location and intel state", () => {
   });
 });
 
+describe("Business selection state", () => {
+  it("stores manual business data including typed street address", () => {
+    let state = initialState();
+    state = reducer(state, {
+      type: "SET_BUSINESS",
+      business: {
+        name: "Acme Manufacturing",
+        address: "1234 Industrial Way",
+        detectedIndustry: "manufacturing",
+        confidence: 0.85,
+      },
+    });
+
+    expect(state.business?.name).toBe("Acme Manufacturing");
+    expect(state.business?.address).toBe("1234 Industrial Way");
+  });
+
+  it("clears business state when edit/reset is requested", () => {
+    let state = initialState();
+    state = reducer(state, {
+      type: "SET_BUSINESS",
+      business: {
+        name: "Acme Manufacturing",
+        detectedIndustry: "manufacturing",
+        confidence: 0.85,
+      },
+    });
+    state = reducer(state, { type: "SET_BUSINESS", business: null });
+
+    expect(state.business).toBeNull();
+  });
+});
+
 // =============================================================================
 // ADDON PREFERENCES
 // =============================================================================

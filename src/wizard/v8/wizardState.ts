@@ -268,7 +268,7 @@ export type WizardIntent =
       type: "SET_GRID_RELIABILITY";
       reliability: "reliable" | "occasional-outages" | "frequent-outages" | "unreliable";
     }
-  | { type: "SET_BUSINESS"; business: BusinessData }
+  | { type: "SET_BUSINESS"; business: BusinessData | null }
   | { type: "SET_BUSINESS_ADDRESS"; address: string }
   | { type: "CONFIRM_BUSINESS" } // Confirms business and advances
   | {
@@ -552,6 +552,7 @@ export interface WizardActions {
   setBusiness: (
     name: string,
     placesData?: {
+      address?: string;
       placeId?: string;
       formattedAddress?: string;
       photoUrl?: string;
