@@ -379,6 +379,43 @@ function emptyIntel(): LocationIntel {
   };
 }
 
+function resetEnergyProfileState(): Pick<
+  WizardState,
+  | "step3Answers"
+  | "evChargers"
+  | "baseLoadKW"
+  | "peakLoadKW"
+  | "criticalLoadKW"
+  | "evRevenuePerYear"
+  | "solarKW"
+  | "generatorKW"
+  | "generatorFuelType"
+  | "level2Chargers"
+  | "dcfcChargers"
+  | "hpcChargers"
+  | "tiersStatus"
+  | "tiers"
+  | "selectedTierIndex"
+> {
+  return {
+    step3Answers: {},
+    evChargers: null,
+    baseLoadKW: 0,
+    peakLoadKW: 0,
+    criticalLoadKW: 0,
+    evRevenuePerYear: 0,
+    solarKW: 0,
+    generatorKW: 0,
+    generatorFuelType: "natural-gas",
+    level2Chargers: 0,
+    dcfcChargers: 0,
+    hpcChargers: 0,
+    tiersStatus: "idle",
+    tiers: null,
+    selectedTierIndex: null,
+  };
+}
+
 export function reducer(state: WizardState, intent: WizardIntent): WizardState {
   switch (intent.type) {
     // ── Step 1 ───────────────────────────────────────────────────────────
@@ -438,6 +475,7 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
       // Skip to Step 3 (questionnaire) if industry detected, else Step 2 (industry selection)
       return {
         ...state,
+        ...(hasIndustry ? resetEnergyProfileState() : {}),
         step: nextStep as WizardStep,
         industry: hasIndustry ? (state.business?.detectedIndustry ?? null) : state.industry,
       };
@@ -463,7 +501,11 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
     // ── Step 2 ───────────────────────────────────────────────────────────
 
     case "SET_INDUSTRY":
-      return { ...state, industry: intent.slug };
+      return {
+        ...state,
+        ...resetEnergyProfileState(),
+        industry: intent.slug,
+      };
 
     case "SET_INDUSTRY_META":
       return {

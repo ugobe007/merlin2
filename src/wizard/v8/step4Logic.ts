@@ -69,6 +69,7 @@ import {
   type BESSUseCase,
 } from "@/services/benchmarkSources";
 import { applyMarginPolicy } from "@/services/marginPolicyEngine";
+import { hasGeneratorIntent } from "./addonIntent";
 import type {
   WizardState,
   QuoteTier,
@@ -339,6 +340,7 @@ async function buildOneTier(
   baseNotes: string[]
 ): Promise<QuoteTier> {
   const { intel, location, industry, evRevenuePerYear, solarKW, generatorKW, generatorFuelType } = state;
+  const generatorEnabled = state.wantsGenerator || hasGeneratorIntent(state.step3Answers);
 
   // Tier scaling for configured addons (user values from Step 3.5 = Recommended baseline)
   const tierAddonScale = tierLabel === 'Starter' ? 0.70 : tierLabel === 'Complete' ? 1.30 : 1.00;
@@ -349,7 +351,7 @@ async function buildOneTier(
     ? Math.round(solarKW * tierAddonScale) 
     : computeSolarKW(state, goal, tierLabel);
   
-  const finalGenKW = (state.wantsGenerator && generatorKW > 0) 
+  const finalGenKW = (generatorEnabled && generatorKW > 0) 
     ? Math.round(generatorKW * tierAddonScale) 
     : computeGeneratorKW(state, goal, tierLabel);
   
@@ -425,7 +427,7 @@ async function buildOneTier(
       ? `Solar: ${finalSolarKW} kW AC${state.wantsSolar && solarKW > 0 ? " (user configured)" : ` (${intel?.peakSunHours.toFixed(1)} PSH × ${finalSolarKW}/${state.solarPhysicalCapKW} kW cap)`}`
       : `Solar: excluded (${intel?.solarFeasible ? "physical cap = 0" : `grade ${intel?.solarGrade ?? "unknown"} < B-`})`,
     finalGenKW > 0
-      ? `Generator: ${finalGenKW} kW${state.wantsGenerator && generatorKW > 0 ? ` (user configured, ${generatorFuelType})` : ` (${(state.criticalLoadPct * 100).toFixed(0)}% critical load × 1.25 reserve)`}`
+      ? `Generator: ${finalGenKW} kW${generatorEnabled && generatorKW > 0 ? ` (user configured, ${generatorFuelType})` : ` (${(state.criticalLoadPct * 100).toFixed(0)}% critical load × 1.25 reserve)`}`
       : `Generator: excluded (policy: ${GOAL_GUIDANCE[goal].generatorPolicy}, need: ${state.step3Answers.generatorNeed ?? "none"})`,
     evChargerKW > 0
       ? `EV chargers: ${evChargerKW} kW (${state.evChargers?.count} × ${state.evChargers?.type.toUpperCase()}, already in base load)`
