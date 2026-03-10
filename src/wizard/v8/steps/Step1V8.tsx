@@ -449,6 +449,21 @@ export function Step1V8({ state, actions }: Step1Props) {
     setBusinessError(null);
     setIsResolvingBusiness(true);
 
+    const optimisticPlace: ResolvedBusinessPlace = {
+      name: businessName.trim(),
+      formattedAddress: addressValue.trim() || location?.formattedAddress,
+      lat: location?.lat,
+      lng: location?.lng,
+    };
+
+    setSelectedPlace((current) => current ?? optimisticPlace);
+    actions.setBusiness(optimisticPlace.name, {
+      address: addressValue.trim() || undefined,
+      formattedAddress: optimisticPlace.formattedAddress,
+      lat: optimisticPlace.lat,
+      lng: optimisticPlace.lng,
+    });
+
     try {
       let place = selectedPlace;
       if (!place && businessSuggestions.length > 0) {
