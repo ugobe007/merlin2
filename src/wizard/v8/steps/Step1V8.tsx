@@ -312,6 +312,23 @@ export function Step1V8({ state, actions }: Step1Props) {
 
     return new Promise<google.maps.places.PlaceResult | null>((resolve) => {
       const service = new window.google.maps.places.PlacesService(document.createElement("div"));
+      let settled = false;
+
+      const finish = (result: google.maps.places.PlaceResult | null) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeoutId);
+        resolve(result);
+      };
+
+      // Google Places lookups can stall for several seconds. Fall back quickly to manual entry.
+      const timeoutId = window.setTimeout(() => {
+        console.warn("[Step1V8] Manual business lookup timed out, using typed business", {
+          query: queryParts,
+        });
+        finish(null);
+      }, 1500);
+
       service.findPlaceFromQuery(
         {
           query: queryParts,
@@ -323,7 +340,7 @@ export function Step1V8({ state, actions }: Step1Props) {
             results &&
             results.length > 0
           ) {
-            resolve(results[0]);
+            finish(results[0]);
             return;
           }
 
@@ -331,7 +348,7 @@ export function Step1V8({ state, actions }: Step1Props) {
             query: queryParts,
             status,
           });
-          resolve(null);
+          finish(null);
         }
       );
     });
