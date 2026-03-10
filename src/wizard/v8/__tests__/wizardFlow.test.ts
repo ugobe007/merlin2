@@ -287,6 +287,9 @@ describe("Addon intent helpers", () => {
     expect(hasGeneratorIntent({ generatorNeed: "partial" })).toBe(true);
     expect(hasGeneratorIntent({ generatorNeed: "full_backup" })).toBe(true);
     expect(hasGeneratorIntent({ generatorNeed: "resilience" })).toBe(true);
+    expect(hasGeneratorIntent({ existingGenerator: "yes-extensive" })).toBe(true);
+    expect(hasGeneratorIntent({ primaryGoal: "resilience" })).toBe(true);
+    expect(hasGeneratorIntent({ gridReliability: "frequent" })).toBe(true);
     expect(hasGeneratorIntent({ generatorNeed: "none" })).toBe(false);
     expect(hasGeneratorIntent({ generatorNeed: "ups" })).toBe(false);
   });
@@ -339,6 +342,47 @@ describe("Business selection state", () => {
 
     expect(state.step).toBe(3);
     expect(state.industry).toBe("retail");
+  });
+
+  it("clears downstream energy profile when business confirmation auto-detects industry", () => {
+    let state = initialState();
+    state = reducer(state, {
+      type: "SET_BASE_LOAD",
+      baseLoadKW: 180,
+      peakLoadKW: 260,
+      criticalLoadKW: 120,
+      evRevenuePerYear: 9000,
+    });
+    state = reducer(state, { type: "SET_ANSWER", key: "generatorNeed", value: "partial" });
+    state = reducer(state, {
+      type: "SET_ADDON_CONFIG",
+      config: {
+        solarKW: 150,
+        generatorKW: 125,
+        level2Chargers: 4,
+      },
+    });
+    state = reducer(state, {
+      type: "SET_BUSINESS",
+      business: {
+        name: "Costco",
+        detectedIndustry: "retail",
+        confidence: 0.85,
+      },
+    });
+
+    state = reducer(state, { type: "CONFIRM_BUSINESS" });
+
+    expect(state.industry).toBe("retail");
+    expect(state.step).toBe(3);
+    expect(state.step3Answers).toEqual({});
+    expect(state.baseLoadKW).toBe(0);
+    expect(state.peakLoadKW).toBe(0);
+    expect(state.criticalLoadKW).toBe(0);
+    expect(state.evRevenuePerYear).toBe(0);
+    expect(state.solarKW).toBe(0);
+    expect(state.generatorKW).toBe(0);
+    expect(state.level2Chargers).toBe(0);
   });
 });
 
@@ -438,6 +482,40 @@ describe("Industry selection", () => {
     expect(state1.criticalLoadPct).toBe(0.25);
     expect(state2.criticalLoadPct).toBe(0.85);
     expect(state1.criticalLoadPct).toBeLessThan(state2.criticalLoadPct);
+  });
+
+  it("clears downstream energy profile and addon sizing when industry is set", () => {
+    let state = initialState();
+    state = reducer(state, {
+      type: "SET_BASE_LOAD",
+      baseLoadKW: 250,
+      peakLoadKW: 400,
+      criticalLoadKW: 160,
+      evRevenuePerYear: 12000,
+    });
+    state = reducer(state, { type: "SET_ANSWER", key: "operatingHours", value: 24 });
+    state = reducer(state, {
+      type: "SET_ADDON_CONFIG",
+      config: {
+        solarKW: 300,
+        generatorKW: 200,
+        level2Chargers: 8,
+        dcfcChargers: 2,
+      },
+    });
+
+    state = reducer(state, { type: "SET_INDUSTRY", slug: "hotel" });
+
+    expect(state.industry).toBe("hotel");
+    expect(state.step3Answers).toEqual({});
+    expect(state.baseLoadKW).toBe(0);
+    expect(state.peakLoadKW).toBe(0);
+    expect(state.criticalLoadKW).toBe(0);
+    expect(state.evRevenuePerYear).toBe(0);
+    expect(state.solarKW).toBe(0);
+    expect(state.generatorKW).toBe(0);
+    expect(state.level2Chargers).toBe(0);
+    expect(state.dcfcChargers).toBe(0);
   });
 });
 
