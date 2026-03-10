@@ -107,7 +107,7 @@ function loadGoogleMapsScript(): Promise<void> {
     return Promise.reject(new Error("Missing VITE_GOOGLE_MAPS_API_KEY"));
   }
 
-  if (window.google?.maps?.importLibrary) {
+  if (typeof window.google?.maps?.importLibrary === "function") {
     return Promise.resolve();
   }
 
@@ -236,7 +236,7 @@ export function Step1V8({ state, actions }: Step1Props) {
       if (!placesLibraryRef.current) {
         placesLibraryRef.current = (await window.google.maps.importLibrary(
           "places"
-        )) as GooglePlacesLibrary;
+        )) as unknown as GooglePlacesLibrary;
       }
       setGoogleError(null);
       return placesLibraryRef.current;
@@ -378,23 +378,23 @@ export function Step1V8({ state, actions }: Step1Props) {
 
         if (suggestionRequestIdRef.current !== requestId) return;
 
-        setBusinessSuggestions(
-          suggestions
-            .map((item) => {
-              const prediction = item.placePrediction;
-              if (!prediction) return null;
-              return {
-                placeId: prediction.placeId,
-                label: prediction.text?.text || prediction.mainText?.text || businessName.trim(),
-                primaryText:
-                  prediction.mainText?.text || prediction.text?.text || businessName.trim(),
-                secondaryText: prediction.secondaryText?.text,
-                prediction,
-              } satisfies BusinessSuggestion;
-            })
-            .filter((item): item is BusinessSuggestion => !!item)
-            .slice(0, 5)
-        );
+        const validSuggestions = suggestions
+          .map((item) => {
+            const prediction = item.placePrediction;
+            if (!prediction) return null;
+            return {
+              placeId: prediction.placeId,
+              label: prediction.text?.text || prediction.mainText?.text || businessName.trim(),
+              primaryText:
+                prediction.mainText?.text || prediction.text?.text || businessName.trim(),
+              secondaryText: prediction.secondaryText?.text,
+              prediction,
+            } as BusinessSuggestion;
+          })
+          .filter((item): item is BusinessSuggestion => item !== null)
+          .slice(0, 5);
+
+        setBusinessSuggestions(validSuggestions);
       } catch {
         if (suggestionRequestIdRef.current === requestId) {
           setBusinessSuggestions([]);
