@@ -9,6 +9,7 @@
 import React from "react";
 import type { WizardState, WizardActions } from "../wizardState";
 import { Sun, Fuel, Zap, Info, Check } from "lucide-react";
+import { hasGeneratorIntent } from "../addonIntent";
 
 interface Props {
   state: WizardState;
@@ -96,6 +97,7 @@ export default function Step3_5V8({ state, actions }: Props) {
   const { wantsSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry } =
     state;
   const [isGeneratingTiers, setIsGeneratingTiers] = React.useState(false);
+  const showGenerator = wantsGenerator || hasGeneratorIntent(state.step3Answers);
 
   // Generate ranges for solar (based on PHYSICAL SPACE CONSTRAINTS by industry)
   const getSolarRanges = () => {
@@ -318,7 +320,7 @@ export default function Step3_5V8({ state, actions }: Props) {
         )}
 
         {/* Generator Configuration */}
-        {wantsGenerator && (
+        {showGenerator && (
           <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-orange-500/30 rounded-2xl p-6 shadow-[0_0_32px_rgba(249,115,22,0.12)]">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-orange-500/10 p-3 rounded-xl">

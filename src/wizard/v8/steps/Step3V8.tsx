@@ -29,6 +29,7 @@ import {
 } from "@/components/wizard/v7/steps/step3Constants";
 import { isAnswered, isRequired } from "@/components/wizard/v7/steps/step3Helpers";
 import merlinIcon from "@/assets/images/new_small_profile_.png";
+import { hasStep35Addons } from "../addonIntent";
 
 
 interface Props {
@@ -38,6 +39,12 @@ interface Props {
 
 export function Step3V8({ state, actions }: Props) {
   const { industry, step3Answers: answers, baseLoadKW } = state;
+  const wantsStep35Addons = hasStep35Addons(
+    state.wantsSolar,
+    state.wantsEVCharging,
+    state.wantsGenerator,
+    answers,
+  );
 
   // Resolve curated schema (SSOT for questions, defaults, validation)
   const curatedSchema: CuratedSchema = useMemo(() => {
@@ -487,8 +494,7 @@ export function Step3V8({ state, actions }: Props) {
                     }
                     setDefaultsReviewed(true);
                     // Go to Step 3.5 if user wants any addons, otherwise skip to Step 4
-                    const wantsAddons = state.wantsSolar || state.wantsGenerator || state.wantsEVCharging;
-                    actions.goToStep(wantsAddons ? 3.5 : 4);
+                    actions.goToStep(wantsStep35Addons ? 3.5 : 4);
                   }}
                   style={{
                     padding: "10px 18px",
@@ -547,8 +553,7 @@ export function Step3V8({ state, actions }: Props) {
                 return;
               }
               // Go to Step 3.5 if user wants any addons, otherwise skip to Step 4
-              const wantsAddons = state.wantsSolar || state.wantsGenerator || state.wantsEVCharging;
-              actions.goToStep(wantsAddons ? 3.5 : 4);
+              actions.goToStep(wantsStep35Addons ? 3.5 : 4);
             }}
             disabled={!isComplete}
             style={{
