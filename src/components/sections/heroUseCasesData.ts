@@ -22,13 +22,13 @@ import hospital3Image from "../../assets/images/hospital_3.jpg";
 import evChargingStationImage from "@/assets/images/ev_charging_station.jpg";
 import airportImage from "../../assets/images/airports_1.jpg";
 import hotelHolidayInn2 from "../../assets/images/hotel_motel_holidayinn_2.jpg";
-import hotelHolidayInn3 from "../../assets/images/hotel_motel_holidayinn_3.jpg";
 import dataCenter1 from "../../assets/images/data-center-1.jpg";
 import manufacturing1 from "../../assets/images/manufacturing_1.jpg";
 import logistics1 from "../../assets/images/logistics_1.jpg";
 import officeBuilding1 from "../../assets/images/office_building1.jpg";
 import indoorFarm1 from "../../assets/images/indoor_farm1.jpeg";
 import college1 from "../../assets/images/college_1.jpg";
+import casinoGaming1 from "../../assets/images/casino_gaming1.jpg";
 
 // ── Type ─────────────────────────────────────────────────────────────────────
 
@@ -337,7 +337,7 @@ export const HERO_USE_CASES: HeroUseCase[] = [
   {
     id: "resort-casino",
     name: "Resort & Casino",
-    image: hotelHolidayInn3,
+    image: casinoGaming1,
     systemSize: "2.5 MW / 10.0 MWh",
     savings: "$708K",
     payback: "1.6 yrs",
