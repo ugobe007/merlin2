@@ -358,9 +358,10 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     if (/warehouse|distribution|logistics|fulfillment|amazon|fedex|ups|dhl/i.test(lowerName)) {
       return { industry: "warehouse", confidence: 0.85 };
     }
-    if (
-      /retail|store|shop|mall|shopping|walmart|target|costco|home\s*depot|lowes/i.test(lowerName)
-    ) {
+    if (/walmart|target|costco|home\s*depot|lowes/i.test(lowerName)) {
+      return { industry: "retail", confidence: 0.85 };
+    }
+    if (/retail|store|shop|mall|shopping/i.test(lowerName)) {
       return { industry: "retail", confidence: 0.7 };
     }
     if (/restaurant|cafe|diner|bistro|eatery/i.test(lowerName)) {

@@ -304,6 +304,23 @@ describe("Business selection state", () => {
 
     expect(state.business).toBeNull();
   });
+
+  it("skips Step 2 when a recognized business has high-confidence industry detection", () => {
+    let state = initialState();
+    state = reducer(state, {
+      type: "SET_BUSINESS",
+      business: {
+        name: "Costco Wholesale",
+        detectedIndustry: "retail",
+        confidence: 0.85,
+      },
+    });
+
+    state = reducer(state, { type: "CONFIRM_BUSINESS" });
+
+    expect(state.step).toBe(3);
+    expect(state.industry).toBe("retail");
+  });
 });
 
 // =============================================================================
