@@ -25,6 +25,7 @@
 
 import { describe, it, expect } from "vitest";
 import { reducer, initialState, isSolarFeasible, type SolarGrade } from "../wizardState";
+import { hasGeneratorIntent, hasStep35Addons } from "../addonIntent";
 
 // =============================================================================
 // INITIAL STATE
@@ -148,6 +149,14 @@ describe("Step navigation", () => {
 
     expect(state.step).toBe(3);
   });
+
+  it("treats Step 3 generator answers as Step 3.5 addon intent", () => {
+    expect(
+      hasStep35Addons(false, false, false, {
+        generatorNeed: "resilience",
+      }),
+    ).toBe(true);
+  });
 });
 
 // =============================================================================
@@ -270,6 +279,16 @@ describe("Location and intel state", () => {
 
     expect(state.intel?.weatherRisk).toBe("Low");
     expect(state.intelStatus.weather).toBe("ready");
+  });
+});
+
+describe("Addon intent helpers", () => {
+  it("detects generator intent from Step 3 answers", () => {
+    expect(hasGeneratorIntent({ generatorNeed: "partial" })).toBe(true);
+    expect(hasGeneratorIntent({ generatorNeed: "full_backup" })).toBe(true);
+    expect(hasGeneratorIntent({ generatorNeed: "resilience" })).toBe(true);
+    expect(hasGeneratorIntent({ generatorNeed: "none" })).toBe(false);
+    expect(hasGeneratorIntent({ generatorNeed: "ups" })).toBe(false);
   });
 });
 
