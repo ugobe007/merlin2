@@ -22,7 +22,7 @@
  * =============================================================================
  */
 
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { useWizardV8 } from "./useWizardV8";
 import type { WizardStep } from "./wizardState";
 import { Step1V8 } from "./steps/Step1V8";
@@ -30,10 +30,15 @@ import { Step0V8_ModeSelect } from "./steps/Step0V8_ModeSelect";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 
 // Lazy-load steps 2–5 so Step 1 renders instantly on first visit
-const Step2V8 = lazy(() => import("./steps/Step2V8"));
-const Step3V8 = lazy(() => import("./steps/Step3V8"));
-const Step3_5V8 = lazy(() => import("./steps/Step3_5V8_RANGEBUTTONS")); // NEW: Range button version
-const Step4V8 = lazy(() => import("./steps/Step4V8"));
+const loadStep2V8 = () => import("./steps/Step2V8");
+const loadStep3V8 = () => import("./steps/Step3V8");
+const loadStep35V8 = () => import("./steps/Step3_5V8_RANGEBUTTONS");
+const loadStep4V8 = () => import("./steps/Step4V8");
+
+const Step2V8 = lazy(loadStep2V8);
+const Step3V8 = lazy(loadStep3V8);
+const Step3_5V8 = lazy(loadStep35V8); // NEW: Range button version
+const Step4V8 = lazy(loadStep4V8);
 const Step5V8 = lazy(() => import("./steps/Step5V8"));
 
 // Step labels — index 0 = step 0 (Mode Select), index 1 = step 1 (Location), etc.
@@ -270,6 +275,25 @@ function SpinnerFallback() {
 export default function WizardV8Page() {
   const { state, actions } = useWizardV8();
   const step = state.step;
+
+  useEffect(() => {
+    if (step === 1 && state.business?.detectedIndustry && (state.business.confidence ?? 0) >= 0.75) {
+      void loadStep3V8();
+      void loadStep35V8();
+      void loadStep4V8();
+      return;
+    }
+
+    if (step === 2) {
+      void loadStep3V8();
+      return;
+    }
+
+    if (step === 3) {
+      void loadStep35V8();
+      void loadStep4V8();
+    }
+  }, [step, state.business?.detectedIndustry, state.business?.confidence]);
 
   // DEBUG: Removed excessive logging - caused 20+ renders per step
   // TODO: Memoize actions object in useWizardV8 to prevent re-render cascade
