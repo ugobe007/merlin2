@@ -429,6 +429,8 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         address?: string;
         website?: string;
         description?: string;
+        photoAttributionName?: string;
+        photoAttributionUri?: string;
         placeId?: string;
         formattedAddress?: string;
         photoUrl?: string;
