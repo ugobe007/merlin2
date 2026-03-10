@@ -14,6 +14,42 @@ import App from "./App.tsx";
 // console.log('🤖 Initializing AI Data Collection Service...');
 // initializeAIDataCollection();
 
+const CHUNK_RELOAD_KEY = "merlin:chunk-reload-once";
+
+function isDynamicChunkLoadError(reason: unknown): boolean {
+  if (!(reason instanceof Error)) return false;
+
+  return (
+    reason.message.includes("Failed to fetch dynamically imported module") ||
+    reason.message.includes("Importing a module script failed")
+  );
+}
+
+function reloadForStaleChunk() {
+  if (sessionStorage.getItem(CHUNK_RELOAD_KEY) === "1") return;
+
+  sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
+  window.location.reload();
+}
+
+window.addEventListener("pageshow", () => {
+  sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+});
+
+window.addEventListener("error", (event) => {
+  if (isDynamicChunkLoadError(event.error)) {
+    console.warn("Recovering from stale chunk load failure via hard reload.");
+    reloadForStaleChunk();
+  }
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  if (isDynamicChunkLoadError(event.reason)) {
+    console.warn("Recovering from stale dynamic import failure via hard reload.");
+    reloadForStaleChunk();
+  }
+});
+
 try {
   const rootElement = document.getElementById("root");
   if (!rootElement) {
