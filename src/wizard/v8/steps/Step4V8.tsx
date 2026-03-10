@@ -361,10 +361,10 @@ export default function Step4V8({ state, actions }: Props) {
             : "No tier data available"}
         </p>
         <button
-          onClick={() => actions.goToStep(3)}
+          onClick={() => actions.goBack()}
           className="px-6 py-3 bg-red-500/20 text-red-300 rounded-xl hover:bg-red-500/30 transition-all border border-red-500/30"
         >
-          Go Back to Profile
+          Go Back
         </button>
       </div>
     );

@@ -123,6 +123,31 @@ describe("Step navigation", () => {
 
     expect(state.step).toBe(0);
   });
+
+  it("goes back from Step 3.5 to Step 3", () => {
+    let state = initialState();
+    state = reducer(state, { type: "GO_TO_STEP", step: 3.5 });
+    state = reducer(state, { type: "GO_BACK" });
+
+    expect(state.step).toBe(3);
+  });
+
+  it("goes back from Step 4 to Step 3.5 when addons are enabled", () => {
+    let state = initialState();
+    state = reducer(state, { type: "SET_ADDON_PREFERENCE", addon: "solar", value: true });
+    state = reducer(state, { type: "GO_TO_STEP", step: 4 });
+    state = reducer(state, { type: "GO_BACK" });
+
+    expect(state.step).toBe(3.5);
+  });
+
+  it("goes back from Step 4 to Step 3 when no addons are enabled", () => {
+    let state = initialState();
+    state = reducer(state, { type: "GO_TO_STEP", step: 4 });
+    state = reducer(state, { type: "GO_BACK" });
+
+    expect(state.step).toBe(3);
+  });
 });
 
 // =============================================================================
@@ -146,6 +171,52 @@ describe("Location and intel state", () => {
 
     expect(state.location).toEqual(location);
     expect(state.locationStatus).toBe("ready");
+  });
+
+  it("clears confirmed location and related Step 1 state", () => {
+    let state = initialState();
+
+    state = reducer(state, {
+      type: "SET_LOCATION",
+      location: {
+        zip: "89101",
+        city: "Las Vegas",
+        state: "NV",
+        formattedAddress: "Las Vegas, NV 89101",
+      },
+    });
+    state = reducer(state, {
+      type: "PATCH_INTEL",
+      patch: {
+        utilityRate: 0.12,
+        utilityStatus: "ready",
+      },
+    });
+    state = reducer(state, {
+      type: "SET_BUSINESS",
+      business: {
+        name: "Acme Manufacturing",
+        detectedIndustry: "manufacturing",
+        confidence: 0.85,
+      },
+    });
+    state = reducer(state, {
+      type: "SET_GRID_RELIABILITY",
+      reliability: "frequent-outages",
+    });
+    state = reducer(state, { type: "CLEAR_LOCATION" });
+
+    expect(state.locationRaw).toBe("");
+    expect(state.location).toBeNull();
+    expect(state.locationStatus).toBe("idle");
+    expect(state.business).toBeNull();
+    expect(state.intel).toBeNull();
+    expect(state.intelStatus).toEqual({
+      utility: "idle",
+      solar: "idle",
+      weather: "idle",
+    });
+    expect(state.gridReliability).toBeNull();
   });
 
   it("patches intel with PATCH_INTEL (utility data)", () => {

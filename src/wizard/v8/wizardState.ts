@@ -264,6 +264,7 @@ export type WizardIntent =
   | { type: "SET_LOCATION_RAW"; value: string }
   | { type: "SET_LOCATION"; location: LocationData }
   | { type: "SET_LOCATION_STATUS"; status: FetchStatus }
+  | { type: "CLEAR_LOCATION" }
   | {
       type: "SET_GRID_RELIABILITY";
       reliability: "reliable" | "occasional-outages" | "frequent-outages" | "unreliable";
@@ -395,6 +396,19 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
     case "SET_LOCATION_STATUS":
       return { ...state, locationStatus: intent.status };
 
+    case "CLEAR_LOCATION":
+      return {
+        ...state,
+        locationRaw: "",
+        location: null,
+        locationStatus: "idle",
+        business: null,
+        intel: null,
+        intelStatus: { utility: "idle", solar: "idle", weather: "idle" },
+        gridReliability: null,
+        error: null,
+      };
+
     case "SET_GRID_RELIABILITY": {
       // Auto-enable generator if grid is unreliable or has frequent outages
       const autoEnableGenerator =
@@ -511,7 +525,22 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
       return { ...state, step: intent.step, error: null };
 
     case "GO_BACK": {
-      const prev = Math.max(0, state.step - 1) as WizardStep;
+      const prev: WizardStep =
+        state.step === 5
+          ? 4
+          : state.step === 4
+            ? state.wantsSolar || state.wantsEVCharging || state.wantsGenerator
+              ? 3.5
+              : 3
+            : state.step === 3.5
+              ? 3
+              : state.step === 3
+                ? 2
+                : state.step === 2
+                  ? 1
+                  : state.step === 1
+                    ? 0
+                    : 0;
       return { ...state, step: prev };
     }
 
@@ -546,6 +575,7 @@ export interface WizardActions {
   // Step 1
   setLocationRaw: (value: string) => void;
   submitLocation: () => Promise<void>;
+  clearLocation: () => void;
   setGridReliability: (
     reliability: "reliable" | "occasional-outages" | "frequent-outages" | "unreliable"
   ) => void;
