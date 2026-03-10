@@ -266,6 +266,12 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     []
   );
 
+  const clearLocation = useCallback(() => {
+    if (abortRef.current) abortRef.current.abort();
+    if (zipDebounceRef.current) clearTimeout(zipDebounceRef.current);
+    dispatch({ type: "CLEAR_LOCATION" });
+  }, []);
+
   /**
    * detectIndustryFromName — simple keyword-based industry detection
    */
@@ -692,6 +698,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     actions: {
       setLocationRaw,
       submitLocation,
+      clearLocation,
       setGridReliability,
       setBusiness,
       setBusinessAddress,

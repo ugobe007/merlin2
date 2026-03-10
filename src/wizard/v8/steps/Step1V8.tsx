@@ -606,7 +606,11 @@ export function Step1V8({ state, actions }: Step1Props) {
               <button
                 type="button"
                 onClick={() => {
-                  actions.setLocationRaw("");
+                  actions.clearLocation();
+                  setBusinessName("");
+                  setAddressValue("");
+                  setSelectedPlace(null);
+                  setBusinessError(null);
                   requestAnimationFrame(() => zipRef.current?.focus());
                 }}
                 style={{
