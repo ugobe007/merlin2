@@ -18,7 +18,7 @@ interface Props {
 // Range button component (Supabase style)
 interface RangeButtonProps {
   label: string;
-  value: number;
+  _value: number;
   isSelected: boolean;
   onClick: () => void;
   color?: string;
@@ -27,7 +27,7 @@ interface RangeButtonProps {
 
 const RangeButton: React.FC<RangeButtonProps> = ({
   label,
-  value,
+  _value,
   isSelected,
   onClick,
   color = "purple",
@@ -445,29 +445,44 @@ export default function Step3_5V8({ state, actions }: Props) {
       </div>
 
       {/* Continue Button */}
-      <div className="flex justify-center pt-6">
-        <button
-          onClick={handleContinue}
-          disabled={isGeneratingTiers}
-          className={`
-            px-12 py-4 rounded-xl font-bold text-lg uppercase tracking-wider
-            transition-all duration-200 flex items-center gap-3
+      <div className="pt-8">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 p-3 shadow-[0_0_50px_rgba(16,185,129,0.18)]">
+          <div className="mb-3 text-center">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-emerald-300/80">
+              Ready For MagicFit
+            </p>
+            <p className="mt-1 text-sm text-slate-300">
+              Lock these add-on choices and generate your three optimized system tiers.
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <button
+              onClick={handleContinue}
+              disabled={isGeneratingTiers}
+              className={`
+            min-w-[320px] px-12 py-5 rounded-2xl font-black text-lg uppercase tracking-[0.18em]
+            transition-all duration-200 flex items-center justify-center gap-3
             ${
               !isGeneratingTiers
-                ? "border-2 border-emerald-500 bg-transparent text-emerald-400 hover:bg-emerald-500/20 hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/30"
+                ? "border-2 border-emerald-300 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-slate-950 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(16,185,129,0.45)]"
                 : "bg-slate-800 text-slate-500 cursor-not-allowed border-2 border-slate-700"
             }
           `}
-        >
-          {isGeneratingTiers ? (
-            <>
-              <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-              Generating Your Options...
-            </>
-          ) : (
-            "Continue to MagicFit"
-          )}
-        </button>
+            >
+              {isGeneratingTiers ? (
+                <>
+                  <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                  Generating Your Options...
+                </>
+              ) : (
+                <>
+                  Continue to MagicFit
+                  <span className="text-2xl leading-none">→</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

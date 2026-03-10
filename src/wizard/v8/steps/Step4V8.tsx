@@ -2,10 +2,10 @@
  * WIZARD V8 — STEP 4: MAGICFIT
  * ============================================================================
  * Three savings-optimized configurations with bold visual design
- * 
+ *
  * Design: STARTER / PERFECT FIT / BEAST MODE
  * Source: Adapted from V6 Step5MagicFit.tsx
- * 
+ *
  * Features:
  * - Gradient headlines that POP
  * - Annual Savings as HERO number
@@ -25,7 +25,8 @@ import { Loader2, AlertTriangle } from "lucide-react";
 // TIER DESIGN CONFIG
 // ============================================================================
 const TIER_CONFIG = {
-  0: { // STARTER
+  0: {
+    // STARTER
     name: "STARTER",
     tagline: "Get your feet wet",
     headlineClass: "headline-starter",
@@ -39,7 +40,8 @@ const TIER_CONFIG = {
     metricBg: "bg-white/5",
     savingsGlow: "savings-glow-starter",
   },
-  1: { // PERFECT FIT
+  1: {
+    // PERFECT FIT
     name: "PERFECT FIT",
     tagline: "Just right for you",
     headlineClass: "headline-perfect",
@@ -54,7 +56,8 @@ const TIER_CONFIG = {
     metricBg: "bg-purple-500/10",
     savingsGlow: "savings-glow-perfect",
   },
-  2: { // BEAST MODE
+  2: {
+    // BEAST MODE
     name: "BEAST MODE",
     tagline: "Go all in",
     headlineClass: "headline-beast",
@@ -236,6 +239,8 @@ export default function Step4V8({ state, actions }: Props) {
   const { tiers, tiersStatus, selectedTierIndex } = state;
   const [loadingStep, setLoadingStep] = React.useState(0);
   const [progress, setProgress] = React.useState(0);
+  const [selectionConfirmation, setSelectionConfirmation] = React.useState<string | null>(null);
+  const loadingStepCount = loadingSteps.length;
 
   // Loading steps for status bar
   const loadingSteps = [
@@ -253,9 +258,9 @@ export default function Step4V8({ state, actions }: Props) {
 
     setLoadingStep(0);
     setProgress(0);
-    
+
     const interval = setInterval(() => {
-      setProgress(prev => {
+      setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
           return 100;
@@ -263,10 +268,10 @@ export default function Step4V8({ state, actions }: Props) {
         return prev + 2; // Progress bar moves 2% every 50ms = ~2.5 seconds total
       });
     }, 50);
-    
+
     const stepInterval = setInterval(() => {
-      setLoadingStep(prev => {
-        if (prev >= loadingSteps.length - 1) {
+      setLoadingStep((prev) => {
+        if (prev >= loadingStepCount - 1) {
           clearInterval(stepInterval);
           return prev;
         }
@@ -278,7 +283,23 @@ export default function Step4V8({ state, actions }: Props) {
       clearInterval(interval);
       clearInterval(stepInterval);
     };
-  }, [tiersStatus]);
+  }, [tiersStatus, loadingStepCount]);
+
+  React.useEffect(() => {
+    if (selectedTierIndex === null || !tiers) {
+      setSelectionConfirmation(null);
+      return;
+    }
+
+    const selectedName = TIER_CONFIG[selectedTierIndex].name;
+    setSelectionConfirmation(`${selectedName} selected. Continue when you're ready.`);
+
+    const timeout = window.setTimeout(() => {
+      setSelectionConfirmation(null);
+    }, 2200);
+
+    return () => window.clearTimeout(timeout);
+  }, [selectedTierIndex, tiers]);
 
   // === LOADING STATE ===
   if (tiersStatus === "fetching") {
@@ -286,41 +307,39 @@ export default function Step4V8({ state, actions }: Props) {
       <div className="flex flex-col items-center justify-center py-20 max-w-2xl mx-auto">
         {/* Spinner */}
         <Loader2 className="w-16 h-16 text-purple-400 animate-spin mb-6" />
-        
+
         {/* Main message */}
         <h3 className="text-2xl font-bold text-white mb-2">Generating Your MagicFit Options</h3>
         <p className="text-slate-400 mb-8">Building 3 optimized configurations for your facility</p>
-        
+
         {/* Progress bar */}
         <div className="w-full space-y-3">
           {/* Bar container */}
           <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-violet-600 via-purple-500 to-fuchsia-500 transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
-          
+
           {/* Current step */}
           <div className="flex items-center gap-2 text-sm">
             <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-            <p className="text-purple-300 font-medium animate-pulse">
-              {loadingSteps[loadingStep]}
-            </p>
+            <p className="text-purple-300 font-medium animate-pulse">{loadingSteps[loadingStep]}</p>
           </div>
-          
+
           {/* Step indicators */}
           <div className="grid grid-cols-6 gap-2 mt-4">
             {loadingSteps.map((step, idx) => (
-              <div 
+              <div
                 key={idx}
                 className={`h-1 rounded-full transition-all duration-300 ${
-                  idx <= loadingStep ? 'bg-purple-500' : 'bg-slate-700'
+                  idx <= loadingStep ? "bg-purple-500" : "bg-slate-700"
                 }`}
               />
             ))}
           </div>
-          
+
           {/* Percentage */}
           <p className="text-center text-slate-500 text-sm mt-2">
             {Math.round(progress)}% complete
@@ -337,7 +356,9 @@ export default function Step4V8({ state, actions }: Props) {
         <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-red-300 mb-2">Unable to Generate Tiers</h3>
         <p className="text-red-400/80 mb-6">
-          {tiersStatus === "error" ? "Failed to calculate configurations" : "No tier data available"}
+          {tiersStatus === "error"
+            ? "Failed to calculate configurations"
+            : "No tier data available"}
         </p>
         <button
           onClick={() => actions.goToStep(3)}
@@ -367,18 +388,37 @@ export default function Step4V8({ state, actions }: Props) {
           Pick Your Power
         </h1>
         <p className="text-slate-400 text-lg">
-          {selectedTierIndex === null 
-            ? "Click a configuration to select it" 
+          {selectedTierIndex === null
+            ? "Click a configuration to select it"
             : "Three configurations optimized for savings"}
         </p>
         {selectedTierIndex === null && (
           <div className="mt-3 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg inline-block">
             <p className="text-purple-300 text-sm flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               Select your preferred configuration to continue
             </p>
+          </div>
+        )}
+        {selectionConfirmation && (
+          <div className="mt-4 inline-flex items-center gap-3 rounded-xl border border-emerald-400/40 bg-emerald-500/12 px-5 py-3 shadow-[0_0_30px_rgba(16,185,129,0.18)]">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white">
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-emerald-200">{selectionConfirmation}</p>
           </div>
         )}
       </div>
@@ -405,10 +445,7 @@ export default function Step4V8({ state, actions }: Props) {
               className={`
                 relative rounded-2xl overflow-hidden cursor-pointer
                 ${config.cardBg} border-2 ${config.cardHover}
-                ${isSelected 
-                  ? "border-purple-500 card-selected" 
-                  : config.cardBorder
-                }
+                ${isSelected ? "border-purple-500 card-selected" : config.cardBorder}
                 ${isPerfectFit ? "shadow-[0_0_60px_-15px_rgba(168,85,247,0.4)]" : ""}
                 transition-all duration-300
               `}
@@ -418,7 +455,11 @@ export default function Step4V8({ state, actions }: Props) {
                 <div className="absolute top-4 right-4 z-20 checkmark-appear">
                   <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full p-3 shadow-lg shadow-emerald-500/50">
                     <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -475,7 +516,9 @@ export default function Step4V8({ state, actions }: Props) {
 
                 {/* Equipment Strip */}
                 <div className="mb-4">
-                  <p className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}>
+                  <p
+                    className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
+                  >
                     System Configuration
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
@@ -491,9 +534,7 @@ export default function Step4V8({ state, actions }: Props) {
                     {tier.solarKW && tier.solarKW > 0 && (
                       <div className={`equipment-chip ${config.chipBg} border`}>
                         <span>☀️</span>
-                        <span className={config.chipText}>
-                          {Math.round(tier.solarKW)} kW Solar
-                        </span>
+                        <span className={config.chipText}>{Math.round(tier.solarKW)} kW Solar</span>
                       </div>
                     )}
 
@@ -502,7 +543,8 @@ export default function Step4V8({ state, actions }: Props) {
                       <div className={`equipment-chip ${config.chipBg} border`}>
                         <span>⚡</span>
                         <span className={config.chipText}>
-                          {state.level2Chargers + state.dcfcChargers + state.hpcChargers} EV Chargers
+                          {state.level2Chargers + state.dcfcChargers + state.hpcChargers} EV
+                          Chargers
                         </span>
                       </div>
                     )}
@@ -588,21 +630,28 @@ export default function Step4V8({ state, actions }: Props) {
                 {/* Select Button with Visual Confirmation */}
                 <button
                   onClick={() => actions.selectTier(tierIndex)}
-                  className={`w-full py-3 rounded-xl font-bold transition-all border-2 ${
+                  className={`w-full py-4 rounded-2xl font-black uppercase tracking-[0.18em] transition-all border-2 ${
                     isSelected
-                      ? 'bg-emerald-500/30 border-emerald-500 text-emerald-300 scale-95'
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-400 border-emerald-300 text-slate-950 shadow-[0_0_28px_rgba(16,185,129,0.4)] scale-[0.99]"
                       : config.buttonClass
                   }`}
                 >
                   {isSelected ? (
                     <div className="flex items-center justify-center gap-2">
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                          clipRule="evenodd"
+                        />
                       </svg>
-                      Tier Selected
+                      Confirmed
                     </div>
                   ) : (
-                    "Select This Tier"
+                    <div className="flex items-center justify-center gap-2">
+                      <span>{`Choose ${config.name}`}</span>
+                      <span className="text-lg leading-none">→</span>
+                    </div>
                   )}
                 </button>
               </div>
@@ -627,8 +676,8 @@ export default function Step4V8({ state, actions }: Props) {
             flex items-center gap-3
             ${
               selectedTierIndex === null
-                ? 'bg-slate-700 text-slate-400 cursor-not-allowed opacity-50'
-                : 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-500/20 hover:scale-105 active:scale-95'
+                ? "bg-slate-700 text-slate-400 cursor-not-allowed opacity-50"
+                : "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-500/20 hover:scale-105 active:scale-95"
             }
           `}
         >
