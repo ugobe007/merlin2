@@ -2,24 +2,24 @@
  * ============================================================================
  * NREL PVWATTS INTEGRATION SERVICE
  * ============================================================================
- * 
+ *
  * Created: January 14, 2026
  * Purpose: Location-specific solar production estimates using NREL PVWatts API
- * 
+ *
  * ADDRESSES GAP: "Static solar production assumptions"
  * - Previous: Fixed capacity factor (e.g., 20%) for all locations
  * - Now: Location-specific hourly/monthly production from PVWatts
- * 
+ *
  * NREL PVWatts API:
  * - Endpoint: https://developer.nrel.gov/api/pvwatts/v8.json
  * - Provides: Hourly/monthly solar production by location
  * - Factors: Latitude, longitude, tilt, azimuth, system losses, weather data
- * 
+ *
  * DATA SOURCES (TrueQuote™ compliant):
  * - NREL PVWatts Version 8 (TMY3 weather data)
  * - NREL National Solar Radiation Database (NSRDB)
  * - NREL System Advisor Model (SAM) calculations
- * 
+ *
  * CACHING STRATEGY:
  * - Cache results by location (lat/lon rounded to 2 decimals)
  * - Results valid for 1 year (weather data doesn't change frequently)
@@ -109,11 +109,11 @@ export interface PVWattsError {
 // CONSTANTS
 // ============================================================================
 
-const PVWATTS_API_BASE = 'https://developer.nrel.gov/api/pvwatts/v8.json';
+const PVWATTS_API_BASE = "https://developer.nrel.gov/api/pvwatts/v8.json";
 
 // API key should be set in environment variables
 // Get a free key at: https://developer.nrel.gov/signup/
-const PVWATTS_API_KEY = import.meta.env.VITE_NREL_API_KEY || 'DEMO_KEY';
+const PVWATTS_API_KEY = import.meta.env.VITE_NREL_API_KEY || "DEMO_KEY";
 
 // In-memory PVWatts result cache (keyed by lat/lon rounded to 2 decimals + capacity)
 // Avoids redundant API calls for the same location (P2b — Feb 2026)
@@ -133,39 +133,73 @@ let _demoKeyWarned = false;
  */
 export const REGIONAL_CAPACITY_FACTORS: Record<string, number> = {
   // Southwest (highest solar resource)
-  'AZ': 0.23, 'NM': 0.22, 'NV': 0.22, 'CA': 0.21, 'UT': 0.20,
+  AZ: 0.23,
+  NM: 0.22,
+  NV: 0.22,
+  CA: 0.21,
+  UT: 0.2,
   // Southern states
-  'TX': 0.19, 'FL': 0.18, 'LA': 0.17, 'MS': 0.17, 'AL': 0.17,
-  'GA': 0.17, 'SC': 0.17, 'NC': 0.16, 'OK': 0.18, 'AR': 0.17,
+  TX: 0.19,
+  FL: 0.18,
+  LA: 0.17,
+  MS: 0.17,
+  AL: 0.17,
+  GA: 0.17,
+  SC: 0.17,
+  NC: 0.16,
+  OK: 0.18,
+  AR: 0.17,
   // Mid-Atlantic
-  'VA': 0.16, 'MD': 0.15, 'DE': 0.15, 'NJ': 0.15, 'PA': 0.14,
+  VA: 0.16,
+  MD: 0.15,
+  DE: 0.15,
+  NJ: 0.15,
+  PA: 0.14,
   // Northeast
-  'NY': 0.14, 'CT': 0.14, 'RI': 0.14, 'MA': 0.14, 'VT': 0.13,
-  'NH': 0.13, 'ME': 0.13,
+  NY: 0.14,
+  CT: 0.14,
+  RI: 0.14,
+  MA: 0.14,
+  VT: 0.13,
+  NH: 0.13,
+  ME: 0.13,
   // Midwest
-  'OH': 0.14, 'IN': 0.14, 'IL': 0.15, 'MI': 0.13, 'WI': 0.14,
-  'MN': 0.14, 'IA': 0.15, 'MO': 0.16, 'KS': 0.18, 'NE': 0.17,
-  'SD': 0.16, 'ND': 0.15,
+  OH: 0.14,
+  IN: 0.14,
+  IL: 0.15,
+  MI: 0.13,
+  WI: 0.14,
+  MN: 0.14,
+  IA: 0.15,
+  MO: 0.16,
+  KS: 0.18,
+  NE: 0.17,
+  SD: 0.16,
+  ND: 0.15,
   // Mountain West
-  'CO': 0.20, 'WY': 0.18, 'MT': 0.16, 'ID': 0.17,
+  CO: 0.2,
+  WY: 0.18,
+  MT: 0.16,
+  ID: 0.17,
   // Pacific Northwest (lower solar)
-  'WA': 0.13, 'OR': 0.14,
+  WA: 0.13,
+  OR: 0.14,
   // Hawaii (excellent solar)
-  'HI': 0.21,
+  HI: 0.21,
   // Alaska (limited solar)
-  'AK': 0.10,
+  AK: 0.1,
 };
 
 /**
  * Default system parameters based on NREL recommendations
  */
 export const DEFAULT_SYSTEM_PARAMS = {
-  moduleType: 0 as const,      // Standard crystalline silicon
-  arrayType: 0 as const,       // Fixed open rack
-  systemLosses: 14,            // 14% total losses
-  dcACRatio: 1.2,              // DC/AC ratio
-  inverterEfficiency: 96,      // 96% inverter efficiency
-  gcr: 0.4,                    // Ground coverage ratio for trackers
+  moduleType: 0 as const, // Standard crystalline silicon
+  arrayType: 0 as const, // Fixed open rack
+  systemLosses: 14, // 14% total losses
+  dcACRatio: 1.2, // DC/AC ratio
+  inverterEfficiency: 96, // 96% inverter efficiency
+  gcr: 0.4, // Ground coverage ratio for trackers
 };
 
 // ============================================================================
@@ -175,42 +209,42 @@ export const DEFAULT_SYSTEM_PARAMS = {
 // Sample major city coordinates by zip prefix
 const ZIP_COORDINATES: Record<string, { lat: number; lon: number; city: string; state: string }> = {
   // California
-  '90': { lat: 34.05, lon: -118.24, city: 'Los Angeles', state: 'CA' },
-  '91': { lat: 34.18, lon: -118.31, city: 'Glendale', state: 'CA' },
-  '92': { lat: 33.74, lon: -117.83, city: 'Orange County', state: 'CA' },
-  '93': { lat: 35.37, lon: -119.02, city: 'Bakersfield', state: 'CA' },
-  '94': { lat: 37.77, lon: -122.42, city: 'San Francisco', state: 'CA' },
-  '95': { lat: 37.34, lon: -121.89, city: 'San Jose', state: 'CA' },
+  "90": { lat: 34.05, lon: -118.24, city: "Los Angeles", state: "CA" },
+  "91": { lat: 34.18, lon: -118.31, city: "Glendale", state: "CA" },
+  "92": { lat: 33.74, lon: -117.83, city: "Orange County", state: "CA" },
+  "93": { lat: 35.37, lon: -119.02, city: "Bakersfield", state: "CA" },
+  "94": { lat: 37.77, lon: -122.42, city: "San Francisco", state: "CA" },
+  "95": { lat: 37.34, lon: -121.89, city: "San Jose", state: "CA" },
   // Texas
-  '75': { lat: 32.78, lon: -96.80, city: 'Dallas', state: 'TX' },
-  '77': { lat: 29.76, lon: -95.37, city: 'Houston', state: 'TX' },
-  '78': { lat: 29.42, lon: -98.49, city: 'San Antonio', state: 'TX' },
+  "75": { lat: 32.78, lon: -96.8, city: "Dallas", state: "TX" },
+  "77": { lat: 29.76, lon: -95.37, city: "Houston", state: "TX" },
+  "78": { lat: 29.42, lon: -98.49, city: "San Antonio", state: "TX" },
   // New York
-  '10': { lat: 40.71, lon: -74.01, city: 'New York City', state: 'NY' },
-  '11': { lat: 40.75, lon: -73.87, city: 'Queens', state: 'NY' },
-  '12': { lat: 42.65, lon: -73.75, city: 'Albany', state: 'NY' },
+  "10": { lat: 40.71, lon: -74.01, city: "New York City", state: "NY" },
+  "11": { lat: 40.75, lon: -73.87, city: "Queens", state: "NY" },
+  "12": { lat: 42.65, lon: -73.75, city: "Albany", state: "NY" },
   // Florida
-  '33': { lat: 25.76, lon: -80.19, city: 'Miami', state: 'FL' },
-  '34': { lat: 27.95, lon: -82.46, city: 'Tampa', state: 'FL' },
-  '32': { lat: 30.33, lon: -81.66, city: 'Jacksonville', state: 'FL' },
+  "33": { lat: 25.76, lon: -80.19, city: "Miami", state: "FL" },
+  "34": { lat: 27.95, lon: -82.46, city: "Tampa", state: "FL" },
+  "32": { lat: 30.33, lon: -81.66, city: "Jacksonville", state: "FL" },
   // Arizona
-  '85': { lat: 33.45, lon: -112.07, city: 'Phoenix', state: 'AZ' },
-  '86': { lat: 35.20, lon: -111.65, city: 'Flagstaff', state: 'AZ' },
+  "85": { lat: 33.45, lon: -112.07, city: "Phoenix", state: "AZ" },
+  "86": { lat: 35.2, lon: -111.65, city: "Flagstaff", state: "AZ" },
   // Illinois
-  '60': { lat: 41.88, lon: -87.63, city: 'Chicago', state: 'IL' },
+  "60": { lat: 41.88, lon: -87.63, city: "Chicago", state: "IL" },
   // Pennsylvania
-  '19': { lat: 39.95, lon: -75.16, city: 'Philadelphia', state: 'PA' },
-  '15': { lat: 40.44, lon: -79.99, city: 'Pittsburgh', state: 'PA' },
+  "19": { lat: 39.95, lon: -75.16, city: "Philadelphia", state: "PA" },
+  "15": { lat: 40.44, lon: -79.99, city: "Pittsburgh", state: "PA" },
   // Georgia
-  '30': { lat: 33.75, lon: -84.39, city: 'Atlanta', state: 'GA' },
+  "30": { lat: 33.75, lon: -84.39, city: "Atlanta", state: "GA" },
   // Washington
-  '98': { lat: 47.61, lon: -122.33, city: 'Seattle', state: 'WA' },
+  "98": { lat: 47.61, lon: -122.33, city: "Seattle", state: "WA" },
   // Massachusetts
-  '02': { lat: 42.36, lon: -71.06, city: 'Boston', state: 'MA' },
+  "02": { lat: 42.36, lon: -71.06, city: "Boston", state: "MA" },
   // Colorado
-  '80': { lat: 39.74, lon: -104.99, city: 'Denver', state: 'CO' },
+  "80": { lat: 39.74, lon: -104.99, city: "Denver", state: "CO" },
   // Nevada
-  '89': { lat: 36.17, lon: -115.14, city: 'Las Vegas', state: 'NV' },
+  "89": { lat: 36.17, lon: -115.14, city: "Las Vegas", state: "NV" },
 };
 
 // ============================================================================
@@ -220,7 +254,9 @@ const ZIP_COORDINATES: Record<string, { lat: number; lon: number; city: string; 
 /**
  * Get coordinates from zip code
  */
-function getCoordinatesFromZip(zipCode: string): { lat: number; lon: number; city: string; state: string } | null {
+function getCoordinatesFromZip(
+  zipCode: string
+): { lat: number; lon: number; city: string; state: string } | null {
   const prefix = zipCode.substring(0, 2);
   return ZIP_COORDINATES[prefix] || null;
 }
@@ -241,7 +277,7 @@ function getOptimalTilt(latitude: number): number {
 
 /**
  * Get solar production estimate from NREL PVWatts API
- * 
+ *
  * @param input - PVWatts calculation inputs
  * @returns Solar production estimate with monthly breakdown
  */
@@ -263,9 +299,9 @@ export async function getPVWattsEstimate(input: PVWattsInput): Promise<PVWattsRe
       }
     } else if (input.address) {
       // Would use geocoding API here - for now, throw error
-      throw new Error('Address geocoding not implemented. Please provide lat/lon or zipCode.');
+      throw new Error("Address geocoding not implemented. Please provide lat/lon or zipCode.");
     } else {
-      throw new Error('Location required: provide lat/lon, zipCode, or address');
+      throw new Error("Location required: provide lat/lon, zipCode, or address");
     }
   }
 
@@ -273,7 +309,12 @@ export async function getPVWattsEstimate(input: PVWattsInput): Promise<PVWattsRe
   const tilt = input.tilt ?? getOptimalTilt(lat);
 
   // P2b — Check cache first (Feb 2026)
-  const cacheKey = makeCacheKey(lat, lon, input.systemCapacityKW, input.arrayType ?? DEFAULT_SYSTEM_PARAMS.arrayType);
+  const cacheKey = makeCacheKey(
+    lat,
+    lon,
+    input.systemCapacityKW,
+    input.arrayType ?? DEFAULT_SYSTEM_PARAMS.arrayType
+  );
   const cached = pvWattsCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     if (import.meta.env.DEV) {
@@ -283,12 +324,12 @@ export async function getPVWattsEstimate(input: PVWattsInput): Promise<PVWattsRe
   }
 
   // P2b — Warn about DEMO_KEY rate limits (Feb 2026)
-  if (PVWATTS_API_KEY === 'DEMO_KEY' && !_demoKeyWarned) {
+  if (PVWATTS_API_KEY === "DEMO_KEY" && !_demoKeyWarned) {
     _demoKeyWarned = true;
     console.warn(
-      '⚠️ [PVWatts] Using DEMO_KEY — limited to 30 requests/hour.\n' +
-      '   Get a free API key at: https://developer.nrel.gov/signup/\n' +
-      '   Set VITE_NREL_API_KEY in your .env file.'
+      "⚠️ [PVWatts] Using DEMO_KEY — limited to 30 requests/hour.\n" +
+        "   Get a free API key at: https://developer.nrel.gov/signup/\n" +
+        "   Set VITE_NREL_API_KEY in your .env file."
     );
   }
 
@@ -305,12 +346,22 @@ export async function getPVWattsEstimate(input: PVWattsInput): Promise<PVWattsRe
     dc_ac_ratio: (input.dcACRatio ?? DEFAULT_SYSTEM_PARAMS.dcACRatio).toString(),
     inv_eff: (input.inverterEfficiency ?? DEFAULT_SYSTEM_PARAMS.inverterEfficiency).toString(),
     gcr: (input.gcr ?? DEFAULT_SYSTEM_PARAMS.gcr).toString(),
-    timeframe: 'monthly', // Get monthly data
+    timeframe: "monthly", // Get monthly data
   });
 
   try {
-    const response = await fetch(`${PVWATTS_API_BASE}?${params.toString()}`);
-    
+    const controller = new AbortController();
+    const timeoutId = globalThis.setTimeout(() => controller.abort(), 1800);
+    let response: Response;
+
+    try {
+      response = await fetch(`${PVWATTS_API_BASE}?${params.toString()}`, {
+        signal: controller.signal,
+      });
+    } finally {
+      globalThis.clearTimeout(timeoutId);
+    }
+
     if (!response.ok) {
       throw new Error(`PVWatts API error: ${response.status} ${response.statusText}`);
     }
@@ -318,7 +369,7 @@ export async function getPVWattsEstimate(input: PVWattsInput): Promise<PVWattsRe
     const data = await response.json();
 
     if (data.errors && data.errors.length > 0) {
-      throw new Error(`PVWatts API error: ${data.errors.join(', ')}`);
+      throw new Error(`PVWatts API error: ${data.errors.join(", ")}`);
     }
 
     const outputs = data.outputs;
@@ -336,7 +387,7 @@ export async function getPVWattsEstimate(input: PVWattsInput): Promise<PVWattsRe
       solarResource: {
         annualSolarRadiation: outputs.solrad_annual,
         avgTemperature: 25, // Would come from detailed output
-        station: stationInfo.station || 'Unknown',
+        station: stationInfo.station || "Unknown",
         stationDistance: stationInfo.distance || 0,
       },
       location: {
@@ -348,17 +399,23 @@ export async function getPVWattsEstimate(input: PVWattsInput): Promise<PVWattsRe
         elevation: stationInfo.elev || 0,
       },
       audit: {
-        source: 'NREL PVWatts API v8',
-        apiVersion: '8.0',
-        weatherData: 'TMY3 (Typical Meteorological Year)',
+        source: "NREL PVWatts API v8",
+        apiVersion: "8.0",
+        weatherData: "TMY3 (Typical Meteorological Year)",
         calculatedAt: new Date().toISOString(),
         assumptions: {
           tilt,
           azimuth: input.azimuth ?? 180,
           systemLosses: input.systemLosses ?? DEFAULT_SYSTEM_PARAMS.systemLosses,
           dcACRatio: input.dcACRatio ?? DEFAULT_SYSTEM_PARAMS.dcACRatio,
-          arrayType: ['Fixed Open Rack', 'Fixed Roof', '1-Axis Tracker', '1-Axis Backtracker', '2-Axis Tracker'][input.arrayType ?? 0],
-          moduleType: ['Standard', 'Premium', 'Thin Film'][input.moduleType ?? 0],
+          arrayType: [
+            "Fixed Open Rack",
+            "Fixed Roof",
+            "1-Axis Tracker",
+            "1-Axis Backtracker",
+            "2-Axis Tracker",
+          ][input.arrayType ?? 0],
+          moduleType: ["Standard", "Premium", "Thin Film"][input.moduleType ?? 0],
         },
       },
     };
@@ -372,10 +429,9 @@ export async function getPVWattsEstimate(input: PVWattsInput): Promise<PVWattsRe
     }
 
     return result;
-
   } catch (error) {
     // Return estimate using regional data as fallback
-    console.warn('PVWatts API failed, using regional estimate:', error);
+    console.warn("PVWatts API failed, using regional estimate:", error);
     return getRegionalEstimate(input, lat, lon, locationInfo);
   }
 }
@@ -393,20 +449,28 @@ function getRegionalEstimate(
   lon: number,
   locationInfo: { city?: string; state?: string }
 ): PVWattsResult {
-  const state = locationInfo.state || 'CA';
+  const state = locationInfo.state || "CA";
   const capacityFactor = REGIONAL_CAPACITY_FACTORS[state] ?? 0.17;
-  
+
   // Calculate annual production
   const annualProductionKWh = input.systemCapacityKW * 8760 * capacityFactor;
-  
+
   // Estimate monthly distribution (seasonal variation)
   const monthlyFactors = [
-    0.065, 0.070, 0.085, 0.090, 0.095, 0.100, // Jan-Jun
-    0.100, 0.095, 0.090, 0.080, 0.070, 0.060, // Jul-Dec
+    0.065,
+    0.07,
+    0.085,
+    0.09,
+    0.095,
+    0.1, // Jan-Jun
+    0.1,
+    0.095,
+    0.09,
+    0.08,
+    0.07,
+    0.06, // Jul-Dec
   ];
-  const monthlyProductionKWh = monthlyFactors.map(f => 
-    Math.round(annualProductionKWh * f)
-  );
+  const monthlyProductionKWh = monthlyFactors.map((f) => Math.round(annualProductionKWh * f));
 
   return {
     annualProductionKWh: Math.round(annualProductionKWh),
@@ -415,7 +479,7 @@ function getRegionalEstimate(
     solarResource: {
       annualSolarRadiation: capacityFactor * 6, // Rough estimate
       avgTemperature: 20,
-      station: 'Regional estimate (API unavailable)',
+      station: "Regional estimate (API unavailable)",
       stationDistance: 0,
     },
     location: {
@@ -427,14 +491,14 @@ function getRegionalEstimate(
       elevation: 0,
     },
     audit: {
-      source: 'Regional estimate (NREL NSRDB averages)',
-      apiVersion: 'fallback',
-      weatherData: 'State-level averages from NREL National Solar Radiation Database',
+      source: "Regional estimate (NREL NSRDB averages)",
+      apiVersion: "fallback",
+      weatherData: "State-level averages from NREL National Solar Radiation Database",
       calculatedAt: new Date().toISOString(),
       assumptions: {
         state,
         capacityFactor,
-        note: 'API unavailable - using regional capacity factor estimate',
+        note: "API unavailable - using regional capacity factor estimate",
       },
     },
   };
@@ -447,7 +511,7 @@ function getRegionalEstimate(
 /**
  * Quick solar production estimate without API call
  * Uses regional capacity factors for instant response
- * 
+ *
  * @param systemCapacityKW - System size in kW
  * @param state - US state abbreviation
  * @param arrayType - Array mounting type
@@ -455,17 +519,17 @@ function getRegionalEstimate(
  */
 export function estimateSolarProduction(
   systemCapacityKW: number,
-  state: string = 'CA',
-  arrayType: 'fixed' | 'tracker' = 'fixed'
+  state: string = "CA",
+  arrayType: "fixed" | "tracker" = "fixed"
 ): {
   annualProductionKWh: number;
   capacityFactor: number;
   productionPerKW: number;
 } {
   let capacityFactor = REGIONAL_CAPACITY_FACTORS[state.toUpperCase()] ?? 0.17;
-  
+
   // Trackers increase production by ~25-30%
-  if (arrayType === 'tracker') {
+  if (arrayType === "tracker") {
     capacityFactor *= 1.27;
   }
 
@@ -485,7 +549,7 @@ export function estimateSolarProduction(
 
 /**
  * Calculate how much solar production can be stored in BESS
- * 
+ *
  * @param solarProductionKWh - Annual solar production (kWh)
  * @param bessCapacityKWh - BESS capacity (kWh)
  * @param bessCyclesPerDay - Average BESS cycles per day
@@ -515,7 +579,7 @@ export function calculateSolarBESSIntegration(
 
   // Recommended BESS size to capture all solar
   // Assuming 80% of daily solar occurs in peak hours (4-5 hours)
-  const peakSolarKW = dailySolarKWh * 0.8 / 4; // Approximate peak power
+  const peakSolarKW = (dailySolarKWh * 0.8) / 4; // Approximate peak power
   const recommendedBESSKWh = dailySolarKWh * 0.6; // Store 60% of daily production
 
   return {
