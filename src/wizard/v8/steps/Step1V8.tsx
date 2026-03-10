@@ -1,37 +1,25 @@
-/**
- * WIZARD V8 — STEP 1: LOCATION
- *
- * Visual parity with V7 Step 1:
- *  • US / International country toggle
- *  • ZIP input styled as V7 (icon inside, 56px, gradient bg) with inline Continue →
- *  • Confirmed location card with city, state + green dot
- *  • IntelStripInline (utility rate · demand · sun hours · grade · climate)
- *  • "Find My Business" section (optional – local state only, improves display accuracy)
- *
- * RULE 3: No API calls here. All fetching stays in useWizardV8.ts.
- *
- * NOTE: Google Places API
- * - Uses the new programmatic Places Autocomplete flow
- * - Suggestions: AutocompleteSuggestion.fetchAutocompleteSuggestions()
- * - Selection: PlacePrediction.toPlace() + Place.fetchFields()
- * - This preserves Merlin's custom UI without relying on the legacy widget
- *
- * PERFORMANCE NOTE (March 9, 2026):
- * - Fixed excessive re-renders by removing `actions` from useEffect deps
- * - Added explicit fields parameter for better data extraction
- * - Added comprehensive error handling and logging
- */
-
-import React, { useRef, useEffect, useState, useCallback } from "react";
-import { GoogleMap, MarkerF, useJsApiLoader } from "@react-google-maps/api";
-import type { WizardState, WizardActions } from "../wizardState";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import IntelStripInline from "@/components/wizard/v7/shared/IntelStripInline";
+import type { BusinessData, WizardActions, WizardState } from "../wizardState";
 
-// Google Maps API key from environment
 const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyB9VeakhIGZQgCKmTiZ3ml0RvnvlT0dNrY";
 
-const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
+const T = {
+  accent: "#3ECF8E",
+  accentSoft: "rgba(62,207,142,0.10)",
+  accentBorder: "rgba(62,207,142,0.28)",
+  textPrimary: "rgba(232,235,243,0.98)",
+  textSecondary: "rgba(232,235,243,0.64)",
+  textMuted: "rgba(232,235,243,0.42)",
+  panel: "rgba(255,255,255,0.03)",
+  panelBorder: "rgba(255,255,255,0.08)",
+  input: "rgba(255,255,255,0.04)",
+  warning: "rgba(251,191,36,0.10)",
+  warningBorder: "rgba(251,191,36,0.24)",
+};
+
+type Country = "US" | "International";
 
 type GooglePlacesLibrary = {
   Place?: new (options: { id: string }) => {
@@ -86,181 +74,85 @@ type BusinessSuggestion = {
   };
 };
 
-type ResolvedBusinessPlace = {
-  name: string;
-  formattedAddress?: string;
-  placeId?: string;
-  photoUrl?: string;
-  lat?: number;
-  lng?: number;
-};
+let googleMapsPromise: Promise<void> | null = null;
 
-// ── Design tokens (match V7/Supabase dark) ────────────────────────────────────
-const T = {
-  bg: "#080b14",
-  cardBg: "rgba(255,255,255,0.03)",
-  cardBorder: "rgba(255,255,255,0.06)",
-  inputBg: "rgba(255,255,255,0.04)",
-  accent: "#3ECF8E",
-  accentDim: "rgba(62,207,142,0.12)",
-  accentBorder: "rgba(62,207,142,0.35)",
-  textPrimary: "rgba(232,235,243,0.98)",
-  textSub: "rgba(232,235,243,0.55)",
-  textMuted: "rgba(232,235,243,0.35)",
-  borderHover: "rgba(255,255,255,0.14)",
-};
+function loadGoogleMapsScript(): Promise<void> {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Google Maps unavailable during SSR"));
+  }
 
-type Country = "US" | "International";
+  if (window.google?.maps?.importLibrary) {
+    return Promise.resolve();
+  }
 
-interface Step1Props {
-  state: WizardState;
-  actions: WizardActions;
-}
+  if (googleMapsPromise) {
+    return googleMapsPromise;
+  }
 
-export function Step1V8({ state, actions }: Step1Props) {
-  const zipRef = useRef<HTMLInputElement>(null);
-  const businessInputRef = useRef<HTMLInputElement>(null);
-  const addressValueRef = useRef("");
-  const placesLibraryRef = useRef<GooglePlacesLibrary | null>(null);
-  const sessionTokenRef = useRef<unknown | null>(null);
-  const suggestionsRequestRef = useRef(0);
-
-  // Local UI state — no impact on wizard SSOT state until submitLocation is called
-  const [country, setCountry] = useState<Country>("US");
-  const [businessName, setBusinessName] = useState("");
-  const [addressValue, setAddressValue] = useState("");
-  const [businessError, setBusinessError] = useState<string | null>(null);
-  const [selectedPlace, setSelectedPlace] = useState<ResolvedBusinessPlace | null>(null);
-  const [businessSuggestions, setBusinessSuggestions] = useState<BusinessSuggestion[]>([]);
-  const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
-  const [isResolvingBusiness, setIsResolvingBusiness] = useState(false);
-  const { isLoaded: isGoogleMapsReady, loadError: googleMapsLoadError } = useJsApiLoader({
-    id: "merlin-v8-google-maps",
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-    version: "weekly",
-  });
-
-  const { intel, intelStatus, locationRaw, locationStatus, location, error, isBusy } = state;
-
-  // Derived state
-  const locationConfirmed = location !== null;
-  const activeBusiness =
-    state.business ??
-    (selectedPlace && locationConfirmed
-      ? {
-          name: selectedPlace.name,
-          address: addressValue.trim() || undefined,
-          website: undefined,
-          estimatedRoofSpaceSqFt: undefined,
-          detectedIndustry: null,
-          confidence: 0,
-          placeId: selectedPlace.placeId,
-          formattedAddress: selectedPlace.formattedAddress,
-          photoUrl: selectedPlace.photoUrl,
-          lat: selectedPlace.lat ?? location?.lat,
-          lng: selectedPlace.lng ?? location?.lng,
-        }
-      : null);
-  const normalizedZip =
-    country === "US" ? locationRaw.replace(/\D/g, "").slice(0, 5) : locationRaw.trim();
-  const isValidZip = country === "US" ? /^\d{5}$/.test(normalizedZip) : normalizedZip.length >= 3;
-
-  useEffect(() => {
-    zipRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    addressValueRef.current = addressValue;
-  }, [addressValue]);
-
-  const ensurePlacesLibrary = useCallback(async (): Promise<GooglePlacesLibrary | null> => {
-    try {
-      if (!isGoogleMapsReady || !window.google?.maps?.importLibrary) return null;
-      if (!placesLibraryRef.current) {
-        placesLibraryRef.current = (await window.google.maps.importLibrary(
-          "places"
-        )) as GooglePlacesLibrary;
-      }
-      return placesLibraryRef.current;
-    } catch {
-      return null;
-    }
-  }, [isGoogleMapsReady]);
-
-  useEffect(() => {
-    if (!locationConfirmed || !businessInputRef.current) return;
-    void ensurePlacesLibrary();
-  }, [country, ensurePlacesLibrary, isGoogleMapsReady, locationConfirmed]);
-
-  useEffect(() => {
-    if (!locationConfirmed || !businessName.trim() || selectedPlace) {
-      setBusinessSuggestions([]);
-      setIsSuggestionsLoading(false);
+  googleMapsPromise = new Promise((resolve, reject) => {
+    const existing = document.getElementById("merlin-v8-google-maps");
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("Failed to load Google Maps")), {
+        once: true,
+      });
       return;
     }
 
-    const requestId = suggestionsRequestRef.current + 1;
-    suggestionsRequestRef.current = requestId;
-    const timer = globalThis.setTimeout(async () => {
-      const placesLibrary = await ensurePlacesLibrary();
-      if (!placesLibrary) return;
+    const script = document.createElement("script");
+    script.id = "merlin-v8-google-maps";
+    script.async = true;
+    script.src =
+      `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}` +
+      "&libraries=places&loading=async&v=weekly";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Google Maps"));
+    document.head.appendChild(script);
+  });
 
-      const query = businessName.trim();
-      if (!query) return;
+  return googleMapsPromise;
+}
 
-      if (!sessionTokenRef.current) {
-        sessionTokenRef.current = new placesLibrary.AutocompleteSessionToken();
-      }
+function getCoordinate(value?: number | (() => number)) {
+  return typeof value === "function" ? value() : value;
+}
 
-      setIsSuggestionsLoading(true);
+function titleCaseIndustry(industry: string) {
+  return industry
+    .replace(/_/g, " ")
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 
-      try {
-        const { suggestions = [] } =
-          await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-            input: query,
-            includedRegionCodes: country === "US" ? ["US"] : undefined,
-            inputOffset: query.length,
-            sessionToken: sessionTokenRef.current,
-          });
+type Step1Props = {
+  state: WizardState;
+  actions: WizardActions;
+};
 
-        if (suggestionsRequestRef.current !== requestId) return;
+export function Step1V8({ state, actions }: Step1Props) {
+  const zipRef = useRef<HTMLInputElement>(null);
+  const placesLibraryRef = useRef<GooglePlacesLibrary | null>(null);
+  const sessionTokenRef = useRef<unknown | null>(null);
+  const suggestionRequestIdRef = useRef(0);
 
-        const nextSuggestions = suggestions
-          .map((suggestion) => {
-            const prediction = suggestion.placePrediction;
-            if (!prediction) return null;
-            return {
-              placeId: prediction.placeId,
-              label: prediction.text?.text || prediction.mainText?.text || "",
-              primaryText: prediction.mainText?.text || prediction.text?.text || "",
-              secondaryText: prediction.secondaryText?.text,
-              prediction,
-            } satisfies BusinessSuggestion;
-          })
-          .filter((suggestion): suggestion is BusinessSuggestion => !!suggestion)
-          .slice(0, 5);
+  const [country, setCountry] = useState<Country>("US");
+  const [businessName, setBusinessName] = useState("");
+  const [streetAddress, setStreetAddress] = useState("");
+  const [businessError, setBusinessError] = useState<string | null>(null);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+  const [businessSuggestions, setBusinessSuggestions] = useState<BusinessSuggestion[]>([]);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<BusinessSuggestion | null>(null);
+  const [previewBusiness, setPreviewBusiness] = useState<BusinessData | null>(null);
+  const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
+  const [isResolvingBusiness, setIsResolvingBusiness] = useState(false);
 
-        setBusinessSuggestions(nextSuggestions);
-      } catch {
-        if (suggestionsRequestRef.current === requestId) {
-          setBusinessSuggestions([]);
-        }
-      } finally {
-        if (suggestionsRequestRef.current === requestId) {
-          setIsSuggestionsLoading(false);
-        }
-      }
-    }, 220);
-
-    return () => {
-      globalThis.clearTimeout(timer);
-    };
-  }, [businessName, country, ensurePlacesLibrary, locationConfirmed, selectedPlace]);
-
-  const isFetching = locationStatus === "fetching" || isBusy;
-  const isBusinessSubmitting = isFetching || isResolvingBusiness;
-
+  const { intel, intelStatus, locationRaw, locationStatus, location, error, isBusy } = state;
+  const locationConfirmed = location !== null;
+  const normalizedZip =
+    country === "US" ? locationRaw.replace(/\D/g, "").slice(0, 5) : locationRaw.trim();
+  const isValidZip = country === "US" ? /^\d{5}$/.test(normalizedZip) : normalizedZip.length >= 3;
+  const isLocationBusy = locationStatus === "fetching" || isBusy;
+  const activeBusiness = state.business ?? previewBusiness;
   const showIntelStrip =
     isValidZip &&
     (intel !== null ||
@@ -268,7 +160,6 @@ export function Step1V8({ state, actions }: Step1Props) {
       intelStatus.solar === "fetching" ||
       intelStatus.weather === "fetching");
 
-  // Build intel prop for IntelStripInline
   const intelStripData = intel
     ? {
         utilityRate: intel.utilityRate,
@@ -288,463 +179,439 @@ export function Step1V8({ state, actions }: Step1Props) {
         weatherStatus: intelStatus.weather,
       };
 
-  const handleZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    const v = country === "US" ? raw.replace(/\D/g, "").slice(0, 5) : raw;
-    actions.setLocationRaw(v);
+  useEffect(() => {
+    zipRef.current?.focus();
+  }, []);
+
+  const ensurePlacesLibrary = useCallback(async (): Promise<GooglePlacesLibrary | null> => {
+    try {
+      await loadGoogleMapsScript();
+      if (!window.google?.maps?.importLibrary) return null;
+      if (!placesLibraryRef.current) {
+        placesLibraryRef.current = (await window.google.maps.importLibrary(
+          "places"
+        )) as GooglePlacesLibrary;
+      }
+      setGoogleError(null);
+      return placesLibraryRef.current;
+    } catch {
+      setGoogleError("Google business search is temporarily unavailable.");
+      return null;
+    }
+  }, []);
+
+  const buildPreviewBusiness = useCallback(
+    (overrides?: Partial<BusinessData>): BusinessData => ({
+      name: businessName.trim(),
+      address: streetAddress.trim() || undefined,
+      detectedIndustry: state.business?.detectedIndustry ?? null,
+      confidence: state.business?.confidence ?? 0,
+      placeId: overrides?.placeId,
+      formattedAddress:
+        overrides?.formattedAddress || streetAddress.trim() || location?.formattedAddress,
+      photoUrl: overrides?.photoUrl,
+      lat: overrides?.lat ?? location?.lat,
+      lng: overrides?.lng ?? location?.lng,
+      estimatedRoofSpaceSqFt: state.business?.estimatedRoofSpaceSqFt,
+      website: state.business?.website,
+    }),
+    [
+      businessName,
+      location?.formattedAddress,
+      location?.lat,
+      location?.lng,
+      state.business,
+      streetAddress,
+    ]
+  );
+
+  const enrichSuggestion = useCallback(
+    async (suggestion: BusinessSuggestion): Promise<Partial<BusinessData>> => {
+      const placesLibrary = await ensurePlacesLibrary();
+      const fallbackAddress =
+        suggestion.secondaryText ||
+        suggestion.label ||
+        streetAddress.trim() ||
+        location?.formattedAddress;
+
+      try {
+        const place = suggestion.prediction.toPlace();
+        await place.fetchFields({
+          fields: ["displayName", "formattedAddress", "location", "photos", "id"],
+        });
+        return {
+          placeId: place.id || suggestion.placeId,
+          formattedAddress: place.formattedAddress || fallbackAddress,
+          photoUrl: place.photos?.[0]?.getURI?.({ maxWidth: 480, maxHeight: 320 }),
+          lat: getCoordinate(place.location?.lat) ?? location?.lat,
+          lng: getCoordinate(place.location?.lng) ?? location?.lng,
+        };
+      } catch {
+        if (placesLibrary?.Place) {
+          try {
+            const place = new placesLibrary.Place({ id: suggestion.placeId });
+            await place.fetchFields({
+              fields: ["displayName", "formattedAddress", "location", "photos", "id"],
+            });
+            return {
+              placeId: place.id || suggestion.placeId,
+              formattedAddress: place.formattedAddress || fallbackAddress,
+              photoUrl: place.photos?.[0]?.getURI?.({ maxWidth: 480, maxHeight: 320 }),
+              lat: getCoordinate(place.location?.lat) ?? location?.lat,
+              lng: getCoordinate(place.location?.lng) ?? location?.lng,
+            };
+          } catch {
+            return {
+              placeId: suggestion.placeId,
+              formattedAddress: fallbackAddress,
+              lat: location?.lat,
+              lng: location?.lng,
+            };
+          }
+        }
+        return {
+          placeId: suggestion.placeId,
+          formattedAddress: fallbackAddress,
+          lat: location?.lat,
+          lng: location?.lng,
+        };
+      }
+    },
+    [ensurePlacesLibrary, location?.formattedAddress, location?.lat, location?.lng, streetAddress]
+  );
+
+  useEffect(() => {
+    if (!locationConfirmed || !businessName.trim() || selectedSuggestion) {
+      setBusinessSuggestions([]);
+      setIsSuggestionsLoading(false);
+      return;
+    }
+
+    const requestId = suggestionRequestIdRef.current + 1;
+    suggestionRequestIdRef.current = requestId;
+
+    const timer = globalThis.setTimeout(async () => {
+      const placesLibrary = await ensurePlacesLibrary();
+      if (!placesLibrary) return;
+
+      if (!sessionTokenRef.current) {
+        sessionTokenRef.current = new placesLibrary.AutocompleteSessionToken();
+      }
+
+      setIsSuggestionsLoading(true);
+
+      try {
+        const { suggestions = [] } =
+          await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+            input: businessName.trim(),
+            includedRegionCodes: country === "US" ? ["US"] : undefined,
+            inputOffset: businessName.trim().length,
+            sessionToken: sessionTokenRef.current,
+          });
+
+        if (suggestionRequestIdRef.current !== requestId) return;
+
+        setBusinessSuggestions(
+          suggestions
+            .map((item) => {
+              const prediction = item.placePrediction;
+              if (!prediction) return null;
+              return {
+                placeId: prediction.placeId,
+                label: prediction.text?.text || prediction.mainText?.text || businessName.trim(),
+                primaryText:
+                  prediction.mainText?.text || prediction.text?.text || businessName.trim(),
+                secondaryText: prediction.secondaryText?.text,
+                prediction,
+              } satisfies BusinessSuggestion;
+            })
+            .filter((item): item is BusinessSuggestion => !!item)
+            .slice(0, 5)
+        );
+      } catch {
+        if (suggestionRequestIdRef.current === requestId) {
+          setBusinessSuggestions([]);
+        }
+      } finally {
+        if (suggestionRequestIdRef.current === requestId) {
+          setIsSuggestionsLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => globalThis.clearTimeout(timer);
+  }, [businessName, country, ensurePlacesLibrary, locationConfirmed, selectedSuggestion]);
+
+  const handleZipChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = event.target.value;
+    const value = country === "US" ? raw.replace(/\D/g, "").slice(0, 5) : raw;
+    actions.setLocationRaw(value);
   };
 
-  const handleSubmit = () => {
-    if (!isValidZip || isFetching) return;
+  const handleLocationSubmit = () => {
+    if (!isValidZip || isLocationBusy) return;
     void actions.submitLocation();
   };
 
-  const fetchPlaceDetails = async (
-    suggestion: BusinessSuggestion
-  ): Promise<ResolvedBusinessPlace | null> => {
-    const placesLibrary = await ensurePlacesLibrary();
-    const getCoordinate = (value?: number | (() => number)) =>
-      typeof value === "function" ? value() : value;
-    const getFallbackAddress = () => {
-      const secondary = suggestion.secondaryText?.trim();
-      if (secondary) return secondary;
-      const label = suggestion.label?.trim();
-      if (label && label !== suggestion.primaryText) return label;
-      return addressValueRef.current.trim() || location?.formattedAddress;
-    };
-    const baseResolvedPlace: ResolvedBusinessPlace = {
-      name: suggestion.primaryText || businessName.trim(),
-      formattedAddress: getFallbackAddress(),
-      placeId: suggestion.placeId,
-      lat: location?.lat,
-      lng: location?.lng,
-    };
-    const toResolvedPlace = (place: {
-      id?: string;
-      displayName?: string | { text?: string };
-      formattedAddress?: string;
-      location?: { lat?: number | (() => number); lng?: number | (() => number) };
-      photos?: Array<{ getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string }>;
-    }): ResolvedBusinessPlace => {
-      let photoUrl: string | undefined;
-      try {
-        photoUrl = place.photos?.[0]?.getURI?.({ maxWidth: 400, maxHeight: 300 });
-      } catch {
-        photoUrl = undefined;
-      }
-
-      const name =
-        typeof place.displayName === "string"
-          ? place.displayName
-          : place.displayName?.text || suggestion.primaryText || businessName.trim();
-
-      return {
-        name,
-        formattedAddress: place.formattedAddress || getFallbackAddress(),
-        placeId: place.id || suggestion.placeId,
-        photoUrl: photoUrl || baseResolvedPlace.photoUrl,
-        lat: getCoordinate(place.location?.lat) ?? baseResolvedPlace.lat,
-        lng: getCoordinate(place.location?.lng) ?? baseResolvedPlace.lng,
-      };
-    };
-
-    try {
-      const place = suggestion.prediction.toPlace();
-      await place.fetchFields({
-        fields: ["displayName", "formattedAddress", "location", "photos", "id"],
-      });
-      return toResolvedPlace(place);
-    } catch {
-      if (placesLibrary?.Place) {
-        try {
-          const fallbackPlace = new placesLibrary.Place({ id: suggestion.placeId });
-          await fallbackPlace.fetchFields({
-            fields: ["displayName", "formattedAddress", "location", "photos", "id"],
-          });
-          return toResolvedPlace(fallbackPlace);
-        } catch {
-          // Fall through to suggestion-only fallback
-        }
-      }
-
-      return baseResolvedPlace;
-    }
+  const resetBusinessFlow = () => {
+    setBusinessName("");
+    setStreetAddress("");
+    setBusinessError(null);
+    setGoogleError(null);
+    setSelectedSuggestion(null);
+    setPreviewBusiness(null);
+    setBusinessSuggestions([]);
+    sessionTokenRef.current = null;
+    actions.setBusiness("");
   };
 
-  const handleSelectSuggestion = async (suggestion: BusinessSuggestion) => {
+  const commitBusinessPreview = (business: BusinessData) => {
+    setPreviewBusiness(business);
+    actions.setBusiness(business.name, {
+      address: business.address,
+      placeId: business.placeId,
+      formattedAddress: business.formattedAddress,
+      photoUrl: business.photoUrl,
+      lat: business.lat,
+      lng: business.lng,
+    });
+  };
+
+  const handleSuggestionSelect = async (suggestion: BusinessSuggestion) => {
     setBusinessError(null);
+    setSelectedSuggestion(suggestion);
     setBusinessSuggestions([]);
     setIsResolvingBusiness(true);
 
-    const previewPlace: ResolvedBusinessPlace = {
-      name: suggestion.primaryText || businessName.trim(),
-      formattedAddress:
-        suggestion.secondaryText || suggestion.label || addressValueRef.current.trim() || undefined,
+    const preview = buildPreviewBusiness({
       placeId: suggestion.placeId,
-      lat: location?.lat,
-      lng: location?.lng,
-    };
-
-    setSelectedPlace(previewPlace);
-    setBusinessName(previewPlace.name);
-    actions.setBusiness(previewPlace.name, {
-      address: addressValueRef.current.trim() || undefined,
-      placeId: previewPlace.placeId,
-      formattedAddress: previewPlace.formattedAddress,
-      lat: previewPlace.lat,
-      lng: previewPlace.lng,
+      formattedAddress: suggestion.secondaryText || suggestion.label,
+    });
+    setBusinessName(suggestion.primaryText);
+    commitBusinessPreview({
+      ...preview,
+      name: suggestion.primaryText || preview.name,
     });
 
     try {
-      const place = await fetchPlaceDetails(suggestion);
-      if (!place) return;
-
-      setSelectedPlace(place);
-      setBusinessName(place.name);
-
-      actions.setBusiness(place.name, {
-        address: addressValueRef.current.trim() || undefined,
-        placeId: place.placeId,
-        formattedAddress: place.formattedAddress,
-        photoUrl: place.photoUrl,
-        lat: place.lat,
-        lng: place.lng,
+      const details = await enrichSuggestion(suggestion);
+      commitBusinessPreview({
+        ...preview,
+        name: suggestion.primaryText || preview.name,
+        ...details,
       });
-    } catch {
-      // Keep the optimistic business card data if Google detail hydration fails.
     } finally {
-      sessionTokenRef.current = null;
       setIsResolvingBusiness(false);
+      sessionTokenRef.current = null;
     }
   };
 
-  const resolveBusinessFromQuery = async () => {
-    const placesLibrary = await ensurePlacesLibrary();
-    if (!placesLibrary || !businessName.trim()) return null;
-
-    const query = [businessName.trim(), addressValue.trim(), location?.city, location?.state]
-      .filter(Boolean)
-      .join(", ");
-    if (!query) return null;
-
-    const sessionToken = new placesLibrary.AutocompleteSessionToken();
-    const timeoutPromise = new Promise<null>((resolve) => {
-      globalThis.setTimeout(() => resolve(null), 1500);
-    });
-
-    const lookupPromise = (async () => {
-      const { suggestions = [] } =
-        await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-          input: query,
-          includedRegionCodes: country === "US" ? ["US"] : undefined,
-          inputOffset: query.length,
-          sessionToken,
-        });
-
-      const match = suggestions[0]?.placePrediction;
-      if (!match) return null;
-
-      return fetchPlaceDetails({
-        placeId: match.placeId,
-        label: match.text?.text || match.mainText?.text || query,
-        primaryText: match.mainText?.text || match.text?.text || query,
-        secondaryText: match.secondaryText?.text,
-        prediction: match,
-      });
-    })().catch(() => null);
-
-    return Promise.race([lookupPromise, timeoutPromise]);
-  };
-
-  const handleBusinessSearch = async () => {
-    if (!businessName.trim()) return;
-    if (!isValidZip) {
-      setBusinessError("Please enter your ZIP code above first.");
-      zipRef.current?.focus();
+  const handleBusinessContinue = async () => {
+    if (!businessName.trim()) {
+      setBusinessError("Enter your business name to continue.");
       return;
     }
+    if (!locationConfirmed) {
+      setBusinessError("Confirm your location first.");
+      return;
+    }
+
     setBusinessError(null);
     setIsResolvingBusiness(true);
 
-    const optimisticPlace: ResolvedBusinessPlace = {
-      name: businessName.trim(),
-      formattedAddress: addressValue.trim() || location?.formattedAddress,
-      lat: location?.lat,
-      lng: location?.lng,
-    };
-
-    setSelectedPlace((current) => current ?? optimisticPlace);
-    actions.setBusiness(optimisticPlace.name, {
-      address: addressValue.trim() || undefined,
-      formattedAddress: optimisticPlace.formattedAddress,
-      lat: optimisticPlace.lat,
-      lng: optimisticPlace.lng,
-    });
+    const preview = buildPreviewBusiness();
+    commitBusinessPreview(preview);
 
     try {
-      let place = selectedPlace;
-      if (!place && businessSuggestions.length > 0) {
-        await handleSelectSuggestion(businessSuggestions[0]);
+      if (selectedSuggestion) {
+        const details = await enrichSuggestion(selectedSuggestion);
+        commitBusinessPreview({ ...preview, ...details });
+      } else if (businessSuggestions[0]) {
+        await handleSuggestionSelect(businessSuggestions[0]);
         return;
       }
-
-      // Use selected place from autocomplete if available
-      place = place ?? (await resolveBusinessFromQuery());
-      if (place) {
-        setSelectedPlace(place);
-        actions.setBusiness(place.name || businessName.trim(), {
-          address: addressValue.trim() || undefined,
-          placeId: place.placeId,
-          formattedAddress: place.formattedAddress,
-          photoUrl: place.photoUrl,
-          lat: place.lat,
-          lng: place.lng,
-        });
-      } else {
-        // Fallback: use manual input without Google data
-        actions.setBusiness(businessName.trim(), {
-          address: addressValue.trim() || undefined,
-        });
-      }
-
-      // Geocode ZIP if not already done
-      if (!locationConfirmed) {
-        void actions.submitLocation();
-      }
     } finally {
-      sessionTokenRef.current = null;
       setIsResolvingBusiness(false);
     }
   };
 
+  const handleConfirmBusiness = () => {
+    if (activeBusiness && !state.business) {
+      actions.setBusiness(activeBusiness.name, {
+        address: activeBusiness.address,
+        placeId: activeBusiness.placeId,
+        formattedAddress: activeBusiness.formattedAddress,
+        photoUrl: activeBusiness.photoUrl,
+        lat: activeBusiness.lat,
+        lng: activeBusiness.lng,
+      });
+      globalThis.setTimeout(() => actions.confirmBusiness(), 0);
+      return;
+    }
+    actions.confirmBusiness();
+  };
+
+  const businessSummaryLine = useMemo(() => {
+    if (!activeBusiness) return null;
+    return (
+      activeBusiness.formattedAddress ||
+      activeBusiness.address ||
+      location?.formattedAddress ||
+      null
+    );
+  }, [activeBusiness, location?.formattedAddress]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div>
         <h1
           style={{
-            fontSize: "clamp(28px,6vw,52px)",
-            fontWeight: 800,
-            letterSpacing: "-1.8px",
-            color: T.textPrimary,
             margin: 0,
-            marginBottom: 6,
-            lineHeight: 1.08,
+            fontSize: "clamp(28px,6vw,50px)",
+            lineHeight: 1.05,
+            letterSpacing: "-1.6px",
+            color: T.textPrimary,
+            fontWeight: 800,
             textTransform: "lowercase",
           }}
         >
-          unlock your{" "}
-          <span
-            style={{
-              background: "linear-gradient(135deg,#4F8CFF 0%,#22D3EE 50%,#06B6D4 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            energy savings
-          </span>
-          …
+          unlock your <span style={{ color: T.accent }}>energy savings</span>
         </h1>
-
-        <p style={{ fontSize: 15, color: T.textSub, margin: 0, marginBottom: 4, lineHeight: 1.6 }}>
-          Enter your location to get utility rates, solar potential, and incentive data.
-        </p>
-
-        <p
-          style={{
-            fontSize: 11,
-            color: T.textMuted,
-            margin: 0,
-            letterSpacing: "0.04em",
-            fontWeight: 500,
-          }}
-        >
-          Utility rates · Solar potential · Demand charges · Incentives
+        <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.6, color: T.textSecondary }}>
+          Confirm your ZIP, then match your business so Merlin can route you into the right
+          questionnaire immediately.
         </p>
       </div>
 
-      {/* ── Confirmed city/state ──────────────────────────────────────────── */}
-      {locationConfirmed && location && (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "#4ade80",
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{ fontSize: 20, fontWeight: 700, color: T.textPrimary, letterSpacing: "-0.3px" }}
-          >
-            {location.city && <span>{location.city}</span>}
-            {location.city && location.state && (
-              <span style={{ color: "rgba(232,235,243,0.35)", margin: "0 4px" }}>,</span>
-            )}
-            {location.state && <span style={{ color: T.accent }}>{location.state}</span>}
-          </span>
+      {error && (
+        <div
+          style={{
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "rgba(239,68,68,0.10)",
+            border: "1px solid rgba(239,68,68,0.26)",
+            color: "#fca5a5",
+            fontSize: 13,
+          }}
+        >
+          {error.message}
         </div>
       )}
 
-      {/* ── Intel strip ──────────────────────────────────────────────────── */}
-      {showIntelStrip && <IntelStripInline intel={intelStripData} />}
-
-      {/* ── Primary input block ──────────────────────────────────────────── */}
-      <div>
-        {/* Country toggle + ZIP row */}
+      <div
+        style={{
+          padding: 18,
+          borderRadius: 14,
+          background: T.panel,
+          border: `1px solid ${T.panelBorder}`,
+        }}
+      >
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          {/* Country toggle */}
-          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-            {(["US", "International"] as Country[]).map((c) => (
+          <div style={{ display: "flex", gap: 6 }}>
+            {(["US", "International"] as Country[]).map((value) => (
               <button
-                key={c}
+                key={value}
                 type="button"
-                onClick={() => setCountry(c)}
+                onClick={() => setCountry(value)}
                 style={{
-                  height: 44,
+                  height: 42,
                   padding: "0 14px",
                   borderRadius: 8,
                   border:
-                    country === c
-                      ? "1px solid rgba(62,207,142,0.45)"
+                    country === value
+                      ? `1px solid ${T.accentBorder}`
                       : "1px solid rgba(255,255,255,0.08)",
-                  background: country === c ? T.accentDim : "rgba(255,255,255,0.03)",
-                  color: country === c ? T.accent : "rgba(232,235,243,0.70)",
-                  fontWeight: 600,
-                  cursor: "pointer",
+                  background: country === value ? T.accentSoft : "rgba(255,255,255,0.03)",
+                  color: country === value ? T.accent : T.textSecondary,
                   fontSize: 13,
-                  transition: "all 0.15s ease",
+                  fontWeight: 700,
+                  cursor: "pointer",
                 }}
               >
-                {c === "US" ? "US" : "Intl"}
+                {value === "US" ? "US" : "Intl"}
               </button>
             ))}
           </div>
 
-          {/* ZIP input — or confirmed card */}
           {!locationConfirmed ? (
             <>
-              <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
-                {/* Location pin icon */}
-                <span
-                  style={{
-                    position: "absolute",
-                    left: 14,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    fontSize: 17,
-                    color: "rgba(62,207,142,0.45)",
-                    pointerEvents: "none",
-                  }}
-                >
-                  ◎
-                </span>
-                <input
-                  ref={zipRef}
-                  id="merlin-zip-input"
-                  type="text"
-                  inputMode={country === "US" ? "numeric" : "text"}
-                  value={locationRaw}
-                  onChange={handleZipChange}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSubmit();
-                  }}
-                  placeholder={country === "US" ? "ZIP code (e.g., 89052)" : "Postal code"}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  style={{
-                    width: "100%",
-                    height: 52,
-                    paddingLeft: 40,
-                    paddingRight: 14,
-                    borderRadius: 8,
-                    border: isValidZip
-                      ? "1px solid rgba(62,207,142,0.30)"
-                      : "1px solid rgba(255,255,255,0.06)",
-                    background:
-                      "linear-gradient(135deg,rgba(139,92,246,0.09),rgba(59,130,246,0.09))",
-                    fontSize: 17,
-                    color: T.textPrimary,
-                    outline: "none",
-                    transition: "border-color 0.2s",
-                    boxSizing: "border-box",
-                  }}
-                />
-              </div>
-
-              {/* Inline Continue button */}
+              <input
+                ref={zipRef}
+                type="text"
+                inputMode={country === "US" ? "numeric" : "text"}
+                value={locationRaw}
+                onChange={handleZipChange}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") handleLocationSubmit();
+                }}
+                placeholder={country === "US" ? "ZIP code" : "Postal code"}
+                style={{
+                  flex: 1,
+                  minWidth: 220,
+                  height: 52,
+                  borderRadius: 10,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: T.input,
+                  color: T.textPrimary,
+                  padding: "0 14px",
+                  fontSize: 18,
+                  outline: "none",
+                }}
+              />
               <button
                 type="button"
-                onClick={handleSubmit}
-                disabled={!isValidZip || isFetching}
+                onClick={handleLocationSubmit}
+                disabled={!isValidZip || isLocationBusy}
                 style={{
-                  height: 44,
-                  padding: "0 20px",
-                  borderRadius: 8,
-                  border:
-                    !isValidZip || isFetching
-                      ? "2px solid rgba(255,255,255,0.08)"
-                      : `2px solid ${T.accent}`,
-                  background: "transparent",
-                  color: !isValidZip || isFetching ? "rgba(232,235,243,0.25)" : T.accent,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: !isValidZip || isFetching ? "not-allowed" : "pointer",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                  transition: "all 0.15s ease",
+                  height: 46,
+                  padding: "0 18px",
+                  borderRadius: 10,
+                  border: `1px solid ${isValidZip ? T.accentBorder : "rgba(255,255,255,0.08)"}`,
+                  background: isValidZip ? T.accentSoft : "rgba(255,255,255,0.03)",
+                  color: isValidZip ? T.accent : T.textMuted,
+                  fontWeight: 700,
+                  cursor: isValidZip ? "pointer" : "not-allowed",
                 }}
               >
-                {isFetching ? "Analyzing…" : "Continue →"}
+                {isLocationBusy ? "Checking..." : "Confirm Location"}
               </button>
             </>
           ) : (
-            /* Confirmed pill */
             <div
               style={{
                 flex: 1,
-                borderRadius: 8,
-                padding: "10px 14px",
-                background: "rgba(62,207,142,0.06)",
-                border: "1px solid rgba(62,207,142,0.20)",
+                minWidth: 240,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                gap: 10,
+                gap: 12,
+                padding: "10px 12px",
+                borderRadius: 10,
+                background: T.accentSoft,
+                border: `1px solid ${T.accentBorder}`,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ color: T.accent, fontWeight: 700 }}>✓</span>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: T.textPrimary }}>
-                    Location confirmed
-                  </div>
-                  <div style={{ fontSize: 12, color: T.textSub }}>
-                    {location?.zip ?? normalizedZip}
-                  </div>
+              <div>
+                <div style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase" }}>
+                  Location Confirmed
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: T.textPrimary }}>
+                  {location.city && location.state
+                    ? `${location.city}, ${location.state}`
+                    : location.formattedAddress}
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => {
+                  resetBusinessFlow();
                   actions.clearLocation();
-                  setBusinessName("");
-                  setAddressValue("");
-                  setSelectedPlace(null);
-                  setBusinessError(null);
-                  requestAnimationFrame(() => zipRef.current?.focus());
                 }}
                 style={{
-                  padding: "5px 11px",
-                  borderRadius: 8,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(255,255,255,0.03)",
-                  color: T.textSub,
-                  fontSize: 12,
-                  fontWeight: 500,
+                  border: "none",
+                  background: "transparent",
+                  color: T.textSecondary,
+                  fontWeight: 700,
                   cursor: "pointer",
                 }}
               >
@@ -755,485 +622,94 @@ export function Step1V8({ state, actions }: Step1Props) {
         </div>
       </div>
 
-      {/* ── Error ────────────────────────────────────────────────────────── */}
-      {error && (
-        <div
-          style={{
-            padding: "10px 14px",
-            borderRadius: 10,
-            background: "rgba(239,68,68,0.08)",
-            border: "1px solid rgba(239,68,68,0.25)",
-            fontSize: 13,
-            color: "#f87171",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <span>⚠️</span>
-          <span style={{ flex: 1 }}>{error.message}</span>
-          <button
-            onClick={actions.clearError}
-            style={{
-              color: "#fca5a5",
-              textDecoration: "underline",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: 12,
-            }}
-          >
-            dismiss
-          </button>
-        </div>
-      )}
+      {showIntelStrip && <IntelStripInline intel={intelStripData} />}
 
-      {/* ── Grid Reliability Question (shown after location confirmed) ──────── */}
       {locationConfirmed && !activeBusiness && (
         <div
           style={{
-            padding: 20,
-            borderRadius: 12,
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            marginBottom: 20,
+            padding: 18,
+            borderRadius: 14,
+            background: T.panel,
+            border: `1px solid ${T.panelBorder}`,
+            display: "grid",
+            gap: 16,
           }}
         >
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary, marginBottom: 4 }}>
-              ⚡ How reliable is your grid power?
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: T.textPrimary }}>
+              Match your business
             </div>
-            <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>
-              This helps us determine if backup generation is needed for your facility.
+            <div style={{ fontSize: 13, lineHeight: 1.5, color: T.textSecondary }}>
+              Merlin uses your business match to detect industry and skip Step 2 when possible.
             </div>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-              gap: 10,
-            }}
-          >
-            {(
-              [
-                {
-                  value: "reliable",
-                  label: "✅ Reliable",
-                  desc: "Rare outages",
-                  color: "rgba(34,197,94,0.20)",
-                  activeColor: "rgba(34,197,94,0.50)",
-                },
-                {
-                  value: "occasional-outages",
-                  label: "⚠️ Occasional",
-                  desc: "Few times/year",
-                  color: "rgba(251,191,36,0.20)",
-                  activeColor: "rgba(251,191,36,0.50)",
-                },
-                {
-                  value: "frequent-outages",
-                  label: "🔴 Frequent",
-                  desc: "Monthly issues",
-                  color: "rgba(249,115,22,0.20)",
-                  activeColor: "rgba(249,115,22,0.50)",
-                },
-                {
-                  value: "unreliable",
-                  label: "💥 Unreliable",
-                  desc: "Weekly outages",
-                  color: "rgba(239,68,68,0.20)",
-                  activeColor: "rgba(239,68,68,0.50)",
-                },
-              ] as const
-            ).map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => actions.setGridReliability(option.value)}
-                style={{
-                  padding: 12,
-                  borderRadius: 10,
-                  border:
-                    state.gridReliability === option.value
-                      ? `2px solid ${option.activeColor}`
-                      : "1px solid rgba(255,255,255,0.08)",
-                  background:
-                    state.gridReliability === option.value
-                      ? option.color
-                      : "rgba(255,255,255,0.02)",
-                  color: T.textPrimary,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  textAlign: "center",
-                  transition: "all 0.15s ease",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 4,
-                }}
-              >
-                <div>{option.label}</div>
-                <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 400 }}>
-                  {option.desc}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {(state.gridReliability === "frequent-outages" ||
-            state.gridReliability === "unreliable") && (
+          {googleError && (
             <div
               style={{
-                marginTop: 12,
-                padding: 10,
-                borderRadius: 8,
-                background: "rgba(239,68,68,0.08)",
-                border: "1px solid rgba(239,68,68,0.25)",
+                padding: "10px 12px",
+                borderRadius: 10,
+                background: T.warning,
+                border: `1px solid ${T.warningBorder}`,
+                color: "rgba(251,191,36,0.92)",
                 fontSize: 12,
-                color: "#fca5a5",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
               }}
             >
-              <span>🔋</span>
-              <span style={{ flex: 1 }}>
-                <strong>Backup generator recommended.</strong> We'll include it in your quote
-                automatically.
-              </span>
+              {googleError} You can still continue with a typed business name.
             </div>
           )}
-        </div>
-      )}
 
-      {/* ── Add-on Preferences (shown after location confirmed) ───────────── */}
-      {locationConfirmed && !activeBusiness && (
-        <div
-          style={{
-            padding: 20,
-            borderRadius: 12,
-            background: "rgba(139,92,246,0.04)",
-            border: "1px solid rgba(139,92,246,0.20)",
-            marginBottom: 20,
-          }}
-        >
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary, marginBottom: 4 }}>
-              💡 Enhance Your Energy System
-            </div>
-            <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>
-              Let Merlin know if you want solar, EV charging, or backup power — we'll optimize your
-              BESS sizing accordingly.
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 12,
-            }}
-          >
-            {/* Solar checkbox */}
-            <button
-              type="button"
-              onClick={() => actions.setAddonPreference("solar", !state.wantsSolar)}
-              style={{
-                padding: 14,
-                borderRadius: 10,
-                border: state.wantsSolar
-                  ? "2px solid rgba(251,191,36,0.50)"
-                  : "1px solid rgba(255,255,255,0.08)",
-                background: state.wantsSolar ? "rgba(251,191,36,0.08)" : "rgba(255,255,255,0.02)",
-                color: T.textPrimary,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-                textAlign: "left",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                transition: "all 0.15s ease",
-              }}
-            >
-              <div
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 6,
-                  border: state.wantsSolar
-                    ? "2px solid #fbbf24"
-                    : "2px solid rgba(255,255,255,0.15)",
-                  background: state.wantsSolar ? "#fbbf24" : "transparent",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {state.wantsSolar && <span style={{ fontSize: 12, color: "#000" }}>✓</span>}
-              </div>
-              <span style={{ flex: 1 }}>☀️ Add Solar PV</span>
-            </button>
-
-            {/* EV Charging checkbox */}
-            <button
-              type="button"
-              onClick={() => actions.setAddonPreference("ev", !state.wantsEVCharging)}
-              style={{
-                padding: 14,
-                borderRadius: 10,
-                border: state.wantsEVCharging
-                  ? "2px solid rgba(59,130,246,0.50)"
-                  : "1px solid rgba(255,255,255,0.08)",
-                background: state.wantsEVCharging
-                  ? "rgba(59,130,246,0.08)"
-                  : "rgba(255,255,255,0.02)",
-                color: T.textPrimary,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-                textAlign: "left",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                transition: "all 0.15s ease",
-              }}
-            >
-              <div
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 6,
-                  border: state.wantsEVCharging
-                    ? "2px solid #3b82f6"
-                    : "2px solid rgba(255,255,255,0.15)",
-                  background: state.wantsEVCharging ? "#3b82f6" : "transparent",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {state.wantsEVCharging && <span style={{ fontSize: 12, color: "#fff" }}>✓</span>}
-              </div>
-              <span style={{ flex: 1 }}>⚡ Add EV Charging</span>
-            </button>
-
-            {/* Generator checkbox */}
-            <button
-              type="button"
-              onClick={() => actions.setAddonPreference("generator", !state.wantsGenerator)}
-              style={{
-                padding: 14,
-                borderRadius: 10,
-                border: state.wantsGenerator
-                  ? "2px solid rgba(239,68,68,0.50)"
-                  : "1px solid rgba(255,255,255,0.08)",
-                background: state.wantsGenerator
-                  ? "rgba(239,68,68,0.08)"
-                  : "rgba(255,255,255,0.02)",
-                color: T.textPrimary,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-                textAlign: "left",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                transition: "all 0.15s ease",
-              }}
-            >
-              <div
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 6,
-                  border: state.wantsGenerator
-                    ? "2px solid #ef4444"
-                    : "2px solid rgba(255,255,255,0.15)",
-                  background: state.wantsGenerator ? "#ef4444" : "transparent",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {state.wantsGenerator && <span style={{ fontSize: 12, color: "#fff" }}>✓</span>}
-              </div>
-              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6 }}>
-                <span>🔋 Add Generator</span>
-                {(state.gridReliability === "frequent-outages" ||
-                  state.gridReliability === "unreliable") &&
-                  state.wantsGenerator && (
-                    <span
-                      style={{
-                        fontSize: 9,
-                        padding: "2px 6px",
-                        borderRadius: 4,
-                        background: "rgba(251,191,36,0.20)",
-                        color: "#fbbf24",
-                        fontWeight: 700,
-                        letterSpacing: "0.5px",
-                      }}
-                    >
-                      AUTO
-                    </span>
-                  )}
-              </div>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Find My Business / Business Confirmation ──────────────────────── */}
-      {locationConfirmed && !activeBusiness ? (
-        /* Business search form */
-        <div
-          style={{
-            padding: 20,
-            borderRadius: 12,
-            background: T.cardBg,
-            border: `1px solid ${T.cardBorder}`,
-          }}
-        >
-          {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 9,
-                background: T.accentDim,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={T.accent}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
-                Find My Business
-              </div>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 500,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Skip industry selection
-              </div>
-            </div>
-          </div>
-
-          <p
-            style={{
-              fontSize: 12,
-              color: "rgba(255,255,255,0.40)",
-              margin: "0 0 14px 44px",
-              lineHeight: 1.6,
-            }}
-          >
-            Merlin will detect your industry and skip straight to your custom questionnaire.
-          </p>
-
-          {/* Business name validation error */}
           {businessError && (
             <div
               style={{
-                marginBottom: 10,
-                padding: "8px 12px",
-                borderRadius: 8,
-                background: "rgba(251,191,36,0.08)",
-                border: "1px solid rgba(251,191,36,0.25)",
+                padding: "10px 12px",
+                borderRadius: 10,
+                background: "rgba(239,68,68,0.10)",
+                border: "1px solid rgba(239,68,68,0.24)",
+                color: "#fca5a5",
                 fontSize: 12,
-                color: "rgba(251,191,36,0.9)",
-                display: "flex",
-                gap: 6,
               }}
             >
-              <span>⚠️</span>
-              <span>{businessError}</span>
+              {businessError}
             </div>
           )}
 
-          {/* Business Name */}
-          <div style={{ marginBottom: 14 }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: 10,
-                fontWeight: 500,
-                color: T.textMuted,
-                marginBottom: 4,
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-              }}
-            >
-              Business Name
-            </label>
+          <div style={{ display: "grid", gap: 12 }}>
             <input
-              ref={businessInputRef}
               type="text"
               value={businessName}
-              onChange={(e) => {
-                setBusinessName(e.target.value);
+              onChange={(event) => {
+                setBusinessName(event.target.value);
                 setBusinessError(null);
-                if (!e.target.value.trim()) {
-                  sessionTokenRef.current = null;
-                  setBusinessSuggestions([]);
-                  setSelectedPlace(null);
-                }
-                // Clear selectedPlace when user types manually
-                if (selectedPlace) {
-                  setSelectedPlace(null);
+                setSelectedSuggestion(null);
+                setPreviewBusiness(null);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  void handleBusinessContinue();
                 }
               }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleBusinessSearch();
-                }
-              }}
-              placeholder="e.g., Wow Car Wash, Sunset Hotel, City Hospital"
-              autoComplete="new-password"
+              placeholder="Business name"
+              autoComplete="off"
               style={{
                 width: "100%",
-                height: 42,
-                padding: "0 12px",
-                borderRadius: 7,
-                border: "1px solid rgba(255,255,255,0.06)",
-                background: T.inputBg,
-                fontSize: 13,
+                height: 46,
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.10)",
+                background: T.input,
                 color: T.textPrimary,
+                padding: "0 14px",
+                fontSize: 14,
                 outline: "none",
                 boxSizing: "border-box",
               }}
             />
 
-            {businessSuggestions.length > 0 && !selectedPlace && (
+            {businessSuggestions.length > 0 && !selectedSuggestion && (
               <div
                 style={{
-                  marginTop: 8,
-                  borderRadius: 8,
+                  borderRadius: 12,
                   border: "1px solid rgba(255,255,255,0.08)",
                   background: "rgba(8,11,20,0.98)",
                   overflow: "hidden",
@@ -1243,158 +719,111 @@ export function Step1V8({ state, actions }: Step1Props) {
                   <button
                     key={suggestion.placeId}
                     type="button"
-                    onClick={() => void handleSelectSuggestion(suggestion)}
+                    onClick={() => void handleSuggestionSelect(suggestion)}
                     style={{
                       width: "100%",
-                      padding: "10px 12px",
+                      padding: "12px 14px",
                       border: "none",
                       borderTop: index === 0 ? "none" : "1px solid rgba(255,255,255,0.06)",
                       background: "transparent",
                       color: T.textPrimary,
                       textAlign: "left",
                       cursor: "pointer",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 3,
                     }}
                   >
-                    <span style={{ fontSize: 12, fontWeight: 600 }}>{suggestion.primaryText}</span>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{suggestion.primaryText}</div>
                     {suggestion.secondaryText && (
-                      <span style={{ fontSize: 11, color: T.textSub }}>
+                      <div style={{ marginTop: 3, fontSize: 11, color: T.textSecondary }}>
                         {suggestion.secondaryText}
-                      </span>
+                      </div>
                     )}
                   </button>
                 ))}
               </div>
             )}
 
-            {/* Helper text - show when typing but no selection */}
-            {businessName.trim() && !selectedPlace && (
-              <div
-                style={{
-                  marginTop: 8,
-                  padding: "8px 12px",
-                  borderRadius: 6,
-                  background: "rgba(59,130,246,0.08)",
-                  border: "1px solid rgba(59,130,246,0.25)",
-                  fontSize: 11,
-                  color: "rgba(59,130,246,0.9)",
-                  display: "flex",
-                  gap: 6,
-                  alignItems: "flex-start",
-                }}
-              >
-                <span>ℹ️</span>
-                <span>
-                  {isSuggestionsLoading ? (
-                    <>Searching Google Places for matching businesses…</>
-                  ) : businessSuggestions.length > 0 ? (
-                    <>
-                      <strong>Select from the dropdown</strong> to get business photo, map, and
-                      verified address
-                    </>
-                  ) : (
-                    <>You can continue with a typed business name if no match appears.</>
-                  )}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Street Address */}
-          <div style={{ marginBottom: 14 }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: 10,
-                fontWeight: 500,
-                color: T.textMuted,
-                marginBottom: 4,
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-              }}
-            >
-              Street Address{" "}
-              <span style={{ opacity: 0.6, fontWeight: 400, textTransform: "none" }}>
-                (optional — improves map accuracy)
-              </span>
-            </label>
             <input
               type="text"
-              value={addressValue}
-              onChange={(e) => {
-                setAddressValue(e.target.value);
+              value={streetAddress}
+              onChange={(event) => {
+                setStreetAddress(event.target.value);
                 setBusinessError(null);
-                actions.setBusinessAddress(e.target.value);
               }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleBusinessSearch();
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  void handleBusinessContinue();
                 }
               }}
-              placeholder="e.g., 1234 S Maryland Parkway"
+              placeholder="Street address (optional)"
               style={{
                 width: "100%",
-                height: 42,
-                padding: "0 12px",
-                borderRadius: 7,
-                border: "1px solid rgba(255,255,255,0.06)",
-                background: T.inputBg,
-                fontSize: 13,
+                height: 46,
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.10)",
+                background: T.input,
                 color: T.textPrimary,
+                padding: "0 14px",
+                fontSize: 14,
                 outline: "none",
                 boxSizing: "border-box",
               }}
             />
           </div>
 
-          {/* Search button */}
-          <button
-            type="button"
-            onClick={handleBusinessSearch}
-            disabled={!businessName.trim() || isBusinessSubmitting}
-            style={{
-              width: "100%",
-              padding: "11px 18px",
-              borderRadius: 8,
-              border:
-                !businessName.trim() || isBusinessSubmitting
-                  ? "2px solid rgba(255,255,255,0.08)"
-                  : "2px solid #10b981",
-              background: "transparent",
-              color:
-                !businessName.trim() || isBusinessSubmitting ? "rgba(232,235,243,0.25)" : "#10b981",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: !businessName.trim() || isBusinessSubmitting ? "not-allowed" : "pointer",
-              transition: "all 0.15s ease",
-            }}
-          >
-            {isBusinessSubmitting
-              ? "Detecting..."
-              : selectedPlace
-                ? "Continue with " + selectedPlace.name
-                : "Continue with typed business name"}
-          </button>
+          <div style={{ display: "grid", gap: 10 }}>
+            {businessName.trim() && !selectedSuggestion && (
+              <div style={{ fontSize: 12, color: T.textSecondary }}>
+                {isSuggestionsLoading
+                  ? "Searching Google Places..."
+                  : businessSuggestions.length > 0
+                    ? "Select a Google match for the richest business card, or continue with your typed entry."
+                    : "No Google match required. Merlin can continue with the typed business."}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => void handleBusinessContinue()}
+              disabled={!businessName.trim() || isResolvingBusiness}
+              style={{
+                width: "100%",
+                height: 48,
+                borderRadius: 12,
+                border:
+                  businessName.trim() && !isResolvingBusiness
+                    ? `1px solid ${T.accentBorder}`
+                    : "1px solid rgba(255,255,255,0.08)",
+                background:
+                  businessName.trim() && !isResolvingBusiness
+                    ? T.accentSoft
+                    : "rgba(255,255,255,0.03)",
+                color: businessName.trim() && !isResolvingBusiness ? T.accent : T.textMuted,
+                fontSize: 14,
+                fontWeight: 800,
+                cursor: businessName.trim() && !isResolvingBusiness ? "pointer" : "not-allowed",
+              }}
+            >
+              {isResolvingBusiness
+                ? "Building business card..."
+                : "Continue to business confirmation"}
+            </button>
+          </div>
         </div>
-      ) : activeBusiness && locationConfirmed ? (
-        /* Business confirmation card - V6 pattern */
+      )}
+
+      {locationConfirmed && activeBusiness && (
         <div
           style={{
             borderRadius: 16,
-            background:
-              "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)",
+            background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))",
             border: "1px solid rgba(255,255,255,0.10)",
             overflow: "hidden",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+            boxShadow: "0 8px 30px rgba(0,0,0,0.28)",
           }}
         >
-          {/* Header with photo and basic info - V6 style */}
           <div style={{ padding: 24, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <div style={{ display: "flex", alignItems: "start", gap: 16 }}>
-              {/* Photo */}
+            <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
               {activeBusiness.photoUrl ? (
                 <img
                   src={activeBusiness.photoUrl}
@@ -1402,15 +831,10 @@ export function Step1V8({ state, actions }: Step1Props) {
                   style={{
                     width: 96,
                     height: 96,
-                    borderRadius: 12,
+                    borderRadius: 14,
                     objectFit: "cover",
-                    border: "2px solid rgba(62,207,142,0.3)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                    border: `1px solid ${T.accentBorder}`,
                     flexShrink: 0,
-                  }}
-                  onError={(e) => {
-                    // Hide image if it fails to load
-                    e.currentTarget.style.display = "none";
                   }}
                 />
               ) : (
@@ -1418,588 +842,160 @@ export function Step1V8({ state, actions }: Step1Props) {
                   style={{
                     width: 96,
                     height: 96,
-                    background:
-                      "linear-gradient(135deg, rgba(62,207,142,0.2) 0%, rgba(62,207,142,0.1) 100%)",
-                    borderRadius: 12,
+                    borderRadius: 14,
+                    background: T.accentSoft,
+                    border: `1px solid ${T.accentBorder}`,
+                    color: T.accent,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    border: "2px solid rgba(62,207,142,0.3)",
+                    fontSize: 28,
+                    fontWeight: 800,
                     flexShrink: 0,
                   }}
                 >
-                  <svg
-                    width="48"
-                    height="48"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="rgba(62,207,142,0.6)"
-                    strokeWidth="1.5"
-                  >
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M9 3v18" />
-                  </svg>
+                  {activeBusiness.name.charAt(0).toUpperCase()}
                 </div>
               )}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 800,
-                    color: T.textPrimary,
-                    letterSpacing: "-0.5px",
-                    lineHeight: 1.2,
-                    marginBottom: 8,
-                  }}
-                >
+
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: T.textPrimary }}>
                   {activeBusiness.name}
                 </div>
-                {activeBusiness.formattedAddress && (
+                {businessSummaryLine && (
                   <div
-                    style={{
-                      fontSize: 13,
-                      color: T.textSub,
-                      marginBottom: 12,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
+                    style={{ marginTop: 8, fontSize: 13, color: T.textSecondary, lineHeight: 1.5 }}
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    <span
-                      style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                    >
-                      {activeBusiness.formattedAddress}
-                    </span>
+                    {businessSummaryLine}
                   </div>
                 )}
                 {activeBusiness.detectedIndustry && (
                   <div
                     style={{
                       display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "6px 16px",
-                      background: "rgba(62,207,142,0.15)",
-                      border: "1px solid rgba(62,207,142,0.3)",
-                      borderRadius: 20,
-                      fontSize: 13,
-                      fontWeight: 600,
+                      marginTop: 12,
+                      padding: "6px 12px",
+                      borderRadius: 999,
+                      background: T.accentSoft,
+                      border: `1px solid ${T.accentBorder}`,
                       color: T.accent,
+                      fontSize: 12,
+                      fontWeight: 800,
                     }}
                   >
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    {activeBusiness.detectedIndustry.replace("_", " ").replace("-", " ")} •{" "}
-                    {Math.round(activeBusiness.confidence * 100)}% match
+                    {titleCaseIndustry(activeBusiness.detectedIndustry)} detected
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Additional details section */}
-          <div style={{ padding: 24, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            {/* Business details grid */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 16,
-                marginBottom: 20,
-              }}
-            >
-              {/* Location */}
-              {location && (
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 8,
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 700,
-                      color: T.textMuted,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      marginBottom: 4,
-                    }}
-                  >
-                    📍 Location
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: T.textPrimary,
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {activeBusiness.formattedAddress ||
-                      activeBusiness.address ||
-                      `${location.city}, ${location.state} ${location.zip}`}
-                  </div>
-                </div>
-              )}
-
-              {/* Website */}
-              {activeBusiness.website && (
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 8,
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 700,
-                      color: T.textMuted,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      marginBottom: 4,
-                    }}
-                  >
-                    🌐 Website
-                  </div>
-                  <a
-                    href={activeBusiness.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: T.accent,
-                      lineHeight: 1.4,
-                      textDecoration: "none",
-                    }}
-                  >
-                    {activeBusiness.website.replace(/^https?:\/\//, "")}
-                  </a>
-                </div>
-              )}
-
-              {/* Estimated roof space */}
-              {activeBusiness.estimatedRoofSpaceSqFt && (
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 8,
-                    background: "rgba(62,207,142,0.06)",
-                    border: "1px solid rgba(62,207,142,0.15)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 700,
-                      color: "rgba(62,207,142,0.7)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      marginBottom: 4,
-                    }}
-                  >
-                    ☀️ Est. Roof Space
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: T.accent,
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {activeBusiness.estimatedRoofSpaceSqFt.toLocaleString()} sq ft
-                    <div
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 500,
-                        color: "rgba(62,207,142,0.6)",
-                        marginTop: 2,
-                      }}
-                    >
-                      ~{Math.round(activeBusiness.estimatedRoofSpaceSqFt / 100)} kW solar potential
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Industry detection */}
-            {activeBusiness.detectedIndustry ? (
+          <div style={{ padding: 24, display: "grid", gap: 18 }}>
+            {activeBusiness.lat && activeBusiness.lng && (
               <div
                 style={{
-                  padding: 16,
-                  borderRadius: 12,
-                  background: "rgba(62,207,142,0.06)",
-                  border: "1px solid rgba(62,207,142,0.25)",
-                  marginBottom: 20,
+                  overflow: "hidden",
+                  borderRadius: 14,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.02)",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    marginBottom: 8,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      background: "rgba(62,207,142,0.12)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke={T.accent}
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 700,
-                        color: "rgba(62,207,142,0.7)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                        marginBottom: 2,
-                      }}
-                    >
-                      Industry Detected
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 700,
-                        color: T.accent,
-                        letterSpacing: "-0.2px",
-                      }}
-                    >
-                      {activeBusiness.detectedIndustry
-                        .replace(/_/g, " ")
-                        .replace(/\b\w/g, (l) => l.toUpperCase())}
-                    </div>
-                  </div>
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "rgba(62,207,142,0.65)",
-                    lineHeight: 1.5,
-                    paddingLeft: 42,
-                  }}
-                >
-                  We'll skip industry selection and go straight to your custom questionnaire
-                </div>
-              </div>
-            ) : (
-              <div
-                style={{
-                  padding: 16,
-                  borderRadius: 12,
-                  background: "rgba(251,191,36,0.05)",
-                  border: "1px solid rgba(251,191,36,0.20)",
-                  marginBottom: 20,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                }}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="rgba(251,191,36,0.9)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                <div
-                  style={{ flex: 1, fontSize: 12, color: "rgba(251,191,36,0.9)", lineHeight: 1.5 }}
-                >
-                  Industry not detected — you'll select manually on the next step
-                </div>
+                <iframe
+                  title={`${activeBusiness.name} map`}
+                  src={`https://maps.google.com/maps?q=${activeBusiness.lat},${activeBusiness.lng}&z=15&output=embed`}
+                  style={{ width: "100%", height: 220, border: 0 }}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
               </div>
             )}
 
-            {/* Live Google Map */}
-            {activeBusiness.lat &&
-              activeBusiness.lng &&
-              isGoogleMapsReady &&
-              !googleMapsLoadError && (
-                <div
-                  style={{
-                    marginBottom: 20,
-                    borderRadius: 12,
-                    overflow: "hidden",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
-                  <GoogleMap
-                    mapContainerStyle={{ width: "100%", height: "200px" }}
-                    center={{ lat: activeBusiness.lat, lng: activeBusiness.lng }}
-                    zoom={15}
-                    options={{
-                      disableDefaultUI: true,
-                      zoomControl: true,
-                      clickableIcons: false,
-                      styles: [
-                        { elementType: "geometry", stylers: [{ color: "#0f172a" }] },
-                        { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
-                        { elementType: "labels.text.stroke", stylers: [{ color: "#0f172a" }] },
-                        {
-                          featureType: "road",
-                          elementType: "geometry",
-                          stylers: [{ color: "#1e293b" }],
-                        },
-                        {
-                          featureType: "poi",
-                          elementType: "geometry",
-                          stylers: [{ color: "#111827" }],
-                        },
-                        {
-                          featureType: "water",
-                          elementType: "geometry",
-                          stylers: [{ color: "#020617" }],
-                        },
-                      ],
-                    }}
-                  >
-                    <MarkerF position={{ lat: activeBusiness.lat, lng: activeBusiness.lng }} />
-                  </GoogleMap>
-                </div>
-              )}
-
-            {/* Location info */}
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
                 gap: 12,
-                padding: 14,
-                borderRadius: 10,
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.05)",
-                marginBottom: 20,
               }}
             >
               <div
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 8,
-                  background: "rgba(59,130,246,0.10)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
+                  padding: 14,
+                  borderRadius: 12,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
                 }}
               >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="rgba(59,130,246,0.8)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: T.textMuted,
-                    marginBottom: 2,
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  Location
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: T.textMuted }}>
+                  ZIP Location
                 </div>
-                {activeBusiness.address && (
-                  <div
-                    style={{ fontSize: 13, color: T.textPrimary, fontWeight: 500, marginBottom: 3 }}
-                  >
-                    {activeBusiness.address}
-                  </div>
-                )}
-                <div style={{ fontSize: 14, color: T.textPrimary, fontWeight: 600 }}>
-                  {location?.city && location?.state
+                <div style={{ marginTop: 4, fontSize: 14, fontWeight: 700, color: T.textPrimary }}>
+                  {location.city && location.state
                     ? `${location.city}, ${location.state}`
-                    : location?.zip}
+                    : location.formattedAddress}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: 12,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                }}
+              >
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: T.textMuted }}>
+                  Business Match
+                </div>
+                <div style={{ marginTop: 4, fontSize: 14, fontWeight: 700, color: T.textPrimary }}>
+                  {activeBusiness.formattedAddress ||
+                    activeBusiness.address ||
+                    "Typed business entry"}
                 </div>
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {/* Confirm button */}
+            <div style={{ display: "grid", gap: 10 }}>
               <button
                 type="button"
-                onClick={() => {
-                  if (!state.business && activeBusiness) {
-                    actions.setBusiness(activeBusiness.name, {
-                      address: activeBusiness.address,
-                      placeId: activeBusiness.placeId,
-                      formattedAddress: activeBusiness.formattedAddress,
-                      photoUrl: activeBusiness.photoUrl,
-                      lat: activeBusiness.lat,
-                      lng: activeBusiness.lng,
-                    });
-                    globalThis.setTimeout(() => {
-                      actions.confirmBusiness();
-                    }, 0);
-                    return;
-                  }
-                  actions.confirmBusiness();
-                }}
+                onClick={handleConfirmBusiness}
                 style={{
                   width: "100%",
-                  padding: "14px 24px",
+                  height: 50,
                   borderRadius: 12,
                   border: "none",
                   background: T.accent,
-                  color: "#000",
+                  color: "#03140b",
                   fontSize: 14,
-                  fontWeight: 700,
+                  fontWeight: 900,
                   cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  boxShadow: "0 4px 16px rgba(62,207,142,0.25)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 6px 24px rgba(62,207,142,0.35)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(62,207,142,0.25)";
                 }}
               >
-                {activeBusiness.detectedIndustry ? (
-                  <>
-                    Confirm & Skip to Questionnaire
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </>
-                ) : (
-                  <>
-                    Confirm & Select Industry
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </>
-                )}
+                {activeBusiness.detectedIndustry
+                  ? "Confirm & Skip to Questionnaire"
+                  : "Confirm & Select Industry"}
               </button>
 
-              {/* Edit button */}
               <button
                 type="button"
-                onClick={() => {
-                  setBusinessName("");
-                  setAddressValue("");
-                  setSelectedPlace(null);
-                  setBusinessError(null);
-                  actions.setBusiness("");
-                }}
+                onClick={resetBusinessFlow}
                 style={{
                   width: "100%",
-                  padding: "11px 20px",
+                  height: 44,
                   borderRadius: 10,
                   border: "1px solid rgba(255,255,255,0.10)",
                   background: "transparent",
-                  color: T.textSub,
+                  color: T.textSecondary,
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   cursor: "pointer",
-                  transition: "all 0.15s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.20)";
-                  e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                  e.currentTarget.style.color = T.textPrimary;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = T.textSub;
                 }}
               >
                 Edit Business Name
               </button>
             </div>
           </div>
-          {/* Close additional details section */}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
