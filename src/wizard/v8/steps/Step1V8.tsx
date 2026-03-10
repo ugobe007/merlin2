@@ -156,17 +156,28 @@ function getPhotoPayload(place: {
   const photo = place.photos?.[0];
   const attribution = photo?.authorAttributions?.[0];
 
-  // Log photo extraction for debugging
-  console.log("[Step1V8] Extracting photo from place:", {
-    hasPhotos: !!place.photos,
-    photoCount: place.photos?.length ?? 0,
-    hasGetURI: !!photo?.getURI,
-    photo: photo,
-  });
+  // DETAILED DEBUG LOGGING v1069
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("[Step1V8] 🔍 PHOTO EXTRACTION v1069");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("Place object:", place);
+  console.log("Photos array:", place.photos);
+  console.log("Photos array length:", place.photos?.length);
+  console.log("First photo object:", photo);
+  console.log("Photo has getURI method:", !!photo?.getURI);
+  console.log("Photo getURI type:", typeof photo?.getURI);
+  console.log("Attribution:", attribution);
 
-  const photoUrl = photo?.getURI?.({ maxWidth: 480, maxHeight: 320 });
+  let photoUrl: string | undefined;
 
-  console.log("[Step1V8] Photo URL extracted:", photoUrl);
+  try {
+    photoUrl = photo?.getURI?.({ maxWidth: 480, maxHeight: 320 });
+    console.log("✅ Photo URL extracted:", photoUrl);
+  } catch (error) {
+    console.error("❌ Error calling getURI:", error);
+  }
+
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
   return {
     photoUrl,
