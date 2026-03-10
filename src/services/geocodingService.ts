@@ -1,13 +1,13 @@
 /**
  * Geocoding Service
- * 
+ *
  * Uses Google Maps Geocoding API to convert addresses and ZIP codes
  * to precise coordinates for weather and location services.
- * 
+ *
  * Created: Jan 17, 2026
  */
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyB9VeakhIGZQgCKmTiZ3ml0RvnvlT0dNrY';
+const GOOGLE_MAPS_API_KEY = "AIzaSyDppNx91-dadZiyNJBcqDhQn9H5mkDdruw";
 
 export interface GeocodeResult {
   lat: number;
@@ -44,17 +44,17 @@ interface GoogleGeocodeResponse {
 export async function geocodeLocation(query: string): Promise<GeocodeResult | null> {
   try {
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}`;
-    
+
     const response = await fetch(url);
     if (!response.ok) {
-      console.warn('Google Geocoding API error:', response.status);
+      console.warn("Google Geocoding API error:", response.status);
       return null;
     }
 
     const data: GoogleGeocodeResponse = await response.json();
-    
-    if (data.status !== 'OK' || !data.results || data.results.length === 0) {
-      console.warn('Google Geocoding returned no results:', data.status);
+
+    if (data.status !== "OK" || !data.results || data.results.length === 0) {
+      console.warn("Google Geocoding returned no results:", data.status);
       return null;
     }
 
@@ -62,11 +62,15 @@ export async function geocodeLocation(query: string): Promise<GeocodeResult | nu
     const components = result.address_components;
 
     // Extract address components
-    const city = components.find(c => c.types.includes('locality'))?.long_name;
-    const state = components.find(c => c.types.includes('administrative_area_level_1'))?.long_name;
-    const stateCode = components.find(c => c.types.includes('administrative_area_level_1'))?.short_name;
-    const zipCode = components.find(c => c.types.includes('postal_code'))?.long_name;
-    const country = components.find(c => c.types.includes('country'))?.long_name;
+    const city = components.find((c) => c.types.includes("locality"))?.long_name;
+    const state = components.find((c) =>
+      c.types.includes("administrative_area_level_1")
+    )?.long_name;
+    const stateCode = components.find((c) =>
+      c.types.includes("administrative_area_level_1")
+    )?.short_name;
+    const zipCode = components.find((c) => c.types.includes("postal_code"))?.long_name;
+    const country = components.find((c) => c.types.includes("country"))?.long_name;
 
     return {
       lat: result.geometry.location.lat,
@@ -79,7 +83,7 @@ export async function geocodeLocation(query: string): Promise<GeocodeResult | nu
       country,
     };
   } catch (error) {
-    console.error('Geocoding fetch error:', error);
+    console.error("Geocoding fetch error:", error);
     return null;
   }
 }
@@ -90,28 +94,32 @@ export async function geocodeLocation(query: string): Promise<GeocodeResult | nu
 export async function reverseGeocode(lat: number, lon: number): Promise<GeocodeResult | null> {
   try {
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${GOOGLE_MAPS_API_KEY}`;
-    
+
     const response = await fetch(url);
     if (!response.ok) {
-      console.warn('Google Reverse Geocoding API error:', response.status);
+      console.warn("Google Reverse Geocoding API error:", response.status);
       return null;
     }
 
     const data: GoogleGeocodeResponse = await response.json();
-    
-    if (data.status !== 'OK' || !data.results || data.results.length === 0) {
-      console.warn('Google Reverse Geocoding returned no results:', data.status);
+
+    if (data.status !== "OK" || !data.results || data.results.length === 0) {
+      console.warn("Google Reverse Geocoding returned no results:", data.status);
       return null;
     }
 
     const result = data.results[0];
     const components = result.address_components;
 
-    const city = components.find(c => c.types.includes('locality'))?.long_name;
-    const state = components.find(c => c.types.includes('administrative_area_level_1'))?.long_name;
-    const stateCode = components.find(c => c.types.includes('administrative_area_level_1'))?.short_name;
-    const zipCode = components.find(c => c.types.includes('postal_code'))?.long_name;
-    const country = components.find(c => c.types.includes('country'))?.long_name;
+    const city = components.find((c) => c.types.includes("locality"))?.long_name;
+    const state = components.find((c) =>
+      c.types.includes("administrative_area_level_1")
+    )?.long_name;
+    const stateCode = components.find((c) =>
+      c.types.includes("administrative_area_level_1")
+    )?.short_name;
+    const zipCode = components.find((c) => c.types.includes("postal_code"))?.long_name;
+    const country = components.find((c) => c.types.includes("country"))?.long_name;
 
     return {
       lat,
@@ -124,7 +132,7 @@ export async function reverseGeocode(lat: number, lon: number): Promise<GeocodeR
       country,
     };
   } catch (error) {
-    console.error('Reverse geocoding fetch error:', error);
+    console.error("Reverse geocoding fetch error:", error);
     return null;
   }
 }
@@ -132,7 +140,9 @@ export async function reverseGeocode(lat: number, lon: number): Promise<GeocodeR
 /**
  * Get coordinates for a ZIP code (convenience wrapper)
  */
-export async function getCoordinatesFromZip(zipCode: string): Promise<{ lat: number; lon: number } | null> {
+export async function getCoordinatesFromZip(
+  zipCode: string
+): Promise<{ lat: number; lon: number } | null> {
   const result = await geocodeLocation(zipCode);
   if (result) {
     return { lat: result.lat, lon: result.lon };
