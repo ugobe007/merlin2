@@ -32,6 +32,11 @@ type GooglePlacesLibrary = {
     location?: { lat?: number | (() => number); lng?: number | (() => number) };
     photos?: Array<{
       getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
+      authorAttributions?: Array<{
+        displayName?: string;
+        uri?: string;
+        photoURI?: string;
+      }>;
     }>;
   };
   AutocompleteSuggestion: {
@@ -52,6 +57,11 @@ type GooglePlacesLibrary = {
             location?: { lat?: number | (() => number); lng?: number | (() => number) };
             photos?: Array<{
               getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
+              authorAttributions?: Array<{
+                displayName?: string;
+                uri?: string;
+                photoURI?: string;
+              }>;
             }>;
           };
         };
@@ -75,7 +85,14 @@ type BusinessSuggestion = {
       editorialSummary?: string | { text?: string };
       websiteURI?: string;
       location?: { lat?: number | (() => number); lng?: number | (() => number) };
-      photos?: Array<{ getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string }>;
+      photos?: Array<{
+        getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
+        authorAttributions?: Array<{
+          displayName?: string;
+          uri?: string;
+          photoURI?: string;
+        }>;
+      }>;
     };
   };
 };
@@ -121,6 +138,26 @@ function loadGoogleMapsScript(): Promise<void> {
 
 function getCoordinate(value?: number | (() => number)) {
   return typeof value === "function" ? value() : value;
+}
+
+function getPhotoPayload(place: {
+  photos?: Array<{
+    getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
+    authorAttributions?: Array<{
+      displayName?: string;
+      uri?: string;
+      photoURI?: string;
+    }>;
+  }>;
+}) {
+  const photo = place.photos?.[0];
+  const attribution = photo?.authorAttributions?.[0];
+
+  return {
+    photoUrl: photo?.getURI?.({ maxWidth: 480, maxHeight: 320 }),
+    photoAttributionName: attribution?.displayName,
+    photoAttributionUri: attribution?.uri,
+  };
 }
 
 function titleCaseIndustry(industry: string) {
@@ -211,6 +248,8 @@ export function Step1V8({ state, actions }: Step1Props) {
       name: businessName.trim(),
       address: streetAddress.trim() || undefined,
       description: overrides?.description || state.business?.description,
+      photoAttributionName: overrides?.photoAttributionName || state.business?.photoAttributionName,
+      photoAttributionUri: overrides?.photoAttributionUri || state.business?.photoAttributionUri,
       detectedIndustry: state.business?.detectedIndustry ?? null,
       confidence: state.business?.confidence ?? 0,
       placeId: overrides?.placeId,
@@ -242,6 +281,33 @@ export function Step1V8({ state, actions }: Step1Props) {
         location?.formattedAddress;
 
       try {
+        if (placesLibrary?.Place) {
+          const place = new placesLibrary.Place({ id: suggestion.placeId });
+          await place.fetchFields({
+            fields: [
+              "displayName",
+              "formattedAddress",
+              "location",
+              "photos",
+              "id",
+              "websiteURI",
+              "editorialSummary",
+            ],
+          });
+          return {
+            placeId: place.id || suggestion.placeId,
+            formattedAddress: place.formattedAddress || fallbackAddress,
+            ...getPhotoPayload(place),
+            website: place.websiteURI,
+            description:
+              typeof place.editorialSummary === "string"
+                ? place.editorialSummary
+                : place.editorialSummary?.text,
+            lat: getCoordinate(place.location?.lat) ?? location?.lat,
+            lng: getCoordinate(place.location?.lng) ?? location?.lng,
+          };
+        }
+
         const place = suggestion.prediction.toPlace();
         await place.fetchFields({
           fields: [
@@ -257,7 +323,7 @@ export function Step1V8({ state, actions }: Step1Props) {
         return {
           placeId: place.id || suggestion.placeId,
           formattedAddress: place.formattedAddress || fallbackAddress,
-          photoUrl: place.photos?.[0]?.getURI?.({ maxWidth: 480, maxHeight: 320 }),
+          ...getPhotoPayload(place),
           website: place.websiteURI,
           description:
             typeof place.editorialSummary === "string"
@@ -267,41 +333,6 @@ export function Step1V8({ state, actions }: Step1Props) {
           lng: getCoordinate(place.location?.lng) ?? location?.lng,
         };
       } catch {
-        if (placesLibrary?.Place) {
-          try {
-            const place = new placesLibrary.Place({ id: suggestion.placeId });
-            await place.fetchFields({
-              fields: [
-                "displayName",
-                "formattedAddress",
-                "location",
-                "photos",
-                "id",
-                "websiteURI",
-                "editorialSummary",
-              ],
-            });
-            return {
-              placeId: place.id || suggestion.placeId,
-              formattedAddress: place.formattedAddress || fallbackAddress,
-              photoUrl: place.photos?.[0]?.getURI?.({ maxWidth: 480, maxHeight: 320 }),
-              website: place.websiteURI,
-              description:
-                typeof place.editorialSummary === "string"
-                  ? place.editorialSummary
-                  : place.editorialSummary?.text,
-              lat: getCoordinate(place.location?.lat) ?? location?.lat,
-              lng: getCoordinate(place.location?.lng) ?? location?.lng,
-            };
-          } catch {
-            return {
-              placeId: suggestion.placeId,
-              formattedAddress: fallbackAddress,
-              lat: location?.lat,
-              lng: location?.lng,
-            };
-          }
-        }
         return {
           placeId: suggestion.placeId,
           formattedAddress: fallbackAddress,
@@ -404,6 +435,8 @@ export function Step1V8({ state, actions }: Step1Props) {
       address: business.address,
       website: business.website,
       description: business.description,
+      photoAttributionName: business.photoAttributionName,
+      photoAttributionUri: business.photoAttributionUri,
       placeId: business.placeId,
       formattedAddress: business.formattedAddress,
       photoUrl: business.photoUrl,
@@ -515,6 +548,8 @@ export function Step1V8({ state, actions }: Step1Props) {
         address: activeBusiness.address,
         website: activeBusiness.website,
         description: activeBusiness.description,
+        photoAttributionName: activeBusiness.photoAttributionName,
+        photoAttributionUri: activeBusiness.photoAttributionUri,
         placeId: activeBusiness.placeId,
         formattedAddress: activeBusiness.formattedAddress,
         photoUrl: activeBusiness.photoUrl,
@@ -901,18 +936,44 @@ export function Step1V8({ state, actions }: Step1Props) {
           <div style={{ padding: 24, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
               {activeBusiness.photoUrl ? (
-                <img
-                  src={activeBusiness.photoUrl}
-                  alt={activeBusiness.name}
-                  style={{
-                    width: 96,
-                    height: 96,
-                    borderRadius: 14,
-                    objectFit: "cover",
-                    border: `1px solid ${T.accentBorder}`,
-                    flexShrink: 0,
-                  }}
-                />
+                <div style={{ width: 96, flexShrink: 0 }}>
+                  <img
+                    src={activeBusiness.photoUrl}
+                    alt={activeBusiness.name}
+                    style={{
+                      width: 96,
+                      height: 96,
+                      borderRadius: 14,
+                      objectFit: "cover",
+                      border: `1px solid ${T.accentBorder}`,
+                      display: "block",
+                    }}
+                  />
+                  {activeBusiness.photoAttributionName && (
+                    <div
+                      style={{
+                        marginTop: 6,
+                        fontSize: 10,
+                        lineHeight: 1.3,
+                        color: T.textMuted,
+                      }}
+                    >
+                      Photo by{" "}
+                      {activeBusiness.photoAttributionUri ? (
+                        <a
+                          href={activeBusiness.photoAttributionUri}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: T.textSecondary, textDecoration: "none" }}
+                        >
+                          {activeBusiness.photoAttributionName}
+                        </a>
+                      ) : (
+                        activeBusiness.photoAttributionName
+                      )}
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div
                   style={{
