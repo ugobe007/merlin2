@@ -144,6 +144,7 @@ export interface BusinessData {
   name: string;
   address?: string; // Optional street address
   website?: string; // Optional website URL
+  description?: string; // Optional Google business summary
   estimatedRoofSpaceSqFt?: number; // Industry-based roof space estimate
   detectedIndustry: IndustrySlug | null;
   confidence: number; // 0-1 confidence score
@@ -625,6 +626,8 @@ export interface WizardActions {
     name: string,
     placesData?: {
       address?: string;
+      website?: string;
+      description?: string;
       placeId?: string;
       formattedAddress?: string;
       photoUrl?: string;

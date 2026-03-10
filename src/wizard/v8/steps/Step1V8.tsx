@@ -27,6 +27,8 @@ type GooglePlacesLibrary = {
     id?: string;
     displayName?: string | { text?: string };
     formattedAddress?: string;
+    editorialSummary?: string | { text?: string };
+    websiteURI?: string;
     location?: { lat?: number | (() => number); lng?: number | (() => number) };
     photos?: Array<{
       getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
@@ -45,6 +47,8 @@ type GooglePlacesLibrary = {
             id?: string;
             displayName?: string | { text?: string };
             formattedAddress?: string;
+            editorialSummary?: string | { text?: string };
+            websiteURI?: string;
             location?: { lat?: number | (() => number); lng?: number | (() => number) };
             photos?: Array<{
               getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
@@ -68,6 +72,8 @@ type BusinessSuggestion = {
       id?: string;
       displayName?: string | { text?: string };
       formattedAddress?: string;
+      editorialSummary?: string | { text?: string };
+      websiteURI?: string;
       location?: { lat?: number | (() => number); lng?: number | (() => number) };
       photos?: Array<{ getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string }>;
     };
@@ -204,6 +210,7 @@ export function Step1V8({ state, actions }: Step1Props) {
     (overrides?: Partial<BusinessData>): BusinessData => ({
       name: businessName.trim(),
       address: streetAddress.trim() || undefined,
+      description: overrides?.description || state.business?.description,
       detectedIndustry: state.business?.detectedIndustry ?? null,
       confidence: state.business?.confidence ?? 0,
       placeId: overrides?.placeId,
@@ -213,7 +220,7 @@ export function Step1V8({ state, actions }: Step1Props) {
       lat: overrides?.lat ?? location?.lat,
       lng: overrides?.lng ?? location?.lng,
       estimatedRoofSpaceSqFt: state.business?.estimatedRoofSpaceSqFt,
-      website: state.business?.website,
+      website: overrides?.website || state.business?.website,
     }),
     [
       businessName,
@@ -237,12 +244,25 @@ export function Step1V8({ state, actions }: Step1Props) {
       try {
         const place = suggestion.prediction.toPlace();
         await place.fetchFields({
-          fields: ["displayName", "formattedAddress", "location", "photos", "id"],
+          fields: [
+            "displayName",
+            "formattedAddress",
+            "location",
+            "photos",
+            "id",
+            "websiteURI",
+            "editorialSummary",
+          ],
         });
         return {
           placeId: place.id || suggestion.placeId,
           formattedAddress: place.formattedAddress || fallbackAddress,
           photoUrl: place.photos?.[0]?.getURI?.({ maxWidth: 480, maxHeight: 320 }),
+          website: place.websiteURI,
+          description:
+            typeof place.editorialSummary === "string"
+              ? place.editorialSummary
+              : place.editorialSummary?.text,
           lat: getCoordinate(place.location?.lat) ?? location?.lat,
           lng: getCoordinate(place.location?.lng) ?? location?.lng,
         };
@@ -251,12 +271,25 @@ export function Step1V8({ state, actions }: Step1Props) {
           try {
             const place = new placesLibrary.Place({ id: suggestion.placeId });
             await place.fetchFields({
-              fields: ["displayName", "formattedAddress", "location", "photos", "id"],
+              fields: [
+                "displayName",
+                "formattedAddress",
+                "location",
+                "photos",
+                "id",
+                "websiteURI",
+                "editorialSummary",
+              ],
             });
             return {
               placeId: place.id || suggestion.placeId,
               formattedAddress: place.formattedAddress || fallbackAddress,
               photoUrl: place.photos?.[0]?.getURI?.({ maxWidth: 480, maxHeight: 320 }),
+              website: place.websiteURI,
+              description:
+                typeof place.editorialSummary === "string"
+                  ? place.editorialSummary
+                  : place.editorialSummary?.text,
               lat: getCoordinate(place.location?.lat) ?? location?.lat,
               lng: getCoordinate(place.location?.lng) ?? location?.lng,
             };
@@ -369,6 +402,8 @@ export function Step1V8({ state, actions }: Step1Props) {
     setPreviewBusiness(business);
     actions.setBusiness(business.name, {
       address: business.address,
+      website: business.website,
+      description: business.description,
       placeId: business.placeId,
       formattedAddress: business.formattedAddress,
       photoUrl: business.photoUrl,
@@ -439,6 +474,8 @@ export function Step1V8({ state, actions }: Step1Props) {
     if (activeBusiness && !state.business) {
       actions.setBusiness(activeBusiness.name, {
         address: activeBusiness.address,
+        website: activeBusiness.website,
+        description: activeBusiness.description,
         placeId: activeBusiness.placeId,
         formattedAddress: activeBusiness.formattedAddress,
         photoUrl: activeBusiness.photoUrl,
@@ -869,6 +906,19 @@ export function Step1V8({ state, actions }: Step1Props) {
                     {businessSummaryLine}
                   </div>
                 )}
+                {activeBusiness.description && (
+                  <div
+                    style={{
+                      marginTop: 10,
+                      maxWidth: 560,
+                      fontSize: 12,
+                      lineHeight: 1.55,
+                      color: T.textSecondary,
+                    }}
+                  >
+                    {activeBusiness.description}
+                  </div>
+                )}
                 {activeBusiness.detectedIndustry && (
                   <div
                     style={{
@@ -952,6 +1002,36 @@ export function Step1V8({ state, actions }: Step1Props) {
                     "Typed business entry"}
                 </div>
               </div>
+
+              {activeBusiness.website && (
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 12,
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <div style={{ fontSize: 10, textTransform: "uppercase", color: T.textMuted }}>
+                    Website
+                  </div>
+                  <a
+                    href={activeBusiness.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-block",
+                      marginTop: 4,
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: T.accent,
+                      textDecoration: "none",
+                    }}
+                  >
+                    {activeBusiness.website.replace(/^https?:\/\//, "")}
+                  </a>
+                </div>
+              )}
             </div>
 
             <div style={{ display: "grid", gap: 10 }}>
