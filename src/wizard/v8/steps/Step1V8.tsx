@@ -145,6 +145,23 @@ export function Step1V8({ state, actions }: Step1Props) {
 
   // Derived state
   const locationConfirmed = location !== null;
+  const activeBusiness =
+    state.business ??
+    (selectedPlace && locationConfirmed
+      ? {
+          name: selectedPlace.name,
+          address: addressValue.trim() || undefined,
+          website: undefined,
+          estimatedRoofSpaceSqFt: undefined,
+          detectedIndustry: null,
+          confidence: 0,
+          placeId: selectedPlace.placeId,
+          formattedAddress: selectedPlace.formattedAddress,
+          photoUrl: selectedPlace.photoUrl,
+          lat: selectedPlace.lat ?? location?.lat,
+          lng: selectedPlace.lng ?? location?.lng,
+        }
+      : null);
   const normalizedZip =
     country === "US" ? locationRaw.replace(/\D/g, "").slice(0, 5) : locationRaw.trim();
   const isValidZip = country === "US" ? /^\d{5}$/.test(normalizedZip) : normalizedZip.length >= 3;
@@ -772,7 +789,7 @@ export function Step1V8({ state, actions }: Step1Props) {
       )}
 
       {/* ── Grid Reliability Question (shown after location confirmed) ──────── */}
-      {locationConfirmed && !state.business && (
+      {locationConfirmed && !activeBusiness && (
         <div
           style={{
             padding: 20,
@@ -891,7 +908,7 @@ export function Step1V8({ state, actions }: Step1Props) {
       )}
 
       {/* ── Add-on Preferences (shown after location confirmed) ───────────── */}
-      {locationConfirmed && !state.business && (
+      {locationConfirmed && !activeBusiness && (
         <div
           style={{
             padding: 20,
@@ -1071,7 +1088,7 @@ export function Step1V8({ state, actions }: Step1Props) {
       )}
 
       {/* ── Find My Business / Business Confirmation ──────────────────────── */}
-      {locationConfirmed && !state.business ? (
+      {locationConfirmed && !activeBusiness ? (
         /* Business search form */
         <div
           style={{
@@ -1183,6 +1200,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 if (!e.target.value.trim()) {
                   sessionTokenRef.current = null;
                   setBusinessSuggestions([]);
+                  setSelectedPlace(null);
                 }
                 // Clear selectedPlace when user types manually
                 if (selectedPlace) {
@@ -1361,7 +1379,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 : "Continue with typed business name"}
           </button>
         </div>
-      ) : state.business && locationConfirmed ? (
+      ) : activeBusiness && locationConfirmed ? (
         /* Business confirmation card - V6 pattern */
         <div
           style={{
@@ -1377,10 +1395,10 @@ export function Step1V8({ state, actions }: Step1Props) {
           <div style={{ padding: 24, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <div style={{ display: "flex", alignItems: "start", gap: 16 }}>
               {/* Photo */}
-              {state.business.photoUrl ? (
+              {activeBusiness.photoUrl ? (
                 <img
-                  src={state.business.photoUrl}
-                  alt={state.business.name}
+                  src={activeBusiness.photoUrl}
+                  alt={activeBusiness.name}
                   style={{
                     width: 96,
                     height: 96,
@@ -1434,9 +1452,9 @@ export function Step1V8({ state, actions }: Step1Props) {
                     marginBottom: 8,
                   }}
                 >
-                  {state.business.name}
+                  {activeBusiness.name}
                 </div>
-                {state.business.formattedAddress && (
+                {activeBusiness.formattedAddress && (
                   <div
                     style={{
                       fontSize: 13,
@@ -1461,11 +1479,11 @@ export function Step1V8({ state, actions }: Step1Props) {
                     <span
                       style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                     >
-                      {state.business.formattedAddress}
+                      {activeBusiness.formattedAddress}
                     </span>
                   </div>
                 )}
-                {state.business.detectedIndustry && (
+                {activeBusiness.detectedIndustry && (
                   <div
                     style={{
                       display: "inline-flex",
@@ -1487,8 +1505,8 @@ export function Step1V8({ state, actions }: Step1Props) {
                         clipRule="evenodd"
                       />
                     </svg>
-                    {state.business.detectedIndustry.replace("_", " ").replace("-", " ")} •{" "}
-                    {Math.round(state.business.confidence * 100)}% match
+                    {activeBusiness.detectedIndustry.replace("_", " ").replace("-", " ")} •{" "}
+                    {Math.round(activeBusiness.confidence * 100)}% match
                   </div>
                 )}
               </div>
@@ -1536,15 +1554,15 @@ export function Step1V8({ state, actions }: Step1Props) {
                       lineHeight: 1.4,
                     }}
                   >
-                    {state.business.formattedAddress ||
-                      state.business.address ||
+                    {activeBusiness.formattedAddress ||
+                      activeBusiness.address ||
                       `${location.city}, ${location.state} ${location.zip}`}
                   </div>
                 </div>
               )}
 
               {/* Website */}
-              {state.business.website && (
+              {activeBusiness.website && (
                 <div
                   style={{
                     padding: 12,
@@ -1566,7 +1584,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                     🌐 Website
                   </div>
                   <a
-                    href={state.business.website}
+                    href={activeBusiness.website}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -1577,13 +1595,13 @@ export function Step1V8({ state, actions }: Step1Props) {
                       textDecoration: "none",
                     }}
                   >
-                    {state.business.website.replace(/^https?:\/\//, "")}
+                    {activeBusiness.website.replace(/^https?:\/\//, "")}
                   </a>
                 </div>
               )}
 
               {/* Estimated roof space */}
-              {state.business.estimatedRoofSpaceSqFt && (
+              {activeBusiness.estimatedRoofSpaceSqFt && (
                 <div
                   style={{
                     padding: 12,
@@ -1612,7 +1630,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                       lineHeight: 1.4,
                     }}
                   >
-                    {state.business.estimatedRoofSpaceSqFt.toLocaleString()} sq ft
+                    {activeBusiness.estimatedRoofSpaceSqFt.toLocaleString()} sq ft
                     <div
                       style={{
                         fontSize: 10,
@@ -1621,7 +1639,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                         marginTop: 2,
                       }}
                     >
-                      ~{Math.round(state.business.estimatedRoofSpaceSqFt / 100)} kW solar potential
+                      ~{Math.round(activeBusiness.estimatedRoofSpaceSqFt / 100)} kW solar potential
                     </div>
                   </div>
                 </div>
@@ -1629,7 +1647,7 @@ export function Step1V8({ state, actions }: Step1Props) {
             </div>
 
             {/* Industry detection */}
-            {state.business.detectedIndustry ? (
+            {activeBusiness.detectedIndustry ? (
               <div
                 style={{
                   padding: 16,
@@ -1692,7 +1710,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                         letterSpacing: "-0.2px",
                       }}
                     >
-                      {state.business.detectedIndustry
+                      {activeBusiness.detectedIndustry
                         .replace(/_/g, " ")
                         .replace(/\b\w/g, (l) => l.toUpperCase())}
                     </div>
@@ -1745,8 +1763,8 @@ export function Step1V8({ state, actions }: Step1Props) {
             )}
 
             {/* Live Google Map */}
-            {state.business.lat &&
-              state.business.lng &&
+            {activeBusiness.lat &&
+              activeBusiness.lng &&
               isGoogleMapsReady &&
               !googleMapsLoadError && (
                 <div
@@ -1759,7 +1777,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 >
                   <GoogleMap
                     mapContainerStyle={{ width: "100%", height: "200px" }}
-                    center={{ lat: state.business.lat, lng: state.business.lng }}
+                    center={{ lat: activeBusiness.lat, lng: activeBusiness.lng }}
                     zoom={15}
                     options={{
                       disableDefaultUI: true,
@@ -1787,7 +1805,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                       ],
                     }}
                   >
-                    <MarkerF position={{ lat: state.business.lat, lng: state.business.lng }} />
+                    <MarkerF position={{ lat: activeBusiness.lat, lng: activeBusiness.lng }} />
                   </GoogleMap>
                 </div>
               )}
@@ -1844,11 +1862,11 @@ export function Step1V8({ state, actions }: Step1Props) {
                 >
                   Location
                 </div>
-                {state.business?.address && (
+                {activeBusiness.address && (
                   <div
                     style={{ fontSize: 13, color: T.textPrimary, fontWeight: 500, marginBottom: 3 }}
                   >
-                    {state.business.address}
+                    {activeBusiness.address}
                   </div>
                 )}
                 <div style={{ fontSize: 14, color: T.textPrimary, fontWeight: 600 }}>
@@ -1864,7 +1882,23 @@ export function Step1V8({ state, actions }: Step1Props) {
               {/* Confirm button */}
               <button
                 type="button"
-                onClick={() => actions.confirmBusiness()}
+                onClick={() => {
+                  if (!state.business && activeBusiness) {
+                    actions.setBusiness(activeBusiness.name, {
+                      address: activeBusiness.address,
+                      placeId: activeBusiness.placeId,
+                      formattedAddress: activeBusiness.formattedAddress,
+                      photoUrl: activeBusiness.photoUrl,
+                      lat: activeBusiness.lat,
+                      lng: activeBusiness.lng,
+                    });
+                    globalThis.setTimeout(() => {
+                      actions.confirmBusiness();
+                    }, 0);
+                    return;
+                  }
+                  actions.confirmBusiness();
+                }}
                 style={{
                   width: "100%",
                   padding: "14px 24px",
@@ -1891,7 +1925,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                   e.currentTarget.style.boxShadow = "0 4px 16px rgba(62,207,142,0.25)";
                 }}
               >
-                {state.business.detectedIndustry ? (
+                {activeBusiness.detectedIndustry ? (
                   <>
                     Confirm & Skip to Questionnaire
                     <svg
