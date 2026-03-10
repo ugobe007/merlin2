@@ -120,6 +120,7 @@ export function Step1V8({ state, actions }: Step1Props) {
   const [addressValue, setAddressValue] = useState("");
   const [businessError, setBusinessError] = useState<string | null>(null);
   const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
+  const [isResolvingBusiness, setIsResolvingBusiness] = useState(false);
 
   const { intel, intelStatus, locationRaw, locationStatus, location, error, isBusy } = state;
 
@@ -249,6 +250,7 @@ export function Step1V8({ state, actions }: Step1Props) {
   }, [country, locationConfirmed]);
 
   const isFetching = locationStatus === "fetching" || isBusy;
+  const isBusinessSubmitting = isFetching || isResolvingBusiness;
 
   const showIntelStrip =
     isValidZip &&
@@ -288,7 +290,54 @@ export function Step1V8({ state, actions }: Step1Props) {
     void actions.submitLocation();
   };
 
-  const handleBusinessSearch = () => {
+  const resolveBusinessFromQuery = async () => {
+    if (!businessName.trim()) return null;
+
+    try {
+      await loadGoogleMapsScript();
+    } catch (err) {
+      console.warn("[Step1V8] Google Maps unavailable for manual business lookup:", err);
+      return null;
+    }
+
+    if (!window.google?.maps?.places) {
+      return null;
+    }
+
+    const queryParts = [businessName.trim(), addressValue.trim(), location?.city, location?.state]
+      .filter(Boolean)
+      .join(", ");
+
+    if (!queryParts) return null;
+
+    return new Promise<google.maps.places.PlaceResult | null>((resolve) => {
+      const service = new window.google.maps.places.PlacesService(document.createElement("div"));
+      service.findPlaceFromQuery(
+        {
+          query: queryParts,
+          fields: ["name", "formatted_address", "geometry", "photos", "place_id"],
+        },
+        (results, status) => {
+          if (
+            status === window.google.maps.places.PlacesServiceStatus.OK &&
+            results &&
+            results.length > 0
+          ) {
+            resolve(results[0]);
+            return;
+          }
+
+          console.warn("[Step1V8] Manual business lookup returned no Google Place", {
+            query: queryParts,
+            status,
+          });
+          resolve(null);
+        }
+      );
+    });
+  };
+
+  const handleBusinessSearch = async () => {
     if (!businessName.trim()) return;
     if (!isValidZip) {
       setBusinessError("Please enter your ZIP code above first.");
@@ -296,44 +345,51 @@ export function Step1V8({ state, actions }: Step1Props) {
       return;
     }
     setBusinessError(null);
+    setIsResolvingBusiness(true);
 
-    // Use selected place from autocomplete if available
-    if (selectedPlace) {
-      let photoUrl: string | undefined;
-      try {
-        photoUrl = selectedPlace.photos?.[0]?.getUrl({ maxWidth: 400, maxHeight: 300 });
-      } catch (err) {
-        console.warn("[Step1V8] Failed to get photo URL:", err);
+    try {
+      // Use selected place from autocomplete if available
+      const place = selectedPlace ?? (await resolveBusinessFromQuery());
+      if (place) {
+        let photoUrl: string | undefined;
+        try {
+          photoUrl = place.photos?.[0]?.getUrl({ maxWidth: 400, maxHeight: 300 });
+        } catch (err) {
+          console.warn("[Step1V8] Failed to get photo URL:", err);
+        }
+
+        const businessData = {
+          address: addressValue.trim() || undefined,
+          placeId: place.place_id,
+          formattedAddress: place.formatted_address,
+          photoUrl,
+          lat: place.geometry?.location?.lat(),
+          lng: place.geometry?.location?.lng(),
+        };
+
+        console.log("[Step1V8] Setting business with data:", {
+          name: place.name || businessName.trim(),
+          hasPhoto: !!photoUrl,
+          hasLocation: !!(businessData.lat && businessData.lng),
+          address: businessData.formattedAddress,
+        });
+
+        setSelectedPlace(place);
+        actions.setBusiness(place.name || businessName.trim(), businessData);
+      } else {
+        console.log("[Step1V8] Setting business without Google Place data");
+        // Fallback: use manual input without Google data
+        actions.setBusiness(businessName.trim(), {
+          address: addressValue.trim() || undefined,
+        });
       }
 
-      const businessData = {
-        address: addressValue.trim() || undefined,
-        placeId: selectedPlace.place_id,
-        formattedAddress: selectedPlace.formatted_address,
-        photoUrl,
-        lat: selectedPlace.geometry?.location?.lat(),
-        lng: selectedPlace.geometry?.location?.lng(),
-      };
-
-      console.log("[Step1V8] Setting business with data:", {
-        name: selectedPlace.name || businessName.trim(),
-        hasPhoto: !!photoUrl,
-        hasLocation: !!(businessData.lat && businessData.lng),
-        address: businessData.formattedAddress,
-      });
-
-      actions.setBusiness(selectedPlace.name || businessName.trim(), businessData);
-    } else {
-      console.log("[Step1V8] Setting business without Google Place data");
-      // Fallback: use manual input without Google data
-      actions.setBusiness(businessName.trim(), {
-        address: addressValue.trim() || undefined,
-      });
-    }
-
-    // Geocode ZIP if not already done
-    if (!locationConfirmed) {
-      void actions.submitLocation();
+      // Geocode ZIP if not already done
+      if (!locationConfirmed) {
+        void actions.submitLocation();
+      }
+    } finally {
+      setIsResolvingBusiness(false);
     }
   };
 
@@ -1117,24 +1173,25 @@ export function Step1V8({ state, actions }: Step1Props) {
           <button
             type="button"
             onClick={handleBusinessSearch}
-            disabled={!businessName.trim() || isFetching}
+            disabled={!businessName.trim() || isBusinessSubmitting}
             style={{
               width: "100%",
               padding: "11px 18px",
               borderRadius: 8,
               border:
-                !businessName.trim() || isFetching
+                !businessName.trim() || isBusinessSubmitting
                   ? "2px solid rgba(255,255,255,0.08)"
                   : "2px solid #10b981",
               background: "transparent",
-              color: !businessName.trim() || isFetching ? "rgba(232,235,243,0.25)" : "#10b981",
+              color:
+                !businessName.trim() || isBusinessSubmitting ? "rgba(232,235,243,0.25)" : "#10b981",
               fontSize: 13,
               fontWeight: 600,
-              cursor: !businessName.trim() || isFetching ? "not-allowed" : "pointer",
+              cursor: !businessName.trim() || isBusinessSubmitting ? "not-allowed" : "pointer",
               transition: "all 0.15s ease",
             }}
           >
-            {isFetching
+            {isBusinessSubmitting
               ? "Detecting..."
               : selectedPlace
                 ? "Continue with " + selectedPlace.name
