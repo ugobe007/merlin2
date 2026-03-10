@@ -31,6 +31,8 @@ import IntelStripInline from "@/components/wizard/v7/shared/IntelStripInline";
 const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyB9VeakhIGZQgCKmTiZ3ml0RvnvlT0dNrY";
 
+const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
+
 type GooglePlacesLibrary = {
   Place?: new (options: { id: string }) => {
     fetchFields: (request: { fields: string[] }) => Promise<void>;
@@ -135,7 +137,7 @@ export function Step1V8({ state, actions }: Step1Props) {
   const { isLoaded: isGoogleMapsReady, loadError: googleMapsLoadError } = useJsApiLoader({
     id: "merlin-v8-google-maps",
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: ["places"],
+    libraries: GOOGLE_MAPS_LIBRARIES,
     version: "weekly",
   });
 
