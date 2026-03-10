@@ -502,100 +502,147 @@ export default function Step5V8({ state, actions }: Props) {
             </div>
           </div>
 
-          {/* ── INVESTMENT group ── */}
-          <div className="mb-1.5">
-            <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
-              Investment
-            </span>
-          </div>
-          <div className="space-y-0">
-            <div className="flex items-center justify-between py-1.5">
-              <span className="text-xs text-slate-400">Total Investment</span>
-              <span className="text-sm font-semibold text-white tabular-nums">
-                {fmt$(tier.grossCost)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-1.5">
-              <span className="text-xs text-slate-400">
-                Federal ITC ({Math.round(tier.itcRate * 100)}%)
-              </span>
-              <span className="text-sm font-semibold text-emerald-400 tabular-nums">
-                −{fmt$(tier.itcAmount)}
-              </span>
-            </div>
-          </div>
-
-          {/* NET COST — hero row with visible separator */}
-          <div className="flex items-baseline justify-between py-2 border-t border-b border-white/[0.10] my-1.5">
-            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
-              Net Cost
-            </span>
-            <span className="text-xl font-black text-white tabular-nums tracking-tight">
-              {fmt$(tier.netCost)}
-            </span>
-          </div>
-
-          {/* ── RETURNS group ── */}
-          <div className="mt-2.5 mb-1.5">
-            <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
-              Returns
-            </span>
-          </div>
-          <div className="space-y-0">
-            <div className="flex items-center justify-between py-1.5">
-              <span className="text-xs text-slate-400">Annual Savings</span>
-              <span className="text-sm font-semibold text-emerald-400 tabular-nums">
-                {fmt$(tier.annualSavings)}
-              </span>
-            </div>
-
-            {/* Payback + ROI — side-by-side stat pills */}
-            <div className="grid grid-cols-2 gap-2 py-1.5">
-              <div className="bg-slate-800/50 rounded-lg px-2.5 py-2 text-center border border-white/[0.05]">
-                <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider mb-0.5">
-                  Payback
-                </div>
-                <div className="text-sm font-bold text-white tabular-nums">
-                  {tier.paybackYears.toFixed(1)} yr
+          <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-emerald-400/20 bg-[linear-gradient(135deg,rgba(16,185,129,0.16),rgba(15,23,42,0.82))] p-5 shadow-[0_0_32px_rgba(16,185,129,0.12)]">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-[10px] font-bold text-emerald-300/80 uppercase tracking-[0.28em]">
+                      Net Investment
+                    </div>
+                    <div className="mt-2 text-4xl font-black text-white tracking-tight tabular-nums">
+                      {fmt$(tier.netCost)}
+                    </div>
+                    <div className="mt-2 max-w-md text-sm leading-relaxed text-slate-300">
+                      After federal incentives, this is the capital required to put the full system
+                      in service.
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-right">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Annual Benefit
+                    </div>
+                    <div className="mt-1 text-xl font-bold text-emerald-400 tabular-nums">
+                      {fmt$(tier.annualSavings)}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="bg-slate-800/50 rounded-lg px-2.5 py-2 text-center border border-white/[0.05]">
-                <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider mb-0.5">
-                  10yr ROI
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                    Upfront Cost
+                  </div>
+                  <div className="mt-2 text-2xl font-bold text-white tabular-nums">
+                    {fmt$(tier.grossCost)}
+                  </div>
+                  <div className="mt-1 text-xs text-slate-400">
+                    Full installed project value before credits
+                  </div>
                 </div>
-                <div className="text-sm font-bold text-emerald-400 tabular-nums">
-                  {tier.roi10Year.toFixed(0)}%
+
+                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300/80">
+                    Federal ITC
+                  </div>
+                  <div className="mt-2 text-2xl font-bold text-emerald-400 tabular-nums">
+                    −{fmt$(tier.itcAmount)}
+                  </div>
+                  <div className="mt-1 text-xs text-emerald-200/70">
+                    {Math.round(tier.itcRate * 100)}% tax credit applied
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/[0.06] bg-slate-950/35 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                      10-Year Projection
+                    </div>
+                    <div className="mt-1 text-sm text-slate-300">
+                      Expected cumulative benefit over the first decade
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-black text-emerald-400 tracking-tight tabular-nums">
+                      {fmt$(tier.annualSavings * 10)}
+                    </div>
+                    <div className="text-xs text-slate-500">gross savings outlook</div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between py-1.5">
-              <span className="text-xs text-slate-400">NPV (25yr)</span>
-              <span
-                className={`text-sm font-semibold tabular-nums ${tier.npv >= 0 ? "text-emerald-400" : "text-red-400"}`}
+            <div className="space-y-3">
+              <div className="grid gap-3">
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                    Payback Window
+                  </div>
+                  <div className="mt-2 flex items-end gap-2">
+                    <span className="text-3xl font-black text-white tabular-nums">
+                      {tier.paybackYears.toFixed(1)}
+                    </span>
+                    <span className="pb-1 text-sm font-semibold text-slate-400">years</span>
+                  </div>
+                  <div className="mt-2 h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400"
+                      style={{ width: `${Math.max(12, Math.min(100, 100 - tier.paybackYears * 7))}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                    10-Year ROI
+                  </div>
+                  <div className="mt-2 text-3xl font-black text-emerald-400 tabular-nums">
+                    {tier.roi10Year.toFixed(0)}%
+                  </div>
+                  <div className="mt-1 text-sm text-slate-400">
+                    Return relative to post-incentive project cost
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                    25-Year NPV
+                  </div>
+                  <div
+                    className={`mt-2 text-3xl font-black tabular-nums ${tier.npv >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                  >
+                    {fmt$(tier.npv)}
+                  </div>
+                  <div className="mt-1 text-sm text-slate-400">
+                    Long-term value after discounting future savings
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowFinancialModal(true)}
+                className="w-full rounded-2xl border border-amber-500/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.12),rgba(15,23,42,0.85))] px-4 py-4 text-left hover:border-amber-400/35 hover:bg-[linear-gradient(135deg,rgba(245,158,11,0.18),rgba(15,23,42,0.92))] transition-all group"
               >
-                {fmt$(tier.npv)}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between py-1.5">
-              <span className="text-xs text-slate-400">10yr Cumulative</span>
-              <span className="text-sm font-semibold text-emerald-400 tabular-nums">
-                {fmt$(tier.annualSavings * 10)}
-              </span>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-300/80">
+                      Deep Dive
+                    </div>
+                    <div className="mt-1 text-base font-bold text-amber-300">
+                      Open the 10-year financial story
+                    </div>
+                    <div className="mt-1 text-sm text-slate-300">
+                      Cash flow, incentives, payback curve, and full projection
+                    </div>
+                  </div>
+                  <TrendingUp className="w-5 h-5 text-amber-300 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
             </div>
           </div>
-
-          {/* Financial projection CTA */}
-          <button
-            onClick={() => setShowFinancialModal(true)}
-            className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 rounded-md border border-amber-500/20 bg-amber-500/[0.04] hover:bg-amber-500/[0.08] transition-all group"
-          >
-            <TrendingUp className="w-3.5 h-3.5 text-amber-400 group-hover:text-amber-300" />
-            <span className="text-[11px] font-semibold text-amber-400 group-hover:text-amber-300">
-              View 10-Year Financial Projection
-            </span>
-          </button>
         </div>
       </div>
 
