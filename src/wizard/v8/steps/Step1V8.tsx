@@ -288,6 +288,20 @@ export function Step1V8({ state, actions }: Step1Props) {
     const placesLibrary = await ensurePlacesLibrary();
     const getCoordinate = (value?: number | (() => number)) =>
       typeof value === "function" ? value() : value;
+    const getFallbackAddress = () => {
+      const secondary = suggestion.secondaryText?.trim();
+      if (secondary) return secondary;
+      const label = suggestion.label?.trim();
+      if (label && label !== suggestion.primaryText) return label;
+      return addressValueRef.current.trim() || location?.formattedAddress;
+    };
+    const baseResolvedPlace: ResolvedBusinessPlace = {
+      name: suggestion.primaryText || businessName.trim(),
+      formattedAddress: getFallbackAddress(),
+      placeId: suggestion.placeId,
+      lat: location?.lat,
+      lng: location?.lng,
+    };
     const toResolvedPlace = (place: {
       id?: string;
       displayName?: string | { text?: string };
@@ -309,11 +323,11 @@ export function Step1V8({ state, actions }: Step1Props) {
 
       return {
         name,
-        formattedAddress: place.formattedAddress || suggestion.secondaryText || suggestion.label,
+        formattedAddress: place.formattedAddress || getFallbackAddress(),
         placeId: place.id || suggestion.placeId,
-        photoUrl,
-        lat: getCoordinate(place.location?.lat) ?? location?.lat,
-        lng: getCoordinate(place.location?.lng) ?? location?.lng,
+        photoUrl: photoUrl || baseResolvedPlace.photoUrl,
+        lat: getCoordinate(place.location?.lat) ?? baseResolvedPlace.lat,
+        lng: getCoordinate(place.location?.lng) ?? baseResolvedPlace.lng,
       };
     };
 
@@ -336,13 +350,7 @@ export function Step1V8({ state, actions }: Step1Props) {
         }
       }
 
-      return {
-        name: suggestion.primaryText || businessName.trim(),
-        formattedAddress: suggestion.secondaryText || suggestion.label,
-        placeId: suggestion.placeId,
-        lat: location?.lat,
-        lng: location?.lng,
-      };
+      return baseResolvedPlace;
     }
   };
 
@@ -350,6 +358,25 @@ export function Step1V8({ state, actions }: Step1Props) {
     setBusinessError(null);
     setBusinessSuggestions([]);
     setIsResolvingBusiness(true);
+
+    const previewPlace: ResolvedBusinessPlace = {
+      name: suggestion.primaryText || businessName.trim(),
+      formattedAddress:
+        suggestion.secondaryText || suggestion.label || addressValueRef.current.trim() || undefined,
+      placeId: suggestion.placeId,
+      lat: location?.lat,
+      lng: location?.lng,
+    };
+
+    setSelectedPlace(previewPlace);
+    setBusinessName(previewPlace.name);
+    actions.setBusiness(previewPlace.name, {
+      address: addressValueRef.current.trim() || undefined,
+      placeId: previewPlace.placeId,
+      formattedAddress: previewPlace.formattedAddress,
+      lat: previewPlace.lat,
+      lng: previewPlace.lng,
+    });
 
     try {
       const place = await fetchPlaceDetails(suggestion);
@@ -366,6 +393,8 @@ export function Step1V8({ state, actions }: Step1Props) {
         lat: place.lat,
         lng: place.lng,
       });
+    } catch {
+      // Keep the optimistic business card data if Google detail hydration fails.
     } finally {
       sessionTokenRef.current = null;
       setIsResolvingBusiness(false);
@@ -421,8 +450,14 @@ export function Step1V8({ state, actions }: Step1Props) {
     setIsResolvingBusiness(true);
 
     try {
+      let place = selectedPlace;
+      if (!place && businessSuggestions.length > 0) {
+        await handleSelectSuggestion(businessSuggestions[0]);
+        return;
+      }
+
       // Use selected place from autocomplete if available
-      const place = selectedPlace ?? (await resolveBusinessFromQuery());
+      place = place ?? (await resolveBusinessFromQuery());
       if (place) {
         setSelectedPlace(place);
         actions.setBusiness(place.name || businessName.trim(), {
