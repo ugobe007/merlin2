@@ -240,7 +240,6 @@ export default function Step4V8({ state, actions }: Props) {
   const [loadingStep, setLoadingStep] = React.useState(0);
   const [progress, setProgress] = React.useState(0);
   const [selectionConfirmation, setSelectionConfirmation] = React.useState<string | null>(null);
-  const loadingStepCount = loadingSteps.length;
 
   // Loading steps for status bar
   const loadingSteps = [
@@ -251,6 +250,7 @@ export default function Step4V8({ state, actions }: Props) {
     "Running 25-year financial model...",
     "Generating 3 optimized tiers...",
   ];
+  const loadingStepCount = loadingSteps.length;
 
   // Simulate progress during loading
   React.useEffect(() => {

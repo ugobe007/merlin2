@@ -18,7 +18,7 @@ interface Props {
 // Range button component (Supabase style)
 interface RangeButtonProps {
   label: string;
-  _value: number;
+  value: number;
   isSelected: boolean;
   onClick: () => void;
   color?: string;
@@ -27,7 +27,7 @@ interface RangeButtonProps {
 
 const RangeButton: React.FC<RangeButtonProps> = ({
   label,
-  _value,
+  value: _value,
   isSelected,
   onClick,
   color = "purple",
@@ -319,13 +319,13 @@ export default function Step3_5V8({ state, actions }: Props) {
 
         {/* Generator Configuration */}
         {wantsGenerator && (
-          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-slate-800 rounded-2xl p-6">
+          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-orange-500/30 rounded-2xl p-6 shadow-[0_0_32px_rgba(249,115,22,0.12)]">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-orange-500/10 p-3 rounded-xl">
                 <Fuel className="w-6 h-6 text-orange-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Backup Generator</h3>
+                <h3 className="text-xl font-bold text-white">Power Generator</h3>
                 <p className="text-slate-400 text-sm">
                   Merlin recommends ⭐ Standard — Choose your preferred range
                 </p>
@@ -446,7 +446,7 @@ export default function Step3_5V8({ state, actions }: Props) {
 
       {/* Continue Button */}
       <div className="pt-8">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 p-3 shadow-[0_0_50px_rgba(16,185,129,0.18)]">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-emerald-500/20 bg-slate-950/40 p-3">
           <div className="mb-3 text-center">
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-emerald-300/80">
               Ready For MagicFit
@@ -464,7 +464,7 @@ export default function Step3_5V8({ state, actions }: Props) {
             transition-all duration-200 flex items-center justify-center gap-3
             ${
               !isGeneratingTiers
-                ? "border-2 border-emerald-300 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-slate-950 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(16,185,129,0.45)]"
+                ? "border-2 border-emerald-400 bg-transparent text-emerald-400 hover:bg-transparent hover:text-emerald-300 hover:border-emerald-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_28px_rgba(16,185,129,0.18)]"
                 : "bg-slate-800 text-slate-500 cursor-not-allowed border-2 border-slate-700"
             }
           `}
