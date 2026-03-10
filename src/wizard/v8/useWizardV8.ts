@@ -380,6 +380,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     (
       name: string,
       placesData?: {
+        address?: string;
         placeId?: string;
         formattedAddress?: string;
         photoUrl?: string;
@@ -389,6 +390,11 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     ) => {
       if (import.meta.env.DEV) {
         console.log("[setBusiness] Called with name:", name, "placesData:", placesData);
+      }
+
+      if (!name.trim()) {
+        dispatch({ type: "SET_BUSINESS", business: null });
+        return;
       }
 
       const { industry, confidence } = detectIndustryFromName(name);

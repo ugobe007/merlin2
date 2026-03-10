@@ -112,6 +112,7 @@ export function Step1V8({ state, actions }: Step1Props) {
   const zipRef = useRef<HTMLInputElement>(null);
   const businessInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const addressValueRef = useRef("");
 
   // Local UI state — no impact on wizard SSOT state until submitLocation is called
   const [country, setCountry] = useState<Country>("US");
@@ -131,6 +132,10 @@ export function Step1V8({ state, actions }: Step1Props) {
   useEffect(() => {
     zipRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    addressValueRef.current = addressValue;
+  }, [addressValue]);
 
   // Initialize Google Places Autocomplete
   useEffect(() => {
@@ -210,6 +215,7 @@ export function Step1V8({ state, actions }: Step1Props) {
               }
 
               const businessData = {
+                address: addressValueRef.current.trim() || undefined,
                 placeId: place.place_id,
                 formattedAddress: place.formatted_address,
                 photoUrl,
@@ -301,6 +307,7 @@ export function Step1V8({ state, actions }: Step1Props) {
       }
 
       const businessData = {
+        address: addressValue.trim() || undefined,
         placeId: selectedPlace.place_id,
         formattedAddress: selectedPlace.formatted_address,
         photoUrl,
@@ -319,7 +326,9 @@ export function Step1V8({ state, actions }: Step1Props) {
     } else {
       console.log("[Step1V8] Setting business without Google Place data");
       // Fallback: use manual input without Google data
-      actions.setBusiness(businessName.trim());
+      actions.setBusiness(businessName.trim(), {
+        address: addressValue.trim() || undefined,
+      });
     }
 
     // Geocode ZIP if not already done
@@ -1012,15 +1021,7 @@ export function Step1V8({ state, actions }: Step1Props) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  // Only allow Enter if autocomplete dropdown is not open
-                  // This prevents bypassing autocomplete selection
-                  if (selectedPlace || !autocompleteRef.current) {
-                    handleBusinessSearch();
-                  } else {
-                    console.log(
-                      "[Step1V8] Enter blocked - please select from autocomplete dropdown"
-                    );
-                  }
+                  handleBusinessSearch();
                 }
               }}
               placeholder="e.g., Wow Car Wash, Sunset Hotel, City Hospital"
@@ -1093,9 +1094,7 @@ export function Step1V8({ state, actions }: Step1Props) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  if (selectedPlace || !autocompleteRef.current) {
-                    handleBusinessSearch();
-                  }
+                  handleBusinessSearch();
                 }
               }}
               placeholder="e.g., 1234 S Maryland Parkway"
@@ -1118,28 +1117,20 @@ export function Step1V8({ state, actions }: Step1Props) {
           <button
             type="button"
             onClick={handleBusinessSearch}
-            disabled={
-              !businessName.trim() || isFetching || (!!autocompleteRef.current && !selectedPlace)
-            }
+            disabled={!businessName.trim() || isFetching}
             style={{
               width: "100%",
               padding: "11px 18px",
               borderRadius: 8,
               border:
-                !businessName.trim() || isFetching || (!!autocompleteRef.current && !selectedPlace)
+                !businessName.trim() || isFetching
                   ? "2px solid rgba(255,255,255,0.08)"
                   : "2px solid #10b981",
               background: "transparent",
-              color:
-                !businessName.trim() || isFetching || (!!autocompleteRef.current && !selectedPlace)
-                  ? "rgba(232,235,243,0.25)"
-                  : "#10b981",
+              color: !businessName.trim() || isFetching ? "rgba(232,235,243,0.25)" : "#10b981",
               fontSize: 13,
               fontWeight: 600,
-              cursor:
-                !businessName.trim() || isFetching || (!!autocompleteRef.current && !selectedPlace)
-                  ? "not-allowed"
-                  : "pointer",
+              cursor: !businessName.trim() || isFetching ? "not-allowed" : "pointer",
               transition: "all 0.15s ease",
             }}
           >
@@ -1147,7 +1138,7 @@ export function Step1V8({ state, actions }: Step1Props) {
               ? "Detecting..."
               : selectedPlace
                 ? "Continue with " + selectedPlace.name
-                : "Select from dropdown to continue"}
+                : "Continue with typed business name"}
           </button>
         </div>
       ) : state.business && locationConfirmed ? (
@@ -1692,6 +1683,9 @@ export function Step1V8({ state, actions }: Step1Props) {
                 type="button"
                 onClick={() => {
                   setBusinessName("");
+                  setAddressValue("");
+                  setSelectedPlace(null);
+                  setBusinessError(null);
                   actions.setBusiness("");
                 }}
                 style={{
