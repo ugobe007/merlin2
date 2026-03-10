@@ -2,8 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import IntelStripInline from "@/components/wizard/v7/shared/IntelStripInline";
 import type { BusinessData, WizardActions, WizardState } from "../wizardState";
 
-const GOOGLE_MAPS_API_KEY =
-  import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyB9VeakhIGZQgCKmTiZ3ml0RvnvlT0dNrY";
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const T = {
   accent: "#3ECF8E",
@@ -102,6 +101,10 @@ let googleMapsPromise: Promise<void> | null = null;
 function loadGoogleMapsScript(): Promise<void> {
   if (typeof window === "undefined") {
     return Promise.reject(new Error("Google Maps unavailable during SSR"));
+  }
+
+  if (!GOOGLE_MAPS_API_KEY) {
+    return Promise.reject(new Error("Missing VITE_GOOGLE_MAPS_API_KEY"));
   }
 
   if (window.google?.maps?.importLibrary) {
