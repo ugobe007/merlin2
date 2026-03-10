@@ -156,8 +156,20 @@ function getPhotoPayload(place: {
   const photo = place.photos?.[0];
   const attribution = photo?.authorAttributions?.[0];
 
+  // Log photo extraction for debugging
+  console.log("[Step1V8] Extracting photo from place:", {
+    hasPhotos: !!place.photos,
+    photoCount: place.photos?.length ?? 0,
+    hasGetURI: !!photo?.getURI,
+    photo: photo,
+  });
+
+  const photoUrl = photo?.getURI?.({ maxWidth: 480, maxHeight: 320 });
+
+  console.log("[Step1V8] Photo URL extracted:", photoUrl);
+
   return {
-    photoUrl: photo?.getURI?.({ maxWidth: 480, maxHeight: 320 }),
+    photoUrl,
     photoAttributionName: attribution?.displayName,
     photoAttributionUri: attribution?.uri,
   };
