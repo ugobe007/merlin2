@@ -441,6 +441,42 @@ export function Step1V8({ state, actions }: Step1Props) {
     }
   };
 
+  const resolveBusinessFromQuery = useCallback(async (): Promise<BusinessSuggestion | null> => {
+    const placesLibrary = await ensurePlacesLibrary();
+    if (!placesLibrary || !businessName.trim()) return null;
+
+    const query = [businessName.trim(), streetAddress.trim(), location?.city, location?.state]
+      .filter(Boolean)
+      .join(", ");
+
+    if (!query) return null;
+
+    const sessionToken = new placesLibrary.AutocompleteSessionToken();
+
+    try {
+      const { suggestions = [] } =
+        await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: query,
+          includedRegionCodes: country === "US" ? ["US"] : undefined,
+          inputOffset: query.length,
+          sessionToken,
+        });
+
+      const prediction = suggestions[0]?.placePrediction;
+      if (!prediction) return null;
+
+      return {
+        placeId: prediction.placeId,
+        label: prediction.text?.text || prediction.mainText?.text || query,
+        primaryText: prediction.mainText?.text || prediction.text?.text || query,
+        secondaryText: prediction.secondaryText?.text,
+        prediction,
+      };
+    } catch {
+      return null;
+    }
+  }, [businessName, country, ensurePlacesLibrary, location?.city, location?.state, streetAddress]);
+
   const handleBusinessContinue = async () => {
     if (!businessName.trim()) {
       setBusinessError("Enter your business name to continue.");
@@ -461,8 +497,11 @@ export function Step1V8({ state, actions }: Step1Props) {
       if (selectedSuggestion) {
         const details = await enrichSuggestion(selectedSuggestion);
         commitBusinessPreview({ ...preview, ...details });
-      } else if (businessSuggestions[0]) {
-        await handleSuggestionSelect(businessSuggestions[0]);
+      } else {
+        const autoSuggestion = businessSuggestions[0] ?? (await resolveBusinessFromQuery());
+        if (autoSuggestion) {
+          await handleSuggestionSelect(autoSuggestion);
+        }
         return;
       }
     } finally {
