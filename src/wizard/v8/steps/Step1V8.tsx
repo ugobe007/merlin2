@@ -32,6 +32,16 @@ const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyB9VeakhIGZQgCKmTiZ3ml0RvnvlT0dNrY";
 
 type GooglePlacesLibrary = {
+  Place?: new (options: { id: string }) => {
+    fetchFields: (request: { fields: string[] }) => Promise<void>;
+    id?: string;
+    displayName?: string | { text?: string };
+    formattedAddress?: string;
+    location?: { lat?: number | (() => number); lng?: number | (() => number) };
+    photos?: Array<{
+      getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
+    }>;
+  };
   AutocompleteSuggestion: {
     fetchAutocompleteSuggestions: (request: Record<string, unknown>) => Promise<{
       suggestions?: Array<{
@@ -273,15 +283,16 @@ export function Step1V8({ state, actions }: Step1Props) {
   const fetchPlaceDetails = async (
     suggestion: BusinessSuggestion
   ): Promise<ResolvedBusinessPlace | null> => {
-    try {
-      const place = suggestion.prediction.toPlace();
-      await place.fetchFields({
-        fields: ["displayName", "formattedAddress", "location", "photos", "id"],
-      });
-
-      const getCoordinate = (value?: number | (() => number)) =>
-        typeof value === "function" ? value() : value;
-
+    const placesLibrary = await ensurePlacesLibrary();
+    const getCoordinate = (value?: number | (() => number)) =>
+      typeof value === "function" ? value() : value;
+    const toResolvedPlace = (place: {
+      id?: string;
+      displayName?: string | { text?: string };
+      formattedAddress?: string;
+      location?: { lat?: number | (() => number); lng?: number | (() => number) };
+      photos?: Array<{ getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string }>;
+    }): ResolvedBusinessPlace => {
       let photoUrl: string | undefined;
       try {
         photoUrl = place.photos?.[0]?.getURI?.({ maxWidth: 400, maxHeight: 300 });
@@ -296,14 +307,40 @@ export function Step1V8({ state, actions }: Step1Props) {
 
       return {
         name,
-        formattedAddress: place.formattedAddress,
+        formattedAddress: place.formattedAddress || suggestion.secondaryText || suggestion.label,
         placeId: place.id || suggestion.placeId,
         photoUrl,
-        lat: getCoordinate(place.location?.lat),
-        lng: getCoordinate(place.location?.lng),
+        lat: getCoordinate(place.location?.lat) ?? location?.lat,
+        lng: getCoordinate(place.location?.lng) ?? location?.lng,
       };
+    };
+
+    try {
+      const place = suggestion.prediction.toPlace();
+      await place.fetchFields({
+        fields: ["displayName", "formattedAddress", "location", "photos", "id"],
+      });
+      return toResolvedPlace(place);
     } catch {
-      return null;
+      if (placesLibrary?.Place) {
+        try {
+          const fallbackPlace = new placesLibrary.Place({ id: suggestion.placeId });
+          await fallbackPlace.fetchFields({
+            fields: ["displayName", "formattedAddress", "location", "photos", "id"],
+          });
+          return toResolvedPlace(fallbackPlace);
+        } catch {
+          // Fall through to suggestion-only fallback
+        }
+      }
+
+      return {
+        name: suggestion.primaryText || businessName.trim(),
+        formattedAddress: suggestion.secondaryText || suggestion.label,
+        placeId: suggestion.placeId,
+        lat: location?.lat,
+        lng: location?.lng,
+      };
     }
   };
 
