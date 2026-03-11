@@ -9,10 +9,11 @@ const GOOGLE_MAPS_API_KEY =
 
 // VERSION CHECK - This will immediately log when Step1V8 is loaded
 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-console.log("🚀 STEP1V8 LOADED - VERSION 1071");
-console.log("📅 Build: March 11, 2026");
+console.log("🚀 STEP1V8 LOADED - VERSION 1072");
+console.log("📅 Build: March 11, 2026 - 16:30 UTC");
 console.log("🔑 ENV VAR:", import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? "✅ Set" : "❌ Missing");
-console.log("🔑 ACTUAL KEY:", GOOGLE_MAPS_API_KEY ? "✅ Using fallback" : "❌ No key");
+console.log("🔑 ACTUAL KEY:", GOOGLE_MAPS_API_KEY ? "✅ Using key" : "❌ No key");
+console.log("🔑 KEY VALUE:", GOOGLE_MAPS_API_KEY?.substring(0, 20) + "...");
 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
 const T = {
