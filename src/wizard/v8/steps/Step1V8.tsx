@@ -311,7 +311,11 @@ export function Step1V8({ state, actions }: Step1Props) {
 
   const enrichSuggestion = useCallback(
     async (suggestion: BusinessSuggestion): Promise<Partial<BusinessData>> => {
+      console.log("🔍 enrichSuggestion CALLED for:", suggestion.primaryText);
+
       const placesLibrary = await ensurePlacesLibrary();
+      console.log("📚 Places library loaded:", !!placesLibrary);
+
       const fallbackAddress =
         suggestion.secondaryText ||
         suggestion.label ||
@@ -320,7 +324,10 @@ export function Step1V8({ state, actions }: Step1Props) {
 
       try {
         if (placesLibrary?.Place) {
+          console.log("✅ Using placesLibrary.Place (NEW API)");
           const place = new placesLibrary.Place({ id: suggestion.placeId });
+          console.log("📍 Place created, fetching fields...");
+
           await place.fetchFields({
             fields: [
               "displayName",
@@ -332,6 +339,12 @@ export function Step1V8({ state, actions }: Step1Props) {
               "editorialSummary",
             ],
           });
+
+          console.log("📦 Place details fetched:", {
+            hasPhotos: !!place.photos,
+            photoCount: place.photos?.length,
+          });
+
           return {
             placeId: place.id || suggestion.placeId,
             formattedAddress: place.formattedAddress || fallbackAddress,
@@ -346,6 +359,7 @@ export function Step1V8({ state, actions }: Step1Props) {
           };
         }
 
+        console.log("⚠️ Fallback: Using prediction.toPlace() (OLD API)");
         const place = suggestion.prediction.toPlace();
         await place.fetchFields({
           fields: [
