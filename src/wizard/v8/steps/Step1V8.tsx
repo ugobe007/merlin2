@@ -425,7 +425,8 @@ export function Step1V8({ state, actions }: Step1Props) {
           await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
             input: businessName.trim(),
             includedRegionCodes: country === "US" ? ["US"] : undefined,
-            inputOffset: businessName.trim().length,
+            // Remove inputOffset - it's optional and was causing "InvalidValueError"
+            // inputOffset is for cursor position in partial completions, not needed here
             sessionToken: sessionTokenRef.current,
           });
 
