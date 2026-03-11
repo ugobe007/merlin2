@@ -4,6 +4,13 @@ import type { BusinessData, WizardActions, WizardState } from "../wizardState";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
+// VERSION CHECK - This will immediately log when Step1V8 is loaded
+console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+console.log("🚀 STEP1V8 LOADED - VERSION 1070");
+console.log("📅 Build: March 11, 2026");
+console.log("🔑 Google Maps API Key:", GOOGLE_MAPS_API_KEY ? "✅ Set" : "❌ Missing");
+console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
 const T = {
   accent: "#3ECF8E",
   accentSoft: "rgba(62,207,142,0.10)",
