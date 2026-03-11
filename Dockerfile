@@ -43,8 +43,17 @@ COPY . .
 # Clear any existing build artifacts
 RUN rm -rf dist node_modules/.vite
 
-# Build the app (skip TypeScript checking for faster deploy)
-RUN npm run build:prod
+# Build the app with explicit env vars passed to Vite
+# Vite needs these as environment variables during the build process
+RUN VITE_SUPABASE_URL=${VITE_SUPABASE_URL} \
+    VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY} \
+    VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY} \
+    VITE_RESEND_API_KEY=${VITE_RESEND_API_KEY} \
+    VITE_OPENAI_API_KEY=${VITE_OPENAI_API_KEY} \
+    VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY} \
+    VITE_NREL_API_KEY=${VITE_NREL_API_KEY} \
+    VITE_VISUAL_CROSSING_API_KEY=${VITE_VISUAL_CROSSING_API_KEY} \
+    npm run build:prod
 
 # Production stage - Multi-service (nginx + Node.js API)
 FROM node:20-alpine
