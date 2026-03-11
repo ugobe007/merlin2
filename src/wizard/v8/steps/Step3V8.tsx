@@ -44,6 +44,8 @@ export function Step3V8({ state, actions }: Props) {
     state.wantsEVCharging,
     state.wantsGenerator,
     answers,
+    state.intel?.solarFeasible ?? false,
+    state.solarPhysicalCapKW,
   );
 
   // Resolve curated schema (SSOT for questions, defaults, validation)
