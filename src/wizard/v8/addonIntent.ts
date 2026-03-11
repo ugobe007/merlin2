@@ -1,3 +1,11 @@
+export function hasSolarAddonOpportunity(
+  wantsSolar: boolean,
+  solarFeasible: boolean,
+  solarPhysicalCapKW: number,
+): boolean {
+  return wantsSolar || (solarFeasible && solarPhysicalCapKW > 0);
+}
+
 export function hasGeneratorIntent(step3Answers: Record<string, unknown>): boolean {
   const generatorNeed = String(step3Answers.generatorNeed ?? "").toLowerCase();
   if (
@@ -45,6 +53,13 @@ export function hasStep35Addons(
   wantsEVCharging: boolean,
   wantsGenerator: boolean,
   step3Answers: Record<string, unknown>,
+  solarFeasible: boolean,
+  solarPhysicalCapKW: number,
 ): boolean {
-  return wantsSolar || wantsEVCharging || wantsGenerator || hasGeneratorIntent(step3Answers);
+  return (
+    hasSolarAddonOpportunity(wantsSolar, solarFeasible, solarPhysicalCapKW) ||
+    wantsEVCharging ||
+    wantsGenerator ||
+    hasGeneratorIntent(step3Answers)
+  );
 }

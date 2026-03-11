@@ -25,7 +25,7 @@
 
 import { describe, it, expect } from "vitest";
 import { reducer, initialState, isSolarFeasible, type SolarGrade } from "../wizardState";
-import { hasGeneratorIntent, hasStep35Addons } from "../addonIntent";
+import { hasGeneratorIntent, hasSolarAddonOpportunity, hasStep35Addons } from "../addonIntent";
 
 // =============================================================================
 // INITIAL STATE
@@ -152,10 +152,41 @@ describe("Step navigation", () => {
 
   it("treats Step 3 generator answers as Step 3.5 addon intent", () => {
     expect(
-      hasStep35Addons(false, false, false, {
-        generatorNeed: "resilience",
-      }),
+      hasStep35Addons(
+        false,
+        false,
+        false,
+        {
+          generatorNeed: "resilience",
+        },
+        false,
+        0,
+      ),
     ).toBe(true);
+  });
+
+  it("goes back from Step 4 to Step 3.5 when solar is feasible even without explicit wantsSolar", () => {
+    let state = initialState();
+    state = reducer(state, {
+      type: "PATCH_INTEL",
+      patch: {
+        solarGrade: "A",
+        solarFeasible: true,
+      },
+    });
+    state = reducer(state, {
+      type: "SET_INDUSTRY",
+      slug: "retail",
+    });
+    state = reducer(state, {
+      type: "SET_INDUSTRY_META",
+      solarPhysicalCapKW: 300,
+      criticalLoadPct: 0.5,
+    });
+    state = reducer(state, { type: "GO_TO_STEP", step: 4 });
+    state = reducer(state, { type: "GO_BACK" });
+
+    expect(state.step).toBe(3.5);
   });
 });
 
@@ -734,7 +765,14 @@ describe("Conditional Step 3.5 flow", () => {
     let state = initialState();
     state = reducer(state, { type: "SET_ADDON_PREFERENCE", addon: "ev", value: true });
 
-    const needsStep35 = state.wantsSolar || state.wantsEVCharging || state.wantsGenerator;
+    const needsStep35 = hasStep35Addons(
+      state.wantsSolar,
+      state.wantsEVCharging,
+      state.wantsGenerator,
+      state.step3Answers,
+      state.intel?.solarFeasible ?? false,
+      state.solarPhysicalCapKW,
+    );
     expect(needsStep35).toBe(true);
   });
 
@@ -742,14 +780,28 @@ describe("Conditional Step 3.5 flow", () => {
     let state = initialState();
     state = reducer(state, { type: "SET_ADDON_PREFERENCE", addon: "generator", value: true });
 
-    const needsStep35 = state.wantsSolar || state.wantsEVCharging || state.wantsGenerator;
+    const needsStep35 = hasStep35Addons(
+      state.wantsSolar,
+      state.wantsEVCharging,
+      state.wantsGenerator,
+      state.step3Answers,
+      state.intel?.solarFeasible ?? false,
+      state.solarPhysicalCapKW,
+    );
     expect(needsStep35).toBe(true);
   });
 
   it("Step 3.5 NOT needed when all addons false", () => {
     const state = initialState();
 
-    const needsStep35 = state.wantsSolar || state.wantsEVCharging || state.wantsGenerator;
+    const needsStep35 = hasStep35Addons(
+      state.wantsSolar,
+      state.wantsEVCharging,
+      state.wantsGenerator,
+      state.step3Answers,
+      state.intel?.solarFeasible ?? false,
+      state.solarPhysicalCapKW,
+    );
     expect(needsStep35).toBe(false);
   });
 
@@ -758,7 +810,48 @@ describe("Conditional Step 3.5 flow", () => {
     state = reducer(state, { type: "SET_ADDON_PREFERENCE", addon: "solar", value: true });
     state = reducer(state, { type: "SET_ADDON_PREFERENCE", addon: "ev", value: true });
 
-    const needsStep35 = state.wantsSolar || state.wantsEVCharging || state.wantsGenerator;
+    const needsStep35 = hasStep35Addons(
+      state.wantsSolar,
+      state.wantsEVCharging,
+      state.wantsGenerator,
+      state.step3Answers,
+      state.intel?.solarFeasible ?? false,
+      state.solarPhysicalCapKW,
+    );
+    expect(needsStep35).toBe(true);
+  });
+
+  it("Step 3.5 needed when solar is feasible and the facility has physical capacity", () => {
+    let state = initialState();
+    state = reducer(state, {
+      type: "PATCH_INTEL",
+      patch: {
+        solarGrade: "A",
+        solarFeasible: true,
+      },
+    });
+    state = reducer(state, {
+      type: "SET_INDUSTRY",
+      slug: "hotel",
+    });
+    state = reducer(state, {
+      type: "SET_INDUSTRY_META",
+      solarPhysicalCapKW: 225,
+      criticalLoadPct: 0.45,
+    });
+
+    expect(hasSolarAddonOpportunity(false, state.intel?.solarFeasible ?? false, state.solarPhysicalCapKW)).toBe(
+      true,
+    );
+
+    const needsStep35 = hasStep35Addons(
+      state.wantsSolar,
+      state.wantsEVCharging,
+      state.wantsGenerator,
+      state.step3Answers,
+      state.intel?.solarFeasible ?? false,
+      state.solarPhysicalCapKW,
+    );
     expect(needsStep35).toBe(true);
   });
 });

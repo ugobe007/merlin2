@@ -66,6 +66,8 @@
  * =============================================================================
  */
 
+import { hasStep35Addons } from "./addonIntent";
+
 // ── Solar grade type ─────────────────────────────────────────────────────────
 // Maps to gradeFromPSH() in wizardAPI.ts. Order matters for isSolarFeasible().
 export type SolarGrade = "A" | "A-" | "B+" | "B" | "B-" | "C+" | "C" | "D";
@@ -574,7 +576,14 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
         state.step === 5
           ? 4
           : state.step === 4
-            ? state.wantsSolar || state.wantsEVCharging || state.wantsGenerator
+            ? hasStep35Addons(
+                state.wantsSolar,
+                state.wantsEVCharging,
+                state.wantsGenerator,
+                state.step3Answers,
+                state.intel?.solarFeasible ?? false,
+                state.solarPhysicalCapKW,
+              )
               ? 3.5
               : 3
             : state.step === 3.5

@@ -44,6 +44,7 @@ import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
 import { buildTiers } from "./step4Logic";
 import type { LocationData } from "./wizardState";
+import { hasStep35Addons } from "./addonIntent";
 
 // ── ZIP → LocationData (V8-native, no backend required) ─────────────────────
 //
@@ -517,16 +518,25 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
   useEffect(() => {
     const slug = state.industry;
-    if (!slug) return;
+    if (!slug) {
+      console.log('[useWizardV8] Power calc skipped: no industry');
+      return;
+    }
 
     const answers = state.step3Answers;
-    if (Object.keys(answers).length === 0) return;
+    if (Object.keys(answers).length === 0) {
+      console.log('[useWizardV8] Power calc skipped: no answers');
+      return;
+    }
+
+    console.log('[useWizardV8] Running power calculation for:', slug, 'with answers:', answers);
 
     // Convert underscore slug (V8 type) → hyphen slug (SSOT function convention)
     const ssotSlug = slug.replace(/_/g, "-");
 
     try {
       const result = calculateUseCasePower(ssotSlug, answers as Record<string, unknown>);
+      console.log('[useWizardV8] Power calculation result:', result);
 
       // PowerCalculationResult returns powerMW (megawatts), convert to kW
       // Legacy results may have averageLoadKW/baseLoadKW/peakLoadKW
@@ -677,7 +687,14 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     async (step: WizardStep) => {
       // Special handling after Step 3: Check if addons need configuration
       if (step === 4 && state.step === 3) {
-        const needsAddonConfig = state.wantsSolar || state.wantsEVCharging || state.wantsGenerator;
+        const needsAddonConfig = hasStep35Addons(
+          state.wantsSolar,
+          state.wantsEVCharging,
+          state.wantsGenerator,
+          state.step3Answers,
+          state.intel?.solarFeasible ?? false,
+          state.solarPhysicalCapKW,
+        );
 
         if (needsAddonConfig) {
           // Redirect to Step 3.5 first to configure addons
@@ -708,9 +725,14 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       if (
         step === 4 &&
         state.step === 3 &&
-        !state.wantsSolar &&
-        !state.wantsEVCharging &&
-        !state.wantsGenerator
+        !hasStep35Addons(
+          state.wantsSolar,
+          state.wantsEVCharging,
+          state.wantsGenerator,
+          state.step3Answers,
+          state.intel?.solarFeasible ?? false,
+          state.solarPhysicalCapKW,
+        )
       ) {
         // Navigate to Step 4 first to show loading screen
         dispatch({ type: "GO_TO_STEP", step: 4 });
@@ -748,9 +770,14 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       state.step === 3 &&
       state.baseLoadKW > 0 &&
       !!state.location &&
-      !state.wantsSolar &&
-      !state.wantsEVCharging &&
-      !state.wantsGenerator;
+      !hasStep35Addons(
+        state.wantsSolar,
+        state.wantsEVCharging,
+        state.wantsGenerator,
+        state.step3Answers,
+        state.intel?.solarFeasible ?? false,
+        state.solarPhysicalCapKW,
+      );
 
     const canBuildFromStep35 = state.step === 3.5 && state.baseLoadKW > 0 && !!state.location;
 

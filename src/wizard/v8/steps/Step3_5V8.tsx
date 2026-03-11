@@ -16,6 +16,7 @@
 
 import React, { useEffect } from "react";
 import type { WizardState, WizardActions } from "../wizardState";
+import { hasSolarAddonOpportunity } from "../addonIntent";
 import { Sun, Zap, Fuel, Info } from "lucide-react";
 
 interface Props {
@@ -25,6 +26,11 @@ interface Props {
 
 export default function Step3_5V8({ state, actions }: Props) {
   const { wantsSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry } = state;
+  const showSolar = hasSolarAddonOpportunity(
+    wantsSolar,
+    state.intel?.solarFeasible ?? false,
+    state.solarPhysicalCapKW,
+  );
 
   // Local confirmation states
   const [solarConfirmed, setSolarConfirmed] = React.useState(false);
@@ -37,7 +43,7 @@ export default function Step3_5V8({ state, actions }: Props) {
     const updates: Record<string, unknown> = {};
     
     // Solar: Industry-appropriate sizing
-    if (wantsSolar && state.solarKW === 0) {
+    if (showSolar && state.solarKW === 0) {
       // Default: 1.4x peak load (NREL ATB 2024 ILR for commercial)
       updates.solarKW = Math.round(peakLoadKW * 1.4);
     }
@@ -90,7 +96,7 @@ export default function Step3_5V8({ state, actions }: Props) {
     if (Object.keys(updates).length > 0) {
       actions.setAddonConfig(updates);
     }
-  }, [wantsSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry, state.solarKW, state.generatorKW, state.level2Chargers, state.dcfcChargers]);
+  }, [showSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry, state.solarKW, state.generatorKW, state.level2Chargers, state.dcfcChargers]);
 
   // Solar sizing guidance based on industry with physical space constraints
   const getSolarGuidance = () => {
@@ -149,7 +155,7 @@ export default function Step3_5V8({ state, actions }: Props) {
       {/* Configuration Cards */}
       <div className="space-y-6">
         {/* Solar Configuration */}
-        {wantsSolar && (
+        {showSolar && (
           <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-500/30 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-amber-500/10 p-3 rounded-xl">

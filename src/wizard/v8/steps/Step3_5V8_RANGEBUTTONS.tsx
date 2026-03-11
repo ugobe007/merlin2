@@ -9,7 +9,7 @@
 import React from "react";
 import type { WizardState, WizardActions } from "../wizardState";
 import { Sun, Fuel, Zap, Info, Check } from "lucide-react";
-import { hasGeneratorIntent } from "../addonIntent";
+import { hasGeneratorIntent, hasSolarAddonOpportunity } from "../addonIntent";
 
 interface Props {
   state: WizardState;
@@ -97,6 +97,11 @@ export default function Step3_5V8({ state, actions }: Props) {
   const { wantsSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry } =
     state;
   const [isGeneratingTiers, setIsGeneratingTiers] = React.useState(false);
+  const showSolar = hasSolarAddonOpportunity(
+    wantsSolar,
+    state.intel?.solarFeasible ?? false,
+    state.solarPhysicalCapKW,
+  );
   const showGenerator = wantsGenerator || hasGeneratorIntent(state.step3Answers);
 
   // Generate ranges for solar (based on PHYSICAL SPACE CONSTRAINTS by industry)
@@ -269,7 +274,7 @@ export default function Step3_5V8({ state, actions }: Props) {
       {/* Configuration Cards */}
       <div className="space-y-6">
         {/* Solar Configuration */}
-        {wantsSolar && (
+        {showSolar && (
           <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-500/30 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-amber-500/10 p-3 rounded-xl">
