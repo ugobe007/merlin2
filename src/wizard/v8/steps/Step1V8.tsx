@@ -2,13 +2,17 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import IntelStripInline from "@/components/wizard/v7/shared/IntelStripInline";
 import type { BusinessData, WizardActions, WizardState } from "../wizardState";
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+// CRITICAL: Google Maps API key from environment
+// Fallback to hardcoded key if env var not available (Docker build issue)
+const GOOGLE_MAPS_API_KEY =
+  import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyDppNx91-dadZiyNJBcqDhQn9H5mkDdruw";
 
 // VERSION CHECK - This will immediately log when Step1V8 is loaded
 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-console.log("🚀 STEP1V8 LOADED - VERSION 1070");
+console.log("🚀 STEP1V8 LOADED - VERSION 1071");
 console.log("📅 Build: March 11, 2026");
-console.log("🔑 Google Maps API Key:", GOOGLE_MAPS_API_KEY ? "✅ Set" : "❌ Missing");
+console.log("🔑 ENV VAR:", import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? "✅ Set" : "❌ Missing");
+console.log("🔑 ACTUAL KEY:", GOOGLE_MAPS_API_KEY ? "✅ Using fallback" : "❌ No key");
 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
 const T = {
