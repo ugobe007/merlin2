@@ -417,6 +417,10 @@ export function Step1V8({ state, actions }: Step1Props) {
       setIsSuggestionsLoading(true);
 
       try {
+        console.log("🔍 Fetching autocomplete suggestions for:", businessName.trim());
+        console.log("📍 Country filter:", country);
+        console.log("🔑 API Key available:", !!GOOGLE_MAPS_API_KEY);
+
         const { suggestions = [] } =
           await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
             input: businessName.trim(),
@@ -424,6 +428,9 @@ export function Step1V8({ state, actions }: Step1Props) {
             inputOffset: businessName.trim().length,
             sessionToken: sessionTokenRef.current,
           });
+
+        console.log("✅ Autocomplete API returned:", suggestions.length, "suggestions");
+        console.log("📦 Raw suggestions:", suggestions);
 
         if (suggestionRequestIdRef.current !== requestId) return;
 
@@ -443,8 +450,17 @@ export function Step1V8({ state, actions }: Step1Props) {
           .filter((item): item is BusinessSuggestion => item !== null)
           .slice(0, 5);
 
+        console.log("📋 Processed valid suggestions:", validSuggestions.length);
+        console.log(
+          "📝 Suggestion details:",
+          validSuggestions.map((s) => ({ name: s.primaryText, placeId: s.placeId }))
+        );
+
         setBusinessSuggestions(validSuggestions);
-      } catch {
+      } catch (error) {
+        console.error("❌ Autocomplete API error:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
+
         if (suggestionRequestIdRef.current === requestId) {
           setBusinessSuggestions([]);
         }
