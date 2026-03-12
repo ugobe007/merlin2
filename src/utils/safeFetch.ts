@@ -78,6 +78,18 @@ export async function fetchOptionalJSON<T = any>(
       return null;
     }
 
+    // Handle unauthorized - invalid API key or auth required
+    if (res.status === 401) {
+      if (import.meta.env.DEV) {
+        console.debug(`[SafeFetch] Unauthorized (401): ${url} - check API key`);
+      }
+      // Cache the 401 so we don't keep hammering with invalid key
+      if (method === "GET") {
+        memoryCache.set(url, { ts: Date.now(), data: null });
+      }
+      return null;
+    }
+
     // Handle not found - endpoint doesn't exist, stop trying
     if (res.status === 404) {
       if (import.meta.env.DEV) {

@@ -44,7 +44,6 @@ import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
 import { buildTiers } from "./step4Logic";
 import type { LocationData } from "./wizardState";
-import { hasStep35Addons } from "./addonIntent";
 
 // ── ZIP → LocationData (V8-native, no backend required) ─────────────────────
 //
@@ -685,73 +684,17 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
   const goToStep = useCallback(
     async (step: WizardStep) => {
-      // Special handling after Step 3: Check if addons need configuration
-      if (step === 4 && state.step === 3) {
-        const needsAddonConfig = hasStep35Addons(
-          state.wantsSolar,
-          state.wantsEVCharging,
-          state.wantsGenerator,
-          state.step3Answers,
-          state.intel?.solarFeasible ?? false,
-          state.solarPhysicalCapKW,
-        );
+      // ⚡ REMOVED SKIP LOGIC - Step 4 (Add-ons) should ALWAYS show
+      // Even if no addons initially selected, we show intelligent recommendations
+      // User can skip addons by clicking Continue, but we always present the opportunity
 
-        if (needsAddonConfig) {
-          // Redirect to Step 3.5 first to configure addons
-          dispatch({ type: "GO_TO_STEP", step: 3.5 });
-          return;
-        }
-        // If no addons, fall through to Step 4 and generate tiers
-      }
-
-      // From Step 3.5 to Step 4: Generate tiers with addon configs
-      if (step === 4 && state.step === 3.5) {
-        // Navigate to Step 4 first to show loading screen
-        dispatch({ type: "GO_TO_STEP", step: 4 });
-        dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
-
-        try {
-          const tiers = await getOrStartTierBuild(state);
-          dispatch({ type: "SET_TIERS", tiers });
-          dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
-        } catch (error) {
-          console.error("Tier generation failed:", error);
-          dispatch({ type: "SET_TIERS_STATUS", status: "error" });
-        }
-        return; // Don't execute the final dispatch
-      }
-
-      // From Step 3 to Step 4 (no addons): Generate tiers
-      if (
-        step === 4 &&
-        state.step === 3 &&
-        !hasStep35Addons(
-          state.wantsSolar,
-          state.wantsEVCharging,
-          state.wantsGenerator,
-          state.step3Answers,
-          state.intel?.solarFeasible ?? false,
-          state.solarPhysicalCapKW,
-        )
-      ) {
-        // Navigate to Step 4 first to show loading screen
-        dispatch({ type: "GO_TO_STEP", step: 4 });
-        dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
-
-        try {
-          const tiers = await getOrStartTierBuild(state);
-          dispatch({ type: "SET_TIERS", tiers });
-          dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
-        } catch (error) {
-          console.error("Tier generation failed:", error);
-          dispatch({ type: "SET_TIERS_STATUS", status: "error" });
-        }
-        return; // Don't execute the final dispatch
-      }
+      // ⚡ REMOVED MANUAL TIER BUILDING - useEffect handles it proactively
+      // Tiers are built in background during Step 3/4 via useEffect
+      // Navigation just moves to the next step - tiers should already be ready
 
       dispatch({ type: "GO_TO_STEP", step });
     },
-    [getOrStartTierBuild, state]
+    []
   );
 
   const goBack = useCallback(() => {
@@ -766,28 +709,35 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   }, []);
 
   useEffect(() => {
-    const canBuildFromStep3 =
-      state.step === 3 &&
-      state.baseLoadKW > 0 &&
-      !!state.location &&
-      !hasStep35Addons(
-        state.wantsSolar,
-        state.wantsEVCharging,
-        state.wantsGenerator,
-        state.step3Answers,
-        state.intel?.solarFeasible ?? false,
-        state.solarPhysicalCapKW,
-      );
+    // Build from Step 3 OR Step 4 - just need baseLoadKW + location
+    const canBuild = 
+      (state.step === 3 || state.step === 4) && 
+      state.baseLoadKW > 0 && 
+      !!state.location;
 
-    const canBuildFromStep35 = state.step === 3.5 && state.baseLoadKW > 0 && !!state.location;
+    if (!canBuild) return;
 
-    if (!canBuildFromStep3 && !canBuildFromStep35) return;
-
-    void getOrStartTierBuild(state).catch(() => {
-      if (tierBuildRef.current?.key === createTierBuildKey(state)) {
-        tierBuildRef.current = null;
-      }
+    // ⚡ PROACTIVE TIER BUILDING - runs in background during Step 3/4
+    console.log('[useWizardV8] 🔄 Proactively building tiers in background...', {
+      step: state.step,
+      baseLoadKW: state.baseLoadKW,
     });
+    
+    dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
+
+    void getOrStartTierBuild(state)
+      .then(tiers => {
+        console.log('[useWizardV8] ✅ Background tier build complete', tiers.length);
+        dispatch({ type: "SET_TIERS", tiers });
+        dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
+      })
+      .catch((error) => {
+        console.error('[useWizardV8] ❌ Background tier build failed:', error);
+        dispatch({ type: "SET_TIERS_STATUS", status: "error" });
+        if (tierBuildRef.current?.key === createTierBuildKey(state)) {
+          tierBuildRef.current = null;
+        }
+      });
   }, [getOrStartTierBuild, state]);
 
   const clearError = useCallback(() => {

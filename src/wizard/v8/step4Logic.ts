@@ -324,6 +324,17 @@ const EV_KW_BY_TYPE: Record<string, number> = {
  * setBaseLoad() call. This field is for display isolation in the quote only.
  */
 function computeEVChargerKW(state: WizardState): number {
+  // Check for Step 3.5 EV charger configuration (level2Chargers + dcfcChargers)
+  const stateWithEV = state as WizardState & { level2Chargers?: number; dcfcChargers?: number };
+  const level2 = stateWithEV.level2Chargers ?? 0;
+  const dcfc = stateWithEV.dcfcChargers ?? 0;
+  
+  if (level2 > 0 || dcfc > 0) {
+    // Level 2: 7.2 kW each, DCFC: 150 kW each
+    return Math.round((level2 * 7.2) + (dcfc * 150));
+  }
+  
+  // Fallback to old evChargers object format
   if (!state.evChargers) return 0;
   const kWPerUnit = EV_KW_BY_TYPE[state.evChargers.type] ?? 7.2;
   return Math.round(state.evChargers.count * kWPerUnit);
@@ -357,6 +368,16 @@ async function buildOneTier(
   
   const { bessKW, bessKWh, durationHours } = computeBESSSizing(state, goal, tierLabel, finalSolarKW, finalGenKW);
   const evChargerKW      = computeEVChargerKW(state);
+  
+  // Build EV charger details for notes
+  const stateWithEV = state as WizardState & { level2Chargers?: number; dcfcChargers?: number };
+  const level2 = stateWithEV.level2Chargers ?? 0;
+  const dcfc = stateWithEV.dcfcChargers ?? 0;
+  const evChargerDetails = level2 > 0 || dcfc > 0
+    ? `${level2} Level 2 (${(level2 * 7.2).toFixed(0)} kW) + ${dcfc} DCFC (${dcfc * 150} kW)`
+    : state.evChargers
+    ? `${state.evChargers.count} × ${state.evChargers.type.toUpperCase()}`
+    : '';
 
   // ── Call SSOT (calculateQuote) ──────────────────────────────────────────
   const result = await calculateQuote({
@@ -430,7 +451,7 @@ async function buildOneTier(
       ? `Generator: ${finalGenKW} kW${generatorEnabled && generatorKW > 0 ? ` (user configured, ${generatorFuelType})` : ` (${(state.criticalLoadPct * 100).toFixed(0)}% critical load × 1.25 reserve)`}`
       : `Generator: excluded (policy: ${GOAL_GUIDANCE[goal].generatorPolicy}, need: ${state.step3Answers.generatorNeed ?? "none"})`,
     evChargerKW > 0
-      ? `EV chargers: ${evChargerKW} kW (${state.evChargers?.count} × ${state.evChargers?.type.toUpperCase()}, already in base load)`
+      ? `EV chargers: ${evChargerKW} kW (${evChargerDetails}, already in base load)`
       : "EV chargers: none",
   ];
 
@@ -474,13 +495,28 @@ async function buildOneTier(
 export async function buildTiers(
   state: WizardState
 ): Promise<[QuoteTier, QuoteTier, QuoteTier]> {
+  console.log('[buildTiers] Called with state:', {
+    baseLoadKW: state.baseLoadKW,
+    peakLoadKW: state.peakLoadKW,
+    location: state.location,
+    industry: state.industry,
+    intel: state.intel,
+    solarPhysicalCapKW: state.solarPhysicalCapKW,
+    criticalLoadPct: state.criticalLoadPct,
+    wantsSolar: state.wantsSolar,
+    wantsGenerator: state.wantsGenerator,
+    wantsEVCharging: state.wantsEVCharging,
+  });
+
   // Since Goals removed, always use "save_most" (balanced/recommended approach)
   const goal = "save_most";
   
   if (state.baseLoadKW <= 0) {
+    console.error('[buildTiers] baseLoadKW invalid:', state.baseLoadKW);
     throw new Error("buildTiers: baseLoadKW must be > 0. Ensure Step 3 is complete.");
   }
   if (!state.location) {
+    console.error('[buildTiers] location missing');
     throw new Error("buildTiers: location must be set. Ensure Step 1 is complete.");
   }
 

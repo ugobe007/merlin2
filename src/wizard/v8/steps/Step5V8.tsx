@@ -28,6 +28,12 @@ import {
   FileText,
   Bookmark,
   X,
+  Share2,
+  Linkedin,
+  Twitter,
+  Facebook,
+  Mail,
+  Link,
 } from "lucide-react";
 import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
@@ -93,14 +99,41 @@ interface Props {
 }
 
 export default function Step5V8({ state, actions }: Props) {
+  console.log('[Step5V8] Rendering with:', {
+    hasTiers: !!state.tiers,
+    selectedTierIndex: state.selectedTierIndex,
+    location: state.location,
+    industry: state.industry,
+  });
+
   const { tiers, selectedTierIndex, location, industry } = state;
   const tier = tiers && selectedTierIndex !== null ? tiers[selectedTierIndex] : undefined;
+
+  console.log('[Step5V8] Selected tier data:', tier);
+
+  if (!tier) {
+    console.error('[Step5V8] No tier data available!', { tiers, selectedTierIndex });
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-red-500 text-xl">⚠️ No tier data available</div>
+          <button
+            onClick={() => actions.goToStep(5)}
+            className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+          >
+            ← Back to Configuration
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Modal states
   const [showFinancialModal, setShowFinancialModal] = useState(false);
   const [showProQuoteModal, setShowProQuoteModal] = useState(false);
   const [exportingFormat, setExportingFormat] = useState<"pdf" | "word" | "excel" | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [shareSuccess, setShareSuccess] = useState<string | null>(null);
 
   // ── LEAD CAPTURE GATE ────────────────────────────────────────────
   const [showLeadGate, setShowLeadGate] = useState(false);
@@ -197,6 +230,64 @@ export default function Step5V8({ state, actions }: Props) {
     }
   }, [leadCaptured, pendingFormat, showLeadGate, exportingFormat, handleExport]);
 
+  // ── SOCIAL MEDIA SHARING ────────────────────────────────────────────
+  const handleShare = useCallback((platform: "linkedin" | "twitter" | "facebook" | "email" | "copy") => {
+    setShareSuccess(null);
+    
+    const industryName = industry?.replace(/_/g, " ") || "business";
+    const shareTitle = `Energy Quote for ${industryName}`;
+    const shareText = `💡 Just got my energy quote from Merlin BESS!\n\n` +
+      `💰 ${fmt$(tier.annualSavings)}/year savings\n` +
+      `⚡ ${fmtNum(tier.bessKWh)} kWh storage\n` +
+      `📊 ${tier.paybackYears.toFixed(1)} year payback\n` +
+      `📈 ${tier.roi10Year.toFixed(0)}% 10-year ROI`;
+    const shareUrl = window.location.href;
+
+    switch (platform) {
+      case "linkedin":
+        window.open(
+          `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle)}&summary=${encodeURIComponent(shareText)}`,
+          "_blank",
+          "noopener,noreferrer,width=600,height=600"
+        );
+        setShareSuccess("Shared to LinkedIn!");
+        break;
+
+      case "twitter":
+        window.open(
+          `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+          "_blank",
+          "noopener,noreferrer,width=600,height=400"
+        );
+        setShareSuccess("Shared to Twitter/X!");
+        break;
+
+      case "facebook":
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`,
+          "_blank",
+          "noopener,noreferrer,width=600,height=600"
+        );
+        setShareSuccess("Shared to Facebook!");
+        break;
+
+      case "email":
+        window.location.href = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`;
+        setShareSuccess("Email client opened!");
+        break;
+
+      case "copy":
+        navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`)
+          .then(() => setShareSuccess("Link copied to clipboard!"))
+          .catch(() => setShareSuccess("Failed to copy"));
+        break;
+    }
+
+    // Clear success message after 3 seconds
+    setTimeout(() => setShareSuccess(null), 3000);
+  }, [industry, tier]);
+
+
   if (!tier) {
     return (
       <div
@@ -250,14 +341,17 @@ export default function Step5V8({ state, actions }: Props) {
         </div>
         <div className="flex gap-2.5">
           <button
-            onClick={() => actions.goToStep(4)}
+            onClick={() => actions.goToStep(5)}
             className="h-9 px-3.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-300 hover:bg-white/[0.06] font-medium text-sm flex items-center gap-1.5 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
           </button>
           <button
-            onClick={() => actions.goToStep(1)}
+            onClick={() => {
+              actions.reset();
+              actions.goToStep(0);
+            }}
             className="h-9 px-3.5 rounded-lg border border-red-500/20 bg-red-500/[0.08] text-red-400 hover:bg-red-500/[0.12] font-medium text-sm flex items-center gap-1.5 transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -696,6 +790,85 @@ export default function Step5V8({ state, actions }: Props) {
       </div>
 
       {/* ================================================================
+          SOCIAL MEDIA SHARING
+      ================================================================ */}
+      <div className="rounded-xl border-2 border-blue-500/20 bg-blue-500/[0.03] p-4 sm:p-6">
+        <div className="flex flex-wrap justify-between items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Share2 className="w-5 h-5 text-blue-400" />
+              <div className="text-lg font-bold text-slate-100 tracking-tight">
+                Share Your Quote
+              </div>
+            </div>
+            <p className="text-sm text-slate-400">
+              Share your energy savings with your network
+            </p>
+          </div>
+
+          <div className="flex gap-2 flex-shrink-0 flex-wrap">
+            <button
+              type="button"
+              onClick={() => handleShare("linkedin")}
+              className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border-2 border-[#0A66C2]/30 bg-[#0A66C2]/[0.06] hover:border-[#0A66C2]/50 hover:bg-[#0A66C2]/[0.12] transition-all group"
+              title="Share on LinkedIn"
+            >
+              <Linkedin className="w-4 h-4 text-[#0A66C2] group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-semibold text-[#0A66C2]">LinkedIn</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleShare("twitter")}
+              className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border-2 border-[#1DA1F2]/30 bg-[#1DA1F2]/[0.06] hover:border-[#1DA1F2]/50 hover:bg-[#1DA1F2]/[0.12] transition-all group"
+              title="Share on Twitter/X"
+            >
+              <Twitter className="w-4 h-4 text-[#1DA1F2] group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-semibold text-[#1DA1F2]">Twitter</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleShare("facebook")}
+              className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border-2 border-[#1877F2]/30 bg-[#1877F2]/[0.06] hover:border-[#1877F2]/50 hover:bg-[#1877F2]/[0.12] transition-all group"
+              title="Share on Facebook"
+            >
+              <Facebook className="w-4 h-4 text-[#1877F2] group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-semibold text-[#1877F2]">Facebook</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleShare("email")}
+              className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border-2 border-slate-400/30 bg-slate-400/[0.06] hover:border-slate-400/50 hover:bg-slate-400/[0.12] transition-all group"
+              title="Share via Email"
+            >
+              <Mail className="w-4 h-4 text-slate-400 group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-semibold text-slate-400">Email</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleShare("copy")}
+              className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border-2 border-emerald-400/30 bg-emerald-400/[0.06] hover:border-emerald-400/50 hover:bg-emerald-400/[0.12] transition-all group"
+              title="Copy Link"
+            >
+              <Link className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-semibold text-emerald-400">Copy</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Share success message */}
+        {shareSuccess && (
+          <div className="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-400 text-center flex items-center justify-center gap-2">
+            <Shield className="w-4 h-4" />
+            {shareSuccess}
+          </div>
+        )}
+      </div>
+
+      {/* ================================================================
           LEAD CAPTURE MODAL
       ================================================================ */}
       {showLeadGate && (
@@ -810,7 +983,7 @@ export default function Step5V8({ state, actions }: Props) {
       ================================================================ */}
       <div className="flex justify-between items-center pt-8 mt-8 border-t border-white/[0.08]">
         <button
-          onClick={() => actions.goToStep(4)}
+          onClick={() => actions.goToStep(5)}
           className="px-6 py-3 bg-white/5 text-slate-300 rounded-xl hover:bg-white/10 transition-all border border-white/10 flex items-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" />

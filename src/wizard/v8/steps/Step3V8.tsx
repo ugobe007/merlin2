@@ -29,7 +29,6 @@ import {
 } from "@/components/wizard/v7/steps/step3Constants";
 import { isAnswered, isRequired } from "@/components/wizard/v7/steps/step3Helpers";
 import merlinIcon from "@/assets/images/new_small_profile_.png";
-import { hasStep35Addons } from "../addonIntent";
 
 
 interface Props {
@@ -39,14 +38,6 @@ interface Props {
 
 export function Step3V8({ state, actions }: Props) {
   const { industry, step3Answers: answers, baseLoadKW } = state;
-  const wantsStep35Addons = hasStep35Addons(
-    state.wantsSolar,
-    state.wantsEVCharging,
-    state.wantsGenerator,
-    answers,
-    state.intel?.solarFeasible ?? false,
-    state.solarPhysicalCapKW,
-  );
 
   // Resolve curated schema (SSOT for questions, defaults, validation)
   const curatedSchema: CuratedSchema = useMemo(() => {
@@ -495,8 +486,8 @@ export function Step3V8({ state, actions }: Props) {
                       return;
                     }
                     setDefaultsReviewed(true);
-                    // Go to Step 3.5 if user wants any addons, otherwise skip to Step 4
-                    actions.goToStep(wantsStep35Addons ? 3.5 : 4);
+                    // Always go to Step 3.5 to show add-on options
+                    actions.goToStep(4);
                   }}
                   style={{
                     padding: "10px 18px",
@@ -554,8 +545,8 @@ export function Step3V8({ state, actions }: Props) {
                 alert("Still calculating your power requirements. Please wait a moment or try answering more questions.");
                 return;
               }
-              // Go to Step 3.5 if user wants any addons, otherwise skip to Step 4
-              actions.goToStep(wantsStep35Addons ? 3.5 : 4);
+              // Always go to Step 4 (Add-ons) to show recommendations
+              actions.goToStep(4);
             }}
             disabled={!isComplete}
             style={{

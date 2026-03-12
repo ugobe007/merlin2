@@ -9,7 +9,6 @@
 import React from "react";
 import type { WizardState, WizardActions } from "../wizardState";
 import { Sun, Fuel, Zap, Info, Check } from "lucide-react";
-import { hasGeneratorIntent, hasSolarAddonOpportunity } from "../addonIntent";
 
 interface Props {
   state: WizardState;
@@ -97,12 +96,6 @@ export default function Step3_5V8({ state, actions }: Props) {
   const { wantsSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry } =
     state;
   const [isGeneratingTiers, setIsGeneratingTiers] = React.useState(false);
-  const showSolar = hasSolarAddonOpportunity(
-    wantsSolar,
-    state.intel?.solarFeasible ?? false,
-    state.solarPhysicalCapKW,
-  );
-  const showGenerator = wantsGenerator || hasGeneratorIntent(state.step3Answers);
 
   // Generate ranges for solar (based on PHYSICAL SPACE CONSTRAINTS by industry)
   const getSolarRanges = () => {
@@ -274,8 +267,7 @@ export default function Step3_5V8({ state, actions }: Props) {
       {/* Configuration Cards */}
       <div className="space-y-6">
         {/* Solar Configuration */}
-        {showSolar && (
-          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-500/30 rounded-2xl p-6">
+        <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-500/30 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-amber-500/10 p-3 rounded-xl">
                 <Sun className="w-6 h-6 text-amber-400" />
@@ -296,7 +288,10 @@ export default function Step3_5V8({ state, actions }: Props) {
                     label={range.label}
                     value={range.value}
                     isSelected={state.solarKW === range.value}
-                    onClick={() => actions.setAddonConfig({ solarKW: range.value })}
+                    onClick={() => {
+                      actions.setAddonPreference('solar', true);
+                      actions.setAddonConfig({ solarKW: range.value });
+                    }}
                     color="amber"
                     isRecommended={idx === 1}
                   />
@@ -322,11 +317,9 @@ export default function Step3_5V8({ state, actions }: Props) {
               </div>
             </div>
           </div>
-        )}
 
         {/* Generator Configuration */}
-        {showGenerator && (
-          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-orange-500/30 rounded-2xl p-6 shadow-[0_0_32px_rgba(249,115,22,0.12)]">
+        <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-orange-500/30 rounded-2xl p-6 shadow-[0_0_32px_rgba(249,115,22,0.12)]">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-orange-500/10 p-3 rounded-xl">
                 <Fuel className="w-6 h-6 text-orange-400" />
@@ -347,7 +340,10 @@ export default function Step3_5V8({ state, actions }: Props) {
                     label={range.label}
                     value={range.value}
                     isSelected={state.generatorKW === range.value}
-                    onClick={() => actions.setAddonConfig({ generatorKW: range.value })}
+                    onClick={() => {
+                      actions.setAddonPreference('generator', true);
+                      actions.setAddonConfig({ generatorKW: range.value });
+                    }}
                     color="orange"
                     isRecommended={idx === 1}
                   />
@@ -388,11 +384,9 @@ export default function Step3_5V8({ state, actions }: Props) {
               )}
             </div>
           </div>
-        )}
 
         {/* EV Charging Configuration */}
-        {wantsEVCharging && (
-          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-slate-800 rounded-2xl p-6">
+        <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-slate-800 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-cyan-500/10 p-3 rounded-xl">
                 <Zap className="w-6 h-6 text-cyan-400" />
@@ -416,12 +410,13 @@ export default function Step3_5V8({ state, actions }: Props) {
                       state.level2Chargers === option.value.level2 &&
                       state.dcfcChargers === option.value.dcfc
                     }
-                    onClick={() =>
+                    onClick={() => {
+                      actions.setAddonPreference('ev', true);
                       actions.setAddonConfig({
                         level2Chargers: option.value.level2,
                         dcfcChargers: option.value.dcfc,
-                      })
-                    }
+                      });
+                    }}
                     color="cyan"
                   />
                 ))}
@@ -448,7 +443,6 @@ export default function Step3_5V8({ state, actions }: Props) {
               </div>
             </div>
           </div>
-        )}
       </div>
 
       {/* Continue Button */}
