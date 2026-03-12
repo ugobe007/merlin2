@@ -128,12 +128,18 @@ function loadGoogleMapsScript(): Promise<void> {
   }
 
   googleMapsPromise = new Promise((resolve, reject) => {
-    const existing = document.getElementById("merlin-v8-google-maps");
+    // Check if script already exists (from index.html preload or previous load)
+    const existing = document.querySelector('script[src*="maps.googleapis.com"]');
     if (existing) {
-      existing.addEventListener("load", () => resolve(), { once: true });
-      existing.addEventListener("error", () => reject(new Error("Failed to load Google Maps")), {
-        once: true,
-      });
+      // Script already loaded or loading
+      if (window.google?.maps) {
+        resolve();
+      } else {
+        existing.addEventListener("load", () => resolve(), { once: true });
+        existing.addEventListener("error", () => reject(new Error("Failed to load Google Maps")), {
+          once: true,
+        });
+      }
       return;
     }
 

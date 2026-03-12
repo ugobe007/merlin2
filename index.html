@@ -37,12 +37,21 @@
     <!-- SEO: Canonical URL -->
     <link rel="canonical" href="https://merlinenergy.net/" />
 
+    <!-- DNS Prefetch & Preconnect for faster loading -->
+    <link rel="dns-prefetch" href="https://maps.googleapis.com" />
+    <link rel="preconnect" href="https://maps.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://developer.nrel.gov" />
+    <link rel="preconnect" href="https://developer.nrel.gov" crossorigin />
+    <link rel="dns-prefetch" href="https://api.openei.org" />
+    
+    <!-- Preload Google Maps API to eliminate Step 1 delay -->
+    <link rel="preload" as="script" href="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDI6KKBpvCfJHJG16_bOEPbKEbF9yQxG4&libraries=places&loading=async&v=weekly" />
+
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
-    [
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
         "name": "Merlin Energy",
         "applicationCategory": "BusinessApplication",
         "description": "AI-powered battery energy storage system (BESS) and solar quote builder. Get instant, bankable proposals backed by NREL, EIA, and IEEE benchmarks.",
@@ -113,10 +122,7 @@
           }
         ]
       }
-    ]
     </script>
-
-    <title>Merlin Energy — AI-Powered BESS & Solar Quote Builder</title>
   </head>
   <body>
     <div id="root"></div>

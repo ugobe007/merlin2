@@ -545,7 +545,7 @@ export default function Step4V8({ state, actions }: Props) {
                     </div>
 
                     {/* Solar */}
-                    {tier.solarKW && tier.solarKW >= 1 && (
+                    {tier.solarKW >= 1 && (
                       <div className={`equipment-chip ${config.chipBg} border`}>
                         <span>☀️</span>
                         <span className={config.chipText}>{Math.round(tier.solarKW)} kW Solar</span>
@@ -553,7 +553,7 @@ export default function Step4V8({ state, actions }: Props) {
                     )}
 
                     {/* EV Chargers */}
-                    {tier.evChargerKW && tier.evChargerKW >= 1 && (
+                    {tier.evChargerKW >= 1 && (
                       <div className={`equipment-chip ${config.chipBg} border`}>
                         <span>⚡</span>
                         <span className={config.chipText}>
@@ -564,7 +564,7 @@ export default function Step4V8({ state, actions }: Props) {
                     )}
 
                     {/* Generator */}
-                    {tier.generatorKW && tier.generatorKW >= 1 && (
+                    {tier.generatorKW >= 1 && (
                       <div className={`equipment-chip ${config.chipBg} border`}>
                         <span>🔥</span>
                         <span className={config.chipText}>

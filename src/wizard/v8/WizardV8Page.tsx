@@ -32,17 +32,18 @@ import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 // Lazy-load steps 2–5 so Step 1 renders instantly on first visit
 const loadStep2V8 = () => import("./steps/Step2V8");
 const loadStep3V8 = () => import("./steps/Step3V8");
-const loadStep35V8 = () => import("./steps/Step3_5V8_RANGEBUTTONS");
+const loadStep35V8 = () => import("./steps/Step3_5V8_ENHANCED"); // ENHANCED: Intelligent recommendations
 const loadStep4V8 = () => import("./steps/Step4V8");
 
 const Step2V8 = lazy(loadStep2V8);
 const Step3V8 = lazy(loadStep3V8);
-const Step3_5V8 = lazy(loadStep35V8); // NEW: Range button version
+const Step3_5V8 = lazy(loadStep35V8); // NEW: Energy Profile + Recommendations
 const Step4V8 = lazy(loadStep4V8);
 const Step5V8 = lazy(() => import("./steps/Step5V8"));
 
 // Step labels — index 0 = step 0 (Mode Select), index 1 = step 1 (Location), etc.
-const STEP_LABELS = ["Mode", "Location", "Industry", "Profile", "MagicFit", "Quote"];
+// Note: Step 3.5 (Add-ons) is inserted between Profile and MagicFit
+const STEP_LABELS = ["Mode", "Location", "Industry", "Profile", "Add-ons", "MagicFit", "Quote"];
 
 // ── Accent helpers ────────────────────────────────────────────────────────────
 const ACCENT = "#3ECF8E";
@@ -181,6 +182,63 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
+            Intelligent Recommendations
+          </div>
+          <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
+            Based on your {hi("grid reliability, existing equipment, and location")}, here's what I recommend adding to maximize your savings and resilience.
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+            {[
+              "Solar: Based on electricity rates & space",
+              "Generator: Based on grid reliability",
+              "EV Charging: Based on facility type",
+            ].map(bullet)}
+          </div>
+          {state.peakLoadKW > 0 && (
+            <div
+              style={{
+                padding: "14px 16px",
+                borderRadius: 10,
+                background: "rgba(62,207,142,0.06)",
+                border: "1px solid rgba(62,207,142,0.22)",
+                marginTop: 8,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.06em",
+                  color: "rgba(62,207,142,0.7)",
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                }}
+              >
+                Your Peak Load
+              </div>
+              <div
+                style={{
+                  fontSize: 28,
+                  fontWeight: 800,
+                  color: ACCENT,
+                  letterSpacing: "-0.5px",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {Math.round(state.peakLoadKW).toLocaleString()} kW
+              </div>
+              <div style={{ fontSize: 11, color: T.muted, marginTop: 4 }}>
+                All recommendations sized from this baseline
+              </div>
+            </div>
+          )}
+        </div>
+      );
+
+    case 5:
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
             What's your priority?
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
@@ -197,19 +255,6 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
         </div>
       );
 
-    case 5:
-      return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
-            Compare your options.
-          </div>
-          <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Three tiers tailored to your facility. Each shows{" "}
-            {hi("cost, annual savings, and payback")}. Pick the one that fits.
-          </div>
-        </div>
-      );
-
     case 6:
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -217,13 +262,8 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
             Your quote is ready.
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Every number is sourced from {hi("NREL, IRS, and live market data")}. Download the PDF
-            or share with your team.
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
-            {["TrueQuote™ verified sources", "IRA 2022 ITC breakdown", "25-year NPV & IRR"].map(
-              bullet
-            )}
+            Three tiers tailored to your facility. Each shows{" "}
+            {hi("cost, annual savings, and payback")}. Pick the one that fits.
           </div>
         </div>
       );
@@ -275,6 +315,13 @@ function SpinnerFallback() {
 export default function WizardV8Page() {
   const { state, actions } = useWizardV8();
   const step = state.step;
+
+  console.log('[WizardV8Page] Rendering step:', step, {
+    selectedTierIndex: state.selectedTierIndex,
+    hasTiers: !!state.tiers,
+    location: state.location?.city,
+    industry: state.industry
+  });
 
   useEffect(() => {
     if (step === 1 && state.business?.detectedIndustry && (state.business.confidence ?? 0) >= 0.75) {
@@ -416,9 +463,9 @@ export default function WizardV8Page() {
           {step === 1 && <Step1V8 state={state} actions={actions} />}
           {step === 2 && <Step2V8 state={state} actions={actions} />}
           {step === 3 && <Step3V8 state={state} actions={actions} />}
-          {step === 3.5 && <Step3_5V8 state={state} actions={actions} />}
-          {step === 4 && <Step4V8 state={state} actions={actions} />}
-          {step === 5 && <Step5V8 state={state} actions={actions} />}
+          {step === 4 && <Step3_5V8 state={state} actions={actions} />}
+          {step === 5 && <Step4V8 state={state} actions={actions} />}
+          {step === 6 && <Step5V8 state={state} actions={actions} />}
         </Suspense>
       </WizardShellV7>
     </div>
