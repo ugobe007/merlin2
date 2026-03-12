@@ -47,13 +47,7 @@ export default function Step3_5V8Enhanced({ state, actions }: Props) {
     peakLoadKW, 
     criticalLoadKW, 
     step3Answers, 
-    industry,
-    location,
-    wantsSolar,
-    wantsGenerator,
-    wantsEVCharging,
-    solarKW,
-    generatorKW
+    industry
   } = state;
 
   // Extract key answers from Step 3
@@ -198,39 +192,53 @@ export default function Step3_5V8Enhanced({ state, actions }: Props) {
   const generatorRec = getGeneratorRecommendation();
   const evRec = getEVRecommendation();
 
-  // Handle add-on toggles
-  const handleSolarToggle = () => {
-    if (!wantsSolar && solarRec) {
-      actions.setAddonPreference('solar', true);
-      actions.setAddonConfig({ solarKW: solarRec.size });
-    } else {
+  // Solar option selection (2 choices)
+  const [selectedSolarOption, setSelectedSolarOption] = React.useState<'none' | 'standard' | 'extended'>('none');
+  
+  const handleSolarSelection = (option: 'none' | 'standard' | 'extended') => {
+    setSelectedSolarOption(option);
+    if (option === 'none') {
       actions.setAddonPreference('solar', false);
       actions.setAddonConfig({ solarKW: 0 });
+    } else {
+      actions.setAddonPreference('solar', true);
+      const size = option === 'standard' ? solarRec!.minSize : solarRec!.size;
+      actions.setAddonConfig({ solarKW: size });
     }
   };
 
-  const handleGeneratorToggle = () => {
-    if (!wantsGenerator && generatorRec) {
-      actions.setAddonPreference('generator', true);
-      actions.setAddonConfig({ generatorKW: generatorRec.size });
-    } else {
+  // Generator option selection (2 choices)
+  const [selectedGeneratorOption, setSelectedGeneratorOption] = React.useState<'none' | 'critical' | 'full'>('none');
+  
+  const handleGeneratorSelection = (option: 'none' | 'critical' | 'full') => {
+    setSelectedGeneratorOption(option);
+    if (option === 'none') {
       actions.setAddonPreference('generator', false);
       actions.setAddonConfig({ generatorKW: 0 });
+    } else {
+      actions.setAddonPreference('generator', true);
+      const size = option === 'critical' ? generatorRec!.targetLoad : generatorRec!.size;
+      actions.setAddonConfig({ generatorKW: Math.round(size / 50) * 50 });
     }
   };
 
-  const handleEVToggle = () => {
-    if (!wantsEVCharging && evRec) {
-      actions.setAddonPreference('ev', true);
-      // Set both level2 and dcfc in state
-      const stateUpdate = {
-        level2Chargers: evRec.level2,
-        dcfcChargers: evRec.dcfc,
-      };
-      actions.setAddonConfig(stateUpdate);
-    } else {
+  // EV option selection (2 choices)
+  const [selectedEVOption, setSelectedEVOption] = React.useState<'none' | 'basic' | 'mixed'>('none');
+  
+  const handleEVSelection = (option: 'none' | 'basic' | 'mixed') => {
+    setSelectedEVOption(option);
+    if (option === 'none') {
       actions.setAddonPreference('ev', false);
       actions.setAddonConfig({ level2Chargers: 0, dcfcChargers: 0 });
+    } else {
+      actions.setAddonPreference('ev', true);
+      if (option === 'basic') {
+        // Level 2 only (12 chargers)
+        actions.setAddonConfig({ level2Chargers: 12, dcfcChargers: 0 });
+      } else {
+        // Mixed (12 L2 + 8 DCFC)
+        actions.setAddonConfig({ level2Chargers: 12, dcfcChargers: 8 });
+      }
     }
   };
 
@@ -503,122 +511,104 @@ export default function Step3_5V8Enhanced({ state, actions }: Props) {
           {solarRec && (
             <div style={{
               background: "rgba(255,255,255,0.02)",
-              border: `1px solid ${wantsSolar ? "#f59e0b" : T.panelBorder}`,
-              borderRadius: 16,
-              padding: 24,
+              border: `1px solid ${selectedSolarOption !== 'none' ? "#f59e0b" : T.panelBorder}`,
+              borderRadius: 12,
+              padding: 20,
               transition: "all 0.2s ease"
             }}>
-              <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 14,
-                    background: "rgba(251,191,36,0.1)",
-                    border: "2px solid rgba(251,191,36,0.3)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}>
-                    <Sun style={{ width: 28, height: 28, color: "#fbbf24" }} />
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: 22, fontWeight: 900, color: T.textPrimary, margin: 0 }}>
-                      Solar PV Array
-                    </h3>
-                    <p style={{ fontSize: 14, color: "#fbbf24", margin: "4px 0 0", fontWeight: 700 }}>
-                      ⭐ Merlin Recommends
-                    </p>
-                  </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                <Sun style={{ width: 20, height: 20, color: "#fbbf24" }} />
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, margin: 0 }}>
+                    Solar PV Array
+                  </h3>
+                  <p style={{ fontSize: 13, color: T.textMuted, margin: "2px 0 0" }}>
+                    {solarRec.reason}
+                  </p>
                 </div>
               </div>
 
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ 
-                  fontSize: 13, 
-                  color: T.textMuted, 
-                  marginBottom: 8,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  fontWeight: 700
+              {/* 2 Option Selection */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {/* Option 1: Standard */}
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "12px 14px",
+                  border: `1px solid ${selectedSolarOption === 'standard' ? "#f59e0b" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 8,
+                  background: selectedSolarOption === 'standard' ? "rgba(251,191,36,0.08)" : "transparent",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
                 }}>
-                  Why Recommended:
-                </div>
-                <p style={{ fontSize: 15, color: T.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                  {solarRec.reason}
-                </p>
-              </div>
+                  <input
+                    type="radio"
+                    name="solar"
+                    checked={selectedSolarOption === 'standard'}
+                    onChange={() => handleSolarSelection('standard')}
+                    style={{ marginRight: 10, accentColor: "#f59e0b" }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                        Standard
+                      </span>
+                      <span style={{ fontSize: 13, color: "#fbbf24", fontWeight: 600 }}>
+                        {solarRec.minSize.toLocaleString()} kW
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>
+                        ${Math.round(solarRec.minSize * 850 / 1000).toLocaleString()}K
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.success }}>
+                        {((solarRec.minSize * 850) / (solarRec.minSize * 1500 * electricityRate)).toFixed(1)}yr payback
+                      </span>
+                    </div>
+                  </div>
+                </label>
 
-              <div style={{ 
-                display: "grid", 
-                gridTemplateColumns: "repeat(3, 1fr)", 
-                gap: 12,
-                marginBottom: 20,
-                padding: 16,
-                background: "rgba(0,0,0,0.2)",
-                borderRadius: 12
-              }}>
-                <div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>Recommended Size</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fbbf24" }}>
-                    {solarRec.size.toLocaleString()} kW
+                {/* Option 2: Extended */}
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "12px 14px",
+                  border: `1px solid ${selectedSolarOption === 'extended' ? "#f59e0b" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 8,
+                  background: selectedSolarOption === 'extended' ? "rgba(251,191,36,0.08)" : "transparent",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}>
+                  <input
+                    type="radio"
+                    name="solar"
+                    checked={selectedSolarOption === 'extended'}
+                    onChange={() => handleSolarSelection('extended')}
+                    style={{ marginRight: 10, accentColor: "#f59e0b" }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                        Extended
+                      </span>
+                      <span style={{ fontSize: 13, color: "#fbbf24", fontWeight: 600 }}>
+                        {solarRec.size.toLocaleString()} kW
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>
+                        ${Math.round(solarRec.size * 850 / 1000).toLocaleString()}K
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.success }}>
+                        {solarRec.payback} yrs payback
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: "#fbbf24" }}>
+                        ⭐ Recommended
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>Annual Savings</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: T.success }}>
-                    ${solarRec.annualSavings.toLocaleString()}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>Payback</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: T.textPrimary }}>
-                    {solarRec.payback} yrs
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: 12 }}>
-                <button
-                  onClick={handleSolarToggle}
-                  style={{
-                    flex: 1,
-                    height: 48,
-                    borderRadius: 12,
-                    border: wantsSolar ? "none" : "1px solid rgba(251,191,36,0.3)",
-                    background: wantsSolar ? "#f59e0b" : "transparent",
-                    color: wantsSolar ? "#000" : "#fbbf24",
-                    fontSize: 15,
-                    fontWeight: 800,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    transition: "all 0.2s ease"
-                  }}
-                >
-                  {wantsSolar && <Check style={{ width: 20, height: 20 }} />}
-                  {wantsSolar ? "Added to Quote" : "Add Solar"}
-                </button>
-                {wantsSolar && (
-                  <button
-                    onClick={handleSolarToggle}
-                    style={{
-                      height: 48,
-                      padding: "0 20px",
-                      borderRadius: 12,
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      background: "transparent",
-                      color: T.textMuted,
-                      fontSize: 14,
-                      fontWeight: 700,
-                      cursor: "pointer"
-                    }}
-                  >
-                    Remove
-                  </button>
-                )}
+                </label>
               </div>
             </div>
           )}
@@ -627,138 +617,120 @@ export default function Step3_5V8Enhanced({ state, actions }: Props) {
           {generatorRec && (
             <div style={{
               background: "rgba(255,255,255,0.02)",
-              border: `1px solid ${wantsGenerator ? "#f97316" : T.panelBorder}`,
-              borderRadius: 16,
-              padding: 24,
+              border: `1px solid ${selectedGeneratorOption !== 'none' ? "#f97316" : T.panelBorder}`,
+              borderRadius: 12,
+              padding: 20,
               transition: "all 0.2s ease"
             }}>
-              <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 14,
-                    background: "rgba(249,115,22,0.1)",
-                    border: "2px solid rgba(249,115,22,0.3)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}>
-                    <Fuel style={{ width: 28, height: 28, color: "#fb923c" }} />
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: 22, fontWeight: 900, color: T.textPrimary, margin: 0 }}>
-                      Backup Generator
-                    </h3>
-                    <p style={{ fontSize: 14, color: "#fb923c", margin: "4px 0 0", fontWeight: 700 }}>
-                      ⭐ Merlin Recommends
-                    </p>
-                  </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                <Fuel style={{ width: 20, height: 20, color: "#fb923c" }} />
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, margin: 0 }}>
+                    Backup Generator
+                  </h3>
+                  <p style={{ fontSize: 13, color: T.textMuted, margin: "2px 0 0" }}>
+                    {generatorRec.reason}
+                  </p>
                 </div>
               </div>
 
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ 
-                  fontSize: 13, 
-                  color: T.textMuted, 
-                  marginBottom: 8,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  fontWeight: 700
+              {/* 2 Option Selection */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {/* Option 1: Critical Load */}
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "12px 14px",
+                  border: `1px solid ${selectedGeneratorOption === 'critical' ? "#f97316" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 8,
+                  background: selectedGeneratorOption === 'critical' ? "rgba(249,115,22,0.08)" : "transparent",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
                 }}>
-                  Why Recommended:
-                </div>
-                <p style={{ fontSize: 15, color: T.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                  {generatorRec.reason}
-                </p>
+                  <input
+                    type="radio"
+                    name="generator"
+                    checked={selectedGeneratorOption === 'critical'}
+                    onChange={() => handleGeneratorSelection('critical')}
+                    style={{ marginRight: 10, accentColor: "#f97316" }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                        Critical Load
+                      </span>
+                      <span style={{ fontSize: 13, color: "#fb923c", fontWeight: 600 }}>
+                        {Math.round(generatorRec.targetLoad / 50) * 50} kW
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>
+                        ${Math.round((generatorRec.targetLoad * 700) / 1000).toLocaleString()}K
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.textSecondary }}>
+                        Essential systems
+                      </span>
+                    </div>
+                  </div>
+                </label>
+
+                {/* Option 2: Full Coverage */}
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "12px 14px",
+                  border: `1px solid ${selectedGeneratorOption === 'full' ? "#f97316" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 8,
+                  background: selectedGeneratorOption === 'full' ? "rgba(249,115,22,0.08)" : "transparent",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}>
+                  <input
+                    type="radio"
+                    name="generator"
+                    checked={selectedGeneratorOption === 'full'}
+                    onChange={() => handleGeneratorSelection('full')}
+                    style={{ marginRight: 10, accentColor: "#f97316" }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                        Full Coverage
+                      </span>
+                      <span style={{ fontSize: 13, color: "#fb923c", fontWeight: 600 }}>
+                        {generatorRec.size.toLocaleString()} kW
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>
+                        ${Math.round((generatorRec.size * 700) / 1000).toLocaleString()}K
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.textSecondary }}>
+                        {generatorRec.coverage}% facility
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: "#fb923c" }}>
+                        ⭐ Recommended
+                      </span>
+                    </div>
+                  </div>
+                </label>
               </div>
 
               <div style={{ 
-                display: "grid", 
-                gridTemplateColumns: "repeat(3, 1fr)", 
-                gap: 12,
-                marginBottom: 20,
-                padding: 16,
-                background: "rgba(0,0,0,0.2)",
-                borderRadius: 12
-              }}>
-                <div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>Recommended Size</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fb923c" }}>
-                    {generatorRec.size.toLocaleString()} kW
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>Load Coverage</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: T.textPrimary }}>
-                    {generatorRec.coverage}%
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>Downtime Cost</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: T.danger }}>
-                    ${generatorRec.downtimeCost}/hr
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ 
-                padding: 12, 
-                background: "rgba(249,115,22,0.1)", 
-                border: "1px solid rgba(249,115,22,0.2)",
-                borderRadius: 10,
-                fontSize: 13,
+                marginTop: 12,
+                padding: 10, 
+                background: "rgba(249,115,22,0.05)", 
+                border: "1px solid rgba(249,115,22,0.15)",
+                borderRadius: 6,
+                fontSize: 12,
                 color: "#fb923c",
-                marginBottom: 16,
                 display: "flex",
                 alignItems: "center",
-                gap: 8
+                gap: 6
               }}>
-                <Shield style={{ width: 16, height: 16 }} />
-                BESS provides instant transfer (&lt;16ms) while generator handles extended outages
-              </div>
-
-              <div style={{ display: "flex", gap: 12 }}>
-                <button
-                  onClick={handleGeneratorToggle}
-                  style={{
-                    flex: 1,
-                    height: 48,
-                    borderRadius: 12,
-                    border: wantsGenerator ? "none" : "1px solid rgba(249,115,22,0.3)",
-                    background: wantsGenerator ? "#f97316" : "transparent",
-                    color: wantsGenerator ? "#000" : "#fb923c",
-                    fontSize: 15,
-                    fontWeight: 800,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    transition: "all 0.2s ease"
-                  }}
-                >
-                  {wantsGenerator && <Check style={{ width: 20, height: 20 }} />}
-                  {wantsGenerator ? "Added to Quote" : "Add Generator"}
-                </button>
-                {wantsGenerator && (
-                  <button
-                    onClick={handleGeneratorToggle}
-                    style={{
-                      height: 48,
-                      padding: "0 20px",
-                      borderRadius: 12,
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      background: "transparent",
-                      color: T.textMuted,
-                      fontSize: 14,
-                      fontWeight: 700,
-                      cursor: "pointer"
-                    }}
-                  >
-                    Remove
-                  </button>
-                )}
+                <Shield style={{ width: 14, height: 14, flexShrink: 0 }} />
+                BESS provides instant transfer (&lt;16ms) • Generator handles extended outages
               </div>
             </div>
           )}
@@ -767,122 +739,104 @@ export default function Step3_5V8Enhanced({ state, actions }: Props) {
           {evRec && (
             <div style={{
               background: "rgba(255,255,255,0.02)",
-              border: `1px solid ${wantsEVCharging ? "#06b6d4" : T.panelBorder}`,
-              borderRadius: 16,
-              padding: 24,
+              border: `1px solid ${selectedEVOption !== 'none' ? "#06b6d4" : T.panelBorder}`,
+              borderRadius: 12,
+              padding: 20,
               transition: "all 0.2s ease"
             }}>
-              <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 14,
-                    background: "rgba(6,182,212,0.1)",
-                    border: "2px solid rgba(6,182,212,0.3)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}>
-                    <Zap style={{ width: 28, height: 28, color: "#22d3ee" }} />
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: 22, fontWeight: 900, color: T.textPrimary, margin: 0 }}>
-                      EV Charging Hub
-                    </h3>
-                    <p style={{ fontSize: 14, color: "#22d3ee", margin: "4px 0 0", fontWeight: 700 }}>
-                      Optional Add-On
-                    </p>
-                  </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                <Zap style={{ width: 20, height: 20, color: "#22d3ee" }} />
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, margin: 0 }}>
+                    EV Charging Hub
+                  </h3>
+                  <p style={{ fontSize: 13, color: T.textMuted, margin: "2px 0 0" }}>
+                    {evRec.reason}
+                  </p>
                 </div>
               </div>
 
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ 
-                  fontSize: 13, 
-                  color: T.textMuted, 
-                  marginBottom: 8,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  fontWeight: 700
+              {/* 2 Option Selection */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {/* Option 1: Basic (Level 2 Only) */}
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "12px 14px",
+                  border: `1px solid ${selectedEVOption === 'basic' ? "#06b6d4" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 8,
+                  background: selectedEVOption === 'basic' ? "rgba(6,182,212,0.08)" : "transparent",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
                 }}>
-                  Why Recommended:
-                </div>
-                <p style={{ fontSize: 15, color: T.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                  {evRec.reason}
-                </p>
-              </div>
+                  <input
+                    type="radio"
+                    name="ev"
+                    checked={selectedEVOption === 'basic'}
+                    onChange={() => handleEVSelection('basic')}
+                    style={{ marginRight: 10, accentColor: "#06b6d4" }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                        Level 2 Only
+                      </span>
+                      <span style={{ fontSize: 13, color: "#22d3ee", fontWeight: 600 }}>
+                        12 chargers • 86 kW
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>
+                        $48K
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.success }}>
+                        $35K-60K/yr revenue
+                      </span>
+                    </div>
+                  </div>
+                </label>
 
-              <div style={{ 
-                display: "grid", 
-                gridTemplateColumns: "repeat(3, 1fr)", 
-                gap: 12,
-                marginBottom: 20,
-                padding: 16,
-                background: "rgba(0,0,0,0.2)",
-                borderRadius: 12
-              }}>
-                <div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>Configuration</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: "#22d3ee" }}>
-                    {evRec.level2} L2 + {evRec.dcfc} DCFC
+                {/* Option 2: Mixed (L2 + DCFC) */}
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "12px 14px",
+                  border: `1px solid ${selectedEVOption === 'mixed' ? "#06b6d4" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 8,
+                  background: selectedEVOption === 'mixed' ? "rgba(6,182,212,0.08)" : "transparent",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}>
+                  <input
+                    type="radio"
+                    name="ev"
+                    checked={selectedEVOption === 'mixed'}
+                    onChange={() => handleEVSelection('mixed')}
+                    style={{ marginRight: 10, accentColor: "#06b6d4" }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                        Mixed Fast Charging
+                      </span>
+                      <span style={{ fontSize: 13, color: "#22d3ee", fontWeight: 600 }}>
+                        12 L2 + 8 DCFC • {Math.round(evRec.totalKW).toLocaleString()} kW
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>
+                        $1.25M
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: T.success }}>
+                        $45K-120K/yr
+                      </span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                      <span style={{ fontSize: 12, color: "#22d3ee" }}>
+                        ⭐ Recommended
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>Total Power</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: T.textPrimary }}>
-                    {Math.round(evRec.totalKW).toLocaleString()} kW
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>Revenue Potential</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: T.success }}>
-                    $45K-120K/yr
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: 12 }}>
-                <button
-                  onClick={handleEVToggle}
-                  style={{
-                    flex: 1,
-                    height: 48,
-                    borderRadius: 12,
-                    border: wantsEVCharging ? "none" : "1px solid rgba(6,182,212,0.3)",
-                    background: wantsEVCharging ? "#06b6d4" : "transparent",
-                    color: wantsEVCharging ? "#000" : "#22d3ee",
-                    fontSize: 15,
-                    fontWeight: 800,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    transition: "all 0.2s ease"
-                  }}
-                >
-                  {wantsEVCharging && <Check style={{ width: 20, height: 20 }} />}
-                  {wantsEVCharging ? "Added to Quote" : "Add EV Charging"}
-                </button>
-                {wantsEVCharging && (
-                  <button
-                    onClick={handleEVToggle}
-                    style={{
-                      height: 48,
-                      padding: "0 20px",
-                      borderRadius: 12,
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      background: "transparent",
-                      color: T.textMuted,
-                      fontSize: 14,
-                      fontWeight: 700,
-                      cursor: "pointer"
-                    }}
-                  >
-                    Remove
-                  </button>
-                )}
+                </label>
               </div>
             </div>
           )}
