@@ -241,6 +241,17 @@ export default function Step4V8({ state, actions }: Props) {
   const [progress, setProgress] = React.useState(0);
   const [selectionConfirmation, setSelectionConfirmation] = React.useState<string | null>(null);
 
+  console.log("[Step4V8] State:", {
+    tiersStatus,
+    selectedTierIndex,
+    hasTiers: !!tiers,
+    tierCount: tiers?.length,
+  });
+
+  React.useEffect(() => {
+    console.log("[Step4V8] selectedTierIndex changed to:", selectedTierIndex);
+  }, [selectedTierIndex]);
+
   // Loading steps for status bar
   const loadingSteps = [
     "Analyzing facility power profile...",
@@ -441,7 +452,10 @@ export default function Step4V8({ state, actions }: Props) {
           return (
             <div
               key={tierIndex}
-              onClick={() => actions.selectTier(tierIndex)}
+              onClick={() => {
+                console.log("[Step4V8] Tier clicked:", tierIndex);
+                actions.selectTier(tierIndex);
+              }}
               className={`
                 relative rounded-2xl overflow-hidden cursor-pointer
                 ${config.cardBg} border-2 ${config.cardHover}
@@ -531,7 +545,7 @@ export default function Step4V8({ state, actions }: Props) {
                     </div>
 
                     {/* Solar */}
-                    {tier.solarKW && tier.solarKW > 0 && (
+                    {tier.solarKW && tier.solarKW >= 1 && (
                       <div className={`equipment-chip ${config.chipBg} border`}>
                         <span>☀️</span>
                         <span className={config.chipText}>{Math.round(tier.solarKW)} kW Solar</span>
@@ -539,7 +553,7 @@ export default function Step4V8({ state, actions }: Props) {
                     )}
 
                     {/* EV Chargers */}
-                    {tier.evChargerKW && tier.evChargerKW > 0 && (
+                    {tier.evChargerKW && tier.evChargerKW >= 1 && (
                       <div className={`equipment-chip ${config.chipBg} border`}>
                         <span>⚡</span>
                         <span className={config.chipText}>
@@ -550,7 +564,7 @@ export default function Step4V8({ state, actions }: Props) {
                     )}
 
                     {/* Generator */}
-                    {tier.generatorKW && tier.generatorKW > 0 && (
+                    {tier.generatorKW && tier.generatorKW >= 1 && (
                       <div className={`equipment-chip ${config.chipBg} border`}>
                         <span>🔥</span>
                         <span className={config.chipText}>
@@ -669,7 +683,12 @@ export default function Step4V8({ state, actions }: Props) {
           ← Back
         </button>
         <button
-          onClick={() => actions.goToStep(5)}
+          onClick={() => {
+            console.log("[Step4V8] Continue clicked, selectedTierIndex:", selectedTierIndex);
+            if (selectedTierIndex !== null) {
+              actions.goToStep(6);
+            }
+          }}
           disabled={selectedTierIndex === null}
           className={`
             px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg
