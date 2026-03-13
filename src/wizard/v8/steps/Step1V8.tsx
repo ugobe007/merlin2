@@ -737,7 +737,16 @@ export function Step1V8({ state, actions }: Step1Props) {
                 type="button"
                 onClick={() => {
                   setCountry(value);
-                  if (value === "US") setSelectedCountryCode("US");
+                  if (value === "US") {
+                    setSelectedCountryCode("US");
+                  } else {
+                    // When switching to International, default to first non-US country and auto-populate
+                    const firstIntlCountry = INTERNATIONAL_COUNTRIES.find(c => c.code !== "US");
+                    if (firstIntlCountry) {
+                      setSelectedCountryCode(firstIntlCountry.code);
+                      actions.setLocationRaw(firstIntlCountry.name);
+                    }
+                  }
                 }}
                 style={{
                   height: 42,
