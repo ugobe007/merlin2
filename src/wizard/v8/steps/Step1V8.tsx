@@ -761,7 +761,16 @@ export function Step1V8({ state, actions }: Step1Props) {
             {country === "International" && (
               <select
                 value={selectedCountryCode}
-                onChange={(e) => setSelectedCountryCode(e.target.value)}
+                onChange={(e) => {
+                  const code = e.target.value;
+                  setSelectedCountryCode(code);
+                  
+                  // Auto-populate input field with country name when dropdown changes
+                  const selectedCountry = INTERNATIONAL_COUNTRIES.find(c => c.code === code);
+                  if (selectedCountry && code !== "US") {
+                    actions.setLocationRaw(selectedCountry.name);
+                  }
+                }}
                 style={{
                   height: 42,
                   padding: "0 12px",
