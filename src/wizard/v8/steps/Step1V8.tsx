@@ -741,7 +741,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                     setSelectedCountryCode("US");
                   } else {
                     // When switching to International, default to first non-US country and auto-populate
-                    const firstIntlCountry = INTERNATIONAL_COUNTRIES.find(c => c.code !== "US");
+                    const firstIntlCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code !== "US");
                     if (firstIntlCountry) {
                       setSelectedCountryCode(firstIntlCountry.code);
                       actions.setLocationRaw(firstIntlCountry.name);
@@ -766,16 +766,16 @@ export function Step1V8({ state, actions }: Step1Props) {
                 {value === "US" ? "US" : "Intl"}
               </button>
             ))}
-            
+
             {country === "International" && (
               <select
                 value={selectedCountryCode}
                 onChange={(e) => {
                   const code = e.target.value;
                   setSelectedCountryCode(code);
-                  
+
                   // Auto-populate input field with country name when dropdown changes
-                  const selectedCountry = INTERNATIONAL_COUNTRIES.find(c => c.code === code);
+                  const selectedCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code === code);
                   if (selectedCountry && code !== "US") {
                     actions.setLocationRaw(selectedCountry.name);
                   }
@@ -794,7 +794,11 @@ export function Step1V8({ state, actions }: Step1Props) {
                 }}
               >
                 {INTERNATIONAL_COUNTRIES.map(({ code, name }) => (
-                  <option key={code} value={code} style={{ background: "#1a1f2e", color: T.textPrimary }}>
+                  <option
+                    key={code}
+                    value={code}
+                    style={{ background: "#1a1f2e", color: T.textPrimary }}
+                  >
                     {name} ({code})
                   </option>
                 ))}
@@ -906,10 +910,10 @@ export function Step1V8({ state, actions }: Step1Props) {
         >
           <div>
             <div style={{ fontSize: 16, fontWeight: 800, color: T.textPrimary }}>
-              Match your business
+              Enter business name
             </div>
             <div style={{ fontSize: 13, lineHeight: 1.5, color: T.textSecondary }}>
-              Merlin uses your business match to detect industry and skip Step 2 when possible.
+              Help us detect your industry automatically — or skip this step and select it manually.
             </div>
           </div>
 
@@ -997,9 +1001,10 @@ export function Step1V8({ state, actions }: Step1Props) {
                 Skip
               </button>
             </div>
-            
+
             <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.4 }}>
-              💡 Business matching helps us detect your industry automatically, but you can skip and select it manually.
+              💡 Business matching helps us detect your industry automatically, but you can skip and
+              select it manually.
             </div>
 
             {businessSuggestions.length > 0 && !selectedSuggestion && (
