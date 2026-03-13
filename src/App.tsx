@@ -40,6 +40,7 @@ const PricingPage = lazy(() => import("./components/pricing/PricingPage"));
 const CheckoutCallback = lazy(() => import("./components/pricing/CheckoutCallback"));
 const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
 const WidgetDemo = lazy(() => import("./pages/WidgetDemo"));
+const WidgetDocs = lazy(() => import("./pages/WidgetDocs"));
 // const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
 import { QuoteProvider } from "./contexts/QuoteContext";
 import { trackPageView } from "./services/analyticsService";
@@ -455,6 +456,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <WidgetDemo />
+      </Suspense>
+    );
+  }
+
+  // Widget Documentation Page - Integration guide & API reference
+  if (pathname === "/widget/docs" || pathname === "/docs/widget" || pathname === "/widget-docs") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <WidgetDocs />
       </Suspense>
     );
   }
