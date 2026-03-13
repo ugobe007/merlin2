@@ -278,12 +278,13 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   /**
    * submitLocation — geocode the typed ZIP/postal code to a named location card.
    * NO LONGER auto-advances to Step 2 — waits for business confirmation.
+   * @param countryCode - US ZIP or 2-letter country code (e.g., "CA", "GB", "NZ")
    */
-  const submitLocation = useCallback(async (country: "US" | "International" = "US") => {
+  const submitLocation = useCallback(async (countryCode: string = "US") => {
     const raw = state.locationRaw.trim();
     
     // US: 5-digit ZIP only
-    if (country === "US") {
+    if (countryCode === "US") {
       const zip = raw.replace(/\D/g, "").slice(0, 5);
       if (zip.length !== 5) return;
 
@@ -309,13 +310,12 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     dispatch({ type: "SET_LOCATION_STATUS", status: "fetching" });
 
     try {
-      // For international, create a basic location with the postal code as-is
-      // In a full implementation, you'd use Google Geocoding API or similar
+      // For international, create a basic location with country info
       const locationData: LocationData = {
         zip: raw,
-        city: raw, // Placeholder - ideally would geocode
-        state: "", // International doesn't have state
-        formattedAddress: raw,
+        city: raw,
+        state: countryCode, // Store country code in state field for international
+        formattedAddress: `${raw}, ${countryCode}`,
       };
       dispatch({ type: "SET_LOCATION", location: locationData });
       // NO auto-advance - wait for business confirmation
@@ -396,13 +396,45 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       }
       return { industry: "data_center", confidence: 0.95 };
     }
-    // Hospital/Healthcare: match common patterns
+    // Hospital/Healthcare: match common patterns including dental, PT, and eye care
     if (
       /hospital|medical\s*center|health\s*center|healthcare|health\s*system|clinic|dignity\s*health|kaiser|sutter|providence|mayo|cleveland\s*clinic/i.test(
         lowerName
       )
     ) {
       return { industry: "hospital", confidence: 0.9 };
+    }
+    // Dental/Orthodontics as medical offices
+    if (
+      /dent(al|ist|istry)|orthodont(ic|ics|ist)|braces|smile\s*direct|aspen\s*dental|bright\s*now/i.test(
+        lowerName
+      )
+    ) {
+      return { industry: "hospital", confidence: 0.85 };
+    }
+    // Physical Therapy as medical offices
+    if (
+      /physical\s*therap(y|ist)|rehab(ilitation)?|sports\s*medicine|athletico|pt\s*solutions/i.test(
+        lowerName
+      )
+    ) {
+      return { industry: "hospital", confidence: 0.85 };
+    }
+    // Optometry/Ophthalmology as medical offices
+    if (
+      /optom(etry|etrist)|ophthalm(ology|ologist)|eye\s*care|vision\s*center|lenscrafters|visionworks|pearle\s*vision/i.test(
+        lowerName
+      )
+    ) {
+      return { industry: "hospital", confidence: 0.85 };
+    }
+    // Fast Food Restaurants - classify as restaurant/retail
+    if (
+      /mcdonald'?s|burger\s*king|wendy'?s|taco\s*bell|kfc|chick-fil-a|chipotle|subway|arby'?s|sonic|dairy\s*queen|jack\s*in\s*the\s*box|carl'?s\s*jr|hardee'?s|five\s*guys|shake\s*shack|in-n-out|whataburger|culver'?s|popeyes|pizza\s*hut|domino'?s|papa\s*john'?s|little\s*caesars|panera/i.test(
+        lowerName
+      )
+    ) {
+      return { industry: "restaurant", confidence: 0.9 };
     }
     // Office Building: enhanced with building types
     if (
