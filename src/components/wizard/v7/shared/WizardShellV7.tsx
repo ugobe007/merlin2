@@ -86,7 +86,7 @@ export default function WizardShellV7({
         style={{
           minHeight: "100vh",
           background: `
-            radial-gradient(ellipse 1200px 800px at 50% 20%, rgba(62,207,142,0.08) 0%, transparent 50%),
+            radial-gradient(ellipse 1400px 900px at 50% 15%, rgba(62,207,142,0.15) 0%, rgba(62,207,142,0.05) 40%, transparent 60%),
             linear-gradient(160deg, #080b14 0%, #0f1420 40%, #0a0d16 100%)
           `,
           color: "#e8ebf3",
