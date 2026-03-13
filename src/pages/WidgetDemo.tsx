@@ -10,6 +10,7 @@
 
 import { useState } from "react";
 import { Copy, Check, Zap, Shield, Code2 } from "lucide-react";
+import merlinWizardImage from '@/assets/images/merlin_wizard_new.png';
 
 export default function WidgetDemo() {
   const [copiedSnippet, setCopiedSnippet] = useState(false);
@@ -62,7 +63,7 @@ export default function WidgetDemo() {
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
             <img
-              src="/images/merlin_wizard_new.png"
+              src={merlinWizardImage}
               alt="Merlin Wizard"
               className="w-16 h-16 object-contain"
             />
@@ -89,7 +90,7 @@ export default function WidgetDemo() {
             <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center bg-gradient-to-b from-white to-gray-50">
               <div className="max-w-md mx-auto space-y-4">
                 <img
-                  src="/images/merlin_wizard_new.png"
+                  src={merlinWizardImage}
                   alt="Merlin"
                   className="w-16 h-16 object-contain mx-auto mb-4"
                 />
