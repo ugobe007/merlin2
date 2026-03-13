@@ -174,9 +174,12 @@ SELECT
 FROM public.widget_usage
 GROUP BY partner_id, DATE_TRUNC('month', created_at);
 
--- Index for fast partner lookups
+-- Initial refresh to populate the view (non-concurrent)
+REFRESH MATERIALIZED VIEW public.widget_monthly_usage;
+
+-- Index for fast partner lookups (required for CONCURRENT refresh)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_widget_monthly_usage_partner_month 
-  ON public.widget_monthly_usage(partner_id, month DESC);
+  ON public.widget_monthly_usage(partner_id, month);
 
 -- Comments
 COMMENT ON MATERIALIZED VIEW public.widget_monthly_usage IS 'Pre-aggregated monthly stats per partner (refresh daily via cron)';
