@@ -45,6 +45,40 @@ import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
 import { buildTiers } from "./step4Logic";
 import type { LocationData } from "./wizardState";
 
+// Country list for matching user input to country names
+const INTERNATIONAL_COUNTRIES = [
+  { code: "US", name: "United States" },
+  { code: "CA", name: "Canada" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "AU", name: "Australia" },
+  { code: "NZ", name: "New Zealand" },
+  { code: "DE", name: "Germany" },
+  { code: "FR", name: "France" },
+  { code: "ES", name: "Spain" },
+  { code: "IT", name: "Italy" },
+  { code: "NL", name: "Netherlands" },
+  { code: "SE", name: "Sweden" },
+  { code: "NO", name: "Norway" },
+  { code: "DK", name: "Denmark" },
+  { code: "FI", name: "Finland" },
+  { code: "IE", name: "Ireland" },
+  { code: "CH", name: "Switzerland" },
+  { code: "AT", name: "Austria" },
+  { code: "BE", name: "Belgium" },
+  { code: "JP", name: "Japan" },
+  { code: "SG", name: "Singapore" },
+  { code: "AE", name: "United Arab Emirates" },
+  { code: "SA", name: "Saudi Arabia" },
+  { code: "KW", name: "Kuwait" },
+  { code: "QA", name: "Qatar" },
+  { code: "ZA", name: "South Africa" },
+  { code: "BR", name: "Brazil" },
+  { code: "MX", name: "Mexico" },
+  { code: "IN", name: "India" },
+  { code: "CN", name: "China" },
+  { code: "KR", name: "South Korea" },
+];
+
 // ── ZIP → LocationData (V8-native, no backend required) ─────────────────────
 //
 // zippopotam.us is free, no API key, CORS-enabled, and has been stable for 10+
@@ -304,18 +338,29 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       return;
     }
 
-    // International: allow any postal code format (at least 3 chars)
-    if (raw.length < 3) return;
+    // International: allow country name or postal code (minimum 2 chars)
+    if (raw.length < 2) return;
 
     dispatch({ type: "SET_LOCATION_STATUS", status: "fetching" });
 
     try {
+      // Check if input matches a country name from our list
+      const matchedCountry = INTERNATIONAL_COUNTRIES.find(
+        c => c.name.toLowerCase() === raw.toLowerCase() || 
+             c.name.toLowerCase().includes(raw.toLowerCase()) ||
+             c.code.toLowerCase() === raw.toLowerCase()
+      );
+      
+      // If matched, use the country code; otherwise use the provided code
+      const finalCountryCode = matchedCountry ? matchedCountry.code : countryCode;
+      const displayName = matchedCountry ? matchedCountry.name : raw;
+      
       // For international, create a basic location with country info
       const locationData: LocationData = {
         zip: raw,
-        city: raw,
-        state: countryCode, // Store country code in state field for international
-        formattedAddress: `${raw}, ${countryCode}`,
+        city: displayName,
+        state: finalCountryCode, // Store country code in state field for international
+        formattedAddress: `${displayName}, ${finalCountryCode}`,
       };
       dispatch({ type: "SET_LOCATION", location: locationData });
       // NO auto-advance - wait for business confirmation

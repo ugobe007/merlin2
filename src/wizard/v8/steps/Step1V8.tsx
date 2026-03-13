@@ -272,7 +272,8 @@ export function Step1V8({ state, actions }: Step1Props) {
   const locationConfirmed = location !== null;
   const normalizedZip =
     country === "US" ? locationRaw.replace(/\D/g, "").slice(0, 5) : locationRaw.trim();
-  const isValidZip = country === "US" ? /^\d{5}$/.test(normalizedZip) : normalizedZip.length >= 3;
+  // For US: require 5-digit ZIP. For International: accept country name (2+ chars) or postal code (optional)
+  const isValidZip = country === "US" ? /^\d{5}$/.test(normalizedZip) : normalizedZip.length >= 2;
   const isLocationBusy = locationStatus === "fetching" || isBusy;
   const activeBusiness = state.business ?? previewBusiness;
   const showIntelStrip =
@@ -794,7 +795,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 onKeyDown={(event) => {
                   if (event.key === "Enter") handleLocationSubmit();
                 }}
-                placeholder={country === "US" ? "ZIP code" : "Postal code"}
+                placeholder={country === "US" ? "ZIP code" : "Country name or postal code"}
                 style={{
                   flex: 1,
                   minWidth: 220,
