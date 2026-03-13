@@ -10,7 +10,10 @@ import {
   Zap,
   AlertCircle,
   ExternalLink,
+  CreditCard,
 } from "lucide-react";
+import UpgradeModal from "@/components/billing/UpgradeModal";
+import { createCustomerPortalSession } from "@/services/stripeService";
 
 interface Partner {
   id: string;
@@ -43,6 +46,7 @@ export default function PartnerDashboard() {
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState(false);
   const [showRegenerateModal, setShowRegenerateModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [customColor, setCustomColor] = useState("#3ecf8e");
   const [customLogoUrl, setCustomLogoUrl] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -432,8 +436,38 @@ export default function PartnerDashboard() {
                   </span>
                   <span className="text-gray-400">/month</span>
                 </div>
-                <button className="w-full px-4 py-2.5 bg-[#3ecf8e] hover:bg-emerald-400 text-white font-medium rounded-lg transition-colors">
+                <button
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="w-full px-4 py-2.5 bg-[#3ecf8e] hover:bg-emerald-400 text-white font-medium rounded-lg transition-colors"
+                >
                   Upgrade Now
+                </button>
+              </div>
+            )}
+
+            {/* Billing Management (if subscribed) */}
+            {partner.tier !== "free" && (
+              <div className="bg-[#151515] rounded-xl border border-[#1a1a1a] p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <CreditCard className="w-6 h-6 text-[#3ecf8e]" />
+                  <h2 className="text-xl font-semibold text-white">Billing</h2>
+                </div>
+                <p className="text-gray-400 text-sm mb-4">
+                  Manage your subscription, payment methods, and invoices
+                </p>
+                <button
+                  onClick={async () => {
+                    try {
+                      const { url } = await createCustomerPortalSession(partner.id);
+                      window.location.href = url;
+                    } catch (_error) {
+                      alert("Demo mode: Billing portal not available. Configure Stripe to enable.");
+                    }
+                  }}
+                  className="w-full px-4 py-2.5 bg-[#1a1a1a] hover:bg-[#252525] text-gray-300 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Manage Billing
                 </button>
               </div>
             )}
@@ -469,6 +503,16 @@ export default function PartnerDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && partner && (
+        <UpgradeModal
+          currentTier={partner.tier}
+          partnerId={partner.id}
+          partnerEmail={partner.contact_email}
+          onClose={() => setShowUpgradeModal(false)}
+        />
       )}
     </div>
   );
