@@ -43,20 +43,13 @@ export default function WidgetDemo() {
       <div className="bg-[#151515] border-b border-[#1a1a1a]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img
-                src="/images/merlin_wizard_new.png"
-                alt="Merlin Wizard"
-                className="w-10 h-10 object-contain"
-              />
-              <div>
-                <h1 className="text-2xl font-bold text-white">Merlin Widget</h1>
-                <p className="text-sm text-gray-400">Embeddable Energy Savings Calculator</p>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Merlin Widget</h1>
+              <p className="text-sm text-gray-400">Embeddable Energy Savings Calculator</p>
             </div>
             <button
               onClick={() => setShowSignupForm(true)}
-              className="px-6 py-2.5 bg-[#3ecf8e] hover:bg-emerald-400 text-white font-medium rounded-lg transition-colors"
+              className="px-8 py-3 border-2 border-[#3ecf8e] hover:bg-[#3ecf8e]/10 text-[#3ecf8e] font-semibold rounded-lg transition-colors text-lg"
             >
               Get Your API Key
             </button>
@@ -67,9 +60,16 @@ export default function WidgetDemo() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-white mb-4">
-            Add Battery Savings to Your Site in <span className="text-[#3ecf8e]">5 Minutes</span>
-          </h2>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <img
+              src="/images/merlin_wizard_new.png"
+              alt="Merlin Wizard"
+              className="w-16 h-16 object-contain"
+            />
+            <h2 className="text-4xl font-bold text-white">
+              Add Battery Savings to Your Site in <span className="text-[#3ecf8e]">5 Minutes</span>
+            </h2>
+          </div>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
             Give your customers instant, NREL-verified quotes for battery storage + solar. No
             development needed. Just copy, paste, and go.
@@ -88,8 +88,12 @@ export default function WidgetDemo() {
             {/* Embedded widget preview placeholder */}
             <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center bg-gradient-to-b from-white to-gray-50">
               <div className="max-w-md mx-auto space-y-4">
-                <div className="text-4xl mb-4">🏨</div>
-                <h4 className="text-lg font-semibold text-gray-900">Hotel Energy Calculator</h4>
+                <img
+                  src="/images/merlin_wizard_new.png"
+                  alt="Merlin"
+                  className="w-16 h-16 object-contain mx-auto mb-4"
+                />
+                <h4 className="text-lg font-semibold text-gray-900">Merlin Energy Calculator</h4>
                 <p className="text-sm text-gray-600">
                   Interactive calculator will appear here once embedded on your site
                 </p>
