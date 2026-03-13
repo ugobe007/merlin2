@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { calculateQuote } from "@/services/unifiedQuoteCalculator";
+import { supabase } from "@/services/supabase";
 import type {
   WidgetQuoteRequest,
   WidgetQuoteResponse,
@@ -35,36 +36,40 @@ interface AuthResult {
  * @returns Authentication result with partner details
  */
 async function validateApiKey(apiKey: string): Promise<AuthResult> {
-  // TODO: Query Supabase widget_partners table
-  // For now, mock validation
-
-  if (!apiKey || !apiKey.startsWith("pk_live_")) {
+  // Basic format check
+  if (!apiKey || (!apiKey.startsWith("pk_live_") && !apiKey.startsWith("pk_test_"))) {
     return { valid: false, error: "Invalid API key format" };
   }
 
-  // Mock partner lookup
-  const mockPartner = {
-    id: "partner_123",
-    tier: "pro",
-    monthlyQuoteLimit: 500,
-    quotesUsedThisMonth: 342, // Would come from widget_usage query
-  };
+  try {
+    // Call database function for validation + quota check in single query
+    const { data, error } = await supabase
+      .rpc("validate_widget_api_key", { p_api_key: apiKey })
+      .single();
 
-  const quotesRemaining = mockPartner.monthlyQuoteLimit - mockPartner.quotesUsedThisMonth;
+    if (error || !data) {
+      console.error("[Widget] API key validation error:", error);
+      return { valid: false, error: "Invalid API key" };
+    }
 
-  if (quotesRemaining <= 0) {
+    // Database function returns: {valid, partner_id, tier, quotes_remaining, message}
+    if (!data.valid) {
+      return {
+        valid: false,
+        error: data.message || "API key validation failed",
+      };
+    }
+
     return {
-      valid: false,
-      error: "Monthly quote limit exceeded. Upgrade to Enterprise for unlimited quotes.",
+      valid: true,
+      partnerId: data.partner_id,
+      tier: data.tier,
+      quotesRemaining: data.quotes_remaining,
     };
+  } catch (err) {
+    console.error("[Widget] Unexpected error in validateApiKey:", err);
+    return { valid: false, error: "Authentication service unavailable" };
   }
-
-  return {
-    valid: true,
-    partnerId: mockPartner.id,
-    tier: mockPartner.tier,
-    quotesRemaining,
-  };
 }
 
 // ============================================================================
@@ -239,26 +244,46 @@ interface UsageTrackingData {
   partnerId: string;
   event: string;
   industry: string;
-  quoteData?: any;
+  quoteData?: Record<string, unknown>;
+  errorMessage?: string;
 }
 
 async function trackWidgetUsage(data: UsageTrackingData): Promise<void> {
-  // TODO: Insert into widget_usage table
-  console.log("[Widget] Usage tracked:", data);
-
-  /*
-  Example Supabase query:
-  
-  const { error } = await supabase
-    .from('widget_usage')
-    .insert({
+  try {
+    // Insert into widget_usage table
+    const { error: insertError } = await supabase.from("widget_usage").insert({
       partner_id: data.partnerId,
       event_type: data.event,
       industry: data.industry,
-      quote_data: data.quoteData,
+      quote_input: data.quoteData ? { industry: data.industry } : null,
+      quote_output: data.quoteData || null,
+      error_message: data.errorMessage,
       created_at: new Date().toISOString(),
     });
-  */
+
+    if (insertError) {
+      console.error("[Widget] Failed to track usage:", insertError);
+      return;
+    }
+
+    // If quote was generated, increment partner counters
+    if (data.event === "quote_generated" || data.event === "quote_completed") {
+      const { error: updateError } = await supabase
+        .from("widget_partners")
+        .update({
+          current_month_quotes: supabase.raw("current_month_quotes + 1"),
+          total_quotes_generated: supabase.raw("total_quotes_generated + 1"),
+          api_key_last_used: new Date().toISOString(),
+        })
+        .eq("id", data.partnerId);
+
+      if (updateError) {
+        console.error("[Widget] Failed to update partner counters:", updateError);
+      }
+    }
+  } catch (err) {
+    console.error("[Widget] Unexpected error in trackWidgetUsage:", err);
+  }
 }
 
 // ============================================================================
