@@ -30,6 +30,7 @@ export default function WidgetDocs() {
   industry: 'hotel',
   theme: 'light',
   primaryColor: '#3ecf8e',
+  logo: 'https://yourhotel.com/logo.png',
   fields: {
     rooms: 150,
     hotelClass: 'midscale'
@@ -52,24 +53,9 @@ export default function WidgetDocs() {
 });`,
     },
     {
-      name: "Data Center",
-      slug: "data-center",
-      description: "Critical power backup and energy optimization",
-      code: `MerlinWidget.init({
-  apiKey: 'YOUR_API_KEY',
-  industry: 'data-center',
-  theme: 'light',
-  primaryColor: '#3ecf8e',
-  fields: {
-    rackCount: 100,
-    powerDensity: 8
-  }
-});`,
-    },
-    {
       name: "Hospital",
       slug: "hospital",
-      description: "Healthcare facility energy analysis",
+      description: "Critical load protection and energy cost reduction",
       code: `MerlinWidget.init({
   apiKey: 'YOUR_API_KEY',
   industry: 'hospital',
@@ -82,17 +68,114 @@ export default function WidgetDocs() {
 });`,
     },
     {
-      name: "Office Building",
-      slug: "office",
-      description: "Commercial office energy savings",
+      name: "Manufacturing",
+      slug: "manufacturing",
+      description: "Industrial energy management and demand response",
       code: `MerlinWidget.init({
   apiKey: 'YOUR_API_KEY',
-  industry: 'office',
+  industry: 'manufacturing',
+  theme: 'dark',
+  primaryColor: '#3ecf8e',
+  fields: {
+    squareFeet: 100000,
+    industryType: 'automotive'
+  }
+});`,
+    },
+    {
+      name: "EV Charging Station",
+      slug: "ev-charging",
+      description: "Load management for EV charging hubs",
+      code: `MerlinWidget.init({
+  apiKey: 'YOUR_API_KEY',
+  industry: 'ev-charging',
   theme: 'light',
   primaryColor: '#3ecf8e',
   fields: {
-    squareFeet: 50000,
-    employees: 200
+    level2Chargers: 12,
+    dcfcChargers: 8
+  }
+});`,
+    },
+    {
+      name: "Warehouse / Logistics",
+      slug: "warehouse",
+      description: "Cold storage and logistics facility optimization",
+      code: `MerlinWidget.init({
+  apiKey: 'YOUR_API_KEY',
+  industry: 'warehouse',
+  theme: 'light',
+  primaryColor: '#3ecf8e',
+  fields: {
+    squareFeet: 200000,
+    isColdStorage: true
+  }
+});`,
+    },
+    {
+      name: "Battery Vendor (Partner)",
+      slug: "vendor-battery",
+      description: "Battery equipment vendor offering quotes to customers",
+      code: `MerlinWidget.init({
+  apiKey: 'YOUR_API_KEY',
+  industry: 'vendor-battery',
+  theme: 'dark',
+  primaryColor: '#1e40af',
+  logo: 'https://battery-vendor.com/logo.png',
+  hideAttribution: true,
+  onQuoteGenerated: (quote) => {
+    // Send lead to your CRM
+    console.log('New quote:', quote);
+  }
+});`,
+    },
+    {
+      name: "Solar Integrator (Partner)",
+      slug: "vendor-solar",
+      description: "Solar installer offering combined solar + BESS quotes",
+      code: `MerlinWidget.init({
+  apiKey: 'YOUR_API_KEY',
+  industry: 'vendor-solar',
+  theme: 'light',
+  primaryColor: '#f59e0b',
+  logo: 'https://solar-co.com/logo.png',
+  hideAttribution: true,
+  fields: {
+    includeSolar: true,
+    solarSizeKW: 500
+  }
+});`,
+    },
+    {
+      name: "System Integrator / EPC (Partner)",
+      slug: "vendor-integrator",
+      description: "EPC contractor offering turnkey BESS projects",
+      code: `MerlinWidget.init({
+  apiKey: 'YOUR_API_KEY',
+  industry: 'vendor-integrator',
+  theme: 'dark',
+  primaryColor: '#059669',
+  logo: 'https://epc-firm.com/logo.png',
+  hideAttribution: true,
+  fields: {
+    projectType: 'turnkey',
+    includeEMS: true
+  }
+});`,
+    },
+    {
+      name: "Architecture Firm (Partner)",
+      slug: "vendor-architect",
+      description: "Architects offering preliminary energy analysis to clients",
+      code: `MerlinWidget.init({
+  apiKey: 'YOUR_API_KEY',
+  industry: 'vendor-architect',
+  theme: 'light',
+  primaryColor: '#7c3aed',
+  logo: 'https://arch-firm.com/logo.png',
+  onQuoteGenerated: (quote) => {
+    // Add to project proposal
+    saveToProject(quote);
   }
 });`,
     },
