@@ -536,6 +536,8 @@ export type WizardState = {
   location: LocationCard | null;
   locationIntel: LocationIntel | null;
   locationConfirmed: boolean; // user has confirmed location (ZIP resolved)
+  country: string; // Country code for international support (e.g., "US", "CA", "GB")
+  countryCode: string; // ISO country code (same as country for now)
 
   // Step 1: goals (added Feb 10, 2026 - user's energy objectives)
   goals: EnergyGoal[];

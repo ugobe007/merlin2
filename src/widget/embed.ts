@@ -173,6 +173,6 @@
   // Expose Global API
   // ============================================================================
 
-  (window as Window & { MerlinWidget: MerlinWidgetManager }).MerlinWidget =
+  (window as unknown as Window & { MerlinWidget: MerlinWidgetManager }).MerlinWidget =
     new MerlinWidgetManager();
 })();

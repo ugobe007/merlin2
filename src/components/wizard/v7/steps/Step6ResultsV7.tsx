@@ -30,6 +30,7 @@ import { Shield } from "lucide-react";
 import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import { useMerlinData } from "@/wizard/v7/memory";
+import { formatCurrency, SUPPORTED_COUNTRIES } from "@/services/internationalService";
 import TrueQuoteFinancialModal from "../shared/TrueQuoteFinancialModal";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
 import { TrueQuoteTemp } from "@/wizard/v7/trueQuoteTemp";
@@ -83,19 +84,16 @@ function StatItem({
 }
 
 /**
- * Safe USD formatter — handles null/undefined/NaN/Infinity
- * The sanitizer may have stripped poison values to null
+ * Safe currency formatter — handles null/undefined/NaN/Infinity and international currencies
+ * Uses internationalService for multi-currency support
  */
-function fmtUSD(n?: number | null): string {
+function fmtUSD(n?: number | null, countryCode?: string): string {
   if (n === null || n === undefined) return "—";
   if (!Number.isFinite(n)) return "—"; // Catches NaN and Infinity
   try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(n);
+    return formatCurrency(n, countryCode || "US");
   } catch {
+    // Fallback to USD if formatting fails
     return `$${Math.round(n)}`;
   }
 }
@@ -139,6 +137,10 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
   }, [data.location, state.location?.formattedAddress]);
 
   const quoteReady = pricingStatus === "ok" && !!quoteRaw;
+
+  // Country for international currency display
+  const countryCode = state.countryCode || state.location?.countryCode || "US";
+  const _currencyInfo = SUPPORTED_COUNTRIES.find(c => c.code === countryCode);
 
   // Badge tier resolution — deterministic, used for badge display decisions
   const _badgeResult = useMemo(

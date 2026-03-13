@@ -129,7 +129,8 @@ export function convertCurrency(
   amountUSD: number,
   targetCurrency: keyof ExchangeRates
 ): number {
-  return amountUSD * EXCHANGE_RATES[targetCurrency];
+  const rate = EXCHANGE_RATES[targetCurrency];
+  return amountUSD * (typeof rate === 'number' ? rate : 1.0);
 }
 
 /**
@@ -139,7 +140,8 @@ export function convertToUSD(
   amount: number,
   sourceCurrency: keyof ExchangeRates
 ): number {
-  return amount / EXCHANGE_RATES[sourceCurrency];
+  const rate = EXCHANGE_RATES[sourceCurrency];
+  return amount / (typeof rate === 'number' ? rate : 1.0);
 }
 
 /**

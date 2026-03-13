@@ -489,7 +489,8 @@ export function Step1V8({ state, actions }: Step1Props) {
 
   const handleLocationSubmit = () => {
     if (!isValidZip || isLocationBusy) return;
-    void actions.submitLocation();
+    // Pass country to submitLocation so it knows how to geocode
+    void actions.submitLocation(country);
   };
 
   const resetBusinessFlow = () => {

@@ -65,6 +65,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS widget_partners_updated_at ON public.widget_partners;
 CREATE TRIGGER widget_partners_updated_at
   BEFORE UPDATE ON public.widget_partners
   FOR EACH ROW
@@ -172,8 +173,13 @@ SELECT
 FROM public.widget_usage
 GROUP BY partner_id, DATE_TRUNC('month', created_at);
 
--- Initial refresh to populate the view (non-concurrent)
-REFRESH MATERIALIZED VIEW public.widget_monthly_usage;
+-- Initial refresh to populate the view (skip if already exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'widget_monthly_usage') THEN
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.widget_monthly_usage;
+  END IF;
+END $$;
 
 -- Index for fast partner lookups (required for CONCURRENT refresh)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_widget_monthly_usage_partner_month 
@@ -300,11 +306,13 @@ ALTER TABLE public.widget_partners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.widget_usage ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Partners can read their own account
+DROP POLICY IF EXISTS widget_partners_read_own ON public.widget_partners;
 CREATE POLICY widget_partners_read_own ON public.widget_partners
   FOR SELECT
   USING (auth.uid() = id OR auth.jwt() ->> 'role' = 'admin');
 
 -- Policy: Partners can update their own account (not tier or billing)
+DROP POLICY IF EXISTS widget_partners_update_own ON public.widget_partners;
 CREATE POLICY widget_partners_update_own ON public.widget_partners
   FOR UPDATE
   USING (auth.uid() = id)
@@ -315,6 +323,7 @@ CREATE POLICY widget_partners_update_own ON public.widget_partners
   );
 
 -- Policy: Partners can read their own usage data
+DROP POLICY IF EXISTS widget_usage_read_own ON public.widget_usage;
 CREATE POLICY widget_usage_read_own ON public.widget_usage
   FOR SELECT
   USING (
@@ -323,6 +332,7 @@ CREATE POLICY widget_usage_read_own ON public.widget_usage
   );
 
 -- Policy: Widget API can insert usage events (service role)
+DROP POLICY IF EXISTS widget_usage_insert_service ON public.widget_usage;
 CREATE POLICY widget_usage_insert_service ON public.widget_usage
   FOR INSERT
   WITH CHECK (true);  -- Service role bypass via auth.uid() check in API

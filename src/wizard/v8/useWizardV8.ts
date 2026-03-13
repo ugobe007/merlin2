@@ -276,24 +276,54 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   }, []);
 
   /**
-   * submitLocation — geocode the typed ZIP to a named location card.
+   * submitLocation — geocode the typed ZIP/postal code to a named location card.
    * NO LONGER auto-advances to Step 2 — waits for business confirmation.
    */
-  const submitLocation = useCallback(async () => {
-    const zip = state.locationRaw.replace(/\D/g, "").slice(0, 5);
-    if (zip.length !== 5) return;
+  const submitLocation = useCallback(async (country: "US" | "International" = "US") => {
+    const raw = state.locationRaw.trim();
+    
+    // US: 5-digit ZIP only
+    if (country === "US") {
+      const zip = raw.replace(/\D/g, "").slice(0, 5);
+      if (zip.length !== 5) return;
+
+      dispatch({ type: "SET_LOCATION_STATUS", status: "fetching" });
+
+      try {
+        const locationData = await resolveZip(zip, abortRef.current?.signal);
+        dispatch({ type: "SET_LOCATION", location: locationData });
+        // NO auto-advance - wait for business confirmation
+      } catch (e) {
+        dispatch({
+          type: "SET_ERROR",
+          code: "GEOCODE_FAILED",
+          message: e instanceof Error ? e.message : "Could not find that ZIP code.",
+        });
+      }
+      return;
+    }
+
+    // International: allow any postal code format (at least 3 chars)
+    if (raw.length < 3) return;
 
     dispatch({ type: "SET_LOCATION_STATUS", status: "fetching" });
 
     try {
-      const locationData = await resolveZip(zip, abortRef.current?.signal);
+      // For international, create a basic location with the postal code as-is
+      // In a full implementation, you'd use Google Geocoding API or similar
+      const locationData: LocationData = {
+        zip: raw,
+        city: raw, // Placeholder - ideally would geocode
+        state: "", // International doesn't have state
+        formattedAddress: raw,
+      };
       dispatch({ type: "SET_LOCATION", location: locationData });
       // NO auto-advance - wait for business confirmation
     } catch (e) {
       dispatch({
         type: "SET_ERROR",
         code: "GEOCODE_FAILED",
-        message: e instanceof Error ? e.message : "Could not find that ZIP code.",
+        message: e instanceof Error ? e.message : "Could not find that location.",
       });
     }
   }, [state.locationRaw]);
