@@ -9,8 +9,9 @@
  */
 
 import { useState } from "react";
-import { Copy, Check, Zap, Shield, Code2 } from "lucide-react";
+import { Copy, Check, Zap, Shield, Code2, Play } from "lucide-react";
 import merlinWizardImage from '@/assets/images/merlin_wizard_new.png';
+import WizardV8Page from '@/wizard/v8/WizardV8Page';
 
 export default function WidgetDemo() {
   const [copiedSnippet, setCopiedSnippet] = useState(false);
@@ -18,6 +19,7 @@ export default function WidgetDemo() {
   const [selectedIndustry, setSelectedIndustry] = useState("hotel");
   const [logoUrl, setLogoUrl] = useState("");
   const [showSignupForm, setShowSignupForm] = useState(false);
+  const [showLiveCalc, setShowLiveCalc] = useState(false);
 
   // Code snippet with customization
   const codeSnippet = `<!-- Add this to your website -->
@@ -81,51 +83,66 @@ export default function WidgetDemo() {
         <div className="grid lg:grid-cols-2 gap-8 mb-16">
           {/* Left: Live Widget Preview */}
           <div className="bg-[#151515] rounded-xl shadow-lg p-8 border border-[#1a1a1a]">
-            <div className="flex items-center gap-2 mb-6">
-              <Zap className="w-5 h-5 text-[#3ecf8e]" />
-              <h3 className="text-lg font-semibold text-white">Live Preview</h3>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-[#3ecf8e]" />
+                <h3 className="text-lg font-semibold text-white">Live Calculator</h3>
+              </div>
+              <button
+                onClick={() => setShowLiveCalc(!showLiveCalc)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#3ecf8e] hover:bg-[#35b67a] text-white font-medium rounded-lg transition-colors text-sm"
+              >
+                <Play className="w-4 h-4" />
+                {showLiveCalc ? 'Hide Calculator' : 'Try Live Demo'}
+              </button>
             </div>
 
-            {/* Embedded widget preview placeholder */}
-            <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center bg-gradient-to-b from-white to-gray-50">
-              <div className="max-w-md mx-auto space-y-4">
-                <img
-                  src={merlinWizardImage}
-                  alt="Merlin"
-                  className="w-16 h-16 object-contain mx-auto mb-4"
-                />
-                <h4 className="text-lg font-semibold text-gray-900">Merlin Energy Calculator</h4>
-                <p className="text-sm text-gray-600">
-                  Interactive calculator will appear here once embedded on your site
-                </p>
+            {/* Live Calculator or Preview */}
+            {showLiveCalc ? (
+              <div className="border-2 border-[#3ecf8e] rounded-lg overflow-hidden bg-[#0a0a0a] min-h-[600px]">
+                <WizardV8Page />
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center bg-gradient-to-b from-white to-gray-50">
+                <div className="max-w-md mx-auto space-y-4">
+                  <img
+                    src={merlinWizardImage}
+                    alt="Merlin"
+                    className="w-16 h-16 object-contain mx-auto mb-4"
+                  />
+                  <h4 className="text-lg font-semibold text-gray-900">Merlin Energy Calculator</h4>
+                  <p className="text-sm text-gray-600">
+                    Click "Try Live Demo" to interact with the full calculator
+                  </p>
 
-                {/* Mock form preview */}
-                <div className="space-y-3 mt-6">
-                  <div className="bg-white rounded-lg p-3 text-left border border-gray-200">
-                    <label className="text-xs font-medium text-gray-700 block mb-1">
-                      Number of Rooms
-                    </label>
-                    <div className="h-8 bg-gray-100 rounded"></div>
+                  {/* Mock form preview */}
+                  <div className="space-y-3 mt-6">
+                    <div className="bg-white rounded-lg p-3 text-left border border-gray-200">
+                      <label className="text-xs font-medium text-gray-700 block mb-1">
+                        Business Location
+                      </label>
+                      <div className="h-8 bg-gray-100 rounded"></div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 text-left border border-gray-200">
+                      <label className="text-xs font-medium text-gray-700 block mb-1">
+                        Industry Type
+                      </label>
+                      <div className="h-8 bg-gray-100 rounded"></div>
+                    </div>
+                    <button
+                      style={{ backgroundColor: customColor }}
+                      className="w-full py-2 text-white font-medium rounded-lg hover:opacity-90 transition-opacity"
+                    >
+                      Get Quote
+                    </button>
                   </div>
-                  <div className="bg-white rounded-lg p-3 text-left border border-gray-200">
-                    <label className="text-xs font-medium text-gray-700 block mb-1">
-                      Hotel Class
-                    </label>
-                    <div className="h-8 bg-gray-100 rounded"></div>
-                  </div>
-                  <button
-                    style={{ backgroundColor: customColor }}
-                    className="w-full py-2 text-white font-medium rounded-lg"
-                  >
-                    Calculate Savings
-                  </button>
-                </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">Powered by Merlin TrueQuote™</p>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-xs text-gray-500">Powered by Merlin TrueQuote™</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Customization Controls */}
             <div className="mt-6 space-y-4">
