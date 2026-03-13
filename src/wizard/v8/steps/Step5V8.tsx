@@ -46,6 +46,7 @@ import {
   trackQuoteGenerated,
 } from "@/services/subscriptionService";
 import { supabase } from "@/services/supabaseClient";
+import { formatCurrency } from "@/services/internationalService";
 
 const DARK = {
   cardBg: "rgba(255,255,255,0.04)",
@@ -56,14 +57,10 @@ const DARK = {
   accent: "#3ECF8E",
 };
 
-function fmt$(n: number | null | undefined): string {
+function fmt$(n: number | null | undefined, countryCode?: string): string {
   if (n === null || n === undefined || !Number.isFinite(n)) return "—";
   try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(n);
+    return formatCurrency(n, countryCode || "US");
   } catch {
     return `$${Math.round(n)}`;
   }
@@ -108,6 +105,7 @@ export default function Step5V8({ state, actions }: Props) {
 
   const { tiers, selectedTierIndex, location, industry } = state;
   const tier = tiers && selectedTierIndex !== null ? tiers[selectedTierIndex] : undefined;
+  const countryCode = state.countryCode || state.country || "US";
 
   console.log('[Step5V8] Selected tier data:', tier);
 
@@ -237,7 +235,7 @@ export default function Step5V8({ state, actions }: Props) {
     const industryName = industry?.replace(/_/g, " ") || "business";
     const shareTitle = `Energy Quote for ${industryName}`;
     const shareText = `💡 Just got my energy quote from Merlin BESS!\n\n` +
-      `💰 ${fmt$(tier.annualSavings)}/year savings\n` +
+      `💰 ${fmt$(tier.annualSavings, countryCode)}/year savings\n` +
       `⚡ ${fmtNum(tier.bessKWh)} kWh storage\n` +
       `📊 ${tier.paybackYears.toFixed(1)} year payback\n` +
       `📈 ${tier.roi10Year.toFixed(0)}% 10-year ROI`;
@@ -439,7 +437,7 @@ export default function Step5V8({ state, actions }: Props) {
                 className="text-5xl md:text-6xl font-bold text-[#3ECF8E] leading-none"
                 style={{ textShadow: "0 0 40px rgba(62,207,142,0.40)" }}
               >
-                {fmt$(tier.annualSavings)}
+                {fmt$(tier.annualSavings, countryCode)}
               </div>
               <div className="text-lg text-slate-400 mt-1.5">per year</div>
 
@@ -605,7 +603,7 @@ export default function Step5V8({ state, actions }: Props) {
                       Net Investment
                     </div>
                     <div className="mt-2 text-4xl font-black text-white tracking-tight tabular-nums">
-                      {fmt$(tier.netCost)}
+                      {fmt$(tier.netCost, countryCode)}
                     </div>
                     <div className="mt-2 max-w-md text-sm leading-relaxed text-slate-300">
                       After federal incentives, this is the capital required to put the full system
@@ -617,7 +615,7 @@ export default function Step5V8({ state, actions }: Props) {
                       Annual Benefit
                     </div>
                     <div className="mt-1 text-xl font-bold text-emerald-400 tabular-nums">
-                      {fmt$(tier.annualSavings)}
+                      {fmt$(tier.annualSavings, countryCode)}
                     </div>
                   </div>
                 </div>
@@ -629,7 +627,7 @@ export default function Step5V8({ state, actions }: Props) {
                     Upfront Cost
                   </div>
                   <div className="mt-2 text-2xl font-bold text-white tabular-nums">
-                    {fmt$(tier.grossCost)}
+                    {fmt$(tier.grossCost, countryCode)}
                   </div>
                   <div className="mt-1 text-xs text-slate-400">
                     Full installed project value before credits
@@ -641,7 +639,7 @@ export default function Step5V8({ state, actions }: Props) {
                     Federal ITC
                   </div>
                   <div className="mt-2 text-2xl font-bold text-emerald-400 tabular-nums">
-                    −{fmt$(tier.itcAmount)}
+                    −{fmt$(tier.itcAmount, countryCode)}
                   </div>
                   <div className="mt-1 text-xs text-emerald-200/70">
                     {Math.round(tier.itcRate * 100)}% tax credit applied
@@ -661,7 +659,7 @@ export default function Step5V8({ state, actions }: Props) {
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-black text-emerald-400 tracking-tight tabular-nums">
-                      {fmt$(tier.annualSavings * 10)}
+                      {fmt$(tier.annualSavings * 10, countryCode)}
                     </div>
                     <div className="text-xs text-slate-500">gross savings outlook</div>
                   </div>
@@ -708,7 +706,7 @@ export default function Step5V8({ state, actions }: Props) {
                   <div
                     className={`mt-2 text-3xl font-black tabular-nums ${tier.npv >= 0 ? "text-emerald-400" : "text-red-400"}`}
                   >
-                    {fmt$(tier.npv)}
+                    {fmt$(tier.npv, countryCode)}
                   </div>
                   <div className="mt-1 text-sm text-slate-400">
                     Long-term value after discounting future savings

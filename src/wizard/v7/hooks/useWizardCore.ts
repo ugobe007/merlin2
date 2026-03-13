@@ -73,6 +73,8 @@ export function initialState(): WizardState {
 
     // Step 1: Location
     locationRawInput: "",
+    country: "US", // Default to US
+    countryCode: "US", // Default to US
     location: null,
     locationIntel: null,
     locationConfirmed: false,

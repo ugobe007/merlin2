@@ -268,8 +268,8 @@ function computeBESSSizing(
   state: WizardState,
   goal: GoalChoice,
   tierLabel: TierLabel,
-  solarKW: number = 0,
-  generatorKW: number = 0
+  _solarKW: number = 0,
+  _generatorKW: number = 0
 ): { bessKW: number; bessKWh: number; durationHours: number } {
   // Use peakLoadKW as sizing basis. Fall back to baseLoadKW if peak not yet set.
   const effectivePeakKW =

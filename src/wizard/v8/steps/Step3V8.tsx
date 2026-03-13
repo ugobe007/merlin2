@@ -70,9 +70,9 @@ export function Step3V8({ state, actions }: Props) {
 
   // Normalize questions (same as V7)
   const questions: CuratedField[] = useMemo(() => {
-    const raw = (curatedSchema as any)?.questions ?? (curatedSchema as any)?.fields ?? [];
-    console.log('[Step3V8] Raw questions from schema:', raw.length);
-    const normalized = raw.map((q: any, idx: number) => {
+    const raw = (curatedSchema as unknown as Record<string, unknown>)?.questions ?? (curatedSchema as unknown as Record<string, unknown>)?.fields ?? [];
+    console.log('[Step3V8] Raw questions from schema:', Array.isArray(raw) ? raw.length : 0);
+    const normalized = (raw as Array<Record<string, unknown>>).map((q: Record<string, unknown>, idx: number) => {
       const rawId = q?.id ?? q?.key ?? q?.fieldId ?? q?.name;
       const id = rawId && String(rawId) !== "undefined" ? rawId : `${industry}_${idx}`;
       const title = q?.title ?? q?.label ?? q?.prompt ?? q?.question;
@@ -177,8 +177,6 @@ export function Step3V8({ state, actions }: Props) {
   );
 
   // Required fields + completion
-  const requiredIds = useMemo(() => questions.filter(isRequired).map((q) => q.id), [questions]);
-  
   const missingRequired = useMemo(() => {
     return questions
       .filter(isRequired)

@@ -28,7 +28,7 @@ const ReferralPage = lazy(() => import("./pages/ReferralPage"));
 const IconPreview = lazy(() => import("./pages/IconPreview"));
 const TwitterBanner = lazy(() => import("./pages/TwitterBanner"));
 const WizardV6 = lazy(() => import("./components/wizard/v6/WizardV6"));
-const WizardV7Page = lazy(() => import("./pages/WizardV7Page"));
+// V7 DEPRECATED March 13, 2026 - Use V8 only
 const WizardVNextPage = lazy(() => import("./pages/WizardVNextPage"));
 const WizardV8Page = lazy(() => import("./wizard/v8/WizardV8Page"));
 const MetaCalculationsPage = lazy(() => import("./pages/MetaCalculationsPage"));
@@ -402,14 +402,7 @@ function App() {
     );
   }
 
-  // Access via /wizard-v7 or /v7 - V7 LEGACY (Jan 2026 - kept for reference)
-  if (pathname === "/wizard-v7" || pathname === "/v7" || pathname === "/wizard/v7") {
-    return (
-      <Suspense fallback={<PageLoader />}>
-        <WizardV7Page />
-      </Suspense>
-    );
-  }
+  // V7 DEPRECATED - Removed March 13, 2026 - Use V8 at /wizard
 
   // Access via /wizard-v6 ONLY - V6 Legacy (kept for testing)
   if (pathname === "/wizard-v6") {

@@ -209,6 +209,8 @@ export interface WizardState {
   // ── Step 1: Location ─────────────────────────────────────────────────────
   // Written by Step 1. Read by all subsequent steps (rate, grade, climate).
   locationRaw: string; // raw input while user types
+  country: string; // Country code for international support (e.g., "US", "CA", "GB")
+  countryCode: string; // ISO country code (same as country for now)
   location: LocationData | null;
   locationStatus: FetchStatus; // geocode API status
   business: BusinessData | null; // Business name + detected industry
@@ -332,6 +334,8 @@ export function initialState(): WizardState {
   return {
     step: 0, // Start at Step 0 (Mode Selection)
     locationRaw: "",
+    country: "US", // Default to US
+    countryCode: "US", // Default to US
     location: null,
     locationStatus: "idle",
     business: null,
@@ -617,7 +621,7 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
 export interface WizardActions {
   // Step 1
   setLocationRaw: (value: string) => void;
-  submitLocation: () => Promise<void>;
+  submitLocation: (country?: "US" | "International") => Promise<void>;
   clearLocation: () => void;
   setGridReliability: (
     reliability: "reliable" | "occasional-outages" | "frequent-outages" | "unreliable"
