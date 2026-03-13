@@ -128,12 +128,10 @@ CREATE INDEX IF NOT EXISTS idx_widget_usage_industry ON public.widget_usage(indu
 CREATE INDEX IF NOT EXISTS idx_widget_usage_created_at ON public.widget_usage(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_widget_usage_partner_created ON public.widget_usage(partner_id, created_at DESC);
 
--- Composite index for monthly usage queries
-CREATE INDEX IF NOT EXISTS idx_widget_usage_monthly ON public.widget_usage(
-  partner_id,
-  DATE_TRUNC('month', created_at),
-  event_type
-) WHERE event_type = 'quote_generated';
+-- Composite index for quote_generated events (for analytics)
+-- Note: Removed DATE_TRUNC from index - monthly aggregation handled by materialized view
+CREATE INDEX IF NOT EXISTS idx_widget_usage_quotes ON public.widget_usage(partner_id, created_at DESC)
+  WHERE event_type = 'quote_generated';
 
 -- Comments
 COMMENT ON TABLE public.widget_usage IS 'Event tracking for all widget activity (quotes, loads, errors)';
