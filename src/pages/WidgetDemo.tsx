@@ -15,6 +15,7 @@ export default function WidgetDemo() {
   const [copiedSnippet, setCopiedSnippet] = useState(false);
   const [customColor, setCustomColor] = useState("#3ecf8e");
   const [selectedIndustry, setSelectedIndustry] = useState("hotel");
+  const [logoUrl, setLogoUrl] = useState("");
   const [showSignupForm, setShowSignupForm] = useState(false);
 
   // Code snippet with customization
@@ -26,7 +27,7 @@ export default function WidgetDemo() {
     apiKey: 'YOUR_API_KEY_HERE',
     industry: '${selectedIndustry}',
     theme: 'light',
-    primaryColor: '${customColor}'
+    primaryColor: '${customColor}'${logoUrl ? `,\n    logo: '${logoUrl}'` : ''}
   });
 </script>`;
 
@@ -144,17 +145,66 @@ export default function WidgetDemo() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Logo URL (Optional)</label>
+                <input
+                  type="text"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="https://your-site.com/logo.png"
+                  className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#1a1a1a] text-gray-300 text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">Show your logo in widget (Pro tier+)</p>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Industry</label>
                 <select
                   value={selectedIndustry}
                   onChange={(e) => setSelectedIndustry(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#1a1a1a] text-gray-300"
                 >
-                  <option value="hotel">Hotel</option>
-                  <option value="car-wash">Car Wash</option>
-                  <option value="hospital">Hospital</option>
-                  <option value="data-center">Data Center</option>
-                  <option value="office">Office Building</option>
+                  <optgroup label="Commercial">
+                    <option value="hotel">Hotel / Hospitality</option>
+                    <option value="car-wash">Car Wash</option>
+                    <option value="restaurant">Restaurant</option>
+                    <option value="retail">Retail Store</option>
+                    <option value="shopping-center">Shopping Center</option>
+                    <option value="office">Office Building</option>
+                    <option value="casino">Casino / Gaming</option>
+                    <option value="gas-station">Gas Station</option>
+                  </optgroup>
+                  <optgroup label="Industrial">
+                    <option value="manufacturing">Manufacturing</option>
+                    <option value="warehouse">Warehouse / Logistics</option>
+                    <option value="cold-storage">Cold Storage</option>
+                    <option value="data-center">Data Center</option>
+                  </optgroup>
+                  <optgroup label="Healthcare & Education">
+                    <option value="hospital">Hospital</option>
+                    <option value="college">College / University</option>
+                    <option value="government">Government Building</option>
+                  </optgroup>
+                  <optgroup label="Transportation">
+                    <option value="ev-charging">EV Charging Station</option>
+                    <option value="truck-stop">Truck Stop</option>
+                    <option value="airport">Airport</option>
+                  </optgroup>
+                  <optgroup label="Residential">
+                    <option value="apartment">Apartment Complex</option>
+                    <option value="residential">Single Family Home</option>
+                  </optgroup>
+                  <optgroup label="Agriculture">
+                    <option value="indoor-farm">Indoor Farm</option>
+                    <option value="agricultural">Agricultural</option>
+                  </optgroup>
+                  <optgroup label="⚡ Vendors & Partners">
+                    <option value="vendor-battery">Battery Vendor</option>
+                    <option value="vendor-solar">Solar Integrator</option>
+                    <option value="vendor-generator">Generator Supplier</option>
+                    <option value="vendor-integrator">System Integrator / EPC</option>
+                    <option value="vendor-architect">Architecture Firm</option>
+                    <option value="vendor-construction">Construction Company</option>
+                  </optgroup>
                 </select>
               </div>
             </div>
