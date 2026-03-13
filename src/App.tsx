@@ -41,6 +41,7 @@ const CheckoutCallback = lazy(() => import("./components/pricing/CheckoutCallbac
 const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
 const WidgetDemo = lazy(() => import("./pages/WidgetDemo"));
 const WidgetDocs = lazy(() => import("./pages/WidgetDocs"));
+const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard"));
 // const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
 import { QuoteProvider } from "./contexts/QuoteContext";
 import { trackPageView } from "./services/analyticsService";
@@ -465,6 +466,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <WidgetDocs />
+      </Suspense>
+    );
+  }
+
+  // Partner Dashboard - Stats, API keys, customization
+  if (pathname === "/dashboard" || pathname === "/partner/dashboard" || pathname === "/partner") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <PartnerDashboard />
       </Suspense>
     );
   }
