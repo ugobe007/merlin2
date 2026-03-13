@@ -32,6 +32,38 @@ const T = {
 
 type Country = "US" | "International";
 
+// Popular international countries for dropdown
+const INTERNATIONAL_COUNTRIES = [
+  { code: "US", name: "United States" },
+  { code: "CA", name: "Canada" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "AU", name: "Australia" },
+  { code: "NZ", name: "New Zealand" },
+  { code: "DE", name: "Germany" },
+  { code: "FR", name: "France" },
+  { code: "ES", name: "Spain" },
+  { code: "IT", name: "Italy" },
+  { code: "NL", name: "Netherlands" },
+  { code: "SE", name: "Sweden" },
+  { code: "NO", name: "Norway" },
+  { code: "DK", name: "Denmark" },
+  { code: "FI", name: "Finland" },
+  { code: "IE", name: "Ireland" },
+  { code: "CH", name: "Switzerland" },
+  { code: "AT", name: "Austria" },
+  { code: "BE", name: "Belgium" },
+  { code: "JP", name: "Japan" },
+  { code: "SG", name: "Singapore" },
+  { code: "AE", name: "United Arab Emirates" },
+  { code: "SA", name: "Saudi Arabia" },
+  { code: "ZA", name: "South Africa" },
+  { code: "BR", name: "Brazil" },
+  { code: "MX", name: "Mexico" },
+  { code: "IN", name: "India" },
+  { code: "CN", name: "China" },
+  { code: "KR", name: "South Korea" },
+];
+
 type GooglePlacesLibrary = {
   Place?: new (options: { id: string }) => {
     fetchFields: (request: { fields: string[] }) => Promise<void>;
@@ -223,6 +255,7 @@ export function Step1V8({ state, actions }: Step1Props) {
   const suggestionRequestIdRef = useRef(0);
 
   const [country, setCountry] = useState<Country>("US");
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string>("US");
   const [businessName, setBusinessName] = useState("");
   const [streetAddress, setStreetAddress] = useState("");
   const [businessError, setBusinessError] = useState<string | null>(null);
@@ -489,8 +522,8 @@ export function Step1V8({ state, actions }: Step1Props) {
 
   const handleLocationSubmit = () => {
     if (!isValidZip || isLocationBusy) return;
-    // Pass country to submitLocation so it knows how to geocode
-    void actions.submitLocation(country);
+    // Pass country code to submitLocation so it knows how to geocode
+    void actions.submitLocation(country === "US" ? "US" : selectedCountryCode);
   };
 
   const resetBusinessFlow = () => {
@@ -694,12 +727,15 @@ export function Step1V8({ state, actions }: Step1Props) {
         }}
       >
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             {(["US", "International"] as Country[]).map((value) => (
               <button
                 key={value}
                 type="button"
-                onClick={() => setCountry(value)}
+                onClick={() => {
+                  setCountry(value);
+                  if (value === "US") setSelectedCountryCode("US");
+                }}
                 style={{
                   height: 42,
                   padding: "0 14px",
@@ -718,6 +754,31 @@ export function Step1V8({ state, actions }: Step1Props) {
                 {value === "US" ? "US" : "Intl"}
               </button>
             ))}
+            
+            {country === "International" && (
+              <select
+                value={selectedCountryCode}
+                onChange={(e) => setSelectedCountryCode(e.target.value)}
+                style={{
+                  height: 42,
+                  padding: "0 12px",
+                  borderRadius: 8,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: T.input,
+                  color: T.textPrimary,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+              >
+                {INTERNATIONAL_COUNTRIES.map(({ code, name }) => (
+                  <option key={code} value={code} style={{ background: "#1a1f2e", color: T.textPrimary }}>
+                    {name} ({code})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {!locationConfirmed ? (
@@ -862,36 +923,63 @@ export function Step1V8({ state, actions }: Step1Props) {
           )}
 
           <div style={{ display: "grid", gap: 12 }}>
-            <input
-              type="text"
-              value={businessName}
-              onChange={(event) => {
-                setBusinessName(event.target.value);
-                setBusinessError(null);
-                setSelectedSuggestion(null);
-                setPreviewBusiness(null);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void handleBusinessContinue();
-                }
-              }}
-              placeholder="Business name"
-              autoComplete="off"
-              style={{
-                width: "100%",
-                height: 46,
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.10)",
-                background: T.input,
-                color: T.textPrimary,
-                padding: "0 14px",
-                fontSize: 14,
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="text"
+                value={businessName}
+                onChange={(event) => {
+                  setBusinessName(event.target.value);
+                  setBusinessError(null);
+                  setSelectedSuggestion(null);
+                  setPreviewBusiness(null);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void handleBusinessContinue();
+                  }
+                }}
+                placeholder="Business name (optional)"
+                autoComplete="off"
+                style={{
+                  flex: 1,
+                  height: 46,
+                  borderRadius: 10,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: T.input,
+                  color: T.textPrimary,
+                  padding: "0 14px",
+                  fontSize: 14,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  resetBusinessFlow();
+                  actions.goToStep(2);
+                }}
+                style={{
+                  height: 46,
+                  padding: "0 18px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.03)",
+                  color: T.textSecondary,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Skip
+              </button>
+            </div>
+            
+            <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.4 }}>
+              💡 Business matching helps us detect your industry automatically, but you can skip and select it manually.
+            </div>
 
             {businessSuggestions.length > 0 && !selectedSuggestion && (
               <div

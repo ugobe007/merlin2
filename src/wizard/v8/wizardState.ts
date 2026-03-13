@@ -621,7 +621,7 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
 export interface WizardActions {
   // Step 1
   setLocationRaw: (value: string) => void;
-  submitLocation: (country?: "US" | "International") => Promise<void>;
+  submitLocation: (countryCode?: string) => Promise<void>;
   clearLocation: () => void;
   setGridReliability: (
     reliability: "reliable" | "occasional-outages" | "frequent-outages" | "unreliable"
