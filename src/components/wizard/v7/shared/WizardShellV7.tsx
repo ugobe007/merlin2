@@ -93,6 +93,8 @@ export default function WizardShellV7({
           display: "flex",
           flexDirection: "column",
           fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+          overflowX: "hidden",
+          width: "100%",
         }}
       >
         {/* Main Layout */}
@@ -265,10 +267,13 @@ export default function WizardShellV7({
 
           {/* ── RIGHT: CONTENT AREA (full width) ─────────────── */}
           <div
+            className="merlin-step-panel"
             style={{
               display: "flex",
               flexDirection: "column",
               gap: 0,
+              minWidth: 0,
+              width: "100%",
             }}
           >
             {/* Horizontal Progress Bar (Feb 11, 2026) */}
@@ -406,30 +411,41 @@ export default function WizardShellV7({
             @media (max-width: 900px) {
               .merlin-shell-grid {
                 grid-template-columns: 1fr !important;
-                padding: 8px 12px !important;
-                gap: 12px !important;
+                padding: 16px !important;
+                gap: 16px !important;
+                width: 100% !important;
+                max-width: 100vw !important;
               }
               .merlin-shell-rail {
                 display: none !important;
               }
               .merlin-shell-bottomnav {
-                padding: 12px 12px 20px !important;
+                padding: 16px 16px 24px !important;
+                width: 100% !important;
               }
               .merlin-progress-bar {
-                gap: 0px !important;
-                padding: 8px 8px !important;
+                gap: 4px !important;
+                padding: 12px !important;
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch;
+                border-radius: 8px !important;
               }
               .merlin-progress-label {
                 display: none !important;
               }
               .merlin-step {
-                padding: 16px !important;
-                min-height: 300px !important;
+                padding: 20px !important;
+                min-height: 400px !important;
+                border-radius: 12px !important;
               }
               .merlin-nexthint {
                 display: none !important;
+              }
+              /* Ensure content panel is full width on mobile */
+              .merlin-step-panel {
+                width: 100% !important;
+                max-width: 100vw !important;
+                overflow-x: hidden !important;
               }
             }
             
