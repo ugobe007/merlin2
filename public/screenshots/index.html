@@ -200,174 +200,243 @@
       box-shadow: 0 0 8px rgba(62, 207, 142, 0.5);
     }
     
-    /* Mockup content area */
+    /* Mockup content area - Merlin dark theme */
     .mockup-content {
       flex: 1;
       padding: 2.5rem;
       overflow-y: auto;
-      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
-    }
-    
-    /* Hero section - with Merlin wizard image */
-    .hero-section {
-      text-align: center;
-      padding: 2rem 1.5rem;
-      background: linear-gradient(135deg, #f0fdf9 0%, #e6f7ef 100%);
-      border-radius: 12px;
-      margin-bottom: 2rem;
-      border: 2px solid rgba(62, 207, 142, 0.2);
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .hero-section::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 300px;
-      height: 300px;
-      background: radial-gradient(circle, rgba(62, 207, 142, 0.1) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    
-    .hero-icon {
-      width: 100px;
-      height: 100px;
-      margin: 0 auto 1rem;
-      background: linear-gradient(135deg, #3ecf8e 0%, #2ba574 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 3.5rem;
-      box-shadow: 
-        0 8px 24px rgba(62, 207, 142, 0.3),
-        0 0 0 4px rgba(62, 207, 142, 0.1);
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
       position: relative;
     }
     
-    .hero-icon img {
-      width: 70px;
-      height: 70px;
-      object-fit: contain;
-    }
-    
-    .hero-section h1 {
-      color: #1a202c;
-      font-size: 2.2rem;
-      margin-bottom: 0.75rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-    
-    .hero-section p {
-      color: #4a5568;
-      font-size: 1.15rem;
-      font-weight: 500;
-    }
-    
-    /* Feature grid */
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
-    }
-    
-    .feature-card {
-      background: white;
-      padding: 1.75rem;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      border: 1px solid #e2e8f0;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .feature-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #3ecf8e 0%, #2ba574 100%);
-      transform: scaleX(0);
-      transition: transform 0.3s ease;
-    }
-    
-    .feature-card:hover::before {
-      transform: scaleX(1);
-    }
-    
-    .feature-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(62, 207, 142, 0.15);
-      border-color: #3ecf8e;
-    }
-    
-    .feature-icon {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      filter: grayscale(0.2);
-    }
-    
-    .feature-card h3 {
-      color: #1a202c;
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-    }
-    
-    .feature-card p {
-      color: #718096;
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-    
-    /* Wizard preview - Supabase form style */
-    .wizard-preview {
-      max-width: 650px;
-      margin: 0 auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-      border: 1px solid #e2e8f0;
-    }
-    
-    .wizard-header {
-      margin-bottom: 2rem;
-    }
-    
-    .progress-bar {
-      height: 8px;
-      background: #e2e8f0;
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 1.5rem;
-      position: relative;
-    }
-    
-    .progress-bar::after {
+    .mockup-content::before {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(90deg, 
-        rgba(62, 207, 142, 0.1) 0%, 
-        transparent 60%,
-        rgba(62, 207, 142, 0.1) 100%);
-      animation: shimmer 2s infinite;
+      background-image: 
+        linear-gradient(rgba(62, 207, 142, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(62, 207, 142, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
     }
     
-    @keyframes shimmer {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
+    /* Navigation arrows */
+    .slide-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(62, 207, 142, 0.1);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(62, 207, 142, 0.3);
+      color: #3ecf8e;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .slide-arrow:hover {
+      background: rgba(62, 207, 142, 0.2);
+      border-color: #3ecf8e;
+      transform: translateY(-50%) scale(1.1);
+      box-shadow: 0 8px 24px rgba(62, 207, 142, 0.3);
+    }
+    
+    .slide-arrow.prev {
+      left: 2rem;
+    }
+    
+    .slide-arrow.next {
+      right: 2rem;
+    }
+    
+    /* Wizard screen mockup - actual UI */
+    .wizard-screen {
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .wizard-step-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    
+    .step-indicator {
+      color: #64748b;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.75rem;
+    }
+    
+    .wizard-screen h1 {
+      color: #f1f5f9;
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+    
+    .wizard-screen .subtitle {
+      color: #94a3b8;
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+    
+    .merlin-advisor {
+      background: rgba(62, 207, 142, 0.1);
+      border: 1px solid rgba(62, 207, 142, 0.3);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    
+    .advisor-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3ecf8e 0%, #2ba574 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(62, 207, 142, 0.3);
+    }
+    
+    .advisor-avatar img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+    
+    .advisor-text {
+      flex: 1;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    
+    .input-field {
+      margin-bottom: 2rem;
+    }
+    
+    .input-label {
+      display: block;
+      color: #cbd5e1;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+    }
+    
+    .input-wrapper {
+      position: relative;
+    }
+    
+    .input-wrapper input {
+      width: 100%;
+      padding: 1rem 1.25rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 2px solid rgba(148, 163, 184, 0.3);
+      border-radius: 10px;
+      color: #f1f5f9;
+      font-size: 1.05rem;
+      transition: all 0.2s ease;
+    }
+    
+    .input-wrapper input:focus {
+      outline: none;
+      border-color: #3ecf8e;
+      background: rgba(15, 23, 42, 0.8);
+      box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.1);
+    }
+    
+    .input-wrapper input::placeholder {
+      color: #64748b;
+    }
+    
+    .mode-toggle {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .mode-btn {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background: rgba(148, 163, 184, 0.1);
+      border: 2px solid rgba(148, 163, 184, 0.2);
+      border-radius: 8px;
+      color: #94a3b8;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    
+    .mode-btn:hover {
+      border-color: rgba(62, 207, 142, 0.5);
+      background: rgba(62, 207, 142, 0.05);
+    }
+    
+    .mode-btn.active {
+      background: linear-gradient(135deg, #3ecf8e 0%, #2ba574 100%);
+      border-color: #3ecf8e;
+      color: #0f172a;
+      box-shadow: 0 4px 12px rgba(62, 207, 142, 0.3);
+    }
+    
+    .wizard-button {
+      width: 100%;
+      padding: 1.125rem 2rem;
+      background: linear-gradient(135deg, #3ecf8e 0%, #2ba574 100%);
+      color: #0f172a;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 24px rgba(62, 207, 142, 0.3);
+    }
+    
+    .wizard-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(62, 207, 142, 0.4);
+    }
+    
+    /* Wizard preview - Supabase dark form style */
+    .wizard-preview {
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .wizard-header {
+      margin-bottom: 2.5rem;
+    }
+    
+    .progress-bar {
+      height: 6px;
+      background: rgba(148, 163, 184, 0.2);
+      border-radius: 3px;
+      margin-bottom: 2rem;
+      overflow: hidden;
     }
     
     .progress-fill {
@@ -375,103 +444,109 @@
       background: linear-gradient(90deg, #3ecf8e 0%, #2ba574 100%);
       transition: width 0.5s ease;
       box-shadow: 0 0 12px rgba(62, 207, 142, 0.5);
-      position: relative;
     }
     
     .wizard-header h2 {
-      color: #1a202c;
-      font-size: 1.6rem;
-      font-weight: 600;
+      color: #f1f5f9;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+    
+    .wizard-header .step-info {
+      color: #94a3b8;
+      font-size: 0.9rem;
     }
     
     .question-group {
-      margin-bottom: 1.75rem;
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
     }
     
     .question-group label {
       display: block;
-      color: #2d3748;
+      color: #cbd5e1;
       font-weight: 600;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
       font-size: 1rem;
     }
     
     .option-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.625rem;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
     }
     
     .option-btn {
-      padding: 0.875rem 0.75rem;
-      border: 2px solid #e2e8f0;
+      padding: 1rem 1.25rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 2px solid rgba(148, 163, 184, 0.3);
       border-radius: 8px;
-      text-align: center;
+      color: #cbd5e1;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
-      color: #4a5568;
-      font-weight: 500;
-      font-size: 0.9rem;
-      background: white;
+      text-align: center;
     }
     
     .option-btn:hover {
-      border-color: #3ecf8e;
-      background: #f0fdf9;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(62, 207, 142, 0.1);
+      border-color: rgba(62, 207, 142, 0.6);
+      background: rgba(62, 207, 142, 0.05);
+      transform: translateY(-1px);
     }
     
     .option-btn.active {
-      border-color: #3ecf8e;
       background: linear-gradient(135deg, #3ecf8e 0%, #2ba574 100%);
-      color: white;
-      font-weight: 600;
+      border-color: #3ecf8e;
+      color: #0f172a;
       box-shadow: 0 4px 12px rgba(62, 207, 142, 0.3);
     }
     
-    .input-group {
-      margin-bottom: 1.75rem;
+    .input-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
     }
     
-    .input-group label {
-      display: block;
-      color: #2d3748;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      font-size: 1rem;
-    }
-    
-    .input-group input {
-      width: 100%;
-      padding: 0.875rem 1rem;
-      border: 2px solid #e2e8f0;
+    .input-row input {
+      flex: 1;
+      padding: 0.875rem 1.125rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 2px solid rgba(148, 163, 184, 0.3);
       border-radius: 8px;
+      color: #f1f5f9;
       font-size: 1rem;
-      color: #2d3748;
-      transition: all 0.2s ease;
-      background: white;
     }
     
-    .input-group input:focus {
+    .input-row input:focus {
       outline: none;
       border-color: #3ecf8e;
       box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.1);
     }
     
-    /* Results panel - Supabase stats style */
+    .input-row input::placeholder {
+      color: #64748b;
+    }
+    
+    .input-unit {
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    
+    /* TrueQuote badge */
     .results-panel {
       max-width: 850px;
       margin: 0 auto;
-      background: white;
-      padding: 2.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-      border: 1px solid #e2e8f0;
+      position: relative;
+      z-index: 1;
     }
     
     .results-panel h2 {
-      color: #1a202c;
+      color: #f1f5f9;
       font-size: 1.8rem;
       margin-bottom: 2rem;
       text-align: center;
@@ -486,11 +561,11 @@
     }
     
     .metric-card {
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.6) 100%);
       padding: 1.5rem;
       border-radius: 10px;
       text-align: center;
-      border: 2px solid #e2e8f0;
+      border: 2px solid rgba(148, 163, 184, 0.2);
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
@@ -508,12 +583,13 @@
     
     .metric-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(62, 207, 142, 0.15);
-      border-color: #3ecf8e;
+      box-shadow: 0 8px 20px rgba(62, 207, 142, 0.25);
+      border-color: rgba(62, 207, 142, 0.5);
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%);
     }
     
     .metric-label {
-      color: #64748b;
+      color: #94a3b8;
       font-size: 0.8rem;
       font-weight: 600;
       text-transform: uppercase;
@@ -522,13 +598,9 @@
     }
     
     .metric-value {
-      color: #1a202c;
+      color: #f1f5f9;
       font-size: 1.75rem;
       font-weight: 700;
-      background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
     }
     
     .truequote-badge {
@@ -582,9 +654,11 @@
         width: 80%;
         height: 70vh;
       }
-      .hero-section h1 { font-size: 1.9rem; }
-      .feature-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .wizard-screen h1 { font-size: 1.9rem; }
       .metric-grid { grid-template-columns: repeat(2, 1fr); }
+      .slide-arrow { width: 40px; height: 40px; font-size: 1.2rem; }
+      .slide-arrow.prev { left: 1rem; }
+      .slide-arrow.next { right: 1rem; }
     }
     
     @media (max-width: 768px) {
@@ -596,10 +670,10 @@
         height: 75vh;
       }
       .mockup-content { padding: 1.5rem; }
-      .wizard-preview, .results-panel { padding: 1.25rem; }
-      .option-grid { grid-template-columns: repeat(2, 1fr); }
-      .hero-icon { width: 80px; height: 80px; }
-      .hero-section h1 { font-size: 1.6rem; }
+      .wizard-screen h1 { font-size: 1.6rem; }
+      .option-grid { grid-template-columns: 1fr; }
+      .mode-toggle { flex-direction: column; }
+      .slide-arrow { display: none; } /* Hide arrows on mobile, use swipe */
     }
   </style>
 </head>
@@ -612,12 +686,16 @@
   
   <!-- Slide Navigation -->
   <div class="slide-nav">
-    <button class="slide-nav-btn active" onclick="showSlide(1)">Overview</button>
-    <button class="slide-nav-btn" onclick="showSlide(2)">Questionnaire</button>
+    <button class="slide-nav-btn active" onclick="showSlide(1)">Step 1: Location</button>
+    <button class="slide-nav-btn" onclick="showSlide(2)">Step 2: Details</button>
     <button class="slide-nav-btn" onclick="showSlide(3)">Quote Results</button>
   </div>
   
-  <!-- Slide 1: Landing Page with Feature Cards -->
+  <!-- Navigation Arrows -->
+  <div class="slide-arrow prev" onclick="prevSlide()">‹</div>
+  <div class="slide-arrow next" onclick="nextSlide()">›</div>
+  
+  <!-- Slide 1: Location Input Step -->
   <div class="slide-container active" id="slide-1">
     <div class="mockup-frame">
       <div class="mockup-header">
@@ -626,29 +704,38 @@
         <div class="mockup-dot green"></div>
       </div>
       <div class="mockup-content">
-        <div class="hero-section">
-          <div class="hero-icon">
-            <img src="../merlin-wizard-new.png" alt="Merlin">
+        <div class="wizard-screen">
+          <div class="wizard-step-header">
+            <div class="step-indicator">Step 1 of 4</div>
+            <h1>📍 Where is your facility?</h1>
+            <p class="subtitle">Let's start with your location to calculate accurate energy rates and incentives</p>
           </div>
-          <h1>AI-Powered BESS Quotes</h1>
-          <p>Industry-specific battery storage quotes in 3 minutes</p>
-        </div>
-        <div class="feature-grid">
-          <div class="feature-card">
-            <div class="feature-icon">✓</div>
-            <h3>TrueQuote™ Accuracy</h3>
-            <p>Every number traceable to NREL, EIA, and industry sources</p>
+          
+          <div class="merlin-advisor">
+            <div class="advisor-avatar">
+              <img src="../merlin-icon.png" alt="Merlin">
+            </div>
+            <div class="advisor-text">
+              <strong>Merlin:</strong> I'll use your location to look up local electricity rates, demand charges, and federal/state incentives. This takes 30 seconds.
+            </div>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">📊</div>
-            <h3>Pro Financial Modeling</h3>
-            <p>NPV, IRR, payback with Monte Carlo risk analysis</p>
+          
+          <div class="input-field">
+            <label class="input-label">Location Type</label>
+            <div class="mode-toggle">
+              <div class="mode-btn active">🇺🇸 US Location</div>
+              <div class="mode-btn">🌍 International</div>
+            </div>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">🏢</div>
-            <h3>20+ Industries</h3>
-            <p>Hotels, data centers, EV charging, manufacturing, hospitals</p>
+          
+          <div class="input-field">
+            <label class="input-label">ZIP Code or Address</label>
+            <div class="input-wrapper">
+              <input type="text" placeholder="Enter ZIP code (e.g., 94102) or full address..." value="">
+            </div>
           </div>
+          
+          <button class="wizard-button">Confirm Location →</button>
         </div>
       </div>
     </div>
@@ -668,7 +755,8 @@
             <div class="progress-bar">
               <div class="progress-fill" style="width: 60%;"></div>
             </div>
-            <h2>Hotel Configuration</h2>
+            <h2>🏨 Hotel Configuration</h2>
+            <p class="step-info">Step 3 of 4 • Customize your facility details</p>
           </div>
           <div class="question-group">
             <label>Hotel Class</label>
@@ -679,17 +767,20 @@
               <div class="option-btn">Luxury</div>
             </div>
           </div>
-          <div class="input-group">
+          <div class="question-group">
             <label>Number of Rooms</label>
-            <input type="text" value="150" readonly />
+            <div class="input-row">
+              <input type="text" value="150" placeholder="Enter number of rooms..."/>
+              <span class="input-unit">rooms</span>
+            </div>
           </div>
           <div class="question-group">
             <label>Amenities</label>
             <div class="option-grid">
-              <div class="option-btn active">Pool</div>
-              <div class="option-btn active">Restaurant</div>
-              <div class="option-btn">Spa</div>
-              <div class="option-btn">Fitness Center</div>
+              <div class="option-btn active">🏊 Pool</div>
+              <div class="option-btn active">🍽️ Restaurant</div>
+              <div class="option-btn">💆 Spa</div>
+              <div class="option-btn">💪 Fitness</div>
             </div>
           </div>
         </div>
