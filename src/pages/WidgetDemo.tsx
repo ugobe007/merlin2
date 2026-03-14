@@ -11,6 +11,9 @@
 import { useState, useEffect } from "react";
 import { Copy, Check, Zap, Shield, Code2, Play } from "lucide-react";
 import merlinWizardImage from "@/assets/images/merlin_wizard_new.png";
+import merlinWizardIcon from "@/assets/images/NEW_Wizard_icon.png";
+import merlinBatteryIcon from "@/assets/images/Merlin_Battery_Icon.png";
+import trueQuoteBadge from "@/assets/images/badge_gold_icon.jpg";
 import WizardV8Page from "@/wizard/v8/WizardV8Page";
 
 export default function WidgetDemo() {
@@ -366,7 +369,11 @@ export default function WidgetDemo() {
                   >
                     <div className="h-full p-8 flex flex-col items-center justify-center text-center">
                       <div className="mb-8">
-                        <div className="text-6xl mb-6">⏱️</div>
+                        <img
+                          src={merlinBatteryIcon}
+                          alt="Battery"
+                          className="w-24 h-24 mx-auto mb-6 opacity-60"
+                        />
                         <div className="text-5xl font-bold mb-6 leading-tight">
                           <span className="text-orange-400">Energy quotes take </span>
                           <span className="text-red-400">weeks</span>
@@ -389,13 +396,17 @@ export default function WidgetDemo() {
                   >
                     <div className="h-full p-8 flex flex-col items-center justify-center text-center">
                       <div className="mb-6">
-                        <div className="text-6xl mb-8">🧙‍♂️</div>
+                        <img
+                          src={merlinWizardIcon}
+                          alt="Merlin"
+                          className="w-32 h-32 mx-auto mb-8"
+                        />
                         <div className="text-5xl font-bold mb-6 leading-tight">
                           <span className="text-[#3ecf8e]">Merlin</span>
                           <span className="text-white">: Bank-ready quotes</span>
                         </div>
                         <div className="text-6xl font-bold text-[#3ecf8e] mb-8">
-                          in under 3 minutes ⚡
+                          in under 3 minutes
                         </div>
                         <p className="text-xl text-gray-300 max-w-2xl mx-auto">
                           Instant financial analysis • NPV, IRR, payback • Export to Word/Excel
@@ -412,9 +423,11 @@ export default function WidgetDemo() {
                   >
                     <div className="h-full p-8 flex flex-col items-center justify-center text-center">
                       <div className="mb-8">
-                        <div className="inline-block px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold rounded-xl mb-8 text-2xl">
-                          🏆 TrueQuote™ Verified
-                        </div>
+                        <img
+                          src={trueQuoteBadge}
+                          alt="TrueQuote Verified"
+                          className="w-24 h-24 mx-auto mb-8"
+                        />
                         <div className="text-4xl font-bold text-white mb-6 leading-tight">
                           Every number <span className="text-[#3ecf8e]">sourced</span>
                         </div>
@@ -422,11 +435,11 @@ export default function WidgetDemo() {
                           Every assumption <span className="text-[#3ecf8e]">traceable</span>
                         </div>
                         <div className="flex gap-4 justify-center items-center text-lg">
-                          <div className="bg-[#1e293b] px-6 py-3 rounded-lg border border-[#3ecf8e]/50">
+                          <div className="bg-[#1e293b] px-4 py-2 rounded border border-[#3ecf8e]/50">
                             <span className="text-gray-400">Source:</span>{" "}
                             <span className="text-[#3ecf8e] font-semibold">NREL ATB 2024</span>
                           </div>
-                          <div className="bg-[#1e293b] px-6 py-3 rounded-lg border border-[#3ecf8e]/50">
+                          <div className="bg-[#1e293b] px-4 py-2 rounded border border-[#3ecf8e]/50">
                             <span className="text-gray-400">Method:</span>{" "}
                             <span className="text-[#3ecf8e] font-semibold">IEEE 4538388</span>
                           </div>
@@ -447,19 +460,19 @@ export default function WidgetDemo() {
                     <div className="h-full p-8 flex flex-col justify-center">
                       <div className="text-center mb-8">
                         <div className="text-5xl font-bold text-white mb-10">
-                          💰 Real Results. Real Savings.
+                          Real Results. Real Savings.
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-6 max-w-4xl mx-auto">
-                        <div className="bg-gradient-to-br from-[#3ecf8e]/30 to-[#3ecf8e]/10 p-8 rounded-2xl border-2 border-[#3ecf8e] text-center transform scale-105">
+                        <div className="bg-gradient-to-br from-[#3ecf8e]/30 to-[#3ecf8e]/10 p-6 rounded-xl border-2 border-[#3ecf8e] text-center transform scale-105">
                           <div className="text-5xl font-bold text-[#3ecf8e] mb-3">$124K</div>
                           <div className="text-lg text-gray-300 font-semibold">Annual Savings</div>
                         </div>
-                        <div className="bg-[#1e293b] p-8 rounded-2xl border-2 border-gray-600 text-center">
+                        <div className="bg-[#1e293b] p-6 rounded-xl border-2 border-gray-600 text-center">
                           <div className="text-5xl font-bold text-white mb-3">4.2yr</div>
                           <div className="text-lg text-gray-400">Payback</div>
                         </div>
-                        <div className="bg-[#1e293b] p-8 rounded-2xl border-2 border-gray-600 text-center">
+                        <div className="bg-[#1e293b] p-6 rounded-xl border-2 border-gray-600 text-center">
                           <div className="text-5xl font-bold text-white mb-3">18.4%</div>
                           <div className="text-lg text-gray-400">IRR</div>
                         </div>
@@ -482,13 +495,15 @@ export default function WidgetDemo() {
                           Get your <span className="text-[#3ecf8e]">free quote</span>
                         </div>
                         <div className="text-4xl font-bold text-gray-300 mb-12">in 3 minutes</div>
-                        <button className="px-12 py-6 bg-gradient-to-r from-[#3ecf8e] to-[#2ab074] text-black text-2xl font-bold rounded-xl hover:shadow-2xl hover:shadow-[#3ecf8e]/50 transition-all transform hover:scale-105">
+                        <div className="text-4xl font-bold text-[#3ecf8e] hover:text-[#2ab074] cursor-pointer transition-colors">
                           Get Started Free →
-                        </button>
+                        </div>
                         <div className="mt-8 flex gap-6 justify-center text-gray-400 text-lg">
-                          <span>✓ No credit card</span>
-                          <span>✓ No sales call</span>
-                          <span>✓ Instant results</span>
+                          <span>No credit card</span>
+                          <span>•</span>
+                          <span>No sales call</span>
+                          <span>•</span>
+                          <span>Instant results</span>
                         </div>
                       </div>
                     </div>
