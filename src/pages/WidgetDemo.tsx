@@ -10,8 +10,8 @@
 
 import { useState } from "react";
 import { Copy, Check, Zap, Shield, Code2, Play } from "lucide-react";
-import merlinWizardImage from '@/assets/images/merlin_wizard_new.png';
-import WizardV8Page from '@/wizard/v8/WizardV8Page';
+import merlinWizardImage from "@/assets/images/merlin_wizard_new.png";
+import WizardV8Page from "@/wizard/v8/WizardV8Page";
 
 export default function WidgetDemo() {
   const [copiedSnippet, setCopiedSnippet] = useState(false);
@@ -24,7 +24,7 @@ export default function WidgetDemo() {
   // Code snippet with customization
   const codeSnippet = `<!-- Add this to your website -->
 <iframe
-  src="https://merlin2.fly.dev/v8?industry=${selectedIndustry}&color=${customColor.replace('#', '')}${logoUrl ? `&logo=${encodeURIComponent(logoUrl)}` : ''}"
+  src="https://merlin2.fly.dev/v8?industry=${selectedIndustry}&color=${customColor.replace("#", "")}${logoUrl ? `&logo=${encodeURIComponent(logoUrl)}` : ""}"
   width="100%"
   height="800"
   frameborder="0"
@@ -80,11 +80,7 @@ export default function WidgetDemo() {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <img
-              src={merlinWizardImage}
-              alt="Merlin Wizard"
-              className="w-16 h-16 object-contain"
-            />
+            <img src={merlinWizardImage} alt="Merlin Wizard" className="w-16 h-16 object-contain" />
             <h2 className="text-4xl font-bold text-white">
               Add Battery Savings to Your Site in <span className="text-[#3ecf8e]">5 Minutes</span>
             </h2>
@@ -109,7 +105,7 @@ export default function WidgetDemo() {
                 className="flex items-center gap-2 px-4 py-2 bg-[#3ecf8e] hover:bg-[#35b67a] text-white font-medium rounded-lg transition-colors text-sm"
               >
                 <Play className="w-4 h-4" />
-                {showLiveCalc ? 'Hide Calculator' : 'Try Live Demo'}
+                {showLiveCalc ? "Hide Calculator" : "Try Live Demo"}
               </button>
             </div>
 
@@ -183,7 +179,9 @@ export default function WidgetDemo() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Logo URL (Optional)</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Logo URL (Optional)
+                </label>
                 <input
                   type="text"
                   value={logoUrl}
@@ -306,6 +304,72 @@ export default function WidgetDemo() {
                   <p className="text-white font-medium mb-1">Start generating leads</p>
                   <p>Track conversions in your dashboard</p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Full Wizard Preview Section */}
+        <div className="mb-16">
+          <div className="bg-gradient-to-br from-[#1a1a1a] to-[#151515] rounded-2xl shadow-2xl p-12 border-2 border-[#3ecf8e]/30 relative overflow-hidden">
+            {/* Background glow effect */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#3ecf8e]/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
+
+            <div className="relative z-10">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-[#3ecf8e]/10 rounded-2xl mb-4">
+                  <Play className="w-8 h-8 text-[#3ecf8e]" />
+                </div>
+                <h3 className="text-3xl font-bold text-white mb-3">
+                  See the Full Wizard Experience
+                </h3>
+                <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+                  Explore our interactive mockup gallery to see how the complete wizard looks and
+                  feels. Perfect for demos and client presentations.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-[#1a1a1a]/50 backdrop-blur-sm rounded-xl p-6 border border-[#252525]">
+                  <div className="text-[#3ecf8e] text-3xl mb-3">🎯</div>
+                  <h4 className="text-white font-semibold mb-2">Step-by-Step Flow</h4>
+                  <p className="text-gray-400 text-sm">
+                    Location input → Industry details → Instant quote results
+                  </p>
+                </div>
+
+                <div className="bg-[#1a1a1a]/50 backdrop-blur-sm rounded-xl p-6 border border-[#252525]">
+                  <div className="text-[#3ecf8e] text-3xl mb-3">🎨</div>
+                  <h4 className="text-white font-semibold mb-2">Dark Supabase Theme</h4>
+                  <p className="text-gray-400 text-sm">
+                    Professional dark mode with Merlin green accents
+                  </p>
+                </div>
+
+                <div className="bg-[#1a1a1a]/50 backdrop-blur-sm rounded-xl p-6 border border-[#252525]">
+                  <div className="text-[#3ecf8e] text-3xl mb-3">⚡</div>
+                  <h4 className="text-white font-semibold mb-2">Real Wizard Mockups</h4>
+                  <p className="text-gray-400 text-sm">
+                    Authentic UI screens, not marketing bullet points
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <a
+                  href="/screenshots/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#3ecf8e] to-emerald-500 hover:from-[#35b67a] hover:to-emerald-400 text-white font-bold rounded-xl transition-all shadow-lg shadow-[#3ecf8e]/25 hover:shadow-xl hover:shadow-[#3ecf8e]/40 hover:-translate-y-0.5"
+                >
+                  <Play className="w-5 h-5" />
+                  <span>View Interactive Gallery</span>
+                  <span className="text-white/80">→</span>
+                </a>
+                <p className="text-sm text-gray-400 mt-4">
+                  Opens in new tab • Keyboard navigation supported
+                </p>
               </div>
             </div>
           </div>
