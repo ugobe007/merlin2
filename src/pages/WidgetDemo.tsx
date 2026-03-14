@@ -8,7 +8,7 @@
  * - Feature comparison
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Copy, Check, Zap, Shield, Code2, Play } from "lucide-react";
 import merlinWizardImage from "@/assets/images/merlin_wizard_new.png";
 import WizardV8Page from "@/wizard/v8/WizardV8Page";
@@ -20,6 +20,16 @@ export default function WidgetDemo() {
   const [logoUrl, setLogoUrl] = useState("");
   const [showSignupForm, setShowSignupForm] = useState(false);
   const [showLiveCalc, setShowLiveCalc] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Auto-advance slideshow
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % 3);
+    }, 4000); // Change slide every 4 seconds
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Code snippet with customization
   const codeSnippet = `<!-- Add this to your website -->
@@ -339,6 +349,130 @@ export default function WidgetDemo() {
                   <span className="flex items-center gap-2">
                     ⚡ <span>Real Wizard Mockups</span>
                   </span>
+                </div>
+              </div>
+
+              {/* Animated Slideshow */}
+              <div className="mb-8 max-w-4xl mx-auto">
+                <div
+                  className="relative bg-gradient-to-b from-[#0f172a] to-[#1e293b] rounded-xl border-2 border-[#3ecf8e]/30 overflow-hidden shadow-2xl"
+                  style={{ paddingBottom: "56.25%" }}
+                >
+                  {/* Slide 1: Location */}
+                  <div
+                    className={`absolute inset-0 transition-opacity duration-1000 ${
+                      currentSlide === 0 ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    <div className="h-full p-8 flex flex-col items-center justify-center text-center">
+                      <div className="mb-6">
+                        <div className="text-5xl font-bold mb-4">
+                          <span className="text-white">unlock your </span>
+                          <span className="text-[#3ecf8e]">energy savings</span>
+                        </div>
+                        <p className="text-gray-400 text-lg">
+                          Confirm your ZIP, then match your business so Merlin can route you into
+                          the right questionnaire immediately.
+                        </p>
+                      </div>
+                      <div className="flex gap-4 items-center">
+                        <button className="px-4 py-2 bg-[#3ecf8e] text-black font-semibold rounded-lg">
+                          US
+                        </button>
+                        <button className="px-4 py-2 border border-gray-600 text-gray-300 rounded-lg">
+                          Intl
+                        </button>
+                        <input
+                          type="text"
+                          placeholder="ZIP code"
+                          className="px-6 py-3 bg-[#1e293b] border-2 border-[#3ecf8e]/50 rounded-lg text-white w-64"
+                          readOnly
+                        />
+                        <button className="px-6 py-3 bg-gray-700 text-gray-400 rounded-lg cursor-not-allowed">
+                          Confirm Location
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Slide 2: Questionnaire */}
+                  <div
+                    className={`absolute inset-0 transition-opacity duration-1000 ${
+                      currentSlide === 1 ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    <div className="h-full p-8 flex flex-col">
+                      <div className="text-center mb-6">
+                        <div className="text-4xl font-bold text-white mb-2">
+                          🏨 Hotel Energy Profile
+                        </div>
+                        <p className="text-gray-400">Tell us about your facility</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
+                        <div className="bg-[#1e293b] p-4 rounded-lg border border-[#3ecf8e]/30">
+                          <div className="text-sm text-gray-400 mb-2">Number of rooms</div>
+                          <div className="text-2xl font-bold text-white">150</div>
+                        </div>
+                        <div className="bg-[#1e293b] p-4 rounded-lg border border-[#3ecf8e]/30">
+                          <div className="text-sm text-gray-400 mb-2">Hotel class</div>
+                          <div className="text-2xl font-bold text-[#3ecf8e]">Midscale</div>
+                        </div>
+                        <div className="bg-[#1e293b] p-4 rounded-lg border border-[#3ecf8e]/30">
+                          <div className="text-sm text-gray-400 mb-2">Pool & spa</div>
+                          <div className="text-2xl font-bold text-white">✓ Yes</div>
+                        </div>
+                        <div className="bg-[#1e293b] p-4 rounded-lg border border-[#3ecf8e]/30">
+                          <div className="text-sm text-gray-400 mb-2">Restaurant</div>
+                          <div className="text-2xl font-bold text-white">✓ Yes</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Slide 3: Results */}
+                  <div
+                    className={`absolute inset-0 transition-opacity duration-1000 ${
+                      currentSlide === 2 ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    <div className="h-full p-8 flex flex-col justify-center">
+                      <div className="text-center mb-6">
+                        <div className="text-4xl font-bold text-white mb-2">
+                          💰 Your Energy Savings
+                        </div>
+                        <div className="inline-block px-4 py-2 bg-[#3ecf8e] text-black font-bold rounded-lg mb-4">
+                          🏆 TrueQuote™ Verified
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
+                        <div className="bg-gradient-to-br from-[#3ecf8e]/20 to-[#3ecf8e]/5 p-6 rounded-xl border-2 border-[#3ecf8e] text-center">
+                          <div className="text-3xl font-bold text-[#3ecf8e] mb-2">$124K</div>
+                          <div className="text-sm text-gray-400">Annual Savings</div>
+                        </div>
+                        <div className="bg-[#1e293b] p-6 rounded-xl border border-gray-600 text-center">
+                          <div className="text-3xl font-bold text-white mb-2">4.2 years</div>
+                          <div className="text-sm text-gray-400">Payback Period</div>
+                        </div>
+                        <div className="bg-[#1e293b] p-6 rounded-xl border border-gray-600 text-center">
+                          <div className="text-3xl font-bold text-white mb-2">18.4%</div>
+                          <div className="text-sm text-gray-400">IRR</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Slide indicators */}
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                    {[0, 1, 2].map((idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentSlide(idx)}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          currentSlide === idx ? "bg-[#3ecf8e] w-6" : "bg-gray-600"
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
 
