@@ -685,7 +685,26 @@ export function Step1V8({ state, actions }: Step1Props) {
   }, [activeBusiness, location?.formattedAddress]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <>
+      <style>{`
+        @media (max-width: 640px) {
+          .step1-zip-input {
+            min-width: 0 !important;
+            font-size: 16px !important;
+          }
+          .step1-container {
+            padding: 12px !important;
+          }
+          .step1-button-group {
+            flex-direction: column !important;
+            width: 100%;
+          }
+          .step1-button-group button {
+            width: 100% !important;
+          }
+        }
+      `}</style>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%", maxWidth: "100%", overflowX: "hidden" }}>
       <div>
         <h1
           style={{
@@ -818,9 +837,11 @@ export function Step1V8({ state, actions }: Step1Props) {
                   if (event.key === "Enter") handleLocationSubmit();
                 }}
                 placeholder={country === "US" ? "ZIP code" : "Country name or postal code"}
+                className="step1-zip-input"
                 style={{
                   flex: 1,
-                  minWidth: 220,
+                  minWidth: 0,
+                  width: "100%",
                   height: 52,
                   borderRadius: 10,
                   border: "1px solid rgba(255,255,255,0.10)",
@@ -853,7 +874,8 @@ export function Step1V8({ state, actions }: Step1Props) {
             <div
               style={{
                 flex: 1,
-                minWidth: 240,
+                minWidth: 0,
+                width: "100%",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -1367,6 +1389,7 @@ export function Step1V8({ state, actions }: Step1Props) {
         </div>
       )}
     </div>
+    </>
   );
 }
 
