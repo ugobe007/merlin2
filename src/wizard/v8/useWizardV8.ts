@@ -252,8 +252,8 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     });
 
     // All three in parallel — fail-soft per service (Promise.allSettled)
-    // For international locations, pass country code from location.state field
-    const countryCode = locationData.state?.length === 2 ? locationData.state : undefined;
+    // For international locations, pass country code from state.location.state field
+    const countryCode = state.location?.state?.length === 2 ? state.location.state : undefined;
     const [utilityRes, solarRes, weatherRes] = await Promise.allSettled([
       fetchUtility(zip, countryCode),
       fetchSolar(zip),
