@@ -365,6 +365,26 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         formattedAddress: `${displayName}, ${finalCountryCode}`,
       };
       dispatch({ type: "SET_LOCATION", location: locationData });
+      
+      // Fetch utility rates with country code for international locations
+      console.log(`[submitLocation] Fetching utility rates for ${finalCountryCode}`);
+      try {
+        const utilityData = await fetchUtility(raw, finalCountryCode);
+        console.log(`[submitLocation] Utility data:`, utilityData);
+        dispatch({
+          type: "PATCH_INTEL",
+          patch: {
+            utilityRate: utilityData.rate ?? 0,
+            demandCharge: utilityData.demandCharge ?? 0,
+            utilityProvider: utilityData.provider ?? "",
+            utilityStatus: "ready",
+          },
+        });
+      } catch (utilityError) {
+        console.error(`[submitLocation] Failed to fetch utility for ${finalCountryCode}:`, utilityError);
+        dispatch({ type: "PATCH_INTEL", patch: { utilityStatus: "error" } });
+      }
+      
       // NO auto-advance - wait for business confirmation
     } catch (e) {
       dispatch({
@@ -817,39 +837,35 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     dispatch({ type: "RESET" });
   }, []);
 
+  // ⚡ TIER BUILDING - Proactive background build
+  // Watches the cache key (createTierBuildKey) which includes ALL relevant fields:
+  // - step, location, industry, baseLoadKW, peakLoadKW, criticalLoadPct
+  // - solarPhysicalCapKW, wantsSolar, wantsGenerator, wantsEVCharging
+  // - solarKW, generatorKW, generatorFuelType, evChargers, evRevenuePerYear
+  // - step3Answers, intel (utilityRate, demandCharge, etc.)
+  //
+  // When createTierBuildKey() changes, the cached tier build is invalidated
+  // and a new build is triggered. This is SSOT for cache invalidation.
   useEffect(() => {
-    // Build tiers after Step 4 (addon config) when advancing to Step 5 (tier display)
-    // OR rebuild if addon config changes while viewing Step 5
-    const shouldBuildNow = 
-      (state.step === 4 || state.step === 5) && 
+    const shouldBuild = 
+      state.step >= 3 && 
       state.baseLoadKW > 0 && 
-      !!state.location;
+      !!state.location &&
+      state.tiersStatus !== "fetching" &&
+      state.tiersStatus !== "ready";
 
-    if (!shouldBuildNow) return;
-    
-    // Skip if already building
-    if (state.tiersStatus === "fetching") return;
+    if (!shouldBuild) return;
 
-    // ⚡ TIER BUILDING - triggered by:
-    // 1. Advancing to Step 4 (addon config completed)
-    // 2. Changing addon config (solar/generator/EV values)
-    // 3. Advancing to Step 5 (tier display)
-    console.log('[useWizardV8] 🔄 Building tiers with addon config...', {
+    console.log('[useWizardV8] 🔄 Proactively building tiers in background...', {
       step: state.step,
-      baseLoadKW: state.baseLoadKW,
-      solarKW: state.solarKW,
-      generatorKW: state.generatorKW,
-      level2Chargers: state.level2Chargers,
-      dcfcChargers: state.dcfcChargers,
+      cacheKey: createTierBuildKey(state).substring(0, 100) + '...'
     });
-    
-    // Always mark as idle first, then rebuild (allows cache key to change)
-    dispatch({ type: "SET_TIERS_STATUS", status: "idle" });
+
     dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
 
     void getOrStartTierBuild(state)
       .then(tiers => {
-        console.log('[useWizardV8] ✅ Tier build complete with addons', tiers.length);
+        console.log('[useWizardV8] ✅ Background tier build complete', tiers.length);
         dispatch({ type: "SET_TIERS", tiers });
         dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
       })
@@ -861,21 +877,26 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         }
       });
   }, [
-    getOrStartTierBuild, 
-    state.step, 
-    state.baseLoadKW, 
-    state.location, 
+    getOrStartTierBuild,
+    state.step,
+    state.baseLoadKW,
+    state.location,
     state.tiersStatus,
-    // ⚡ ADDON CONFIG - rebuild tiers when these change
-    state.solarKW,
-    state.generatorKW,
-    state.generatorFuelType,
-    state.level2Chargers,
-    state.dcfcChargers,
-    state.hpcChargers,
+    // ⚡ CRITICAL: createTierBuildKey() already includes ALL these fields
+    // So we watch them individually to trigger re-evaluation of shouldBuild
+    state.industry,
+    state.peakLoadKW,
+    state.criticalLoadPct,
+    state.solarPhysicalCapKW,
     state.wantsSolar,
     state.wantsGenerator,
     state.wantsEVCharging,
+    state.solarKW,
+    state.generatorKW,
+    state.generatorFuelType,
+    state.evChargers,
+    state.step3Answers,
+    state.intel,
   ]);
 
   const clearError = useCallback(() => {
