@@ -23,6 +23,7 @@
       flex-direction: column;
       align-items: center;
       padding: 1.5rem;
+      padding-top: 5rem; /* Space for fixed nav */
       position: relative;
     }
     
@@ -54,6 +55,116 @@
       background: radial-gradient(ellipse at center, rgba(62, 207, 142, 0.15) 0%, transparent 70%);
       pointer-events: none;
       z-index: 1;
+    }
+    
+    /* Top navigation bar */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(62, 207, 142, 0.2);
+      padding: 0.75rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: #3ecf8e;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: opacity 0.2s ease;
+    }
+    
+    .nav-brand:hover {
+      opacity: 0.8;
+    }
+    
+    .nav-brand-icon {
+      width: 32px;
+      height: 32px;
+      filter: drop-shadow(0 2px 8px rgba(62, 207, 142, 0.4));
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+    
+    .nav-link {
+      color: #8b92a7;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .nav-link:hover {
+      color: #3ecf8e;
+    }
+    
+    .nav-link-primary {
+      background: linear-gradient(135deg, #3ecf8e 0%, #2ba574 100%);
+      color: #0a0a0a;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(62, 207, 142, 0.3);
+      transition: all 0.2s ease;
+    }
+    
+    .nav-link-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(62, 207, 142, 0.4);
+      color: #0a0a0a;
+    }
+    
+    .nav-arrow {
+      font-size: 0.7rem;
+      opacity: 0.6;
+    }
+    
+    /* Adjust body padding for fixed nav */
+    body {
+      padding-top: 4.5rem;
+    }
+    
+    /* Hide nav on mobile */
+    @media (max-width: 768px) {
+      .top-nav {
+        padding: 0.5rem 1rem;
+      }
+      
+      .nav-links {
+        gap: 1rem;
+      }
+      
+      .nav-link {
+        font-size: 0.8rem;
+      }
+      
+      .nav-brand span {
+        display: none;
+      }
     }
     
     /* Header with logo */
@@ -678,6 +789,26 @@
   </style>
 </head>
 <body>
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <div class="nav-left">
+      <a href="/" class="nav-brand">
+        <img src="../merlin-wizard-new.png" alt="Merlin" class="nav-brand-icon">
+        <span>Merlin</span>
+      </a>
+    </div>
+    <div class="nav-links">
+      <a href="/widget" class="nav-link">
+        <span class="nav-arrow">←</span>
+        Back to Widget
+      </a>
+      <a href="/" class="nav-link">Home</a>
+      <a href="/pricing" class="nav-link">Pricing</a>
+      <a href="/widget-docs" class="nav-link">API Docs</a>
+      <a href="/wizard" class="nav-link-primary">Try Live Demo</a>
+    </div>
+  </nav>
+
   <div class="header">
     <img src="../merlin-wizard-new.png" alt="Merlin Wizard" class="merlin-logo">
     <h1>Merlin BESS Quote Builder</h1>
