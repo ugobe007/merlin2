@@ -324,35 +324,21 @@ export default function WidgetDemo() {
                 <h3 className="text-3xl font-bold text-white mb-3">
                   See the Full Wizard Experience
                 </h3>
-                <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+                <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-6">
                   Explore our interactive mockup gallery to see how the complete wizard looks and
                   feels. Perfect for demos and client presentations.
                 </p>
-              </div>
 
-              <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-[#1a1a1a]/50 backdrop-blur-sm rounded-xl p-6 border border-[#252525]">
-                  <div className="text-[#3ecf8e] text-3xl mb-3">🎯</div>
-                  <h4 className="text-white font-semibold mb-2">Step-by-Step Flow</h4>
-                  <p className="text-gray-400 text-sm">
-                    Location input → Industry details → Instant quote results
-                  </p>
-                </div>
-
-                <div className="bg-[#1a1a1a]/50 backdrop-blur-sm rounded-xl p-6 border border-[#252525]">
-                  <div className="text-[#3ecf8e] text-3xl mb-3">🎨</div>
-                  <h4 className="text-white font-semibold mb-2">Dark Supabase Theme</h4>
-                  <p className="text-gray-400 text-sm">
-                    Professional dark mode with Merlin green accents
-                  </p>
-                </div>
-
-                <div className="bg-[#1a1a1a]/50 backdrop-blur-sm rounded-xl p-6 border border-[#252525]">
-                  <div className="text-[#3ecf8e] text-3xl mb-3">⚡</div>
-                  <h4 className="text-white font-semibold mb-2">Real Wizard Mockups</h4>
-                  <p className="text-gray-400 text-sm">
-                    Authentic UI screens, not marketing bullet points
-                  </p>
+                <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-gray-300 mb-8">
+                  <span className="flex items-center gap-2">
+                    🎯 <span>Step-by-Step Flow</span>
+                  </span>
+                  <span className="flex items-center gap-2">
+                    🎨 <span>Dark Supabase Theme</span>
+                  </span>
+                  <span className="flex items-center gap-2">
+                    ⚡ <span>Real Wizard Mockups</span>
+                  </span>
                 </div>
               </div>
 
