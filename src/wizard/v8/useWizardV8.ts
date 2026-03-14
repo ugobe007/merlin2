@@ -252,8 +252,10 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     });
 
     // All three in parallel — fail-soft per service (Promise.allSettled)
+    // For international locations, pass country code from location.state field
+    const countryCode = locationData.state?.length === 2 ? locationData.state : undefined;
     const [utilityRes, solarRes, weatherRes] = await Promise.allSettled([
-      fetchUtility(zip),
+      fetchUtility(zip, countryCode),
       fetchSolar(zip),
       fetchWeather(zip),
     ]);
@@ -823,6 +825,9 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       !!state.location;
 
     if (!canBuild) return;
+    
+    // Skip if already building or ready
+    if (state.tiersStatus === "fetching" || state.tiersStatus === "ready") return;
 
     // ⚡ PROACTIVE TIER BUILDING - runs in background during Step 3/4
     console.log('[useWizardV8] 🔄 Proactively building tiers in background...', {
@@ -845,7 +850,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
           tierBuildRef.current = null;
         }
       });
-  }, [getOrStartTierBuild, state]);
+  }, [getOrStartTierBuild, state.step, state.baseLoadKW, state.location, state.tiersStatus]);
 
   const clearError = useCallback(() => {
     dispatch({ type: "CLEAR_ERROR" });
