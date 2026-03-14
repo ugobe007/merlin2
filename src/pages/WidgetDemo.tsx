@@ -361,29 +361,71 @@ export default function WidgetDemo() {
                   className="relative bg-gradient-to-b from-[#0f172a] to-[#1e293b] rounded-xl border-2 border-[#3ecf8e]/30 overflow-hidden shadow-2xl"
                   style={{ paddingBottom: "56.25%" }}
                 >
-                  {/* Slide 1: The Problem */}
+                  {/* Slide 1: The Problem + Solution Preview */}
                   <div
                     className={`absolute inset-0 transition-opacity duration-1000 ${
                       currentSlide === 0 ? "opacity-100" : "opacity-0"
                     }`}
                   >
-                    <div className="h-full p-8 flex flex-col items-center justify-center text-center">
-                      <div className="mb-8">
-                        <img
-                          src={merlinBatteryIcon}
-                          alt="Battery"
-                          className="w-24 h-24 mx-auto mb-6 opacity-60"
-                        />
-                        <div className="text-5xl font-bold mb-6 leading-tight">
-                          <span className="text-orange-400">Energy quotes take </span>
-                          <span className="text-red-400">weeks</span>
+                    <div className="h-full p-6 flex items-center justify-center">
+                      <div className="grid grid-cols-2 gap-8 max-w-6xl w-full">
+                        {/* Left: The Problem */}
+                        <div className="flex flex-col justify-center text-left pr-8 border-r border-gray-700">
+                          {/* CSS Battery Icon */}
+                          <div className="mb-6 flex items-center gap-3">
+                            <div className="relative w-16 h-8 border-3 border-gray-600 rounded-md">
+                              <div className="absolute left-0 top-0 bottom-0 w-1/3 bg-[#3ecf8e] rounded-l"></div>
+                              <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-4 bg-gray-600 rounded-r"></div>
+                            </div>
+                            <div className="text-sm font-mono text-gray-500">Low Power</div>
+                          </div>
+                          <div className="text-4xl font-bold mb-4 leading-tight">
+                            <span className="text-white">Energy quotes take </span>
+                            <span className="text-gray-400">weeks</span>
+                          </div>
+                          <div className="text-2xl font-semibold text-gray-400 mb-6">
+                            Cost you <span className="text-gray-300">thousands</span> in delays
+                          </div>
+                          <p className="text-lg text-gray-500">
+                            Traditional energy procurement: slow, expensive, opaque
+                          </p>
                         </div>
-                        <div className="text-4xl font-bold text-gray-300 mb-8">
-                          Cost you <span className="text-red-400">thousands</span> in delays
+
+                        {/* Right: Quote Preview */}
+                        <div className="flex flex-col justify-center pl-4">
+                          <div className="text-2xl font-bold text-[#3ecf8e] mb-4">
+                            Merlin gets you this in 3 minutes:
+                          </div>
+                          <div className="bg-[#1e293b] rounded-lg p-5 border border-[#3ecf8e]/30">
+                            {/* Mock Quote Summary */}
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center pb-3 border-b border-gray-700">
+                                <span className="text-gray-400 text-sm">System Size</span>
+                                <span className="text-white font-semibold">2 MW / 8 MWh</span>
+                              </div>
+                              <div className="flex justify-between items-center pb-3 border-b border-gray-700">
+                                <span className="text-gray-400 text-sm">Investment</span>
+                                <span className="text-white font-semibold">$2.4M</span>
+                              </div>
+                              <div className="flex justify-between items-center pb-3 border-b border-gray-700">
+                                <span className="text-gray-400 text-sm">Annual Savings</span>
+                                <span className="text-[#3ecf8e] font-bold text-lg">$485K</span>
+                              </div>
+                              <div className="flex justify-between items-center pb-3 border-b border-gray-700">
+                                <span className="text-gray-400 text-sm">Payback Period</span>
+                                <span className="text-[#3ecf8e] font-bold">4.9 years</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-400 text-sm">IRR (25-year)</span>
+                                <span className="text-[#3ecf8e] font-bold text-lg">19.2%</span>
+                              </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-gray-700 flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-[#3ecf8e] animate-pulse"></div>
+                              <span className="text-xs text-gray-500">TrueQuote™ Verified</span>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                          Traditional energy procurement: slow, expensive, opaque
-                        </p>
                       </div>
                     </div>
                   </div>
