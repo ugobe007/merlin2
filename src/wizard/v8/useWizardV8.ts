@@ -175,6 +175,11 @@ function createTierBuildKey(state: WizardState): string {
     solarKW: state.solarKW,
     generatorKW: state.generatorKW,
     generatorFuelType: state.generatorFuelType,
+    // ⚡ CRITICAL: Include individual EV charger counts (not just evChargers object)
+    // These are set by Step 4 addon config and must trigger tier rebuild
+    level2Chargers: state.level2Chargers,
+    dcfcChargers: state.dcfcChargers,
+    hpcChargers: state.hpcChargers,
     evChargers: state.evChargers,
     evRevenuePerYear: state.evRevenuePerYear,
     step3Answers: state.step3Answers,
@@ -894,6 +899,9 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     state.solarKW,
     state.generatorKW,
     state.generatorFuelType,
+    state.level2Chargers,
+    state.dcfcChargers,
+    state.hpcChargers,
     state.evChargers,
     state.step3Answers,
     state.intel,
