@@ -23,15 +23,31 @@ export default function WidgetDemo() {
 
   // Code snippet with customization
   const codeSnippet = `<!-- Add this to your website -->
-<div id="merlin-widget" data-industry="${selectedIndustry}"></div>
-<script src="https://widget.merlin.energy/embed.js"></script>
+<iframe
+  src="https://merlin2.fly.dev/v8?industry=${selectedIndustry}&color=${customColor.replace('#', '')}${logoUrl ? `&logo=${encodeURIComponent(logoUrl)}` : ''}"
+  width="100%"
+  height="800"
+  frameborder="0"
+  style="border: 2px solid ${customColor}; border-radius: 12px;"
+  allow="geolocation"
+></iframe>
+
+<!-- Or use REST API for backend integration -->
 <script>
-  MerlinWidget.init({
-    apiKey: 'YOUR_API_KEY_HERE',
-    industry: '${selectedIndustry}',
-    theme: 'light',
-    primaryColor: '${customColor}'${logoUrl ? `,\n    logo: '${logoUrl}'` : ''}
-  });
+  fetch('https://merlin2.fly.dev/api/quote', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer YOUR_API_KEY'
+    },
+    body: JSON.stringify({
+      industry: '${selectedIndustry}',
+      location: 'San Francisco, CA',
+      // Add your facility details here
+    })
+  })
+  .then(res => res.json())
+  .then(quote => console.log('Quote:', quote));
 </script>`;
 
   const handleCopySnippet = () => {
