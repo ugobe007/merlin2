@@ -252,11 +252,11 @@
     }
     
     .slide-arrow.prev {
-      left: 2rem;
+      left: 0.5rem;
     }
     
     .slide-arrow.next {
-      right: 2rem;
+      right: 0.5rem;
     }
     
     /* Wizard screen mockup - actual UI */
@@ -731,7 +731,7 @@
           <div class="input-field">
             <label class="input-label">ZIP Code or Address</label>
             <div class="input-wrapper">
-              <input type="text" placeholder="Enter ZIP code (e.g., 94102) or full address..." value="">
+              <input type="text" placeholder="Enter ZIP code (e.g., 94102) or full address..." value="94102" readonly>
             </div>
           </div>
           
@@ -770,7 +770,7 @@
           <div class="question-group">
             <label>Number of Rooms</label>
             <div class="input-row">
-              <input type="text" value="150" placeholder="Enter number of rooms..."/>
+              <input type="text" value="150" placeholder="Enter number of rooms..." readonly/>
               <span class="input-unit">rooms</span>
             </div>
           </div>
@@ -850,6 +850,18 @@
       document.getElementById(`slide-${n}`).classList.add('active');
       document.querySelectorAll('.slide-nav-btn')[n-1].classList.add('active');
       currentSlide = n;
+    }
+    
+    function prevSlide() {
+      if (currentSlide > 1) {
+        showSlide(currentSlide - 1);
+      }
+    }
+    
+    function nextSlide() {
+      if (currentSlide < 3) {
+        showSlide(currentSlide + 1);
+      }
     }
     
     // Keyboard navigation
