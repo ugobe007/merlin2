@@ -818,39 +818,65 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   }, []);
 
   useEffect(() => {
-    // Build from Step 3 OR Step 4 - just need baseLoadKW + location
-    const canBuild = 
-      (state.step === 3 || state.step === 4) && 
+    // Build tiers after Step 4 (addon config) when advancing to Step 5 (tier display)
+    // OR rebuild if addon config changes while viewing Step 5
+    const shouldBuildNow = 
+      (state.step === 4 || state.step === 5) && 
       state.baseLoadKW > 0 && 
       !!state.location;
 
-    if (!canBuild) return;
+    if (!shouldBuildNow) return;
     
-    // Skip if already building or ready
-    if (state.tiersStatus === "fetching" || state.tiersStatus === "ready") return;
+    // Skip if already building
+    if (state.tiersStatus === "fetching") return;
 
-    // ⚡ PROACTIVE TIER BUILDING - runs in background during Step 3/4
-    console.log('[useWizardV8] 🔄 Proactively building tiers in background...', {
+    // ⚡ TIER BUILDING - triggered by:
+    // 1. Advancing to Step 4 (addon config completed)
+    // 2. Changing addon config (solar/generator/EV values)
+    // 3. Advancing to Step 5 (tier display)
+    console.log('[useWizardV8] 🔄 Building tiers with addon config...', {
       step: state.step,
       baseLoadKW: state.baseLoadKW,
+      solarKW: state.solarKW,
+      generatorKW: state.generatorKW,
+      level2Chargers: state.level2Chargers,
+      dcfcChargers: state.dcfcChargers,
     });
     
+    // Always mark as idle first, then rebuild (allows cache key to change)
+    dispatch({ type: "SET_TIERS_STATUS", status: "idle" });
     dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
 
     void getOrStartTierBuild(state)
       .then(tiers => {
-        console.log('[useWizardV8] ✅ Background tier build complete', tiers.length);
+        console.log('[useWizardV8] ✅ Tier build complete with addons', tiers.length);
         dispatch({ type: "SET_TIERS", tiers });
         dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
       })
       .catch((error) => {
-        console.error('[useWizardV8] ❌ Background tier build failed:', error);
+        console.error('[useWizardV8] ❌ Tier build failed:', error);
         dispatch({ type: "SET_TIERS_STATUS", status: "error" });
         if (tierBuildRef.current?.key === createTierBuildKey(state)) {
           tierBuildRef.current = null;
         }
       });
-  }, [getOrStartTierBuild, state.step, state.baseLoadKW, state.location, state.tiersStatus]);
+  }, [
+    getOrStartTierBuild, 
+    state.step, 
+    state.baseLoadKW, 
+    state.location, 
+    state.tiersStatus,
+    // ⚡ ADDON CONFIG - rebuild tiers when these change
+    state.solarKW,
+    state.generatorKW,
+    state.generatorFuelType,
+    state.level2Chargers,
+    state.dcfcChargers,
+    state.hpcChargers,
+    state.wantsSolar,
+    state.wantsGenerator,
+    state.wantsEVCharging,
+  ]);
 
   const clearError = useCallback(() => {
     dispatch({ type: "CLEAR_ERROR" });
