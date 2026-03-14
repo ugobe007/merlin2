@@ -25,8 +25,8 @@ export default function WidgetDemo() {
   // Auto-advance slideshow
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % 3);
-    }, 4000); // Change slide every 4 seconds
+      setCurrentSlide((prev) => (prev + 1) % 5);
+    }, 5000); // Change slide every 5 seconds
 
     return () => clearInterval(timer);
   }, []);
@@ -352,110 +352,143 @@ export default function WidgetDemo() {
                 </div>
               </div>
 
-              {/* Animated Slideshow */}
+              {/* Animated Slideshow - 5-Slide Marketing Journey */}
               <div className="mb-8 max-w-4xl mx-auto">
                 <div
                   className="relative bg-gradient-to-b from-[#0f172a] to-[#1e293b] rounded-xl border-2 border-[#3ecf8e]/30 overflow-hidden shadow-2xl"
                   style={{ paddingBottom: "56.25%" }}
                 >
-                  {/* Slide 1: Location */}
+                  {/* Slide 1: The Problem */}
                   <div
                     className={`absolute inset-0 transition-opacity duration-1000 ${
                       currentSlide === 0 ? "opacity-100" : "opacity-0"
                     }`}
                   >
                     <div className="h-full p-8 flex flex-col items-center justify-center text-center">
-                      <div className="mb-6">
-                        <div className="text-5xl font-bold mb-4">
-                          <span className="text-white">unlock your </span>
-                          <span className="text-[#3ecf8e]">energy savings</span>
+                      <div className="mb-8">
+                        <div className="text-6xl mb-6">⏱️</div>
+                        <div className="text-5xl font-bold mb-6 leading-tight">
+                          <span className="text-orange-400">Energy quotes take </span>
+                          <span className="text-red-400">weeks</span>
                         </div>
-                        <p className="text-gray-400 text-lg">
-                          Confirm your ZIP, then match your business so Merlin can route you into
-                          the right questionnaire immediately.
+                        <div className="text-4xl font-bold text-gray-300 mb-8">
+                          Cost you <span className="text-red-400">thousands</span> in delays
+                        </div>
+                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                          Traditional energy procurement: slow, expensive, opaque
                         </p>
-                      </div>
-                      <div className="flex gap-4 items-center">
-                        <button className="px-4 py-2 bg-[#3ecf8e] text-black font-semibold rounded-lg">
-                          US
-                        </button>
-                        <button className="px-4 py-2 border border-gray-600 text-gray-300 rounded-lg">
-                          Intl
-                        </button>
-                        <input
-                          type="text"
-                          placeholder="ZIP code"
-                          className="px-6 py-3 bg-[#1e293b] border-2 border-[#3ecf8e]/50 rounded-lg text-white w-64"
-                          readOnly
-                        />
-                        <button className="px-6 py-3 bg-gray-700 text-gray-400 rounded-lg cursor-not-allowed">
-                          Confirm Location
-                        </button>
                       </div>
                     </div>
                   </div>
 
-                  {/* Slide 2: Questionnaire */}
+                  {/* Slide 2: The Merlin Solution */}
                   <div
                     className={`absolute inset-0 transition-opacity duration-1000 ${
                       currentSlide === 1 ? "opacity-100" : "opacity-0"
                     }`}
                   >
-                    <div className="h-full p-8 flex flex-col">
-                      <div className="text-center mb-6">
-                        <div className="text-4xl font-bold text-white mb-2">
-                          🏨 Hotel Energy Profile
+                    <div className="h-full p-8 flex flex-col items-center justify-center text-center">
+                      <div className="mb-6">
+                        <div className="text-6xl mb-8">🧙‍♂️</div>
+                        <div className="text-5xl font-bold mb-6 leading-tight">
+                          <span className="text-[#3ecf8e]">Merlin</span>
+                          <span className="text-white">: Bank-ready quotes</span>
                         </div>
-                        <p className="text-gray-400">Tell us about your facility</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
-                        <div className="bg-[#1e293b] p-4 rounded-lg border border-[#3ecf8e]/30">
-                          <div className="text-sm text-gray-400 mb-2">Number of rooms</div>
-                          <div className="text-2xl font-bold text-white">150</div>
+                        <div className="text-6xl font-bold text-[#3ecf8e] mb-8">
+                          in under 3 minutes ⚡
                         </div>
-                        <div className="bg-[#1e293b] p-4 rounded-lg border border-[#3ecf8e]/30">
-                          <div className="text-sm text-gray-400 mb-2">Hotel class</div>
-                          <div className="text-2xl font-bold text-[#3ecf8e]">Midscale</div>
-                        </div>
-                        <div className="bg-[#1e293b] p-4 rounded-lg border border-[#3ecf8e]/30">
-                          <div className="text-sm text-gray-400 mb-2">Pool & spa</div>
-                          <div className="text-2xl font-bold text-white">✓ Yes</div>
-                        </div>
-                        <div className="bg-[#1e293b] p-4 rounded-lg border border-[#3ecf8e]/30">
-                          <div className="text-sm text-gray-400 mb-2">Restaurant</div>
-                          <div className="text-2xl font-bold text-white">✓ Yes</div>
-                        </div>
+                        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+                          Instant financial analysis • NPV, IRR, payback • Export to Word/Excel
+                        </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Slide 3: Results */}
+                  {/* Slide 3: TrueQuote™ Differentiator */}
                   <div
                     className={`absolute inset-0 transition-opacity duration-1000 ${
                       currentSlide === 2 ? "opacity-100" : "opacity-0"
                     }`}
                   >
-                    <div className="h-full p-8 flex flex-col justify-center">
-                      <div className="text-center mb-6">
-                        <div className="text-4xl font-bold text-white mb-2">
-                          💰 Your Energy Savings
-                        </div>
-                        <div className="inline-block px-4 py-2 bg-[#3ecf8e] text-black font-bold rounded-lg mb-4">
+                    <div className="h-full p-8 flex flex-col items-center justify-center text-center">
+                      <div className="mb-8">
+                        <div className="inline-block px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold rounded-xl mb-8 text-2xl">
                           🏆 TrueQuote™ Verified
                         </div>
+                        <div className="text-4xl font-bold text-white mb-6 leading-tight">
+                          Every number <span className="text-[#3ecf8e]">sourced</span>
+                        </div>
+                        <div className="text-4xl font-bold text-white mb-10">
+                          Every assumption <span className="text-[#3ecf8e]">traceable</span>
+                        </div>
+                        <div className="flex gap-4 justify-center items-center text-lg">
+                          <div className="bg-[#1e293b] px-6 py-3 rounded-lg border border-[#3ecf8e]/50">
+                            <span className="text-gray-400">Source:</span>{" "}
+                            <span className="text-[#3ecf8e] font-semibold">NREL ATB 2024</span>
+                          </div>
+                          <div className="bg-[#1e293b] px-6 py-3 rounded-lg border border-[#3ecf8e]/50">
+                            <span className="text-gray-400">Method:</span>{" "}
+                            <span className="text-[#3ecf8e] font-semibold">IEEE 4538388</span>
+                          </div>
+                        </div>
+                        <p className="text-gray-400 mt-8 text-lg">
+                          Transparent methodology banks and investors trust
+                        </p>
                       </div>
-                      <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
-                        <div className="bg-gradient-to-br from-[#3ecf8e]/20 to-[#3ecf8e]/5 p-6 rounded-xl border-2 border-[#3ecf8e] text-center">
-                          <div className="text-3xl font-bold text-[#3ecf8e] mb-2">$124K</div>
-                          <div className="text-sm text-gray-400">Annual Savings</div>
+                    </div>
+                  </div>
+
+                  {/* Slide 4: Real Results */}
+                  <div
+                    className={`absolute inset-0 transition-opacity duration-1000 ${
+                      currentSlide === 3 ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    <div className="h-full p-8 flex flex-col justify-center">
+                      <div className="text-center mb-8">
+                        <div className="text-5xl font-bold text-white mb-10">
+                          💰 Real Results. Real Savings.
                         </div>
-                        <div className="bg-[#1e293b] p-6 rounded-xl border border-gray-600 text-center">
-                          <div className="text-3xl font-bold text-white mb-2">4.2 years</div>
-                          <div className="text-sm text-gray-400">Payback Period</div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-6 max-w-4xl mx-auto">
+                        <div className="bg-gradient-to-br from-[#3ecf8e]/30 to-[#3ecf8e]/10 p-8 rounded-2xl border-2 border-[#3ecf8e] text-center transform scale-105">
+                          <div className="text-5xl font-bold text-[#3ecf8e] mb-3">$124K</div>
+                          <div className="text-lg text-gray-300 font-semibold">Annual Savings</div>
                         </div>
-                        <div className="bg-[#1e293b] p-6 rounded-xl border border-gray-600 text-center">
-                          <div className="text-3xl font-bold text-white mb-2">18.4%</div>
-                          <div className="text-sm text-gray-400">IRR</div>
+                        <div className="bg-[#1e293b] p-8 rounded-2xl border-2 border-gray-600 text-center">
+                          <div className="text-5xl font-bold text-white mb-3">4.2yr</div>
+                          <div className="text-lg text-gray-400">Payback</div>
+                        </div>
+                        <div className="bg-[#1e293b] p-8 rounded-2xl border-2 border-gray-600 text-center">
+                          <div className="text-5xl font-bold text-white mb-3">18.4%</div>
+                          <div className="text-lg text-gray-400">IRR</div>
+                        </div>
+                      </div>
+                      <p className="text-center text-gray-400 mt-8 text-lg">
+                        Typical commercial building results
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Slide 5: Call to Action */}
+                  <div
+                    className={`absolute inset-0 transition-opacity duration-1000 ${
+                      currentSlide === 4 ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    <div className="h-full p-8 flex flex-col items-center justify-center text-center">
+                      <div className="mb-8">
+                        <div className="text-5xl font-bold text-white mb-8 leading-tight">
+                          Get your <span className="text-[#3ecf8e]">free quote</span>
+                        </div>
+                        <div className="text-4xl font-bold text-gray-300 mb-12">in 3 minutes</div>
+                        <button className="px-12 py-6 bg-gradient-to-r from-[#3ecf8e] to-[#2ab074] text-black text-2xl font-bold rounded-xl hover:shadow-2xl hover:shadow-[#3ecf8e]/50 transition-all transform hover:scale-105">
+                          Get Started Free →
+                        </button>
+                        <div className="mt-8 flex gap-6 justify-center text-gray-400 text-lg">
+                          <span>✓ No credit card</span>
+                          <span>✓ No sales call</span>
+                          <span>✓ Instant results</span>
                         </div>
                       </div>
                     </div>
@@ -463,7 +496,7 @@ export default function WidgetDemo() {
 
                   {/* Slide indicators */}
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                    {[0, 1, 2].map((idx) => (
+                    {[0, 1, 2, 3, 4].map((idx) => (
                       <button
                         key={idx}
                         onClick={() => setCurrentSlide(idx)}
