@@ -96,35 +96,9 @@ interface Props {
 }
 
 export default function Step5V8({ state, actions }: Props) {
-  console.log('[Step5V8] Rendering with:', {
-    hasTiers: !!state.tiers,
-    selectedTierIndex: state.selectedTierIndex,
-    location: state.location,
-    industry: state.industry,
-  });
-
-  const { tiers, selectedTierIndex, location, industry } = state;
-  const tier = tiers && selectedTierIndex !== null ? tiers[selectedTierIndex] : undefined;
-  const countryCode = state.countryCode || state.country || "US";
-
-  console.log('[Step5V8] Selected tier data:', tier);
-
-  if (!tier) {
-    console.error('[Step5V8] No tier data available!', { tiers, selectedTierIndex });
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="text-red-500 text-xl">⚠️ No tier data available</div>
-          <button
-            onClick={() => actions.goToStep(5)}
-            className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-          >
-            ← Back to Configuration
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // ═══════════════════════════════════════════════════════════════════════
+  // 🔧 HOOKS - MUST BE CALLED FIRST BEFORE ANY CONDITIONAL RETURNS
+  // ═══════════════════════════════════════════════════════════════════════
 
   // Modal states
   const [showFinancialModal, setShowFinancialModal] = useState(false);
@@ -142,6 +116,7 @@ export default function Step5V8({ state, actions }: Props) {
   const [leadForm, setLeadForm] = useState({ name: "", email: "", company: "" });
   const [leadSubmitting, setLeadSubmitting] = useState(false);
 
+  // ── ALL CALLBACKS AND EFFECTS (MUST BE BEFORE EARLY RETURN) ────
   const handleLeadSubmit = useCallback(async () => {
     if (!leadForm.email || !leadForm.name) return;
     setLeadSubmitting(true);
@@ -219,6 +194,90 @@ export default function Step5V8({ state, actions }: Props) {
     [state, leadCaptured]
   );
 
+  // ── SOCIAL MEDIA SHARING (needs tier data from below, so this will be moved after validation) ────
+  // This will be moved after tier validation
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // 📊 STATE VALIDATION AND DATA EXTRACTION
+  // ═══════════════════════════════════════════════════════════════════════
+
+  console.log("[Step5V8] Rendering with:", {
+    hasTiers: !!state.tiers,
+    selectedTierIndex: state.selectedTierIndex,
+    location: state.location,
+    industry: state.industry,
+  });
+
+  const { tiers, selectedTierIndex, location, industry } = state;
+  const tier = tiers && selectedTierIndex !== null ? tiers[selectedTierIndex] : undefined;
+  const countryCode = state.countryCode || state.country || "US";
+
+  console.log("[Step5V8] Selected tier data:", tier);
+
+  // ── handleShare needs tier data, so define it after validation ──
+  const handleShare = useCallback(
+    (platform: "linkedin" | "twitter" | "facebook" | "email" | "copy") => {
+      if (!tier) return; // Guard against missing tier
+
+      setShareSuccess(null);
+
+      const industryName = industry?.replace(/_/g, " ") || "business";
+      const shareTitle = `Energy Quote for ${industryName}`;
+      const shareText =
+        `💡 Just got my energy quote from Merlin BESS!\n\n` +
+        `💰 ${fmt$(tier.annualSavings, countryCode)}/year savings\n` +
+        `⚡ ${fmtNum(tier.bessKWh)} kWh storage\n` +
+        `📊 ${Math.round(tier.paybackYears)} year payback\n` +
+        `📈 ${tier.roi10Year.toFixed(0)}% 10-year ROI`;
+      const shareUrl = window.location.href;
+
+      switch (platform) {
+        case "linkedin":
+          window.open(
+            `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle)}&summary=${encodeURIComponent(shareText)}`,
+            "_blank",
+            "noopener,noreferrer,width=600,height=600"
+          );
+          setShareSuccess("Shared to LinkedIn!");
+          break;
+
+        case "twitter":
+          window.open(
+            `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+            "_blank",
+            "noopener,noreferrer,width=600,height=400"
+          );
+          setShareSuccess("Shared to Twitter/X!");
+          break;
+
+        case "facebook":
+          window.open(
+            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`,
+            "_blank",
+            "noopener,noreferrer,width=600,height=600"
+          );
+          setShareSuccess("Shared to Facebook!");
+          break;
+
+        case "email":
+          window.location.href = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`;
+          setShareSuccess("Email client opened!");
+          break;
+
+        case "copy":
+          navigator.clipboard
+            .writeText(`${shareText}\n\n${shareUrl}`)
+            .then(() => setShareSuccess("Link copied to clipboard!"))
+            .catch(() => setShareSuccess("Failed to copy"));
+          break;
+      }
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setShareSuccess(null), 3000);
+    },
+    [industry, tier, countryCode]
+  );
+
   // ── Auto-trigger pending export after lead capture completes ──
   React.useEffect(() => {
     if (leadCaptured && pendingFormat && !showLeadGate && !exportingFormat) {
@@ -228,91 +287,30 @@ export default function Step5V8({ state, actions }: Props) {
     }
   }, [leadCaptured, pendingFormat, showLeadGate, exportingFormat, handleExport]);
 
-  // ── SOCIAL MEDIA SHARING ────────────────────────────────────────────
-  const handleShare = useCallback((platform: "linkedin" | "twitter" | "facebook" | "email" | "copy") => {
-    setShareSuccess(null);
-    
-    const industryName = industry?.replace(/_/g, " ") || "business";
-    const shareTitle = `Energy Quote for ${industryName}`;
-    const shareText = `💡 Just got my energy quote from Merlin BESS!\n\n` +
-      `💰 ${fmt$(tier.annualSavings, countryCode)}/year savings\n` +
-      `⚡ ${fmtNum(tier.bessKWh)} kWh storage\n` +
-      `📊 ${tier.paybackYears.toFixed(1)} year payback\n` +
-      `📈 ${tier.roi10Year.toFixed(0)}% 10-year ROI`;
-    const shareUrl = window.location.href;
-
-    switch (platform) {
-      case "linkedin":
-        window.open(
-          `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle)}&summary=${encodeURIComponent(shareText)}`,
-          "_blank",
-          "noopener,noreferrer,width=600,height=600"
-        );
-        setShareSuccess("Shared to LinkedIn!");
-        break;
-
-      case "twitter":
-        window.open(
-          `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
-          "_blank",
-          "noopener,noreferrer,width=600,height=400"
-        );
-        setShareSuccess("Shared to Twitter/X!");
-        break;
-
-      case "facebook":
-        window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`,
-          "_blank",
-          "noopener,noreferrer,width=600,height=600"
-        );
-        setShareSuccess("Shared to Facebook!");
-        break;
-
-      case "email":
-        window.location.href = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`;
-        setShareSuccess("Email client opened!");
-        break;
-
-      case "copy":
-        navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`)
-          .then(() => setShareSuccess("Link copied to clipboard!"))
-          .catch(() => setShareSuccess("Failed to copy"));
-        break;
-    }
-
-    // Clear success message after 3 seconds
-    setTimeout(() => setShareSuccess(null), 3000);
-  }, [industry, tier]);
-
+  // ═══════════════════════════════════════════════════════════════════════
+  // 🚫 EARLY RETURN CHECK - ONLY AFTER ALL HOOKS
+  // ═══════════════════════════════════════════════════════════════════════
 
   if (!tier) {
+    console.error("[Step5V8] No tier data available!", { tiers, selectedTierIndex });
     return (
-      <div
-        style={{
-          textAlign: "center",
-          padding: "60px 24px",
-          color: DARK.textSecondary,
-          fontSize: 15,
-        }}
-      >
-        No quote available.{" "}
-        <button
-          onClick={() => actions.goToStep(1)}
-          style={{
-            color: DARK.accent,
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            textDecoration: "underline",
-            fontSize: 15,
-          }}
-        >
-          Start over
-        </button>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-red-500 text-xl">⚠️ No tier data available</div>
+          <button
+            onClick={() => actions.goToStep(5)}
+            className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+          >
+            ← Back to Configuration
+          </button>
+        </div>
       </div>
     );
   }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // 📊 FORMATTING HELPERS
+  // ═══════════════════════════════════════════════════════════════════════
 
   const locationLine = location ? [location.city, location.state].filter(Boolean).join(", ") : "";
 
@@ -446,7 +444,7 @@ export default function Step5V8({ state, actions }: Props) {
                 <TrendingUp className="w-4 h-4 text-[#3ECF8E]" />
                 <span className="text-sm text-slate-300">
                   Payback in{" "}
-                  <strong className="text-[#3ECF8E]">{tier.paybackYears.toFixed(1)} years</strong>
+                  <strong className="text-[#3ECF8E]">{Math.round(tier.paybackYears)} years</strong>
                 </span>
                 <span className="text-slate-600">|</span>
                 <span className="text-sm text-slate-300">
@@ -675,14 +673,16 @@ export default function Step5V8({ state, actions }: Props) {
                   </div>
                   <div className="mt-2 flex items-end gap-2">
                     <span className="text-3xl font-black text-white tabular-nums">
-                      {tier.paybackYears.toFixed(1)}
+                      {Math.round(tier.paybackYears)}
                     </span>
                     <span className="pb-1 text-sm font-semibold text-slate-400">years</span>
                   </div>
                   <div className="mt-2 h-2 rounded-full bg-white/[0.06] overflow-hidden">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400"
-                      style={{ width: `${Math.max(12, Math.min(100, 100 - tier.paybackYears * 7))}%` }}
+                      style={{
+                        width: `${Math.max(12, Math.min(100, 100 - tier.paybackYears * 7))}%`,
+                      }}
                     />
                   </div>
                 </div>
@@ -742,7 +742,7 @@ export default function Step5V8({ state, actions }: Props) {
           EXPORT / DOWNLOAD — PDF, Word, Excel
       ================================================================ */}
       <div className="rounded-xl border-2 border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] p-4 sm:p-6">
-        <div className="flex flex-wrap justify-between items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div className="flex-1 min-w-0">
             <div className="text-lg font-bold text-slate-100 tracking-tight mb-1">
               Download Quote
@@ -752,7 +752,7 @@ export default function Step5V8({ state, actions }: Props) {
             </p>
           </div>
 
-          <div className="flex gap-2 flex-shrink-0 flex-wrap">
+          <div className="flex gap-2 flex-shrink-0 flex-wrap sm:flex-nowrap">
             {(["pdf", "word", "excel"] as const).map((format) => (
               <button
                 key={format}
@@ -799,9 +799,7 @@ export default function Step5V8({ state, actions }: Props) {
                 Share Your Quote
               </div>
             </div>
-            <p className="text-sm text-slate-400">
-              Share your energy savings with your network
-            </p>
+            <p className="text-sm text-slate-400">Share your energy savings with your network</p>
           </div>
 
           <div className="flex gap-2 flex-shrink-0 flex-wrap">
