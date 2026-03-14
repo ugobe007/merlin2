@@ -117,32 +117,62 @@ export async function resolveLocation(input: string, signal?: AbortSignal): Prom
  * Progressive hydration: enriches location with utility data.
  */
 export async function fetchUtility(
-  zipOrInput: string
+  zipOrInput: string,
+  countryCode?: string
 ): Promise<{ rate?: number; demandCharge?: number; provider?: string }> {
   const zip = zipOrInput.replace(/\D/g, "").slice(0, 5);
-  if (!zip || zip.length < 5) {
-    return { rate: undefined, demandCharge: undefined, provider: undefined };
-  }
+  
+  // US ZIP lookup
+  if (zip && zip.length === 5) {
+    try {
+      // Wire to real utilityRateService
+      const { getCommercialRateByZip } = await import("@/services/utilityRateService");
+      const data = await getCommercialRateByZip(zip);
 
-  try {
-    // Wire to real utilityRateService
-    const { getCommercialRateByZip } = await import("@/services/utilityRateService");
-    const data = await getCommercialRateByZip(zip);
-
-    if (!data) {
-      devWarn("[V7] No utility data for ZIP:", zip);
-      return { rate: undefined, demandCharge: undefined, provider: undefined };
+      if (data) {
+        return {
+          rate: data.rate,
+          demandCharge: data.demandCharge,
+          provider: data.utilityName,
+        };
+      }
+    } catch (e) {
+      devError("[V7] Utility rate fetch error:", e);
     }
-
-    return {
-      rate: data.rate,
-      demandCharge: data.demandCharge,
-      provider: data.utilityName,
-    };
-  } catch (e) {
-    devError("[V7] Utility rate fetch error:", e);
-    throw e;
   }
+  
+  // International fallback rates by country/region
+  if (countryCode) {
+    const internationalRates: Record<string, { rate: number; demandCharge: number; provider: string }> = {
+      // Middle East
+      KW: { rate: 0.016, demandCharge: 2, provider: "Kuwait Ministry of Electricity & Water" }, // Kuwait: Very low subsidized rates
+      QA: { rate: 0.027, demandCharge: 3, provider: "Qatar General Electricity & Water" }, // Qatar: Subsidized
+      AE: { rate: 0.082, demandCharge: 12, provider: "DEWA / ADDC" }, // UAE: Moderate commercial rates
+      SA: { rate: 0.048, demandCharge: 5, provider: "Saudi Electricity Company" }, // Saudi Arabia: Subsidized
+      // Europe
+      GB: { rate: 0.35, demandCharge: 22, provider: "UK Grid" }, // UK: High rates
+      DE: { rate: 0.32, demandCharge: 20, provider: "German Grid" }, // Germany: High rates
+      FR: { rate: 0.19, demandCharge: 15, provider: "EDF" }, // France: Moderate
+      // Asia Pacific
+      AU: { rate: 0.20, demandCharge: 18, provider: "Australian Grid" }, // Australia
+      NZ: { rate: 0.18, demandCharge: 16, provider: "NZ Grid" }, // New Zealand
+      SG: { rate: 0.15, demandCharge: 12, provider: "SP Group" }, // Singapore
+      JP: { rate: 0.25, demandCharge: 20, provider: "Japanese Grid" }, // Japan
+      // Americas
+      CA: { rate: 0.11, demandCharge: 13, provider: "Canadian Grid" }, // Canada
+      MX: { rate: 0.09, demandCharge: 8, provider: "CFE" }, // Mexico
+    };
+    
+    const countryData = internationalRates[countryCode.toUpperCase()];
+    if (countryData) {
+      devLog(`[V7] Using international rates for ${countryCode}:`, countryData);
+      return countryData;
+    }
+  }
+  
+  // No data found
+  devWarn("[V7] No utility data for input:", zipOrInput, "country:", countryCode);
+  return { rate: undefined, demandCharge: undefined, provider: undefined };
 }
 
 /**
