@@ -466,7 +466,7 @@ export function Step1V8({ state, actions }: Step1Props) {
         const { suggestions = [] } =
           await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
             input: businessName.trim(),
-            includedRegionCodes: country === "US" ? ["US"] : undefined,
+            includedRegionCodes: selectedCountryCode ? [selectedCountryCode] : undefined,
             // Remove inputOffset - it's optional and was causing "InvalidValueError"
             // inputOffset is for cursor position in partial completions, not needed here
             sessionToken: sessionTokenRef.current,
@@ -602,7 +602,7 @@ export function Step1V8({ state, actions }: Step1Props) {
       const { suggestions = [] } =
         await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
           input: query,
-          includedRegionCodes: country === "US" ? ["US"] : undefined,
+          includedRegionCodes: selectedCountryCode ? [selectedCountryCode] : undefined,
           inputOffset: query.length,
           sessionToken,
         });
@@ -700,7 +700,7 @@ export function Step1V8({ state, actions }: Step1Props) {
         >
           unlock your <span style={{ color: T.accent }}>energy savings</span>
         </h1>
-        <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.6, color: T.textSecondary }}>
+        <p style={{ margin: "8px 0 0", fontSize: 16, lineHeight: 1.6, color: T.textPrimary, opacity: 0.9 }}>
           Confirm your ZIP, then match your business so Merlin can route you into the right
           questionnaire immediately.
         </p>
@@ -749,21 +749,21 @@ export function Step1V8({ state, actions }: Step1Props) {
                   }
                 }}
                 style={{
-                  height: 42,
-                  padding: "0 14px",
+                  height: 46,
+                  padding: "0 16px",
                   borderRadius: 8,
                   border:
                     country === value
                       ? `1px solid ${T.accentBorder}`
                       : "1px solid rgba(255,255,255,0.08)",
                   background: country === value ? T.accentSoft : "rgba(255,255,255,0.03)",
-                  color: country === value ? T.accent : T.textSecondary,
-                  fontSize: 13,
+                  color: country === value ? T.accent : T.textPrimary,
+                  fontSize: 15,
                   fontWeight: 700,
                   cursor: "pointer",
                 }}
               >
-                {value === "US" ? "US" : "Intl"}
+                {value === "US" ? "US" : "International"}
               </button>
             ))}
 
@@ -781,13 +781,13 @@ export function Step1V8({ state, actions }: Step1Props) {
                   }
                 }}
                 style={{
-                  height: 42,
+                  height: 46,
                   padding: "0 12px",
                   borderRadius: 8,
                   border: "1px solid rgba(255,255,255,0.10)",
                   background: T.input,
                   color: T.textPrimary,
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: 500,
                   cursor: "pointer",
                   outline: "none",
