@@ -692,15 +692,17 @@ export function Step1V8({ state, actions }: Step1Props) {
             min-width: 0 !important;
             font-size: 16px !important;
           }
-          .step1-container {
-            padding: 12px !important;
+          .step1-location-container {
+            padding: 16px !important;
           }
-          .step1-button-group {
-            flex-direction: column !important;
-            width: 100%;
+          .step1-country-buttons {
+            flex-direction: row !important;
+            justify-content: flex-start !important;
+            margin-bottom: 16px !important;
           }
-          .step1-button-group button {
-            width: 100% !important;
+          .step1-country-buttons button,
+          .step1-country-buttons select {
+            flex: 0 0 auto !important;
           }
         }
       `}</style>
@@ -741,6 +743,7 @@ export function Step1V8({ state, actions }: Step1Props) {
       )}
 
       <div
+        className="step1-location-container"
         style={{
           padding: 18,
           borderRadius: 14,
@@ -748,127 +751,129 @@ export function Step1V8({ state, actions }: Step1Props) {
           border: `1px solid ${T.panelBorder}`,
         }}
       >
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            {(["US", "International"] as Country[]).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => {
-                  setCountry(value);
-                  if (value === "US") {
-                    setSelectedCountryCode("US");
-                  } else {
-                    // When switching to International, default to first non-US country and auto-populate
-                    const firstIntlCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code !== "US");
-                    if (firstIntlCountry) {
-                      setSelectedCountryCode(firstIntlCountry.code);
-                      actions.setLocationRaw(firstIntlCountry.name);
-                    }
+        {/* Row 1: Country Selection Buttons */}
+        <div className="step1-country-buttons" style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
+          {(["US", "International"] as Country[]).map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => {
+                setCountry(value);
+                if (value === "US") {
+                  setSelectedCountryCode("US");
+                } else {
+                  // When switching to International, default to first non-US country and auto-populate
+                  const firstIntlCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code !== "US");
+                  if (firstIntlCountry) {
+                    setSelectedCountryCode(firstIntlCountry.code);
+                    actions.setLocationRaw(firstIntlCountry.name);
                   }
-                }}
-                style={{
-                  height: 46,
-                  padding: "0 16px",
-                  borderRadius: 8,
-                  border:
-                    country === value
-                      ? `1px solid ${T.accentBorder}`
-                      : "1px solid rgba(255,255,255,0.08)",
-                  background: country === value ? T.accentSoft : "rgba(255,255,255,0.03)",
-                  color: country === value ? T.accent : T.textPrimary,
-                  fontSize: 15,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                {value === "US" ? "US" : "International"}
-              </button>
-            ))}
+                }
+              }}
+              style={{
+                height: 46,
+                padding: "0 16px",
+                borderRadius: 8,
+                border:
+                  country === value
+                    ? `1px solid ${T.accentBorder}`
+                    : "1px solid rgba(255,255,255,0.08)",
+                background: country === value ? T.accentSoft : "rgba(255,255,255,0.03)",
+                color: country === value ? T.accent : T.textPrimary,
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              {value === "US" ? "US" : "International"}
+            </button>
+          ))}
 
-            {country === "International" && (
-              <select
-                value={selectedCountryCode}
-                onChange={(e) => {
-                  const code = e.target.value;
-                  setSelectedCountryCode(code);
+          {country === "International" && (
+            <select
+              value={selectedCountryCode}
+              onChange={(e) => {
+                const code = e.target.value;
+                setSelectedCountryCode(code);
 
-                  // Auto-populate input field with country name when dropdown changes
-                  const selectedCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code === code);
-                  if (selectedCountry && code !== "US") {
-                    actions.setLocationRaw(selectedCountry.name);
-                  }
-                }}
-                style={{
-                  height: 46,
-                  padding: "0 12px",
-                  borderRadius: 8,
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  background: T.input,
-                  color: T.textPrimary,
-                  fontSize: 14,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  outline: "none",
-                }}
-              >
-                {INTERNATIONAL_COUNTRIES.map(({ code, name }) => (
-                  <option
-                    key={code}
-                    value={code}
-                    style={{ background: "#1a1f2e", color: T.textPrimary }}
-                  >
-                    {name} ({code})
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+                // Auto-populate input field with country name when dropdown changes
+                const selectedCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code === code);
+                if (selectedCountry && code !== "US") {
+                  actions.setLocationRaw(selectedCountry.name);
+                }
+              }}
+              style={{
+                height: 46,
+                padding: "0 12px",
+                borderRadius: 8,
+                border: "1px solid rgba(255,255,255,0.10)",
+                background: T.input,
+                color: T.textPrimary,
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer",
+                outline: "none",
+              }}
+            >
+              {INTERNATIONAL_COUNTRIES.map(({ code, name }) => (
+                <option
+                  key={code}
+                  value={code}
+                  style={{ background: "#1a1f2e", color: T.textPrimary }}
+                >
+                  {name} ({code})
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
 
-          {!locationConfirmed ? (
-            <>
-              <input
-                ref={zipRef}
-                type="text"
-                inputMode={country === "US" ? "numeric" : "text"}
-                value={locationRaw}
-                onChange={handleZipChange}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") handleLocationSubmit();
-                }}
-                placeholder={country === "US" ? "ZIP code" : "Country name or postal code"}
-                className="step1-zip-input"
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  width: "100%",
-                  height: 52,
-                  borderRadius: 10,
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  background: T.input,
-                  color: T.textPrimary,
-                  padding: "0 14px",
-                  fontSize: 18,
-                  outline: "none",
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleLocationSubmit}
-                disabled={!isValidZip || isLocationBusy}
-                style={{
-                  height: 46,
-                  padding: "0 18px",
-                  borderRadius: 10,
-                  border: `1px solid ${isValidZip ? T.accentBorder : "rgba(255,255,255,0.08)"}`,
-                  background: isValidZip ? T.accentSoft : "rgba(255,255,255,0.03)",
-                  color: isValidZip ? T.accent : T.textMuted,
-                  fontWeight: 700,
-                  cursor: isValidZip ? "pointer" : "not-allowed",
-                }}
-              >
-                {isLocationBusy ? "Checking..." : "Confirm Location"}
-              </button>
+        {!locationConfirmed ? (
+          <>
+            {/* Row 2: ZIP Code Input */}
+            <input
+              ref={zipRef}
+              type="text"
+              inputMode={country === "US" ? "numeric" : "text"}
+              value={locationRaw}
+              onChange={handleZipChange}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") handleLocationSubmit();
+              }}
+              placeholder={country === "US" ? "ZIP code" : "Country name or postal code"}
+              className="step1-zip-input"
+              style={{
+                width: "100%",
+                height: 52,
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.10)",
+                background: T.input,
+                color: T.textPrimary,
+                padding: "0 14px",
+                fontSize: 18,
+                outline: "none",
+                marginBottom: 12,
+              }}
+            />
+            
+            {/* Row 3: Confirmation Button */}
+            <button
+              type="button"
+              onClick={handleLocationSubmit}
+              disabled={!isValidZip || isLocationBusy}
+              style={{
+                width: "100%",
+                height: 46,
+                borderRadius: 10,
+                border: `1px solid ${isValidZip ? T.accentBorder : "rgba(255,255,255,0.08)"}`,
+                background: isValidZip ? T.accentSoft : "rgba(255,255,255,0.03)",
+                color: isValidZip ? T.accent : T.textMuted,
+                fontWeight: 700,
+                cursor: isValidZip ? "pointer" : "not-allowed",
+              }}
+            >
+              {isLocationBusy ? "Checking..." : "Confirm Location"}
+            </button>
             </>
           ) : (
             <div
@@ -914,7 +919,6 @@ export function Step1V8({ state, actions }: Step1Props) {
               </button>
             </div>
           )}
-        </div>
       </div>
 
       {showIntelStrip && <IntelStripInline intel={intelStripData} />}
