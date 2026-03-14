@@ -223,9 +223,9 @@
       pointer-events: none;
     }
     
-    /* Navigation arrows */
+    /* Navigation arrows - positioned relative to slide container */
     .slide-arrow {
-      position: absolute;
+      position: fixed;
       top: 50%;
       transform: translateY(-50%);
       width: 50px;
@@ -252,11 +252,11 @@
     }
     
     .slide-arrow.prev {
-      left: 0.5rem;
+      left: calc(15% - 30px);
     }
     
     .slide-arrow.next {
-      right: 0.5rem;
+      right: calc(15% - 30px);
     }
     
     /* Wizard screen mockup - actual UI */
@@ -298,17 +298,17 @@
     .merlin-advisor {
       background: rgba(62, 207, 142, 0.1);
       border: 1px solid rgba(62, 207, 142, 0.3);
-      border-radius: 12px;
-      padding: 1.25rem;
+      border-radius: 16px;
+      padding: 2rem 2.25rem;
       margin-bottom: 2rem;
       display: flex;
-      gap: 1rem;
+      gap: 1.5rem;
       align-items: flex-start;
     }
     
     .advisor-avatar {
-      width: 40px;
-      height: 40px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       background: linear-gradient(135deg, #3ecf8e 0%, #2ba574 100%);
       display: flex;
@@ -319,16 +319,16 @@
     }
     
     .advisor-avatar img {
-      width: 28px;
-      height: 28px;
+      width: 36px;
+      height: 36px;
       object-fit: contain;
     }
     
     .advisor-text {
       flex: 1;
       color: #e2e8f0;
-      font-size: 0.95rem;
-      line-height: 1.6;
+      font-size: 1.1rem;
+      line-height: 1.7;
     }
     
     .input-field {
