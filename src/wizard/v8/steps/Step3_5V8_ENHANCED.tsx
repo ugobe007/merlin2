@@ -33,6 +33,18 @@ const T = {
 export default function Step3_5V8Enhanced({ state, actions }: Props) {
   const { peakLoadKW, criticalLoadKW, step3Answers, industry } = state;
 
+  // Mobile sub-step state (1 = summary, 2 = recommendations)
+  const [mobileStep, setMobileStep] = React.useState<1 | 2>(1);
+
+  // Detect mobile viewport
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   // Extract key answers from Step 3
   const gridReliability = (step3Answers.gridReliability as string) || "reliable";
   const existingSolar = (step3Answers.existingSolar as string) || "none";
@@ -250,7 +262,7 @@ export default function Step3_5V8Enhanced({ state, actions }: Props) {
             textTransform: "uppercase",
           }}
         >
-          Step 3.5 of 5
+          {isMobile && `Step 3.${mobileStep} of 2 • `}Step 3.5 of 5
         </div>
         <h1
           style={{
@@ -261,808 +273,827 @@ export default function Step3_5V8Enhanced({ state, actions }: Props) {
             lineHeight: 1.1,
           }}
         >
-          Your Energy Profile & Recommendations
+          {isMobile && mobileStep === 1
+            ? "Your Facility Profile"
+            : isMobile && mobileStep === 2
+              ? "Recommended Add-Ons"
+              : "Your Energy Profile & Recommendations"}
         </h1>
         <p style={{ fontSize: 16, color: T.textSecondary, maxWidth: 600, margin: "0 auto" }}>
-          Based on your facility details, here's what Merlin recommends
+          {isMobile && mobileStep === 1
+            ? "Confirm your energy usage and costs"
+            : isMobile && mobileStep === 2
+              ? "Select add-ons to maximize savings"
+              : "Based on your facility details, here's what Merlin recommends"}
         </p>
       </div>
 
-      {/* Two-Panel Layout */}
+      {/* Two-Panel Layout (Desktop) or Single Panel (Mobile Sub-Steps) */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(320px, 400px) 1fr",
+          gridTemplateColumns: isMobile ? "1fr" : "minmax(320px, 400px) 1fr",
           gap: 24,
           alignItems: "start",
         }}
       >
-        {/* LEFT PANEL: Energy Profile */}
-        <div style={{ position: "sticky", top: 20 }}>
-          <div
-            style={{
-              background: T.panel,
-              border: `1px solid ${T.panelBorder}`,
-              borderRadius: 16,
-              padding: 24,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 12,
-                  background: T.accentSoft,
-                  border: `1px solid ${T.accentBorder}`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Battery style={{ width: 24, height: 24, color: T.accent }} />
-              </div>
-              <div>
-                <h2 style={{ fontSize: 20, fontWeight: 800, color: T.textPrimary, margin: 0 }}>
-                  Facility Profile
-                </h2>
-                <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>
-                  {industry || "Your business"}
-                </p>
-              </div>
-            </div>
-
-            {/* Key Metrics */}
+        {/* LEFT PANEL: Energy Profile (Always shown on desktop, Mobile Sub-Step 1 only) */}
+        {(!isMobile || mobileStep === 1) && (
+          <div style={{ position: isMobile ? "static" : "sticky", top: 20 }}>
             <div
               style={{
-                display: "grid",
-                gap: 16,
-                padding: 16,
-                background: "rgba(0,0,0,0.2)",
-                borderRadius: 12,
-                marginBottom: 20,
+                background: T.panel,
+                border: `1px solid ${T.panelBorder}`,
+                borderRadius: 16,
+                padding: 24,
               }}
             >
-              <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                 <div
                   style={{
-                    fontSize: 11,
-                    color: T.textMuted,
-                    marginBottom: 4,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
+                    width: 48,
+                    height: 48,
+                    borderRadius: 12,
+                    background: T.accentSoft,
+                    border: `1px solid ${T.accentBorder}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  Peak Demand
+                  <Battery style={{ width: 24, height: 24, color: T.accent }} />
                 </div>
-                <div style={{ fontSize: 28, fontWeight: 900, color: T.textPrimary }}>
-                  {peakLoadKW.toLocaleString()}{" "}
-                  <span style={{ fontSize: 16, fontWeight: 600, color: T.textSecondary }}>kW</span>
+                <div>
+                  <h2 style={{ fontSize: 20, fontWeight: 800, color: T.textPrimary, margin: 0 }}>
+                    Facility Profile
+                  </h2>
+                  <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>
+                    {industry || "Your business"}
+                  </p>
                 </div>
               </div>
 
-              <div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: T.textMuted,
-                    marginBottom: 4,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  Monthly Energy
+              {/* Key Metrics */}
+              <div
+                style={{
+                  display: "grid",
+                  gap: 16,
+                  padding: 16,
+                  background: "rgba(0,0,0,0.2)",
+                  borderRadius: 12,
+                  marginBottom: 20,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: T.textMuted,
+                      marginBottom: 4,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    Peak Demand
+                  </div>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: T.textPrimary }}>
+                    {peakLoadKW.toLocaleString()}{" "}
+                    <span style={{ fontSize: 16, fontWeight: 600, color: T.textSecondary }}>
+                      kW
+                    </span>
+                  </div>
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: T.textPrimary }}>
-                  {Math.round(monthlyEnergyKWh).toLocaleString()}{" "}
-                  <span style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>kWh</span>
+
+                <div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: T.textMuted,
+                      marginBottom: 4,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    Monthly Energy
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: T.textPrimary }}>
+                    {Math.round(monthlyEnergyKWh).toLocaleString()}{" "}
+                    <span style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>
+                      kWh
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: T.textMuted,
+                      marginBottom: 4,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    Estimated Monthly Cost
+                  </div>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: T.warning }}>
+                    ${Math.round(totalMonthlyCost).toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>
+                    ${Math.round(monthlyEnergyCost).toLocaleString()} energy + $
+                    {Math.round(monthlyDemandCost).toLocaleString()} demand
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: T.textMuted,
-                    marginBottom: 4,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  Estimated Monthly Cost
+              {/* Risk Factors */}
+              {(gridReliability !== "reliable" || existingGenerator === "none") && (
+                <div style={{ marginBottom: 20 }}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: T.danger,
+                      marginBottom: 12,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <AlertCircle style={{ width: 16, height: 16 }} />
+                    RISK FACTORS
+                  </div>
+                  <div style={{ display: "grid", gap: 8 }}>
+                    {gridReliability !== "reliable" && (
+                      <div
+                        style={{
+                          padding: 12,
+                          background: "rgba(239,68,68,0.1)",
+                          border: "1px solid rgba(239,68,68,0.2)",
+                          borderRadius: 8,
+                          fontSize: 13,
+                          color: "#fca5a5",
+                        }}
+                      >
+                        • Grid reliability:{" "}
+                        {gridReliability === "frequent" ? "Frequent outages" : "Occasional issues"}
+                      </div>
+                    )}
+                    {existingGenerator === "none" && (
+                      <div
+                        style={{
+                          padding: 12,
+                          background: "rgba(239,68,68,0.1)",
+                          border: "1px solid rgba(239,68,68,0.2)",
+                          borderRadius: 8,
+                          fontSize: 13,
+                          color: "#fca5a5",
+                        }}
+                      >
+                        • No backup power
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        padding: 12,
+                        background: "rgba(251,191,36,0.1)",
+                        border: "1px solid rgba(251,191,36,0.2)",
+                        borderRadius: 8,
+                        fontSize: 13,
+                        color: "#fbbf24",
+                      }}
+                    >
+                      • High demand charges (${demandCharge}/kW)
+                    </div>
+                  </div>
                 </div>
-                <div style={{ fontSize: 24, fontWeight: 900, color: T.warning }}>
-                  ${Math.round(totalMonthlyCost).toLocaleString()}
-                </div>
-                <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>
-                  ${Math.round(monthlyEnergyCost).toLocaleString()} energy + $
-                  {Math.round(monthlyDemandCost).toLocaleString()} demand
-                </div>
-              </div>
-            </div>
+              )}
 
-            {/* Risk Factors */}
-            {(gridReliability !== "reliable" || existingGenerator === "none") && (
-              <div style={{ marginBottom: 20 }}>
+              {/* Opportunities */}
+              <div>
                 <div
                   style={{
                     fontSize: 12,
                     fontWeight: 700,
-                    color: T.danger,
+                    color: T.success,
                     marginBottom: 12,
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
                   }}
                 >
-                  <AlertCircle style={{ width: 16, height: 16 }} />
-                  RISK FACTORS
+                  <TrendingUp style={{ width: 16, height: 16 }} />
+                  OPPORTUNITIES
                 </div>
                 <div style={{ display: "grid", gap: 8 }}>
-                  {gridReliability !== "reliable" && (
+                  {solarRec && (
                     <div
                       style={{
                         padding: 12,
-                        background: "rgba(239,68,68,0.1)",
-                        border: "1px solid rgba(239,68,68,0.2)",
+                        background: "rgba(16,185,129,0.1)",
+                        border: "1px solid rgba(16,185,129,0.2)",
                         borderRadius: 8,
                         fontSize: 13,
-                        color: "#fca5a5",
+                        color: "#6ee7b7",
                       }}
                     >
-                      • Grid reliability:{" "}
-                      {gridReliability === "frequent" ? "Frequent outages" : "Occasional issues"}
-                    </div>
-                  )}
-                  {existingGenerator === "none" && (
-                    <div
-                      style={{
-                        padding: 12,
-                        background: "rgba(239,68,68,0.1)",
-                        border: "1px solid rgba(239,68,68,0.2)",
-                        borderRadius: 8,
-                        fontSize: 13,
-                        color: "#fca5a5",
-                      }}
-                    >
-                      • No backup power
+                      • Solar: {solarRec.payback}yr payback
                     </div>
                   )}
                   <div
                     style={{
                       padding: 12,
-                      background: "rgba(251,191,36,0.1)",
-                      border: "1px solid rgba(251,191,36,0.2)",
+                      background: "rgba(16,185,129,0.1)",
+                      border: "1px solid rgba(16,185,129,0.2)",
                       borderRadius: 8,
                       fontSize: 13,
-                      color: "#fbbf24",
+                      color: "#6ee7b7",
                     }}
                   >
-                    • High demand charges (${demandCharge}/kW)
+                    • BESS: ${Math.round(monthlyDemandCost * 0.7).toLocaleString()}/mo demand
+                    savings
                   </div>
+                  {generatorRec && (
+                    <div
+                      style={{
+                        padding: 12,
+                        background: "rgba(16,185,129,0.1)",
+                        border: "1px solid rgba(16,185,129,0.2)",
+                        borderRadius: 8,
+                        fontSize: 13,
+                        color: "#6ee7b7",
+                      }}
+                    >
+                      • Backup: Avoid ${generatorRec.downtimeCost}/hr downtime
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* RIGHT PANEL: Recommendations (Always shown on desktop, Mobile Sub-Step 2 only) */}
+        {(!isMobile || mobileStep === 2) && (
+          <div style={{ display: "grid", gap: 20 }}>
+            {/* Battery Storage (Always Included) */}
+            <div
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(62,207,142,0.05) 0%, rgba(62,207,142,0.02) 100%)",
+                border: `2px solid ${T.accentBorder}`,
+                borderRadius: 16,
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "start",
+                  justifyContent: "space-between",
+                  marginBottom: 16,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 14,
+                      background: T.accentSoft,
+                      border: `2px solid ${T.accentBorder}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Battery style={{ width: 28, height: 28, color: T.accent }} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: 22, fontWeight: 900, color: T.textPrimary, margin: 0 }}>
+                      Battery Storage
+                    </h3>
+                    <p
+                      style={{ fontSize: 14, color: T.accent, margin: "4px 0 0", fontWeight: 700 }}
+                    >
+                      ✓ Included in your quote
+                    </p>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    padding: "6px 12px",
+                    background: T.accentSoft,
+                    border: `1px solid ${T.accentBorder}`,
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 800,
+                    color: T.accent,
+                  }}
+                >
+                  REQUIRED
+                </div>
+              </div>
+              <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.6, margin: 0 }}>
+                MagicFit will size your battery system based on your peak demand and energy goals in
+                the next step.
+              </p>
+            </div>
+
+            {/* Solar Recommendation */}
+            {solarRec && (
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.02)",
+                  border: `1px solid ${selectedSolarOption !== "none" ? "#f59e0b" : T.panelBorder}`,
+                  borderRadius: 12,
+                  padding: 20,
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                  <Sun style={{ width: 20, height: 20, color: "#fbbf24" }} />
+                  <div>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, margin: 0 }}>
+                      Solar PV Array
+                    </h3>
+                    <p style={{ fontSize: 13, color: T.textMuted, margin: "2px 0 0" }}>
+                      {solarRec.reason}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2 Option Selection */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {/* Option 1: Standard */}
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "14px 16px",
+                      border: `2px solid ${selectedSolarOption === "standard" ? "#f59e0b" : "rgba(255,255,255,0.15)"}`,
+                      borderRadius: 10,
+                      background:
+                        selectedSolarOption === "standard"
+                          ? "rgba(251,191,36,0.12)"
+                          : "rgba(255,255,255,0.03)",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      boxShadow:
+                        selectedSolarOption === "standard"
+                          ? "0 0 0 3px rgba(251,191,36,0.1)"
+                          : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedSolarOption !== "standard") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                        e.currentTarget.style.borderColor = "rgba(251,191,36,0.3)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedSolarOption !== "standard") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                      }
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="solar"
+                      checked={selectedSolarOption === "standard"}
+                      onChange={() => handleSolarSelection("standard")}
+                      style={{
+                        marginRight: 12,
+                        accentColor: "#f59e0b",
+                        width: 18,
+                        height: 18,
+                        cursor: "pointer",
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                          Standard
+                        </span>
+                        <span style={{ fontSize: 13, color: "#fbbf24", fontWeight: 600 }}>
+                          {solarRec.minSize.toLocaleString()} kW
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>
+                          ${Math.round((solarRec.minSize * 850) / 1000).toLocaleString()}K
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.success }}>
+                          {(
+                            (solarRec.minSize * 850) /
+                            (solarRec.minSize * 1500 * electricityRate)
+                          ).toFixed(1)}
+                          yr payback
+                        </span>
+                      </div>
+                    </div>
+                  </label>
+
+                  {/* Option 2: Extended */}
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "14px 16px",
+                      border: `2px solid ${selectedSolarOption === "extended" ? "#f59e0b" : "rgba(255,255,255,0.15)"}`,
+                      borderRadius: 10,
+                      background:
+                        selectedSolarOption === "extended"
+                          ? "rgba(251,191,36,0.12)"
+                          : "rgba(255,255,255,0.03)",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      boxShadow:
+                        selectedSolarOption === "extended"
+                          ? "0 0 0 3px rgba(251,191,36,0.1)"
+                          : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedSolarOption !== "extended") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                        e.currentTarget.style.borderColor = "rgba(251,191,36,0.3)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedSolarOption !== "extended") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                      }
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="solar"
+                      checked={selectedSolarOption === "extended"}
+                      onChange={() => handleSolarSelection("extended")}
+                      style={{
+                        marginRight: 12,
+                        accentColor: "#f59e0b",
+                        width: 18,
+                        height: 18,
+                        cursor: "pointer",
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                          Extended
+                        </span>
+                        <span style={{ fontSize: 13, color: "#fbbf24", fontWeight: 600 }}>
+                          {solarRec.size.toLocaleString()} kW
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>
+                          ${Math.round((solarRec.size * 850) / 1000).toLocaleString()}K
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.success }}>
+                          {solarRec.payback} yrs payback
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: "#fbbf24" }}>⭐ Recommended</span>
+                      </div>
+                    </div>
+                  </label>
                 </div>
               </div>
             )}
 
-            {/* Opportunities */}
-            <div>
+            {/* Generator Recommendation */}
+            {generatorRec && (
               <div
                 style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: T.success,
-                  marginBottom: 12,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
+                  background: "rgba(255,255,255,0.02)",
+                  border: `1px solid ${selectedGeneratorOption !== "none" ? "#f97316" : T.panelBorder}`,
+                  borderRadius: 12,
+                  padding: 20,
+                  transition: "all 0.2s ease",
                 }}
               >
-                <TrendingUp style={{ width: 16, height: 16 }} />
-                OPPORTUNITIES
-              </div>
-              <div style={{ display: "grid", gap: 8 }}>
-                {solarRec && (
-                  <div
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                  <Fuel style={{ width: 20, height: 20, color: "#fb923c" }} />
+                  <div>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, margin: 0 }}>
+                      Backup Generator
+                    </h3>
+                    <p style={{ fontSize: 13, color: T.textMuted, margin: "2px 0 0" }}>
+                      {generatorRec.reason}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2 Option Selection */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {/* Option 1: Critical Load */}
+                  <label
                     style={{
-                      padding: 12,
-                      background: "rgba(16,185,129,0.1)",
-                      border: "1px solid rgba(16,185,129,0.2)",
-                      borderRadius: 8,
-                      fontSize: 13,
-                      color: "#6ee7b7",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "14px 16px",
+                      border: `2px solid ${selectedGeneratorOption === "critical" ? "#f97316" : "rgba(255,255,255,0.15)"}`,
+                      borderRadius: 10,
+                      background:
+                        selectedGeneratorOption === "critical"
+                          ? "rgba(249,115,22,0.12)"
+                          : "rgba(255,255,255,0.03)",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      boxShadow:
+                        selectedGeneratorOption === "critical"
+                          ? "0 0 0 3px rgba(249,115,22,0.1)"
+                          : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedGeneratorOption !== "critical") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                        e.currentTarget.style.borderColor = "rgba(249,115,22,0.3)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedGeneratorOption !== "critical") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                      }
                     }}
                   >
-                    • Solar: {solarRec.payback}yr payback
-                  </div>
-                )}
-                <div
-                  style={{
-                    padding: 12,
-                    background: "rgba(16,185,129,0.1)",
-                    border: "1px solid rgba(16,185,129,0.2)",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    color: "#6ee7b7",
-                  }}
-                >
-                  • BESS: ${Math.round(monthlyDemandCost * 0.7).toLocaleString()}/mo demand savings
-                </div>
-                {generatorRec && (
-                  <div
+                    <input
+                      type="radio"
+                      name="generator"
+                      checked={selectedGeneratorOption === "critical"}
+                      onChange={() => handleGeneratorSelection("critical")}
+                      style={{
+                        marginRight: 12,
+                        accentColor: "#f97316",
+                        width: 18,
+                        height: 18,
+                        cursor: "pointer",
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                          Critical Load
+                        </span>
+                        <span style={{ fontSize: 13, color: "#fb923c", fontWeight: 600 }}>
+                          {Math.round(generatorRec.targetLoad / 50) * 50} kW
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>
+                          ${Math.round((generatorRec.targetLoad * 700) / 1000).toLocaleString()}K
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.textSecondary }}>
+                          Essential systems
+                        </span>
+                      </div>
+                    </div>
+                  </label>
+
+                  {/* Option 2: Full Coverage */}
+                  <label
                     style={{
-                      padding: 12,
-                      background: "rgba(16,185,129,0.1)",
-                      border: "1px solid rgba(16,185,129,0.2)",
-                      borderRadius: 8,
-                      fontSize: 13,
-                      color: "#6ee7b7",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "14px 16px",
+                      border: `2px solid ${selectedGeneratorOption === "full" ? "#f97316" : "rgba(255,255,255,0.15)"}`,
+                      borderRadius: 10,
+                      background:
+                        selectedGeneratorOption === "full"
+                          ? "rgba(249,115,22,0.12)"
+                          : "rgba(255,255,255,0.03)",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      boxShadow:
+                        selectedGeneratorOption === "full"
+                          ? "0 0 0 3px rgba(249,115,22,0.1)"
+                          : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedGeneratorOption !== "full") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                        e.currentTarget.style.borderColor = "rgba(249,115,22,0.3)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedGeneratorOption !== "full") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                      }
                     }}
                   >
-                    • Backup: Avoid ${generatorRec.downtimeCost}/hr downtime
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+                    <input
+                      type="radio"
+                      name="generator"
+                      checked={selectedGeneratorOption === "full"}
+                      onChange={() => handleGeneratorSelection("full")}
+                      style={{
+                        marginRight: 12,
+                        accentColor: "#f97316",
+                        width: 18,
+                        height: 18,
+                        cursor: "pointer",
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                          Full Coverage
+                        </span>
+                        <span style={{ fontSize: 13, color: "#fb923c", fontWeight: 600 }}>
+                          {generatorRec.size.toLocaleString()} kW
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>
+                          ${Math.round((generatorRec.size * 700) / 1000).toLocaleString()}K
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.textSecondary }}>
+                          {generatorRec.coverage}% facility
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: "#fb923c" }}>⭐ Recommended</span>
+                      </div>
+                    </div>
+                  </label>
+                </div>
 
-        {/* RIGHT PANEL: Recommendations */}
-        <div style={{ display: "grid", gap: 20 }}>
-          {/* Battery Storage (Always Included) */}
-          <div
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(62,207,142,0.05) 0%, rgba(62,207,142,0.02) 100%)",
-              border: `2px solid ${T.accentBorder}`,
-              borderRadius: 16,
-              padding: 24,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "start",
-                justifyContent: "space-between",
-                marginBottom: 16,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div
                   style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 14,
-                    background: T.accentSoft,
-                    border: `2px solid ${T.accentBorder}`,
+                    marginTop: 12,
+                    padding: 10,
+                    background: "rgba(249,115,22,0.05)",
+                    border: "1px solid rgba(249,115,22,0.15)",
+                    borderRadius: 6,
+                    fontSize: 12,
+                    color: "#fb923c",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
+                    gap: 6,
                   }}
                 >
-                  <Battery style={{ width: 28, height: 28, color: T.accent }} />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: 22, fontWeight: 900, color: T.textPrimary, margin: 0 }}>
-                    Battery Storage
-                  </h3>
-                  <p style={{ fontSize: 14, color: T.accent, margin: "4px 0 0", fontWeight: 700 }}>
-                    ✓ Included in your quote
-                  </p>
+                  <Shield style={{ width: 14, height: 14, flexShrink: 0 }} />
+                  BESS provides instant transfer (&lt;16ms) • Generator handles extended outages
                 </div>
               </div>
+            )}
+
+            {/* EV Charging Recommendation */}
+            {evRec && (
               <div
                 style={{
-                  padding: "6px 12px",
-                  background: T.accentSoft,
-                  border: `1px solid ${T.accentBorder}`,
-                  borderRadius: 8,
-                  fontSize: 12,
-                  fontWeight: 800,
-                  color: T.accent,
+                  background: "rgba(255,255,255,0.02)",
+                  border: `1px solid ${selectedEVOption !== "none" ? "#06b6d4" : T.panelBorder}`,
+                  borderRadius: 12,
+                  padding: 20,
+                  transition: "all 0.2s ease",
                 }}
               >
-                REQUIRED
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                  <Zap style={{ width: 20, height: 20, color: "#22d3ee" }} />
+                  <div>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, margin: 0 }}>
+                      EV Charging Hub
+                    </h3>
+                    <p style={{ fontSize: 13, color: T.textMuted, margin: "2px 0 0" }}>
+                      {evRec.reason}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2 Option Selection */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {/* Option 1: Basic (Level 2 Only) */}
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "14px 16px",
+                      border: `2px solid ${selectedEVOption === "basic" ? "#06b6d4" : "rgba(255,255,255,0.15)"}`,
+                      borderRadius: 10,
+                      background:
+                        selectedEVOption === "basic"
+                          ? "rgba(6,182,212,0.12)"
+                          : "rgba(255,255,255,0.03)",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      boxShadow:
+                        selectedEVOption === "basic" ? "0 0 0 3px rgba(6,182,212,0.1)" : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedEVOption !== "basic") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                        e.currentTarget.style.borderColor = "rgba(6,182,212,0.3)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedEVOption !== "basic") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                      }
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="ev"
+                      checked={selectedEVOption === "basic"}
+                      onChange={() => handleEVSelection("basic")}
+                      style={{
+                        marginRight: 12,
+                        accentColor: "#06b6d4",
+                        width: 18,
+                        height: 18,
+                        cursor: "pointer",
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                          Level 2 Only
+                        </span>
+                        <span style={{ fontSize: 13, color: "#22d3ee", fontWeight: 600 }}>
+                          12 chargers • 86 kW
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>$48K</span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.success }}>$35K-60K/yr revenue</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  {/* Option 2: Mixed (L2 + DCFC) */}
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "14px 16px",
+                      border: `2px solid ${selectedEVOption === "mixed" ? "#06b6d4" : "rgba(255,255,255,0.15)"}`,
+                      borderRadius: 10,
+                      background:
+                        selectedEVOption === "mixed"
+                          ? "rgba(6,182,212,0.12)"
+                          : "rgba(255,255,255,0.03)",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      boxShadow:
+                        selectedEVOption === "mixed" ? "0 0 0 3px rgba(6,182,212,0.1)" : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedEVOption !== "mixed") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                        e.currentTarget.style.borderColor = "rgba(6,182,212,0.3)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedEVOption !== "mixed") {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                      }
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="ev"
+                      checked={selectedEVOption === "mixed"}
+                      onChange={() => handleEVSelection("mixed")}
+                      style={{
+                        marginRight: 12,
+                        accentColor: "#06b6d4",
+                        width: 18,
+                        height: 18,
+                        cursor: "pointer",
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
+                          Mixed Fast Charging
+                        </span>
+                        <span style={{ fontSize: 13, color: "#22d3ee", fontWeight: 600 }}>
+                          12 L2 + 8 DCFC • {Math.round(evRec.totalKW).toLocaleString()} kW
+                        </span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>$1.25M</span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: T.success }}>$45K-120K/yr</span>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
+                        <span style={{ fontSize: 12, color: "#22d3ee" }}>⭐ Recommended</span>
+                      </div>
+                    </div>
+                  </label>
+                </div>
               </div>
-            </div>
-            <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.6, margin: 0 }}>
-              MagicFit will size your battery system based on your peak demand and energy goals in
-              the next step.
-            </p>
+            )}
           </div>
-
-          {/* Solar Recommendation */}
-          {solarRec && (
-            <div
-              style={{
-                background: "rgba(255,255,255,0.02)",
-                border: `1px solid ${selectedSolarOption !== "none" ? "#f59e0b" : T.panelBorder}`,
-                borderRadius: 12,
-                padding: 20,
-                transition: "all 0.2s ease",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <Sun style={{ width: 20, height: 20, color: "#fbbf24" }} />
-                <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, margin: 0 }}>
-                    Solar PV Array
-                  </h3>
-                  <p style={{ fontSize: 13, color: T.textMuted, margin: "2px 0 0" }}>
-                    {solarRec.reason}
-                  </p>
-                </div>
-              </div>
-
-              {/* 2 Option Selection */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {/* Option 1: Standard */}
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "14px 16px",
-                    border: `2px solid ${selectedSolarOption === "standard" ? "#f59e0b" : "rgba(255,255,255,0.15)"}`,
-                    borderRadius: 10,
-                    background:
-                      selectedSolarOption === "standard"
-                        ? "rgba(251,191,36,0.12)"
-                        : "rgba(255,255,255,0.03)",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow:
-                      selectedSolarOption === "standard"
-                        ? "0 0 0 3px rgba(251,191,36,0.1)"
-                        : "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedSolarOption !== "standard") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                      e.currentTarget.style.borderColor = "rgba(251,191,36,0.3)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedSolarOption !== "standard") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-                    }
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="solar"
-                    checked={selectedSolarOption === "standard"}
-                    onChange={() => handleSolarSelection("standard")}
-                    style={{
-                      marginRight: 12,
-                      accentColor: "#f59e0b",
-                      width: 18,
-                      height: 18,
-                      cursor: "pointer",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
-                        Standard
-                      </span>
-                      <span style={{ fontSize: 13, color: "#fbbf24", fontWeight: 600 }}>
-                        {solarRec.minSize.toLocaleString()} kW
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>
-                        ${Math.round((solarRec.minSize * 850) / 1000).toLocaleString()}K
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.success }}>
-                        {(
-                          (solarRec.minSize * 850) /
-                          (solarRec.minSize * 1500 * electricityRate)
-                        ).toFixed(1)}
-                        yr payback
-                      </span>
-                    </div>
-                  </div>
-                </label>
-
-                {/* Option 2: Extended */}
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "14px 16px",
-                    border: `2px solid ${selectedSolarOption === "extended" ? "#f59e0b" : "rgba(255,255,255,0.15)"}`,
-                    borderRadius: 10,
-                    background:
-                      selectedSolarOption === "extended"
-                        ? "rgba(251,191,36,0.12)"
-                        : "rgba(255,255,255,0.03)",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow:
-                      selectedSolarOption === "extended"
-                        ? "0 0 0 3px rgba(251,191,36,0.1)"
-                        : "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedSolarOption !== "extended") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                      e.currentTarget.style.borderColor = "rgba(251,191,36,0.3)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedSolarOption !== "extended") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-                    }
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="solar"
-                    checked={selectedSolarOption === "extended"}
-                    onChange={() => handleSolarSelection("extended")}
-                    style={{
-                      marginRight: 12,
-                      accentColor: "#f59e0b",
-                      width: 18,
-                      height: 18,
-                      cursor: "pointer",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
-                        Extended
-                      </span>
-                      <span style={{ fontSize: 13, color: "#fbbf24", fontWeight: 600 }}>
-                        {solarRec.size.toLocaleString()} kW
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>
-                        ${Math.round((solarRec.size * 850) / 1000).toLocaleString()}K
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.success }}>
-                        {solarRec.payback} yrs payback
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: "#fbbf24" }}>⭐ Recommended</span>
-                    </div>
-                  </div>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* Generator Recommendation */}
-          {generatorRec && (
-            <div
-              style={{
-                background: "rgba(255,255,255,0.02)",
-                border: `1px solid ${selectedGeneratorOption !== "none" ? "#f97316" : T.panelBorder}`,
-                borderRadius: 12,
-                padding: 20,
-                transition: "all 0.2s ease",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <Fuel style={{ width: 20, height: 20, color: "#fb923c" }} />
-                <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, margin: 0 }}>
-                    Backup Generator
-                  </h3>
-                  <p style={{ fontSize: 13, color: T.textMuted, margin: "2px 0 0" }}>
-                    {generatorRec.reason}
-                  </p>
-                </div>
-              </div>
-
-              {/* 2 Option Selection */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {/* Option 1: Critical Load */}
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "14px 16px",
-                    border: `2px solid ${selectedGeneratorOption === "critical" ? "#f97316" : "rgba(255,255,255,0.15)"}`,
-                    borderRadius: 10,
-                    background:
-                      selectedGeneratorOption === "critical"
-                        ? "rgba(249,115,22,0.12)"
-                        : "rgba(255,255,255,0.03)",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow:
-                      selectedGeneratorOption === "critical"
-                        ? "0 0 0 3px rgba(249,115,22,0.1)"
-                        : "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedGeneratorOption !== "critical") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                      e.currentTarget.style.borderColor = "rgba(249,115,22,0.3)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedGeneratorOption !== "critical") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-                    }
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="generator"
-                    checked={selectedGeneratorOption === "critical"}
-                    onChange={() => handleGeneratorSelection("critical")}
-                    style={{
-                      marginRight: 12,
-                      accentColor: "#f97316",
-                      width: 18,
-                      height: 18,
-                      cursor: "pointer",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
-                        Critical Load
-                      </span>
-                      <span style={{ fontSize: 13, color: "#fb923c", fontWeight: 600 }}>
-                        {Math.round(generatorRec.targetLoad / 50) * 50} kW
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>
-                        ${Math.round((generatorRec.targetLoad * 700) / 1000).toLocaleString()}K
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.textSecondary }}>
-                        Essential systems
-                      </span>
-                    </div>
-                  </div>
-                </label>
-
-                {/* Option 2: Full Coverage */}
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "14px 16px",
-                    border: `2px solid ${selectedGeneratorOption === "full" ? "#f97316" : "rgba(255,255,255,0.15)"}`,
-                    borderRadius: 10,
-                    background:
-                      selectedGeneratorOption === "full"
-                        ? "rgba(249,115,22,0.12)"
-                        : "rgba(255,255,255,0.03)",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow:
-                      selectedGeneratorOption === "full"
-                        ? "0 0 0 3px rgba(249,115,22,0.1)"
-                        : "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedGeneratorOption !== "full") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                      e.currentTarget.style.borderColor = "rgba(249,115,22,0.3)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedGeneratorOption !== "full") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-                    }
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="generator"
-                    checked={selectedGeneratorOption === "full"}
-                    onChange={() => handleGeneratorSelection("full")}
-                    style={{
-                      marginRight: 12,
-                      accentColor: "#f97316",
-                      width: 18,
-                      height: 18,
-                      cursor: "pointer",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
-                        Full Coverage
-                      </span>
-                      <span style={{ fontSize: 13, color: "#fb923c", fontWeight: 600 }}>
-                        {generatorRec.size.toLocaleString()} kW
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>
-                        ${Math.round((generatorRec.size * 700) / 1000).toLocaleString()}K
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.textSecondary }}>
-                        {generatorRec.coverage}% facility
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: "#fb923c" }}>⭐ Recommended</span>
-                    </div>
-                  </div>
-                </label>
-              </div>
-
-              <div
-                style={{
-                  marginTop: 12,
-                  padding: 10,
-                  background: "rgba(249,115,22,0.05)",
-                  border: "1px solid rgba(249,115,22,0.15)",
-                  borderRadius: 6,
-                  fontSize: 12,
-                  color: "#fb923c",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-              >
-                <Shield style={{ width: 14, height: 14, flexShrink: 0 }} />
-                BESS provides instant transfer (&lt;16ms) • Generator handles extended outages
-              </div>
-            </div>
-          )}
-
-          {/* EV Charging Recommendation */}
-          {evRec && (
-            <div
-              style={{
-                background: "rgba(255,255,255,0.02)",
-                border: `1px solid ${selectedEVOption !== "none" ? "#06b6d4" : T.panelBorder}`,
-                borderRadius: 12,
-                padding: 20,
-                transition: "all 0.2s ease",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <Zap style={{ width: 20, height: 20, color: "#22d3ee" }} />
-                <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, margin: 0 }}>
-                    EV Charging Hub
-                  </h3>
-                  <p style={{ fontSize: 13, color: T.textMuted, margin: "2px 0 0" }}>
-                    {evRec.reason}
-                  </p>
-                </div>
-              </div>
-
-              {/* 2 Option Selection */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {/* Option 1: Basic (Level 2 Only) */}
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "14px 16px",
-                    border: `2px solid ${selectedEVOption === "basic" ? "#06b6d4" : "rgba(255,255,255,0.15)"}`,
-                    borderRadius: 10,
-                    background:
-                      selectedEVOption === "basic"
-                        ? "rgba(6,182,212,0.12)"
-                        : "rgba(255,255,255,0.03)",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow:
-                      selectedEVOption === "basic" ? "0 0 0 3px rgba(6,182,212,0.1)" : "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedEVOption !== "basic") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                      e.currentTarget.style.borderColor = "rgba(6,182,212,0.3)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedEVOption !== "basic") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-                    }
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="ev"
-                    checked={selectedEVOption === "basic"}
-                    onChange={() => handleEVSelection("basic")}
-                    style={{
-                      marginRight: 12,
-                      accentColor: "#06b6d4",
-                      width: 18,
-                      height: 18,
-                      cursor: "pointer",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
-                        Level 2 Only
-                      </span>
-                      <span style={{ fontSize: 13, color: "#22d3ee", fontWeight: 600 }}>
-                        12 chargers • 86 kW
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>$48K</span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.success }}>$35K-60K/yr revenue</span>
-                    </div>
-                  </div>
-                </label>
-
-                {/* Option 2: Mixed (L2 + DCFC) */}
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "14px 16px",
-                    border: `2px solid ${selectedEVOption === "mixed" ? "#06b6d4" : "rgba(255,255,255,0.15)"}`,
-                    borderRadius: 10,
-                    background:
-                      selectedEVOption === "mixed"
-                        ? "rgba(6,182,212,0.12)"
-                        : "rgba(255,255,255,0.03)",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow:
-                      selectedEVOption === "mixed" ? "0 0 0 3px rgba(6,182,212,0.1)" : "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedEVOption !== "mixed") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                      e.currentTarget.style.borderColor = "rgba(6,182,212,0.3)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedEVOption !== "mixed") {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-                    }
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="ev"
-                    checked={selectedEVOption === "mixed"}
-                    onChange={() => handleEVSelection("mixed")}
-                    style={{
-                      marginRight: 12,
-                      accentColor: "#06b6d4",
-                      width: 18,
-                      height: 18,
-                      cursor: "pointer",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>
-                        Mixed Fast Charging
-                      </span>
-                      <span style={{ fontSize: 13, color: "#22d3ee", fontWeight: 600 }}>
-                        12 L2 + 8 DCFC • {Math.round(evRec.totalKW).toLocaleString()} kW
-                      </span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>$1.25M</span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: T.success }}>$45K-120K/yr</span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>•</span>
-                      <span style={{ fontSize: 12, color: "#22d3ee" }}>⭐ Recommended</span>
-                    </div>
-                  </div>
-                </label>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* Continue Button */}
+      {/* Navigation Buttons */}
       <div
         style={{
           marginTop: 40,
@@ -1070,34 +1101,95 @@ export default function Step3_5V8Enhanced({ state, actions }: Props) {
           borderTop: `1px solid ${T.panelBorder}`,
           display: "flex",
           justifyContent: "center",
+          gap: 16,
         }}
       >
-        <button
-          onClick={() => actions.goToStep(5)}
-          style={{
-            height: 56,
-            padding: "0 48px",
-            borderRadius: 14,
-            border: "none",
-            background: T.accent,
-            color: "#000",
-            fontSize: 16,
-            fontWeight: 900,
-            cursor: "pointer",
-            boxShadow: "0 4px 20px rgba(62,207,142,0.3)",
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.boxShadow = "0 8px 30px rgba(62,207,142,0.4)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 4px 20px rgba(62,207,142,0.3)";
-          }}
-        >
-          Continue to MagicFit Sizing →
-        </button>
+        {/* Mobile: Show "Back" button on sub-step 2 */}
+        {isMobile && mobileStep === 2 && (
+          <button
+            onClick={() => setMobileStep(1)}
+            style={{
+              height: 56,
+              padding: "0 32px",
+              borderRadius: 14,
+              border: `1px solid ${T.panelBorder}`,
+              background: "rgba(255,255,255,0.05)",
+              color: T.textPrimary,
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+              e.currentTarget.style.borderColor = T.accent;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+              e.currentTarget.style.borderColor = T.panelBorder;
+            }}
+          >
+            ← Back to Profile
+          </button>
+        )}
+
+        {/* Mobile Sub-Step 1: Confirm & Continue to Recommendations */}
+        {isMobile && mobileStep === 1 ? (
+          <button
+            onClick={() => setMobileStep(2)}
+            style={{
+              height: 56,
+              padding: "0 48px",
+              borderRadius: 14,
+              border: "none",
+              background: T.accent,
+              color: "#000",
+              fontSize: 16,
+              fontWeight: 900,
+              cursor: "pointer",
+              boxShadow: "0 4px 20px rgba(62,207,142,0.3)",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 8px 30px rgba(62,207,142,0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 20px rgba(62,207,142,0.3)";
+            }}
+          >
+            ✓ Confirm & Continue →
+          </button>
+        ) : (
+          /* Desktop OR Mobile Sub-Step 2: Continue to MagicFit */
+          <button
+            onClick={() => actions.goToStep(5)}
+            style={{
+              height: 56,
+              padding: "0 48px",
+              borderRadius: 14,
+              border: "none",
+              background: T.accent,
+              color: "#000",
+              fontSize: 16,
+              fontWeight: 900,
+              cursor: "pointer",
+              boxShadow: "0 4px 20px rgba(62,207,142,0.3)",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 8px 30px rgba(62,207,142,0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 20px rgba(62,207,142,0.3)";
+            }}
+          >
+            Continue to MagicFit Sizing →
+          </button>
+        )}
       </div>
     </div>
   );
