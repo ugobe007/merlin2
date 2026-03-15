@@ -1,8 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 export default function ElCarWashLanding() {
-  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
@@ -347,7 +345,7 @@ export default function ElCarWashLanding() {
                 📊 Download Full Quotes
               </button>
               <button
-                onClick={() => navigate('/wizard-v8')}
+                onClick={() => window.location.href = '/wizard-v8'}
                 className="px-8 py-4 bg-gray-700 text-white text-lg font-semibold rounded-lg hover:bg-gray-600 transition"
               >
                 🧮 Try Quote Tool
