@@ -3901,7 +3901,9 @@ export function calculateDatacenterPower(
     powerKW = 2000; // 2 MW default
     method = "Default 2MW datacenter";
     if (import.meta.env.DEV) {
-      console.log("⚠️ [calculateDatacenterPower] USING DEFAULT - No itLoadKW or rackCount provided!");
+      console.log(
+        "⚠️ [calculateDatacenterPower] USING DEFAULT - No itLoadKW or rackCount provided!"
+      );
     }
   }
 
@@ -5750,9 +5752,12 @@ export function calculateCarWashPowerFromEquipment(
   // Scale benchmarks for independent bays (singleBayAutomatic with multiple bays)
   // Tunnel types: benchmarks are per-tunnel (bayCount just extends the tunnel)
   const facilityPeak = facilityType.peak;
-  const bayScale = (washType === "singleBayAutomatic" && bayCount > 1) ? bayCount :
-                   (washType === "multiBaySelfService") ? 1 :
-                   Math.sqrt(Math.max(1, bayCount)); // Tunnel: sqrt scaling
+  const bayScale =
+    washType === "singleBayAutomatic" && bayCount > 1
+      ? bayCount
+      : washType === "multiBaySelfService"
+        ? 1
+        : Math.sqrt(Math.max(1, bayCount)); // Tunnel: sqrt scaling
   const scaledMin = facilityPeak.min * bayScale;
   const scaledMax = facilityPeak.max * bayScale;
   const validatedPeakKW = Math.max(scaledMin, Math.min(scaledMax, peakDemandKW));
@@ -5961,15 +5966,32 @@ export function calculateUseCasePower(
 
     case "hotel":
     case "hotel-hospitality": {
-      // Support multiple field names: roomCount, numberOfRooms, facilitySize (from wizard)
-      // BUG FIX: wizard passes facilitySize for all industries, so accept it for hotels too
+      // Support multiple field names: roomCount, numberOfRooms, numRooms, facilitySize (from wizard)
+      // BUG FIX #1: wizard passes facilitySize for all industries, so accept it for hotels too
+      // BUG FIX #2 (March 15, 2026): V8 wizard uses 'numRooms' from hotel-questions-complete.config
       const hotelRooms =
         parseInt(
-          useCaseData.roomCount ||
+          useCaseData.numRooms || // V8 wizard field name ← FIX
+            useCaseData.roomCount ||
             useCaseData.numberOfRooms ||
             useCaseData.facilitySize || // Wizard uses facilitySize generically
             useCaseData.rooms
         ) || 150; // DB default: 150 rooms
+
+      if (import.meta.env.DEV) {
+        console.log("🏨 [calculateHotelPower] SSOT calculation:", {
+          inputFields: {
+            numRooms: useCaseData.numRooms,
+            roomCount: useCaseData.roomCount,
+            numberOfRooms: useCaseData.numberOfRooms,
+            facilitySize: useCaseData.facilitySize,
+            rooms: useCaseData.rooms,
+          },
+          resolvedValue: hotelRooms,
+          allAnswers: useCaseData,
+        });
+      }
+
       return calculateHotelPower(hotelRooms);
     }
 
@@ -6157,7 +6179,9 @@ export function calculateUseCasePower(
         useCaseData.numberOfLevel2Chargers != null ||
         useCaseData.numberOfDCFastChargers != null ||
         useCaseData.numberOfLevel1Chargers != null ||
-        evConfig.level1Count > 0 || evConfig.level2Count > 0 || evConfig.dcFastCount > 0;
+        evConfig.level1Count > 0 ||
+        evConfig.level2Count > 0 ||
+        evConfig.dcFastCount > 0;
 
       const evLevel1 = evConfig.level1Count;
       const evLevel2 = hasAnyChargerInput ? evConfig.level2Count : 12; // DB default: 12
@@ -6308,23 +6332,59 @@ export function calculateUseCasePower(
         parseInt(useCaseData.studentCount || useCaseData.enrollment) || 15000
       );
 
-    case "car-wash":
+    case "car-wash": {
       // Database uses 'bayCount', 'carWashType' (Dec 2025), legacy: washBays, washType
+      // V8 wizard uses 'tunnelOrBayCount' and 'facilityType' (from carwash-questions-complete.config)
       // DB default: 4 bays, default type: tunnel (most common for BESS customers)
-      return calculateCarWashPower(
+      const carWashBays =
         parseInt(
-          useCaseData.bayCount ||
+          useCaseData.tunnelOrBayCount || // V8 wizard field name ← FIX March 15, 2026
+            useCaseData.bayCount ||
             useCaseData.washBays ||
             useCaseData.numBays ||
             useCaseData.numberOfBays
-        ) || 4,
-        useCaseData.carWashType || useCaseData.washType || "tunnel",
-        {
-          hasVacuums: useCaseData.hasVacuums !== false,
-          hasDryers: useCaseData.hasDryers !== false,
-          dailyVehicles: parseInt(useCaseData.dailyVehicles || useCaseData.carsPerDay) || 200,
+        ) || 4;
+
+      // Map V8 facilityType to SSOT washType
+      // V8: express_tunnel, mini_tunnel, in_bay_automatic, self_serve
+      // SSOT: tunnel, automatic, self-service
+      let washType = useCaseData.carWashType || useCaseData.washType || "tunnel";
+      if (useCaseData.facilityType) {
+        switch (useCaseData.facilityType) {
+          case "express_tunnel":
+          case "mini_tunnel":
+            washType = "tunnel";
+            break;
+          case "in_bay_automatic":
+            washType = "automatic";
+            break;
+          case "self_serve":
+            washType = "self-service";
+            break;
         }
-      );
+      }
+
+      if (import.meta.env.DEV) {
+        console.log("🚗 [calculateCarWashPower] SSOT calculation:", {
+          inputFields: {
+            tunnelOrBayCount: useCaseData.tunnelOrBayCount,
+            bayCount: useCaseData.bayCount,
+            facilityType: useCaseData.facilityType,
+            carWashType: useCaseData.carWashType,
+          },
+          resolvedValues: {
+            bays: carWashBays,
+            washType: washType,
+          },
+        });
+      }
+
+      return calculateCarWashPower(carWashBays, washType, {
+        hasVacuums: useCaseData.hasVacuums !== false,
+        hasDryers: useCaseData.hasDryers !== false,
+        dailyVehicles: parseInt(useCaseData.dailyVehicles || useCaseData.carsPerDay) || 200,
+      });
+    }
 
     case "gas-station":
     case "fuel-station": {
@@ -6864,8 +6924,13 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     typicalCanopyAreaSqFt: 1800,
     canopyPotentialKW: 23,
     totalRealisticSolarKW: 60,
-    sources: ['ICA 2024 Industry Study', 'Professional Carwash & Detailing Magazine', 'NREL Rooftop PV'],
-    notes: 'Vineet confirmed: max 30-40 kW rooftop + 20-25 kW canopy. Total realistic ~60 kW for automated wash.',
+    sources: [
+      "ICA 2024 Industry Study",
+      "Professional Carwash & Detailing Magazine",
+      "NREL Rooftop PV",
+    ],
+    notes:
+      "Vineet confirmed: max 30-40 kW rooftop + 20-25 kW canopy. Total realistic ~60 kW for automated wash.",
   },
   hotel: {
     typicalFootprintSqFt: 20000,
@@ -6876,32 +6941,35 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     typicalCanopyAreaSqFt: 10000,
     canopyPotentialKW: 120,
     totalRealisticSolarKW: 225,
-    sources: ['ASHRAE 90.1', 'CBECS 2018', 'NREL Rooftop PV'],
-    notes: 'Multi-story reduces roof/floor ratio. HVAC, pools, elevator penthouses limit roof. Guest parking canopy + porte-cochère common. Large resorts (50K sqft footprint) scale proportionally.',
+    sources: ["ASHRAE 90.1", "CBECS 2018", "NREL Rooftop PV"],
+    notes:
+      "Multi-story reduces roof/floor ratio. HVAC, pools, elevator penthouses limit roof. Guest parking canopy + porte-cochère common. Large resorts (50K sqft footprint) scale proportionally.",
   },
   office: {
     typicalFootprintSqFt: 15000,
     footprintRange: [5000, 50000],
-    usableRoofPercent: 0.40,
+    usableRoofPercent: 0.4,
     maxRooftopSolarKW: 90,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 8000,
     canopyPotentialKW: 96,
     totalRealisticSolarKW: 186,
-    sources: ['CBECS 2018', 'NREL Rooftop PV', 'ASHRAE 90.1'],
-    notes: 'Multi-story buildings have large floor area but limited roof. Employee parking canopy helps.',
+    sources: ["CBECS 2018", "NREL Rooftop PV", "ASHRAE 90.1"],
+    notes:
+      "Multi-story buildings have large floor area but limited roof. Employee parking canopy helps.",
   },
   data_center: {
     typicalFootprintSqFt: 40000,
     footprintRange: [15000, 100000],
-    usableRoofPercent: 0.30,
+    usableRoofPercent: 0.3,
     maxRooftopSolarKW: 180,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 10000,
     canopyPotentialKW: 120,
     totalRealisticSolarKW: 300,
-    sources: ['Uptime Institute', 'ASHRAE TC 9.9', 'NREL Rooftop PV'],
-    notes: 'Heavy HVAC units, generators, switchgear on roof. Solar covers <5% of typical load. Ground-mount preferred for meaningful renewable offset; campus designs may support larger arrays.',
+    sources: ["Uptime Institute", "ASHRAE TC 9.9", "NREL Rooftop PV"],
+    notes:
+      "Heavy HVAC units, generators, switchgear on roof. Solar covers <5% of typical load. Ground-mount preferred for meaningful renewable offset; campus designs may support larger arrays.",
   },
   hospital: {
     typicalFootprintSqFt: 80000,
@@ -6912,44 +6980,44 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     typicalCanopyAreaSqFt: 15000,
     canopyPotentialKW: 180,
     totalRealisticSolarKW: 480,
-    sources: ['NEC 517', 'NFPA 99', 'NREL Rooftop PV'],
-    notes: 'Helipad, cooling towers, exhaust stacks, medical gas vents severely limit usable roof.',
+    sources: ["NEC 517", "NFPA 99", "NREL Rooftop PV"],
+    notes: "Helipad, cooling towers, exhaust stacks, medical gas vents severely limit usable roof.",
   },
   manufacturing: {
     typicalFootprintSqFt: 75000,
     footprintRange: [20000, 200000],
-    usableRoofPercent: 0.60,
+    usableRoofPercent: 0.6,
     maxRooftopSolarKW: 675,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 12000,
     canopyPotentialKW: 144,
     totalRealisticSolarKW: 819,
-    sources: ['EIA MECS 2018', 'NREL Rooftop PV', 'SEIA Solar Means Business'],
-    notes: 'Large flat roofs are excellent. Some exhaust/crane systems reduce usable area.',
+    sources: ["EIA MECS 2018", "NREL Rooftop PV", "SEIA Solar Means Business"],
+    notes: "Large flat roofs are excellent. Some exhaust/crane systems reduce usable area.",
   },
   retail: {
     typicalFootprintSqFt: 50000,
     footprintRange: [10000, 150000],
-    usableRoofPercent: 0.70,
+    usableRoofPercent: 0.7,
     maxRooftopSolarKW: 525,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 20000,
     canopyPotentialKW: 240,
     totalRealisticSolarKW: 765,
-    sources: ['CBECS 2018', 'SEIA Solar Means Business 2024', 'NREL Rooftop PV'],
-    notes: 'Big box retailers have cleanest roofs. Walmart, Target, IKEA leading commercial solar.',
+    sources: ["CBECS 2018", "SEIA Solar Means Business 2024", "NREL Rooftop PV"],
+    notes: "Big box retailers have cleanest roofs. Walmart, Target, IKEA leading commercial solar.",
   },
   warehouse: {
     typicalFootprintSqFt: 100000,
     footprintRange: [30000, 500000],
-    usableRoofPercent: 0.80,
+    usableRoofPercent: 0.8,
     maxRooftopSolarKW: 1200,
     canopyApplicable: false,
     typicalCanopyAreaSqFt: 5000,
     canopyPotentialKW: 60,
     totalRealisticSolarKW: 1260,
-    sources: ['CBECS 2018', 'NREL Rooftop PV', 'Prologis Solar Portfolio'],
-    notes: 'Best roof-to-load ratio in commercial. Prologis: 500+ MW deployed on warehouse roofs.',
+    sources: ["CBECS 2018", "NREL Rooftop PV", "Prologis Solar Portfolio"],
+    notes: "Best roof-to-load ratio in commercial. Prologis: 500+ MW deployed on warehouse roofs.",
   },
   restaurant: {
     typicalFootprintSqFt: 3500,
@@ -6960,8 +7028,9 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     typicalCanopyAreaSqFt: 1200,
     canopyPotentialKW: 14,
     totalRealisticSolarKW: 38,
-    sources: ['ASHRAE 90.1', 'NREL Rooftop PV'],
-    notes: 'Kitchen exhaust hoods, grease traps, walk-in cooler condensers limit roof. Patio canopy helps.',
+    sources: ["ASHRAE 90.1", "NREL Rooftop PV"],
+    notes:
+      "Kitchen exhaust hoods, grease traps, walk-in cooler condensers limit roof. Patio canopy helps.",
   },
   gas_station: {
     typicalFootprintSqFt: 3000,
@@ -6972,68 +7041,75 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     typicalCanopyAreaSqFt: 3000,
     canopyPotentialKW: 36,
     totalRealisticSolarKW: 61,
-    sources: ['EIA', 'NREL Rooftop PV'],
-    notes: 'Pump canopy is key solar opportunity. Small convenience store roof is secondary.',
+    sources: ["EIA", "NREL Rooftop PV"],
+    notes: "Pump canopy is key solar opportunity. Small convenience store roof is secondary.",
   },
   truck_stop: {
     typicalFootprintSqFt: 12000,
     footprintRange: [6000, 20000],
-    usableRoofPercent: 0.40,
+    usableRoofPercent: 0.4,
     maxRooftopSolarKW: 72,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 18000,
     canopyPotentialKW: 216,
     totalRealisticSolarKW: 288,
-    sources: ['NATSO/SIGMA Travel Plaza Guide', 'NACS Convenience Store Industry', 'DOE AFDC', 'NREL Rooftop PV'],
-    notes: 'Large single-story c-store (8-15K sqft) with flat commercial roof. Fuel island canopy (~6K sqft diesel + 3K sqft gas) is primary solar opportunity. Truck parking canopy viable but requires 14ft+ clearance for semis. Car parking + fuel canopy = ~18K sqft realistic canopy area.',
+    sources: [
+      "NATSO/SIGMA Travel Plaza Guide",
+      "NACS Convenience Store Industry",
+      "DOE AFDC",
+      "NREL Rooftop PV",
+    ],
+    notes:
+      "Large single-story c-store (8-15K sqft) with flat commercial roof. Fuel island canopy (~6K sqft diesel + 3K sqft gas) is primary solar opportunity. Truck parking canopy viable but requires 14ft+ clearance for semis. Car parking + fuel canopy = ~18K sqft realistic canopy area.",
   },
   ev_charging: {
     typicalFootprintSqFt: 2000,
     footprintRange: [500, 5000],
-    usableRoofPercent: 0.40,
+    usableRoofPercent: 0.4,
     maxRooftopSolarKW: 12,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 8000,
     canopyPotentialKW: 96,
     totalRealisticSolarKW: 108,
-    sources: ['SAE J1772', 'NREL Solar-EV Integration', 'DOE Vehicle Technologies'],
-    notes: 'Canopy is PRIMARY solar source. Building roof is minimal. Solar canopy + EV is ideal combo.',
+    sources: ["SAE J1772", "NREL Solar-EV Integration", "DOE Vehicle Technologies"],
+    notes:
+      "Canopy is PRIMARY solar source. Building roof is minimal. Solar canopy + EV is ideal combo.",
   },
   college: {
     typicalFootprintSqFt: 50000,
     footprintRange: [20000, 200000],
-    usableRoofPercent: 0.40,
+    usableRoofPercent: 0.4,
     maxRooftopSolarKW: 300,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 25000,
     canopyPotentialKW: 300,
     totalRealisticSolarKW: 600,
-    sources: ['CBECS 2018', 'AASHE STARS', 'NREL Rooftop PV'],
-    notes: 'Multiple buildings spread area. Parking lots provide large canopy opportunity.',
+    sources: ["CBECS 2018", "AASHE STARS", "NREL Rooftop PV"],
+    notes: "Multiple buildings spread area. Parking lots provide large canopy opportunity.",
   },
   casino: {
     typicalFootprintSqFt: 120000,
     footprintRange: [50000, 300000],
-    usableRoofPercent: 0.50,
+    usableRoofPercent: 0.5,
     maxRooftopSolarKW: 900,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 30000,
     canopyPotentialKW: 360,
     totalRealisticSolarKW: 1260,
-    sources: ['ASHRAE 90.1', 'NREL Rooftop PV'],
-    notes: 'Large buildings with significant HVAC. Massive parking structures = canopy goldmine.',
+    sources: ["ASHRAE 90.1", "NREL Rooftop PV"],
+    notes: "Large buildings with significant HVAC. Massive parking structures = canopy goldmine.",
   },
   apartment: {
     typicalFootprintSqFt: 12000,
     footprintRange: [5000, 30000],
-    usableRoofPercent: 0.30,
+    usableRoofPercent: 0.3,
     maxRooftopSolarKW: 54,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 5000,
     canopyPotentialKW: 60,
     totalRealisticSolarKW: 114,
-    sources: ['CBECS 2018', 'NREL Rooftop PV'],
-    notes: 'Multi-story severely limits roof per unit. Parking canopy with EV charging is key.',
+    sources: ["CBECS 2018", "NREL Rooftop PV"],
+    notes: "Multi-story severely limits roof per unit. Parking canopy with EV charging is key.",
   },
   cold_storage: {
     typicalFootprintSqFt: 60000,
@@ -7044,8 +7120,8 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     typicalCanopyAreaSqFt: 5000,
     canopyPotentialKW: 60,
     totalRealisticSolarKW: 735,
-    sources: ['CBECS 2018', 'NREL Rooftop PV'],
-    notes: 'Large flat roofs similar to warehouse. Insulated roof panels can support solar well.',
+    sources: ["CBECS 2018", "NREL Rooftop PV"],
+    notes: "Large flat roofs similar to warehouse. Insulated roof panels can support solar well.",
   },
   indoor_farm: {
     typicalFootprintSqFt: 40000,
@@ -7056,56 +7132,58 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     typicalCanopyAreaSqFt: 2000,
     canopyPotentialKW: 24,
     totalRealisticSolarKW: 174,
-    sources: ['USDA CEA Research', 'NREL Rooftop PV'],
-    notes: 'Some facilities need translucent/glass roofs for supplemental light. Limited solar area.',
+    sources: ["USDA CEA Research", "NREL Rooftop PV"],
+    notes:
+      "Some facilities need translucent/glass roofs for supplemental light. Limited solar area.",
   },
   airport: {
     typicalFootprintSqFt: 200000,
     footprintRange: [50000, 1000000],
-    usableRoofPercent: 0.20,
+    usableRoofPercent: 0.2,
     maxRooftopSolarKW: 600,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 50000,
     canopyPotentialKW: 600,
     totalRealisticSolarKW: 1200,
-    sources: ['FAA Advisory Circular', 'NREL Airport Solar', 'DEN 4MW case study'],
-    notes: 'Complex roofs, glare restrictions near runways. Massive parking for canopy. Denver has 4 MW.',
+    sources: ["FAA Advisory Circular", "NREL Airport Solar", "DEN 4MW case study"],
+    notes:
+      "Complex roofs, glare restrictions near runways. Massive parking for canopy. Denver has 4 MW.",
   },
   government: {
     typicalFootprintSqFt: 30000,
     footprintRange: [10000, 100000],
-    usableRoofPercent: 0.40,
+    usableRoofPercent: 0.4,
     maxRooftopSolarKW: 180,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 10000,
     canopyPotentialKW: 120,
     totalRealisticSolarKW: 300,
-    sources: ['EO 14057 Net-Zero by 2050', 'GSA Green Building', 'NREL Rooftop PV'],
-    notes: 'Federal mandates drive adoption. Historic buildings may have restrictions.',
+    sources: ["EO 14057 Net-Zero by 2050", "GSA Green Building", "NREL Rooftop PV"],
+    notes: "Federal mandates drive adoption. Historic buildings may have restrictions.",
   },
   residential: {
     typicalFootprintSqFt: 2000,
     footprintRange: [1000, 4000],
-    usableRoofPercent: 0.60,
+    usableRoofPercent: 0.6,
     maxRooftopSolarKW: 18,
     canopyApplicable: false,
     typicalCanopyAreaSqFt: 400,
     canopyPotentialKW: 5,
     totalRealisticSolarKW: 23,
-    sources: ['NREL Rooftop PV', 'EIA Residential Energy Survey'],
-    notes: 'Single-family home. South-facing roof section is primary constraint.',
+    sources: ["NREL Rooftop PV", "EIA Residential Energy Survey"],
+    notes: "Single-family home. South-facing roof section is primary constraint.",
   },
   agricultural: {
     typicalFootprintSqFt: 20000,
     footprintRange: [5000, 100000],
-    usableRoofPercent: 0.70,
+    usableRoofPercent: 0.7,
     maxRooftopSolarKW: 210,
     canopyApplicable: false,
     typicalCanopyAreaSqFt: 5000,
     canopyPotentialKW: 60,
     totalRealisticSolarKW: 270,
-    sources: ['USDA Rural Energy', 'NREL Rooftop PV'],
-    notes: 'Barn/shed roofs are excellent. Ground-mount often preferred for larger installations.',
+    sources: ["USDA Rural Energy", "NREL Rooftop PV"],
+    notes: "Barn/shed roofs are excellent. Ground-mount often preferred for larger installations.",
   },
   shopping_center: {
     typicalFootprintSqFt: 200000,
@@ -7116,20 +7194,21 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     typicalCanopyAreaSqFt: 50000,
     canopyPotentialKW: 600,
     totalRealisticSolarKW: 2550,
-    sources: ['CBECS 2018', 'SEIA Solar Means Business', 'NREL Rooftop PV'],
-    notes: 'Among best commercial solar candidates. Massive flat roofs + parking.',
+    sources: ["CBECS 2018", "SEIA Solar Means Business", "NREL Rooftop PV"],
+    notes: "Among best commercial solar candidates. Massive flat roofs + parking.",
   },
   microgrid: {
     typicalFootprintSqFt: 10000,
     footprintRange: [2000, 50000],
-    usableRoofPercent: 0.50,
+    usableRoofPercent: 0.5,
     maxRooftopSolarKW: 75,
     canopyApplicable: true,
     typicalCanopyAreaSqFt: 5000,
     canopyPotentialKW: 60,
     totalRealisticSolarKW: 135,
-    sources: ['NREL Microgrid Standards', 'IEEE 1547'],
-    notes: 'Varies widely. Ground-mount common for larger microgrids. Solar essential for islanding.',
+    sources: ["NREL Microgrid Standards", "IEEE 1547"],
+    notes:
+      "Varies widely. Ground-mount common for larger microgrids. Solar essential for islanding.",
   },
 };
 
@@ -7161,13 +7240,13 @@ export function validateIndustrySolarCapacity(
   recommendation?: string;
 } {
   // Normalize industry slug
-  const normalizedIndustry = industry.replace(/-/g, '_');
+  const normalizedIndustry = industry.replace(/-/g, "_");
   const constraints = INDUSTRY_FACILITY_CONSTRAINTS[normalizedIndustry];
 
   if (!constraints) {
     // Unknown industry — use conservative defaults
     const defaultFootprint = buildingSqFt || 15000;
-    const usableRoof = defaultFootprint * 0.40;
+    const usableRoof = defaultFootprint * 0.4;
     const maxKW = Math.floor((usableRoof * SOLAR_WATTS_PER_SQFT) / 1000);
     return {
       isValid: solarKW <= maxKW,
@@ -7203,7 +7282,7 @@ export function validateIndustrySolarCapacity(
   const exceedsBy = Math.round(solarKW - maxRooftopKW);
   const canopyCanCover = solarKW <= totalPotentialKW;
 
-  let warning = `⚠️ ${solarKW} kW solar exceeds ${maxRooftopKW} kW rooftop capacity (${usableRoofSqFt.toLocaleString()} usable sqft on ${footprint.toLocaleString()} sqft building).`;
+  const warning = `⚠️ ${solarKW} kW solar exceeds ${maxRooftopKW} kW rooftop capacity (${usableRoofSqFt.toLocaleString()} usable sqft on ${footprint.toLocaleString()} sqft building).`;
   let recommendation: string | undefined;
 
   if (constraints.canopyApplicable && canopyCanCover) {
@@ -7233,7 +7312,7 @@ export function validateIndustrySolarCapacity(
  * Returns null if industry not found
  */
 export function getFacilityConstraints(industry: string): FacilitySolarConstraint | null {
-  const normalized = industry.replace(/-/g, '_');
+  const normalized = industry.replace(/-/g, "_");
   return INDUSTRY_FACILITY_CONSTRAINTS[normalized] || null;
 }
 
@@ -7441,8 +7520,8 @@ export function calculateCarportSolarCapacity(
 // =============================================================================
 // CAR WASH 16-QUESTION CALCULATOR - Re-export from dedicated module
 // =============================================================================
-export { 
+export {
   calculateCarWash16Q,
   type CarWash16QInput,
-  type CarWash16QResult
-} from './carWash16QCalculator';
+  type CarWash16QResult,
+} from "./carWash16QCalculator";
