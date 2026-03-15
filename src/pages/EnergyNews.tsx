@@ -12,7 +12,9 @@ import {
   RefreshCw,
   ExternalLink,
   Zap,
-  Calendar
+  Calendar,
+  Share2,
+  Mail
 } from 'lucide-react';
 import { 
   getTopEnergyNews, 
@@ -409,7 +411,7 @@ export default function EnergyNews() {
                   </p>
 
                   {/* Tags */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
                     {story.topics.slice(0, 3).map(topic => (
                       <span
                         key={topic}
@@ -441,6 +443,201 @@ export default function EnergyNews() {
                         {eq}
                       </span>
                     ))}
+                  </div>
+
+                  {/* Social Share Buttons */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    paddingTop: 12,
+                    borderTop: `1px solid ${DARK.border}`,
+                  }}>
+                    <span style={{ fontSize: 13, color: DARK.textSecondary, fontWeight: 600, marginRight: 4 }}>
+                      Share:
+                    </span>
+                    
+                    {/* Twitter/X */}
+                    <a
+                      href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(story.url)}&text=${encodeURIComponent(story.title)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 32,
+                        height: 32,
+                        borderRadius: 6,
+                        background: DARK.panel,
+                        border: `1px solid ${DARK.border}`,
+                        color: DARK.textSecondary,
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#1DA1F2';
+                        e.currentTarget.style.color = '#1DA1F2';
+                        e.currentTarget.style.background = 'rgba(29, 161, 242, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = DARK.border;
+                        e.currentTarget.style.color = DARK.textSecondary;
+                        e.currentTarget.style.background = DARK.panel;
+                      }}
+                      title="Share on Twitter"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      </svg>
+                    </a>
+
+                    {/* LinkedIn */}
+                    <a
+                      href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(story.url)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 32,
+                        height: 32,
+                        borderRadius: 6,
+                        background: DARK.panel,
+                        border: `1px solid ${DARK.border}`,
+                        color: DARK.textSecondary,
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#0A66C2';
+                        e.currentTarget.style.color = '#0A66C2';
+                        e.currentTarget.style.background = 'rgba(10, 102, 194, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = DARK.border;
+                        e.currentTarget.style.color = DARK.textSecondary;
+                        e.currentTarget.style.background = DARK.panel;
+                      }}
+                      title="Share on LinkedIn"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                      </svg>
+                    </a>
+
+                    {/* Facebook */}
+                    <a
+                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(story.url)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 32,
+                        height: 32,
+                        borderRadius: 6,
+                        background: DARK.panel,
+                        border: `1px solid ${DARK.border}`,
+                        color: DARK.textSecondary,
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#1877F2';
+                        e.currentTarget.style.color = '#1877F2';
+                        e.currentTarget.style.background = 'rgba(24, 119, 242, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = DARK.border;
+                        e.currentTarget.style.color = DARK.textSecondary;
+                        e.currentTarget.style.background = DARK.panel;
+                      }}
+                      title="Share on Facebook"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                    </a>
+
+                    {/* Email */}
+                    <a
+                      href={`mailto:?subject=${encodeURIComponent(story.title)}&body=${encodeURIComponent(`Check out this article: ${story.title}\n\n${story.url}`)}`}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 32,
+                        height: 32,
+                        borderRadius: 6,
+                        background: DARK.panel,
+                        border: `1px solid ${DARK.border}`,
+                        color: DARK.textSecondary,
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = DARK.accent;
+                        e.currentTarget.style.color = DARK.accent;
+                        e.currentTarget.style.background = `${DARK.accent}10`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = DARK.border;
+                        e.currentTarget.style.color = DARK.textSecondary;
+                        e.currentTarget.style.background = DARK.panel;
+                      }}
+                      title="Share via Email"
+                    >
+                      <Mail size={14} />
+                    </a>
+
+                    {/* Copy Link */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(story.url);
+                        // Could add a toast notification here
+                        const btn = e.currentTarget;
+                        const originalText = btn.title;
+                        btn.title = 'Copied!';
+                        btn.style.borderColor = DARK.accent;
+                        btn.style.color = DARK.accent;
+                        setTimeout(() => {
+                          btn.title = originalText;
+                          btn.style.borderColor = DARK.border;
+                          btn.style.color = DARK.textSecondary;
+                        }, 2000);
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 32,
+                        height: 32,
+                        borderRadius: 6,
+                        background: DARK.panel,
+                        border: `1px solid ${DARK.border}`,
+                        color: DARK.textSecondary,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = DARK.accent;
+                        e.currentTarget.style.color = DARK.accent;
+                        e.currentTarget.style.background = `${DARK.accent}10`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = DARK.border;
+                        e.currentTarget.style.color = DARK.textSecondary;
+                        e.currentTarget.style.background = DARK.panel;
+                      }}
+                      title="Copy link"
+                    >
+                      <Share2 size={14} />
+                    </button>
                   </div>
                 </div>
               </a>
