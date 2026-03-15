@@ -43,6 +43,7 @@ const WidgetDemo = lazy(() => import("./pages/WidgetDemo"));
 const WidgetDocs = lazy(() => import("./pages/WidgetDocs"));
 const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard"));
 const EnergyNews = lazy(() => import("./pages/EnergyNews"));
+const ElCarWashLanding = lazy(() => import("./pages/ElCarWashLanding"));
 // const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
 import { QuoteProvider } from "./contexts/QuoteContext";
 import { trackPageView } from "./services/analyticsService";
@@ -478,6 +479,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <EnergyNews />
+      </Suspense>
+    );
+  }
+
+  // El Car Wash Landing Page - Campaign-specific sales page
+  if (pathname === "/el-car-wash" || pathname === "/elcarwash" || pathname === "/car-wash-campaign") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <ElCarWashLanding />
       </Suspense>
     );
   }
