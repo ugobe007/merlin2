@@ -334,7 +334,7 @@ export default function Step5V8({ state, actions }: Props) {
     }
     
     fetchInstallers();
-  }, [location?.state, tier?.solarKW, tier?.bessKWh, tier?.bessKW, tier?.generatorKW, tier?.evChargerKW]);
+  }, [location?.state, tier]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // 🚫 EARLY RETURN CHECK - ONLY AFTER ALL HOOKS
