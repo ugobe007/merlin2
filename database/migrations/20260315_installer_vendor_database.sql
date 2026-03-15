@@ -685,15 +685,15 @@ BEGIN
             AND p_project_size_kw <= iv.max_project_size_kw
     )
     SELECT 
-        installer_rank as rank,
-        company_name,
-        phone,
-        email,
-        website,
-        tier,
-        recommendation_reason
-    FROM ranked_installers
-    WHERE installer_rank <= 3;
+        ri.installer_rank as rank,
+        ri.company_name,
+        ri.phone,
+        ri.email,
+        ri.website,
+        ri.tier,
+        ri.recommendation_reason
+    FROM ranked_installers ri
+    WHERE ri.installer_rank <= 3;
 END;
 $$ LANGUAGE plpgsql;
 
