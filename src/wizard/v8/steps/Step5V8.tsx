@@ -295,7 +295,13 @@ export default function Step5V8({ state, actions }: Props) {
   // ── Fetch recommended installers based on location and project type ──
   React.useEffect(() => {
     async function fetchInstallers() {
-      if (!location?.state) return;
+      const stateCode = location?.state;
+      console.log('[Step5V8] Fetching installers for state:', stateCode, 'location:', location);
+      
+      if (!stateCode) {
+        console.log('[Step5V8] No state code - skipping installer fetch');
+        return;
+      }
       
       setLoadingInstallers(true);
       try {
@@ -312,7 +318,12 @@ export default function Step5V8({ state, actions }: Props) {
         }
         
         const projectSizeKW = tier ? (tier.solarKW || tier.bessKW || tier.bessKWh / 4) : 500;
-        const results = await getRecommendedInstallers(location.state, installerType, projectSizeKW);
+        
+        console.log('[Step5V8] Fetching installers:', { stateCode, installerType, projectSizeKW });
+        
+        const results = await getRecommendedInstallers(stateCode, installerType, projectSizeKW);
+        
+        console.log('[Step5V8] Installer results:', results);
         setInstallers(results);
       } catch (error) {
         console.error('[Step5V8] Failed to fetch installers:', error);
@@ -779,7 +790,7 @@ export default function Step5V8({ state, actions }: Props) {
       {/* ================================================================
           RECOMMENDED INSTALLERS
       ================================================================ */}
-      {installers.length > 0 && (
+      {location?.state && (
         <div className="rounded-xl border-2 border-purple-500/20 bg-purple-500/[0.03] p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
@@ -799,6 +810,15 @@ export default function Step5V8({ state, actions }: Props) {
             <div className="flex items-center justify-center py-8">
               <RefreshCw className="w-5 h-5 text-purple-400 animate-spin" />
               <span className="ml-2 text-sm text-slate-400">Loading installers...</span>
+            </div>
+          ) : installers.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-sm text-slate-400">
+                No installers found for {location.state}. We're expanding our network!
+              </p>
+              <p className="text-xs text-slate-500 mt-2">
+                Contact us to add recommended installers in your area.
+              </p>
             </div>
           ) : (
             <>
