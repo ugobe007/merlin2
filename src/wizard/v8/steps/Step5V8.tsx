@@ -47,6 +47,7 @@ import {
 } from "@/services/subscriptionService";
 import { supabase } from "@/services/supabaseClient";
 import { formatCurrency } from "@/services/internationalService";
+import { getRecommendedInstallers, type RecommendedInstaller } from "@/services/installerService";
 
 const DARK = {
   cardBg: "rgba(255,255,255,0.04)",
@@ -106,6 +107,10 @@ export default function Step5V8({ state, actions }: Props) {
   const [exportingFormat, setExportingFormat] = useState<"pdf" | "word" | "excel" | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [shareSuccess, setShareSuccess] = useState<string | null>(null);
+  
+  // Installer recommendations
+  const [installers, setInstallers] = useState<RecommendedInstaller[]>([]);
+  const [loadingInstallers, setLoadingInstallers] = useState(false);
 
   // ── LEAD CAPTURE GATE ────────────────────────────────────────────
   const [showLeadGate, setShowLeadGate] = useState(false);
@@ -286,6 +291,39 @@ export default function Step5V8({ state, actions }: Props) {
       handleExport(fmt, true);
     }
   }, [leadCaptured, pendingFormat, showLeadGate, exportingFormat, handleExport]);
+
+  // ── Fetch recommended installers based on location and project type ──
+  React.useEffect(() => {
+    async function fetchInstallers() {
+      if (!location?.state) return;
+      
+      setLoadingInstallers(true);
+      try {
+        // Determine installer type based on system configuration
+        let installerType: 'solar' | 'bess' | 'ev_charging' | 'generator' = 'bess';
+        if (tier && tier.solarKW > 0 && tier.bessKWh > 0) {
+          installerType = 'solar'; // Solar+Storage projects get solar installers
+        } else if (tier && tier.solarKW > 0) {
+          installerType = 'solar';
+        } else if (tier && tier.generatorKW > 0) {
+          installerType = 'generator';
+        } else if (tier && tier.evChargerKW > 0) {
+          installerType = 'ev_charging';
+        }
+        
+        const projectSizeKW = tier ? (tier.solarKW || tier.bessKW || tier.bessKWh / 4) : 500;
+        const results = await getRecommendedInstallers(location.state, installerType, projectSizeKW);
+        setInstallers(results);
+      } catch (error) {
+        console.error('[Step5V8] Failed to fetch installers:', error);
+        setInstallers([]);
+      } finally {
+        setLoadingInstallers(false);
+      }
+    }
+    
+    fetchInstallers();
+  }, [location?.state, tier?.solarKW, tier?.bessKWh, tier?.bessKW, tier?.generatorKW, tier?.evChargerKW]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // 🚫 EARLY RETURN CHECK - ONLY AFTER ALL HOOKS
@@ -737,6 +775,129 @@ export default function Step5V8({ state, actions }: Props) {
           </div>
         </div>
       </div>
+
+      {/* ================================================================
+          RECOMMENDED INSTALLERS
+      ================================================================ */}
+      {installers.length > 0 && (
+        <div className="rounded-xl border-2 border-purple-500/20 bg-purple-500/[0.03] p-4 sm:p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+              <Building2 className="w-4 h-4 text-purple-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-slate-100 tracking-tight">
+                Recommended Installers in {location?.state || 'Your Area'}
+              </h3>
+              <p className="text-sm text-slate-400 mt-0.5">
+                Top-rated companies for your project size and location
+              </p>
+            </div>
+          </div>
+
+          {loadingInstallers ? (
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="w-5 h-5 text-purple-400 animate-spin" />
+              <span className="ml-2 text-sm text-slate-400">Loading installers...</span>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-3 mb-4">
+                {installers.map((installer, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-purple-500/30 hover:bg-purple-500/[0.04] transition-all group"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-bold text-purple-400">#{installer.rank}</span>
+                          {installer.tier === 1 && (
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-400 uppercase">
+                              Tier 1
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-100 leading-tight">
+                          {installer.company_name}
+                        </h4>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 text-xs text-slate-400">
+                      {installer.phone && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">📞</span>
+                          <a
+                            href={`tel:${installer.phone}`}
+                            className="hover:text-purple-400 transition-colors"
+                          >
+                            {installer.phone}
+                          </a>
+                        </div>
+                      )}
+                      {installer.email && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">✉️</span>
+                          <a
+                            href={`mailto:${installer.email}`}
+                            className="hover:text-purple-400 transition-colors truncate"
+                          >
+                            {installer.email}
+                          </a>
+                        </div>
+                      )}
+                      {installer.website && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">🌐</span>
+                          <a
+                            href={installer.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-purple-400 transition-colors truncate"
+                          >
+                            Visit Website →
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    {installer.recommendation_reason && (
+                      <div className="mt-3 pt-3 border-t border-white/[0.06]">
+                        <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                          {installer.recommendation_reason}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => {
+                  const emails = installers.map(i => i.email).filter(Boolean).join(',');
+                  const subject = encodeURIComponent(`Quote Request - ${industry?.replace(/_/g, ' ')} Energy System`);
+                  const body = encodeURIComponent(
+                    `Hi,\n\nI received a quote from Merlin BESS and would like to request bids from your company.\n\n` +
+                    `Project Details:\n` +
+                    `- Location: ${location?.city || location?.state || 'TBD'}\n` +
+                    `- System Size: ${tier ? fmtNum(tier.bessKWh) : 'TBD'} kWh storage` +
+                    `${tier && tier.solarKW > 0 ? ` + ${fmtNum(tier.solarKW)} kW solar` : ''}\n` +
+                    `- Estimated Investment: ${tier ? fmt$(tier.netCost, countryCode) : 'TBD'}\n\n` +
+                    `Please contact me to discuss this project.\n\n` +
+                    `Thank you!`
+                  );
+                  window.location.href = `mailto:${emails}?subject=${subject}&body=${body}`;
+                }}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold hover:from-purple-500 hover:to-purple-400 transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 group"
+              >
+                <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                Request Bids from All {installers.length} Companies
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* ================================================================
           EXPORT / DOWNLOAD — PDF, Word, Excel
