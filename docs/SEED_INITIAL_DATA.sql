@@ -99,15 +99,16 @@ INSERT INTO pricing_configurations (
   'generator_default',
   'generator',
   '{
-    "diesel_per_kw": 800,
-    "natural_gas_per_kw": 700,
+    "diesel_per_kw": 450,
+    "natural_gas_per_kw": 430,
     "dual_fuel_per_kw": 900,
-    "vendor_notes": "Caterpillar, Cummins, Eaton quotes"
+    "linear_generator_per_kw": 1500,
+    "vendor_notes": "Traditional: Caterpillar, Cummins, Eaton. Linear: Mainspring Energy (HADLEY project)"
   }'::jsonb,
-  'Generator pricing by fuel type',
-  '1.0.0',
+  'Generator pricing by fuel type - Updated March 2026 based on vendor quotes',
+  '2.0.1',
   true,
-  'Caterpillar, Cummins, Eaton',
+  'Hampton Heights, GoGoEV, VoloStar, Train Hub, HADLEY vendor quotes (Oct 2025)',
   'high'
 )
 ON CONFLICT (config_key) DO UPDATE SET
@@ -132,12 +133,12 @@ INSERT INTO pricing_configurations (
   'balance_of_plant',
   '{
     "bopPercentage": 0.12,
-    "epcPercentage": 0.15,
+    "epcPercentage": 0.27,
     "contingencyPercentage": 0.05,
-    "notes": "Industry standard ranges: BOP 10-15%, EPC 12-18%"
+    "notes": "Industry standard ranges: BOP 10-15%, EPC 25-30% (updated March 2026)"
   }'::jsonb,
-  'Balance of plant and installation costs',
-  '1.0.0',
+  'Balance of plant and installation costs - Updated March 2026 for realistic EPC margins',
+  '2.0.0',
   true,
   'Industry standards',
   'high'
