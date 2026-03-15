@@ -685,7 +685,7 @@ BEGIN
             AND p_project_size_kw <= iv.max_project_size_kw
     )
     SELECT 
-        ri.installer_rank as rank,
+        ri.installer_rank::INTEGER as rank,
         ri.company_name,
         ri.phone,
         ri.email,
