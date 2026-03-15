@@ -665,7 +665,7 @@ BEGIN
                     END,
                     iv.customer_rating DESC NULLS LAST,
                     iv.projects_completed DESC
-            ) as rank,
+            ) as installer_rank,
             iv.company_name,
             iv.phone,
             iv.email,
@@ -684,8 +684,16 @@ BEGIN
             AND p_project_size_kw >= iv.min_project_size_kw
             AND p_project_size_kw <= iv.max_project_size_kw
     )
-    SELECT * FROM ranked_installers
-    WHERE rank <= 3;
+    SELECT 
+        installer_rank as rank,
+        company_name,
+        phone,
+        email,
+        website,
+        tier,
+        recommendation_reason
+    FROM ranked_installers
+    WHERE installer_rank <= 3;
 END;
 $$ LANGUAGE plpgsql;
 
