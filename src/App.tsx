@@ -42,6 +42,7 @@ const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
 const WidgetDemo = lazy(() => import("./pages/WidgetDemo"));
 const WidgetDocs = lazy(() => import("./pages/WidgetDocs"));
 const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard"));
+const EnergyNews = lazy(() => import("./pages/EnergyNews"));
 // const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
 import { QuoteProvider } from "./contexts/QuoteContext";
 import { trackPageView } from "./services/analyticsService";
@@ -468,6 +469,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <PartnerDashboard />
+      </Suspense>
+    );
+  }
+
+  // Energy News - Top 15 daily stories from scraped sources
+  if (pathname === "/news" || pathname === "/energy-news" || pathname === "/market-news") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <EnergyNews />
       </Suspense>
     );
   }
