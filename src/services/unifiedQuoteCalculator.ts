@@ -409,6 +409,24 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   const totalProjectCost = equipment.totals.totalProjectCost;
 
   // Step 2b: Calculate dynamic ITC (NEW Jan 2026 - IRA 2022 compliant)
+  // ⚠️ CRITICAL: Federal ITC only applies to US projects (IRA 2022 is US-only)
+  // For international quotes, ITC = 0
+  
+  // Check if this is a US project based on location/zipCode
+  const isUSProject = !location || // No location = assume US
+                      location.toUpperCase() === 'US' ||
+                      /^[A-Z]{2}$/.test(location) === false || // If not 2-letter code, likely US state
+                      (zipCode && /^\d{5}$/.test(zipCode)); // US ZIP format
+  
+  if (import.meta.env.DEV) {
+    console.log(`🇺🇸 [ITC Check] Project location:`, {
+      location,
+      zipCode,
+      isUSProject,
+      willApplyITC: isUSProject,
+    });
+  }
+  
   // Determine project type based on what's included
   let projectType: 'bess' | 'solar' | 'hybrid' = 'bess';
   if (solarMW > 0 && storageSizeMW > 0) projectType = 'hybrid';
@@ -417,7 +435,8 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   // Default to PWA compliance for commercial/utility projects (most common)
   const defaultPWA = storageSizeMW >= 1;
   
-  const itcResult = estimateITC(
+  // Calculate ITC only for US projects
+  const itcResult = isUSProject ? estimateITC(
     projectType,
     totalProjectCost,
     Math.max(storageSizeMW, solarMW, 0.1), // Use largest MW for ITC sizing
@@ -427,7 +446,23 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
       domesticContent: itcConfig?.domesticContent,
       lowIncome: itcConfig?.lowIncomeProject,
     }
-  );
+  ) : {
+    // International projects: no federal ITC
+    totalRate: 0,
+    creditAmount: 0,
+    baseRate: 0,
+    bonuses: {
+      prevailingWage: 0,
+      energyCommunity: 0,
+      domesticContent: 0,
+      lowIncome: 0,
+    },
+    details: {
+      applicableIncentives: [],
+      assumptions: ['International project - no US federal ITC'],
+      limitations: ['Project location outside United States'],
+    },
+  };
 
   const taxCredit = itcResult.creditAmount;
   const netCost = totalProjectCost - taxCredit;
@@ -599,7 +634,7 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
       domesticContent: !!itcConfig?.domesticContent,
       lowIncome: !!itcConfig?.lowIncomeProject,
     },
-    source: 'IRA 2022 (IRC Section 48)',
+    source: isUSProject ? 'IRA 2022 (IRC Section 48)' : 'N/A - International project',
   };
 
   if (import.meta.env.DEV) {
