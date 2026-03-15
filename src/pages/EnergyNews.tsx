@@ -31,6 +31,13 @@ const DARK = {
   accent: '#3ecf8e',
 };
 
+// Decode HTML entities (e.g., &#8217; → ')
+function decodeHTMLEntities(text: string): string {
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+}
+
 export default function EnergyNews() {
   const [stories, setStories] = useState<EnergyNewsStory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -358,7 +365,7 @@ export default function EnergyNews() {
                     color: DARK.text,
                     lineHeight: 1.4,
                   }}>
-                    {story.title}
+                    {decodeHTMLEntities(story.title)}
                     <ExternalLink size={16} style={{ marginLeft: 8, opacity: 0.5 }} />
                   </h2>
 
@@ -369,7 +376,7 @@ export default function EnergyNews() {
                     lineHeight: 1.6,
                     marginBottom: 16,
                   }}>
-                    {story.summary}
+                    {decodeHTMLEntities(story.summary)}
                   </p>
 
                   {/* Tags */}
