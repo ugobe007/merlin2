@@ -583,7 +583,9 @@ export const calculateEquipmentBreakdown = async (
     const isSmallGenerator = effectiveGeneratorMW < 1.0;
 
     // Fetch generator pricing from database - NOW SUPPORTS FUEL TYPE SELECTION
-    let costPerKW = 800; // Fallback: $800/kW for diesel generators
+    // ✅ PRICING UPDATED March 2026: Based on five real vendor quotes from Oct 2025 projects
+    // Natural gas: $430/kW (was $700), Diesel: $450/kW (was $800)
+    let costPerKW = 450; // Fallback: $450/kW for diesel generators (validated via real quotes)
     let fuelTypeLabel = "Diesel";
     let manufacturer = "Caterpillar/Eaton";
 
@@ -594,7 +596,7 @@ export const calculateEquipmentBreakdown = async (
         // ✅ FIX: Use pricing based on requested fuel type
         switch (generatorFuelType) {
           case "natural-gas":
-            costPerKW = generatorConfig.natural_gas_per_kw || 700;
+            costPerKW = generatorConfig.natural_gas_per_kw || 430; // Validated via vendor quotes
             fuelTypeLabel = "Natural Gas";
             manufacturer = "Caterpillar/Waukesha/Jenbacher";
             break;
@@ -604,7 +606,7 @@ export const calculateEquipmentBreakdown = async (
             manufacturer = "Caterpillar/Cummins";
             break;
           default:
-            costPerKW = generatorConfig.diesel_per_kw || 800;
+            costPerKW = generatorConfig.diesel_per_kw || 450; // Validated via vendor quotes
             fuelTypeLabel = "Diesel";
             manufacturer = "Caterpillar/Cummins/Eaton";
         }

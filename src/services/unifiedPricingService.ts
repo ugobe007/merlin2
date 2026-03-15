@@ -166,13 +166,13 @@ const NREL_WIND_PRICING: WindPricing = {
 };
 
 const NREL_GENERATOR_PRICING: GeneratorPricing = {
-  pricePerKW: 700, // $700/kW for natural gas generator (NREL ATB 2024, may be updated)
+  pricePerKW: 430, // $430/kW for natural gas generator (validated via 5 real vendor quotes, March 2026)
   manufacturer: "Various (Industry Standard)",
   model: "Natural Gas Generator",
   fuelType: "natural-gas",
   efficiency: 0.4,
-  dataSource: "nrel",
-  lastUpdated: new Date("2024-11-01"), // TODO: Update to 2025/2026 if available
+  dataSource: "market", // Market validation via real vendor quotes
+  lastUpdated: new Date("2026-03-15"), // Updated based on Hampton Heights, GoGoEV, VoloStar, Train Hub, HADLEY projects
 };
 
 // ============================================
