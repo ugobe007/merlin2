@@ -5,7 +5,7 @@
  * for solar, BESS, EV charging, and generator projects by state.
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from './supabaseClient';
 
 export interface RecommendedInstaller {
   rank: number;
@@ -36,18 +36,23 @@ export async function getRecommendedInstallers(
   type: InstallerType,
   projectSizeKW: number
 ): Promise<RecommendedInstaller[]> {
-  const { data, error } = await supabase.rpc('get_recommended_installers', {
-    p_state: state.toUpperCase(),
-    p_installer_type: type,
-    p_project_size_kw: projectSizeKW,
-  });
+  try {
+    const { data, error } = await supabase.rpc('get_recommended_installers' as any, {
+      p_state: state.toUpperCase(),
+      p_installer_type: type,
+      p_project_size_kw: projectSizeKW,
+    });
 
-  if (error) {
-    console.error('Error fetching recommended installers:', error);
-    throw new Error(`Failed to get installers: ${error.message}`);
+    if (error) {
+      console.error('Error fetching recommended installers:', error);
+      throw new Error(`Failed to get installers: ${error.message}`);
+    }
+
+    return (data as any) as RecommendedInstaller[] || [];
+  } catch (err) {
+    console.error('Error in getRecommendedInstallers:', err);
+    return [];
   }
-
-  return data || [];
 }
 
 /**
@@ -63,16 +68,21 @@ export async function getAllInstallers(
   type: InstallerType,
   maxTier: number = 3
 ): Promise<any[]> {
-  const { data, error } = await supabase.rpc('get_installers_by_state_and_type', {
-    p_state: state.toUpperCase(),
-    p_installer_type: type,
-    p_tier_max: maxTier,
-  });
+  try {
+    const { data, error } = await supabase.rpc('get_installers_by_state_and_type' as any, {
+      p_state: state.toUpperCase(),
+      p_installer_type: type,
+      p_tier_max: maxTier,
+    });
 
-  if (error) {
-    console.error('Error fetching installers:', error);
-    throw new Error(`Failed to get installers: ${error.message}`);
+    if (error) {
+      console.error('Error fetching installers:', error);
+      throw new Error(`Failed to get installers: ${error.message}`);
+    }
+
+    return (data as any) || [];
+  } catch (err) {
+    console.error('Error in getAllInstallers:', err);
+    return [];
   }
-
-  return data || [];
 }
