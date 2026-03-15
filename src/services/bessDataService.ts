@@ -158,8 +158,9 @@ export async function getBESSFinancialInputs(
     const pcsCostPerMW = inverterPerKW * 1000; // Convert to per MW
 
     // BOP/EPC percentages
+    // ✅ PRICING UPDATED March 2026: EPC margins based on five real vendor quotes (25-30% range)
     const bopPercent = bopConfig?.bopPercentage || 0.12;
-    const epcPercent = bopConfig?.epcPercentage || 0.08;
+    const epcPercent = bopConfig?.epcPercentage || 0.27; // Updated from 0.08 to 0.27 (was too low)
 
     console.log("✅ [bessDataService] Using database-driven pricing:", {
       batteryCostPerMWh,
