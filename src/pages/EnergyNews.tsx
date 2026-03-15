@@ -124,11 +124,40 @@ export default function EnergyNews() {
         
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <Newspaper size={32} color={DARK.accent} />
-            <h1 style={{ fontSize: 36, fontWeight: 800, margin: 0 }}>
-              Energy News
-            </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Newspaper size={32} color={DARK.accent} />
+              <h1 style={{ fontSize: 36, fontWeight: 800, margin: 0 }}>
+                Energy Newsletter
+              </h1>
+            </div>
+            <a
+              href="/"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '8px 16px',
+                background: DARK.panel,
+                border: `1px solid ${DARK.border}`,
+                borderRadius: 8,
+                color: DARK.text,
+                textDecoration: 'none',
+                fontSize: 14,
+                fontWeight: 600,
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = DARK.accent;
+                e.currentTarget.style.color = DARK.accent;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = DARK.border;
+                e.currentTarget.style.color = DARK.text;
+              }}
+            >
+              ← Back to Home
+            </a>
           </div>
           <p style={{ fontSize: 16, color: DARK.textSecondary, margin: 0 }}>
             Top 15 stories from {stats.totalToday} articles scraped today · Last updated {formatTimeAgo(stats.lastScraped)}
