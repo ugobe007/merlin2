@@ -540,7 +540,9 @@ export default function Step4V8({ state, actions }: Props) {
                     <div className={`equipment-chip ${config.chipBg} border`}>
                       <span>🔋</span>
                       <span className={config.chipText}>
-                        {Math.round(tier.bessKWh / 1000)} MWh BESS
+                        {tier.bessKWh >= 1000 
+                          ? `${Math.round(tier.bessKWh / 1000)} MWh` 
+                          : `${Math.round(tier.bessKWh)} kWh`} BESS
                       </span>
                     </div>
 
