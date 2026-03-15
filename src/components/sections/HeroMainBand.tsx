@@ -237,8 +237,8 @@ export default function HeroMainBand({
                   <span style={{ fontSize: "20px", marginLeft: "4px" }}>→</span>
                 </button>
 
-                {/* Merlin Link */}
-                <div className="flex justify-center w-full" style={{ maxWidth: "480px" }}>
+                {/* Links - Merlin + Newsletter */}
+                <div className="flex flex-col items-center gap-3 w-full" style={{ maxWidth: "480px" }}>
                   <button
                     onClick={() => setShowAbout(true)}
                     className="inline-flex items-center gap-2 transition-all"
@@ -257,6 +257,25 @@ export default function HeroMainBand({
                     <img src={merlinImage} alt="Merlin" className="w-7 h-7 rounded-full" />
                     <span>About Merlin AI →</span>
                   </button>
+                  
+                  {/* Newsletter Link */}
+                  <a
+                    href="/news"
+                    className="inline-flex items-center gap-2 transition-all"
+                    style={{
+                      color: "rgba(255,255,255,0.5)",
+                      fontSize: "14px",
+                      textDecoration: "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "#3ECF8E";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "rgba(255,255,255,0.5)";
+                    }}
+                  >
+                    <span>📰 Energy Newsletter</span>
+                  </a>
                 </div>
 
                 {/* Trust Strip - Data Source Badges */}
