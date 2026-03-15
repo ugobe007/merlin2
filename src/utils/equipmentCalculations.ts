@@ -17,7 +17,7 @@ import {
 } from "../services/equipmentPricingTiersService";
 
 // Generator fuel type options - matches database config keys
-export type GeneratorFuelType = "diesel" | "natural-gas" | "dual-fuel";
+export type GeneratorFuelType = "diesel" | "natural-gas" | "dual-fuel" | "linear-generator";
 
 // Fuel cell technology type options - matches database config keys
 export type FuelCellType = "hydrogen" | "natural-gas-fc" | "solid-oxide";
@@ -604,6 +604,11 @@ export const calculateEquipmentBreakdown = async (
             costPerKW = generatorConfig.dual_fuel_per_kw || 900;
             fuelTypeLabel = "Dual Fuel";
             manufacturer = "Caterpillar/Cummins";
+            break;
+          case "linear-generator":
+            costPerKW = generatorConfig.linear_generator_per_kw || 1500; // Mainspring from HADLEY project
+            fuelTypeLabel = "Linear Generator (Mainspring)";
+            manufacturer = "Mainspring Energy";
             break;
           default:
             costPerKW = generatorConfig.diesel_per_kw || 450; // Validated via vendor quotes

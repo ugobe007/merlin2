@@ -58,39 +58,21 @@ SET
 WHERE config_key = 'balance_of_plant_default';
 
 -- ========================================
--- 3. ADD AUDIT TRAIL ENTRY
+-- 3. ADD MAINSPRING LINEAR GENERATOR PRICING
 -- ========================================
 
--- Log the pricing update (if audit table exists)
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'pricing_audit_log') THEN
-    INSERT INTO pricing_audit_log (
-      config_key,
-      change_type,
-      old_value,
-      new_value,
-      change_reason,
-      changed_by
-    ) VALUES 
-    (
-      'generator_default',
-      'price_update',
-      '{"natural_gas_per_kw": 700, "diesel_per_kw": 800}',
-      '{"natural_gas_per_kw": 430, "diesel_per_kw": 450}',
-      'Updated based on five real vendor quotes from Oct 2025 projects. NG generators were 1.6× too high ($700→$430/kW), diesel 1.8× too high ($800→$450/kW). See PRICING_CALIBRATION_THREE_PROJECTS.md',
-      'system'
-    ),
-    (
-      'balance_of_plant_default',
-      'margin_update',
-      '{"epcPercentage": 0.15}',
-      '{"epcPercentage": 0.27}',
-      'Updated EPC margins from 15% to 27% (average of 25-30% range observed in five real projects). Previous margins were too low and causing unrealistic total system costs.',
-      'system'
-    );
-  END IF;
-END $$;
+UPDATE pricing_configurations
+SET 
+  config_data = jsonb_set(
+    config_data,
+    '{linear_generator_per_kw}',
+    '1500'::jsonb
+  ),
+  description = 'Generator pricing by fuel type - Updated March 2026 based on vendor quotes (includes Mainspring linear generators)',
+  data_source = 'Hampton Heights, GoGoEV, VoloStar, Train Hub, HADLEY vendor quotes (Oct 2025)',
+  version = '2.0.1',
+  updated_at = NOW()
+WHERE config_key = 'generator_default';
 
 -- ========================================
 -- 4. VERIFICATION QUERIES
@@ -102,6 +84,7 @@ SELECT
   config_data->>'natural_gas_per_kw' as ng_per_kw,
   config_data->>'diesel_per_kw' as diesel_per_kw,
   config_data->>'dual_fuel_per_kw' as dual_fuel_per_kw,
+  config_data->>'linear_generator_per_kw' as linear_gen_per_kw,
   version,
   data_source
 FROM pricing_configurations
@@ -124,6 +107,7 @@ WHERE config_key = 'balance_of_plant_default';
 --   - natural_gas_per_kw: 430 (was 700)
 --   - diesel_per_kw: 450 (was 800)
 --   - dual_fuel_per_kw: 900 (unchanged)
+--   - linear_generator_per_kw: 1500 (NEW - Mainspring from HADLEY project)
 --
 -- EPC margins:
 --   - epcPercentage: 0.27 (was 0.15)
