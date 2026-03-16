@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { MiniWizardV8 } from "@/wizard/v8/MiniWizardV8";
+import ScheduleDemoModal from "@/components/modals/ScheduleDemoModal";
 
 // ========================================
 // CAMPAIGN CONFIGURATION
@@ -401,6 +402,7 @@ interface CarWashCampaignProps {
 
 export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWashCampaignProps) {
   const [showWizard, setShowWizard] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   console.log("[CarWashCampaign] Rendered, showWizard:", showWizard, "URL:", window.location.href);
 
@@ -512,12 +514,7 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
             <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-10">{config.heroSubtitle}</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
-                onClick={() =>
-                  window.open(
-                    `mailto:sales@merlinbess.com?subject=Schedule%20${encodeURIComponent(config.companyName)}%20Demo&body=${encodeURIComponent(config.emailBody)}`,
-                    "_blank"
-                  )
-                }
+                onClick={() => setShowDemoModal(true)}
                 className="px-8 py-4 border-2 border-emerald-500 text-emerald-400 text-lg font-semibold rounded-lg hover:border-emerald-400 hover:text-emerald-300 transition-all"
                 style={{ background: "transparent" }}
               >
@@ -967,6 +964,9 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
           </p>
         </div>
       </div>
+
+      {/* Schedule Demo Modal */}
+      <ScheduleDemoModal isOpen={showDemoModal} onClose={() => setShowDemoModal(false)} />
     </div>
   );
 }

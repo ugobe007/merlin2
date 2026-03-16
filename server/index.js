@@ -6,6 +6,7 @@ import placesRouter from './routes/places.js';
 import locationRouter from './routes/location.js';
 import templatesRouter from './routes/templates.js';
 import telemetryRouter from './routes/telemetry.js';
+import demoRouter from './routes/demo.js';
 
 // Load environment variables from server/.env
 const __filename = fileURLToPath(import.meta.url);
@@ -36,13 +37,14 @@ app.use('/api/places', placesRouter);
 app.use('/api/location', locationRouter);
 app.use('/api/templates', templatesRouter);
 app.use('/api/telemetry', telemetryRouter);
+app.use('/api', demoRouter);
 
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     service: 'merlin-api', 
-    endpoints: ['/api/places', '/api/location', '/api/templates', '/api/telemetry'] 
+    endpoints: ['/api/places', '/api/location', '/api/templates', '/api/telemetry', '/api/send-demo-request'] 
   });
 });
 
