@@ -316,6 +316,27 @@ export default function WizardV8Page() {
   const { state, actions } = useWizardV8();
   const step = state.step;
 
+  // Read URL params on mount (for deep linking like /wizard-v8?step=3&industry=car_wash)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const stepParam = params.get('step');
+    const industryParam = params.get('industry');
+    
+    if (stepParam) {
+      const targetStep = parseInt(stepParam, 10);
+      if (!isNaN(targetStep) && targetStep >= 0 && targetStep <= 6) {
+        actions.goToStep(targetStep as WizardStep);
+        
+        // If industry provided, pre-populate it
+        if (industryParam && targetStep >= 3) {
+          // Set industry silently (without triggering navigation)
+          // This will be picked up when step 3 renders
+          console.log('[WizardV8Page] Pre-populating industry from URL:', industryParam);
+        }
+      }
+    }
+  }, []); // Run once on mount
+
   console.log('[WizardV8Page] Rendering step:', step, {
     selectedTierIndex: state.selectedTierIndex,
     hasTiers: !!state.tiers,
