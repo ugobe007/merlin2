@@ -10,6 +10,8 @@ app = 'merlin2'
 primary_region = 'lax'
 
 [build]
+  dockerfile = "Dockerfile"
+  
   [build.args]
     # Public Supabase credentials (anon key is designed to be public — shipped in browser JS)
     VITE_SUPABASE_URL = "https://fvmpmozybmtzjvikrctq.supabase.co"
