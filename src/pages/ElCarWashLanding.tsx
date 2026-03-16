@@ -1,11 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MiniWizardV8 } from "@/wizard/v8/MiniWizardV8";
 
 export default function ElCarWashLanding() {
   const [showWizard, setShowWizard] = useState(false);
 
+  console.log("[ElCarWashLanding] Rendered, showWizard:", showWizard, "URL:", window.location.href);
+
+  // Monitor for any unexpected navigation attempts
+  useEffect(() => {
+    console.log("[ElCarWashLanding] Mounted at URL:", window.location.href);
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (showWizard) {
+        console.log("[ElCarWashLanding] Page is being unloaded/navigated while wizard is open");
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [showWizard]);
+
+  // When wizard is shown, render it fullscreen without navigation
   if (showWizard) {
-    return <MiniWizardV8 industry="car_wash" companyName="El Car Wash" />;
+    return (
+      <div style={{ minHeight: "100vh", background: "#0a0a0a", position: "relative" }}>
+        {/* Back button to return to landing page */}
+        <button
+          onClick={() => setShowWizard(false)}
+          style={{
+            position: "fixed",
+            top: 20,
+            left: 20,
+            zIndex: 9999,
+            padding: "8px 16px",
+            borderRadius: 8,
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(8,11,20,0.85)",
+            backdropFilter: "blur(12px)",
+            color: "rgba(255,255,255,0.65)",
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "rgba(62,207,142,0.35)";
+            e.currentTarget.style.background = "rgba(8,11,20,0.95)";
+            e.currentTarget.style.color = "#3ECF8E";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+            e.currentTarget.style.background = "rgba(8,11,20,0.85)";
+            e.currentTarget.style.color = "rgba(255,255,255,0.65)";
+          }}
+        >
+          ← Back to Campaign
+        </button>
+        <MiniWizardV8 industry="car_wash" companyName="El Car Wash" />
+      </div>
+    );
   }
 
   return (
