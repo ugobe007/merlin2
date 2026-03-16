@@ -8,6 +8,17 @@
   50% { transform: translateZ(0) scale(1.01); opacity: 0.92; }
 }
 
+/* Supabase-style gradient text animation */
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% auto;
+  animation: gradient 3s ease infinite;
+}
+
 /* Smooth scrolling for the entire app */
 html {
   scroll-behavior: smooth;
