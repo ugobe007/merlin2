@@ -50,12 +50,12 @@ export default function ElCarWashLanding() {
               >
                 📅 Schedule Alpha Site Demo
               </button>
-              <button
-                onClick={() => window.open('/campaigns/EL_CAR_WASH_FLORIDA_QUOTES.md', '_blank')}
-                className="px-8 py-4 bg-gray-700 text-white text-lg font-semibold rounded-lg hover:bg-gray-600 transition"
+              <a
+                href="/wizard-v8?step=3&industry=car_wash"
+                className="px-8 py-4 bg-gray-700 text-white text-lg font-semibold rounded-lg hover:bg-gray-600 transition inline-block"
               >
                 📊 View Full Quotes
-              </button>
+              </a>
             </div>
           </div>
 
@@ -215,57 +215,6 @@ export default function ElCarWashLanding() {
                   <p className="text-gray-300 text-sm">{prop.desc}</p>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Implementation Roadmap */}
-          <div className="mb-20">
-            <h2 className="text-3xl font-bold text-white mb-8 text-center">🗺️ 3-Phase Implementation Roadmap</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 backdrop-blur border border-blue-700 rounded-xl p-8">
-                <div className="text-2xl font-bold text-white mb-2">Phase 1: Alpha Site</div>
-                <div className="text-blue-300 mb-4">Months 1-4</div>
-                <ul className="space-y-2 text-gray-300 text-sm">
-                  <li>✅ Select Miami or Orlando flagship</li>
-                  <li>✅ Engineering & permits</li>
-                  <li>✅ 2-3 week installation</li>
-                  <li>✅ Performance validation</li>
-                  <li>✅ PR & media tour</li>
-                </ul>
-                <div className="mt-4 pt-4 border-t border-blue-700">
-                  <div className="text-blue-200 font-semibold">Goal: Operational within 120 days</div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 backdrop-blur border border-purple-700 rounded-xl p-8">
-                <div className="text-2xl font-bold text-white mb-2">Phase 2: Portfolio Rollout</div>
-                <div className="text-purple-300 mb-4">Months 5-12</div>
-                <ul className="space-y-2 text-gray-300 text-sm">
-                  <li>✅ Remaining 4 Florida sites</li>
-                  <li>✅ Simultaneous construction</li>
-                  <li>✅ Volume discounts (10-15%)</li>
-                  <li>✅ Standardized SOP</li>
-                  <li>✅ Full FL footprint complete</li>
-                </ul>
-                <div className="mt-4 pt-4 border-t border-purple-700">
-                  <div className="text-purple-200 font-semibold">Goal: $180K/year savings realized</div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-orange-900/50 to-orange-800/30 backdrop-blur border border-orange-700 rounded-xl p-8">
-                <div className="text-2xl font-bold text-white mb-2">Phase 3: National Expansion</div>
-                <div className="text-orange-300 mb-4">Year 2+</div>
-                <ul className="space-y-2 text-gray-300 text-sm">
-                  <li>✅ 50+ sites (TX, GA, NC, SC, TN)</li>
-                  <li>✅ Green bonds / tax equity</li>
-                  <li>✅ $1.8M+ annual savings</li>
-                  <li>✅ $50M+ enterprise value creation</li>
-                  <li>✅ "Most Sustainable Car Wash Chain"</li>
-                </ul>
-                <div className="mt-4 pt-4 border-t border-orange-700">
-                  <div className="text-orange-200 font-semibold">Goal: Portfolio-wide transformation</div>
-                </div>
-              </div>
             </div>
           </div>
 
