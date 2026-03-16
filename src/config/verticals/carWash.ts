@@ -38,14 +38,16 @@ export const carWashConfig: VerticalConfig = {
   brandSubtitle: 'Battery Storage Solutions',
   brandIcon: Droplets,
   theme: {
-    pageBg: 'bg-gradient-to-br from-blue-900 via-cyan-800 to-teal-700',
+    pageBg: 'bg-slate-950',
     accent: 'cyan',
     accentSecondary: 'emerald',
-    carouselShadow: 'shadow-cyan-500/30',
-    carouselBorder: 'border-cyan-400/20',
-    headerBg: 'bg-gradient-to-r from-slate-900/90 via-purple-900/30 to-slate-800/90',
-    ctaGradient: 'bg-gradient-to-r from-emerald-500 to-cyan-500',
-    ctaHoverGradient: 'hover:from-emerald-400 hover:to-cyan-400',
+    carouselShadow: 'shadow-cyan-500/50',
+    carouselBorder: 'border-cyan-400/30',
+    headerBg: 'bg-slate-900/80 backdrop-blur-xl',
+    ctaGradient: 'border-2 border-cyan-400 text-cyan-400',
+    ctaHoverGradient: 'hover:bg-cyan-400/10 hover:border-cyan-300 hover:text-cyan-300',
+    ctaSecondary: 'border-2 border-emerald-400 text-emerald-400',
+    ctaSecondaryHover: 'hover:bg-emerald-400/10 hover:border-emerald-300 hover:text-emerald-300',
   },
 
   // ─── Hero Section ────────────────────────────────────────────────────

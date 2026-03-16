@@ -24,45 +24,45 @@ export function VerticalHeader({ config, onGetQuote }: VerticalHeaderProps) {
   const baseNamePart = brandName.replace(brandHighlight, '');
 
   return (
-    <header className={`${theme.headerBg} backdrop-blur-xl border-b-2 border-${theme.accent}-500/40 sticky top-0 z-40 shadow-lg shadow-${theme.accent}-500/10`}>
-      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+    <header className={`${theme.headerBg} border-b border-cyan-500/20 sticky top-0 z-40`}>
+      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Back to Merlin */}
         <a
           href="/"
-          className={`flex items-center gap-2 text-${theme.accent}-300 hover:text-white transition-colors group mr-4 bg-slate-800/50 hover:bg-slate-700/50 px-3 py-2 rounded-xl border border-${theme.accent}-500/30 hover:border-${theme.accent}-400/50`}
+          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group mr-4 hover:bg-slate-800/50 px-3 py-2 rounded-lg"
         >
           <span className="group-hover:-translate-x-1 transition-transform">←</span>
           <img src={merlinImage} alt="Merlin" className="w-7 h-7" />
-          <span className="hidden sm:inline text-sm font-semibold">Merlin</span>
+          <span className="hidden sm:inline text-sm font-medium">Merlin</span>
         </a>
 
         <div className="flex items-center gap-3 flex-1">
-          <div className={`w-12 h-12 bg-gradient-to-br ${theme.ctaGradient} rounded-xl flex items-center justify-center shadow-lg shadow-${theme.accent}-500/40 border-2 border-${theme.accent}-400/50`}>
-            <BrandIcon className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-emerald-500 rounded-lg flex items-center justify-center">
+            <BrandIcon className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-white tracking-tight">
+            <h1 className="text-xl font-bold text-white tracking-tight">
               {baseNamePart}
-              <span className={`text-transparent bg-clip-text bg-gradient-to-r from-${theme.accent}-400 to-${theme.accentSecondary}-400`}>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">
                 {brandHighlight}
               </span>
             </h1>
-            <p className={`text-xs text-${theme.accent}-300 font-medium`}>
+            <p className="text-xs text-slate-400 font-medium">
               {brandSubtitle}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <a href="#calculator" className={`hidden md:block text-${theme.accent}-200 hover:text-white text-sm font-semibold transition-colors hover:bg-${theme.accent}-500/20 px-4 py-2 rounded-lg`}>
+          <a href="#calculator" className="hidden md:block text-slate-400 hover:text-white text-sm font-medium transition-colors hover:bg-slate-800/50 px-4 py-2 rounded-lg">
             Calculator
           </a>
           <button
             onClick={onGetQuote}
-            className={`flex items-center gap-2 bg-gradient-to-r ${theme.ctaGradient} hover:${theme.ctaHoverGradient} px-5 py-2.5 rounded-full transition-all shadow-lg shadow-${theme.accent}-500/30 border-2 border-${theme.accent}-300/50 hover:scale-105`}
+            className={`group flex items-center gap-2 ${theme.ctaGradient} ${theme.ctaHoverGradient} px-5 py-2.5 rounded-full transition-all backdrop-blur-sm`}
           >
-            <Phone className="w-4 h-4 text-white" />
-            <span className="text-white font-bold text-sm">Get Quote</span>
+            <Phone className="w-4 h-4" />
+            <span className="font-bold text-sm">Get Quote</span>
           </button>
         </div>
       </div>

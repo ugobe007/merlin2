@@ -170,26 +170,26 @@ export function VerticalCalculatorSection({
   };
 
   return (
-    <section id="calculator" className="py-16 bg-white/5 backdrop-blur-sm">
+    <section id="calculator" className="py-20 bg-slate-900/50 backdrop-blur-sm border-y border-cyan-500/10">
       <div className="max-w-6xl mx-auto px-6">
         {/* Section header */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Calculate Your{' '}
-            <span className={`text-transparent bg-clip-text bg-gradient-to-r from-${theme.accent}-300 via-${theme.accentSecondary}-400 to-${theme.accent}-300`}>
+          <h2 className="text-4xl md:text-5xl font-black mb-4">
+            <span className="text-white">Calculate Your </span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400 animate-gradient">
               Savings
             </span>
           </h2>
-          <p className={`text-${theme.accent}-200/70 max-w-2xl mx-auto`}>
+          <p className="text-slate-400 max-w-2xl mx-auto text-lg">
             Enter your details below and see how much you could save with battery storage
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* ─── LEFT: Input Form ─────────────────────────────── */}
-          <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-3xl p-8 border border-purple-500/30 shadow-2xl shadow-purple-500/10">
+          <div className="bg-slate-900/80 backdrop-blur-sm rounded-2xl p-8 border border-cyan-500/20 shadow-xl">
             <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-              <div className={`w-10 h-10 bg-gradient-to-br from-purple-500 to-${theme.accent}-500 rounded-xl flex items-center justify-center`}>
+              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-emerald-500 rounded-lg flex items-center justify-center">
                 <CalcIcon className="w-5 h-5 text-white" />
               </div>
               Your Details

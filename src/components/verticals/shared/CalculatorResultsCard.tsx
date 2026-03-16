@@ -56,9 +56,9 @@ export function CalculatorResultsCard({
   const { theme: _theme } = config;
 
   return (
-    <div className="relative bg-gradient-to-br from-slate-900/95 via-emerald-900/30 to-slate-900/95 backdrop-blur-xl rounded-3xl p-8 border-2 border-emerald-400/40 shadow-2xl">
+    <div className="relative bg-slate-900/90 backdrop-blur-xl rounded-2xl p-8 border border-emerald-400/30 shadow-xl">
       <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+        <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
           <TrendingDown className="w-5 h-5 text-white" />
         </div>
         <span className="text-white">Your Estimated Savings</span>
@@ -133,19 +133,19 @@ export function CalculatorResultsCard({
             </div>
           )}
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons - Supabase Style */}
           <div className="flex flex-col gap-3 pt-2">
             <button
               onClick={onBuildQuote}
-              className="relative w-full bg-white hover:bg-purple-50 text-purple-700 py-5 rounded-xl font-black text-lg shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border-2 border-purple-500 hover:border-purple-600 hover:shadow-purple-300/50"
+              className="group w-full border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400/10 hover:border-cyan-300 hover:text-cyan-300 py-5 rounded-xl font-bold text-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-3"
             >
-              <Sparkles className="w-6 h-6 text-purple-600" />
+              <Sparkles className="w-6 h-6" />
               <span>Build My Quote</span>
-              <ArrowRight className="w-5 h-5 text-purple-600" />
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
             <button
               onClick={onTalkToExpert}
-              className="w-full bg-slate-800/80 hover:bg-slate-700/80 border-2 border-cyan-400/40 hover:border-cyan-300/60 text-white py-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+              className="w-full border-2 border-emerald-400 text-emerald-400 hover:bg-emerald-400/10 hover:border-emerald-300 hover:text-emerald-300 py-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
             >
               <Phone className="w-5 h-5" />
               Talk to an Expert

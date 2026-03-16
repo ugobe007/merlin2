@@ -53,9 +53,10 @@ export function VerticalHeroSection({ config, calculatorInputs, onGetQuote: _onG
   );
   
   return (
-    <section className="relative min-h-[85vh] lg:min-h-[90vh] overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtNi42MjcgMC0xMiA1LjM3My0xMiAxMnM1LjM3MyAxMiAxMiAxMiAxMi01LjM3MyAxMi0xMi01LjM3My0xMi0xMi0xMnoiIHN0cm9rZT0iIzEwYjk4MSIgc3Ryb2tlLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-30" />
+    <section className="relative min-h-[85vh] lg:min-h-[90vh] overflow-hidden bg-slate-950">
+      {/* Radial gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-emerald-500/5" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-20" />
       
       {/* Left content */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-16 md:py-24 lg:py-32">
@@ -63,23 +64,23 @@ export function VerticalHeroSection({ config, calculatorInputs, onGetQuote: _onG
           {/* ─── Left: Copy ─────────────────────────────────────── */}
           <div>
             {/* Badge */}
-            <div className={`inline-flex items-center gap-2 bg-gradient-to-r from-${theme.accent}-500/20 via-${theme.accentSecondary}-500/20 to-${theme.accent}-500/20 border border-${theme.accent}-400/40 rounded-full px-5 py-2 mb-6 shadow-lg`}>
-              <BadgeIcon className={`w-5 h-5 text-${theme.accent}-300`} />
-              <span className={`text-${theme.accent}-200 text-sm font-semibold`}>{config.heroBadge}</span>
+            <div className="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-400/40 rounded-full px-5 py-2 mb-6 backdrop-blur-sm">
+              <BadgeIcon className="w-5 h-5 text-cyan-400" />
+              <span className="text-cyan-300 text-sm font-semibold">{config.heroBadge}</span>
             </div>
             
             {/* Headline */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-[1.1]">
-              {config.heroHeadline}
-              <span className={`text-transparent bg-clip-text bg-gradient-to-r from-${theme.accent}-300 via-${theme.accentSecondary}-400 to-${theme.accent}-300`}>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 leading-[1.1]">
+              <span className="text-white">{config.heroHeadline}</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400 animate-gradient">
                 {config.heroHeadlineHighlight}
               </span>
             </h1>
             
             {/* Subtitle */}
-            <p className={`text-xl text-${theme.accent}-100/90 mb-8 leading-relaxed`}>
+            <p className="text-xl text-slate-300 mb-8 leading-relaxed">
               {config.heroSubtitle}
-              <span className={`text-${theme.accent}-300 font-medium`}>{config.heroSubtitleHighlight}</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400 font-semibold">{config.heroSubtitleHighlight}</span>
             </p>
             
             {/* Value Props */}
@@ -92,13 +93,13 @@ export function VerticalHeroSection({ config, calculatorInputs, onGetQuote: _onG
               ))}
             </div>
             
-            {/* CTA Button */}
+            {/* CTA Button - Stroke Only */}
             <button
               onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
-              className={`inline-flex items-center gap-2 ${theme.ctaGradient} ${theme.ctaHoverGradient} text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105`}
+              className={`group inline-flex items-center gap-3 ${theme.ctaGradient} ${theme.ctaHoverGradient} px-8 py-4 rounded-full font-bold text-lg transition-all hover:scale-105 backdrop-blur-sm`}
             >
               {config.heroCTA}
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
             
             {/* Inline Savings Estimate */}
