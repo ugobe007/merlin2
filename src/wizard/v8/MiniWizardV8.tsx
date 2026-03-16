@@ -210,15 +210,39 @@ export function MiniWizardV8({ industry, companyName, companyLogo }: MiniWizardV
   const wizard = useWizardV8();
   const { state, actions } = wizard;
 
-  // Set industry on mount
+  // Track which mini step we're on using state
+  const [internalMiniStep, setInternalMiniStep] = React.useState<number>(0);
+
+  // Prevent URL navigation by blocking history/location changes
+  useEffect(() => {
+    // Block any URL changes while in mini wizard
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+
+    window.history.pushState = function (...args) {
+      // Allow pushState but don't actually change URL
+      console.log("[MiniWizardV8] Blocked pushState:", args);
+      return;
+    };
+
+    window.history.replaceState = function (...args) {
+      // Allow replaceState but don't actually change URL
+      console.log("[MiniWizardV8] Blocked replaceState:", args);
+      return;
+    };
+
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+    };
+  }, []);
+
+  // Set industry on mount - do this AFTER blocking navigation
   useEffect(() => {
     if (industry && !state.industry) {
       actions.setIndustry(industry as IndustrySlug); // Type cast for vertical-specific industries
     }
   }, [industry, state.industry, actions]);
-
-  // Track which mini step we're on using state
-  const [internalMiniStep, setInternalMiniStep] = React.useState<number>(0);
 
   // Sync internal step with wizard state changes
   useEffect(() => {
