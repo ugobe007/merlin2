@@ -354,16 +354,20 @@ async function buildOneTier(
   const generatorEnabled = state.wantsGenerator || hasGeneratorIntent(state.step3Answers);
 
   // Tier scaling for configured addons (user values from Step 3.5 = Recommended baseline)
+  // If user configured addons in Step 3.5, treat their values as the "Recommended" tier
+  // and scale up/down for Complete/Starter. Otherwise, use intelligent defaults.
   const tierAddonScale = tierLabel === 'Starter' ? 0.70 : tierLabel === 'Complete' ? 1.30 : 1.00;
 
-  // Scale configured addon values per tier, or compute defaults if not configured
-  // User's Step 3.5 selections become the "Recommended" (100%) baseline
-  const finalSolarKW = (state.wantsSolar && solarKW > 0) 
-    ? Math.round(solarKW * tierAddonScale) 
+  // Solar: Use user-configured value (scaled per tier) or auto-calculate
+  const userConfiguredSolar = state.wantsSolar && solarKW > 0;
+  const finalSolarKW = userConfiguredSolar
+    ? Math.min(Math.round(solarKW * tierAddonScale), state.solarPhysicalCapKW) // Cap at physical limit
     : computeSolarKW(state, goal, tierLabel);
   
-  const finalGenKW = (generatorEnabled && generatorKW > 0) 
-    ? Math.round(generatorKW * tierAddonScale) 
+  // Generator: Use user-configured value (scaled per tier) or auto-calculate
+  const userConfiguredGenerator = generatorEnabled && generatorKW > 0;
+  const finalGenKW = userConfiguredGenerator
+    ? Math.round(generatorKW * tierAddonScale)
     : computeGeneratorKW(state, goal, tierLabel);
   
   const { bessKW, bessKWh, durationHours } = computeBESSSizing(state, goal, tierLabel, finalSolarKW, finalGenKW);
@@ -445,10 +449,10 @@ async function buildOneTier(
     `Tier: ${tierLabel} (BESS scale ${TIER_BESS_SCALE[tierLabel]}×)`,
     `BESS: ${bessKW} kW / ${bessKWh} kWh (${durationHours}h duration)`,
     finalSolarKW > 0
-      ? `Solar: ${finalSolarKW} kW AC${state.wantsSolar && solarKW > 0 ? " (user configured)" : ` (${intel?.peakSunHours.toFixed(1)} PSH × ${finalSolarKW}/${state.solarPhysicalCapKW} kW cap)`}`
+      ? `Solar: ${finalSolarKW} kW AC${userConfiguredSolar ? ` (user selected ${solarKW} kW, scaled ${Math.round(tierAddonScale * 100)}% for ${tierLabel})` : ` (${intel?.peakSunHours.toFixed(1)} PSH × ${finalSolarKW}/${state.solarPhysicalCapKW} kW cap)`}`
       : `Solar: excluded (${intel?.solarFeasible ? "physical cap = 0" : `grade ${intel?.solarGrade ?? "unknown"} < B-`})`,
     finalGenKW > 0
-      ? `Generator: ${finalGenKW} kW${generatorEnabled && generatorKW > 0 ? ` (user configured, ${generatorFuelType})` : ` (${(state.criticalLoadPct * 100).toFixed(0)}% critical load × 1.25 reserve)`}`
+      ? `Generator: ${finalGenKW} kW${userConfiguredGenerator ? ` (user selected ${generatorKW} kW ${generatorFuelType}, scaled ${Math.round(tierAddonScale * 100)}% for ${tierLabel})` : ` (${(state.criticalLoadPct * 100).toFixed(0)}% critical load × 1.25 reserve)`}`
       : `Generator: excluded (policy: ${GOAL_GUIDANCE[goal].generatorPolicy}, need: ${state.step3Answers.generatorNeed ?? "none"})`,
     evChargerKW > 0
       ? `EV chargers: ${evChargerKW} kW (${evChargerDetails}, already in base load)`

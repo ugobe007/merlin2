@@ -33,7 +33,7 @@ import { ElCarWashLogo } from "@/components/logos/ElCarWashLogo";
 
 // Lazy-load steps
 const Step3V8 = lazy(() => import("./steps/Step3V8"));
-const Step3_5V8_ENHANCED = lazy(() => import("./steps/Step3_5V8_ENHANCED")); // Add-ons step
+const Step3_5V8 = lazy(() => import("./steps/Step3_5V8")); // Add-ons step
 const Step4V8 = lazy(() => import("./steps/Step4V8")); // MagicFit tiers
 const Step5V8 = lazy(() => import("./steps/Step5V8"));
 
@@ -366,7 +366,7 @@ export function MiniWizardV8({ industry, companyName, companyLogo }: MiniWizardV
       case "addons":
         return (
           <Suspense fallback={<div style={{ padding: 40, color: "#fff" }}>Loading...</div>}>
-            <Step3_5V8_ENHANCED {...wizard} />
+            <Step3_5V8 {...wizard} />
           </Suspense>
         );
       case "magicfit":

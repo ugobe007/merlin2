@@ -497,9 +497,9 @@ export default function Step4V8({ state, actions }: Props) {
               )}
 
               {/* Top Section - Responsive padding */}
-              <div className={`p-4 md:p-5 ${isPerfectFit ? "pt-8 md:pt-9" : ""}`}>
+              <div className={`p-3 md:p-4 ${isPerfectFit ? "pt-7 md:pt-8" : ""}`}>
                 {/* HEADLINE */}
-                <div className="text-center mb-3 md:mb-4">
+                <div className="text-center mb-2 md:mb-3">
                   <h2
                     className={`text-3xl md:text-4xl font-black tracking-tight ${config.headlineClass}`}
                     style={{ fontFamily: "Outfit, sans-serif" }}
@@ -514,7 +514,7 @@ export default function Step4V8({ state, actions }: Props) {
                 </div>
 
                 {/* HERO: Annual Savings - Responsive sizing */}
-                <div className="text-center py-3 md:py-4">
+                <div className="text-center py-2 md:py-3">
                   <p
                     className={`text-[10px] uppercase tracking-widest mb-1 ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
                   >
@@ -529,7 +529,7 @@ export default function Step4V8({ state, actions }: Props) {
                 </div>
 
                 {/* Equipment Strip */}
-                <div className="mb-4">
+                <div className="mb-3">
                   <p
                     className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
                   >
@@ -580,15 +580,15 @@ export default function Step4V8({ state, actions }: Props) {
 
               {/* Financial Summary - Responsive padding and spacing */}
               <div
-                className={`border-t p-4 md:p-5 ${isPerfectFit ? "bg-slate-950/60 border-purple-500/20" : "bg-slate-950/80 border-slate-800"}`}
+                className={`border-t p-3 md:p-4 ${isPerfectFit ? "bg-slate-950/60 border-purple-500/20" : "bg-slate-950/80 border-slate-800"}`}
               >
                 <p
-                  className={`text-[10px] uppercase tracking-widest mb-3 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
+                  className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
                 >
                   Financial Summary
                 </p>
 
-                <div className="space-y-2 text-xs md:text-sm mb-4">
+                <div className="space-y-1.5 text-xs md:text-sm mb-3">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500">Total Investment</span>
                     <span className="text-slate-300 font-medium">
@@ -616,7 +616,7 @@ export default function Step4V8({ state, actions }: Props) {
                 </div>
 
                 {/* ROI Metrics - Responsive grid */}
-                <div className="grid grid-cols-3 gap-1.5 md:gap-2 mb-4">
+                <div className="grid grid-cols-3 gap-1.5 md:gap-2 mb-3">
                   <div className={`text-center p-1.5 md:p-2 rounded-lg ${config.metricBg}`}>
                     <p className="text-[9px] md:text-[10px] text-slate-500 uppercase tracking-wider mb-1">
                       Payback

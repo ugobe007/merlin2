@@ -32,12 +32,12 @@ import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 // Lazy-load steps 2–5 so Step 1 renders instantly on first visit
 const loadStep2V8 = () => import("./steps/Step2V8");
 const loadStep3V8 = () => import("./steps/Step3V8");
-const loadStep35V8 = () => import("./steps/Step3_5V8_ENHANCED"); // ENHANCED: Intelligent recommendations
+const loadStep35V8 = () => import("./steps/Step3_5V8");
 const loadStep4V8 = () => import("./steps/Step4V8");
 
 const Step2V8 = lazy(loadStep2V8);
 const Step3V8 = lazy(loadStep3V8);
-const Step3_5V8 = lazy(loadStep35V8); // NEW: Energy Profile + Recommendations
+const Step3_5V8 = lazy(loadStep35V8);
 const Step4V8 = lazy(loadStep4V8);
 const Step5V8 = lazy(() => import("./steps/Step5V8"));
 
