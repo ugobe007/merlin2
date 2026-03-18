@@ -248,7 +248,9 @@ export default function Step3_5V8({ state, actions }: Props) {
               {/* Solar Capacity Slider */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-medium text-slate-300">Solar Capacity</label>
+                  <label className="text-sm font-medium text-slate-300">
+                    Usable Roof Space for Solar
+                  </label>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() =>
@@ -390,10 +392,20 @@ export default function Step3_5V8({ state, actions }: Props) {
                 <div className="flex gap-2 text-sm">
                   <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
                   <div className="text-slate-300 leading-relaxed">
-                    <strong className="text-amber-400">Sizing Guidance:</strong> Based on NREL ATB
-                    2024, commercial facilities typically install 1.4x their peak load (ILR). This
-                    accounts for solar production curves, panel degradation, and energy storage
-                    coupling.
+                    <div className="mb-2">
+                      <strong className="text-amber-400">
+                        🧙‍♂️ Merlin suggests {solarGuidance.recommended.toLocaleString()} kW for solar
+                      </strong>
+                      <span className="text-slate-400">
+                        {" "}
+                        based on your {Math.round(solarGuidance.maxSize)} kW of usable roof space
+                        and {Math.round(peakLoadKW)} kW peak load.
+                      </span>
+                    </div>
+                    <strong className="text-amber-400">Sizing Guidance:</strong> The slider above
+                    adjusts based on your available roof space. Commercial facilities typically
+                    install 1.4x their peak load (ILR per NREL ATB 2024), accounting for solar
+                    production curves, panel degradation, and energy storage coupling.
                   </div>
                 </div>
               </div>
@@ -404,20 +416,23 @@ export default function Step3_5V8({ state, actions }: Props) {
         {/* EV Charging Configuration - Simple Yes/No */}
         {wantsEVCharging && (
           <div className="bg-gradient-to-br from-cyan-950/40 via-slate-900 to-slate-950 border-2 border-cyan-500/40 rounded-2xl p-6 shadow-xl shadow-cyan-500/10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-cyan-500/10 p-3 rounded-xl">
-                  <Zap className="w-6 h-6 text-cyan-400" />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-cyan-500/10 p-3 rounded-xl">
+                    <Zap className="w-6 h-6 text-cyan-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Add EV Charging?</h3>
+                    <p className="text-slate-400 text-sm">
+                      Employee and customer charging stations
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Add EV Charging?</h3>
-                  <p className="text-slate-400 text-sm">Employee and customer charging stations</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => actions.setAddonPreference("ev", true)}
-                  className={`
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => actions.setAddonPreference("ev", true)}
+                    className={`
                     px-8 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-200
                     ${
                       state.wantsEVCharging
@@ -425,12 +440,12 @@ export default function Step3_5V8({ state, actions }: Props) {
                         : "bg-slate-800/50 border-2 border-slate-700 text-slate-400 hover:border-emerald-500/50"
                     }
                   `}
-                >
-                  Yes
-                </button>
-                <button
-                  onClick={() => actions.setAddonPreference("ev", false)}
-                  className={`
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => actions.setAddonPreference("ev", false)}
+                    className={`
                     px-8 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-200
                     ${
                       !state.wantsEVCharging
@@ -438,9 +453,29 @@ export default function Step3_5V8({ state, actions }: Props) {
                         : "bg-slate-800/50 border-2 border-slate-700 text-slate-400 hover:border-red-500/50"
                     }
                   `}
-                >
-                  No
-                </button>
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+              {/* Merlin's EV Charging Recommendation */}
+              <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-4">
+                <div className="flex gap-2 text-sm">
+                  <Info className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-slate-300 leading-relaxed">
+                    <strong className="text-cyan-400">
+                      🧙‍♂️ Merlin suggests{" "}
+                      {state.level2Chargers > 0
+                        ? `${state.level2Chargers} Level 2 chargers`
+                        : "starting with Level 2 chargers"}
+                    </strong>
+                    <span className="text-slate-400">
+                      {" "}
+                      for your facility size. Level 2 chargers are ideal for employee daily
+                      charging, while DC Fast Chargers serve customer convenience needs.
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -640,6 +675,17 @@ export default function Step3_5V8({ state, actions }: Props) {
                   <div className="text-slate-300 leading-relaxed">
                     {criticalLoadKW && criticalLoadKW < peakLoadKW ? (
                       <>
+                        <div className="mb-2">
+                          <strong className="text-orange-400">
+                            🧙‍♂️ Merlin suggests {Math.round(criticalLoadKW * 1.25).toLocaleString()}{" "}
+                            kW for power generation
+                          </strong>
+                          <span className="text-slate-400">
+                            {" "}
+                            to cover your {criticalLoadKW.toLocaleString()} kW critical loads with
+                            reserve margin.
+                          </span>
+                        </div>
                         <strong className="text-orange-400">Critical Loads Sizing:</strong> This
                         facility can operate without full backup power during outages. Generator
                         sized for{" "}
@@ -653,6 +699,17 @@ export default function Step3_5V8({ state, actions }: Props) {
                       </>
                     ) : (
                       <>
+                        <div className="mb-2">
+                          <strong className="text-orange-400">
+                            🧙‍♂️ Merlin suggests {Math.round(peakLoadKW * 1.25).toLocaleString()} kW
+                            for power generation
+                          </strong>
+                          <span className="text-slate-400">
+                            {" "}
+                            to cover your {peakLoadKW.toLocaleString()} kW peak load with 1.25x
+                            reserve margin.
+                          </span>
+                        </div>
                         <strong className="text-orange-400">Full Backup Sizing:</strong> Generator
                         sized with 1.25x reserve margin per NREL/WPP guidelines. This facility
                         requires full backup power for critical operations (life-safety, data
