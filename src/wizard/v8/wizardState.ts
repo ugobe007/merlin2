@@ -351,9 +351,9 @@ export function initialState(): WizardState {
     peakLoadKW: 0,
     criticalLoadKW: 0, // Critical loads for generator sizing
     evRevenuePerYear: 0,
-    wantsSolar: false,
-    wantsEVCharging: false,
-    wantsGenerator: false,
+    wantsSolar: true,
+    wantsEVCharging: true,
+    wantsGenerator: true,
     // Addon config defaults (Step 3.5)
     solarKW: 0,
     generatorKW: 0,

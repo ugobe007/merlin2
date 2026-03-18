@@ -426,7 +426,8 @@ export function Step1V8({ state, actions }: Step1Props) {
           lat: getCoordinate(place.location?.lat) ?? location?.lat,
           lng: getCoordinate(place.location?.lng) ?? location?.lng,
         };
-      } catch {
+      } catch (error) {
+        console.error("❌ Error enriching suggestion:", error);
         return {
           placeId: suggestion.placeId,
           formattedAddress: fallbackAddress,
@@ -558,28 +559,44 @@ export function Step1V8({ state, actions }: Step1Props) {
   };
 
   const handleSuggestionSelect = async (suggestion: BusinessSuggestion) => {
-    setBusinessError(null);
-    setSelectedSuggestion(suggestion);
-    setBusinessSuggestions([]);
-    setIsResolvingBusiness(true);
-
-    const preview = buildPreviewBusiness({
-      placeId: suggestion.placeId,
-      formattedAddress: suggestion.secondaryText || suggestion.label,
-    });
-    setBusinessName(suggestion.primaryText);
-    commitBusinessPreview({
-      ...preview,
-      name: suggestion.primaryText || preview.name,
-    });
-
+    console.log("🏢 handleSuggestionSelect CALLED:", suggestion.primaryText);
+    
     try {
+      setBusinessError(null);
+      setSelectedSuggestion(suggestion);
+      setBusinessSuggestions([]);
+      setIsResolvingBusiness(true);
+
+      const preview = buildPreviewBusiness({
+        placeId: suggestion.placeId,
+        formattedAddress: suggestion.secondaryText || suggestion.label,
+      });
+      
+      console.log("📦 Business preview built:", preview);
+      
+      setBusinessName(suggestion.primaryText);
+      commitBusinessPreview({
+        ...preview,
+        name: suggestion.primaryText || preview.name,
+      });
+
+      console.log("✅ Business preview committed, fetching details...");
+
       const details = await enrichSuggestion(suggestion);
+      
+      console.log("📋 Business details enriched:", details);
+      
       commitBusinessPreview({
         ...preview,
         name: suggestion.primaryText || preview.name,
         ...details,
       });
+      
+      console.log("✅ Business selection complete!");
+      
+    } catch (error) {
+      console.error("❌ Error in handleSuggestionSelect:", error);
+      setBusinessError("Failed to load business details. Please try again.");
     } finally {
       setIsResolvingBusiness(false);
       sessionTokenRef.current = null;
@@ -655,6 +672,24 @@ export function Step1V8({ state, actions }: Step1Props) {
   };
 
   const handleConfirmBusiness = () => {
+    // Validation: Must have location confirmed first
+    if (!locationConfirmed) {
+      setBusinessError("Please confirm your ZIP code location first.");
+      return;
+    }
+    
+    // Validation: Must have business name
+    if (!activeBusiness || !activeBusiness.name) {
+      setBusinessError("Please enter your business name.");
+      return;
+    }
+    
+    // Validation: Must select grid reliability
+    if (!state.gridReliability) {
+      setBusinessError("Please select your grid reliability.");
+      return;
+    }
+    
     if (activeBusiness && !state.business) {
       actions.setBusiness(activeBusiness.name, {
         address: activeBusiness.address,
@@ -1346,6 +1381,72 @@ export function Step1V8({ state, actions }: Step1Props) {
                   >
                     {activeBusiness.website.replace(/^https?:\/\//, "")}
                   </a>
+                </div>
+              )}
+            </div>
+
+            {/* Grid Reliability Question */}
+            <div style={{ 
+              marginTop: 24, 
+              padding: 20, 
+              borderRadius: 14, 
+              background: "linear-gradient(135deg, rgba(62, 207, 142, 0.08) 0%, rgba(62, 207, 142, 0.02) 100%)",
+              border: `2px solid ${T.accentBorder}`
+            }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: T.accent, marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                ⚡ Grid Connection Status
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+                {[
+                  { value: "reliable", label: "Reliable", subtitle: "Rare outages" },
+                  { value: "occasional-outages", label: "Occasional", subtitle: "Few outages/year" },
+                  { value: "frequent-outages", label: "Frequent", subtitle: "Monthly outages" },
+                  { value: "unreliable", label: "Unreliable", subtitle: "Weekly issues" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => actions.setGridReliability(option.value as any)}
+                    style={{
+                      padding: 12,
+                      borderRadius: 10,
+                      border: state.gridReliability === option.value 
+                        ? `2px solid ${T.accent}` 
+                        : "1px solid rgba(255,255,255,0.10)",
+                      background: state.gridReliability === option.value
+                        ? "rgba(62, 207, 142, 0.15)"
+                        : "rgba(255,255,255,0.02)",
+                      color: state.gridReliability === option.value ? T.accent : T.textSecondary,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      textAlign: "left",
+                      boxShadow: state.gridReliability === option.value 
+                        ? `0 0 0 4px rgba(62, 207, 142, 0.25), 0 0 24px rgba(62, 207, 142, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3)` 
+                        : "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700 }}>{option.label}</div>
+                    <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>{option.subtitle}</div>
+                  </button>
+                ))}
+              </div>
+              {!state.gridReliability && businessError && (
+                <div style={{ 
+                  marginTop: 12, 
+                  padding: "10px 14px",
+                  borderRadius: 8,
+                  background: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8
+                }}>
+                  <span style={{ fontSize: 14 }}>⚠️</span>
+                  <span style={{ fontSize: 12, color: "#fca5a5", fontWeight: 500 }}>
+                    Please select your grid connection status to continue
+                  </span>
                 </div>
               )}
             </div>

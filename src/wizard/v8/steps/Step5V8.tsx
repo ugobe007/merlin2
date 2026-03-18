@@ -822,13 +822,13 @@ export default function Step5V8({ state, actions }: Props) {
             </div>
           ) : (
             <>
-              <div className="grid gap-3 sm:grid-cols-3 mb-4">
+              <div className="grid gap-2.5 sm:grid-cols-3 mb-3">
                 {installers.map((installer, idx) => (
                   <div
                     key={idx}
-                    className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-purple-500/30 hover:bg-purple-500/[0.04] transition-all group"
+                    className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 hover:border-purple-500/30 hover:bg-purple-500/[0.04] transition-all group"
                   >
-                    <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs font-bold text-purple-400">#{installer.rank}</span>
@@ -844,7 +844,7 @@ export default function Step5V8({ state, actions }: Props) {
                       </div>
                     </div>
 
-                    <div className="space-y-2 text-xs text-slate-400">
+                    <div className="space-y-1.5 text-xs text-slate-400">
                       {installer.phone && (
                         <div className="flex items-center gap-2">
                           <span className="text-slate-500">📞</span>
@@ -883,8 +883,8 @@ export default function Step5V8({ state, actions }: Props) {
                     </div>
 
                     {installer.recommendation_reason && (
-                      <div className="mt-3 pt-3 border-t border-white/[0.06]">
-                        <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                      <div className="mt-2 pt-2 border-t border-white/[0.06]">
+                        <p className="text-xs text-slate-400 leading-snug line-clamp-2">
                           {installer.recommendation_reason}
                         </p>
                       </div>
@@ -922,18 +922,21 @@ export default function Step5V8({ state, actions }: Props) {
       {/* ================================================================
           EXPORT / DOWNLOAD — PDF, Word, Excel
       ================================================================ */}
-      <div className="rounded-xl border-2 border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+      <div className="rounded-xl border-2 border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
           <div className="flex-1 min-w-0">
-            <div className="text-lg font-bold text-slate-100 tracking-tight mb-1">
-              Download Quote
+            <div className="flex items-center gap-2 mb-1">
+              <FileText className="w-5 h-5 text-[#3ECF8E]" />
+              <div className="text-lg font-bold text-slate-100 tracking-tight">
+                Download Quote
+              </div>
             </div>
             <p className="text-sm text-slate-400">
-              kW breakdown, confidence score & methodology included
+              Detailed breakdown with equipment specs, financials & methodology
             </p>
           </div>
 
-          <div className="flex gap-2 flex-shrink-0 flex-wrap sm:flex-nowrap">
+          <div className="flex gap-2 flex-shrink-0">
             {(["pdf", "word", "excel"] as const).map((format) => (
               <button
                 key={format}

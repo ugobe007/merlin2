@@ -25,6 +25,15 @@ interface Props {
 }
 
 export default function Step3_5V8({ state, actions }: Props) {
+  console.log("[Step3_5V8] Component rendering, state:", {
+    step: state.step,
+    wantsSolar: state.wantsSolar,
+    wantsGenerator: state.wantsGenerator,
+    wantsEVCharging: state.wantsEVCharging,
+    peakLoadKW: state.peakLoadKW,
+    industry: state.industry
+  });
+
   const { wantsSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry } = state;
   const showSolar = hasSolarAddonOpportunity(
     wantsSolar,
@@ -38,14 +47,69 @@ export default function Step3_5V8({ state, actions }: Props) {
   const [evConfirmed, setEvConfirmed] = React.useState(false);
   const [isGeneratingTiers, setIsGeneratingTiers] = React.useState(false);
 
-  // Smart defaults based on facility peak load
+  // Solar sizing guidance based on industry with physical space constraints
+  const getSolarGuidance = () => {
+    // Industry-specific maximum based on physical space
+    const INDUSTRY_SOLAR_CAPS: Record<string, number> = {
+      'car-wash': 100,      // Limited bay roof space
+      'car_wash': 100,      // Alternate slug format
+      'gas-station': 120,   // Canopy space
+      'gas_station': 120,
+      'retail': 150,        // Limited roof area
+      'office': 250,        // Medium roof space
+      'warehouse': 400,     // Large flat roofs
+      'manufacturing': 600, // Industrial roofs
+      'hotel': 200,         // Multi-story with rooftop
+      'hospital': 300,      // Hospital roof space
+      'data-center': 200,   // Data center roof
+      'data_center': 200,
+    };
+
+    const physicalCap = industry ? (INDUSTRY_SOLAR_CAPS[industry] || peakLoadKW * 1.0) : peakLoadKW * 1.0;
+    
+    const minSize = Math.round(Math.min(peakLoadKW * 0.5, physicalCap * 0.5));
+    const recommended = Math.round(Math.min(peakLoadKW * 0.8, physicalCap * 0.85)); // Reduced from 1.4x
+    const maxSize = Math.round(Math.min(peakLoadKW * 1.0, physicalCap));
+    
+    return {
+      minSize,
+      recommended,
+      maxSize,
+      label: state.solarKW < minSize ? "Undersized" :
+             state.solarKW > maxSize ? "Oversized" :
+             Math.abs(state.solarKW - recommended) < recommended * 0.2 ? "Optimal" : "Good"
+    };
+  };
+
+  const solarGuidance = getSolarGuidance();
+
+  // Smart defaults based on facility peak load - SET TO RECOMMENDED VALUES
   useEffect(() => {
     const updates: Record<string, unknown> = {};
     
-    // Solar: Industry-appropriate sizing
+    // Solar: Set to recommended value from guidance (respects physical constraints)
     if (showSolar && state.solarKW === 0) {
-      // Default: 1.4x peak load (NREL ATB 2024 ILR for commercial)
-      updates.solarKW = Math.round(peakLoadKW * 1.4);
+      updates.solarKW = solarGuidance.recommended;
+      
+      if (import.meta.env.DEV) {
+        console.log("[Step3_5V8] Solar sizing:", {
+          industry,
+          peakLoadKW,
+          physicalCap: solarGuidance.maxSize,
+          recommended: solarGuidance.recommended,
+          minSize: solarGuidance.minSize,
+          showSolar,
+          currentSolarKW: state.solarKW,
+        });
+      }
+    } else if (import.meta.env.DEV) {
+      console.log("[Step3_5V8] Solar NOT set:", {
+        showSolar,
+        currentSolarKW: state.solarKW,
+        wantsSolar: state.wantsSolar,
+        solarFeasible: state.intel?.solarFeasible,
+        solarPhysicalCapKW: state.solarPhysicalCapKW,
+      });
     }
     
     // ══════════════════════════════════════════════════════════════════════════
@@ -96,43 +160,7 @@ export default function Step3_5V8({ state, actions }: Props) {
     if (Object.keys(updates).length > 0) {
       actions.setAddonConfig(updates);
     }
-  }, [showSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry, state.solarKW, state.generatorKW, state.level2Chargers, state.dcfcChargers]);
-
-  // Solar sizing guidance based on industry with physical space constraints
-  const getSolarGuidance = () => {
-    // Industry-specific maximum based on physical space
-    const INDUSTRY_SOLAR_CAPS: Record<string, number> = {
-      'car-wash': 100,      // Limited bay roof space
-      'car_wash': 100,      // Alternate slug format
-      'gas-station': 120,   // Canopy space
-      'gas_station': 120,
-      'retail': 150,        // Limited roof area
-      'office': 250,        // Medium roof space
-      'warehouse': 400,     // Large flat roofs
-      'manufacturing': 600, // Industrial roofs
-      'hotel': 200,         // Multi-story with rooftop
-      'hospital': 300,      // Hospital roof space
-      'data-center': 200,   // Data center roof
-      'data_center': 200,
-    };
-
-    const physicalCap = industry ? (INDUSTRY_SOLAR_CAPS[industry] || peakLoadKW * 1.0) : peakLoadKW * 1.0;
-    
-    const minSize = Math.round(Math.min(peakLoadKW * 0.5, physicalCap * 0.5));
-    const recommended = Math.round(Math.min(peakLoadKW * 0.8, physicalCap * 0.85)); // Reduced from 1.4x
-    const maxSize = Math.round(Math.min(peakLoadKW * 1.0, physicalCap));
-    
-    return {
-      minSize,
-      recommended,
-      maxSize,
-      label: state.solarKW < minSize ? "Undersized" :
-             state.solarKW > maxSize ? "Oversized" :
-             Math.abs(state.solarKW - recommended) < recommended * 0.2 ? "Optimal" : "Good"
-    };
-  };
-
-  const solarGuidance = getSolarGuidance();
+  }, [showSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry, state.solarKW, state.generatorKW, state.level2Chargers, state.dcfcChargers, solarGuidance.recommended]);
 
   return (
     <div className="space-y-8">
@@ -156,14 +184,19 @@ export default function Step3_5V8({ state, actions }: Props) {
       <div className="space-y-6">
         {/* Solar Configuration */}
         {showSolar && (
-          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-500/30 rounded-2xl p-6">
+          <div className="bg-gradient-to-br from-amber-950/40 via-slate-900 to-slate-950 border-2 border-amber-500/40 rounded-2xl p-6 shadow-xl shadow-amber-500/10">
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-amber-500/10 p-3 rounded-xl">
                 <Sun className="w-6 h-6 text-amber-400" />
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-white">Solar PV Array</h3>
-                <p className="text-slate-400 text-sm">Industry: {industry || 'Commercial'} • Peak Load: {Math.round(peakLoadKW)} kW</p>
+                <p className="text-slate-400 text-sm">
+                  Industry: {industry || 'Commercial'} • Peak Load: {Math.round(peakLoadKW)} kW
+                </p>
+                <p className="text-amber-400/70 text-xs mt-0.5">
+                  Typical roof space: {Math.round(solarGuidance.maxSize)} kW capacity • Recommended: {Math.round(solarGuidance.recommended)} kW
+                </p>
               </div>
               <div className={`
                 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide
@@ -306,7 +339,7 @@ export default function Step3_5V8({ state, actions }: Props) {
 
         {/* Generator Configuration */}
         {wantsGenerator && (
-          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-slate-800 rounded-2xl p-6">
+          <div className="bg-gradient-to-br from-red-950/40 via-slate-900 to-slate-950 border-2 border-red-500/40 rounded-2xl p-6 shadow-xl shadow-red-500/10">
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-orange-500/10 p-3 rounded-xl">
                 <Fuel className="w-6 h-6 text-orange-400" />
@@ -494,7 +527,7 @@ export default function Step3_5V8({ state, actions }: Props) {
 
         {/* EV Charging Configuration */}
         {wantsEVCharging && (
-          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-slate-800 rounded-2xl p-6">
+          <div className="bg-gradient-to-br from-cyan-950/40 via-slate-900 to-slate-950 border-2 border-cyan-500/40 rounded-2xl p-6 shadow-xl shadow-cyan-500/10">
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-cyan-500/10 p-3 rounded-xl">
                 <Zap className="w-6 h-6 text-cyan-400" />
@@ -630,7 +663,7 @@ export default function Step3_5V8({ state, actions }: Props) {
           onClick={() => {
             setIsGeneratingTiers(true);
             // Small delay to show loading state before navigating
-            setTimeout(() => actions.goToStep(4), 100);
+            setTimeout(() => actions.goToStep(5), 100);
           }}
           disabled={isGeneratingTiers}
           className={`
