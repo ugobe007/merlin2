@@ -413,52 +413,21 @@ export default function Step3_5V8({ state, actions }: Props) {
           </div>
         )}
 
-        {/* EV Charging Configuration - Simple Yes/No */}
+        {/* EV Charging Configuration */}
         {wantsEVCharging && (
           <div className="bg-gradient-to-br from-cyan-950/40 via-slate-900 to-slate-950 border-2 border-cyan-500/40 rounded-2xl p-6 shadow-xl shadow-cyan-500/10">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-cyan-500/10 p-3 rounded-xl">
-                    <Zap className="w-6 h-6 text-cyan-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Add EV Charging?</h3>
-                    <p className="text-slate-400 text-sm">
-                      Employee and customer charging stations
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => actions.setAddonPreference("ev", true)}
-                    className={`
-                    px-8 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-200
-                    ${
-                      state.wantsEVCharging
-                        ? "bg-emerald-500/30 border-2 border-emerald-500 text-emerald-300 shadow-lg shadow-emerald-500/20"
-                        : "bg-slate-800/50 border-2 border-slate-700 text-slate-400 hover:border-emerald-500/50"
-                    }
-                  `}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    onClick={() => actions.setAddonPreference("ev", false)}
-                    className={`
-                    px-8 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-200
-                    ${
-                      !state.wantsEVCharging
-                        ? "bg-red-500/30 border-2 border-red-500 text-red-300 shadow-lg shadow-red-500/20"
-                        : "bg-slate-800/50 border-2 border-slate-700 text-slate-400 hover:border-red-500/50"
-                    }
-                  `}
-                  >
-                    No
-                  </button>
-                </div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-cyan-500/10 p-3 rounded-xl">
+                <Zap className="w-6 h-6 text-cyan-400" />
               </div>
-              {/* Merlin's EV Charging Recommendation */}
+              <div>
+                <h3 className="text-xl font-bold text-white">EV Charging</h3>
+                <p className="text-slate-400 text-sm">Employee and customer charging</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Merlin's EV Charging Recommendation - At the top for visibility */}
               <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-4">
                 <div className="flex gap-2 text-sm">
                   <Info className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
@@ -475,6 +444,80 @@ export default function Step3_5V8({ state, actions }: Props) {
                       charging, while DC Fast Chargers serve customer convenience needs.
                     </span>
                   </div>
+                </div>
+              </div>
+
+              {/* Level 2 Chargers */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Level 2 Chargers (7-22 kW)
+                  </label>
+                  <span className="text-lg font-bold text-cyan-400">{state.level2Chargers}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={20}
+                  step={1}
+                  value={state.level2Chargers}
+                  onChange={(e) =>
+                    actions.setAddonConfig({ level2Chargers: Number(e.target.value) })
+                  }
+                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                />
+              </div>
+
+              {/* DCFC Chargers */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    DC Fast Chargers (50-150 kW)
+                  </label>
+                  <span className="text-lg font-bold text-purple-400">{state.dcfcChargers}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={10}
+                  step={1}
+                  value={state.dcfcChargers}
+                  onChange={(e) => actions.setAddonConfig({ dcfcChargers: Number(e.target.value) })}
+                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                />
+              </div>
+
+              {/* HPC Chargers */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    High Power Chargers (250-350 kW)
+                  </label>
+                  <span className="text-lg font-bold text-fuchsia-400">{state.hpcChargers}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={5}
+                  step={1}
+                  value={state.hpcChargers}
+                  onChange={(e) => actions.setAddonConfig({ hpcChargers: Number(e.target.value) })}
+                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-fuchsia-500"
+                />
+              </div>
+
+              {/* Total Power Summary */}
+              <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-cyan-300">Total Charging Capacity:</span>
+                  <span className="text-lg font-bold text-cyan-400">
+                    {(
+                      state.level2Chargers * 11 +
+                      state.dcfcChargers * 150 +
+                      state.hpcChargers * 350
+                    ).toLocaleString()}{" "}
+                    kW
+                  </span>
                 </div>
               </div>
             </div>
