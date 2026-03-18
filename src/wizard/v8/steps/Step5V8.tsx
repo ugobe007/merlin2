@@ -1,5 +1,5 @@
 /**
- * WIZARD V8 — STEP 6: QUOTE RESULTS (COMPLETE V7 PARITY)
+ * WIZARD V8 — STEP 5: QUOTE RESULTS (COMPLETE V7 PARITY)
  *
  * Full V7 feature parity:
  * - TrueQuote™ gold badge (clickable) → opens financial modal
@@ -199,18 +199,20 @@ export default function Step5V8({ state, actions }: Props) {
   // 📊 STATE VALIDATION AND DATA EXTRACTION
   // ═══════════════════════════════════════════════════════════════════════
 
-  console.log("[Step5V8] Rendering with:", {
-    hasTiers: !!state.tiers,
-    selectedTierIndex: state.selectedTierIndex,
-    location: state.location,
-    industry: state.industry,
-  });
-
   const { tiers, selectedTierIndex, location, industry } = state;
   const tier = tiers && selectedTierIndex !== null ? tiers[selectedTierIndex] : undefined;
   const countryCode = state.countryCode || state.country || "US";
 
-  console.log("[Step5V8] Selected tier data:", tier);
+  // Debug logging (dev only, runs once on mount)
+  React.useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log(
+        "[Step5V8] Mounted with tier:",
+        tier ? `${tier.label} - ${tier.bessKW}kW` : "none"
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── handleShare needs tier data, so define it after validation ──
   const handleShare = useCallback(
@@ -286,49 +288,69 @@ export default function Step5V8({ state, actions }: Props) {
   }, [leadCaptured, pendingFormat, showLeadGate, exportingFormat, handleExport]);
 
   // ── Fetch recommended installers based on location and project type ──
+  // Only fetch once when state code and tier data become available
   React.useEffect(() => {
+    const stateCode = location?.state;
+
+    if (!stateCode || !tier || loadingInstallers || installers.length > 0) {
+      // Skip if: no location, no tier, already loading, or already have results
+      return;
+    }
+
+    if (import.meta.env.DEV) {
+      console.log("[Step5V8] Fetching installers for state:", stateCode);
+    }
+
+    let mounted = true;
+    setLoadingInstallers(true);
+
     async function fetchInstallers() {
-      const stateCode = location?.state;
-      console.log("[Step5V8] Fetching installers for state:", stateCode, "location:", location);
-
-      if (!stateCode) {
-        console.log("[Step5V8] No state code - skipping installer fetch");
-        return;
-      }
-
-      setLoadingInstallers(true);
       try {
         // Determine installer type based on system configuration
         let installerType: "solar" | "bess" | "ev_charging" | "generator" = "bess";
-        if (tier && tier.solarKW > 0 && tier.bessKWh > 0) {
+        if (tier.solarKW > 0 && tier.bessKWh > 0) {
           installerType = "solar"; // Solar+Storage projects get solar installers
-        } else if (tier && tier.solarKW > 0) {
+        } else if (tier.solarKW > 0) {
           installerType = "solar";
-        } else if (tier && tier.generatorKW > 0) {
+        } else if (tier.generatorKW > 0) {
           installerType = "generator";
-        } else if (tier && tier.evChargerKW > 0) {
+        } else if (tier.evChargerKW > 0) {
           installerType = "ev_charging";
         }
 
-        const projectSizeKW = tier ? tier.solarKW || tier.bessKW || tier.bessKWh / 4 : 500;
+        const projectSizeKW = tier.solarKW || tier.bessKW || tier.bessKWh / 4 || 500;
 
-        console.log("[Step5V8] Fetching installers:", { stateCode, installerType, projectSizeKW });
+        if (import.meta.env.DEV) {
+          console.log("[Step5V8] Fetching installers:", { installerType, projectSizeKW });
+        }
 
         const results = await getRecommendedInstallers(stateCode, installerType, projectSizeKW);
 
-        console.log("[Step5V8] Installer results:", results);
-        setInstallers(results);
+        if (mounted) {
+          if (import.meta.env.DEV) {
+            console.log("[Step5V8] Installer results:", results);
+          }
+          setInstallers(results);
+          setLoadingInstallers(false);
+        }
       } catch (error) {
-        console.error("[Step5V8] Failed to fetch installers:", error);
-        setInstallers([]);
-      } finally {
-        setLoadingInstallers(false);
+        if (mounted) {
+          console.error("[Step5V8] Failed to fetch installers:", error);
+          setInstallers([]);
+          setLoadingInstallers(false);
+        }
       }
     }
 
     fetchInstallers();
+
+    return () => {
+      mounted = false;
+    };
+    // Only trigger when location.state or tier changes (not on every render)
+    // installers.length and loadingInstallers are checked inside effect to prevent refetches
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location?.state, tier]);
+  }, [location?.state, tier?.bessKW, tier?.solarKW]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // 🚫 EARLY RETURN CHECK - ONLY AFTER ALL HOOKS

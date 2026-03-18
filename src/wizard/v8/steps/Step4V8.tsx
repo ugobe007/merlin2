@@ -241,15 +241,24 @@ export default function Step4V8({ state, actions }: Props) {
   const [progress, setProgress] = React.useState(0);
   const [selectionConfirmation, setSelectionConfirmation] = React.useState<string | null>(null);
 
-  console.log("[Step4V8] State:", {
-    tiersStatus,
-    selectedTierIndex,
-    hasTiers: !!tiers,
-    tierCount: tiers?.length,
-  });
-
+  // Log only when tiersStatus changes, not on every render
   React.useEffect(() => {
-    console.log("[Step4V8] selectedTierIndex changed to:", selectedTierIndex);
+    if (import.meta.env.DEV) {
+      console.log("[Step4V8] State:", {
+        tiersStatus,
+        selectedTierIndex,
+        hasTiers: !!tiers,
+        tierCount: tiers?.length,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tiersStatus]);
+
+  // Track tier selection changes (debug only)
+  React.useEffect(() => {
+    if (import.meta.env.DEV && selectedTierIndex !== null) {
+      console.log("[Step4V8] selectedTierIndex changed to:", selectedTierIndex);
+    }
   }, [selectedTierIndex]);
 
   // Loading steps for status bar
@@ -540,9 +549,10 @@ export default function Step4V8({ state, actions }: Props) {
                     <div className={`equipment-chip ${config.chipBg} border`}>
                       <span>🔋</span>
                       <span className={config.chipText}>
-                        {tier.bessKWh >= 1000 
-                          ? `${Math.round(tier.bessKWh / 1000)} MWh` 
-                          : `${Math.round(tier.bessKWh)} kWh`} BESS
+                        {tier.bessKWh >= 1000
+                          ? `${Math.round(tier.bessKWh / 1000)} MWh`
+                          : `${Math.round(tier.bessKWh)} kWh`}{" "}
+                        BESS
                       </span>
                     </div>
 
