@@ -45,6 +45,7 @@ export default function Step3_5V8({ state, actions }: Props) {
   // Local confirmation states
   const [solarConfirmed, setSolarConfirmed] = React.useState(false);
   const [generatorConfirmed, setGeneratorConfirmed] = React.useState(false);
+  const [evConfirmed, setEvConfirmed] = React.useState(false);
   const [isGeneratingTiers, setIsGeneratingTiers] = React.useState(false);
 
   // Solar sizing guidance based on industry with physical space constraints
@@ -446,7 +447,6 @@ export default function Step3_5V8({ state, actions }: Props) {
                   </div>
                 </div>
               </div>
-
               {/* Level 2 Chargers */}
               <div>
                 <div className="flex justify-between items-center mb-2">
@@ -467,7 +467,6 @@ export default function Step3_5V8({ state, actions }: Props) {
                   className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                 />
               </div>
-
               {/* DCFC Chargers */}
               <div>
                 <div className="flex justify-between items-center mb-2">
@@ -486,7 +485,6 @@ export default function Step3_5V8({ state, actions }: Props) {
                   className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
                 />
               </div>
-
               {/* HPC Chargers */}
               <div>
                 <div className="flex justify-between items-center mb-2">
@@ -505,7 +503,6 @@ export default function Step3_5V8({ state, actions }: Props) {
                   className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-fuchsia-500"
                 />
               </div>
-
               {/* Total Power Summary */}
               <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3">
                 <div className="flex justify-between items-center">
@@ -520,6 +517,36 @@ export default function Step3_5V8({ state, actions }: Props) {
                   </span>
                 </div>
               </div>
+              {/* Confirmation Button */}
+              <button
+                onClick={() => setEvConfirmed(true)}
+                disabled={evConfirmed}
+                className={`
+                  w-full px-8 py-3 rounded-xl font-bold text-sm uppercase tracking-wider
+                  flex items-center justify-center gap-2
+                  ${
+                    evConfirmed
+                      ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 scale-95 cursor-default"
+                      : "bg-transparent border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 hover:scale-105 active:scale-95"
+                  }
+                  transition-all duration-200
+                `}
+              >
+                {evConfirmed ? (
+                  <>
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    EV Charging Confirmed
+                  </>
+                ) : (
+                  "Confirm EV Charging"
+                )}
+              </button>{" "}
             </div>
           </div>
         )}
