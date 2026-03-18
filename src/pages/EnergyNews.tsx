@@ -377,29 +377,19 @@ ${story.topics.length > 0 ? `#${story.topics.map((t) => t.replace(/\s+/g, "")).j
         {!loading && stories.length > 0 && (
           <div style={{ display: "grid", gap: 20 }}>
             {stories.map((story, index) => (
-              <a
+              <div
                 key={story.id}
-                href={story.url}
-                target="_blank"
-                rel="noopener noreferrer"
                 style={{
                   display: "block",
                   background: DARK.panel,
                   border: `1px solid ${DARK.border}`,
                   borderRadius: 12,
                   padding: 24,
-                  textDecoration: "none",
                   color: "inherit",
                   transition: "all 0.2s",
                   position: "relative",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = DARK.accent;
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = DARK.border;
-                  e.currentTarget.style.transform = "translateY(0)";
+                  userSelect: "text",
+                  WebkitUserSelect: "text",
                 }}
               >
                 {/* Rank Badge */}
@@ -458,8 +448,28 @@ ${story.topics.length > 0 ? `#${story.topics.map((t) => t.replace(/\s+/g, "")).j
                       lineHeight: 1.4,
                     }}
                   >
-                    {decodeHTMLEntities(story.title)}
-                    <ExternalLink size={16} style={{ marginLeft: 8, opacity: 0.5 }} />
+                    <a
+                      href={story.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: DARK.text,
+                        textDecoration: "none",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = DARK.accent;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = DARK.text;
+                      }}
+                    >
+                      {decodeHTMLEntities(story.title)}
+                      <ExternalLink
+                        size={16}
+                        style={{ marginLeft: 8, opacity: 0.5, display: "inline" }}
+                      />
+                    </a>
                   </h2>
 
                   {/* Subtitle */}
@@ -524,6 +534,39 @@ ${story.topics.length > 0 ? `#${story.topics.map((t) => t.replace(/\s+/g, "")).j
                     ))}
                   </div>
 
+                  {/* Read Full Article Button */}
+                  <a
+                    href={story.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "10px 16px",
+                      marginBottom: 16,
+                      borderRadius: 8,
+                      background: `${DARK.accent}15`,
+                      border: `1px solid ${DARK.accent}`,
+                      color: DARK.accent,
+                      textDecoration: "none",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = DARK.accent;
+                      e.currentTarget.style.color = DARK.bg;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = `${DARK.accent}15`;
+                      e.currentTarget.style.color = DARK.accent;
+                    }}
+                  >
+                    Read Full Article
+                    <ExternalLink size={14} />
+                  </a>
+
                   {/* Social Share Buttons */}
                   <div
                     style={{
@@ -539,7 +582,6 @@ ${story.topics.length > 0 ? `#${story.topics.map((t) => t.replace(/\s+/g, "")).j
                     <button
                       onClick={(e) => {
                         e.preventDefault();
-                        e.stopPropagation();
                         copyArticleForSocialMedia(story);
                       }}
                       style={{
@@ -601,7 +643,7 @@ ${story.topics.length > 0 ? `#${story.topics.map((t) => t.replace(/\s+/g, "")).j
                       href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(story.url)}&text=${encodeURIComponent(story.title)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={() => {}}
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -636,7 +678,7 @@ ${story.topics.length > 0 ? `#${story.topics.map((t) => t.replace(/\s+/g, "")).j
                       href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(story.url)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={() => {}}
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -671,7 +713,7 @@ ${story.topics.length > 0 ? `#${story.topics.map((t) => t.replace(/\s+/g, "")).j
                       href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(story.url)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={() => {}}
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -704,7 +746,7 @@ ${story.topics.length > 0 ? `#${story.topics.map((t) => t.replace(/\s+/g, "")).j
                     {/* Email */}
                     <a
                       href={`mailto:?subject=${encodeURIComponent(story.title)}&body=${encodeURIComponent(`Check out this article: ${story.title}\n\n${story.url}`)}`}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={() => {}}
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -736,7 +778,7 @@ ${story.topics.length > 0 ? `#${story.topics.map((t) => t.replace(/\s+/g, "")).j
                     <button
                       onClick={(e) => {
                         e.preventDefault();
-                        e.stopPropagation();
+
                         navigator.clipboard.writeText(story.url);
                         // Could add a toast notification here
                         const btn = e.currentTarget;
@@ -779,7 +821,7 @@ ${story.topics.length > 0 ? `#${story.topics.map((t) => t.replace(/\s+/g, "")).j
                     </button>
                   </div>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         )}
