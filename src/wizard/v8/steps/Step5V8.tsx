@@ -49,14 +49,7 @@ import { supabase } from "@/services/supabaseClient";
 import { formatCurrency } from "@/services/internationalService";
 import { getRecommendedInstallers, type RecommendedInstaller } from "@/services/installerService";
 
-const DARK = {
-  cardBg: "rgba(255,255,255,0.04)",
-  cardBorder: "rgba(255,255,255,0.09)",
-  textPrimary: "#ffffff",
-  textSecondary: "rgba(255,255,255,0.60)",
-  textMuted: "rgba(255,255,255,0.35)",
-  accent: "#3ECF8E",
-};
+// Removed unused DARK color constants
 
 function fmt$(n: number | null | undefined, countryCode?: string): string {
   if (n === null || n === undefined || !Number.isFinite(n)) return "—";
@@ -107,7 +100,7 @@ export default function Step5V8({ state, actions }: Props) {
   const [exportingFormat, setExportingFormat] = useState<"pdf" | "word" | "excel" | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [shareSuccess, setShareSuccess] = useState<string | null>(null);
-  
+
   // Installer recommendations
   const [installers, setInstallers] = useState<RecommendedInstaller[]>([]);
   const [loadingInstallers, setLoadingInstallers] = useState(false);
@@ -296,44 +289,45 @@ export default function Step5V8({ state, actions }: Props) {
   React.useEffect(() => {
     async function fetchInstallers() {
       const stateCode = location?.state;
-      console.log('[Step5V8] Fetching installers for state:', stateCode, 'location:', location);
-      
+      console.log("[Step5V8] Fetching installers for state:", stateCode, "location:", location);
+
       if (!stateCode) {
-        console.log('[Step5V8] No state code - skipping installer fetch');
+        console.log("[Step5V8] No state code - skipping installer fetch");
         return;
       }
-      
+
       setLoadingInstallers(true);
       try {
         // Determine installer type based on system configuration
-        let installerType: 'solar' | 'bess' | 'ev_charging' | 'generator' = 'bess';
+        let installerType: "solar" | "bess" | "ev_charging" | "generator" = "bess";
         if (tier && tier.solarKW > 0 && tier.bessKWh > 0) {
-          installerType = 'solar'; // Solar+Storage projects get solar installers
+          installerType = "solar"; // Solar+Storage projects get solar installers
         } else if (tier && tier.solarKW > 0) {
-          installerType = 'solar';
+          installerType = "solar";
         } else if (tier && tier.generatorKW > 0) {
-          installerType = 'generator';
+          installerType = "generator";
         } else if (tier && tier.evChargerKW > 0) {
-          installerType = 'ev_charging';
+          installerType = "ev_charging";
         }
-        
-        const projectSizeKW = tier ? (tier.solarKW || tier.bessKW || tier.bessKWh / 4) : 500;
-        
-        console.log('[Step5V8] Fetching installers:', { stateCode, installerType, projectSizeKW });
-        
+
+        const projectSizeKW = tier ? tier.solarKW || tier.bessKW || tier.bessKWh / 4 : 500;
+
+        console.log("[Step5V8] Fetching installers:", { stateCode, installerType, projectSizeKW });
+
         const results = await getRecommendedInstallers(stateCode, installerType, projectSizeKW);
-        
-        console.log('[Step5V8] Installer results:', results);
+
+        console.log("[Step5V8] Installer results:", results);
         setInstallers(results);
       } catch (error) {
-        console.error('[Step5V8] Failed to fetch installers:', error);
+        console.error("[Step5V8] Failed to fetch installers:", error);
         setInstallers([]);
       } finally {
         setLoadingInstallers(false);
       }
     }
-    
+
     fetchInstallers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location?.state, tier]);
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -798,7 +792,7 @@ export default function Step5V8({ state, actions }: Props) {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-bold text-slate-100 tracking-tight">
-                Recommended Installers in {location?.state || 'Your Area'}
+                Recommended Installers in {location?.state || "Your Area"}
               </h3>
               <p className="text-sm text-slate-400 mt-0.5">
                 Top-rated companies for your project size and location
@@ -831,7 +825,9 @@ export default function Step5V8({ state, actions }: Props) {
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-bold text-purple-400">#{installer.rank}</span>
+                          <span className="text-xs font-bold text-purple-400">
+                            #{installer.rank}
+                          </span>
                           {installer.tier === 1 && (
                             <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-400 uppercase">
                               Tier 1
@@ -895,17 +891,22 @@ export default function Step5V8({ state, actions }: Props) {
 
               <button
                 onClick={() => {
-                  const emails = installers.map(i => i.email).filter(Boolean).join(',');
-                  const subject = encodeURIComponent(`Quote Request - ${industry?.replace(/_/g, ' ')} Energy System`);
+                  const emails = installers
+                    .map((i) => i.email)
+                    .filter(Boolean)
+                    .join(",");
+                  const subject = encodeURIComponent(
+                    `Quote Request - ${industry?.replace(/_/g, " ")} Energy System`
+                  );
                   const body = encodeURIComponent(
                     `Hi,\n\nI received a quote from Merlin BESS and would like to request bids from your company.\n\n` +
-                    `Project Details:\n` +
-                    `- Location: ${location?.city || location?.state || 'TBD'}\n` +
-                    `- System Size: ${tier ? fmtNum(tier.bessKWh) : 'TBD'} kWh storage` +
-                    `${tier && tier.solarKW > 0 ? ` + ${fmtNum(tier.solarKW)} kW solar` : ''}\n` +
-                    `- Estimated Investment: ${tier ? fmt$(tier.netCost, countryCode) : 'TBD'}\n\n` +
-                    `Please contact me to discuss this project.\n\n` +
-                    `Thank you!`
+                      `Project Details:\n` +
+                      `- Location: ${location?.city || location?.state || "TBD"}\n` +
+                      `- System Size: ${tier ? fmtNum(tier.bessKWh) : "TBD"} kWh storage` +
+                      `${tier && tier.solarKW > 0 ? ` + ${fmtNum(tier.solarKW)} kW solar` : ""}\n` +
+                      `- Estimated Investment: ${tier ? fmt$(tier.netCost, countryCode) : "TBD"}\n\n` +
+                      `Please contact me to discuss this project.\n\n` +
+                      `Thank you!`
                   );
                   window.location.href = `mailto:${emails}?subject=${subject}&body=${body}`;
                 }}
@@ -927,9 +928,7 @@ export default function Step5V8({ state, actions }: Props) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <FileText className="w-5 h-5 text-[#3ECF8E]" />
-              <div className="text-lg font-bold text-slate-100 tracking-tight">
-                Download Quote
-              </div>
+              <div className="text-lg font-bold text-slate-100 tracking-tight">Download Quote</div>
             </div>
             <p className="text-sm text-slate-400">
               Detailed breakdown with equipment specs, financials & methodology

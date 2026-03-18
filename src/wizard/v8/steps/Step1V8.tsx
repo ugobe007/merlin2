@@ -516,6 +516,7 @@ export function Step1V8({ state, actions }: Step1Props) {
     }, 250);
 
     return () => globalThis.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessName, country, ensurePlacesLibrary, locationConfirmed, selectedSuggestion]);
 
   const handleZipChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -560,7 +561,7 @@ export function Step1V8({ state, actions }: Step1Props) {
 
   const handleSuggestionSelect = async (suggestion: BusinessSuggestion) => {
     console.log("🏢 handleSuggestionSelect CALLED:", suggestion.primaryText);
-    
+
     try {
       setBusinessError(null);
       setSelectedSuggestion(suggestion);
@@ -571,9 +572,9 @@ export function Step1V8({ state, actions }: Step1Props) {
         placeId: suggestion.placeId,
         formattedAddress: suggestion.secondaryText || suggestion.label,
       });
-      
+
       console.log("📦 Business preview built:", preview);
-      
+
       setBusinessName(suggestion.primaryText);
       commitBusinessPreview({
         ...preview,
@@ -583,17 +584,16 @@ export function Step1V8({ state, actions }: Step1Props) {
       console.log("✅ Business preview committed, fetching details...");
 
       const details = await enrichSuggestion(suggestion);
-      
+
       console.log("📋 Business details enriched:", details);
-      
+
       commitBusinessPreview({
         ...preview,
         name: suggestion.primaryText || preview.name,
         ...details,
       });
-      
+
       console.log("✅ Business selection complete!");
-      
     } catch (error) {
       console.error("❌ Error in handleSuggestionSelect:", error);
       setBusinessError("Failed to load business details. Please try again.");
@@ -637,6 +637,7 @@ export function Step1V8({ state, actions }: Step1Props) {
     } catch {
       return null;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessName, country, ensurePlacesLibrary, location?.city, location?.state, streetAddress]);
 
   const handleBusinessContinue = async () => {
@@ -677,19 +678,19 @@ export function Step1V8({ state, actions }: Step1Props) {
       setBusinessError("Please confirm your ZIP code location first.");
       return;
     }
-    
+
     // Validation: Must have business name
     if (!activeBusiness || !activeBusiness.name) {
       setBusinessError("Please enter your business name.");
       return;
     }
-    
+
     // Validation: Must select grid reliability
     if (!state.gridReliability) {
       setBusinessError("Please select your grid reliability.");
       return;
     }
-    
+
     if (activeBusiness && !state.business) {
       actions.setBusiness(activeBusiness.name, {
         address: activeBusiness.address,
@@ -741,174 +742,200 @@ export function Step1V8({ state, actions }: Step1Props) {
           }
         }
       `}</style>
-      <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%", maxWidth: "100%", overflowX: "hidden" }}>
-      <div>
-        <h1
-          style={{
-            margin: 0,
-            fontSize: "clamp(28px,6vw,50px)",
-            lineHeight: 1.05,
-            letterSpacing: "-1.6px",
-            color: T.textPrimary,
-            fontWeight: 800,
-            textTransform: "lowercase",
-          }}
-        >
-          unlock your <span style={{ color: T.accent }}>energy savings</span>
-        </h1>
-        <p style={{ margin: "8px 0 0", fontSize: 16, lineHeight: 1.6, color: T.textPrimary, opacity: 0.9 }}>
-          Confirm your ZIP, then match your business so Merlin can route you into the right
-          questionnaire immediately.
-        </p>
-      </div>
-
-      {error && (
-        <div
-          style={{
-            padding: "12px 14px",
-            borderRadius: 12,
-            background: "rgba(239,68,68,0.10)",
-            border: "1px solid rgba(239,68,68,0.26)",
-            color: "#fca5a5",
-            fontSize: 13,
-          }}
-        >
-          {error.message}
-        </div>
-      )}
-
       <div
-        className="step1-location-container"
         style={{
-          padding: 18,
-          borderRadius: 14,
-          background: T.panel,
-          border: `1px solid ${T.panelBorder}`,
+          display: "flex",
+          flexDirection: "column",
+          gap: 20,
+          width: "100%",
+          maxWidth: "100%",
+          overflowX: "hidden",
         }}
       >
-        {/* Row 1: Country Selection Buttons */}
-        <div className="step1-country-buttons" style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
-          {(["US", "International"] as Country[]).map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => {
-                setCountry(value);
-                if (value === "US") {
-                  setSelectedCountryCode("US");
-                } else {
-                  // When switching to International, default to first non-US country and auto-populate
-                  const firstIntlCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code !== "US");
-                  if (firstIntlCountry) {
-                    setSelectedCountryCode(firstIntlCountry.code);
-                    actions.setLocationRaw(firstIntlCountry.name);
-                  }
-                }
-              }}
-              style={{
-                height: 46,
-                padding: "0 16px",
-                borderRadius: 8,
-                border:
-                  country === value
-                    ? `1px solid ${T.accentBorder}`
-                    : "1px solid rgba(255,255,255,0.08)",
-                background: country === value ? T.accentSoft : "rgba(255,255,255,0.03)",
-                color: country === value ? T.accent : T.textPrimary,
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              {value === "US" ? "US" : "International"}
-            </button>
-          ))}
-
-          {country === "International" && (
-            <select
-              value={selectedCountryCode}
-              onChange={(e) => {
-                const code = e.target.value;
-                setSelectedCountryCode(code);
-
-                // Auto-populate input field with country name when dropdown changes
-                const selectedCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code === code);
-                if (selectedCountry && code !== "US") {
-                  actions.setLocationRaw(selectedCountry.name);
-                }
-              }}
-              style={{
-                height: 46,
-                padding: "0 12px",
-                borderRadius: 8,
-                border: "1px solid rgba(255,255,255,0.10)",
-                background: T.input,
-                color: T.textPrimary,
-                fontSize: 14,
-                fontWeight: 500,
-                cursor: "pointer",
-                outline: "none",
-              }}
-            >
-              {INTERNATIONAL_COUNTRIES.map(({ code, name }) => (
-                <option
-                  key={code}
-                  value={code}
-                  style={{ background: "#1a1f2e", color: T.textPrimary }}
-                >
-                  {name} ({code})
-                </option>
-              ))}
-            </select>
-          )}
+        <div>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "clamp(28px,6vw,50px)",
+              lineHeight: 1.05,
+              letterSpacing: "-1.6px",
+              color: T.textPrimary,
+              fontWeight: 800,
+              textTransform: "lowercase",
+            }}
+          >
+            unlock your <span style={{ color: T.accent }}>energy savings</span>
+          </h1>
+          <p
+            style={{
+              margin: "8px 0 0",
+              fontSize: 16,
+              lineHeight: 1.6,
+              color: T.textPrimary,
+              opacity: 0.9,
+            }}
+          >
+            Confirm your ZIP, then match your business so Merlin can route you into the right
+            questionnaire immediately.
+          </p>
         </div>
 
-        {!locationConfirmed ? (
-          <>
-            {/* Row 2: ZIP Code Input */}
-            <input
-              ref={zipRef}
-              type="text"
-              inputMode={country === "US" ? "numeric" : "text"}
-              value={locationRaw}
-              onChange={handleZipChange}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") handleLocationSubmit();
-              }}
-              placeholder={country === "US" ? "ZIP code" : "Country name or postal code"}
-              className="step1-zip-input"
-              style={{
-                width: "100%",
-                height: 52,
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.10)",
-                background: T.input,
-                color: T.textPrimary,
-                padding: "0 14px",
-                fontSize: 18,
-                outline: "none",
-                marginBottom: 12,
-              }}
-            />
-            
-            {/* Row 3: Confirmation Button */}
-            <button
-              type="button"
-              onClick={handleLocationSubmit}
-              disabled={!isValidZip || isLocationBusy}
-              style={{
-                width: "100%",
-                height: 46,
-                borderRadius: 10,
-                border: `1px solid ${isValidZip ? T.accentBorder : "rgba(255,255,255,0.08)"}`,
-                background: isValidZip ? T.accentSoft : "rgba(255,255,255,0.03)",
-                color: isValidZip ? T.accent : T.textMuted,
-                fontWeight: 700,
-                cursor: isValidZip ? "pointer" : "not-allowed",
-              }}
-            >
-              {isLocationBusy ? "Checking..." : "Confirm Location"}
-            </button>
+        {error && (
+          <div
+            style={{
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "rgba(239,68,68,0.10)",
+              border: "1px solid rgba(239,68,68,0.26)",
+              color: "#fca5a5",
+              fontSize: 13,
+            }}
+          >
+            {error.message}
+          </div>
+        )}
+
+        <div
+          className="step1-location-container"
+          style={{
+            padding: 18,
+            borderRadius: 14,
+            background: T.panel,
+            border: `1px solid ${T.panelBorder}`,
+          }}
+        >
+          {/* Row 1: Country Selection Buttons */}
+          <div
+            className="step1-country-buttons"
+            style={{
+              display: "flex",
+              gap: 6,
+              alignItems: "center",
+              marginBottom: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            {(["US", "International"] as Country[]).map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setCountry(value);
+                  if (value === "US") {
+                    setSelectedCountryCode("US");
+                  } else {
+                    // When switching to International, default to first non-US country and auto-populate
+                    const firstIntlCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code !== "US");
+                    if (firstIntlCountry) {
+                      setSelectedCountryCode(firstIntlCountry.code);
+                      actions.setLocationRaw(firstIntlCountry.name);
+                    }
+                  }
+                }}
+                style={{
+                  height: 46,
+                  padding: "0 16px",
+                  borderRadius: 8,
+                  border:
+                    country === value
+                      ? `1px solid ${T.accentBorder}`
+                      : "1px solid rgba(255,255,255,0.08)",
+                  background: country === value ? T.accentSoft : "rgba(255,255,255,0.03)",
+                  color: country === value ? T.accent : T.textPrimary,
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                {value === "US" ? "US" : "International"}
+              </button>
+            ))}
+
+            {country === "International" && (
+              <select
+                value={selectedCountryCode}
+                onChange={(e) => {
+                  const code = e.target.value;
+                  setSelectedCountryCode(code);
+
+                  // Auto-populate input field with country name when dropdown changes
+                  const selectedCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code === code);
+                  if (selectedCountry && code !== "US") {
+                    actions.setLocationRaw(selectedCountry.name);
+                  }
+                }}
+                style={{
+                  height: 46,
+                  padding: "0 12px",
+                  borderRadius: 8,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: T.input,
+                  color: T.textPrimary,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+              >
+                {INTERNATIONAL_COUNTRIES.map(({ code, name }) => (
+                  <option
+                    key={code}
+                    value={code}
+                    style={{ background: "#1a1f2e", color: T.textPrimary }}
+                  >
+                    {name} ({code})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {!locationConfirmed ? (
+            <>
+              {/* Row 2: ZIP Code Input */}
+              <input
+                ref={zipRef}
+                type="text"
+                inputMode={country === "US" ? "numeric" : "text"}
+                value={locationRaw}
+                onChange={handleZipChange}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") handleLocationSubmit();
+                }}
+                placeholder={country === "US" ? "ZIP code" : "Country name or postal code"}
+                className="step1-zip-input"
+                style={{
+                  width: "100%",
+                  height: 52,
+                  borderRadius: 10,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: T.input,
+                  color: T.textPrimary,
+                  padding: "0 14px",
+                  fontSize: 18,
+                  outline: "none",
+                  marginBottom: 12,
+                }}
+              />
+
+              {/* Row 3: Confirmation Button */}
+              <button
+                type="button"
+                onClick={handleLocationSubmit}
+                disabled={!isValidZip || isLocationBusy}
+                style={{
+                  width: "100%",
+                  height: 46,
+                  borderRadius: 10,
+                  border: `1px solid ${isValidZip ? T.accentBorder : "rgba(255,255,255,0.08)"}`,
+                  background: isValidZip ? T.accentSoft : "rgba(255,255,255,0.03)",
+                  color: isValidZip ? T.accent : T.textMuted,
+                  fontWeight: 700,
+                  cursor: isValidZip ? "pointer" : "not-allowed",
+                }}
+              >
+                {isLocationBusy ? "Checking..." : "Confirm Location"}
+              </button>
             </>
           ) : (
             <div
@@ -954,70 +981,163 @@ export function Step1V8({ state, actions }: Step1Props) {
               </button>
             </div>
           )}
-      </div>
+        </div>
 
-      {showIntelStrip && <IntelStripInline intel={intelStripData} />}
+        {showIntelStrip && <IntelStripInline intel={intelStripData} />}
 
-      {locationConfirmed && !activeBusiness && (
-        <div
-          style={{
-            padding: 18,
-            borderRadius: 14,
-            background: T.panel,
-            border: `1px solid ${T.panelBorder}`,
-            display: "grid",
-            gap: 16,
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: T.textPrimary }}>
-              Enter business name
+        {locationConfirmed && !activeBusiness && (
+          <div
+            style={{
+              padding: 18,
+              borderRadius: 14,
+              background: T.panel,
+              border: `1px solid ${T.panelBorder}`,
+              display: "grid",
+              gap: 16,
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: T.textPrimary }}>
+                Enter business name
+              </div>
+              <div style={{ fontSize: 13, lineHeight: 1.5, color: T.textSecondary }}>
+                Help us detect your industry automatically — or skip this step and select it
+                manually.
+              </div>
             </div>
-            <div style={{ fontSize: 13, lineHeight: 1.5, color: T.textSecondary }}>
-              Help us detect your industry automatically — or skip this step and select it manually.
-            </div>
-          </div>
 
-          {googleError && (
-            <div
-              style={{
-                padding: "10px 12px",
-                borderRadius: 10,
-                background: T.warning,
-                border: `1px solid ${T.warningBorder}`,
-                color: "rgba(251,191,36,0.92)",
-                fontSize: 12,
-              }}
-            >
-              {googleError} You can still continue with a typed business name.
-            </div>
-          )}
+            {googleError && (
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: T.warning,
+                  border: `1px solid ${T.warningBorder}`,
+                  color: "rgba(251,191,36,0.92)",
+                  fontSize: 12,
+                }}
+              >
+                {googleError} You can still continue with a typed business name.
+              </div>
+            )}
 
-          {businessError && (
-            <div
-              style={{
-                padding: "10px 12px",
-                borderRadius: 10,
-                background: "rgba(239,68,68,0.10)",
-                border: "1px solid rgba(239,68,68,0.24)",
-                color: "#fca5a5",
-                fontSize: 12,
-              }}
-            >
-              {businessError}
-            </div>
-          )}
+            {businessError && (
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "rgba(239,68,68,0.10)",
+                  border: "1px solid rgba(239,68,68,0.24)",
+                  color: "#fca5a5",
+                  fontSize: 12,
+                }}
+              >
+                {businessError}
+              </div>
+            )}
 
-          <div style={{ display: "grid", gap: 12 }}>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ display: "grid", gap: 12 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="text"
+                  value={businessName}
+                  onChange={(event) => {
+                    setBusinessName(event.target.value);
+                    setBusinessError(null);
+                    setSelectedSuggestion(null);
+                    setPreviewBusiness(null);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void handleBusinessContinue();
+                    }
+                  }}
+                  placeholder="Business name (optional)"
+                  autoComplete="off"
+                  style={{
+                    flex: 1,
+                    height: 46,
+                    borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    background: T.input,
+                    color: T.textPrimary,
+                    padding: "0 14px",
+                    fontSize: 14,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetBusinessFlow();
+                    actions.goToStep(2);
+                  }}
+                  style={{
+                    height: 46,
+                    padding: "0 18px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(255,255,255,0.03)",
+                    color: T.textSecondary,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Skip
+                </button>
+              </div>
+
+              <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.4 }}>
+                💡 Business matching helps us detect your industry automatically, but you can skip
+                and select it manually.
+              </div>
+
+              {businessSuggestions.length > 0 && !selectedSuggestion && (
+                <div
+                  style={{
+                    borderRadius: 12,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(8,11,20,0.98)",
+                    overflow: "hidden",
+                  }}
+                >
+                  {businessSuggestions.map((suggestion, index) => (
+                    <button
+                      key={suggestion.placeId}
+                      type="button"
+                      onClick={() => void handleSuggestionSelect(suggestion)}
+                      style={{
+                        width: "100%",
+                        padding: "12px 14px",
+                        border: "none",
+                        borderTop: index === 0 ? "none" : "1px solid rgba(255,255,255,0.06)",
+                        background: "transparent",
+                        color: T.textPrimary,
+                        textAlign: "left",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{suggestion.primaryText}</div>
+                      {suggestion.secondaryText && (
+                        <div style={{ marginTop: 3, fontSize: 11, color: T.textSecondary }}>
+                          {suggestion.secondaryText}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <input
                 type="text"
-                value={businessName}
+                value={streetAddress}
                 onChange={(event) => {
-                  setBusinessName(event.target.value);
+                  setStreetAddress(event.target.value);
                   setBusinessError(null);
-                  setSelectedSuggestion(null);
-                  setPreviewBusiness(null);
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
@@ -1025,10 +1145,9 @@ export function Step1V8({ state, actions }: Step1Props) {
                     void handleBusinessContinue();
                   }
                 }}
-                placeholder="Business name (optional)"
-                autoComplete="off"
+                placeholder="Street address (optional)"
                 style={{
-                  flex: 1,
+                  width: "100%",
                   height: 46,
                   borderRadius: 10,
                   border: "1px solid rgba(255,255,255,0.10)",
@@ -1040,321 +1159,198 @@ export function Step1V8({ state, actions }: Step1Props) {
                   boxSizing: "border-box",
                 }}
               />
+            </div>
+
+            <div style={{ display: "grid", gap: 10 }}>
+              {businessName.trim() && !selectedSuggestion && (
+                <div style={{ fontSize: 12, color: T.textSecondary }}>
+                  {isSuggestionsLoading
+                    ? "Searching Google Places..."
+                    : businessSuggestions.length > 0
+                      ? "Select a Google match for the richest business card, or continue with your typed entry."
+                      : "No Google match required. Merlin can continue with the typed business."}
+                </div>
+              )}
+
               <button
                 type="button"
-                onClick={() => {
-                  resetBusinessFlow();
-                  actions.goToStep(2);
-                }}
+                onClick={() => void handleBusinessContinue()}
+                disabled={!businessName.trim() || isResolvingBusiness}
                 style={{
-                  height: 46,
-                  padding: "0 18px",
-                  borderRadius: 10,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(255,255,255,0.03)",
-                  color: T.textSecondary,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
+                  width: "100%",
+                  height: 48,
+                  borderRadius: 12,
+                  border:
+                    businessName.trim() && !isResolvingBusiness
+                      ? `1px solid ${T.accentBorder}`
+                      : "1px solid rgba(255,255,255,0.08)",
+                  background:
+                    businessName.trim() && !isResolvingBusiness
+                      ? T.accentSoft
+                      : "rgba(255,255,255,0.03)",
+                  color: businessName.trim() && !isResolvingBusiness ? T.accent : T.textMuted,
+                  fontSize: 14,
+                  fontWeight: 800,
+                  cursor: businessName.trim() && !isResolvingBusiness ? "pointer" : "not-allowed",
                 }}
               >
-                Skip
+                {isResolvingBusiness
+                  ? "Building business card..."
+                  : "Continue to business confirmation"}
               </button>
             </div>
+          </div>
+        )}
 
-            <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.4 }}>
-              💡 Business matching helps us detect your industry automatically, but you can skip and
-              select it manually.
-            </div>
-
-            {businessSuggestions.length > 0 && !selectedSuggestion && (
-              <div
-                style={{
-                  borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(8,11,20,0.98)",
-                  overflow: "hidden",
-                }}
-              >
-                {businessSuggestions.map((suggestion, index) => (
-                  <button
-                    key={suggestion.placeId}
-                    type="button"
-                    onClick={() => void handleSuggestionSelect(suggestion)}
-                    style={{
-                      width: "100%",
-                      padding: "12px 14px",
-                      border: "none",
-                      borderTop: index === 0 ? "none" : "1px solid rgba(255,255,255,0.06)",
-                      background: "transparent",
-                      color: T.textPrimary,
-                      textAlign: "left",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ fontSize: 13, fontWeight: 700 }}>{suggestion.primaryText}</div>
-                    {suggestion.secondaryText && (
-                      <div style={{ marginTop: 3, fontSize: 11, color: T.textSecondary }}>
-                        {suggestion.secondaryText}
+        {locationConfirmed && activeBusiness && (
+          <div
+            style={{
+              borderRadius: 16,
+              background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))",
+              border: "1px solid rgba(255,255,255,0.10)",
+              overflow: "hidden",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.28)",
+            }}
+          >
+            <div style={{ padding: 24, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+                {activeBusiness.photoUrl ? (
+                  <div style={{ width: 96, flexShrink: 0 }}>
+                    <img
+                      src={activeBusiness.photoUrl}
+                      alt={activeBusiness.name}
+                      style={{
+                        width: 96,
+                        height: 96,
+                        borderRadius: 14,
+                        objectFit: "cover",
+                        border: `1px solid ${T.accentBorder}`,
+                        display: "block",
+                      }}
+                    />
+                    {activeBusiness.photoAttributionName && (
+                      <div
+                        style={{
+                          marginTop: 6,
+                          fontSize: 10,
+                          lineHeight: 1.3,
+                          color: T.textMuted,
+                        }}
+                      >
+                        Photo by{" "}
+                        {activeBusiness.photoAttributionUri ? (
+                          <a
+                            href={activeBusiness.photoAttributionUri}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: T.textSecondary, textDecoration: "none" }}
+                          >
+                            {activeBusiness.photoAttributionName}
+                          </a>
+                        ) : (
+                          activeBusiness.photoAttributionName
+                        )}
                       </div>
                     )}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <input
-              type="text"
-              value={streetAddress}
-              onChange={(event) => {
-                setStreetAddress(event.target.value);
-                setBusinessError(null);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void handleBusinessContinue();
-                }
-              }}
-              placeholder="Street address (optional)"
-              style={{
-                width: "100%",
-                height: 46,
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.10)",
-                background: T.input,
-                color: T.textPrimary,
-                padding: "0 14px",
-                fontSize: 14,
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
-
-          <div style={{ display: "grid", gap: 10 }}>
-            {businessName.trim() && !selectedSuggestion && (
-              <div style={{ fontSize: 12, color: T.textSecondary }}>
-                {isSuggestionsLoading
-                  ? "Searching Google Places..."
-                  : businessSuggestions.length > 0
-                    ? "Select a Google match for the richest business card, or continue with your typed entry."
-                    : "No Google match required. Merlin can continue with the typed business."}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={() => void handleBusinessContinue()}
-              disabled={!businessName.trim() || isResolvingBusiness}
-              style={{
-                width: "100%",
-                height: 48,
-                borderRadius: 12,
-                border:
-                  businessName.trim() && !isResolvingBusiness
-                    ? `1px solid ${T.accentBorder}`
-                    : "1px solid rgba(255,255,255,0.08)",
-                background:
-                  businessName.trim() && !isResolvingBusiness
-                    ? T.accentSoft
-                    : "rgba(255,255,255,0.03)",
-                color: businessName.trim() && !isResolvingBusiness ? T.accent : T.textMuted,
-                fontSize: 14,
-                fontWeight: 800,
-                cursor: businessName.trim() && !isResolvingBusiness ? "pointer" : "not-allowed",
-              }}
-            >
-              {isResolvingBusiness
-                ? "Building business card..."
-                : "Continue to business confirmation"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {locationConfirmed && activeBusiness && (
-        <div
-          style={{
-            borderRadius: 16,
-            background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))",
-            border: "1px solid rgba(255,255,255,0.10)",
-            overflow: "hidden",
-            boxShadow: "0 8px 30px rgba(0,0,0,0.28)",
-          }}
-        >
-          <div style={{ padding: 24, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-              {activeBusiness.photoUrl ? (
-                <div style={{ width: 96, flexShrink: 0 }}>
-                  <img
-                    src={activeBusiness.photoUrl}
-                    alt={activeBusiness.name}
+                  </div>
+                ) : (
+                  <div
                     style={{
                       width: 96,
                       height: 96,
                       borderRadius: 14,
-                      objectFit: "cover",
-                      border: `1px solid ${T.accentBorder}`,
-                      display: "block",
-                    }}
-                  />
-                  {activeBusiness.photoAttributionName && (
-                    <div
-                      style={{
-                        marginTop: 6,
-                        fontSize: 10,
-                        lineHeight: 1.3,
-                        color: T.textMuted,
-                      }}
-                    >
-                      Photo by{" "}
-                      {activeBusiness.photoAttributionUri ? (
-                        <a
-                          href={activeBusiness.photoAttributionUri}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ color: T.textSecondary, textDecoration: "none" }}
-                        >
-                          {activeBusiness.photoAttributionName}
-                        </a>
-                      ) : (
-                        activeBusiness.photoAttributionName
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div
-                  style={{
-                    width: 96,
-                    height: 96,
-                    borderRadius: 14,
-                    background: T.accentSoft,
-                    border: `1px solid ${T.accentBorder}`,
-                    color: T.accent,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 28,
-                    fontWeight: 800,
-                    flexShrink: 0,
-                  }}
-                >
-                  {activeBusiness.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: T.textPrimary }}>
-                  {activeBusiness.name}
-                </div>
-                {businessSummaryLine && (
-                  <div
-                    style={{ marginTop: 8, fontSize: 13, color: T.textSecondary, lineHeight: 1.5 }}
-                  >
-                    {businessSummaryLine}
-                  </div>
-                )}
-                {activeBusiness.description && (
-                  <div
-                    style={{
-                      marginTop: 10,
-                      maxWidth: 560,
-                      fontSize: 12,
-                      lineHeight: 1.55,
-                      color: T.textSecondary,
-                    }}
-                  >
-                    {activeBusiness.description}
-                  </div>
-                )}
-                {activeBusiness.detectedIndustry && (
-                  <div
-                    style={{
-                      display: "inline-flex",
-                      marginTop: 12,
-                      padding: "6px 12px",
-                      borderRadius: 999,
                       background: T.accentSoft,
                       border: `1px solid ${T.accentBorder}`,
                       color: T.accent,
-                      fontSize: 12,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 28,
                       fontWeight: 800,
+                      flexShrink: 0,
                     }}
                   >
-                    {titleCaseIndustry(activeBusiness.detectedIndustry)} detected
+                    {activeBusiness.name.charAt(0).toUpperCase()}
                   </div>
                 )}
+
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: T.textPrimary }}>
+                    {activeBusiness.name}
+                  </div>
+                  {businessSummaryLine && (
+                    <div
+                      style={{
+                        marginTop: 8,
+                        fontSize: 13,
+                        color: T.textSecondary,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {businessSummaryLine}
+                    </div>
+                  )}
+                  {activeBusiness.description && (
+                    <div
+                      style={{
+                        marginTop: 10,
+                        maxWidth: 560,
+                        fontSize: 12,
+                        lineHeight: 1.55,
+                        color: T.textSecondary,
+                      }}
+                    >
+                      {activeBusiness.description}
+                    </div>
+                  )}
+                  {activeBusiness.detectedIndustry && (
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        marginTop: 12,
+                        padding: "6px 12px",
+                        borderRadius: 999,
+                        background: T.accentSoft,
+                        border: `1px solid ${T.accentBorder}`,
+                        color: T.accent,
+                        fontSize: 12,
+                        fontWeight: 800,
+                      }}
+                    >
+                      {titleCaseIndustry(activeBusiness.detectedIndustry)} detected
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{ padding: 24, display: "grid", gap: 18 }}>
-            {activeBusiness.lat && activeBusiness.lng && (
-              <div
-                style={{
-                  overflow: "hidden",
-                  borderRadius: 14,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(255,255,255,0.02)",
-                }}
-              >
-                <iframe
-                  title={`${activeBusiness.name} map`}
-                  src={`https://maps.google.com/maps?q=${activeBusiness.lat},${activeBusiness.lng}&z=15&output=embed`}
-                  style={{ width: "100%", height: 220, border: 0 }}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
-            )}
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: 12,
-              }}
-            >
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 12,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                <div style={{ fontSize: 10, textTransform: "uppercase", color: T.textMuted }}>
-                  ZIP Location
+            <div style={{ padding: 24, display: "grid", gap: 18 }}>
+              {activeBusiness.lat && activeBusiness.lng && (
+                <div
+                  style={{
+                    overflow: "hidden",
+                    borderRadius: 14,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(255,255,255,0.02)",
+                  }}
+                >
+                  <iframe
+                    title={`${activeBusiness.name} map`}
+                    src={`https://maps.google.com/maps?q=${activeBusiness.lat},${activeBusiness.lng}&z=15&output=embed`}
+                    style={{ width: "100%", height: 220, border: 0 }}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
                 </div>
-                <div style={{ marginTop: 4, fontSize: 14, fontWeight: 700, color: T.textPrimary }}>
-                  {location.city && location.state
-                    ? `${location.city}, ${location.state}`
-                    : location.formattedAddress}
-                </div>
-              </div>
+              )}
 
               <div
                 style={{
-                  padding: 14,
-                  borderRadius: 12,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 12,
                 }}
               >
-                <div style={{ fontSize: 10, textTransform: "uppercase", color: T.textMuted }}>
-                  Business Match
-                </div>
-                <div style={{ marginTop: 4, fontSize: 14, fontWeight: 700, color: T.textPrimary }}>
-                  {activeBusiness.formattedAddress ||
-                    activeBusiness.address ||
-                    "Typed business entry"}
-                </div>
-              </div>
-
-              {activeBusiness.website && (
                 <div
                   style={{
                     padding: 14,
@@ -1364,136 +1360,208 @@ export function Step1V8({ state, actions }: Step1Props) {
                   }}
                 >
                   <div style={{ fontSize: 10, textTransform: "uppercase", color: T.textMuted }}>
-                    Website
+                    ZIP Location
                   </div>
-                  <a
-                    href={activeBusiness.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <div
+                    style={{ marginTop: 4, fontSize: 14, fontWeight: 700, color: T.textPrimary }}
+                  >
+                    {location.city && location.state
+                      ? `${location.city}, ${location.state}`
+                      : location.formattedAddress}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 12,
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <div style={{ fontSize: 10, textTransform: "uppercase", color: T.textMuted }}>
+                    Business Match
+                  </div>
+                  <div
+                    style={{ marginTop: 4, fontSize: 14, fontWeight: 700, color: T.textPrimary }}
+                  >
+                    {activeBusiness.formattedAddress ||
+                      activeBusiness.address ||
+                      "Typed business entry"}
+                  </div>
+                </div>
+
+                {activeBusiness.website && (
+                  <div
                     style={{
-                      display: "inline-block",
-                      marginTop: 4,
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: T.accent,
-                      textDecoration: "none",
+                      padding: 14,
+                      borderRadius: 12,
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
-                    {activeBusiness.website.replace(/^https?:\/\//, "")}
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Grid Reliability Question */}
-            <div style={{ 
-              marginTop: 24, 
-              padding: 20, 
-              borderRadius: 14, 
-              background: "linear-gradient(135deg, rgba(62, 207, 142, 0.08) 0%, rgba(62, 207, 142, 0.02) 100%)",
-              border: `2px solid ${T.accentBorder}`
-            }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: T.accent, marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                ⚡ Grid Connection Status
+                    <div style={{ fontSize: 10, textTransform: "uppercase", color: T.textMuted }}>
+                      Website
+                    </div>
+                    <a
+                      href={activeBusiness.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-block",
+                        marginTop: 4,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: T.accent,
+                        textDecoration: "none",
+                      }}
+                    >
+                      {activeBusiness.website.replace(/^https?:\/\//, "")}
+                    </a>
+                  </div>
+                )}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
-                {[
-                  { value: "reliable", label: "Reliable", subtitle: "Rare outages" },
-                  { value: "occasional-outages", label: "Occasional", subtitle: "Few outages/year" },
-                  { value: "frequent-outages", label: "Frequent", subtitle: "Monthly outages" },
-                  { value: "unreliable", label: "Unreliable", subtitle: "Weekly issues" },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => actions.setGridReliability(option.value as any)}
+
+              {/* Grid Reliability Question */}
+              <div
+                style={{
+                  marginTop: 24,
+                  padding: 20,
+                  borderRadius: 14,
+                  background:
+                    "linear-gradient(135deg, rgba(62, 207, 142, 0.08) 0%, rgba(62, 207, 142, 0.02) 100%)",
+                  border: `2px solid ${T.accentBorder}`,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 800,
+                    color: T.accent,
+                    marginBottom: 16,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  ⚡ Grid Connection Status
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+                  {[
+                    { value: "reliable", label: "Reliable", subtitle: "Rare outages" },
+                    {
+                      value: "occasional-outages",
+                      label: "Occasional",
+                      subtitle: "Few outages/year",
+                    },
+                    { value: "frequent-outages", label: "Frequent", subtitle: "Monthly outages" },
+                    { value: "unreliable", label: "Unreliable", subtitle: "Weekly issues" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() =>
+                        actions.setGridReliability(
+                          option.value as
+                            | "reliable"
+                            | "occasional-outages"
+                            | "frequent-outages"
+                            | "unreliable"
+                        )
+                      }
+                      style={{
+                        padding: 12,
+                        borderRadius: 10,
+                        border:
+                          state.gridReliability === option.value
+                            ? `2px solid ${T.accent}`
+                            : "1px solid rgba(255,255,255,0.10)",
+                        background:
+                          state.gridReliability === option.value
+                            ? "rgba(62, 207, 142, 0.15)"
+                            : "rgba(255,255,255,0.02)",
+                        color: state.gridReliability === option.value ? T.accent : T.textSecondary,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        textAlign: "left",
+                        boxShadow:
+                          state.gridReliability === option.value
+                            ? `0 0 0 4px rgba(62, 207, 142, 0.25), 0 0 24px rgba(62, 207, 142, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3)`
+                            : "0 2px 4px rgba(0, 0, 0, 0.1)",
+                      }}
+                    >
+                      <div style={{ fontWeight: 700 }}>{option.label}</div>
+                      <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>
+                        {option.subtitle}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {!state.gridReliability && businessError && (
+                  <div
                     style={{
-                      padding: 12,
-                      borderRadius: 10,
-                      border: state.gridReliability === option.value 
-                        ? `2px solid ${T.accent}` 
-                        : "1px solid rgba(255,255,255,0.10)",
-                      background: state.gridReliability === option.value
-                        ? "rgba(62, 207, 142, 0.15)"
-                        : "rgba(255,255,255,0.02)",
-                      color: state.gridReliability === option.value ? T.accent : T.textSecondary,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                      textAlign: "left",
-                      boxShadow: state.gridReliability === option.value 
-                        ? `0 0 0 4px rgba(62, 207, 142, 0.25), 0 0 24px rgba(62, 207, 142, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3)` 
-                        : "0 2px 4px rgba(0, 0, 0, 0.1)",
+                      marginTop: 12,
+                      padding: "10px 14px",
+                      borderRadius: 8,
+                      background: "rgba(239, 68, 68, 0.1)",
+                      border: "1px solid rgba(239, 68, 68, 0.3)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
                     }}
                   >
-                    <div style={{ fontWeight: 700 }}>{option.label}</div>
-                    <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>{option.subtitle}</div>
-                  </button>
-                ))}
+                    <span style={{ fontSize: 14 }}>⚠️</span>
+                    <span style={{ fontSize: 12, color: "#fca5a5", fontWeight: 500 }}>
+                      Please select your grid connection status to continue
+                    </span>
+                  </div>
+                )}
               </div>
-              {!state.gridReliability && businessError && (
-                <div style={{ 
-                  marginTop: 12, 
-                  padding: "10px 14px",
-                  borderRadius: 8,
-                  background: "rgba(239, 68, 68, 0.1)",
-                  border: "1px solid rgba(239, 68, 68, 0.3)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8
-                }}>
-                  <span style={{ fontSize: 14 }}>⚠️</span>
-                  <span style={{ fontSize: 12, color: "#fca5a5", fontWeight: 500 }}>
-                    Please select your grid connection status to continue
-                  </span>
-                </div>
-              )}
-            </div>
 
-            <div style={{ display: "grid", gap: 10 }}>
-              <button
-                type="button"
-                onClick={handleConfirmBusiness}
-                style={{
-                  width: "100%",
-                  height: 50,
-                  borderRadius: 12,
-                  border: "none",
-                  background: T.accent,
-                  color: "#03140b",
-                  fontSize: 14,
-                  fontWeight: 900,
-                  cursor: "pointer",
-                }}
-              >
-                {activeBusiness.detectedIndustry
-                  ? "Confirm & Skip to Questionnaire"
-                  : "Confirm & Select Industry"}
-              </button>
+              <div style={{ display: "grid", gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={handleConfirmBusiness}
+                  style={{
+                    width: "100%",
+                    height: 50,
+                    borderRadius: 12,
+                    border: "none",
+                    background: T.accent,
+                    color: "#03140b",
+                    fontSize: 14,
+                    fontWeight: 900,
+                    cursor: "pointer",
+                  }}
+                >
+                  {activeBusiness.detectedIndustry
+                    ? "Confirm & Skip to Questionnaire"
+                    : "Confirm & Select Industry"}
+                </button>
 
-              <button
-                type="button"
-                onClick={resetBusinessFlow}
-                style={{
-                  width: "100%",
-                  height: 44,
-                  borderRadius: 10,
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  background: "transparent",
-                  color: T.textSecondary,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Edit Business Name
-              </button>
+                <button
+                  type="button"
+                  onClick={resetBusinessFlow}
+                  style={{
+                    width: "100%",
+                    height: 44,
+                    borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    background: "transparent",
+                    color: T.textSecondary,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Edit Business Name
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </>
   );
 }
