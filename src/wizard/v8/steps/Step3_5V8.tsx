@@ -806,6 +806,11 @@ export default function Step3_5V8({ state, actions }: Props) {
         <button
           onClick={() => {
             setIsGeneratingTiers(true);
+            // ⚡ CRITICAL FIX: Reset tiers status to 'idle' to force rebuild with addon values
+            // Tiers were built in background after Step 3, but addon values are set in Step 3.5
+            // We need to rebuild tiers with the configured solar/generator/EV values
+            console.log("[Step3_5V8] Resetting tiers status to force rebuild with addon values");
+            actions.setTiersStatus("idle");
             // Small delay to show loading state before navigating
             setTimeout(() => actions.goToStep(5), 100);
           }}
