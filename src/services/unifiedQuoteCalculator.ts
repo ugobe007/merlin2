@@ -28,11 +28,22 @@
  * Date: December 10, 2025
  */
 
-import { calculateEquipmentBreakdown, type EquipmentBreakdown } from "@/utils/equipmentCalculations";
+import {
+  calculateEquipmentBreakdown,
+  type EquipmentBreakdown,
+} from "@/utils/equipmentCalculations";
 import { calculateFinancialMetrics } from "./centralizedCalculations";
 import { getBatteryPricing } from "./unifiedPricingService";
-import { AUTHORITATIVE_SOURCES, PRICING_BENCHMARKS, CURRENT_BENCHMARK_VERSION } from "./benchmarkSources";
-import { getUtilityRatesByZip, getCommercialRateByZip, buildTOUPeriodsFromUtilityRate } from "./utilityRateService";
+import {
+  AUTHORITATIVE_SOURCES,
+  PRICING_BENCHMARKS,
+  CURRENT_BENCHMARK_VERSION,
+} from "./benchmarkSources";
+import {
+  getUtilityRatesByZip,
+  getCommercialRateByZip,
+  buildTOUPeriodsFromUtilityRate,
+} from "./utilityRateService";
 import { estimateITC } from "./itcCalculator";
 import { estimateDegradation, type BatteryChemistry } from "./batteryDegradationService";
 import { estimateSolarProduction, getPVWattsEstimate } from "./pvWattsService";
@@ -82,28 +93,35 @@ export interface QuoteInput {
 
   // ITC Configuration (NEW Jan 2026 - Dynamic ITC per IRA 2022)
   itcConfig?: {
-    prevailingWage?: boolean;      // Meeting PWA requirements? (required for ≥1 MW)
-    apprenticeship?: boolean;       // Meeting apprenticeship requirements?
-    energyCommunity?: boolean | 'coal-closure' | 'brownfield' | 'fossil-fuel-employment';
-    domesticContent?: boolean;      // Meeting domestic content requirements?
-    lowIncomeProject?: boolean | 'located-in' | 'serves';
+    prevailingWage?: boolean; // Meeting PWA requirements? (required for ≥1 MW)
+    apprenticeship?: boolean; // Meeting apprenticeship requirements?
+    energyCommunity?: boolean | "coal-closure" | "brownfield" | "fossil-fuel-employment";
+    domesticContent?: boolean; // Meeting domestic content requirements?
+    lowIncomeProject?: boolean | "located-in" | "serves";
   };
 
   // Battery degradation modeling (NEW Jan 2026)
   batteryChemistry?: BatteryChemistry; // 'lfp' | 'nmc' | 'nca' | 'flow-vrb' | 'sodium-ion'
-  cyclesPerYear?: number;              // Expected cycles (default: 365 for daily cycling)
-  averageDoD?: number;                 // Average depth of discharge (default: 0.8 = 80%)
+  cyclesPerYear?: number; // Expected cycles (default: 365 for daily cycling)
+  averageDoD?: number; // Average depth of discharge (default: 0.8 = 80%)
 
   // Solar production override (NEW Jan 2026)
   // If not provided and solarMW > 0 + state provided, will auto-estimate via PVWatts
   annualSolarProductionKWh?: number;
 
   // Advanced analysis options (NEW Jan 2026)
-  includeAdvancedAnalysis?: boolean;  // Include 8760 simulation + Monte Carlo
-  loadProfileType?: 'commercial-office' | 'commercial-retail' | 'industrial' | 'hotel' | 
-                    'hospital' | 'data-center' | 'ev-charging' | 'warehouse';
-  peakDemandKW?: number;              // For 8760 analysis
-  annualLoadKWh?: number;             // For 8760 analysis
+  includeAdvancedAnalysis?: boolean; // Include 8760 simulation + Monte Carlo
+  loadProfileType?:
+    | "commercial-office"
+    | "commercial-retail"
+    | "industrial"
+    | "hotel"
+    | "hospital"
+    | "data-center"
+    | "ev-charging"
+    | "warehouse";
+  peakDemandKW?: number; // For 8760 analysis
+  annualLoadKWh?: number; // For 8760 analysis
 }
 
 export interface QuoteResult {
@@ -137,9 +155,9 @@ export interface QuoteResult {
     systemCategory: "residential" | "commercial" | "utility";
     // NEW: ITC calculation details (Jan 2026)
     itcDetails?: {
-      totalRate: number;             // Final ITC percentage (0.06 to 0.70)
-      baseRate: number;              // Base rate (0.06 or 0.30)
-      creditAmount: number;          // Dollar amount
+      totalRate: number; // Final ITC percentage (0.06 to 0.70)
+      baseRate: number; // Base rate (0.06 or 0.30)
+      creditAmount: number; // Dollar amount
       qualifications: {
         prevailingWage: boolean;
         energyCommunity: boolean;
@@ -154,27 +172,27 @@ export interface QuoteResult {
       demandCharge: number;
       utilityName?: string;
       rateName?: string;
-      source: 'nrel' | 'eia' | 'manual' | 'cache' | 'default';
-      confidence: 'high' | 'medium' | 'low';
+      source: "nrel" | "eia" | "manual" | "cache" | "default";
+      confidence: "high" | "medium" | "low";
       zipCode?: string;
       state?: string;
     };
     // NEW: Battery degradation analysis (Jan 2026)
     degradation?: {
       chemistry: BatteryChemistry;
-      yearlyCapacityPct: number[];     // Year 0-25 capacity as % of original
-      year10CapacityPct: number;       // Capacity at year 10
-      year25CapacityPct: number;       // Capacity at end of life
-      warrantyPeriod: number;          // Warranty (years)
+      yearlyCapacityPct: number[]; // Year 0-25 capacity as % of original
+      year10CapacityPct: number; // Capacity at year 10
+      year25CapacityPct: number; // Capacity at end of life
+      warrantyPeriod: number; // Warranty (years)
       expectedWarrantyCapacity: number; // Expected capacity at warranty end (%)
-      financialImpactPct: number;       // NPV reduction due to degradation (%)
-      source: string;                   // Methodology source
+      financialImpactPct: number; // NPV reduction due to degradation (%)
+      source: string; // Methodology source
     };
     // NEW: Solar production analysis (Jan 2026)
     solarProduction?: {
       annualProductionKWh: number;
       capacityFactorPct: number;
-      source: 'pvwatts' | 'regional-estimate' | 'manual';
+      source: "pvwatts" | "regional-estimate" | "manual";
       arrayType?: string;
       state?: string;
       monthlyProductionKWh?: number[];
@@ -295,18 +313,24 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   let electricityRate = inputElectricityRate ?? 0.15;
   let demandCharge = inputDemandCharge ?? 15;
   // Store resolved TOU data for 8760 analysis (Feb 2026)
-  let resolvedTOUData: { hasTOU?: boolean; peakRate?: number; offPeakRate?: number; peakHours?: string; commercialRate?: number } | null = null;
-  let utilityRateInfo: QuoteResult['metadata']['utilityRates'] = {
+  let resolvedTOUData: {
+    hasTOU?: boolean;
+    peakRate?: number;
+    offPeakRate?: number;
+    peakHours?: string;
+    commercialRate?: number;
+  } | null = null;
+  let utilityRateInfo: QuoteResult["metadata"]["utilityRates"] = {
     electricityRate,
     demandCharge,
-    source: 'default',
-    confidence: 'low',
+    source: "default",
+    confidence: "low",
   };
 
   // If zip code provided and no manual rate override, lookup dynamic rates
   if (zipCode && zipCode.length === 5 && !inputElectricityRate) {
     try {
-      if (systemCategory === 'residential') {
+      if (systemCategory === "residential") {
         // For residential, get full data
         const rateData = await getUtilityRatesByZip(zipCode);
         if (rateData && rateData.recommendedRate) {
@@ -341,14 +365,15 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
             electricityRate,
             demandCharge,
             utilityName: rateData.utilityName,
-            source: rateData.source as 'nrel' | 'eia' | 'manual' | 'cache' | 'default',
-            confidence: rateData.source === 'nrel' ? 'high' : rateData.source === 'eia' ? 'medium' : 'low',
+            source: rateData.source as "nrel" | "eia" | "manual" | "cache" | "default",
+            confidence:
+              rateData.source === "nrel" ? "high" : rateData.source === "eia" ? "medium" : "low",
             zipCode,
             state: rateData.state,
           };
         }
       }
-      if (import.meta.env.DEV && utilityRateInfo.source !== 'default') {
+      if (import.meta.env.DEV && utilityRateInfo.source !== "default") {
         console.log(`⚡ [UnifiedQuoteCalculator] Dynamic rate lookup for ZIP ${zipCode}:`, {
           utility: utilityRateInfo.utilityName,
           rate: electricityRate,
@@ -357,15 +382,18 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
         });
       }
     } catch (error) {
-      console.warn(`[UnifiedQuoteCalculator] Rate lookup failed for ZIP ${zipCode}, using defaults:`, error);
+      console.warn(
+        `[UnifiedQuoteCalculator] Rate lookup failed for ZIP ${zipCode}, using defaults:`,
+        error
+      );
     }
   } else if (inputElectricityRate) {
     // Manual rate provided
     utilityRateInfo = {
       electricityRate,
       demandCharge,
-      source: 'manual',
-      confidence: 'high',
+      source: "manual",
+      confidence: "high",
     };
   }
 
@@ -411,13 +439,14 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   // Step 2b: Calculate dynamic ITC (NEW Jan 2026 - IRA 2022 compliant)
   // ⚠️ CRITICAL: Federal ITC only applies to US projects (IRA 2022 is US-only)
   // For international quotes, ITC = 0
-  
+
   // Check if this is a US project based on location/zipCode
-  const isUSProject = !location || // No location = assume US
-                      location.toUpperCase() === 'US' ||
-                      /^[A-Z]{2}$/.test(location) === false || // If not 2-letter code, likely US state
-                      (zipCode && /^\d{5}$/.test(zipCode)); // US ZIP format
-  
+  const isUSProject =
+    !location || // No location = assume US
+    location.toUpperCase() === "US" ||
+    /^[A-Z]{2}$/.test(location) === false || // If not 2-letter code, likely US state
+    (zipCode && /^\d{5}$/.test(zipCode)); // US ZIP format
+
   if (import.meta.env.DEV) {
     console.log(`🇺🇸 [ITC Check] Project location:`, {
       location,
@@ -426,43 +455,45 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
       willApplyITC: isUSProject,
     });
   }
-  
+
   // Determine project type based on what's included
-  let projectType: 'bess' | 'solar' | 'hybrid' = 'bess';
-  if (solarMW > 0 && storageSizeMW > 0) projectType = 'hybrid';
-  else if (solarMW > 0) projectType = 'solar';
+  let projectType: "bess" | "solar" | "hybrid" = "bess";
+  if (solarMW > 0 && storageSizeMW > 0) projectType = "hybrid";
+  else if (solarMW > 0) projectType = "solar";
 
   // Default to PWA compliance for commercial/utility projects (most common)
   const defaultPWA = storageSizeMW >= 1;
-  
+
   // Calculate ITC only for US projects
-  const itcResult = isUSProject ? estimateITC(
-    projectType,
-    totalProjectCost,
-    Math.max(storageSizeMW, solarMW, 0.1), // Use largest MW for ITC sizing
-    itcConfig?.prevailingWage ?? defaultPWA,
-    {
-      energyCommunity: itcConfig?.energyCommunity,
-      domesticContent: itcConfig?.domesticContent,
-      lowIncome: itcConfig?.lowIncomeProject,
-    }
-  ) : {
-    // International projects: no federal ITC
-    totalRate: 0,
-    creditAmount: 0,
-    baseRate: 0,
-    bonuses: {
-      prevailingWage: 0,
-      energyCommunity: 0,
-      domesticContent: 0,
-      lowIncome: 0,
-    },
-    details: {
-      applicableIncentives: [],
-      assumptions: ['International project - no US federal ITC'],
-      limitations: ['Project location outside United States'],
-    },
-  };
+  const itcResult = isUSProject
+    ? estimateITC(
+        projectType,
+        totalProjectCost,
+        Math.max(storageSizeMW, solarMW, 0.1), // Use largest MW for ITC sizing
+        itcConfig?.prevailingWage ?? defaultPWA,
+        {
+          energyCommunity: itcConfig?.energyCommunity,
+          domesticContent: itcConfig?.domesticContent,
+          lowIncome: itcConfig?.lowIncomeProject,
+        }
+      )
+    : {
+        // International projects: no federal ITC
+        totalRate: 0,
+        creditAmount: 0,
+        baseRate: 0,
+        bonuses: {
+          prevailingWage: 0,
+          energyCommunity: 0,
+          domesticContent: 0,
+          lowIncome: 0,
+        },
+        details: {
+          applicableIncentives: [],
+          assumptions: ["International project - no US federal ITC"],
+          limitations: ["Project location outside United States"],
+        },
+      };
 
   const taxCredit = itcResult.creditAmount;
   const netCost = totalProjectCost - taxCredit;
@@ -470,44 +501,48 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   // ============================================
   // STEP 2c: BATTERY DEGRADATION MODELING (NEW Jan 2026)
   // ============================================
-  const chemistry: BatteryChemistry = input.batteryChemistry || 'lfp'; // Default to LFP (most common)
+  const chemistry: BatteryChemistry = input.batteryChemistry || "lfp"; // Default to LFP (most common)
   const cyclesPerYear = input.cyclesPerYear || 365; // Daily cycling default
   const averageDoD = input.averageDoD || 0.8; // 80% DoD default
   const projectYears = 25;
 
   // Calculate degradation trajectory - returns array of { year, capacityPct }
   const degradationData = estimateDegradation(chemistry, projectYears, cyclesPerYear);
-  
+
   // Extract capacity percentages as simple number array for metadata
-  const yearlyCapacityPct = degradationData.map(d => d.capacityPct);
-  
+  const yearlyCapacityPct = degradationData.map((d) => d.capacityPct);
+
   // Get year 10 and year 25 capacity
-  const year10Data = degradationData.find(d => d.year === 10);
-  const year25Data = degradationData.find(d => d.year === 25) || degradationData[degradationData.length - 1];
+  const year10Data = degradationData.find((d) => d.year === 10);
+  const year25Data =
+    degradationData.find((d) => d.year === 25) || degradationData[degradationData.length - 1];
   const year10CapacityPct = year10Data ? year10Data.capacityPct : 85;
   const year25CapacityPct = year25Data ? year25Data.capacityPct : 62;
-  
+
   // Calculate financial impact of degradation (simplified direct calculation)
   // Estimate base annual revenue (savings) for degradation impact
-  const baseAnnualRevenue = electricityRate * storageSizeMW * 1000 * durationHours * cyclesPerYear * 0.5; // 50% arbitrage
+  const baseAnnualRevenue =
+    electricityRate * storageSizeMW * 1000 * durationHours * cyclesPerYear * 0.5; // 50% arbitrage
   const discountRate = 0.08;
-  
+
   // Calculate NPV with and without degradation
   let noDegradationNPV = 0;
   let withDegradationNPV = 0;
   for (let year = 1; year <= projectYears; year++) {
     const discountFactor = Math.pow(1 + discountRate, -year);
     noDegradationNPV += baseAnnualRevenue * discountFactor;
-    const capacityFactor = (yearlyCapacityPct[year] || yearlyCapacityPct[yearlyCapacityPct.length - 1]) / 100;
+    const capacityFactor =
+      (yearlyCapacityPct[year] || yearlyCapacityPct[yearlyCapacityPct.length - 1]) / 100;
     withDegradationNPV += baseAnnualRevenue * capacityFactor * discountFactor;
   }
-  const degradationImpactPct = noDegradationNPV > 0 
-    ? Math.round(((noDegradationNPV - withDegradationNPV) / noDegradationNPV) * 1000) / 10
-    : 0;
+  const degradationImpactPct =
+    noDegradationNPV > 0
+      ? Math.round(((noDegradationNPV - withDegradationNPV) / noDegradationNPV) * 1000) / 10
+      : 0;
 
   // Warranty info by chemistry
-  const warrantyYears = chemistry === 'lfp' ? 15 : chemistry === 'flow-vrb' ? 20 : 10;
-  const warrantyData = degradationData.find(d => d.year === warrantyYears);
+  const warrantyYears = chemistry === "lfp" ? 15 : chemistry === "flow-vrb" ? 20 : 10;
+  const warrantyData = degradationData.find((d) => d.year === warrantyYears);
   const expectedWarrantyCapacity = warrantyData ? warrantyData.capacityPct : 80;
 
   if (import.meta.env.DEV) {
@@ -525,23 +560,33 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   // ============================================
   // STEP 2d: SOLAR PRODUCTION ESTIMATE (NEW Jan 2026)
   // ============================================
-  let solarProductionInfo: QuoteResult['metadata']['solarProduction'] | undefined;
-  
+  let solarProductionInfo: QuoteResult["metadata"]["solarProduction"] | undefined;
+
   if (solarMW > 0) {
     const solarCapacityKW = solarMW * 1000;
     let annualSolarKWh = input.annualSolarProductionKWh;
-    let productionSource: 'pvwatts' | 'regional-estimate' | 'manual' = 'manual';
-    
+    let productionSource: "pvwatts" | "regional-estimate" | "manual" = "manual";
+
     if (!annualSolarKWh) {
       // Extract state from location string for fallback
-      let state = 'CA'; // Default
+      let state = "CA"; // Default
       if (location) {
-        const stateMatch = location.match(/\b([A-Z]{2})\b/) || location.match(/(California|Texas|Arizona|Florida|Nevada|New York)/i);
+        const stateMatch =
+          location.match(/\b([A-Z]{2})\b/) ||
+          location.match(/(California|Texas|Arizona|Florida|Nevada|New York)/i);
         if (stateMatch) {
           const stateMap: Record<string, string> = {
-            'California': 'CA', 'Texas': 'TX', 'Arizona': 'AZ', 'Florida': 'FL',
-            'Nevada': 'NV', 'New York': 'NY', 'Hawaii': 'HI', 'Oregon': 'OR',
-            'Washington': 'WA', 'Colorado': 'CO', 'Massachusetts': 'MA',
+            California: "CA",
+            Texas: "TX",
+            Arizona: "AZ",
+            Florida: "FL",
+            Nevada: "NV",
+            "New York": "NY",
+            Hawaii: "HI",
+            Oregon: "OR",
+            Washington: "WA",
+            Colorado: "CO",
+            Massachusetts: "MA",
           };
           state = stateMap[stateMatch[1]] || stateMatch[1];
         }
@@ -558,14 +603,14 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
             arrayType: 0, // Fixed open rack (default)
           });
           annualSolarKWh = pvResult.annualProductionKWh;
-          productionSource = 'pvwatts';
+          productionSource = "pvwatts";
           pvWattsSucceeded = true;
 
           solarProductionInfo = {
             annualProductionKWh: pvResult.annualProductionKWh,
             capacityFactorPct: pvResult.capacityFactor,
-            source: 'pvwatts',
-            arrayType: 'fixed',
+            source: "pvwatts",
+            arrayType: "fixed",
             state: pvResult.location.state ?? state,
             monthlyProductionKWh: pvResult.monthlyProductionKWh,
           };
@@ -576,29 +621,31 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
               zipCode,
               annualProductionKWh: annualSolarKWh,
               capacityFactorPct: pvResult.capacityFactor,
-              source: 'pvwatts',
+              source: "pvwatts",
               station: pvResult.solarResource.station,
             });
           }
         } catch {
           // PVWatts failed — fall through to regional estimate below
           if (import.meta.env.DEV) {
-            console.warn(`☀️ [UnifiedQuoteCalculator] PVWatts API unavailable for ZIP ${zipCode}, using regional estimate`);
+            console.warn(
+              `☀️ [UnifiedQuoteCalculator] PVWatts API unavailable for ZIP ${zipCode}, using regional estimate`
+            );
           }
         }
       }
 
       if (!pvWattsSucceeded) {
         // Fallback: regional estimate (fast, no API key needed)
-        const solarEstimate = estimateSolarProduction(solarCapacityKW, state, 'fixed');
+        const solarEstimate = estimateSolarProduction(solarCapacityKW, state, "fixed");
         annualSolarKWh = solarEstimate.annualProductionKWh;
-        productionSource = 'regional-estimate';
+        productionSource = "regional-estimate";
 
         solarProductionInfo = {
           annualProductionKWh: annualSolarKWh,
           capacityFactorPct: solarEstimate.capacityFactor,
           source: productionSource,
-          arrayType: 'fixed',
+          arrayType: "fixed",
           state,
         };
 
@@ -618,13 +665,13 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
       solarProductionInfo = {
         annualProductionKWh: annualSolarKWh,
         capacityFactorPct: Math.round(capacityFactor * 10) / 10,
-        source: 'manual',
+        source: "manual",
       };
     }
   }
 
   // Build ITC details for metadata
-  const itcDetails: QuoteResult['metadata']['itcDetails'] = {
+  const itcDetails: QuoteResult["metadata"]["itcDetails"] = {
     totalRate: itcResult.totalRate,
     baseRate: itcResult.baseRate,
     creditAmount: itcResult.creditAmount,
@@ -634,7 +681,7 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
       domesticContent: !!itcConfig?.domesticContent,
       lowIncome: !!itcConfig?.lowIncomeProject,
     },
-    source: isUSProject ? 'IRA 2022 (IRC Section 48)' : 'N/A - International project',
+    source: isUSProject ? "IRA 2022 (IRC Section 48)" : "N/A - International project",
   };
 
   if (import.meta.env.DEV) {
@@ -656,6 +703,7 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
     equipmentCost,
     installationCost,
     location,
+    useCase, // Pass use case for specialized savings calculations (e.g., EV charging)
     includeNPV: true,
   });
 
@@ -763,35 +811,37 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   // STEP 5: ADVANCED ANALYSIS (8760 + Monte Carlo) - NEW Jan 2026
   // ============================================
   // Only run if explicitly requested (computationally intensive)
-  let advancedAnalysis: QuoteResult['metadata']['advancedAnalysis'] | undefined;
-  
+  let advancedAnalysis: QuoteResult["metadata"]["advancedAnalysis"] | undefined;
+
   if (input.includeAdvancedAnalysis) {
     try {
       // Map use case to load profile type
       const loadProfileMap: Record<string, typeof input.loadProfileType> = {
-        'office': 'commercial-office',
-        'retail': 'commercial-retail',
-        'manufacturing': 'industrial',
-        'hotel': 'hotel',
-        'hospital': 'hospital',
-        'data-center': 'data-center',
-        'ev-charging': 'ev-charging',
-        'warehouse': 'warehouse',
+        office: "commercial-office",
+        retail: "commercial-retail",
+        manufacturing: "industrial",
+        hotel: "hotel",
+        hospital: "hospital",
+        "data-center": "data-center",
+        "ev-charging": "ev-charging",
+        warehouse: "warehouse",
       };
-      const loadProfileType = input.loadProfileType || loadProfileMap[useCase || ''] || 'commercial-office';
-      
+      const loadProfileType =
+        input.loadProfileType || loadProfileMap[useCase || ""] || "commercial-office";
+
       // Estimate annual load if not provided
       const bessKWh = storageSizeMW * durationHours * 1000;
       const bessKW = storageSizeMW * 1000;
-      
+
       // 8760 Hourly Simulation — use FULL simulation for accurate results (Feb 2026 upgrade)
       // Build TOU periods from resolved utility rate data (P1a bridge — Feb 2026)
       const resolvedTOU = resolvedTOUData ? buildTOUPeriodsFromUtilityRate(resolvedTOUData) : null;
-      const rateStructure = resolvedTOU && resolvedTOU.length > 0
-        ? { type: 'tou' as const, touPeriods: resolvedTOU }
-        : { type: 'tou' as const, touPeriods: [] }; // Falls back to state-based TOU in 8760 service
-      
-      const annualLoadEstimate = input.annualLoadKWh || (bessKW * 8760 * 0.4); // Rough estimate if not provided
+      const rateStructure =
+        resolvedTOU && resolvedTOU.length > 0
+          ? { type: "tou" as const, touPeriods: resolvedTOU }
+          : { type: "tou" as const, touPeriods: [] }; // Falls back to state-based TOU in 8760 service
+
+      const annualLoadEstimate = input.annualLoadKWh || bessKW * 8760 * 0.4; // Rough estimate if not provided
       const fullHourlyResults = run8760Analysis({
         bessCapacityKWh: bessKWh,
         bessPowerKW: bessKW,
@@ -801,20 +851,20 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
         rateStructure,
         demandCharge,
         state: location,
-        strategy: 'hybrid',
+        strategy: "hybrid",
         solarCapacityKW: solarMW > 0 ? solarMW * 1000 : undefined,
       });
-      
+
       // Monte Carlo Risk Analysis (quick estimate version — full MC is too slow for synchronous calls)
       const npv = financials.npv ?? 0;
       const riskResults = estimateRiskMetrics(npv, totalProjectCost);
-      
+
       // Calculate additional metrics for more complete output
       const irr = financials.irr ?? 0;
       const stdDevRatio = 0.25;
       const irrStdDev = irr * stdDevRatio;
       const paybackStdDev = actualPayback * stdDevRatio;
-      
+
       advancedAnalysis = {
         hourlySimulation: {
           annualSavings: fullHourlyResults.summary.annualSavings,
@@ -824,7 +874,9 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
           demandChargeSavings: fullHourlyResults.summary.demandChargeSavings,
           equivalentCycles: fullHourlyResults.summary.equivalentCycles,
           capacityFactor: Math.round(fullHourlyResults.summary.capacityFactor * 10) / 10,
-          source: fullHourlyResults.audit.methodology || '8760 hourly simulation (DOE load profiles + TOU rates)',
+          source:
+            fullHourlyResults.audit.methodology ||
+            "8760 hourly simulation (DOE load profiles + TOU rates)",
         },
         riskAnalysis: {
           npvP10: riskResults.npvP10,
@@ -838,10 +890,10 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
           paybackP90: Math.round(Math.max(0.5, actualPayback - 1.28 * paybackStdDev) * 10) / 10, // P90 = shorter payback (better)
           probabilityPositiveNPV: riskResults.probabilityPositive,
           valueAtRisk95: Math.round(npv - 1.645 * npv * stdDevRatio), // 95% VaR
-          source: 'Parametric risk estimate (NREL uncertainty ranges, ±25% std dev)',
+          source: "Parametric risk estimate (NREL uncertainty ranges, ±25% std dev)",
         },
       };
-      
+
       if (import.meta.env.DEV) {
         console.log(`📊 [UnifiedQuoteCalculator] Advanced analysis:`, {
           hourlySimulation: advancedAnalysis.hourlySimulation,
@@ -849,7 +901,7 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
         });
       }
     } catch (error) {
-      console.warn('[UnifiedQuoteCalculator] Advanced analysis failed:', error);
+      console.warn("[UnifiedQuoteCalculator] Advanced analysis failed:", error);
       // Don't fail the whole quote, just skip advanced analysis
     }
   }
@@ -875,7 +927,7 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
       calculatedAt: new Date(),
       pricingSource: equipment.batteries.marketIntelligence?.dataSource || "NREL ATB 2024",
       systemCategory,
-      itcDetails,  // NEW: Dynamic ITC details (Jan 2026)
+      itcDetails, // NEW: Dynamic ITC details (Jan 2026)
       utilityRates: utilityRateInfo,
       // NEW: Battery degradation analysis (Jan 2026)
       degradation: {
@@ -886,7 +938,7 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
         warrantyPeriod: warrantyYears,
         expectedWarrantyCapacity,
         financialImpactPct: degradationImpactPct,
-        source: 'Combined cycle + calendar aging per NREL/PNNL research',
+        source: "Combined cycle + calendar aging per NREL/PNNL research",
       },
       // NEW: Solar production analysis (Jan 2026)
       solarProduction: solarProductionInfo,

@@ -66,6 +66,7 @@ export interface FinancialCalculationInput {
   // Location & pricing
   location: string;
   electricityRate: number; // $/kWh
+  useCase?: string; // Use case for specialized savings calculations (e.g., 'ev-charging')
 
   // Equipment costs (if already calculated)
   equipmentCost?: number;
@@ -416,8 +417,49 @@ export async function calculateFinancialMetrics(
   const windSavings =
     windMW > 0 ? windMW * constants.WIND_CAPACITY_FACTOR * electricityRate * 1000 : 0;
 
+  // ===================================
+  // USE CASE-SPECIFIC ADJUSTMENTS
+  // ===================================
+
+  let useCaseAdjustment = 0;
+
+  if (
+    input.useCase === "ev-charging" ||
+    input.useCase === "EV Charging" ||
+    input.useCase === "EV Charging Stations"
+  ) {
+    // EV charging stations have significantly higher savings potential due to:
+    // 1. High demand charges from EV charging surges
+    // 2. Time-of-use optimization for charging schedules
+    // 3. Peak load management to avoid demand spikes
+    // 4. Grid services revenue from demand response programs
+
+    const evDemandChargeReduction = storageSizeMW * 180000; // $180K per MW-year
+    const evPeakManagement = storageSizeMW * 250000; // $250K per MW-year from surge management
+    const evTOUArbitrage = totalEnergyMWh * 1000 * 250 * 0.3; // 250 cycles/yr @ $0.30/kWh spread
+    const evDemandResponse = storageSizeMW * 50000; // $50K per MW-year grid services
+
+    useCaseAdjustment =
+      evDemandChargeReduction + evPeakManagement + evTOUArbitrage + evDemandResponse;
+
+    if (import.meta.env.DEV) {
+      console.log("⚡ EV Charging Use Case - Enhanced Savings:", {
+        evDemandChargeReduction: evDemandChargeReduction.toFixed(0),
+        evPeakManagement: evPeakManagement.toFixed(0),
+        evTOUArbitrage: evTOUArbitrage.toFixed(0),
+        evDemandResponse: evDemandResponse.toFixed(0),
+        totalUseCaseAdjustment: useCaseAdjustment.toFixed(0),
+      });
+    }
+  }
+
   const annualSavings =
-    peakShavingSavings + demandChargeSavings + gridServiceRevenue + solarSavings + windSavings;
+    peakShavingSavings +
+    demandChargeSavings +
+    gridServiceRevenue +
+    solarSavings +
+    windSavings +
+    useCaseAdjustment;
 
   // Debugging: Log the breakdown (DEV only)
   if (import.meta.env.DEV) {
