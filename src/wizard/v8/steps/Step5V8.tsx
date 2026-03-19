@@ -306,6 +306,12 @@ export default function Step5V8({ state, actions }: Props) {
 
     async function fetchInstallers() {
       try {
+        // Guard: ensure tier exists
+        if (!tier) {
+          console.warn("[Step5V8] No tier selected, skipping installer fetch");
+          return;
+        }
+
         // Determine installer type based on system configuration
         let installerType: "solar" | "bess" | "ev_charging" | "generator" = "bess";
         if (tier.solarKW > 0 && tier.bessKWh > 0) {
@@ -324,7 +330,11 @@ export default function Step5V8({ state, actions }: Props) {
           console.log("[Step5V8] Fetching installers:", { installerType, projectSizeKW });
         }
 
-        const results = await getRecommendedInstallers(stateCode, installerType, projectSizeKW);
+        const results = await getRecommendedInstallers(
+          stateCode || "CA",
+          installerType,
+          projectSizeKW
+        );
 
         if (mounted) {
           if (import.meta.env.DEV) {
