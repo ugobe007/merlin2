@@ -185,7 +185,8 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
             Intelligent Recommendations
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Based on your {hi("grid reliability, existing equipment, and location")}, here's what I recommend adding to maximize your savings and resilience.
+            Based on your {hi("grid reliability, existing equipment, and location")}, here's what I
+            recommend adding to maximize your savings and resilience.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
             {[
@@ -319,33 +320,37 @@ export default function WizardV8Page() {
   // Read URL params on mount (for deep linking like /wizard-v8?step=3&industry=car_wash)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const stepParam = params.get('step');
-    const industryParam = params.get('industry');
-    
+    const stepParam = params.get("step");
+    const industryParam = params.get("industry");
+
     if (stepParam) {
       const targetStep = parseInt(stepParam, 10);
       if (!isNaN(targetStep) && targetStep >= 0 && targetStep <= 6) {
         actions.goToStep(targetStep as WizardStep);
-        
+
         // If industry provided, pre-populate it
         if (industryParam && targetStep >= 3) {
           // Set industry silently (without triggering navigation)
           // This will be picked up when step 3 renders
-          console.log('[WizardV8Page] Pre-populating industry from URL:', industryParam);
+          console.log("[WizardV8Page] Pre-populating industry from URL:", industryParam);
         }
       }
     }
   }, []); // Run once on mount
 
-  console.log('[WizardV8Page] Rendering step:', step, {
+  console.log("[WizardV8Page] Rendering step:", step, {
     selectedTierIndex: state.selectedTierIndex,
     hasTiers: !!state.tiers,
     location: state.location?.city,
-    industry: state.industry
+    industry: state.industry,
   });
 
   useEffect(() => {
-    if (step === 1 && state.business?.detectedIndustry && (state.business.confidence ?? 0) >= 0.75) {
+    if (
+      step === 1 &&
+      state.business?.detectedIndustry &&
+      (state.business.confidence ?? 0) >= 0.75
+    ) {
       void loadStep3V8();
       void loadStep35V8();
       void loadStep4V8();
@@ -475,8 +480,7 @@ export default function WizardV8Page() {
                 } else if (mode === "proquote") {
                   window.location.href = "/pro-quote";
                 } else if (mode === "upload") {
-                  // TODO: Implement upload flow
-                  alert("Upload quote feature coming soon!");
+                  window.location.href = "/upload-quote";
                 }
               }}
             />

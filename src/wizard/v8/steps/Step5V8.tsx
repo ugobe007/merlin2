@@ -1273,7 +1273,7 @@ export default function Step5V8({ state, actions }: Props) {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => {
-                  window.location.href = "/quote-builder";
+                  window.location.href = "/pro-quote";
                 }}
                 className="flex-1 py-2.5 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold hover:bg-[#35b87a] transition-colors"
               >
