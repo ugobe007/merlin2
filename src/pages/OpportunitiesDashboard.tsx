@@ -4,7 +4,15 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Search, ExternalLink, CheckCircle, Archive, TrendingUp, Play } from "lucide-react";
+import {
+  Search,
+  ExternalLink,
+  CheckCircle,
+  Archive,
+  TrendingUp,
+  Play,
+  Sparkles,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { runOpportunityScraper } from "../api/opportunityScraper";
 import type { Opportunity, OpportunityFilter, OpportunityStatus } from "../types/opportunity";
@@ -176,7 +184,9 @@ export function OpportunitiesDashboard() {
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <img src="/images/new_small_profile_.png" alt="Merlin" className="w-12 h-12" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
               Opportunity Dashboard
             </h1>
