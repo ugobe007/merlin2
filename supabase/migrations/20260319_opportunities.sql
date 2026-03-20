@@ -1,3 +1,8 @@
+-- Drop existing tables if they exist (clean slate)
+DROP TABLE IF EXISTS scraper_runs CASCADE;
+DROP TABLE IF EXISTS lead_sources CASCADE;
+DROP TABLE IF EXISTS opportunities CASCADE;
+
 -- Opportunities table for lead generation
 CREATE TABLE IF NOT EXISTS opportunities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

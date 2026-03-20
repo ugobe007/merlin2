@@ -472,3 +472,5 @@ export function OpportunitiesDashboard() {
     </div>
   );
 }
+
+export default OpportunitiesDashboard;
