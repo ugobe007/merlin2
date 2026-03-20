@@ -267,7 +267,7 @@ export default function Step4V8({ state, actions }: Props) {
 
   // Keyboard navigation for tiers
   React.useEffect(() => {
-    if (!tiers || tiersStatus !== "success") return;
+    if (!tiers || tiersStatus !== FetchStatus.Success) return;
 
     const handleKeyPress = (e: KeyboardEvent) => {
       // Prevent if user is typing in an input field
@@ -280,14 +280,14 @@ export default function Step4V8({ state, actions }: Props) {
         if (selectedTierIndex === null || selectedTierIndex === 0) {
           actions.selectTier(0);
         } else {
-          actions.selectTier(selectedTierIndex - 1);
+          actions.selectTier((selectedTierIndex - 1) as 0 | 1 | 2);
         }
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
         if (selectedTierIndex === null || selectedTierIndex === 2) {
           actions.selectTier(2);
         } else {
-          actions.selectTier(selectedTierIndex + 1);
+          actions.selectTier((selectedTierIndex + 1) as 0 | 1 | 2);
         }
       } else if (e.key === "Enter" && selectedTierIndex !== null) {
         e.preventDefault();

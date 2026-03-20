@@ -58,6 +58,7 @@ export default function Step3_5V8({ state, actions }: Props) {
         state.level2Chargers * EQUIPMENT_UNIT_COSTS.evCharging.level2 +
         state.dcfcChargers * EQUIPMENT_UNIT_COSTS.evCharging.dcfc +
         state.hpcChargers * EQUIPMENT_UNIT_COSTS.evCharging.hpc,
+      total: 0,
     };
     costs.total = costs.solar + costs.generator + costs.evCharging;
     return costs;
