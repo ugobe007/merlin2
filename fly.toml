@@ -21,6 +21,11 @@ primary_region = 'lax'
     VITE_GOOGLE_MAPS_API_KEY = "AIzaSyDppNx91-dadZiyNJBcqDhQn9H5mkDdruw"
     VITE_NREL_API_KEY = "G9sYxfv89Vr9mjHD5zThWpBntyYkKJjP6iF8i3He"
     VITE_VISUAL_CROSSING_API_KEY = "HQLBWQ3D3YLYKF2NLJL68EW4C"
+  
+  [build.secrets]
+    # AI & Analysis Keys (passed from Fly.io secrets)
+    VITE_OPENAI_API_KEY = "VITE_OPENAI_API_KEY"
+    VITE_ENABLE_AI_ANALYSIS = "VITE_ENABLE_AI_ANALYSIS"
 
 [http_service]
   internal_port = 80
