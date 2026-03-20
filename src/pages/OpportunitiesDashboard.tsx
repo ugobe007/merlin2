@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Search, ExternalLink, CheckCircle, Archive, TrendingUp } from "lucide-react";
-import { supabase } from "../../lib/supabase";
-import type { Opportunity, OpportunityFilter, OpportunityStatus } from "../../types/opportunity";
+import { supabase } from "../lib/supabase";
+import type { Opportunity, OpportunityFilter, OpportunityStatus } from "../types/opportunity";
 
 // Signal display names
 const SIGNAL_LABELS: Record<string, string> = {
