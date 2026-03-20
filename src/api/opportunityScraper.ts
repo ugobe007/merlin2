@@ -4,7 +4,8 @@
  */
 
 import { scrapeOpportunities } from "../services/opportunityScraperService";
-import { supabase } from "../lib/supabase";
+import { batchAnalyzeArticles } from "../services/aiAnalysisService";
+import { supabase } from "../services/supabase";
 
 /**
  * Run scraper and store opportunities
@@ -24,12 +25,21 @@ export async function runOpportunityScraper(): Promise<{
 
     // Run the scraper
     const result = await scrapeOpportunities();
+    let opportunities = result.opportunities;
+
+    // AI enrichment if enabled
+    const enableAI = import.meta.env.VITE_ENABLE_AI_ANALYSIS === "true";
+    if (enableAI && opportunities.length > 0) {
+      console.log("🤖 Enriching opportunities with AI analysis...");
+      opportunities = await batchAnalyzeArticles(opportunities);
+      console.log(`✨ AI analysis complete for ${opportunities.length} opportunities`);
+    }
 
     // Store results in database
     let newOpps = 0;
     let duplicates = 0;
 
-    for (const opp of result.opportunities) {
+    for (const opp of opportunities) {
       try {
         // Check if opportunity already exists (by source URL)
         const { data: existing } = await supabase
