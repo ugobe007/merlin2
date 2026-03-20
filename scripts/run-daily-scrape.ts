@@ -13,8 +13,12 @@
  * Created: December 10, 2025
  */
 
+import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { parseRSSFeed, classifyContent, extractPrices } from '../src/services/marketDataParser';
+
+// Load environment variables from .env file
+config();
 
 // ============================================================================
 // CONFIGURATION

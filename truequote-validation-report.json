@@ -1,5 +1,5 @@
 {
-  "ts": "2026-02-06T02:59:06.005Z",
+  "ts": "2026-03-19T21:58:00.215Z",
   "mode": "dev",
   "industries": 4,
   "pass": 3,
@@ -10,7 +10,7 @@
       "industry": "car_wash",
       "status": "pass",
       "layerA": {
-        "ts": "2026-02-06T02:59:03.169Z",
+        "ts": "2026-03-19T21:57:56.565Z",
         "layer": "A",
         "template": {
           "industry": "car_wash",
@@ -23,28 +23,28 @@
           "location": "NV",
           "industry": "car_wash",
           "gridMode": "grid_tied",
+          "carWashType": "tunnel",
           "demand_charge_rate": 0
         },
         "loadProfile": {
-          "baseLoadKW": 20,
-          "peakLoadKW": 240,
-          "energyKWhPerDay": 1728
+          "baseLoadKW": 25,
+          "peakLoadKW": 300,
+          "energyKWhPerDay": 2160
         },
         "computed": {
-          "version": "v1",
           "dutyCycle": 0.6,
           "kWContributors": {
-            "process": 219.83999999999997,
-            "hvac": 5.04,
-            "lighting": 10.08,
-            "controls": 5.04,
+            "process": 274.8,
+            "hvac": 6.300000000000001,
+            "lighting": 12.600000000000001,
+            "controls": 6.300000000000001,
             "itLoad": 0,
             "cooling": 0,
             "charging": 0,
             "other": 0
           },
-          "kWContributorShares": {
-            "processPct": 91.6,
+          "contributorShares": {
+            "processPct": 91.60000000000001,
             "hvacPct": 2.1,
             "lightingPct": 4.2,
             "controlsPct": 2.1,
@@ -55,13 +55,13 @@
           },
           "details": {
             "car_wash": {
-              "dryers": 150,
-              "pumps": 49.919999999999995,
-              "vacuums": 19.92
+              "dryers": 187.5,
+              "pumps": 62.4,
+              "vacuums": 24.900000000000002
             }
           },
           "notes": [
-            "Process breakdown: dryers=150.0kW (63%), pumps=49.9kW (21%), vacuums=19.9kW (8%)"
+            "Process breakdown: dryers=187.5kW (63%), pumps=62.4kW (21%), vacuums=24.9kW (8%)"
           ],
           "assumptions": [
             "Wash positions: 4 bays (4 total)",
@@ -89,18 +89,19 @@
         }
       },
       "layerB": {
-        "capexUSD": 145044.1692,
-        "annualSavingsUSD": 21932.399999999998,
-        "roiYears": 6.613237456913061,
-        "npvUSD": 134734.66738515216,
-        "irr": 24.174172279830067,
-        "pricingSnapshotId": "snap_ed2a4831",
+        "capexUSD": 93276,
+        "annualSavingsUSD": 27415.5,
+        "roiYears": 3.402308912841276,
+        "npvUSD": 225811.0737340011,
+        "irr": 48.71765465999031,
+        "pricingSnapshotId": "snap_cb2bb937",
         "warnings": [
           "ℹ️ Default electricity rate used (0.12 $/kWh)",
           "ℹ️ Default demand charge used (15 $/kW)"
         ]
       },
       "warnings": [
+        "ℹ️  Validation envelope not provided (calculator not yet migrated)",
         "ℹ️ Default electricity rate used (0.12 $/kWh)",
         "ℹ️ Default demand charge used (15 $/kW)"
       ]
@@ -109,7 +110,7 @@
       "industry": "hotel",
       "status": "pass",
       "layerA": {
-        "ts": "2026-02-06T02:59:04.506Z",
+        "ts": "2026-03-19T21:57:58.694Z",
         "layer": "A",
         "template": {
           "industry": "hotel",
@@ -122,28 +123,50 @@
           "location": "NV",
           "industry": "hotel",
           "gridMode": "grid_tied",
+          "hotelClass": "midscale",
           "demand_charge_rate": 0
         },
         "loadProfile": {
-          "baseLoadKW": 135,
+          "baseLoadKW": 217,
           "peakLoadKW": 450,
-          "energyKWhPerDay": 5670
+          "energyKWhPerDay": 7072
         },
         "computed": {
+          "dutyCycle": 0.4822222222222222,
           "kWContributors": {
-            "process": 0,
-            "hvac": 0,
-            "lighting": 0,
-            "controls": 0,
+            "process": 27.551020408163264,
+            "hvac": 275.51020408163265,
+            "lighting": 91.83673469387756,
+            "controls": 18.367346938775512,
             "itLoad": 0,
             "cooling": 0,
             "charging": 0,
-            "other": 0
+            "other": 36.734693877551024
           },
-          "assumptions": [
-            "150 rooms (midscale)",
-            "Occupancy: 70%"
+          "contributorShares": {
+            "processPct": 6.122448979591836,
+            "hvacPct": 61.224489795918366,
+            "lightingPct": 20.408163265306126,
+            "controlsPct": 4.081632653061225,
+            "itLoadPct": 0,
+            "coolingPct": 0,
+            "chargingPct": 0,
+            "otherPct": 8.16326530612245
+          },
+          "details": {
+            "hotel": {
+              "kitchen": 0,
+              "laundry": 27.551020408163264,
+              "pool": 0,
+              "miscPlug": 27.551020408163264
+            }
+          },
+          "notes": [
+            "Hotel class: midscale (HVAC: 1.5 kW/room)",
+            "Amenities: none",
+            "Process breakdown: kitchen=0.0kW, laundry=27.6kW, pool=0.0kW"
           ],
+          "assumptions": ["150 rooms (midscale)", "Occupancy: 70%"],
           "warnings": []
         },
         "sizingHints": {
@@ -165,11 +188,11 @@
         }
       },
       "layerB": {
-        "capexUSD": 261572.40899999999,
+        "capexUSD": 212082.375,
         "annualSavingsUSD": 56196,
-        "roiYears": 4.65464461883408,
-        "npvUSD": 364878.9766660599,
-        "irr": 26.550738714807142,
+        "roiYears": 3.773976350629938,
+        "npvUSD": 436503.5972070719,
+        "irr": 40.1076483750139,
         "pricingSnapshotId": "snap_3a5de5dd",
         "warnings": [
           "ℹ️ Default electricity rate used (0.12 $/kWh)",
@@ -192,7 +215,7 @@
       "industry": "data_center",
       "status": "pass",
       "layerA": {
-        "ts": "2026-02-06T02:59:05.253Z",
+        "ts": "2026-03-19T21:57:59.414Z",
         "layer": "A",
         "template": {
           "industry": "data_center",
@@ -206,28 +229,52 @@
           "industry": "data_center",
           "gridMode": "grid_tied",
           "redundancy": "2n",
-          "pue": 1.5,
+          "currentPUE": 1.5,
           "demand_charge_rate": 0
         },
         "loadProfile": {
-          "baseLoadKW": 1400,
+          "baseLoadKW": 1900,
           "peakLoadKW": 2000,
-          "energyKWhPerDay": 33600
+          "energyKWhPerDay": 45600
         },
         "computed": {
+          "dutyCycle": 0.95,
           "kWContributors": {
             "process": 0,
             "hvac": 0,
-            "lighting": 0,
-            "controls": 0,
-            "itLoad": 0,
-            "cooling": 0,
+            "lighting": 40,
+            "controls": 40,
+            "itLoad": 1333.3333333333333,
+            "cooling": 426.66666666666674,
             "charging": 0,
-            "other": 0
+            "other": 160
           },
+          "contributorShares": {
+            "processPct": 0,
+            "hvacPct": 0,
+            "lightingPct": 2,
+            "controlsPct": 2,
+            "itLoadPct": 66.66666666666666,
+            "coolingPct": 21.333333333333336,
+            "chargingPct": 0,
+            "otherPct": 8
+          },
+          "details": {
+            "data_center": {
+              "upsLosses": 66.66666666666667,
+              "pdus": 39.99999999999999,
+              "fans": 53.33333333333333,
+              "pue": 1.5
+            }
+          },
+          "notes": [
+            "PUE: 1.50 → cooling allocation: 426.7kW",
+            "Infrastructure losses: UPS=66.7kW, PDU=40.0kW, Fans=53.3kW"
+          ],
           "assumptions": [
-            "IT load: 500-1000",
-            "PUE: 1.3-1.5",
+            "Redundancy: 2n",
+            "IT load: default kW",
+            "PUE: 1.5",
             "Utilization: 60-80%",
             "Tier: tier_3"
           ],
@@ -252,11 +299,11 @@
         }
       },
       "layerB": {
-        "capexUSD": 1055854.205,
+        "capexUSD": 1079187.25,
         "annualSavingsUSD": 249760,
-        "roiYears": 4.227475196188341,
-        "npvUSD": 1503898.8681083897,
-        "irr": 23.431115264731407,
+        "roiYears": 4.320897061178732,
+        "npvUSD": 1822230.5149573323,
+        "irr": 33.886932777771584,
         "pricingSnapshotId": "snap_cf380060",
         "warnings": [
           "ℹ️ Default electricity rate used (0.12 $/kWh)",

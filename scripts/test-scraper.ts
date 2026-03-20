@@ -2,7 +2,11 @@
  * Simple test to verify Supabase connection and INSERT works
  */
 
+import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+
+// Load environment variables from .env file
+config();
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;

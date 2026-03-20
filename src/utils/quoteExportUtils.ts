@@ -1628,15 +1628,15 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
           font-size: 10.5pt;
-          color: #ededed;
+          color: #1E293B;
           line-height: 1.55;
-          background: #0D0D0D;
+          background: #FFFFFF;
         }
 
         /* ── HEADER ─────────────────────────────────────── */
         .proposal-header {
-          background: #171717;
-          border-bottom: 2px solid #3ECF8E;
+          background: #DBEAFE;
+          border-bottom: 2px solid #10B981;
           padding: 28px 32px;
           display: flex;
           justify-content: space-between;
@@ -1650,16 +1650,16 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
           letter-spacing: 0.3px;
           margin-bottom: 8px;
           line-height: 1.2;
-          color: #ffffff;
+          color: #0C4A6E;
         }
         .proposal-header .left .subtitle {
           font-size: 10pt;
-          color: #8B8B8B;
+          color: #475569;
           font-weight: 400;
         }
         .proposal-header .left .truequote-line {
           font-size: 9pt;
-          color: #3ECF8E;
+          color: #0F7544;
           margin-top: 6px;
           font-weight: 600;
           letter-spacing: 0.5px;
@@ -1674,7 +1674,7 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
           width: 56px;
           height: 56px;
           border-radius: 12px;
-          border: 2px solid #3ECF8E;
+          border: 2px solid #10B981;
         }
         .proposal-header .right .brand-text {
           text-align: right;
@@ -1683,18 +1683,18 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
           font-size: 16pt;
           font-weight: 700;
           letter-spacing: 1px;
-          color: #ffffff;
+          color: #0C4A6E;
         }
         .proposal-header .right .brand-tagline {
           font-size: 8.5pt;
-          color: #8B8B8B;
+          color: #64748B;
           margin-top: 2px;
         }
 
         /* ── ACCENT BAR ──────────────────────────────────── */
         .accent-bar {
           height: 3px;
-          background: linear-gradient(90deg, #3ECF8E, #2BA86E, #1A7A4E);
+          background: linear-gradient(90deg, #10B981, #059669, #047857);
           margin: 0 -0.75in;
           width: calc(100% + 1.5in);
         }
@@ -1703,9 +1703,9 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
         .section-heading {
           font-size: 12pt;
           font-weight: 700;
-          color: #3ECF8E;
+          color: #0F7544;
           padding: 8px 0;
-          border-bottom: 1px solid #2a2a2a;
+          border-bottom: 1px solid #CBD5E1;
           margin: 28px 0 14px 0;
           letter-spacing: 0.5px;
           text-transform: uppercase;
@@ -1719,18 +1719,18 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
         }
         .info-table td {
           padding: 8px 14px;
-          border: 1px solid #2a2a2a;
+          border: 1px solid #CBD5E1;
           font-size: 10pt;
         }
         .info-table .label-cell {
           font-weight: 600;
-          background: #1a1a1a;
+          background: #F1F5F9;
           width: 35%;
-          color: #8B8B8B;
+          color: #64748B;
         }
         .info-table .value-cell {
-          color: #ededed;
-          background: #111111;
+          color: #1E293B;
+          background: #FFFFFF;
         }
 
         /* ── KEY METRICS TABLE ──────────────────────────── */
@@ -1740,8 +1740,8 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
           margin: 12px 0 24px 0;
         }
         .metrics-table thead th {
-          background: #3ECF8E;
-          color: #0D0D0D;
+          background: #E0F2FE;
+          color: #0C4A6E;
           font-weight: 700;
           font-size: 10pt;
           padding: 9px 14px;
@@ -1751,23 +1751,23 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
         }
         .metrics-table tbody td {
           padding: 8px 14px;
-          border: 1px solid #2a2a2a;
+          border: 1px solid #CBD5E1;
           font-size: 10pt;
-          background: #111111;
+          background: #FFFFFF;
         }
         .metrics-table tbody tr:nth-child(even) td {
-          background: #171717;
+          background: #F8FAFC;
         }
         .metrics-table .metric-label {
           font-weight: 600;
-          color: #8B8B8B;
+          color: #64748B;
         }
         .metrics-table .metric-value {
           font-weight: 600;
-          color: #ededed;
+          color: #1E293B;
         }
         .metrics-table .metric-value.highlight {
-          color: #3ECF8E;
+          color: #0F7544;
           font-weight: 700;
         }
 
@@ -1848,17 +1848,17 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
         }
         .financial-table .label-cell {
           font-weight: 600;
-          background: #1a1a1a;
+          background: #F1F5F9;
           width: 50%;
-          color: #8B8B8B;
+          color: #64748B;
         }
         .financial-table .value-cell {
           font-weight: 600;
-          color: #ededed;
-          background: #111111;
+          color: #1E293B;
+          background: #FFFFFF;
         }
         .financial-table .value-cell.green {
-          color: #3ECF8E;
+          color: #0F7544;
         }
 
         /* ── CONFIDENCE BADGE ───────────────────────────── */
@@ -1871,28 +1871,28 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
           letter-spacing: 0.3px;
         }
         .confidence-badge.high {
-          background: #3ECF8E20;
-          color: #3ECF8E;
-          border: 1px solid #3ECF8E40;
+          background: #D1FAE5;
+          color: #065F46;
+          border: 1px solid #10B981;
         }
         .confidence-badge.medium {
-          background: #F59E0B20;
-          color: #F59E0B;
-          border: 1px solid #F59E0B40;
+          background: #FEF3C7;
+          color: #92400E;
+          border: 1px solid #F59E0B;
         }
         .confidence-badge.low {
-          background: #EF444420;
-          color: #EF4444;
-          border: 1px solid #EF444440;
+          background: #FEE2E2;
+          color: #991B1B;
+          border: 1px solid #EF4444;
         }
 
         /* ── FOOTER ─────────────────────────────────────── */
         .proposal-footer {
           margin-top: 36px;
           padding-top: 16px;
-          border-top: 1px solid #2a2a2a;
+          border-top: 1px solid #CBD5E1;
           font-size: 8.5pt;
-          color: #555;
+          color: #64748B;
           line-height: 1.7;
         }
         .proposal-footer p {
