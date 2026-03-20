@@ -4,8 +4,9 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Search, ExternalLink, CheckCircle, Archive, TrendingUp } from "lucide-react";
+import { Search, ExternalLink, CheckCircle, Archive, TrendingUp, Play } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { runOpportunityScraper } from "../api/opportunityScraper";
 import type { Opportunity, OpportunityFilter, OpportunityStatus } from "../types/opportunity";
 
 // Signal display names
@@ -38,6 +39,7 @@ export function OpportunitiesDashboard() {
   const [filteredOpportunities, setFilteredOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOpp, setSelectedOpp] = useState<Opportunity | null>(null);
+  const [scraping, setScraping] = useState(false);
 
   // Filters
   const [filter, setFilter] = useState<OpportunityFilter>({
@@ -100,6 +102,26 @@ export function OpportunitiesDashboard() {
     }
   }
 
+  async function runScraper() {
+    setScraping(true);
+    try {
+      const result = await runOpportunityScraper();
+      if (result.success) {
+        await loadOpportunities();
+        alert(
+          `✅ Scraper complete!\n\nFound: ${result.data?.total_found || 0} opportunities\nNew: ${result.data?.new_opportunities || 0}\nDuplicates: ${result.data?.duplicates_skipped || 0}`
+        );
+      } else {
+        alert(`❌ Scraper failed: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Scraper error:", error);
+      alert("❌ Failed to run scraper");
+    } finally {
+      setScraping(false);
+    }
+  }
+
   async function updateStatus(oppId: string, newStatus: OpportunityStatus) {
     try {
       const updates: Partial<Opportunity> = {
@@ -153,15 +175,28 @@ export function OpportunitiesDashboard() {
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
-            🧙‍♂️ Opportunity Dashboard
-          </h1>
-          <button
-            onClick={loadOpportunities}
-            className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400 hover:bg-emerald-500/30 transition-colors"
-          >
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <img src="/images/new_small_profile_.png" alt="Merlin" className="w-12 h-12" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
+              Opportunity Dashboard
+            </h1>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={runScraper}
+              disabled={scraping}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:text-slate-400 text-white rounded-lg transition-colors font-semibold"
+            >
+              <Play className="w-4 h-4" />
+              {scraping ? "Scraping..." : "Run Scraper"}
+            </button>
+            <button
+              onClick={loadOpportunities}
+              className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400 hover:bg-emerald-500/30 transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
         <p className="text-slate-400">
           Business leads discovered by Merlin&apos;s opportunity scraper
