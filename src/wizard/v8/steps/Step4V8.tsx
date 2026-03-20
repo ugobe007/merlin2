@@ -491,8 +491,8 @@ export default function Step4V8({ state, actions }: Props) {
         )}
       </div>
 
-      {/* Cards Stack - Vertical layout */}
-      <div className="flex flex-col gap-4 md:gap-6 w-full max-w-4xl mx-auto px-2 md:px-4">
+      {/* Cards Grid - Horizontal layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 w-full px-2 md:px-4">
         {tiers.map((tier, index) => {
           const tierIndex = index as 0 | 1 | 2;
           const config = TIER_CONFIG[tierIndex];
