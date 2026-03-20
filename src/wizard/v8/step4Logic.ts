@@ -267,6 +267,26 @@ function computeBESSSizing(
   // Use peakLoadKW as sizing basis. Fall back to baseLoadKW if peak not yet set.
   const effectivePeakKW = state.peakLoadKW > 0 ? state.peakLoadKW : state.baseLoadKW;
 
+  // Validation: warn if load data is suspiciously low or missing
+  if (effectivePeakKW <= 0) {
+    console.error(
+      `❌ [BESS Sizing] Invalid effectivePeakKW (${effectivePeakKW}). Using fallback minimum of 100 kW.`
+    );
+    const bessKW = 75; // Minimum system
+    const durationHours = GOAL_GUIDANCE[goal].durationHours.recommended;
+    return {
+      bessKW,
+      bessKWh: Math.round(bessKW * durationHours),
+      durationHours,
+    };
+  }
+
+  if (effectivePeakKW < 10) {
+    console.warn(
+      `⚠️ [BESS Sizing] Very low effectivePeakKW (${effectivePeakKW} kW). Residential scale - may not be suitable for commercial BESS.`
+    );
+  }
+
   console.log(
     `🔋 [BESS Sizing] effectivePeakKW=${effectivePeakKW}, state.peakLoadKW=${state.peakLoadKW}, state.baseLoadKW=${state.baseLoadKW}`
   );
@@ -282,9 +302,10 @@ function computeBESSSizing(
   const { ratio } = getBESSSizingRatioWithSource(bessUseCase);
 
   // BESS power: peak × ratio × tier scale
+  const rawBessKW = effectivePeakKW * ratio * TIER_BESS_SCALE[tierLabel];
   const bessKW = Math.max(
     75, // minimum 75 kW system (ensures adequate sizing for medium/large retail)
-    Math.round(effectivePeakKW * ratio * TIER_BESS_SCALE[tierLabel])
+    Math.min(5000, Math.round(rawBessKW)) // max 5,000 kW (safety limit)
   );
 
   // Duration from goal guidance
@@ -296,9 +317,13 @@ function computeBESSSizing(
         ? guidance.durationHours.recommended
         : guidance.durationHours.complete;
 
+  const bessKWh = Math.min(50000, Math.round(bessKW * durationHours)); // max 50 MWh
+
+  const bessKWh = Math.min(50000, Math.round(bessKW * durationHours)); // max 50 MWh
+
   return {
     bessKW,
-    bessKWh: Math.round(bessKW * durationHours),
+    bessKWh,
     durationHours,
   };
 }
