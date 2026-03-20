@@ -267,7 +267,7 @@ export default function Step4V8({ state, actions }: Props) {
 
   // Keyboard navigation for tiers
   React.useEffect(() => {
-    if (!tiers || tiersStatus !== FetchStatus.Success) return;
+    if (!tiers || tiersStatus !== "loaded") return;
 
     const handleKeyPress = (e: KeyboardEvent) => {
       // Prevent if user is typing in an input field
