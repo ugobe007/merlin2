@@ -233,6 +233,37 @@ export interface CostBreakdown {
  * Calculate complete cost breakdown with v4.5 validated logic
  */
 export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
+  // Validation: check for negative values
+  if (
+    (config.solarKW || 0) < 0 ||
+    (config.bessKW || 0) < 0 ||
+    (config.bessKWh || 0) < 0 ||
+    (config.generatorKW || 0) < 0 ||
+    (config.level2Chargers || 0) < 0 ||
+    (config.dcfcChargers || 0) < 0 ||
+    (config.hpcChargers || 0) < 0
+  ) {
+    throw new Error("Equipment quantities cannot be negative");
+  }
+
+  // Validation: check for unrealistic values (max bounds)
+  if ((config.solarKW || 0) > 10000) {
+    throw new Error("Solar capacity exceeds maximum (10,000 kW)");
+  }
+  if ((config.bessKW || 0) > 5000 || (config.bessKWh || 0) > 50000) {
+    throw new Error("BESS capacity exceeds maximum (5,000 kW / 50,000 kWh)");
+  }
+  if ((config.generatorKW || 0) > 5000) {
+    throw new Error("Generator capacity exceeds maximum (5,000 kW)");
+  }
+  if (
+    (config.level2Chargers || 0) > 100 ||
+    (config.dcfcChargers || 0) > 50 ||
+    (config.hpcChargers || 0) > 20
+  ) {
+    throw new Error("EV charger count exceeds reasonable maximum");
+  }
+
   // Equipment costs
   const solarCost = (config.solarKW || 0) * EQUIPMENT_UNIT_COSTS.solar.pricePerWatt * 1000;
 
@@ -337,6 +368,19 @@ export interface SavingsBreakdown {
  * Calculate annual savings with honest reserves deduction
  */
 export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): SavingsBreakdown {
+  // Validation: check for negative or unrealistic utility rates
+  if (inputs.electricityRate < 0 || inputs.electricityRate > 1.0) {
+    console.warn(
+      `⚠️ Unrealistic electricity rate: $${inputs.electricityRate}/kWh (expected $0.05-$0.50)`
+    );
+  }
+  if (inputs.demandCharge < 0 || inputs.demandCharge > 100) {
+    console.warn(`⚠️ Unrealistic demand charge: $${inputs.demandCharge}/kW (expected $5-$50)`);
+  }
+  if (inputs.bessKW <= 0 && inputs.solarKW <= 0) {
+    console.warn("⚠️ No BESS or Solar specified, savings will be minimal");
+  }
+
   // BESS Demand Charge Savings
   // Assume 30% reduction of demand charges
   const demandChargeSavings = inputs.bessKW * inputs.demandCharge * 12 * 0.3;
@@ -409,6 +453,29 @@ export function calculateROI(
   netAnnualSavings: number,
   discountRate: number = 0.05 // 5% discount rate for NPV
 ): ROIMetrics {
+  // Validation: prevent division by zero and negative values
+  if (netInvestment <= 0) {
+    console.warn("⚠️ Invalid netInvestment (<=0), returning default metrics");
+    return {
+      paybackYears: 999,
+      year1ROI: 0,
+      roi10Year: 0,
+      roi25Year: 0,
+      npv25Year: -netInvestment,
+    };
+  }
+
+  if (netAnnualSavings <= 0) {
+    console.warn("⚠️ Invalid netAnnualSavings (<=0), system will not pay back");
+    return {
+      paybackYears: 999,
+      year1ROI: -100,
+      roi10Year: -100,
+      roi25Year: -100,
+      npv25Year: -netInvestment,
+    };
+  }
+
   // Simple payback
   const paybackYears = netInvestment / netAnnualSavings;
 
