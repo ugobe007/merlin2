@@ -61,29 +61,47 @@ const INDUSTRY_KEYWORDS: Record<IndustryType, string[]> = {
 async function parseRSSFeed(url: string): Promise<any[]> {
   try {
     const response = await fetch(url);
-    const text = await response.text();
+    const xmlText = await response.text();
 
-    // Simple RSS parser (in production, use a library like rss-parser)
-    const items: any[] = [];
-    const itemRegex = /<item>(.*?)<\/item>/gs;
-    const matches = text.matchAll(itemRegex);
+    // Parse XML using DOMParser (works in browser)
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
 
-    for (const match of matches) {
-      const itemXml = match[1];
-      const title = itemXml.match(/<title>(.*?)<\/title>/)?.[1] || "";
-      const link = itemXml.match(/<link>(.*?)<\/link>/)?.[1] || "";
-      const description = itemXml.match(/<description>(.*?)<\/description>/)?.[1] || "";
-      const pubDate = itemXml.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || "";
+    // Check for parsing errors
+    const parserError = xmlDoc.querySelector("parsererror");
+    if (parserError) {
+      console.error("XML parsing error:", parserError.textContent);
+      return [];
+    }
 
-      items.push({
-        title: decodeHTMLEntities(title),
-        link: decodeHTMLEntities(link),
-        description: decodeHTMLEntities(description),
-        pubDate,
+    // Get all item elements
+    const items = xmlDoc.querySelectorAll("item");
+    const articles: any[] = [];
+
+    for (const item of items) {
+      const title = item.querySelector("title")?.textContent || "";
+      const link = item.querySelector("link")?.textContent || "";
+      const descriptionHTML = item.querySelector("description")?.textContent || "";
+      const pubDate = item.querySelector("pubDate")?.textContent || "";
+
+      // Clean HTML tags from description
+      const description = cleanHTMLTags(descriptionHTML);
+
+      // Skip if we don't have essential data
+      if (!title || !link) {
+        continue;
+      }
+
+      articles.push({
+        title: title.trim(),
+        link: link.trim(),
+        description: description.trim(),
+        pubDate: pubDate.trim(),
       });
     }
 
-    return items;
+    console.log(`  ✓ Parsed ${articles.length} articles from ${url}`);
+    return articles;
   } catch (error) {
     console.error(`Error parsing RSS feed ${url}:`, error);
     return [];
@@ -91,12 +109,15 @@ async function parseRSSFeed(url: string): Promise<any[]> {
 }
 
 /**
- * Decode HTML entities in text
+ * Clean HTML tags and decode entities from text
  */
-function decodeHTMLEntities(text: string): string {
+function cleanHTMLTags(html: string): string {
   const parser = new DOMParser();
-  const doc = parser.parseFromString(text, "text/html");
-  return doc.documentElement.textContent || text;
+  // Parse as HTML to handle entities and tags
+  const doc = parser.parseFromString(html, "text/html");
+  // Get text content (strips tags and decodes entities)
+  const text = doc.body.textContent || doc.documentElement.textContent || "";
+  return text.trim();
 }
 
 /**
@@ -134,21 +155,39 @@ function detectIndustry(text: string): IndustryType | undefined {
  * Extract company name from article (simple heuristic)
  */
 function extractCompanyName(title: string, description: string): string {
-  // Look for patterns like "Company Name announces..." or "Company Name to..."
+  // Common patterns for company names in news headlines
   const patterns = [
-    /^([A-Z][A-Za-z0-9\s&]+?)\s+(announces|to|plans|opens|expands)/,
-    /([A-Z][A-Za-z0-9\s&]+?)\s+(Inc\.|LLC|Corp\.|Corporation|Ltd\.)/,
+    // "Company Name announces/plans/opens..."
+    /^([A-Z][A-Za-z0-9\s&.]+?)\s+(announces|plans|to build|opens|expands|unveils|launches)/i,
+    // "Company Inc./LLC/Corp."
+    /([A-Z][A-Za-z0-9\s&.]+?)\s+(Inc\.|LLC|Corp\.|Corporation|Ltd\.)/,
+    // Company name at start with capital letters
+    /^([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,2})/,
   ];
 
+  // Try title first
   for (const pattern of patterns) {
     const match = title.match(pattern);
-    if (match) {
+    if (match && match[1].length > 2) {
       return match[1].trim();
     }
   }
 
-  // Fallback: first few words of title
-  return title.split(" ").slice(0, 3).join(" ");
+  // Try description
+  for (const pattern of patterns) {
+    const match = description.match(pattern);
+    if (match && match[1].length > 2) {
+      return match[1].trim();
+    }
+  }
+
+  // Fallback: Use first 2-4 words of title (likely contains company name)
+  const words = title.split(/\s+/).filter((w) => w.length > 0);
+  if (words.length >= 2) {
+    return words.slice(0, Math.min(3, words.length)).join(" ");
+  }
+
+  return "Unknown Company";
 }
 
 /**
