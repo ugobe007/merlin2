@@ -190,12 +190,17 @@ export interface QuoteTier {
   itcRate: number; // IRA 2022 dynamic (0.06 – 0.70)
   itcAmount: number;
   netCost: number; // grossCost − itcAmount
-  // Financial outcomes
-  annualSavings: number; // peak shaving + solar offset + EV revenue
-  evRevenuePerYear: number; // subset of annualSavings (for display isolation)
+  // Financial outcomes (V4.5 honest TCO)
+  grossAnnualSavings: number; // before reserves deduction
+  annualReserves: number; // insurance, inverter replacement, degradation (V4.5)
+  annualSavings: number; // NET savings (gross - reserves) for honest payback
+  evRevenuePerYear: number; // subset of grossAnnualSavings (for display isolation)
   paybackYears: number;
   roi10Year: number; // percent, e.g. 185.0
   npv: number;
+  // Margin policy (V4.5 transparency)
+  marginBandId: string; // e.g., "micro", "small", "medium"
+  blendedMarginPercent: number; // effective margin applied (e.g., 14.2)
   // TrueQuote™ audit trail
   notes: string[];
 }

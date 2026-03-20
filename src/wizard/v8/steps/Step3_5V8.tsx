@@ -18,6 +18,7 @@ import React, { useEffect } from "react";
 import type { WizardState, WizardActions } from "../wizardState";
 import { hasSolarAddonOpportunity } from "../addonIntent";
 import { Sun, Zap, Fuel, Info } from "lucide-react";
+import { EQUIPMENT_UNIT_COSTS } from "@/services/pricingServiceV45";
 
 interface Props {
   state: WizardState;
@@ -47,6 +48,22 @@ export default function Step3_5V8({ state, actions }: Props) {
   const [generatorConfirmed, setGeneratorConfirmed] = React.useState(false);
   const [evConfirmed, setEvConfirmed] = React.useState(false);
   const [isGeneratingTiers, setIsGeneratingTiers] = React.useState(false);
+
+  // Real-time cost estimates helper
+  const calculateAddonCosts = () => {
+    const costs = {
+      solar: state.solarKW * EQUIPMENT_UNIT_COSTS.solar.pricePerWatt * 1000,
+      generator: state.generatorKW * EQUIPMENT_UNIT_COSTS.generator.pricePerKW,
+      evCharging:
+        state.level2Chargers * EQUIPMENT_UNIT_COSTS.evCharging.level2 +
+        state.dcfcChargers * EQUIPMENT_UNIT_COSTS.evCharging.dcfc +
+        state.hpcChargers * EQUIPMENT_UNIT_COSTS.evCharging.hpc,
+    };
+    costs.total = costs.solar + costs.generator + costs.evCharging;
+    return costs;
+  };
+
+  const addonCosts = calculateAddonCosts();
 
   // Solar sizing guidance based on industry with physical space constraints
   const getSolarGuidance = () => {
@@ -191,40 +208,90 @@ export default function Step3_5V8({ state, actions }: Props) {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Configuration Summary Card - Floating */}
+      {(showSolar || wantsGenerator || wantsEVCharging) && (
+        <div className="bg-gradient-to-br from-emerald-950/60 via-slate-900/95 to-slate-950/95 border-2 border-emerald-500/30 rounded-xl p-4 shadow-xl shadow-emerald-500/10 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="text-2xl">🧙‍♂️</div>
+              <div>
+                <h3 className="text-sm font-bold text-emerald-400">Your Configuration</h3>
+                <p className="text-[10px] text-slate-400">
+                  {state.location?.city || "Location"} •{" "}
+                  {state.industry?.replace(/_/g, " ") || "Industry"} • {Math.round(peakLoadKW)} kW
+                  peak
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-slate-400">Estimated Investment</div>
+              <div className="text-lg font-bold text-emerald-400">
+                ${Math.round(addonCosts.total / 1000)}K
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            {showSolar && (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2">
+                <div className="text-xs text-amber-400 font-medium mb-0.5">☀️ Solar</div>
+                <div className="text-sm font-bold text-white">{state.solarKW} kW</div>
+                <div className="text-[9px] text-slate-400">
+                  ~${Math.round(addonCosts.solar / 1000)}K
+                </div>
+              </div>
+            )}
+            {wantsGenerator && (
+              <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-2">
+                <div className="text-xs text-orange-400 font-medium mb-0.5">🔥 Generator</div>
+                <div className="text-sm font-bold text-white">{state.generatorKW} kW</div>
+                <div className="text-[9px] text-slate-400">
+                  ~${Math.round(addonCosts.generator / 1000)}K
+                </div>
+              </div>
+            )}
+            {wantsEVCharging && (
+              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-2">
+                <div className="text-xs text-cyan-400 font-medium mb-0.5">⚡ EV Charging</div>
+                <div className="text-sm font-bold text-white">
+                  {state.level2Chargers + state.dcfcChargers + state.hpcChargers} ports
+                </div>
+                <div className="text-[9px] text-slate-400">
+                  ~${Math.round(addonCosts.evCharging / 1000)}K
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center">
-        <p className="text-purple-400 uppercase tracking-[0.3em] text-sm font-medium mb-3">
+        <p className="text-purple-400 uppercase tracking-[0.3em] text-xs font-medium mb-2">
           Step 3.5 of 5
         </p>
         <h1
-          className="text-4xl md:text-5xl font-bold text-white mb-3"
+          className="text-3xl md:text-4xl font-bold text-white mb-2"
           style={{ fontFamily: "Outfit, sans-serif" }}
         >
           Configure Your Add-ons
         </h1>
-        <p className="text-slate-400 text-lg">
-          Fine-tune your solar, EV charging, and backup generator
-        </p>
+        <p className="text-slate-400 text-sm">Fine-tune solar, EV charging, and backup generator</p>
       </div>
 
       {/* Configuration Cards */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Solar Configuration */}
         {showSolar && (
-          <div className="bg-gradient-to-br from-amber-950/40 via-slate-900 to-slate-950 border-2 border-amber-500/40 rounded-2xl p-6 shadow-xl shadow-amber-500/10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-amber-500/10 p-3 rounded-xl">
-                <Sun className="w-6 h-6 text-amber-400" />
+          <div className="bg-gradient-to-br from-amber-950/40 via-slate-900 to-slate-950 border-2 border-amber-500/40 rounded-xl p-4 shadow-xl shadow-amber-500/10">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="bg-amber-500/10 p-2 rounded-lg">
+                <Sun className="w-5 h-5 text-amber-400" />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-white">Solar PV Array</h3>
-                <p className="text-slate-400 text-sm">
-                  Industry: {industry || "Commercial"} • Peak Load: {Math.round(peakLoadKW)} kW
-                </p>
-                <p className="text-amber-400/70 text-xs mt-0.5">
-                  Typical roof space: {Math.round(solarGuidance.maxSize)} kW capacity • Recommended:{" "}
-                  {Math.round(solarGuidance.recommended)} kW
+                <h3 className="text-lg font-bold text-white">Solar PV Array</h3>
+                <p className="text-slate-400 text-xs">
+                  {Math.round(peakLoadKW)} kW peak • Max: {Math.round(solarGuidance.maxSize)} kW
                 </p>
               </div>
               <div
@@ -245,30 +312,28 @@ export default function Step3_5V8({ state, actions }: Props) {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Solar Capacity Slider */}
               <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-medium text-slate-300">
-                    Usable Roof Space for Solar
-                  </label>
-                  <div className="flex items-center gap-3">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-medium text-slate-300">Solar Capacity</label>
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() =>
                         actions.setAddonConfig({
                           solarKW: Math.max(solarGuidance.minSize, state.solarKW - 50),
                         })
                       }
-                      className="w-10 h-10 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-2xl font-bold transition-all border border-amber-500/30"
+                      className="w-8 h-8 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xl font-bold transition-all border border-amber-500/30"
                     >
                       −
                     </button>
-                    <div className="text-right flex items-center gap-2">
+                    <div className="text-right flex items-center gap-1.5">
                       <div>
-                        <div className="text-2xl font-bold text-amber-400 flex items-center gap-2">
+                        <div className="text-xl font-bold text-amber-400 flex items-center gap-1.5">
                           {state.solarKW.toLocaleString()} kW
                           <svg
-                            className="w-5 h-5 text-emerald-400"
+                            className="w-4 h-4 text-emerald-400"
                             fill="currentColor"
                             viewBox="0 0 20 20"
                           >
@@ -279,8 +344,11 @@ export default function Step3_5V8({ state, actions }: Props) {
                             />
                           </svg>
                         </div>
-                        <div className="text-xs text-slate-500">
-                          {((state.solarKW / peakLoadKW) * 100).toFixed(0)}% of peak load
+                        <div className="text-[10px] text-slate-500">
+                          {((state.solarKW / peakLoadKW) * 100).toFixed(0)}%
+                        </div>
+                        <div className="text-[10px] font-medium text-emerald-400">
+                          +${Math.round(addonCosts.solar / 1000)}K
                         </div>
                       </div>
                     </div>
@@ -290,7 +358,7 @@ export default function Step3_5V8({ state, actions }: Props) {
                           solarKW: Math.min(solarGuidance.maxSize, state.solarKW + 50),
                         })
                       }
-                      className="w-10 h-10 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-2xl font-bold transition-all border border-amber-500/30"
+                      className="w-8 h-8 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xl font-bold transition-all border border-amber-500/30"
                     >
                       +
                     </button>
@@ -337,33 +405,25 @@ export default function Step3_5V8({ state, actions }: Props) {
                   onChange={(e) => actions.setAddonConfig({ solarKW: Number(e.target.value) })}
                   className="solar-slider w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer"
                 />
-                <div className="flex justify-between items-center text-xs text-slate-500 mt-2">
-                  <span>
-                    {solarGuidance.minSize} kW
-                    <br />
-                    <span className="text-slate-600">Min (80%)</span>
-                  </span>
+                <div className="flex justify-between items-center text-[10px] text-slate-500 mt-1.5">
+                  <span>{solarGuidance.minSize} kW</span>
                   <button
                     onClick={() => actions.setAddonConfig({ solarKW: solarGuidance.recommended })}
-                    className="px-3 py-1 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 font-medium"
+                    className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 text-[10px] font-medium"
                   >
-                    ⭐ {solarGuidance.recommended} kW (Recommended)
+                    ⭐ {solarGuidance.recommended} kW
                   </button>
-                  <span className="text-right">
-                    {solarGuidance.maxSize} kW
-                    <br />
-                    <span className="text-slate-600">Max (2.5x)</span>
-                  </span>
+                  <span>{solarGuidance.maxSize} kW</span>
                 </div>
               </div>
               {/* Solar Confirm Button */}
-              <div className="flex justify-center mt-4">
+              <div className="flex justify-center mt-3">
                 <button
                   onClick={() => setSolarConfirmed(true)}
                   disabled={solarConfirmed}
                   className={`
-                    px-8 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-200
-                    flex items-center gap-2
+                    px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all duration-200
+                    flex items-center gap-1.5
                     ${
                       solarConfirmed
                         ? "bg-emerald-500/30 border-2 border-emerald-500 text-emerald-300 cursor-default scale-95"
@@ -389,24 +449,18 @@ export default function Step3_5V8({ state, actions }: Props) {
                 </button>
               </div>
               {/* Sizing Info */}
-              <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
-                <div className="flex gap-2 text-sm">
-                  <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <div className="text-slate-300 leading-relaxed">
-                    <div className="mb-2">
-                      <strong className="text-amber-400">
-                        🧙‍♂️ Merlin suggests {solarGuidance.recommended.toLocaleString()} kW for solar
-                      </strong>
-                      <span className="text-slate-400">
-                        {" "}
-                        based on your {Math.round(solarGuidance.maxSize)} kW of usable roof space
-                        and {Math.round(peakLoadKW)} kW peak load.
-                      </span>
-                    </div>
-                    <strong className="text-amber-400">Sizing Guidance:</strong> The slider above
-                    adjusts based on your available roof space. Commercial facilities typically
-                    install 1.4x their peak load (ILR per NREL ATB 2024), accounting for solar
-                    production curves, panel degradation, and energy storage coupling.
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3">
+                <div className="flex gap-2 text-xs">
+                  <Info className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-slate-300 leading-snug">
+                    <strong className="text-amber-400">
+                      🧙‍♂️ Merlin: {solarGuidance.recommended.toLocaleString()} kW recommended
+                    </strong>
+                    <span className="text-slate-400">
+                      {" "}
+                      based on {Math.round(solarGuidance.maxSize)} kW roof space and{" "}
+                      {Math.round(peakLoadKW)} kW peak load.
+                    </span>
                   </div>
                 </div>
               </div>
@@ -416,44 +470,35 @@ export default function Step3_5V8({ state, actions }: Props) {
 
         {/* EV Charging Configuration */}
         {wantsEVCharging && (
-          <div className="bg-gradient-to-br from-cyan-950/40 via-slate-900 to-slate-950 border-2 border-cyan-500/40 rounded-2xl p-6 shadow-xl shadow-cyan-500/10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-cyan-500/10 p-3 rounded-xl">
-                <Zap className="w-6 h-6 text-cyan-400" />
+          <div className="bg-gradient-to-br from-cyan-950/40 via-slate-900 to-slate-950 border-2 border-cyan-500/40 rounded-xl p-4 shadow-xl shadow-cyan-500/10">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="bg-cyan-500/10 p-2 rounded-lg">
+                <Zap className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">EV Charging</h3>
-                <p className="text-slate-400 text-sm">Employee and customer charging</p>
+                <h3 className="text-lg font-bold text-white">EV Charging</h3>
+                <p className="text-slate-400 text-xs">Employee & customer charging</p>
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Merlin's EV Charging Recommendation - At the top for visibility */}
-              <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-4">
-                <div className="flex gap-2 text-sm">
-                  <Info className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
-                  <div className="text-slate-300 leading-relaxed">
+              <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3">
+                <div className="flex gap-2 text-xs">
+                  <Info className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-slate-300 leading-snug">
                     <strong className="text-cyan-400">
-                      🧙‍♂️ Merlin suggests{" "}
-                      {state.level2Chargers > 0
-                        ? `${state.level2Chargers} Level 2 chargers`
-                        : "starting with Level 2 chargers"}
+                      🧙‍♂️ Merlin: {state.level2Chargers} L2 chargers recommended
                     </strong>
-                    <span className="text-slate-400">
-                      {" "}
-                      for your facility size. Level 2 chargers are ideal for employee daily
-                      charging, while DC Fast Chargers serve customer convenience needs.
-                    </span>
+                    <span className="text-slate-400"> for employee daily charging.</span>
                   </div>
                 </div>
               </div>
               {/* Level 2 Chargers */}
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-sm font-medium text-slate-300">
-                    Level 2 Chargers (7-22 kW)
-                  </label>
-                  <span className="text-lg font-bold text-cyan-400">{state.level2Chargers}</span>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-medium text-slate-300">Level 2 (7-22 kW)</label>
+                  <span className="text-base font-bold text-cyan-400">{state.level2Chargers}</span>
                 </div>
                 <input
                   type="range"
@@ -469,11 +514,9 @@ export default function Step3_5V8({ state, actions }: Props) {
               </div>
               {/* DCFC Chargers */}
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-sm font-medium text-slate-300">
-                    DC Fast Chargers (50-150 kW)
-                  </label>
-                  <span className="text-lg font-bold text-purple-400">{state.dcfcChargers}</span>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-medium text-slate-300">DC Fast (50-150 kW)</label>
+                  <span className="text-base font-bold text-purple-400">{state.dcfcChargers}</span>
                 </div>
                 <input
                   type="range"
@@ -487,11 +530,11 @@ export default function Step3_5V8({ state, actions }: Props) {
               </div>
               {/* HPC Chargers */}
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-sm font-medium text-slate-300">
-                    High Power Chargers (250-350 kW)
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-medium text-slate-300">
+                    High Power (250-350 kW)
                   </label>
-                  <span className="text-lg font-bold text-fuchsia-400">{state.hpcChargers}</span>
+                  <span className="text-base font-bold text-fuchsia-400">{state.hpcChargers}</span>
                 </div>
                 <input
                   type="range"
@@ -504,10 +547,10 @@ export default function Step3_5V8({ state, actions }: Props) {
                 />
               </div>
               {/* Total Power Summary */}
-              <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3">
+              <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-cyan-300">Total Charging Capacity:</span>
-                  <span className="text-lg font-bold text-cyan-400">
+                  <span className="text-xs text-cyan-300">Total Capacity:</span>
+                  <span className="text-base font-bold text-cyan-400">
                     {(
                       state.level2Chargers * 11 +
                       state.dcfcChargers * 150 +
@@ -522,8 +565,8 @@ export default function Step3_5V8({ state, actions }: Props) {
                 onClick={() => setEvConfirmed(true)}
                 disabled={evConfirmed}
                 className={`
-                  w-full px-8 py-3 rounded-xl font-bold text-sm uppercase tracking-wider
-                  flex items-center justify-center gap-2
+                  w-full px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-wider
+                  flex items-center justify-center gap-1.5
                   ${
                     evConfirmed
                       ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 scale-95 cursor-default"
@@ -553,23 +596,23 @@ export default function Step3_5V8({ state, actions }: Props) {
 
         {/* Generator Configuration */}
         {wantsGenerator && (
-          <div className="bg-gradient-to-br from-red-950/40 via-slate-900 to-slate-950 border-2 border-red-500/40 rounded-2xl p-6 shadow-xl shadow-red-500/10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-orange-500/10 p-3 rounded-xl">
-                <Fuel className="w-6 h-6 text-orange-400" />
+          <div className="bg-gradient-to-br from-red-950/40 via-slate-900 to-slate-950 border-2 border-red-500/40 rounded-xl p-4 shadow-xl shadow-red-500/10">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="bg-orange-500/10 p-2 rounded-lg">
+                <Fuel className="w-5 h-5 text-orange-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Backup Generator</h3>
-                <p className="text-slate-400 text-sm">Critical load protection</p>
+                <h3 className="text-lg font-bold text-white">Backup Generator</h3>
+                <p className="text-slate-400 text-xs">Critical load protection</p>
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Generator Capacity Slider */}
               <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-medium text-slate-300">Generator Capacity</label>
-                  <div className="flex items-center gap-3">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-medium text-slate-300">Generator Capacity</label>
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() =>
                         actions.setAddonConfig({
@@ -579,14 +622,14 @@ export default function Step3_5V8({ state, actions }: Props) {
                           ),
                         })
                       }
-                      className="w-10 h-10 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-2xl font-bold transition-all border border-orange-500/30"
+                      className="w-8 h-8 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-xl font-bold transition-all border border-orange-500/30"
                     >
                       −
                     </button>
-                    <span className="text-2xl font-bold text-orange-400 flex items-center gap-2">
+                    <span className="text-xl font-bold text-orange-400 flex items-center gap-1.5">
                       {state.generatorKW.toLocaleString()} kW
                       <svg
-                        className="w-5 h-5 text-emerald-400"
+                        className="w-4 h-4 text-emerald-400"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -597,6 +640,9 @@ export default function Step3_5V8({ state, actions }: Props) {
                         />
                       </svg>
                     </span>
+                    <div className="text-[10px] font-medium text-emerald-400 text-right mr-2">
+                      +${Math.round(addonCosts.generator / 1000)}K
+                    </div>
                     <button
                       onClick={() =>
                         actions.setAddonConfig({

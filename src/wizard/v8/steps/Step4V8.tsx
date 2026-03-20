@@ -19,7 +19,8 @@
 
 import React from "react";
 import type { WizardState, WizardActions } from "../wizardState";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, ChevronDown, ChevronUp, Info } from "lucide-react";
+import { calculateSystemCosts, EQUIPMENT_UNIT_COSTS } from "@/services/pricingServiceV45";
 
 // ============================================================================
 // TIER DESIGN CONFIG
@@ -36,7 +37,8 @@ const TIER_CONFIG = {
     accentColor: "text-emerald-400",
     chipBg: "bg-white/5 border-white/10",
     chipText: "text-slate-300",
-    buttonClass: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20",
+    buttonClass:
+      "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
     metricBg: "bg-white/5",
     savingsGlow: "savings-glow-starter",
   },
@@ -52,7 +54,7 @@ const TIER_CONFIG = {
     chipBg: "bg-purple-500/10 border-purple-500/30",
     chipText: "text-purple-200",
     buttonClass:
-      "text-white bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 shadow-lg shadow-purple-500/20",
+      "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
     metricBg: "bg-purple-500/10",
     savingsGlow: "savings-glow-perfect",
   },
@@ -67,7 +69,8 @@ const TIER_CONFIG = {
     accentColor: "text-orange-400",
     chipBg: "bg-white/5 border-white/10",
     chipText: "text-slate-300",
-    buttonClass: "text-orange-400 bg-orange-500/10 border-orange-500/30 hover:bg-orange-500/20",
+    buttonClass:
+      "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
     metricBg: "bg-white/5",
     savingsGlow: "savings-glow-beast",
   },
@@ -240,6 +243,7 @@ export default function Step4V8({ state, actions }: Props) {
   const [loadingStep, setLoadingStep] = React.useState(0);
   const [progress, setProgress] = React.useState(0);
   const [selectionConfirmation, setSelectionConfirmation] = React.useState<string | null>(null);
+  const [expandedCostBreakdown, setExpandedCostBreakdown] = React.useState<number | null>(null);
 
   // Log only when tiersStatus changes, not on every render
   React.useEffect(() => {
@@ -260,6 +264,49 @@ export default function Step4V8({ state, actions }: Props) {
       console.log("[Step4V8] selectedTierIndex changed to:", selectedTierIndex);
     }
   }, [selectedTierIndex]);
+
+  // Keyboard navigation for tiers
+  React.useEffect(() => {
+    if (!tiers || tiersStatus !== "success") return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Prevent if user is typing in an input field
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (selectedTierIndex === null || selectedTierIndex === 0) {
+          actions.selectTier(0);
+        } else {
+          actions.selectTier(selectedTierIndex - 1);
+        }
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        if (selectedTierIndex === null || selectedTierIndex === 2) {
+          actions.selectTier(2);
+        } else {
+          actions.selectTier(selectedTierIndex + 1);
+        }
+      } else if (e.key === "Enter" && selectedTierIndex !== null) {
+        e.preventDefault();
+        actions.goToStep(6);
+      } else if (e.key === "1") {
+        e.preventDefault();
+        actions.selectTier(0);
+      } else if (e.key === "2") {
+        e.preventDefault();
+        actions.selectTier(1);
+      } else if (e.key === "3") {
+        e.preventDefault();
+        actions.selectTier(2);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [selectedTierIndex, tiers, tiersStatus, actions]);
 
   // Loading steps for status bar
   const loadingSteps = [
@@ -407,10 +454,11 @@ export default function Step4V8({ state, actions }: Props) {
         >
           Pick Your Power
         </h1>
-        <p className="text-slate-400 text-lg">
+        <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+          🧙‍♂️{" "}
           {selectedTierIndex === null
-            ? "Click a configuration to select it"
-            : "Three configurations optimized for savings"}
+            ? "Merlin has crafted three magical configurations just for you. Choose the one that feels right!"
+            : "Excellent choice! This configuration balances savings, resilience, and your facility's needs beautifully."}
         </p>
         {selectedTierIndex === null && (
           <div className="mt-3 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg inline-block">
@@ -653,6 +701,198 @@ export default function Step4V8({ state, actions }: Props) {
                   </div>
                 </div>
 
+                {/* V4.5 Cost Breakdown - Expandable */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedCostBreakdown(
+                      expandedCostBreakdown === tierIndex ? null : tierIndex
+                    );
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 mb-2 rounded-lg transition-all ${
+                    isPerfectFit
+                      ? "bg-purple-500/10 hover:bg-purple-500/15"
+                      : "bg-white/5 hover:bg-white/8"
+                  }`}
+                >
+                  <span className="text-sm text-emerald-400 font-semibold flex items-center gap-1.5">
+                    <Info className="w-4 h-4" />
+                    Detailed Cost Breakdown
+                  </span>
+                  {expandedCostBreakdown === tierIndex ? (
+                    <ChevronUp className="w-4 h-4 text-slate-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                  )}
+                </button>
+
+                {/* Expanded Cost Details */}
+                {expandedCostBreakdown === tierIndex &&
+                  (() => {
+                    // Calculate v4.5 detailed costs for this tier
+                    const v45Costs = calculateSystemCosts({
+                      solarKW: tier.solarKW,
+                      bessKW: tier.bessKW,
+                      bessKWh: tier.bessKWh,
+                      generatorKW: tier.generatorKW,
+                      level2Chargers: state.level2Chargers || 0,
+                      dcfcChargers: state.dcfcChargers || 0,
+                      hpcChargers: state.hpcChargers || 0,
+                    });
+
+                    return (
+                      <div
+                        className={`mb-3 p-3 rounded-lg space-y-2 text-xs ${
+                          isPerfectFit
+                            ? "bg-purple-950/30 border border-purple-500/20"
+                            : "bg-slate-900/50 border border-slate-700/30"
+                        }`}
+                      >
+                        {/* Equipment Costs */}
+                        <div className="pb-2 border-b border-slate-700/50">
+                          <p className="text-[11px] uppercase tracking-wider text-emerald-400 mb-1.5 font-bold">
+                            Equipment Costs
+                          </p>
+                          {v45Costs.solarCost > 0 && (
+                            <div className="flex justify-between items-center text-slate-300">
+                              <span className="flex items-center gap-1">
+                                <span className="text-amber-400">☀️</span>
+                                <span>
+                                  Solar PV ({tier.solarKW.toFixed(0)}kW @ $
+                                  {EQUIPMENT_UNIT_COSTS.solar.pricePerWatt}/W)
+                                </span>
+                              </span>
+                              <span className="font-medium">
+                                {formatCurrency(v45Costs.solarCost)}
+                              </span>
+                            </div>
+                          )}
+                          {v45Costs.bessCost > 0 && (
+                            <div className="flex justify-between items-center text-slate-300">
+                              <span className="flex items-center gap-1">
+                                <span>🔋</span>
+                                <span>BESS + Hybrid Inverter ({tier.bessKWh.toFixed(0)}kWh)</span>
+                              </span>
+                              <span className="font-medium">
+                                {formatCurrency(v45Costs.bessCost)}
+                              </span>
+                            </div>
+                          )}
+                          {v45Costs.generatorCost > 0 && (
+                            <div className="flex justify-between items-center text-slate-300">
+                              <span className="flex items-center gap-1">
+                                <span className="text-orange-400">🔥</span>
+                                <span>Generator ({tier.generatorKW.toFixed(0)}kW)</span>
+                              </span>
+                              <span className="font-medium">
+                                {formatCurrency(v45Costs.generatorCost)}
+                              </span>
+                            </div>
+                          )}
+                          {v45Costs.evChargingCost > 0 && (
+                            <div className="flex justify-between items-center text-slate-300">
+                              <span className="flex items-center gap-1">
+                                <span className="text-cyan-400">⚡</span>
+                                <span>EV Chargers</span>
+                              </span>
+                              <span className="font-medium">
+                                {formatCurrency(v45Costs.evChargingCost)}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex justify-between items-center text-slate-200 font-semibold mt-1.5 pt-1.5 border-t border-slate-700/30">
+                            <span>Equipment Subtotal</span>
+                            <span>{formatCurrency(v45Costs.equipmentSubtotal)}</span>
+                          </div>
+                        </div>
+
+                        {/* Site Work & Soft Costs */}
+                        <div className="pb-2 border-b border-slate-700/50">
+                          <p className="text-[11px] uppercase tracking-wider text-emerald-400 mb-1.5 font-bold">
+                            Site Work & Soft Costs
+                          </p>
+                          <div className="flex justify-between items-center text-slate-300">
+                            <span>Site Engineering & Construction</span>
+                            <span className="font-medium">
+                              {formatCurrency(v45Costs.siteEngineering)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-slate-300">
+                            <span>Construction Contingency (7.5%)</span>
+                            <span className="font-medium">
+                              {formatCurrency(v45Costs.constructionContingency)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Merlin AI Services */}
+                        <div className="pb-2 border-b border-slate-700/50">
+                          <p className="text-[11px] uppercase tracking-wider text-emerald-400 mb-1.5 font-bold">
+                            Merlin AI Services (
+                            {(v45Costs.merlinFees.effectiveMargin * 100).toFixed(0)}% margin)
+                          </p>
+                          <div className="flex justify-between items-center text-slate-300">
+                            <span>◈ Design Intelligence</span>
+                            <span className="font-medium">
+                              {formatCurrency(v45Costs.merlinFees.designIntelligence)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-slate-300">
+                            <span>Procurement & Sourcing</span>
+                            <span className="font-medium">
+                              {formatCurrency(v45Costs.merlinFees.procurementSourcing)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-slate-300">
+                            <span>PM & Construction Oversight</span>
+                            <span className="font-medium">
+                              {formatCurrency(v45Costs.merlinFees.pmConstruction)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-slate-300">
+                            <span>Incentive Filing</span>
+                            <span className="font-medium">
+                              {formatCurrency(v45Costs.merlinFees.incentiveFiling)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-slate-200 font-semibold mt-1.5 pt-1.5 border-t border-slate-700/30">
+                            <span>Total Merlin Fee</span>
+                            <span>{formatCurrency(v45Costs.merlinFees.totalFee)}</span>
+                          </div>
+                        </div>
+
+                        {/* Annual Operating Reserves */}
+                        <div className="pb-2">
+                          <p className="text-[11px] uppercase tracking-wider text-emerald-400 mb-1.5 font-bold">
+                            Annual Operating Reserves
+                          </p>
+                          <div className="flex justify-between items-center text-amber-300">
+                            <span>Insurance + Inverter + BESS Reserves</span>
+                            <span className="font-medium">
+                              -{formatCurrency(v45Costs.annualReserves)}/yr
+                            </span>
+                          </div>
+                          <p className="text-[9px] text-slate-500 mt-1 italic">
+                            Deducted from gross annual savings for honest TCO
+                          </p>
+                        </div>
+
+                        {/* Pricing Notes */}
+                        <div
+                          className={`p-2 rounded text-[10px] ${
+                            isPerfectFit ? "bg-purple-900/20" : "bg-slate-800/50"
+                          }`}
+                        >
+                          <p className="text-slate-400 leading-relaxed">
+                            <span className="font-semibold text-slate-300">V4.5 Pricing:</span> NREL
+                            ATB 2024, tiered margin (20%→14%→13%), 7.5% contingency, honest
+                            reserves. Payback {tier.paybackYears.toFixed(1)}yr includes all costs.
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                 {/* Select Button with Visual Confirmation */}
                 <button
                   onClick={() => actions.selectTier(tierIndex)}
@@ -674,7 +914,7 @@ export default function Step4V8({ state, actions }: Props) {
                       Confirmed
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-2 text-emerald-400">
                       <span>{`Choose ${config.name}`}</span>
                       <span className="text-lg leading-none">→</span>
                     </div>
