@@ -69,12 +69,11 @@ import {
   type BESSUseCase,
 } from "@/services/benchmarkSources";
 import { applyMarginPolicy } from "@/services/marginPolicyEngine";
+
+// V4.5 enhancements: Annual reserves for honest TCO
+import { ANNUAL_RESERVES } from "@/services/pricingServiceV45";
 import { hasGeneratorIntent } from "./addonIntent";
-import type {
-  WizardState,
-  QuoteTier,
-  TierLabel,
-} from "./wizardState";
+import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
 
 // =============================================================================
 // GOAL GUIDANCE TABLE
@@ -106,25 +105,25 @@ const GOAL_GUIDANCE: Record<GoalChoice, GoalGuidance> = {
   save_more: {
     // Smaller, cheaper, faster payback. Solar at moderate penetration.
     // Generator only if Step 3 asked for it (adds cost, slows payback).
-    solarPenetration: { starter: 0.40, recommended: 0.70, complete: 1.00 },
-    durationHours:    { starter: 2,    recommended: 3,    complete: 4   },
-    generatorPolicy:  "if_requested",
-    auditNote:        "Goal: Save More — bias toward smaller system and fast payback.",
+    solarPenetration: { starter: 0.4, recommended: 0.7, complete: 1.0 },
+    durationHours: { starter: 2, recommended: 3, complete: 4 },
+    generatorPolicy: "if_requested",
+    auditNote: "Goal: Save More — bias toward smaller system and fast payback.",
   },
   save_most: {
     // Balanced for optimal NPV. Solar at high penetration (best ROI driver).
     // Generator when critical loads are substantial (≥ 50%).
-    solarPenetration: { starter: 0.50, recommended: 0.85, complete: 1.00 },
-    durationHours:    { starter: 2,    recommended: 4,    complete: 6   },
-    generatorPolicy:  "if_critical",
-    auditNote:        "Goal: Save Most — bias toward optimal NPV and return on investment.",
+    solarPenetration: { starter: 0.5, recommended: 0.85, complete: 1.0 },
+    durationHours: { starter: 2, recommended: 4, complete: 6 },
+    generatorPolicy: "if_critical",
+    auditNote: "Goal: Save Most — bias toward optimal NPV and return on investment.",
   },
   full_power: {
     // Maximum resilience. Solar maxed out. Generator always. Long duration.
-    solarPenetration: { starter: 0.60, recommended: 1.00, complete: 1.00 },
-    durationHours:    { starter: 4,    recommended: 6,    complete: 8   },
-    generatorPolicy:  "always",
-    auditNote:        "Goal: Full Power — bias toward maximum coverage and grid independence.",
+    solarPenetration: { starter: 0.6, recommended: 1.0, complete: 1.0 },
+    durationHours: { starter: 4, recommended: 6, complete: 8 },
+    generatorPolicy: "always",
+    auditNote: "Goal: Full Power — bias toward maximum coverage and grid independence.",
   },
 };
 
@@ -136,9 +135,9 @@ const GOAL_GUIDANCE: Record<GoalChoice, GoalGuidance> = {
 // =============================================================================
 
 const TIER_BESS_SCALE: Record<TierLabel, number> = {
-  Starter:     0.55,  // 55% of base (smaller, budget option)
-  Recommended: 1.00,  // 100% of base (optimal sizing)
-  Complete:    1.50,  // 150% of base (premium, longer duration)
+  Starter: 0.55, // 55% of base (smaller, budget option)
+  Recommended: 1.0, // 100% of base (optimal sizing)
+  Complete: 1.5, // 150% of base (premium, longer duration)
 };
 
 // =============================================================================
@@ -151,11 +150,7 @@ const TIER_BESS_SCALE: Record<TierLabel, number> = {
  * Returns 0 when solar is not feasible (grade < B-, PSH < 3.5).
  * Never exceeds solarPhysicalCapKW regardless of goal.
  */
-function computeSolarKW(
-  state: WizardState,
-  goal: GoalChoice,
-  tierLabel: TierLabel
-): number {
+function computeSolarKW(state: WizardState, goal: GoalChoice, tierLabel: TierLabel): number {
   const { intel, solarPhysicalCapKW } = state;
 
   // Hard gate: location must be solar-viable and industry must have roof/land
@@ -169,9 +164,11 @@ function computeSolarKW(
   // Goal-guided penetration fraction for this tier
   const guidance = GOAL_GUIDANCE[goal];
   const penetration =
-    tierLabel === "Starter"     ? guidance.solarPenetration.starter     :
-    tierLabel === "Recommended" ? guidance.solarPenetration.recommended :
-                                  guidance.solarPenetration.complete;
+    tierLabel === "Starter"
+      ? guidance.solarPenetration.starter
+      : tierLabel === "Recommended"
+        ? guidance.solarPenetration.recommended
+        : guidance.solarPenetration.complete;
 
   // Physics-bounded result: cap × sun quality × goal weight
   const rawKW = solarPhysicalCapKW * sunFactor * penetration;
@@ -191,11 +188,7 @@ function computeSolarKW(
  * Base size: criticalLoadPct × peakLoadKW × reserveMargin (1.25, NEC/LADWP)
  * Source: getGeneratorReserveMarginWithSource() → benchmarkSources.ts
  */
-function computeGeneratorKW(
-  state: WizardState,
-  goal: GoalChoice,
-  tierLabel: TierLabel
-): number {
+function computeGeneratorKW(state: WizardState, goal: GoalChoice, tierLabel: TierLabel): number {
   const { peakLoadKW, criticalLoadPct, step3Answers } = state;
   const guidance = GOAL_GUIDANCE[goal];
 
@@ -205,16 +198,19 @@ function computeGeneratorKW(
   //   "partial"      → generator for critical circuits
   //   "full_backup"  → full facility backup
   //   "resilience"   → resilience + potential revenue (demand response)
-  const generatorNeed =
-    (step3Answers.generatorNeed as string | undefined) ?? "none";
+  const generatorNeed = (step3Answers.generatorNeed as string | undefined) ?? "none";
 
   // Determine inclusion based on policy × intent
   const includeGenerator =
     guidance.generatorPolicy === "always" ||
     (guidance.generatorPolicy === "if_critical" &&
-      (criticalLoadPct >= 0.50 || generatorNeed === "full_backup" || generatorNeed === "resilience")) ||
+      (criticalLoadPct >= 0.5 ||
+        generatorNeed === "full_backup" ||
+        generatorNeed === "resilience")) ||
     (guidance.generatorPolicy === "if_requested" &&
-      (generatorNeed === "partial" || generatorNeed === "full_backup" || generatorNeed === "resilience"));
+      (generatorNeed === "partial" ||
+        generatorNeed === "full_backup" ||
+        generatorNeed === "resilience"));
 
   if (!includeGenerator) return 0;
 
@@ -229,10 +225,7 @@ function computeGeneratorKW(
   const basePowerKW = peakLoadKW * criticalLoadPct * margin;
 
   // Tier scaling for generator: Complete gets additional headroom
-  const tierScale =
-    tierLabel === "Complete"    ? 1.25 :
-    tierLabel === "Starter"     ? 0.80 :
-                                  1.00;
+  const tierScale = tierLabel === "Complete" ? 1.25 : tierLabel === "Starter" ? 0.8 : 1.0;
 
   return Math.max(10, Math.round(basePowerKW * tierScale));
 }
@@ -243,13 +236,13 @@ function computeGeneratorKW(
 
 /** Map Step 3 primaryBESSApplication answers to benchmarkSources BESSUseCase */
 const APPLICATION_TO_BESS_USE_CASE: Record<string, BESSUseCase> = {
-  peak_shaving:     "peak_shaving",  // ratio: 0.40 (IEEE 4538388, MDPI 11(8):2048)
-  backup_power:     "resilience",    // ratio: 0.70 (IEEE 446-1995 Orange Book)
-  energy_arbitrage: "arbitrage",     // ratio: 0.50 (industry practice)
-  demand_response:  "peak_shaving",  // DR uses similar sizing to peak shaving
-  load_shifting:    "arbitrage",
-  resilience:       "resilience",
-  stacked:          "peak_shaving",  // multi-use defaults to peak shaving ratio
+  peak_shaving: "peak_shaving", // ratio: 0.40 (IEEE 4538388, MDPI 11(8):2048)
+  backup_power: "resilience", // ratio: 0.70 (IEEE 446-1995 Orange Book)
+  energy_arbitrage: "arbitrage", // ratio: 0.50 (industry practice)
+  demand_response: "peak_shaving", // DR uses similar sizing to peak shaving
+  load_shifting: "arbitrage",
+  resilience: "resilience",
+  stacked: "peak_shaving", // multi-use defaults to peak shaving ratio
 };
 
 /** Infer BESS application from goal when Step 3 answer not yet captured */
@@ -272,18 +265,18 @@ function computeBESSSizing(
   _generatorKW: number = 0
 ): { bessKW: number; bessKWh: number; durationHours: number } {
   // Use peakLoadKW as sizing basis. Fall back to baseLoadKW if peak not yet set.
-  const effectivePeakKW =
-    state.peakLoadKW > 0 ? state.peakLoadKW : state.baseLoadKW;
+  const effectivePeakKW = state.peakLoadKW > 0 ? state.peakLoadKW : state.baseLoadKW;
 
-  console.log(`🔋 [BESS Sizing] effectivePeakKW=${effectivePeakKW}, state.peakLoadKW=${state.peakLoadKW}, state.baseLoadKW=${state.baseLoadKW}`);
+  console.log(
+    `🔋 [BESS Sizing] effectivePeakKW=${effectivePeakKW}, state.peakLoadKW=${state.peakLoadKW}, state.baseLoadKW=${state.baseLoadKW}`
+  );
 
   // Application from Step 3 (or inferred from goal if not yet answered)
   const application =
     (state.step3Answers.primaryBESSApplication as string | undefined) ??
     inferApplicationFromGoal(goal);
 
-  const bessUseCase: BESSUseCase =
-    APPLICATION_TO_BESS_USE_CASE[application] ?? "peak_shaving";
+  const bessUseCase: BESSUseCase = APPLICATION_TO_BESS_USE_CASE[application] ?? "peak_shaving";
 
   // SSOT sizing ratio (IEEE/MDPI benchmark)
   const { ratio } = getBESSSizingRatioWithSource(bessUseCase);
@@ -297,9 +290,11 @@ function computeBESSSizing(
   // Duration from goal guidance
   const guidance = GOAL_GUIDANCE[goal];
   const durationHours =
-    tierLabel === "Starter"     ? guidance.durationHours.starter     :
-    tierLabel === "Recommended" ? guidance.durationHours.recommended :
-                                  guidance.durationHours.complete;
+    tierLabel === "Starter"
+      ? guidance.durationHours.starter
+      : tierLabel === "Recommended"
+        ? guidance.durationHours.recommended
+        : guidance.durationHours.complete;
 
   return {
     bessKW,
@@ -313,9 +308,9 @@ function computeBESSSizing(
 // =============================================================================
 
 const EV_KW_BY_TYPE: Record<string, number> = {
-  l2:   7.2,   // Level 2 standard (7.2 kW)
-  dcfc: 150,   // DC Fast Charger (150 kW typical)
-  hpc:  250,   // High Power Charger (250 kW)
+  l2: 7.2, // Level 2 standard (7.2 kW)
+  dcfc: 150, // DC Fast Charger (150 kW typical)
+  hpc: 250, // High Power Charger (250 kW)
 };
 
 /**
@@ -328,12 +323,12 @@ function computeEVChargerKW(state: WizardState): number {
   const stateWithEV = state as WizardState & { level2Chargers?: number; dcfcChargers?: number };
   const level2 = stateWithEV.level2Chargers ?? 0;
   const dcfc = stateWithEV.dcfcChargers ?? 0;
-  
+
   if (level2 > 0 || dcfc > 0) {
     // Level 2: 7.2 kW each, DCFC: 150 kW each
-    return Math.round((level2 * 7.2) + (dcfc * 150));
+    return Math.round(level2 * 7.2 + dcfc * 150);
   }
-  
+
   // Fallback to old evChargers object format
   if (!state.evChargers) return 0;
   const kWPerUnit = EV_KW_BY_TYPE[state.evChargers.type] ?? 7.2;
@@ -350,56 +345,69 @@ async function buildOneTier(
   tierLabel: TierLabel,
   baseNotes: string[]
 ): Promise<QuoteTier> {
-  const { intel, location, industry, evRevenuePerYear, solarKW, generatorKW, generatorFuelType } = state;
+  const { intel, location, industry, evRevenuePerYear, solarKW, generatorKW, generatorFuelType } =
+    state;
   const generatorEnabled = state.wantsGenerator || hasGeneratorIntent(state.step3Answers);
 
   // Tier scaling for configured addons (user values from Step 3.5 = Recommended baseline)
   // If user configured addons in Step 3.5, treat their values as the "Recommended" tier
   // and scale up/down for Complete/Starter. Otherwise, use intelligent defaults.
-  const tierAddonScale = tierLabel === 'Starter' ? 0.70 : tierLabel === 'Complete' ? 1.30 : 1.00;
+  const tierAddonScale = tierLabel === "Starter" ? 0.7 : tierLabel === "Complete" ? 1.3 : 1.0;
 
   // Solar: Use user-configured value (scaled per tier) or auto-calculate
   const userConfiguredSolar = state.wantsSolar && solarKW > 0;
   const finalSolarKW = userConfiguredSolar
     ? Math.min(Math.round(solarKW * tierAddonScale), state.solarPhysicalCapKW) // Cap at physical limit
     : computeSolarKW(state, goal, tierLabel);
-  
+
   // Generator: Use user-configured value (scaled per tier) or auto-calculate
   const userConfiguredGenerator = generatorEnabled && generatorKW > 0;
   const finalGenKW = userConfiguredGenerator
     ? Math.round(generatorKW * tierAddonScale)
     : computeGeneratorKW(state, goal, tierLabel);
-  
-  const { bessKW, bessKWh, durationHours } = computeBESSSizing(state, goal, tierLabel, finalSolarKW, finalGenKW);
-  const evChargerKW      = computeEVChargerKW(state);
-  
+
+  const { bessKW, bessKWh, durationHours } = computeBESSSizing(
+    state,
+    goal,
+    tierLabel,
+    finalSolarKW,
+    finalGenKW
+  );
+  const evChargerKW = computeEVChargerKW(state);
+
   // Build EV charger details for notes
-  const stateWithEV = state as WizardState & { level2Chargers?: number; dcfcChargers?: number };
+  const stateWithEV = state as WizardState & {
+    level2Chargers?: number;
+    dcfcChargers?: number;
+    hpcChargers?: number;
+  };
   const level2 = stateWithEV.level2Chargers ?? 0;
   const dcfc = stateWithEV.dcfcChargers ?? 0;
-  const evChargerDetails = level2 > 0 || dcfc > 0
-    ? `${level2} Level 2 (${(level2 * 7.2).toFixed(0)} kW) + ${dcfc} DCFC (${dcfc * 150} kW)`
-    : state.evChargers
-    ? `${state.evChargers.count} × ${state.evChargers.type.toUpperCase()}`
-    : '';
+  const hpc = stateWithEV.hpcChargers ?? 0;
+  const evChargerDetails =
+    level2 > 0 || dcfc > 0 || hpc > 0
+      ? `${level2} Level 2 (${(level2 * 7.2).toFixed(0)} kW) + ${dcfc} DCFC (${dcfc * 150} kW) + ${hpc} HPC (${hpc * 250} kW)`
+      : state.evChargers
+        ? `${state.evChargers.count} × ${state.evChargers.type.toUpperCase()}`
+        : "";
 
   // ── Call SSOT (calculateQuote) ──────────────────────────────────────────
   const result = await calculateQuote({
-    storageSizeMW:     Math.max(0.01, bessKW / 1000),
+    storageSizeMW: Math.max(0.01, bessKW / 1000),
     durationHours,
-    solarMW:           finalSolarKW / 1000,
-    generatorMW:       finalGenKW / 1000,
-    generatorFuelType: generatorFuelType || "natural-gas",  // Use configured fuel type
-    electricityRate:   intel?.utilityRate  ?? 0.15,
-    demandCharge:      intel?.demandCharge ?? 15,
-    zipCode:           location?.zip,
-    location:          location?.state     ?? "CA",
-    useCase:           industry            ?? "office",
-    gridConnection:    "on-grid",
+    solarMW: finalSolarKW / 1000,
+    generatorMW: finalGenKW / 1000,
+    generatorFuelType: generatorFuelType || "natural-gas", // Use configured fuel type
+    electricityRate: intel?.utilityRate ?? 0.15,
+    demandCharge: intel?.demandCharge ?? 15,
+    zipCode: location?.zip,
+    location: location?.state ?? "CA",
+    useCase: industry ?? "office",
+    gridConnection: "on-grid",
     // ITC: assume prevailing wage compliance (standard for commercial BESS ≥ 1 MW)
     itcConfig: {
-      prevailingWage:  true,
-      apprenticeship:  true,
+      prevailingWage: true,
+      apprenticeship: true,
     },
   });
 
@@ -407,40 +415,49 @@ async function buildOneTier(
   const withMargin = applyMarginPolicy({
     lineItems: [
       {
-        sku: 'bess-equipment',
-        category: 'bess',
-        description: 'Battery Energy Storage System',
+        sku: "bess-equipment",
+        category: "bess",
+        description: "Battery Energy Storage System",
         baseCost: result.costs.equipmentCost,
         quantity: 1,
         unitCost: result.costs.equipmentCost,
-        unit: 'system',
-        costSource: 'NREL ATB 2024',
+        unit: "system",
+        costSource: "NREL ATB 2024",
       },
       {
-        sku: 'bess-installation',
-        category: 'construction_labor',
-        description: 'Installation & Soft Costs',
+        sku: "bess-installation",
+        category: "construction_labor",
+        description: "Installation & Soft Costs",
         baseCost: result.costs.installationCost,
         quantity: 1,
         unitCost: result.costs.installationCost,
-        unit: 'system',
-        costSource: 'NREL ATB 2024',
+        unit: "system",
+        costSource: "NREL ATB 2024",
       },
     ],
     totalBaseCost: result.costs.totalProjectCost,
-    riskLevel: 'standard',
-    customerSegment: 'direct',
+    riskLevel: "standard",
+    customerSegment: "direct",
   });
 
   // ── Assemble QuoteTier ──────────────────────────────────────────────────
-  const itcRate   = result.metadata.itcDetails?.totalRate ?? 0.30;
-  const grossCost = withMargin.sellPriceTotal;  // USE SELL PRICE (not base cost)
+  const itcRate = result.metadata.itcDetails?.totalRate ?? 0.3;
+  const grossCost = withMargin.sellPriceTotal; // USE SELL PRICE (not base cost)
   const itcAmount = grossCost * itcRate;
-  const netCost   = grossCost - itcAmount;
+  const netCost = grossCost - itcAmount;
+
+  // V4.5 Enhancement: Calculate annual reserves for honest TCO
+  const annualReserves = ANNUAL_RESERVES.total(finalSolarKW);
 
   // EV revenue (money from selling charging service) is additive to SSOT savings.
   // It is NOT in result.financials.annualSavings — that covers energy cost savings only.
-  const annualSavings = result.financials.annualSavings + evRevenuePerYear;
+  const grossAnnualSavings = result.financials.annualSavings + evRevenuePerYear;
+
+  // V4.5: Deduct annual reserves for honest net savings
+  const annualSavings = grossAnnualSavings - annualReserves;
+
+  // Recalculate payback with honest net savings (v4.5 improvement)
+  const paybackYears = netCost / annualSavings;
 
   // Audit trail notes for this tier
   const tierNotes: string[] = [
@@ -457,26 +474,37 @@ async function buildOneTier(
     evChargerKW > 0
       ? `EV chargers: ${evChargerKW} kW (${evChargerDetails}, already in base load)`
       : "EV chargers: none",
+    // V4.5 transparency: Show gross vs net savings
+    `Gross annual savings: $${Math.round(grossAnnualSavings).toLocaleString()}`,
+    `Annual reserves: -$${Math.round(annualReserves).toLocaleString()} (insurance, inverter, degradation)`,
+    `Net annual savings: $${Math.round(annualSavings).toLocaleString()} (honest TCO)`,
+    `Margin band: ${withMargin.marginBandId} (${withMargin.blendedMarginPercent.toFixed(1)}%)`,
   ];
 
   return {
-    label:            tierLabel,
+    label: tierLabel,
     bessKWh,
     bessKW,
-    solarKW:          finalSolarKW,
-    generatorKW:      finalGenKW,
+    solarKW: finalSolarKW,
+    generatorKW: finalGenKW,
     evChargerKW,
     durationHours,
     grossCost,
     itcRate,
     itcAmount,
     netCost,
-    annualSavings,
+    // V4.5 honest TCO: persist both gross and net savings
+    grossAnnualSavings,
+    annualReserves,
+    annualSavings, // NET savings (gross - reserves)
     evRevenuePerYear,
-    paybackYears:     result.financials.paybackYears,
-    roi10Year:        result.financials.roi10Year,
-    npv:              result.financials.npv,
-    notes:            tierNotes,
+    paybackYears,
+    roi10Year: result.financials.roi10Year,
+    npv: result.financials.npv,
+    // V4.5 margin transparency
+    marginBandId: withMargin.marginBandId,
+    blendedMarginPercent: withMargin.blendedMarginPercent,
+    notes: tierNotes,
   };
 }
 
@@ -496,10 +524,8 @@ async function buildOneTier(
  *
  * @throws If goalChoice is null or baseLoadKW has not been established.
  */
-export async function buildTiers(
-  state: WizardState
-): Promise<[QuoteTier, QuoteTier, QuoteTier]> {
-  console.log('[buildTiers] Called with state:', {
+export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteTier, QuoteTier]> {
+  console.log("[buildTiers] Called with state:", {
     baseLoadKW: state.baseLoadKW,
     peakLoadKW: state.peakLoadKW,
     location: state.location,
@@ -514,13 +540,13 @@ export async function buildTiers(
 
   // Since Goals removed, always use "save_most" (balanced/recommended approach)
   const goal = "save_most";
-  
+
   if (state.baseLoadKW <= 0) {
-    console.error('[buildTiers] baseLoadKW invalid:', state.baseLoadKW);
+    console.error("[buildTiers] baseLoadKW invalid:", state.baseLoadKW);
     throw new Error("buildTiers: baseLoadKW must be > 0. Ensure Step 3 is complete.");
   }
   if (!state.location) {
-    console.error('[buildTiers] location missing');
+    console.error("[buildTiers] location missing");
     throw new Error("buildTiers: location must be set. Ensure Step 1 is complete.");
   }
 
@@ -536,9 +562,9 @@ export async function buildTiers(
 
   // Run all three tiers in parallel (each makes one calculateQuote() call)
   const [starter, recommended, complete] = await Promise.all([
-    buildOneTier(state, goal, "Starter",     baseNotes),
+    buildOneTier(state, goal, "Starter", baseNotes),
     buildOneTier(state, goal, "Recommended", baseNotes),
-    buildOneTier(state, goal, "Complete",    baseNotes),
+    buildOneTier(state, goal, "Complete", baseNotes),
   ]);
 
   return [starter, recommended, complete];
