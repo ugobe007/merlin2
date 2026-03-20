@@ -305,7 +305,7 @@ function computeBESSSizing(
   const rawBessKW = effectivePeakKW * ratio * TIER_BESS_SCALE[tierLabel];
   const bessKW = Math.max(
     75, // minimum 75 kW system (ensures adequate sizing for medium/large retail)
-    Math.min(5000, Math.round(rawBessKW)) // max 5,000 kW (safety limit)
+    Math.round(rawBessKW)
   );
 
   // Duration from goal guidance
@@ -317,9 +317,7 @@ function computeBESSSizing(
         ? guidance.durationHours.recommended
         : guidance.durationHours.complete;
 
-  const bessKWh = Math.min(50000, Math.round(bessKW * durationHours)); // max 50 MWh
-
-  const bessKWh = Math.min(50000, Math.round(bessKW * durationHours)); // max 50 MWh
+  const bessKWh = Math.round(bessKW * durationHours);
 
   return {
     bessKW,

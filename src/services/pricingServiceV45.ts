@@ -246,24 +246,6 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
     throw new Error("Equipment quantities cannot be negative");
   }
 
-  // Validation: check for unrealistic values (max bounds)
-  if ((config.solarKW || 0) > 10000) {
-    throw new Error("Solar capacity exceeds maximum (10,000 kW)");
-  }
-  if ((config.bessKW || 0) > 5000 || (config.bessKWh || 0) > 50000) {
-    throw new Error("BESS capacity exceeds maximum (5,000 kW / 50,000 kWh)");
-  }
-  if ((config.generatorKW || 0) > 5000) {
-    throw new Error("Generator capacity exceeds maximum (5,000 kW)");
-  }
-  if (
-    (config.level2Chargers || 0) > 100 ||
-    (config.dcfcChargers || 0) > 50 ||
-    (config.hpcChargers || 0) > 20
-  ) {
-    throw new Error("EV charger count exceeds reasonable maximum");
-  }
-
   // Equipment costs
   const solarCost = (config.solarKW || 0) * EQUIPMENT_UNIT_COSTS.solar.pricePerWatt * 1000;
 

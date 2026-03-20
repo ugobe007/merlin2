@@ -45,23 +45,6 @@ describe("pricingServiceV45", () => {
       expect(() => calculateSystemCosts(config)).toThrow("Equipment quantities cannot be negative");
     });
 
-    it("should throw error for solar capacity exceeding maximum", () => {
-      const config: EquipmentConfig = {
-        solarKW: 15000, // Exceeds 10,000 kW max
-      };
-
-      expect(() => calculateSystemCosts(config)).toThrow("Solar capacity exceeds maximum");
-    });
-
-    it("should throw error for BESS capacity exceeding maximum", () => {
-      const config: EquipmentConfig = {
-        bessKW: 6000, // Exceeds 5,000 kW max
-        bessKWh: 1000,
-      };
-
-      expect(() => calculateSystemCosts(config)).toThrow("BESS capacity exceeds maximum");
-    });
-
     it("should handle zero equipment (minimal system)", () => {
       const config: EquipmentConfig = {
         solarKW: 0,
