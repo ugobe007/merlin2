@@ -150,7 +150,7 @@ export interface QuoteExportData {
   // ─── Advanced Analytics (Feb 2026) ───────────────────────────────
   /** Dynamic ITC breakdown from IRA 2022 calculator */
   itcBreakdown?: {
-    totalRate: number;        // e.g. 0.40 = 40%
+    totalRate: number; // e.g. 0.40 = 40%
     creditAmount: number;
     baseRate: number;
     prevailingWageBonus: number;
@@ -263,9 +263,11 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
       : 0;
   const lifetimeSavings = annualSavings * 10;
   const itcRate = data.itcBreakdown?.totalRate ?? (data.financialAnalysis ? 0.3 : 0);
-  const itcAmount = data.itcBreakdown?.creditAmount ?? (data.systemCost * itcRate);
+  const itcAmount = data.itcBreakdown?.creditAmount ?? data.systemCost * itcRate;
   const netCost = data.systemCost - itcAmount;
-  const itcLabel = data.itcBreakdown ? `Federal ITC Credit (${Math.round(itcRate * 100)}%)` : "Federal ITC Credit (30%)";
+  const itcLabel = data.itcBreakdown
+    ? `Federal ITC Credit (${Math.round(itcRate * 100)}%)`
+    : "Federal ITC Credit (30%)";
   const demandChargeSavings =
     data.financialAnalysis?.demandChargeSavings ?? data.demandCharge * storageKW * 0.5 * 12;
 
@@ -274,27 +276,27 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   const fmtPct = (v: number) => `${v.toFixed(1)}%`;
   const fmtNum = (v: number) => v.toLocaleString("en-US");
 
-  // ── Professional color palette (Supabase-inspired, WHITE background) ─
+  // ── Professional color palette (Print-friendly, WHITE background) ─
   const C = {
-    emerald: "1B8F5A", // Dark green — readable on white
-    emeraldLight: "3ECF8E", // Light green accent
-    emeraldBg: "EDFDF5", // Very light green bg for tables
-    navy: "1A1F36", // Primary text
-    dark: "2D3748", // Secondary text
-    body: "4A5568", // Body text
-    muted: "718096", // Muted/caption text
-    border: "E2E8F0", // Table borders
-    headerBg: "1E293B", // Dark header bg for tables (matches panelDark)
-    headerText: "FFFFFF", // White text on dark bg
-    highlight: "F0FFF4", // Highlight rows
+    emerald: "0F7544", // Dark green — readable on white, print-friendly
+    emeraldLight: "10B981", // Emerald-500 accent
+    emeraldBg: "F0FDF4", // Very light green bg for tables (emerald-50)
+    navy: "1E293B", // Primary text (slate-800)
+    dark: "334155", // Secondary text (slate-700)
+    body: "475569", // Body text (slate-600)
+    muted: "64748B", // Muted/caption text (slate-500)
+    border: "CBD5E1", // Table borders (slate-300)
+    headerBg: "E0F2FE", // Light blue header bg for tables (sky-100) - print-friendly
+    headerText: "0C4A6E", // Dark blue text on light bg (sky-900)
+    highlight: "F0FDF4", // Highlight rows (emerald-50)
     amber: "D97706",
     red: "DC2626",
-    // ── Dark panels (matches Merlin Wizard Step 1 panels) ──
-    panelDark: "1E293B", // Tailwind slate-800 — wizard Step 1 panel color
-    panelDarkAlt: "334155", // Tailwind slate-700 — subtle contrast
-    lightGrey: "F1F5F9", // Light grey sub-panel
-    lightGreyDark: "E2E8F0", // Slightly darker grey
-    gold: "D4A017", // Gold accent for TrueQuote badge
+    // ── Light panels (print-friendly replacements for dark panels) ──
+    panelDark: "DBEAFE", // Light blue panel (blue-100) - replaces dark slate
+    panelDarkAlt: "BFDBFE", // Slightly darker blue (blue-200)
+    lightGrey: "F8FAFC", // Very light grey (slate-50)
+    lightGreyDark: "F1F5F9", // Light grey (slate-100)
+    gold: "CA8A04", // Gold accent for TrueQuote badge (yellow-600)
   };
 
   // ── Helper: decode base64 string to Uint8Array for ImageRun ──────
@@ -501,7 +503,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             ],
           }),
         },
-        children: ([
+        children: [
           // ═══════════════════════════════════════════════════════════
           // COVER / HEADER BLOCK — Dark panel (matches Merlin Wizard)
           // ═══════════════════════════════════════════════════════════
@@ -526,7 +528,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
               }),
               new TextRun({ text: "  ", size: 14 }),
               new TextRun({ text: "MERLIN", size: 36, bold: true, color: C.headerText }),
-              new TextRun({ text: " ENERGY SOLUTIONS", size: 20, color: "94A3B8" }),
+              new TextRun({ text: " ENERGY SOLUTIONS", size: 20, color: C.navy }),
             ],
           }),
           // Title: Battery Energy Storage System
@@ -578,11 +580,11 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                 type: "png",
               }),
               new TextRun({ text: "  ", size: 10 }),
-              new TextRun({ text: "TrueQuote™ Verified", size: 20, bold: true, color: "FFD700" }),
+              new TextRun({ text: "TrueQuote™ Verified", size: 20, bold: true, color: C.gold }),
               new TextRun({
                 text: "  —  Every estimate backed by published sources",
                 size: 18,
-                color: "94A3B8",
+                color: C.body,
               }),
             ],
           }),
@@ -1034,7 +1036,12 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             [
               ["Gross System Cost", fmt(data.systemCost)],
               ...(itcAmount > 0
-                ? [["Federal Investment Tax Credit (ITC — " + Math.round(itcRate * 100) + "%)", `– ${fmt(itcAmount)}`]]
+                ? [
+                    [
+                      "Federal Investment Tax Credit (ITC — " + Math.round(itcRate * 100) + "%)",
+                      `– ${fmt(itcAmount)}`,
+                    ],
+                  ]
                 : []),
               ...(netCost !== data.systemCost ? [["Net Cost After Incentives", fmt(netCost)]] : []),
             ],
@@ -1050,10 +1057,26 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                   ["Component", "Cost", "Unit Rate"],
                   [
                     ...(data.equipmentCosts.batteryCost
-                      ? [["Battery Storage (LFP)", fmt(data.equipmentCosts.batteryCost), data.equipmentCosts.batteryPerKWh ? `${fmt(data.equipmentCosts.batteryPerKWh)}/kWh` : "—"]]
+                      ? [
+                          [
+                            "Battery Storage (LFP)",
+                            fmt(data.equipmentCosts.batteryCost),
+                            data.equipmentCosts.batteryPerKWh
+                              ? `${fmt(data.equipmentCosts.batteryPerKWh)}/kWh`
+                              : "—",
+                          ],
+                        ]
                       : []),
                     ...(data.equipmentCosts.inverterCost
-                      ? [["Power Conversion System (PCS)", fmt(data.equipmentCosts.inverterCost), data.equipmentCosts.inverterPerKW ? `${fmt(data.equipmentCosts.inverterPerKW)}/kW` : "—"]]
+                      ? [
+                          [
+                            "Power Conversion System (PCS)",
+                            fmt(data.equipmentCosts.inverterCost),
+                            data.equipmentCosts.inverterPerKW
+                              ? `${fmt(data.equipmentCosts.inverterPerKW)}/kW`
+                              : "—",
+                          ],
+                        ]
                       : []),
                     ...(data.equipmentCosts.transformerCost
                       ? [["Transformer", fmt(data.equipmentCosts.transformerCost), "—"]]
@@ -1062,13 +1085,35 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                       ? [["Switchgear", fmt(data.equipmentCosts.switchgearCost), "—"]]
                       : []),
                     ...(data.equipmentCosts.solarCost
-                      ? [["Solar Array", fmt(data.equipmentCosts.solarCost), data.equipmentCosts.solarPerWatt ? `$${data.equipmentCosts.solarPerWatt.toFixed(2)}/W` : "—"]]
+                      ? [
+                          [
+                            "Solar Array",
+                            fmt(data.equipmentCosts.solarCost),
+                            data.equipmentCosts.solarPerWatt
+                              ? `$${data.equipmentCosts.solarPerWatt.toFixed(2)}/W`
+                              : "—",
+                          ],
+                        ]
                       : []),
                     ...(data.equipmentCosts.generatorCost
-                      ? [["Backup Generator", fmt(data.equipmentCosts.generatorCost), data.equipmentCosts.generatorPerKW ? `${fmt(data.equipmentCosts.generatorPerKW)}/kW` : "—"]]
+                      ? [
+                          [
+                            "Backup Generator",
+                            fmt(data.equipmentCosts.generatorCost),
+                            data.equipmentCosts.generatorPerKW
+                              ? `${fmt(data.equipmentCosts.generatorPerKW)}/kW`
+                              : "—",
+                          ],
+                        ]
                       : []),
                     ...(data.equipmentCosts.installationCost
-                      ? [["Installation / BOS / EPC", fmt(data.equipmentCosts.installationCost), "—"]]
+                      ? [
+                          [
+                            "Installation / BOS / EPC",
+                            fmt(data.equipmentCosts.installationCost),
+                            "—",
+                          ],
+                        ]
                       : []),
                     ["Base Equipment Total", fmt(data.equipmentCosts.totalEquipmentCost), "—"],
                   ],
@@ -1076,9 +1121,11 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                 ),
                 // Unit economics summary
                 ...(data.equipmentCosts.allInPerKWh || data.equipmentCosts.allInPerKW
-                  ? [bodyParagraph(
-                      `Unit Economics: ${data.equipmentCosts.allInPerKWh ? `${fmt(data.equipmentCosts.allInPerKWh)}/kWh (all-in)` : ""}${data.equipmentCosts.allInPerKWh && data.equipmentCosts.allInPerKW ? " | " : ""}${data.equipmentCosts.allInPerKW ? `${fmt(data.equipmentCosts.allInPerKW)}/kW (all-in)` : ""}`
-                    )]
+                  ? [
+                      bodyParagraph(
+                        `Unit Economics: ${data.equipmentCosts.allInPerKWh ? `${fmt(data.equipmentCosts.allInPerKWh)}/kWh (all-in)` : ""}${data.equipmentCosts.allInPerKWh && data.equipmentCosts.allInPerKW ? " | " : ""}${data.equipmentCosts.allInPerKW ? `${fmt(data.equipmentCosts.allInPerKW)}/kW (all-in)` : ""}`
+                      ),
+                    ]
                   : []),
                 spacer(200),
               ]
@@ -1535,7 +1582,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
               new TextRun({ text: "— End of Proposal —", size: 18, color: C.muted, italics: true }),
             ],
           }),
-        ] as FileChild[]),
+        ] as FileChild[],
       },
     ],
   });
@@ -2049,7 +2096,9 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
         ${data.equipmentCosts?.allInPerKWh ? `<tr><td class="label-cell">All-In Cost $/kWh</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.allInPerKWh)}/kWh</td></tr>` : ""}
         ${data.equipmentCosts?.allInPerKW ? `<tr><td class="label-cell">All-In Cost $/kW</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.allInPerKW)}/kW</td></tr>` : ""}
       </table>
-      ${data.equipmentCosts?.totalEquipmentCost ? `
+      ${
+        data.equipmentCosts?.totalEquipmentCost
+          ? `
       <div style="margin-top: 16px; font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Equipment Cost Breakdown</div>
       <table class="financial-table" style="margin-top: 8px;">
         ${data.equipmentCosts.batteryCost ? `<tr><td class="label-cell">Battery Storage (LFP)</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.batteryCost)}${data.equipmentCosts.batteryPerKWh ? ` <span style="color:#64748b;font-size:10px">(${fmtCurrencyShort(data.equipmentCosts.batteryPerKWh)}/kWh)</span>` : ""}</td></tr>` : ""}
@@ -2060,7 +2109,9 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
         ${data.equipmentCosts.generatorCost ? `<tr><td class="label-cell">Backup Generator</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.generatorCost)}${data.equipmentCosts.generatorPerKW ? ` <span style="color:#64748b;font-size:10px">(${fmtCurrencyShort(data.equipmentCosts.generatorPerKW)}/kW)</span>` : ""}</td></tr>` : ""}
         ${data.equipmentCosts.installationCost ? `<tr><td class="label-cell">Installation / BOS / EPC</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.installationCost)}</td></tr>` : ""}
         <tr style="border-top: 1px solid #334155;"><td class="label-cell" style="font-weight:700">Base Equipment Total</td><td class="value-cell" style="font-weight:700">${fmtCurrencyShort(data.equipmentCosts.totalEquipmentCost)}</td></tr>
-      </table>` : ""}
+      </table>`
+          : ""
+      }
       `
           : ""
       }
@@ -2218,37 +2269,37 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
       summaryRows.push([
         "Battery / BESS",
         Math.round(data.equipmentCosts.batteryCost),
-        data.equipmentCosts.batteryPerKWh ? `$${Math.round(data.equipmentCosts.batteryPerKWh)}/kWh` : "—",
+        data.equipmentCosts.batteryPerKWh
+          ? `$${Math.round(data.equipmentCosts.batteryPerKWh)}/kWh`
+          : "—",
       ]);
     if (data.equipmentCosts.inverterCost)
       summaryRows.push([
         "Inverter / PCS",
         Math.round(data.equipmentCosts.inverterCost),
-        data.equipmentCosts.inverterPerKW ? `$${Math.round(data.equipmentCosts.inverterPerKW)}/kW` : "—",
+        data.equipmentCosts.inverterPerKW
+          ? `$${Math.round(data.equipmentCosts.inverterPerKW)}/kW`
+          : "—",
       ]);
     if (data.equipmentCosts.transformerCost)
-      summaryRows.push([
-        "Transformer",
-        Math.round(data.equipmentCosts.transformerCost),
-        "—",
-      ]);
+      summaryRows.push(["Transformer", Math.round(data.equipmentCosts.transformerCost), "—"]);
     if (data.equipmentCosts.switchgearCost)
-      summaryRows.push([
-        "Switchgear",
-        Math.round(data.equipmentCosts.switchgearCost),
-        "—",
-      ]);
+      summaryRows.push(["Switchgear", Math.round(data.equipmentCosts.switchgearCost), "—"]);
     if (data.equipmentCosts.solarCost)
       summaryRows.push([
         "Solar PV",
         Math.round(data.equipmentCosts.solarCost),
-        data.equipmentCosts.solarPerWatt ? `$${data.equipmentCosts.solarPerWatt.toFixed(2)}/W` : "—",
+        data.equipmentCosts.solarPerWatt
+          ? `$${data.equipmentCosts.solarPerWatt.toFixed(2)}/W`
+          : "—",
       ]);
     if (data.equipmentCosts.generatorCost)
       summaryRows.push([
         "Generator",
         Math.round(data.equipmentCosts.generatorCost),
-        data.equipmentCosts.generatorPerKW ? `$${Math.round(data.equipmentCosts.generatorPerKW)}/kW` : "—",
+        data.equipmentCosts.generatorPerKW
+          ? `$${Math.round(data.equipmentCosts.generatorPerKW)}/kW`
+          : "—",
       ]);
     if (data.equipmentCosts.installationCost)
       summaryRows.push([
@@ -2256,11 +2307,7 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
         Math.round(data.equipmentCosts.installationCost),
         "—",
       ]);
-    summaryRows.push([
-      "Total Equipment",
-      Math.round(data.equipmentCosts.totalEquipmentCost),
-      "—",
-    ]);
+    summaryRows.push(["Total Equipment", Math.round(data.equipmentCosts.totalEquipmentCost), "—"]);
   }
 
   const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
@@ -2384,7 +2431,7 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
   if (data.financialAnalysis && data.financialAnalysis.annualSavingsUSD > 0) {
     const annualSavings = data.financialAnalysis.annualSavingsUSD;
     const xlItcRate = data.itcBreakdown?.totalRate ?? 0.3;
-    const xlItcAmount = data.itcBreakdown?.creditAmount ?? (data.systemCost * xlItcRate);
+    const xlItcAmount = data.itcBreakdown?.creditAmount ?? data.systemCost * xlItcRate;
     const xlNetCost = data.systemCost - xlItcAmount;
     const escalationRate = 0.03;
 
@@ -2420,16 +2467,36 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
         ["ITC BREAKDOWN (IRA 2022)"],
         ["Base Rate", `${Math.round(data.itcBreakdown.baseRate * 100)}%`],
         ...(data.itcBreakdown.prevailingWageBonus > 0
-          ? [["Prevailing Wage Bonus" as string | number, `+${Math.round(data.itcBreakdown.prevailingWageBonus * 100)}%` as string | number]]
+          ? [
+              [
+                "Prevailing Wage Bonus" as string | number,
+                `+${Math.round(data.itcBreakdown.prevailingWageBonus * 100)}%` as string | number,
+              ],
+            ]
           : []),
         ...(data.itcBreakdown.energyCommunityBonus > 0
-          ? [["Energy Community Bonus" as string | number, `+${Math.round(data.itcBreakdown.energyCommunityBonus * 100)}%` as string | number]]
+          ? [
+              [
+                "Energy Community Bonus" as string | number,
+                `+${Math.round(data.itcBreakdown.energyCommunityBonus * 100)}%` as string | number,
+              ],
+            ]
           : []),
         ...(data.itcBreakdown.domesticContentBonus > 0
-          ? [["Domestic Content Bonus" as string | number, `+${Math.round(data.itcBreakdown.domesticContentBonus * 100)}%` as string | number]]
+          ? [
+              [
+                "Domestic Content Bonus" as string | number,
+                `+${Math.round(data.itcBreakdown.domesticContentBonus * 100)}%` as string | number,
+              ],
+            ]
           : []),
         ...(data.itcBreakdown.lowIncomeBonus > 0
-          ? [["Low-Income Bonus" as string | number, `+${Math.round(data.itcBreakdown.lowIncomeBonus * 100)}%` as string | number]]
+          ? [
+              [
+                "Low-Income Bonus" as string | number,
+                `+${Math.round(data.itcBreakdown.lowIncomeBonus * 100)}%` as string | number,
+              ],
+            ]
           : []),
         ["Total ITC Rate", `${Math.round(data.itcBreakdown.totalRate * 100)}%`],
         ["Credit Amount ($)", Math.round(data.itcBreakdown.creditAmount)]
@@ -2455,7 +2522,10 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
       ["TOU Arbitrage Savings ($)", Math.round(data.hourlySavingsBreakdown.touArbitrageSavings)],
       ["Peak Shaving Savings ($)", Math.round(data.hourlySavingsBreakdown.peakShavingSavings)],
       ["Demand Charge Savings ($)", Math.round(data.hourlySavingsBreakdown.demandChargeSavings)],
-      ["Solar Self-Consumption ($)", Math.round(data.hourlySavingsBreakdown.solarSelfConsumptionSavings)],
+      [
+        "Solar Self-Consumption ($)",
+        Math.round(data.hourlySavingsBreakdown.solarSelfConsumptionSavings),
+      ],
       ["Equivalent Cycles/Year", data.hourlySavingsBreakdown.equivalentCycles],
       ["Capacity Factor (%)", data.hourlySavingsBreakdown.capacityFactor],
       ["Source", data.hourlySavingsBreakdown.source],
@@ -2470,9 +2540,19 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
       ["RISK ANALYSIS (P10 / P50 / P90)"],
       [],
       ["Metric", "P10 (Downside)", "P50 (Base)", "P90 (Upside)"],
-      ["NPV ($)", Math.round(data.riskAnalysis.npvP10), Math.round(data.riskAnalysis.npvP50), Math.round(data.riskAnalysis.npvP90)],
+      [
+        "NPV ($)",
+        Math.round(data.riskAnalysis.npvP10),
+        Math.round(data.riskAnalysis.npvP50),
+        Math.round(data.riskAnalysis.npvP90),
+      ],
       ["IRR (%)", data.riskAnalysis.irrP10, data.riskAnalysis.irrP50, data.riskAnalysis.irrP90],
-      ["Payback (years)", data.riskAnalysis.paybackP10, data.riskAnalysis.paybackP50, data.riskAnalysis.paybackP90],
+      [
+        "Payback (years)",
+        data.riskAnalysis.paybackP10,
+        data.riskAnalysis.paybackP50,
+        data.riskAnalysis.paybackP90,
+      ],
       [],
       ["Probability of Positive NPV (%)", data.riskAnalysis.probabilityPositiveNPV],
       ["Value at Risk — 95% ($)", Math.round(data.riskAnalysis.valueAtRisk95)],
@@ -2508,7 +2588,20 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
       ["Source", data.solarProductionDetail.source]
     );
     if (data.solarProductionDetail.monthlyProductionKWh?.length) {
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
       analyticsRows.push([], ["Month", "Production (kWh)"]);
       data.solarProductionDetail.monthlyProductionKWh.forEach((kWh, i) => {
         analyticsRows.push([months[i] || `M${i + 1}`, Math.round(kWh)]);
