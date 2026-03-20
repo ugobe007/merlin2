@@ -28,9 +28,41 @@ export interface AIAnalysisResult {
   reasoning: string;
 }
 
+/**
+ * Validate if a company name is legitimate (not junk)
+ */
+function isValidCompanyName(name: string): boolean {
+  if (!name || name.length < 2) return false;
+
+  // Reject generic/junk phrases
+  const junkPatterns = [
+    /^(the|a|an)\s+$/i,
+    /^(new|latest|breaking|report|update|news)$/i,
+    /^(business|company|corporation|firm|enterprise)\s*$/i,
+    /^(it|this|that|these|those|here|there)$/i,
+    /^(what|where|when|why|how|who)\b/i,
+    /^\d+[\d\s,.-]*$/, // Just numbers
+    /\b(plans to|set to|expected to|will|announces)\b/i,
+  ];
+
+  for (const pattern of junkPatterns) {
+    if (pattern.test(name)) return false;
+  }
+
+  // Must have at least one letter
+  if (!/[a-zA-Z]/.test(name)) return false;
+
+  // Should not be too long (likely a sentence fragment)
+  if (name.length > 100) return false;
+
+  return true;
+}
+
 const ANALYSIS_PROMPT = `You are an expert business analyst specializing in identifying energy infrastructure opportunities for BESS (Battery Energy Storage Systems) projects.
 
 Analyze the following news article and extract structured information in JSON format.
+
+CRITICAL: Extract the ACTUAL company name (e.g., "Amazon", "Tesla", "Microsoft"), NOT descriptive phrases like "Company plans" or "New facility". If you cannot identify a real company name, use "Unknown".
 
 Focus on:
 1. Company name (the organization undertaking the project)
@@ -131,6 +163,15 @@ export async function analyzeArticleWithAI(
       return null;
     }
 
+    // Validate company name quality
+    if (
+      !isValidCompanyName(result.company_name) ||
+      result.company_name.toLowerCase() === "unknown"
+    ) {
+      console.warn(`Rejecting junk company name: "${result.company_name}"`);
+      return null;
+    }
+
     return result;
   } catch (error) {
     console.error("AI analysis error:", error);
@@ -141,9 +182,7 @@ export async function analyzeArticleWithAI(
 /**
  * Enrich opportunity with AI analysis
  */
-export async function enrichOpportunityWithAI(
-  opportunity: Opportunity
-): Promise<Opportunity> {
+export async function enrichOpportunityWithAI(opportunity: Opportunity): Promise<Opportunity> {
   const aiResult = await analyzeArticleWithAI(
     opportunity.company_name,
     opportunity.description,
@@ -195,7 +234,9 @@ export async function batchAnalyzeArticles(
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    console.log(`AI analysis progress: ${Math.min(i + maxConcurrent, opportunities.length)}/${opportunities.length}`);
+    console.log(
+      `AI analysis progress: ${Math.min(i + maxConcurrent, opportunities.length)}/${opportunities.length}`
+    );
   }
 
   return enriched;

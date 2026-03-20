@@ -157,6 +157,62 @@ function detectIndustry(text: string): IndustryType | undefined {
 }
 
 /**
+ * Junk words/phrases that indicate low-quality company names
+ */
+const JUNK_NAME_PATTERNS = [
+  // Generic location words
+  /^(the|a|an)\s+/i,
+  /\b(city|county|state|town|village|municipality)\b/i,
+
+  // Generic business words without actual company name
+  /^(new|latest|breaking|report|update|news)/i,
+  /^(business|company|corporation|firm|enterprise)\s*$/i,
+
+  // Descriptive phrases
+  /\b(plans to|set to|expected to|will|announces|says)\b/i,
+
+  // Question words
+  /^(what|where|when|why|how|who)\b/i,
+
+  // Numbers or dates as company name
+  /^\d+[\d\s,.-]*$/,
+
+  // Too short (likely not a real company)
+  /^.{1,2}$/,
+
+  // Generic terms
+  /^(it|this|that|these|those|here|there)\b/i,
+];
+
+/**
+ * Check if a company name is valid (not junk)
+ */
+function isValidCompanyName(name: string): boolean {
+  if (!name || name === "Unknown Company") {
+    return false;
+  }
+
+  // Check against junk patterns
+  for (const pattern of JUNK_NAME_PATTERNS) {
+    if (pattern.test(name)) {
+      return false;
+    }
+  }
+
+  // Must have at least one letter
+  if (!/[a-zA-Z]/.test(name)) {
+    return false;
+  }
+
+  // Should not be too long (likely a full sentence)
+  if (name.length > 100) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Extract company name from article (simple heuristic)
  */
 function extractCompanyName(title: string, description: string): string {
@@ -174,7 +230,10 @@ function extractCompanyName(title: string, description: string): string {
   for (const pattern of patterns) {
     const match = title.match(pattern);
     if (match && match[1].length > 2) {
-      return match[1].trim();
+      const name = match[1].trim();
+      if (isValidCompanyName(name)) {
+        return name;
+      }
     }
   }
 
@@ -182,14 +241,20 @@ function extractCompanyName(title: string, description: string): string {
   for (const pattern of patterns) {
     const match = description.match(pattern);
     if (match && match[1].length > 2) {
-      return match[1].trim();
+      const name = match[1].trim();
+      if (isValidCompanyName(name)) {
+        return name;
+      }
     }
   }
 
   // Fallback: Use first 2-4 words of title (likely contains company name)
   const words = title.split(/\s+/).filter((w) => w.length > 0);
   if (words.length >= 2) {
-    return words.slice(0, Math.min(3, words.length)).join(" ");
+    const name = words.slice(0, Math.min(3, words.length)).join(" ");
+    if (isValidCompanyName(name)) {
+      return name;
+    }
   }
 
   return "Unknown Company";
@@ -272,6 +337,11 @@ export async function scrapeOpportunities(): Promise<ScraperResult> {
 
       // Extract company name
       const companyName = extractCompanyName(article.title, article.description);
+
+      // Skip if company name is junk (saves AI API costs)
+      if (companyName === "Unknown Company" || !isValidCompanyName(companyName)) {
+        continue;
+      }
 
       // Calculate confidence
       const confidence = calculateConfidence(signals, industry);
