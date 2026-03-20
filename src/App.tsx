@@ -44,6 +44,7 @@ const WidgetDocs = lazy(() => import("./pages/WidgetDocs"));
 const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard"));
 const EnergyNews = lazy(() => import("./pages/EnergyNews"));
 const ElCarWashLanding = lazy(() => import("./pages/ElCarWashLanding"));
+const OpportunitiesDashboard = lazy(() => import("./pages/OpportunitiesDashboard"));
 // const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
 import { QuoteProvider } from "./contexts/QuoteContext";
 import { trackPageView } from "./services/analyticsService";
@@ -483,8 +484,21 @@ function App() {
     );
   }
 
+  // Opportunities Dashboard - Business leads from scraper
+  if (pathname === "/opportunities" || pathname === "/leads" || pathname === "/opp") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <OpportunitiesDashboard />
+      </Suspense>
+    );
+  }
+
   // El Car Wash Landing Page - Campaign-specific sales page
-  if (pathname === "/el-car-wash" || pathname === "/elcarwash" || pathname === "/car-wash-campaign") {
+  if (
+    pathname === "/el-car-wash" ||
+    pathname === "/elcarwash" ||
+    pathname === "/car-wash-campaign"
+  ) {
     return (
       <Suspense fallback={<PageLoader />}>
         <ElCarWashLanding />
