@@ -828,8 +828,7 @@ export default function Step4V8({ state, actions }: Props) {
                         {/* Merlin AI Services */}
                         <div className="pb-2 border-b border-slate-700/50">
                           <p className="text-[11px] uppercase tracking-wider text-emerald-400 mb-1.5 font-bold">
-                            Merlin AI Services (
-                            {(v45Costs.merlinFees.effectiveMargin * 100).toFixed(0)}% margin)
+                            Merlin AI Services
                           </p>
                           <div className="flex justify-between items-center text-slate-300">
                             <span>◈ Design Intelligence</span>
