@@ -267,7 +267,7 @@ export default function Step4V8({ state, actions }: Props) {
 
   // Keyboard navigation for tiers
   React.useEffect(() => {
-    if (!tiers || tiersStatus !== "loaded") return;
+    if (!tiers) return;
 
     const handleKeyPress = (e: KeyboardEvent) => {
       // Prevent if user is typing in an input field
@@ -306,7 +306,7 @@ export default function Step4V8({ state, actions }: Props) {
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [selectedTierIndex, tiers, tiersStatus, actions]);
+  }, [selectedTierIndex, tiers, actions]);
 
   // Loading steps for status bar
   const loadingSteps = [
