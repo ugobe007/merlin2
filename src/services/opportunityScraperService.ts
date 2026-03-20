@@ -60,7 +60,12 @@ const INDUSTRY_KEYWORDS: Record<IndustryType, string[]> = {
  */
 async function parseRSSFeed(url: string): Promise<any[]> {
   try {
-    const response = await fetch(url);
+    // Use CORS proxy to fetch RSS feeds from browser
+    // Alternative: Move this to a backend API endpoint for production
+    const corsProxy = "https://api.allorigins.win/raw?url=";
+    const proxyUrl = corsProxy + encodeURIComponent(url);
+
+    const response = await fetch(proxyUrl);
     const xmlText = await response.text();
 
     // Parse XML using DOMParser (works in browser)
