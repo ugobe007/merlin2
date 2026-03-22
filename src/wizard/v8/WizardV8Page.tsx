@@ -320,20 +320,6 @@ export default function WizardV8Page() {
   // Read URL params on mount (for deep linking like /wizard-v8?step=3&industry=car_wash)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-
-    // ✅ Handle fresh=true parameter — clears all wizard state for new session
-    const freshParam = params.get("fresh");
-    if (freshParam === "true") {
-      console.log("[WizardV8Page] Fresh start requested — clearing wizard state");
-      // Clear persisted state by resetting to initial state
-      actions.reset();
-      // Remove the fresh param from URL to avoid clearing on page refresh
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete("fresh");
-      window.history.replaceState({}, "", newUrl.toString());
-      return; // Don't process other params on fresh start
-    }
-
     const stepParam = params.get("step");
     const industryParam = params.get("industry");
 
