@@ -194,20 +194,28 @@ export const EQUIPMENT_KEYWORDS: Record<string, string[]> = {
 // ============================================================================
 
 export const PRICE_PATTERNS = {
-  // BESS: $XXX/kWh, $XXX per kWh
-  bess_kwh: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kWh/gi,
-  // BESS: $XXX/kW
-  bess_kw: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kW(?!h)/gi,
-  // Solar: $X.XX/W, $X.XX per watt
-  solar_watt: /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per)\s*[Ww](?:att)?/gi,
-  // Solar: $XXX/kW
-  solar_kw: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kW(?!h)/gi,
-  // General: $X million, $X billion
-  project_cost: /\$\s*(\d+(?:\.\d{1,2})?)\s*(million|billion|M|B)/gi,
-  // EV: $X,XXX per charger/unit
-  ev_unit: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*(?:charger|unit|station)/gi,
+  // BESS: $XXX/kWh, $XXX per kWh - ENHANCED
+  bess_kwh: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*k[Ww]h/gi,
+  // BESS: Battery costs fell/dropped/declined to $XXX
+  bess_cost: /(?:battery|bess|storage)\s+(?:cost|price|pricing)s?\s+(?:fell|dropped|declined|reached|at|to|of)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k[Ww]h/gi,
+  // BESS: $XXX/kW installed
+  bess_kw: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kW(?!h)\s*(?:installed)?/gi,
+  // Solar: $X.XX/W, $X.XX per watt - ENHANCED  
+  solar_watt: /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*[Ww](?:att)?/gi,
+  // Solar: module pricing at $X.XX/W
+  solar_module: /(?:module|panel|solar)\s+(?:cost|price|pricing)s?\s+(?:at|of|to|reached)\s+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*[Ww](?:att)?/gi,
+  // Solar: $XXX/kW - ENHANCED
+  solar_kw: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kW(?!h)\s*(?:installed)?/gi,
+  // Inverter: $XXX/kW
+  inverter_kw: /(?:inverter|pcs)\s+(?:cost|price|pricing)s?\s+(?:at|of|to|reached)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*kW(?!h)/gi,
+  // General: $X million, $X billion - ENHANCED
+  project_cost: /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:million|billion|M|B)(?:\s+(?:project|investment|contract|deal))?/gi,
+  // EV: $X,XXX per charger/unit - ENHANCED
+  ev_unit: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*(?:charger|unit|station|port)/gi,
   // General percentage
   percentage: /(\d+(?:\.\d{1,2})?)\s*%/gi,
+  // Transformer/switchgear: $XXX,XXX per unit
+  equipment_unit: /\$\s*(\d+(?:,\d{3})*)\s*(?:per|\/)\s*(?:transformer|unit|switchgear)/gi,
 };
 
 // ============================================================================
@@ -523,7 +531,9 @@ function preprocessTextForPrices(text: string): string {
 
 function detectEquipmentFromText(text: string): string[] {
   const equipment: string[] = [];
-  if (text.includes("battery") || text.includes("bess") || text.includes("energy storage"))
+  if (text.includes("battery") || text.includes("bess") || text.includes("energy storage") ||
+      text.includes("utility-scale storage") || text.includes("c&i storage") ||
+      (text.includes("storage") && (text.includes("/kwh") || text.includes("per kwh"))))
     equipment.push("bess");
   if (text.includes("solar") || text.includes("photovoltaic") || text.includes("pv "))
     equipment.push("solar");
@@ -555,11 +565,18 @@ export function extractPrices(text: string, equipment: string[]): ExtractedPrice
   ) {
     const bessPatterns = [
       PRICE_PATTERNS.bess_kwh,
-      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kwh/gi,
-      /(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/)\s*kwh/gi,
-      /(?:cost|price|priced|pricing)\s*(?:at|of)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kwh/gi,
-      /battery.*?\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kwh/gi,
-      /storage.*?\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kwh/gi,
+      PRICE_PATTERNS.bess_cost,
+      PRICE_PATTERNS.bess_kw,
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*kwh/gi,
+      /(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/|a)\s*kwh/gi,
+      /(?:cost|price|priced|pricing|priced\s+at)\s*(?:at|of|is|are|to)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*kwh/gi,
+      /battery.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+      /storage.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+      /bess.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+      // "costs fell to $120 per kilowatt-hour"
+      /costs?\s+(?:fell|dropped|declined|decreased|reduced|dropped\s+to)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|a)\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+      // "at $350/kWh installed"  
+      /at\s+\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kwh\s*installed/gi,
     ];
     for (const pattern of bessPatterns) {
       pattern.lastIndex = 0;
@@ -599,11 +616,19 @@ export function extractPrices(text: string, equipment: string[]): ExtractedPrice
   ) {
     const solarPatterns = [
       PRICE_PATTERNS.solar_watt,
-      /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/)\s*[Ww](?:att)?/gi,
-      /(\d+(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/)\s*[Ww](?:att)?/gi,
-      /(?:cost|price|priced|pricing)\s*(?:at|of)?\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/)\s*[Ww](?:att)?/gi,
-      /solar.*?\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/)\s*[Ww](?:att)?/gi,
-      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kw(?!h)/gi,
+      PRICE_PATTERNS.solar_module,
+      PRICE_PATTERNS.solar_kw,
+      /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*[Ww](?:att)?/gi,
+      /(\d+(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/|a)\s*[Ww](?:att)?/gi,
+      /(?:cost|price|priced|pricing|priced\s+at)\s*(?:at|of|is|are|to)?\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*[Ww](?:att)?/gi,
+      /solar.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*[Ww](?:att)?/gi,
+      /module.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*[Ww](?:att)?/gi,
+      /panel.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*[Ww](?:att)?/gi,
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*kw(?!h)\s*(?:installed)?/gi,
+      // "module prices at $0.25/W"
+      /prices?\s+(?:at|of|reached)\s+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*[Ww](?:att)?/gi,
+      // "solar pricing: $1.51/W"
+      /pricing[:\s]+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*[Ww](?:att)?/gi,
     ];
     for (const pattern of solarPatterns) {
       pattern.lastIndex = 0;

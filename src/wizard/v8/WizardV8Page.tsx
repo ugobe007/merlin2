@@ -13,28 +13,30 @@
  *   3. Routes the active step component as children
  *
  * Navigation policy:
- *   Steps 1, 2, 4 — self-advance via their own internal buttons/card clicks.
- *     Shell Next button is kept disabled (canGoNext=false) so it doesn't conflict.
- *   Steps 3 and 5 — shell Next button is the primary CTA.
- *   Step 6 — terminal (no Next).
+//   Steps 1, 2, 4 (Add-ons), 5 (MagicFit) — self-advance via their own buttons/card clicks.
+//     Shell Next button is kept disabled (canGoNext=false) so it doesn't conflict.
+//   Step 3 (Profile) — shell Next button is the primary CTA (enabled when baseLoadKW > 0).
+//   Step 6 (Quote) — terminal (no Next).
  *
  * Route: /v8
  * =============================================================================
  */
 
-import React, { Suspense, lazy, useEffect } from "react";
+import React, { Suspense, lazy, useEffect, useMemo } from "react";
 import { useWizardV8 } from "./useWizardV8";
 import type { WizardStep } from "./wizardState";
-import { Step1V8 } from "./steps/Step1V8";
 import { Step0V8_ModeSelect } from "./steps/Step0V8_ModeSelect";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 
-// Lazy-load steps 2–5 so Step 1 renders instantly on first visit
+// Lazy-load all steps — Step0 (mode select) is the true entry point and is
+// eagerly imported above. Step1 is preloaded immediately so it feels instant.
+const loadStep1V8 = () => import("./steps/Step1V8");
 const loadStep2V8 = () => import("./steps/Step2V8");
 const loadStep3V8 = () => import("./steps/Step3V8");
 const loadStep35V8 = () => import("./steps/Step3_5V8");
 const loadStep4V8 = () => import("./steps/Step4V8");
 
+const Step1V8 = lazy(loadStep1V8);
 const Step2V8 = lazy(loadStep2V8);
 const Step3V8 = lazy(loadStep3V8);
 const Step3_5V8 = lazy(loadStep35V8);
@@ -44,6 +46,16 @@ const Step5V8 = lazy(() => import("./steps/Step5V8"));
 // Step labels — index 0 = step 0 (Mode Select), index 1 = step 1 (Location), etc.
 // Note: Step 3.5 (Add-ons) is inserted between Profile and MagicFit
 const STEP_LABELS = ["Mode", "Location", "Industry", "Profile", "Add-ons", "MagicFit", "Quote"];
+
+// Map WizardStep (0|1|2|3|3.5|4|5|6) → display index (0-6) for WizardShellV7.
+// Shell uses integer indices for progress bar; 3.5 must map to 4 (Add-ons slot).
+function wizardStepToDisplayIndex(step: number): number {
+  if (step <= 3) return step;          // 0→0, 1→1, 2→2, 3→3 (Profile)
+  if (step === 3.5) return 4;          // 3.5 → 4 (Add-ons)
+  if (step === 4) return 4;            // step=4 also renders Step3_5V8 → 4
+  if (step === 5) return 5;            // MagicFit
+  return 6;                            // Quote
+}
 
 // ── Accent helpers ────────────────────────────────────────────────────────────
 const ACCENT = "#3ECF8E";
@@ -182,11 +194,12 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
-            Intelligent Recommendations
+            Customize your scope.
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Based on your {hi("grid reliability, existing equipment, and location")}, here's what I
-            recommend adding to maximize your savings and resilience.
+            Add-ons are optional but can significantly improve your ROI. Merlin has pre-selected
+            the most common upgrades for{" "}
+            {hi(state.industry ? state.industry.replace(/_/g, " ") : "your facility")}.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
             {[
@@ -280,16 +293,22 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
 // Step 5 is final step with export buttons - no Next button needed.
 function resolveCanGoNext(step: number, state: S): boolean {
   if (step === 3) return state.baseLoadKW > 0;
+  if (step === 4) return true;                              // Add-ons: always continuable
+  if (step === 5) return state.selectedTierIndex !== null;  // MagicFit: must pick a tier
   return false;
 }
 
 const NEXT_LABELS: Partial<Record<number, string>> = {
-  3: "Build my quote →",
+  3: "Choose add-ons →",
+  4: "Build my tiers →",
+  5: "See your quote →",
 };
 
 const NEXT_HINTS: Partial<Record<number, string>> = {
   1: "Select your industry",
-  3: "Goal selection",
+  3: "Solar, generator & EV options",
+  4: "MagicFit sizes your system",
+  5: "Review your TrueQuote™",
 };
 
 // ── Spinner fallback ──────────────────────────────────────────────────────────
@@ -338,19 +357,19 @@ export default function WizardV8Page() {
     }
   }, []); // Run once on mount
 
-  console.log("[WizardV8Page] Rendering step:", step, {
-    selectedTierIndex: state.selectedTierIndex,
-    hasTiers: !!state.tiers,
-    location: state.location?.city,
-    industry: state.industry,
-  });
-
   useEffect(() => {
+    // Step 0 → preload Step1 immediately (16 kB, hides lazy latency)
+    if (step === 0) {
+      void loadStep1V8();
+      return;
+    }
+
     if (
       step === 1 &&
       state.business?.detectedIndustry &&
       (state.business.confidence ?? 0) >= 0.75
     ) {
+      void loadStep2V8();
       void loadStep3V8();
       void loadStep35V8();
       void loadStep4V8();
@@ -368,8 +387,15 @@ export default function WizardV8Page() {
     }
   }, [step, state.business?.detectedIndustry, state.business?.confidence]);
 
-  // DEBUG: Removed excessive logging - caused 20+ renders per step
-  // TODO: Memoize actions object in useWizardV8 to prevent re-render cascade
+  // Memoize advisor sidebar content — getAdvisorContent builds React nodes, so
+  // calling it inline would create fresh objects on every state dispatch.
+  // Only re-compute when the values it actually renders change.
+  const advisorContent = useMemo(
+    () => getAdvisorContent(step, state),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [step, state.baseLoadKW, state.peakLoadKW, state.industry,
+     state.wantsSolar, state.wantsGenerator, state.wantsEVCharging]
+  );
 
   return (
     <div style={{ position: "relative" }}>
@@ -429,15 +455,40 @@ export default function WizardV8Page() {
       </button>
 
       <WizardShellV7
-        currentStep={step} // Now steps align: 0=Mode, 1=Location, etc.
+        currentStep={wizardStepToDisplayIndex(step)}
         stepLabels={STEP_LABELS}
         canGoBack={step > 0}
         canGoNext={resolveCanGoNext(step, state)}
         onBack={actions.goBack}
-        onNext={() => actions.goToStep((step + 1) as WizardStep)}
+        onNext={() => {
+          if (step === 4) {
+            // Persist EV charger counts + mark Add-ons visited before advancing
+            const evScope = (state.step3Answers?.evScope as string) ?? "pkg_pro";
+            const EV_COUNTS: Record<string, { level2: number; dcfc: number }> = {
+              // legacy scope IDs
+              small:     { level2: 4,  dcfc: 0 },
+              medium:    { level2: 8,  dcfc: 2 },
+              large:     { level2: 12, dcfc: 4 },
+              // new package IDs
+              pkg_basic: { level2: 4,  dcfc: 0 },
+              pkg_pro:   { level2: 6,  dcfc: 2 },
+              pkg_fleet: { level2: 6,  dcfc: 4 },
+            };
+            if (state.wantsEVCharging) {
+              const counts = EV_COUNTS[evScope] ?? { level2: 8, dcfc: 2 };
+              actions.setAddonConfig({ level2Chargers: counts.level2, dcfcChargers: counts.dcfc });
+            } else {
+              actions.setAddonConfig({ level2Chargers: 0, dcfcChargers: 0 });
+            }
+            actions.setAnswer("step3_5Visited", true);
+            actions.goToStep(5);
+          } else {
+            actions.goToStep((step + 1) as WizardStep);
+          }
+        }}
         nextLabel={NEXT_LABELS[step]}
         nextHint={NEXT_HINTS[step]}
-        advisorContent={getAdvisorContent(step, state)}
+        advisorContent={advisorContent}
       >
         {/* Error banner */}
         {state.error && (

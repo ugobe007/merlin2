@@ -160,8 +160,9 @@ export const carWashQuestionsComplete: Question[] = [
       { value: '8', label: '8', icon: '🕐', description: 'hrs/day' },
       { value: '10', label: '10', icon: '🕐🕐', description: 'hrs/day' },
       { value: '12', label: '12', icon: '🕐🕐🕐', description: 'hrs/day' },
-      { value: '16', label: '16', icon: '🕐🕐🕐🕐', description: 'hrs/day' },
-      { value: '20', label: '20', icon: '🕐🕐🕐🕐🕐', description: 'hrs/day' },
+      { value: '14', label: '14', icon: '🕐🕐🕐🕐', description: 'hrs/day' },
+      { value: '16', label: '16', icon: '🕐🕐🕐🕐🕐', description: 'hrs/day' },
+      { value: '20', label: '20', icon: '🌗', description: 'hrs/day' },
       { value: '24', label: '24/7', icon: '🌙', description: 'Always open' }
     ],
     smartDefault: '12',

@@ -21,7 +21,7 @@
  * =============================================================================
  */
 
-import { useReducer, useCallback, useRef, useEffect } from "react";
+import { useReducer, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   reducer,
   initialState,
@@ -546,6 +546,21 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     if (/manufacturing|factory|plant|production/i.test(lowerName)) {
       return { industry: "manufacturing", confidence: 0.85 };
     }
+    if (/college|university|polytechnic|community\s+college|cal\s*(state|poly)|state\s+univ/i.test(lowerName)) {
+      return { industry: "college", confidence: 0.80 };
+    }
+    if (/airport|airfield|air\s*terminal|aviation|airstrip|aerodrome/i.test(lowerName)) {
+      return { industry: "airport", confidence: 0.90 };
+    }
+    if (/cold\s*storage|cold\s*chain|refrigerated\s*(warehouse|facility)|freezer\s*(facility|storage)/i.test(lowerName)) {
+      return { industry: "cold_storage", confidence: 0.85 };
+    }
+    if (/indoor\s*farm|vertical\s*farm|hydroponic|aeroponic|aquaponic|greenhouse\s*(farm|grower)/i.test(lowerName)) {
+      return { industry: "indoor_farm", confidence: 0.85 };
+    }
+    if (/\bfarm\b|ranch|\bagriculture\b|\bagricultural\b|organic\s*farm|dairy\s*farm|vineyard|winery|orchard|livestock/i.test(lowerName)) {
+      return { industry: "agricultural", confidence: 0.80 };
+    }
 
     if (import.meta.env.DEV) {
       console.log("[detectIndustryFromName] ❌ No match found for:", lowerName);
@@ -648,6 +663,50 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   // Watches step3Answers + industry. Calls calculateUseCasePower() (synchronous
   // SSOT function) and dispatches SET_BASE_LOAD with the result.
   // This keeps Rule 3: steps are pure renderers — no calculations inside them.
+  //
+  // Non-power keys: add-on scope intents and navigation markers written to
+  // step3Answers by Step3_5V8. These are NOT equipment inputs and must NOT
+  // trigger a recalculation when they change.
+  const NON_POWER_ANSWER_KEYS = new Set([
+    "solarScope",
+    "generatorScope",
+    "evScope",
+    "step3_5Visited",
+    "carportInterest",
+  ]);
+
+  // Stable string key of only the equipment-relevant answers.
+  // Changes only when an answer that affects kW calculation changes.
+  // Non-power keys (solarScope, generatorScope, evScope, step3_5Visited,
+  // carportInterest) are excluded so toggling add-ons or leaving the add-ons
+  // step does NOT trigger a recalculation.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const powerAnswersKey = useMemo(() => {
+    return Object.entries(state.step3Answers)
+      .filter(([k]) => !NON_POWER_ANSWER_KEYS.has(k))
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}:${String(v)}`)
+      .join("|");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.step3Answers]);
+
+  // Stable serialization of ALL step3 answers — replaces JSON.stringify(state.step3Answers)
+  // in the tier-build effect dependency array so serialization cost is paid once
+  // per object change rather than on every render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const step3AnswersKey = useMemo(() => {
+    return Object.entries(state.step3Answers)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}:${String(v)}`)
+      .join("|");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.step3Answers]);
+
+  // Ref so the effect body can always read the latest full answers snapshot
+  // without adding state.step3Answers to the dependency array (which would
+  // re-trigger on every non-power key change).
+  const step3AnswersRef = useRef(state.step3Answers);
+  step3AnswersRef.current = state.step3Answers;
 
   useEffect(() => {
     const slug = state.industry;
@@ -656,7 +715,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       return;
     }
 
-    const answers = state.step3Answers;
+    const answers = step3AnswersRef.current;
     if (Object.keys(answers).length === 0) {
       console.log('[useWizardV8] Power calc skipped: no answers');
       return;
@@ -714,7 +773,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       }
       // baseLoadKW stays at 0 until enough answers are present
     }
-  }, [state.step3Answers, state.industry]);
+  }, [powerAnswersKey, state.industry]);
 
   // ── Step 2: Industry selection ─────────────────────────────────────────
 
@@ -852,18 +911,27 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   // When createTierBuildKey() changes, the cached tier build is invalidated
   // and a new build is triggered. This is SSOT for cache invalidation.
   useEffect(() => {
-    const shouldBuild = 
-      state.step >= 3 && 
-      state.baseLoadKW > 0 && 
+    // Detect stale cache: tiers are "ready" but the current state (e.g. addon
+    // preferences changed on Step 3.5) no longer matches what was built.
+    const currentKey = createTierBuildKey(state);
+    const cacheStale =
+      state.tiersStatus === "ready" &&
+      tierBuildRef.current !== null &&
+      tierBuildRef.current.key !== currentKey;
+
+    const shouldBuild =
+      state.step >= 3 &&
+      state.baseLoadKW > 0 &&
       !!state.location &&
       state.tiersStatus !== "fetching" &&
-      state.tiersStatus !== "ready";
+      (state.tiersStatus !== "ready" || cacheStale);
 
     if (!shouldBuild) return;
 
-    console.log('[useWizardV8] 🔄 Proactively building tiers in background...', {
+    console.log('[useWizardV8] 🔄 Building tiers', cacheStale ? '(addons changed — rebuilding)' : '(initial build)', {
       step: state.step,
-      cacheKey: createTierBuildKey(state).substring(0, 100) + '...'
+      wantsSolar: state.wantsSolar,
+      solarScope: state.step3Answers?.solarScope,
     });
 
     dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
@@ -885,10 +953,8 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     getOrStartTierBuild,
     state.step,
     state.baseLoadKW,
-    state.location,
+    state.location?.zip,
     state.tiersStatus,
-    // ⚡ CRITICAL: createTierBuildKey() already includes ALL these fields
-    // So we watch them individually to trigger re-evaluation of shouldBuild
     state.industry,
     state.peakLoadKW,
     state.criticalLoadPct,
@@ -902,9 +968,15 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     state.level2Chargers,
     state.dcfcChargers,
     state.hpcChargers,
-    state.evChargers,
-    state.step3Answers,
-    state.intel,
+    // Use stable memoized key instead of inline JSON.stringify (saves
+    // serialization cost on every render; same semantics, fires only when
+    // step3Answers object reference changes).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    step3AnswersKey,
+    state.intel?.utilityRate,
+    state.intel?.demandCharge,
+    state.intel?.peakSunHours,
+    state.intel?.solarFeasible,
   ]);
 
   const clearError = useCallback(() => {
@@ -913,9 +985,11 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
   // ── Return ────────────────────────────────────────────────────────────────
 
-  return {
-    state,
-    actions: {
+  // Memoize the actions bag so downstream components that destructure `actions`
+  // don't re-render just because unrelated state (e.g. baseLoadKW) changed.
+  // All callbacks are already stable (useCallback), so this memo rarely fires.
+  const actions = useMemo(
+    () => ({
       setLocationRaw,
       submitLocation,
       clearLocation,
@@ -936,8 +1010,16 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       goBack,
       reset,
       clearError,
-    },
-  };
+    }),
+    [
+      setLocationRaw, submitLocation, clearLocation, setGridReliability, setBusiness,
+      setBusinessAddress, confirmBusiness, setIndustry, setAnswer, setAddonPreference,
+      setAddonConfig, setEVChargers, setBaseLoad, setTiers, setTiersStatus,
+      selectTier, goToStep, goBack, reset, clearError,
+    ]
+  );
+
+  return { state, actions };
 }
 
 export type { WizardState, WizardActions } from "./wizardState";

@@ -27,11 +27,11 @@ import { calculateSystemCosts, EQUIPMENT_UNIT_COSTS } from "@/services/pricingSe
 // ============================================================================
 const TIER_CONFIG = {
   0: {
-    // STARTER
-    name: "STARTER",
-    tagline: "Get your feet wet",
+    // ESSENTIAL
+    name: "ESSENTIAL",
+    tagline: "Core system, right-sized",
     headlineClass: "headline-starter",
-    cardBorder: "border-slate-800",
+    cardBorder: "border-slate-700/60",
     cardBg: "bg-gradient-to-b from-slate-900 to-slate-950",
     cardHover: "card-starter",
     accentColor: "text-emerald-400",
@@ -40,39 +40,36 @@ const TIER_CONFIG = {
     buttonClass:
       "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
     metricBg: "bg-white/5",
-    savingsGlow: "savings-glow-starter",
   },
   1: {
-    // PERFECT FIT
-    name: "PERFECT FIT",
-    tagline: "Just right for you",
+    // OPTIMIZED
+    name: "OPTIMIZED",
+    tagline: "Most popular configuration",
     headlineClass: "headline-perfect",
-    cardBorder: "border-purple-500/30",
-    cardBg: "bg-gradient-to-b from-purple-950/50 via-slate-900 to-slate-950",
+    cardBorder: "border-emerald-500/35",
+    cardBg: "bg-gradient-to-b from-emerald-950/40 via-slate-900 to-slate-950",
     cardHover: "card-perfect",
-    accentColor: "text-purple-400",
-    chipBg: "bg-purple-500/10 border-purple-500/30",
-    chipText: "text-purple-200",
+    accentColor: "text-emerald-400",
+    chipBg: "bg-emerald-500/10 border-emerald-500/30",
+    chipText: "text-emerald-200",
     buttonClass:
       "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
-    metricBg: "bg-purple-500/10",
-    savingsGlow: "savings-glow-perfect",
+    metricBg: "bg-emerald-500/10",
   },
   2: {
-    // BEAST MODE
-    name: "BEAST MODE",
-    tagline: "Go all in",
+    // PREMIUM
+    name: "PREMIUM",
+    tagline: "Maximum performance",
     headlineClass: "headline-beast",
-    cardBorder: "border-slate-800",
+    cardBorder: "border-slate-700/60",
     cardBg: "bg-gradient-to-b from-slate-900 to-slate-950",
     cardHover: "card-beast",
-    accentColor: "text-orange-400",
+    accentColor: "text-amber-400",
     chipBg: "bg-white/5 border-white/10",
     chipText: "text-slate-300",
     buttonClass:
       "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
     metricBg: "bg-white/5",
-    savingsGlow: "savings-glow-beast",
   },
 } as const;
 
@@ -86,92 +83,82 @@ const customStyles = `
   }
   
   .card-starter:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 40px 80px -20px rgba(16, 185, 129, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.18);
   }
   
   .card-starter:active {
-    transform: translateY(-2px) scale(0.98);
-    box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px) scale(0.99);
+    box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.25);
   }
   
   .card-perfect:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 40px 80px -20px rgba(168, 85, 247, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.22);
   }
   
   .card-perfect:active {
-    transform: translateY(-2px) scale(0.98);
-    box-shadow: 0 20px 40px -15px rgba(168, 85, 247, 0.5);
+    transform: translateY(-1px) scale(0.99);
+    box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.28);
   }
   
   .card-beast:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 40px 80px -20px rgba(249, 115, 22, 0.35);
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px -15px rgba(249, 115, 22, 0.18);
   }
   
   .card-beast:active {
-    transform: translateY(-2px) scale(0.98);
-    box-shadow: 0 20px 40px -15px rgba(249, 115, 22, 0.45);
+    transform: translateY(-1px) scale(0.99);
+    box-shadow: 0 10px 20px -10px rgba(249, 115, 22, 0.25);
   }
   
-  /* SELECTED STATE GLOW */
+  /* SELECTED STATE GLOW — static, no pulse */
   .card-selected {
-    animation: selectedPulse 2s ease-in-out infinite;
+    box-shadow: 0 0 28px 0px rgba(16, 185, 129, 0.22);
   }
   
-  @keyframes selectedPulse {
-    0%, 100% { box-shadow: 0 0 40px 0px rgba(168, 85, 247, 0.5); }
-    50% { box-shadow: 0 0 60px 5px rgba(168, 85, 247, 0.7); }
-  }
-  
-  /* CHECKMARK ANIMATION */
+  /* CHECKMARK ANIMATION — gentle fade in */
   .checkmark-appear {
-    animation: checkmarkBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    animation: checkmarkFade 0.25s ease-out;
   }
   
-  @keyframes checkmarkBounce {
-    0% { transform: scale(0) rotate(-45deg); opacity: 0; }
-    50% { transform: scale(1.2) rotate(0deg); }
-    100% { transform: scale(1) rotate(0deg); opacity: 1; }
-  }
-  
-  /* SAVINGS NUMBER POP */
-  @keyframes savingsPop {
-    0% { transform: scale(0.9); opacity: 0; }
-    50% { transform: scale(1.05); }
+  @keyframes checkmarkFade {
+    0% { transform: scale(0.7); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
   }
   
+  /* SAVINGS NUMBER — simple fade in */
+  @keyframes savingsFade {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
   .savings-number {
-    animation: savingsPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    animation: savingsFade 0.4s ease-out;
   }
   
-  /* STARTER - Fresh green gradient text */
+  /* STARTER */
   .headline-starter {
-    background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
+    background: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.4));
   }
   
-  /* PERFECT FIT - Royal purple/pink gradient */
+  /* OPTIMIZED */
   .headline-perfect {
-    background: linear-gradient(135deg, #c084fc 0%, #a855f7 30%, #9333ea 60%, #7c3aed 100%);
+    background: linear-gradient(135deg, #6ee7b7 0%, #10b981 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 4px 16px rgba(168, 85, 247, 0.5));
   }
   
-  /* BEAST MODE - Fire gradient */
+  /* PREMIUM */
   .headline-beast {
-    background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 25%, #f97316 50%, #ea580c 75%, #dc2626 100%);
+    background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.5));
   }
   
   /* Savings glow effects */
@@ -204,14 +191,8 @@ const customStyles = `
     font-size: 16px;
   }
   
-  /* Pulse glow animation for recommended banner */
-  @keyframes pulse-glow {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-  }
-  
   .recommended-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
+    opacity: 0.85;
   }
 `;
 
@@ -373,26 +354,26 @@ export default function Step4V8({ state, actions }: Props) {
     return (
       <div className="flex flex-col items-center justify-center py-20 max-w-2xl mx-auto">
         {/* Spinner */}
-        <Loader2 className="w-16 h-16 text-purple-400 animate-spin mb-6" />
+        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mb-6" />
 
         {/* Main message */}
-        <h3 className="text-2xl font-bold text-white mb-2">Generating Your MagicFit Options</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">Generating Your MagicFit Options</h3>
         <p className="text-slate-400 mb-8">Building 3 optimized configurations for your facility</p>
 
         {/* Progress bar */}
         <div className="w-full space-y-3">
           {/* Bar container */}
-          <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-violet-600 via-purple-500 to-fuchsia-500 transition-all duration-300 ease-out"
+              className="h-full bg-emerald-500 transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
 
           {/* Current step */}
           <div className="flex items-center gap-2 text-sm">
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-            <p className="text-purple-300 font-medium animate-pulse">{loadingSteps[loadingStep]}</p>
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <p className="text-emerald-400 font-medium">{loadingSteps[loadingStep]}</p>
           </div>
 
           {/* Step indicators */}
@@ -401,7 +382,7 @@ export default function Step4V8({ state, actions }: Props) {
               <div
                 key={idx}
                 className={`h-1 rounded-full transition-all duration-300 ${
-                  idx <= loadingStep ? "bg-purple-500" : "bg-slate-700"
+                  idx <= loadingStep ? "bg-emerald-500" : "bg-slate-700"
                 }`}
               />
             ))}
@@ -445,20 +426,19 @@ export default function Step4V8({ state, actions }: Props) {
 
       {/* Header */}
       <div className="text-center">
-        <p className="text-purple-400 uppercase tracking-[0.3em] text-sm font-medium mb-3">
-          Step 4 of 5
+        <p className="text-emerald-500/60 uppercase tracking-[0.3em] text-xs font-medium mb-3">
+          MagicFit™ — 3 Configurations
         </p>
         <h1
-          className="text-4xl md:text-5xl font-bold text-white mb-3"
+          className="text-2xl md:text-3xl font-bold text-white mb-3"
           style={{ fontFamily: "Outfit, sans-serif" }}
         >
-          Pick Your Power
+          Select Your Configuration
         </h1>
-        <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-          🧙‍♂️{" "}
+        <p className="text-slate-400 text-sm max-w-2xl mx-auto">
           {selectedTierIndex === null
-            ? "Merlin has crafted three magical configurations just for you. Choose the one that feels right!"
-            : "Excellent choice! This configuration balances savings, resilience, and your facility's needs beautifully."}
+            ? "Each configuration is sized to your facility profile. Select one to continue."
+            : "Selection confirmed. Review the details and click \"See your quote\" to proceed."}
         </p>
         {selectedTierIndex === null && (
           <div className="mt-3 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg inline-block">
@@ -510,22 +490,21 @@ export default function Step4V8({ state, actions }: Props) {
             <div
               key={tierIndex}
               onClick={() => {
-                console.log("[Step4V8] Tier clicked:", tierIndex);
                 actions.selectTier(tierIndex);
               }}
               className={`
                 relative rounded-2xl overflow-hidden cursor-pointer
                 ${config.cardBg} border-2 ${config.cardHover}
-                ${isSelected ? "border-purple-500 card-selected" : config.cardBorder}
-                ${isPerfectFit ? "shadow-[0_0_60px_-15px_rgba(168,85,247,0.4)]" : ""}
+                ${isSelected ? "border-emerald-500/60 card-selected" : config.cardBorder}
+                ${isPerfectFit && !isSelected ? "shadow-[0_0_30px_-10px_rgba(168,85,247,0.2)]" : ""}
                 transition-all duration-300
               `}
             >
               {/* SELECTED CHECKMARK BADGE */}
               {isSelected && (
                 <div className="absolute top-4 right-4 z-20 checkmark-appear">
-                  <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full p-3 shadow-lg shadow-emerald-500/50">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="bg-emerald-500 rounded-full p-1.5 shadow-sm">
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
@@ -536,18 +515,18 @@ export default function Step4V8({ state, actions }: Props) {
                 </div>
               )}
 
-              {/* SELECTION GLOW OVERLAY */}
+              {/* SELECTION OVERLAY */}
               {isSelected && (
-                <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/6 via-transparent to-transparent pointer-events-none" />
               )}
 
               {/* BEST VALUE Banner (Perfect Fit only) */}
               {isPerfectFit && (
                 <>
-                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 recommended-glow" />
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500/70 recommended-glow" />
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
-                    <div className="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-4 py-1.5 rounded-b-lg text-[10px] font-bold tracking-wider shadow-lg shadow-purple-500/30">
-                      ⭐ BEST VALUE
+                    <div className="bg-emerald-600 text-white px-4 py-1.5 rounded-b-lg text-[10px] font-bold tracking-wider shadow-sm">
+                      RECOMMENDED
                     </div>
                   </div>
                 </>
@@ -558,7 +537,7 @@ export default function Step4V8({ state, actions }: Props) {
                 {/* HEADLINE */}
                 <div className="text-center mb-2 md:mb-3">
                   <h2
-                    className={`text-3xl md:text-4xl font-black tracking-tight ${config.headlineClass}`}
+                    className={`text-2xl md:text-3xl font-black tracking-tight ${config.headlineClass}`}
                     style={{ fontFamily: "Outfit, sans-serif" }}
                   >
                     {config.name}
@@ -578,7 +557,7 @@ export default function Step4V8({ state, actions }: Props) {
                     Annual Savings
                   </p>
                   <p
-                    className={`text-4xl md:text-5xl font-bold ${config.accentColor} ${config.savingsGlow} savings-number`}
+                    className={`text-3xl md:text-4xl font-bold ${config.accentColor} savings-number`}
                     style={{ fontFamily: "Outfit, sans-serif" }}
                   >
                     {formatCurrency(tier.annualSavings)}
@@ -925,35 +904,6 @@ export default function Step4V8({ state, actions }: Props) {
         })}
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="flex justify-between pt-6">
-        <button
-          onClick={() => actions.goBack()}
-          className="px-6 py-3 bg-white/5 text-slate-300 rounded-xl hover:bg-white/10 transition-all border border-white/10 flex items-center gap-2"
-        >
-          ← Back
-        </button>
-        <button
-          onClick={() => {
-            console.log("[Step4V8] Continue clicked, selectedTierIndex:", selectedTierIndex);
-            if (selectedTierIndex !== null) {
-              actions.goToStep(6);
-            }
-          }}
-          disabled={selectedTierIndex === null}
-          className={`
-            px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg
-            flex items-center gap-3
-            ${
-              selectedTierIndex === null
-                ? "bg-slate-700 text-slate-400 cursor-not-allowed opacity-50"
-                : "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-500/20 hover:scale-105 active:scale-95"
-            }
-          `}
-        >
-          Continue →
-        </button>
-      </div>
     </div>
   );
 }

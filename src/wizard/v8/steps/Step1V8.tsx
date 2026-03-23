@@ -7,14 +7,7 @@ import type { BusinessData, WizardActions, WizardState } from "../wizardState";
 const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyDppNx91-dadZiyNJBcqDhQn9H5mkDdruw";
 
-// VERSION CHECK - This will immediately log when Step1V8 is loaded
-console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-console.log("🚀 STEP1V8 LOADED - VERSION 1072");
-console.log("📅 Build: March 11, 2026 - 16:30 UTC");
-console.log("🔑 ENV VAR:", import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? "✅ Set" : "❌ Missing");
-console.log("🔑 ACTUAL KEY:", GOOGLE_MAPS_API_KEY ? "✅ Using key" : "❌ No key");
-console.log("🔑 KEY VALUE:", GOOGLE_MAPS_API_KEY?.substring(0, 20) + "...");
-console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
 
 const T = {
   accent: "#3ECF8E",
@@ -208,28 +201,13 @@ function getPhotoPayload(place: {
   const photo = place.photos?.[0];
   const attribution = photo?.authorAttributions?.[0];
 
-  // DETAILED DEBUG LOGGING v1069
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("[Step1V8] 🔍 PHOTO EXTRACTION v1069");
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("Place object:", place);
-  console.log("Photos array:", place.photos);
-  console.log("Photos array length:", place.photos?.length);
-  console.log("First photo object:", photo);
-  console.log("Photo has getURI method:", !!photo?.getURI);
-  console.log("Photo getURI type:", typeof photo?.getURI);
-  console.log("Attribution:", attribution);
-
   let photoUrl: string | undefined;
 
   try {
     photoUrl = photo?.getURI?.({ maxWidth: 480, maxHeight: 320 });
-    console.log("✅ Photo URL extracted:", photoUrl);
-  } catch (error) {
-    console.error("❌ Error calling getURI:", error);
+  } catch {
+    // photo URI unavailable
   }
-
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
   return {
     photoUrl,
@@ -353,10 +331,7 @@ export function Step1V8({ state, actions }: Step1Props) {
 
   const enrichSuggestion = useCallback(
     async (suggestion: BusinessSuggestion): Promise<Partial<BusinessData>> => {
-      console.log("🔍 enrichSuggestion CALLED for:", suggestion.primaryText);
-
       const placesLibrary = await ensurePlacesLibrary();
-      console.log("📚 Places library loaded:", !!placesLibrary);
 
       const fallbackAddress =
         suggestion.secondaryText ||
@@ -366,9 +341,7 @@ export function Step1V8({ state, actions }: Step1Props) {
 
       try {
         if (placesLibrary?.Place) {
-          console.log("✅ Using placesLibrary.Place (NEW API)");
           const place = new placesLibrary.Place({ id: suggestion.placeId });
-          console.log("📍 Place created, fetching fields...");
 
           await place.fetchFields({
             fields: [
@@ -380,11 +353,6 @@ export function Step1V8({ state, actions }: Step1Props) {
               "websiteURI",
               "editorialSummary",
             ],
-          });
-
-          console.log("📦 Place details fetched:", {
-            hasPhotos: !!place.photos,
-            photoCount: place.photos?.length,
           });
 
           return {
@@ -401,7 +369,6 @@ export function Step1V8({ state, actions }: Step1Props) {
           };
         }
 
-        console.log("⚠️ Fallback: Using prediction.toPlace() (OLD API)");
         const place = suggestion.prediction.toPlace();
         await place.fetchFields({
           fields: [
@@ -460,10 +427,6 @@ export function Step1V8({ state, actions }: Step1Props) {
       setIsSuggestionsLoading(true);
 
       try {
-        console.log("🔍 Fetching autocomplete suggestions for:", businessName.trim());
-        console.log("📍 Country filter:", country);
-        console.log("🔑 API Key available:", !!GOOGLE_MAPS_API_KEY);
-
         const { suggestions = [] } =
           await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
             input: businessName.trim(),
@@ -472,9 +435,6 @@ export function Step1V8({ state, actions }: Step1Props) {
             // inputOffset is for cursor position in partial completions, not needed here
             sessionToken: sessionTokenRef.current,
           });
-
-        console.log("✅ Autocomplete API returned:", suggestions.length, "suggestions");
-        console.log("📦 Raw suggestions:", suggestions);
 
         if (suggestionRequestIdRef.current !== requestId) return;
 
@@ -493,12 +453,6 @@ export function Step1V8({ state, actions }: Step1Props) {
           })
           .filter((item): item is BusinessSuggestion => item !== null)
           .slice(0, 5);
-
-        console.log("📋 Processed valid suggestions:", validSuggestions.length);
-        console.log(
-          "📝 Suggestion details:",
-          validSuggestions.map((s) => ({ name: s.primaryText, placeId: s.placeId }))
-        );
 
         setBusinessSuggestions(validSuggestions);
       } catch (error) {
@@ -560,8 +514,6 @@ export function Step1V8({ state, actions }: Step1Props) {
   };
 
   const handleSuggestionSelect = async (suggestion: BusinessSuggestion) => {
-    console.log("🏢 handleSuggestionSelect CALLED:", suggestion.primaryText);
-
     try {
       setBusinessError(null);
       setSelectedSuggestion(suggestion);
@@ -573,27 +525,19 @@ export function Step1V8({ state, actions }: Step1Props) {
         formattedAddress: suggestion.secondaryText || suggestion.label,
       });
 
-      console.log("📦 Business preview built:", preview);
-
       setBusinessName(suggestion.primaryText);
       commitBusinessPreview({
         ...preview,
         name: suggestion.primaryText || preview.name,
       });
 
-      console.log("✅ Business preview committed, fetching details...");
-
       const details = await enrichSuggestion(suggestion);
-
-      console.log("📋 Business details enriched:", details);
 
       commitBusinessPreview({
         ...preview,
         name: suggestion.primaryText || preview.name,
         ...details,
       });
-
-      console.log("✅ Business selection complete!");
     } catch (error) {
       console.error("❌ Error in handleSuggestionSelect:", error);
       setBusinessError("Failed to load business details. Please try again.");
@@ -850,6 +794,24 @@ export function Step1V8({ state, actions }: Step1Props) {
                 {value === "US" ? "US" : "International"}
               </button>
             ))}
+
+            {/* TrueQuote™ badge */}
+            <div style={{
+              marginLeft: "auto",
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              padding: "0 10px",
+              height: 30,
+              borderRadius: 8,
+              border: "1px solid rgba(245,158,11,0.35)",
+              background: "rgba(245,158,11,0.07)",
+              flexShrink: 0,
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#F59E0B", flexShrink: 0, display: "inline-block" }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", letterSpacing: "0.01em" }}>TrueQuote™</span>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Verified</span>
+            </div>
 
             {country === "International" && (
               <select
@@ -1491,9 +1453,32 @@ export function Step1V8({ state, actions }: Step1Props) {
                             : "0 2px 4px rgba(0, 0, 0, 0.1)",
                       }}
                     >
-                      <div style={{ fontWeight: 700 }}>{option.label}</div>
-                      <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>
-                        {option.subtitle}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                        <div>
+                          <div style={{ fontWeight: 700 }}>{option.label}</div>
+                          <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>
+                            {option.subtitle}
+                          </div>
+                        </div>
+                        {/* Circle checkmark */}
+                        <div style={{
+                          flexShrink: 0,
+                          width: 20,
+                          height: 20,
+                          borderRadius: "50%",
+                          border: state.gridReliability === option.value ? "none" : "1.5px solid rgba(255,255,255,0.20)",
+                          background: state.gridReliability === option.value ? "#10b981" : "transparent",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 10,
+                          fontWeight: 800,
+                          color: "#0f1117",
+                          transition: "all 0.15s ease",
+                          boxShadow: state.gridReliability === option.value ? "0 0 6px rgba(16,185,129,0.5)" : "none",
+                        }}>
+                          {state.gridReliability === option.value && "✓"}
+                        </div>
                       </div>
                     </button>
                   ))}

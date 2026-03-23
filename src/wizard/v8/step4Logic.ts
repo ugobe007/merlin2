@@ -149,28 +149,45 @@ const TIER_BESS_SCALE: Record<TierLabel, number> = {
  *
  * Returns 0 when solar is not feasible (grade < B-, PSH < 3.5).
  * Never exceeds solarPhysicalCapKW regardless of goal.
+ *
+ * When the user sets solarScope in Step 3.5 ("roof_only" | "roof_canopy" |
+ * "maximum"), that scope replaces the goal-guided penetration fraction. The
+ * sun-quality factor and physical cap still apply. Tier scaling shifts the
+ * scope baseline ±25% for Starter/Complete:
+ *   roof_only  → 0.55 base  (Starter 0.41, Recommended 0.55, Complete 0.60)
+ *   roof_canopy→ 0.80 base  (Starter 0.60, Recommended 0.80, Complete 0.88)
+ *   maximum    → 1.00 base  (Starter 0.75, Recommended 1.00, Complete 1.00)
  */
 function computeSolarKW(state: WizardState, goal: GoalChoice, tierLabel: TierLabel): number {
-  const { intel, solarPhysicalCapKW } = state;
+  const { intel, solarPhysicalCapKW, step3Answers } = state;
 
   // Hard gate: location must be solar-viable and industry must have roof/land
   if (!intel || !intel.solarFeasible || solarPhysicalCapKW <= 0) return 0;
 
   // Sun quality factor: normalized to 5.5 PSH (A− = excellent reference)
   // At 3.0 PSH → 0 (just below viable), at 5.5+ PSH → 1.0 (clamped)
-  // Formula: clamp((PSH − 3.0) / 2.5, 0, 1)
   const sunFactor = Math.max(0, Math.min(1.0, (intel.peakSunHours - 3.0) / 2.5));
 
-  // Goal-guided penetration fraction for this tier
-  const guidance = GOAL_GUIDANCE[goal];
-  const penetration =
-    tierLabel === "Starter"
-      ? guidance.solarPenetration.starter
-      : tierLabel === "Recommended"
-        ? guidance.solarPenetration.recommended
-        : guidance.solarPenetration.complete;
+  const solarScope = step3Answers?.solarScope as string | undefined;
+  let penetration: number;
 
-  // Physics-bounded result: cap × sun quality × goal weight
+  if (solarScope === "roof_only" || solarScope === "roof_canopy" || solarScope === "maximum") {
+    // Scope-driven penetration (Step 3.5 intent overrides goal)
+    const scopeBase = solarScope === "roof_only" ? 0.55 : solarScope === "maximum" ? 1.0 : 0.80;
+    const tierMult  = tierLabel === "Starter" ? 0.75 : tierLabel === "Complete" ? 1.10 : 1.0;
+    penetration = Math.min(scopeBase * tierMult, 1.0);
+  } else {
+    // Goal-guided penetration (Step 3.5 not visited or scope not set)
+    const guidance = GOAL_GUIDANCE[goal];
+    penetration =
+      tierLabel === "Starter"
+        ? guidance.solarPenetration.starter
+        : tierLabel === "Recommended"
+          ? guidance.solarPenetration.recommended
+          : guidance.solarPenetration.complete;
+  }
+
+  // Physics-bounded result: cap × sun quality × penetration
   const rawKW = solarPhysicalCapKW * sunFactor * penetration;
   return Math.round(Math.min(rawKW, solarPhysicalCapKW));
 }
@@ -182,26 +199,36 @@ function computeSolarKW(state: WizardState, goal: GoalChoice, tierLabel: TierLab
 /**
  * Compute generator capacity for a given tier.
  *
- * Returns 0 when the goal policy and Step 3 intent together do not warrant
- * including a generator.
+ * Returns 0 when goal policy + intent do not warrant a generator.
  *
  * Base size: criticalLoadPct × peakLoadKW × reserveMargin (1.25, NEC/LADWP)
- * Source: getGeneratorReserveMarginWithSource() → benchmarkSources.ts
+ *
+ * When the user sets generatorScope in Step 3.5, that scope overrides the
+ * criticalLoadPct-based default and forces inclusion:
+ *   "essential"  → criticalLoadKW × 1.25  (NEC margin on critical circuits)
+ *   "full"       → peakLoadKW × 1.10      (full facility + 10% headroom)
+ *   "critical"   → peakLoadKW × 1.35      (mission-critical headroom)
+ * Tier scaling still applies on top of the scope base.
  */
 function computeGeneratorKW(state: WizardState, goal: GoalChoice, tierLabel: TierLabel): number {
-  const { peakLoadKW, criticalLoadPct, step3Answers } = state;
+  const { peakLoadKW, criticalLoadPct, step3Answers, wantsGenerator } = state;
   const guidance = GOAL_GUIDANCE[goal];
 
-  // Read Step 3 intent. Values captured when Step 3 is built:
-  //   "none"         → user doesn't want a generator
-  //   "ups"          → small UPS-class backup only (handled by BESS alone)
-  //   "partial"      → generator for critical circuits
-  //   "full_backup"  → full facility backup
-  //   "resilience"   → resilience + potential revenue (demand response)
-  const generatorNeed = (step3Answers.generatorNeed as string | undefined) ?? "none";
+  // Step 3.5 explicit scope (takes priority over Step 3 generatorNeed)
+  const generatorScope = step3Answers?.generatorScope as string | undefined;
 
-  // Determine inclusion based on policy × intent
-  const includeGenerator =
+  // Step 3 generatorNeed fallback
+  const generatorNeed = (step3Answers?.generatorNeed as string | undefined) ?? "none";
+
+  // Explicit Step 3.5 toggle: if user turned it ON, always include regardless of policy
+  const explicitlyEnabled =
+    wantsGenerator === true ||
+    generatorScope === "essential" ||
+    generatorScope === "full" ||
+    generatorScope === "critical";
+
+  // Goal-policy gating (used when Step 3.5 was not visited)
+  const includeByPolicy =
     guidance.generatorPolicy === "always" ||
     (guidance.generatorPolicy === "if_critical" &&
       (criticalLoadPct >= 0.5 ||
@@ -212,19 +239,33 @@ function computeGeneratorKW(state: WizardState, goal: GoalChoice, tierLabel: Tie
         generatorNeed === "full_backup" ||
         generatorNeed === "resilience"));
 
+  const includeGenerator = explicitlyEnabled || includeByPolicy;
   if (!includeGenerator) return 0;
 
-  // Starter tier: reduce generator for save_more / save_most goals (cost focus)
-  if (tierLabel === "Starter" && guidance.generatorPolicy !== "always") {
-    // Only include in Starter if explicitly requested in Step 3
+  // Starter tier: skip unless explicitly requested (cost-focused goal)
+  if (tierLabel === "Starter" && !explicitlyEnabled && guidance.generatorPolicy !== "always") {
     if (generatorNeed === "none" || generatorNeed === "ups") return 0;
   }
 
-  // Base size: critical load fraction of peak × NEC reserve margin
-  const { margin } = getGeneratorReserveMarginWithSource(); // 1.25
-  const basePowerKW = peakLoadKW * criticalLoadPct * margin;
+  // Base power: scope-driven when available, else criticalLoad-based
+  let basePowerKW: number;
+  if (generatorScope === "essential") {
+    // Critical circuits only: criticalLoadPct of peak × NEC margin
+    const { margin } = getGeneratorReserveMarginWithSource();
+    basePowerKW = peakLoadKW * criticalLoadPct * margin;
+  } else if (generatorScope === "critical") {
+    // Mission critical: full peak + 35% headroom (UPS/data-center class)
+    basePowerKW = peakLoadKW * 1.35;
+  } else if (generatorScope === "full") {
+    // Full facility: full peak + 10% headroom
+    basePowerKW = peakLoadKW * 1.10;
+  } else {
+    // Goal/policy default: criticalLoad fraction × NEC margin
+    const { margin } = getGeneratorReserveMarginWithSource();
+    basePowerKW = peakLoadKW * criticalLoadPct * margin;
+  }
 
-  // Tier scaling for generator: Complete gets additional headroom
+  // Tier scaling: Complete gets additional headroom, Starter is trimmed
   const tierScale = tierLabel === "Complete" ? 1.25 : tierLabel === "Starter" ? 0.8 : 1.0;
 
   return Math.max(10, Math.round(basePowerKW * tierScale));
@@ -297,7 +338,7 @@ function computeBESSSizing(
 
   // BESS power: peak × ratio × tier scale
   const rawBessKW = effectivePeakKW * ratio * TIER_BESS_SCALE[tierLabel];
-  const bessKW = Math.round(rawBessKW);
+  const bessKW = Math.max(75, Math.round(rawBessKW)); // 75 kW commercial minimum floor
 
   // Duration from goal guidance
   const guidance = GOAL_GUIDANCE[goal];
@@ -361,20 +402,30 @@ async function buildOneTier(
 ): Promise<QuoteTier> {
   const { intel, location, industry, evRevenuePerYear, solarKW, generatorKW, generatorFuelType } =
     state;
-  const generatorEnabled = state.wantsGenerator || hasGeneratorIntent(state.step3Answers);
+
+  // Step 3.5 visited flag: when set, the user explicitly toggled each addon.
+  // Gate solar/generator on their explicit choices; when not visited, fall back
+  // to goal-policy + hasGeneratorIntent (original behavior preserved).
+  const step35Visited = Boolean(state.step3Answers?.step3_5Visited);
+  const generatorEnabled = step35Visited
+    ? state.wantsGenerator || hasGeneratorIntent(state.step3Answers)
+    : state.wantsGenerator || hasGeneratorIntent(state.step3Answers);
 
   // Tier scaling for configured addons (user values from Step 3.5 = Recommended baseline)
-  // If user configured addons in Step 3.5, treat their values as the "Recommended" tier
-  // and scale up/down for Complete/Starter. Otherwise, use intelligent defaults.
   const tierAddonScale = tierLabel === "Starter" ? 0.7 : tierLabel === "Complete" ? 1.3 : 1.0;
 
-  // Solar: Use user-configured value (scaled per tier) or auto-calculate
+  // Solar: if Step 3.5 visited and user said no solar → hard zero.
+  // Otherwise use user-configured kW (legacy path) or auto-calculate via computeSolarKW
+  // (which now reads solarScope from step3Answers for scope-based penetration).
+  const userExplicitlyDeclinedSolar = step35Visited && !state.wantsSolar;
   const userConfiguredSolar = state.wantsSolar && solarKW > 0;
-  const finalSolarKW = userConfiguredSolar
-    ? Math.min(Math.round(solarKW * tierAddonScale), state.solarPhysicalCapKW) // Cap at physical limit
-    : computeSolarKW(state, goal, tierLabel);
+  const finalSolarKW = userExplicitlyDeclinedSolar
+    ? 0
+    : userConfiguredSolar
+      ? Math.min(Math.round(solarKW * tierAddonScale), state.solarPhysicalCapKW)
+      : computeSolarKW(state, goal, tierLabel);
 
-  // Generator: Use user-configured value (scaled per tier) or auto-calculate
+  // Generator: auto-calculate via computeGeneratorKW which reads generatorScope.
   const userConfiguredGenerator = generatorEnabled && generatorKW > 0;
   const finalGenKW = userConfiguredGenerator
     ? Math.round(generatorKW * tierAddonScale)

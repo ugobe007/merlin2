@@ -350,6 +350,11 @@ export interface SavingsBreakdown {
  * Calculate annual savings with honest reserves deduction
  */
 export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): SavingsBreakdown {
+  // Warn on unrealistic electricity rates (>$1/kWh is unrealistic for commercial)
+  if (inputs.electricityRate > 1.0) {
+    console.warn(`Unrealistic electricity rate: $${inputs.electricityRate}/kWh. Typical commercial rates are $0.08–$0.30/kWh.`);
+  }
+
   // BESS Demand Charge Savings
   // Assume 30% reduction of demand charges
   const demandChargeSavings = inputs.bessKW * inputs.demandCharge * 12 * 0.3;
@@ -430,7 +435,7 @@ export function calculateROI(
       year1ROI: 0,
       roi10Year: 0,
       roi25Year: 0,
-      npv25Year: -netInvestment,
+      npv25Year: 0,
     };
   }
 

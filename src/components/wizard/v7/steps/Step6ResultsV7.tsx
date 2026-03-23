@@ -30,7 +30,7 @@ import { Shield } from "lucide-react";
 import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import { useMerlinData } from "@/wizard/v7/memory";
-import { formatCurrency, SUPPORTED_COUNTRIES } from "@/services/internationalService";
+import { SUPPORTED_COUNTRIES } from "@/services/internationalService";
 import TrueQuoteFinancialModal from "../shared/TrueQuoteFinancialModal";
 import ProQuoteHowItWorksModal from "@/components/shared/ProQuoteHowItWorksModal";
 import { TrueQuoteTemp } from "@/wizard/v7/trueQuoteTemp";
@@ -44,6 +44,7 @@ import ProTeaserPanels from "../shared/ProTeaserPanels";
 import AdvancedAnalyticsPanels from "../shared/AdvancedAnalyticsPanels";
 import ScenarioComparison from "../shared/ScenarioComparison";
 import QuoteCharts from "../shared/QuoteCharts";
+import { StatItem, fmtUSD, fmtNum } from "./Step6Helpers";
 
 type Props = {
   state: WizardV7State;
@@ -60,59 +61,10 @@ type Props = {
   };
 };
 
-/** Stat item — compact inline readout with no card chrome */
-function StatItem({
-  icon,
-  label,
-  value,
-  accent,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  accent?: string;
-}) {
-  return (
-    <div className="flex items-center gap-2 whitespace-nowrap">
-      <span className={accent || "text-slate-500"}>{icon}</span>
-      <span className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
-        {label}
-      </span>
-      <span className="text-sm font-bold text-slate-100 tabular-nums">{value}</span>
-    </div>
-  );
-}
-
-/**
- * Safe currency formatter — handles null/undefined/NaN/Infinity and international currencies
- * Uses internationalService for multi-currency support
- */
-function fmtUSD(n?: number | null, countryCode?: string): string {
-  if (n === null || n === undefined) return "—";
-  if (!Number.isFinite(n)) return "—"; // Catches NaN and Infinity
-  try {
-    return formatCurrency(n, countryCode || "US");
-  } catch {
-    // Fallback to USD if formatting fails
-    return `$${Math.round(n)}`;
-  }
-}
-
-/**
- * Safe number formatter for non-currency values
- */
-function fmtNum(n?: number | null, fallback = "—"): string {
-  if (n === null || n === undefined) return fallback;
-  if (!Number.isFinite(n)) return fallback;
-  return String(n);
-}
-
 // Badge resolver, contributor helpers: imported from ../shared/badgeResolver
 
 const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Props) {
-  // ============================================================================
   // MERLIN MEMORY — canonical cross-step data reads
-  // ============================================================================
   const data = useMerlinData(state);
 
   // ============================================================================
@@ -171,9 +123,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
-      {/* ================================================================
-          HEADER — Industry + Location + Navigation
-      ================================================================ */}
+      {/* HEADER — Industry + Location + Navigation */}
       <div className="flex items-start justify-between gap-6">
         <div>
           <div className="flex items-center gap-2 text-slate-400 mb-2">
@@ -257,9 +207,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         </div>
       )}
 
-      {/* ================================================================
-          TRUEQUOTE™ GOLD BADGE — Always visible at top, opens financial modal
-      ================================================================ */}
+      {/* TRUEQUOTE™ GOLD BADGE — Always visible at top, opens financial modal */}
       <button
         type="button"
         onClick={() => setShowFinancialModal(true)}
@@ -298,13 +246,8 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         </div>
       </button>
 
-      {/* ================================================================
-          QUOTE RESULTS — Full quote display (add-ons configured in Step 4)
-      ================================================================ */}
-
-      {/* ================================================================
-          PARTIAL RESULTS / FALLBACK / STATUS BANNERS
-      ================================================================ */}
+      {/* QUOTE RESULTS — Full quote display (add-ons configured in Step 4) */}
+      {/* PARTIAL RESULTS / FALLBACK / STATUS BANNERS */}
       {!!(quote?._extra as Record<string, unknown>)?.isProvisional && (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
           <div className="flex items-start gap-2.5">
@@ -347,7 +290,6 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         </div>
       )}
 
-      {/* Pricing status banners */}
       {pricingStatus === "pending" && (
         <div className="rounded-xl border border-blue-500/25 bg-blue-500/[0.04] p-4 flex items-center gap-3">
           <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
@@ -403,9 +345,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         </div>
       )}
 
-      {/* ================================================================
-          HERO SAVINGS — Big number, compelling
-      ================================================================ */}
+      {/* HERO SAVINGS — Big number, compelling */}
       {quoteReady && quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
         <div
           className="relative rounded-xl overflow-hidden"
@@ -445,7 +385,6 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               </div>
               <div className="text-lg text-slate-400 mt-1.5">per year</div>
 
-              {/* ROI snapshot below hero */}
               {quote.roiYears != null && Number(quote.roiYears) > 0 && (
                 <div className="mt-5 inline-flex items-center gap-4 px-5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                   <TrendingUp className="w-4 h-4 text-[#3ECF8E]" />
@@ -477,9 +416,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         </div>
       )}
 
-      {/* ================================================================
-          STATS BAR — Key metrics at a glance
-      ================================================================ */}
+      {/* STATS BAR — Key metrics at a glance */}
       {quoteReady && (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 border-b border-white/[0.06]">
           <StatItem
@@ -556,12 +493,9 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         </div>
       )}
 
-      {/* ================================================================
-          EQUIPMENT & FINANCIAL SUMMARY — Horizontal layout
-      ================================================================ */}
+      {/* EQUIPMENT & FINANCIAL SUMMARY — Horizontal layout */}
       {quoteReady && (
         <div className="border border-white/[0.06] rounded-lg overflow-hidden space-y-0">
-          {/* Equipment — horizontal row */}
           <div className="p-4 border-b border-white/[0.06]">
             <div className="flex items-center gap-1.5 mb-3">
               <Battery className="w-3.5 h-3.5 text-slate-500" />
@@ -570,7 +504,6 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               </span>
             </div>
 
-            {/* Horizontal badge row */}
             <div className="flex flex-wrap items-center gap-3">
               {quote.bessKWh != null && (
                 <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
@@ -658,7 +591,6 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
             </div>
           </div>
 
-          {/* Financial — tighter grouped layout */}
           <div className="p-4 bg-gradient-to-br from-slate-800/30 to-slate-900/30">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -823,11 +755,8 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         </div>
       )}
 
-      {/* TrueQuote badge moved to top (after savings hero) — see above */}
 
-      {/* ================================================================
-          UNIT ECONOMICS — $/kW and $/kWh ground truth
-      ================================================================ */}
+      {/* UNIT ECONOMICS — $/kW and $/kWh ground truth */}
       {quoteReady &&
         quote.equipmentCosts &&
         (quote.equipmentCosts.allInPerKWh || quote.equipmentCosts.allInPerKW) && (
@@ -870,7 +799,6 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                   </div>
                 )}
               </div>
-              {/* Component-level unit costs */}
               {(quote.equipmentCosts.batteryPerKWh || quote.equipmentCosts.solarPerWatt) && (
                 <div className="mt-2 pt-2 border-t border-white/[0.04]">
                   <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -913,9 +841,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
           </div>
         )}
 
-      {/* ================================================================
-          EQUIPMENT COST BREAKDOWN — Component-level detail
-      ================================================================ */}
+      {/* EQUIPMENT COST BREAKDOWN — Component-level detail */}
       {quoteReady && quote.equipmentCosts && quote.equipmentCosts.totalEquipmentCost && (
         <details className="group">
           <summary className="cursor-pointer text-xs text-slate-400 hover:text-slate-300 transition-colors flex items-center gap-1.5 font-semibold">
@@ -1030,7 +956,6 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                   </span>
                 </div>
               )}
-              {/* Total line */}
               <div className="flex items-center justify-between py-2 pt-3">
                 <span className="text-xs font-semibold text-slate-200">Base Equipment Total</span>
                 <span className="text-sm font-bold text-white tabular-nums">
@@ -1053,14 +978,10 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         />
       )}
 
-      {/* ================================================================
-          SCENARIO COMPARISON — Conservative / Balanced / Aggressive
-      ================================================================ */}
+      {/* SCENARIO COMPARISON — Conservative / Balanced / Aggressive */}
       {quoteReady && <ScenarioComparison quote={quote} />}
 
-      {/* ================================================================
-          FINANCIAL CHARTS — Cash flow, Risk bands, Solar, Degradation
-      ================================================================ */}
+      {/* FINANCIAL CHARTS — Cash flow, Risk bands, Solar, Degradation */}
       {quoteReady && <QuoteCharts quote={quote} />}
 
       {/* ================================================================
@@ -1088,7 +1009,6 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                 Why this size?
               </summary>
               <div className="mt-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
-                {/* Top kW contributors */}
                 <div>
                   <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
                     Top Load Contributors
@@ -1105,7 +1025,6 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                               {fmtNum(Math.round(c.kW))} kW
                             </span>
                           </div>
-                          {/* Proportion bar */}
                           <div className="mt-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
                             <div
                               className="h-full rounded-full bg-[#3ECF8E]/40"
@@ -1181,9 +1100,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         getEffectiveTier() !== "advanced" &&
         getEffectiveTier() !== "business" && <ProTeaserPanels />}
 
-      {/* ================================================================
-          PROQUOTE™ UPSELL — Merlin is the salesman
-      ================================================================ */}
+      {/* PROQUOTE™ UPSELL — Merlin is the salesman */}
       <div className="rounded-xl border-2 border-white/[0.08] bg-white/[0.03] p-4 sm:p-6 hover:border-white/[0.12] transition-all">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
           <div className="shrink-0 hidden sm:block">
@@ -1209,9 +1126,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         </div>
       </div>
 
-      {/* ================================================================
-          VENDOR / EPC PORTAL CTA — Bring vendors into the platform
-      ================================================================ */}
+      {/* VENDOR / EPC PORTAL CTA — Bring vendors into the platform */}
       <div className="rounded-xl border-2 border-blue-500/[0.12] bg-blue-500/[0.03] p-4 sm:p-6 hover:border-blue-500/[0.20] transition-all">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
           <div className="shrink-0 w-14 h-14 rounded-xl bg-blue-500/10 items-center justify-center hidden sm:flex">
@@ -1248,9 +1163,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         <ExportBar state={state} onTrueQuoteClick={() => setShowFinancialModal(true)} />
       )}
 
-      {/* ================================================================
-          PROQUOTE™ EXPLAINER MODAL
-      ================================================================ */}
+      {/* PROQUOTE™ EXPLAINER MODAL */}
       <ProQuoteHowItWorksModal
         isOpen={showProQuoteModal}
         onClose={() => setShowProQuoteModal(false)}
@@ -1260,14 +1173,10 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         }}
       />
 
-      {/* ================================================================
-          TRUEQUOTE™ EXPLAINER MODAL
-      ================================================================ */}
+      {/* TRUEQUOTE™ EXPLAINER MODAL */}
       <TrueQuoteModal isOpen={showTrueQuoteModal} onClose={() => setShowTrueQuoteModal(false)} />
 
-      {/* ================================================================
-          TRUEQUOTE™ FINANCIAL PROJECTION MODAL
-      ================================================================ */}
+      {/* TRUEQUOTE™ FINANCIAL PROJECTION MODAL */}
       <TrueQuoteFinancialModal
         isOpen={showFinancialModal}
         onClose={() => setShowFinancialModal(false)}

@@ -9,6 +9,12 @@ import type {
   IndustryType,
   ScraperResult,
 } from "../types/opportunity";
+import {
+  cleanCompanyName,
+  extractCompanyFromTitle,
+  isValidCompanyName as utilIsValidCompanyName,
+  scoreCompanyName,
+} from "../utils/companyNameExtraction";
 
 // RSS feed sources
 const NEWS_SOURCES = [
@@ -157,94 +163,26 @@ function detectIndustry(text: string): IndustryType | undefined {
 }
 
 /**
- * Junk words/phrases that indicate low-quality company names
- */
-const JUNK_NAME_PATTERNS = [
-  // Generic location words
-  /^(the|a|an)\s+/i,
-  /\b(city|county|state|town|village|municipality)\b/i,
-
-  // Generic business words without actual company name
-  /^(new|latest|breaking|report|update|news)/i,
-  /^(business|company|corporation|firm|enterprise)\s*$/i,
-
-  // Descriptive phrases
-  /\b(plans to|set to|expected to|will|announces|says)\b/i,
-
-  // Question words
-  /^(what|where|when|why|how|who)\b/i,
-
-  // Numbers or dates as company name
-  /^\d+[\d\s,.-]*$/,
-
-  // Too short (likely not a real company)
-  /^.{1,2}$/,
-
-  // Generic terms
-  /^(it|this|that|these|those|here|there)\b/i,
-];
-
-/**
- * Check if a company name is valid (not junk)
- */
-function isValidCompanyName(name: string): boolean {
-  if (!name || name === "Unknown Company") {
-    return false;
-  }
-
-  // Check against junk patterns
-  for (const pattern of JUNK_NAME_PATTERNS) {
-    if (pattern.test(name)) {
-      return false;
-    }
-  }
-
-  // Must have at least one letter
-  if (!/[a-zA-Z]/.test(name)) {
-    return false;
-  }
-
-  // Should not be too long (likely a full sentence)
-  if (name.length > 100) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Extract company name from article (simple heuristic)
+ * Extract company name from article using enhanced utilities
+ * Uses the companyNameExtraction utilities for better filtering
  */
 function extractCompanyName(title: string, description: string): string {
-  // Common patterns for company names in news headlines
-  const patterns = [
-    // "Company Name announces/plans/opens..."
-    /^([A-Z][A-Za-z0-9\s&.]+?)\s+(announces|plans|to build|opens|expands|unveils|launches)/i,
-    // "Company Inc./LLC/Corp."
-    /([A-Z][A-Za-z0-9\s&.]+?)\s+(Inc\.|LLC|Corp\.|Corporation|Ltd\.)/,
-    // Company name at start with capital letters
-    /^([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,2})/,
-  ];
-
-  // Try title first
-  for (const pattern of patterns) {
-    const match = title.match(pattern);
-    if (match && match[1].length > 2) {
-      const name = match[1].trim();
-      if (isValidCompanyName(name)) {
-        return name;
-      }
+  // Try title first with the enhanced extraction
+  let extracted = extractCompanyFromTitle(title);
+  
+  if (extracted) {
+    const cleaned = cleanCompanyName(extracted);
+    if (cleaned && utilIsValidCompanyName(cleaned)) {
+      return cleaned;
     }
   }
 
   // Try description
-  for (const pattern of patterns) {
-    const match = description.match(pattern);
-    if (match && match[1].length > 2) {
-      const name = match[1].trim();
-      if (isValidCompanyName(name)) {
-        return name;
-      }
+  extracted = extractCompanyFromTitle(description);
+  if (extracted) {
+    const cleaned = cleanCompanyName(extracted);
+    if (cleaned && utilIsValidCompanyName(cleaned)) {
+      return cleaned;
     }
   }
 
@@ -252,8 +190,9 @@ function extractCompanyName(title: string, description: string): string {
   const words = title.split(/\s+/).filter((w) => w.length > 0);
   if (words.length >= 2) {
     const name = words.slice(0, Math.min(3, words.length)).join(" ");
-    if (isValidCompanyName(name)) {
-      return name;
+    const cleaned = cleanCompanyName(name);
+    if (cleaned && utilIsValidCompanyName(cleaned)) {
+      return cleaned;
     }
   }
 
@@ -339,12 +278,21 @@ export async function scrapeOpportunities(): Promise<ScraperResult> {
       const companyName = extractCompanyName(article.title, article.description);
 
       // Skip if company name is junk (saves AI API costs)
-      if (companyName === "Unknown Company" || !isValidCompanyName(companyName)) {
+      if (companyName === "Unknown Company" || !utilIsValidCompanyName(companyName)) {
         continue;
       }
 
-      // Calculate confidence
-      const confidence = calculateConfidence(signals, industry);
+      // Get company name quality score
+      const nameQuality = scoreCompanyName(companyName);
+      
+      // Skip if name quality is too low
+      if (nameQuality < 50) {
+        continue;
+      }
+
+      // Calculate confidence (factoring in name quality)
+      const baseConfidence = calculateConfidence(signals, industry);
+      const confidence = Math.round((baseConfidence * 0.8) + (nameQuality * 0.2));
 
       // Create opportunity
       const opportunity: Opportunity = {

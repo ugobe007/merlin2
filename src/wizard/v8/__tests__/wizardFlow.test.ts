@@ -133,13 +133,15 @@ describe("Step navigation", () => {
     expect(state.step).toBe(3);
   });
 
-  it("goes back from Step 4 to Step 3.5 when addons are enabled", () => {
+  it("goes back from Step 4 to Step 3 when addons are enabled", () => {
     let state = initialState();
     state = reducer(state, { type: "SET_ADDON_PREFERENCE", addon: "solar", value: true });
     state = reducer(state, { type: "GO_TO_STEP", step: 4 });
     state = reducer(state, { type: "GO_BACK" });
 
-    expect(state.step).toBe(3.5);
+    // Step 4 = Add-ons (Step3_5V8). Back always goes to Profile (step 3).
+    // WizardV8Page has no renderer for step 3.5 — it was the old Add-ons slot.
+    expect(state.step).toBe(3);
   });
 
   it("goes back from Step 4 to Step 3 when no addons are enabled", () => {
@@ -165,7 +167,7 @@ describe("Step navigation", () => {
     ).toBe(true);
   });
 
-  it("goes back from Step 4 to Step 3.5 when solar is feasible even without explicit wantsSolar", () => {
+  it("goes back from Step 4 to Step 3 when solar is feasible even without explicit wantsSolar", () => {
     let state = initialState();
     state = reducer(state, {
       type: "PATCH_INTEL",
@@ -186,7 +188,8 @@ describe("Step navigation", () => {
     state = reducer(state, { type: "GO_TO_STEP", step: 4 });
     state = reducer(state, { type: "GO_BACK" });
 
-    expect(state.step).toBe(3.5);
+    // Step 4 = Add-ons (Step3_5V8). Back always goes to Profile (step 3).
+    expect(state.step).toBe(3);
   });
 });
 
