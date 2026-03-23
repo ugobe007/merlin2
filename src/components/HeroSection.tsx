@@ -5,7 +5,7 @@
    2. Quote card rotates through 3 industry examples every 4s with live pulse indicator
    3. Social proof strip below path selector */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const SHIELD_GOLD = "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/shield-gold_53d77804.png";
 const SHIELD_BLUE = "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/shield-blue_6e564263.png";
@@ -98,6 +98,54 @@ function QuotePreviewCard() {
 
   const currentIndustry = industries[industryIndex];
 
+  // ── Option E: 3D card tilt ─────────────────────────────────────
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const nx = (e.clientY - rect.top) / rect.height - 0.5;
+    const ny = (e.clientX - rect.left) / rect.width - 0.5;
+    setTilt({ x: -nx * 8, y: ny * 8 });
+  };
+  const handleMouseLeave = () => setTilt({ x: 0, y: 0 });
+
+  // ── Option A: API fetch loader (steps 2–4) ──────────────────────
+  const [apiLoader, setApiLoader] = useState(false);
+  const apiMessages = [
+    "",
+    "",
+    "Loading NREL industry benchmarks...",
+    "Running MagicFit™ · NREL ATB · EIA · IRA 2022...",
+    "Compiling TrueQuote™ report...",
+  ];
+  useEffect(() => {
+    if (step >= 2) {
+      setApiLoader(true);
+      const t = setTimeout(() => setApiLoader(false), 680);
+      return () => clearTimeout(t);
+    }
+  }, [step]);
+
+  // ── Option B: Energy bars (step 3) ─────────────────────────────
+  const barTargets = [72, 58, 84];
+  const [barsActive, setBarsActive] = useState([false, false, false]);
+  useEffect(() => {
+    if (step === 3) {
+      setBarsActive([false, false, false]);
+      [0, 1, 2].forEach((i) => {
+        setTimeout(() => {
+          setBarsActive((prev) => {
+            const next = [...prev];
+            next[i] = true;
+            return next;
+          });
+        }, 780 + i * 480);
+      });
+    }
+  }, [step]);
+
   // Animation control
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -155,9 +203,9 @@ function QuotePreviewCard() {
       return () => clearTimeout(timer);
     }
 
-    // Step 4: MAGICFIT (2s)
+    // Step 4: MAGICFIT (3.5s — bars need time to fill)
     if (step === 3) {
-      timer = setTimeout(() => setStep(4), 2000);
+      timer = setTimeout(() => setStep(4), 3500);
       return () => clearTimeout(timer);
     }
 
@@ -172,8 +220,18 @@ function QuotePreviewCard() {
   }, [step, industryIndex]);
 
   return (
-    <div className="relative w-full">
-      {/* Multi-layer outer glow */}
+    <div
+      ref={cardRef}
+      className="relative w-full"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+        transition: tilt.x === 0 && tilt.y === 0 ? "transform 0.6s ease" : "transform 0.08s ease",
+        willChange: "transform",
+      }}
+    >
+      {/* Multi-layer outer glow */
       <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-yellow-500/25 via-emerald-500/10 to-blue-600/10 blur-2xl" />
       <div className="absolute -inset-6 rounded-3xl bg-yellow-400/8 blur-3xl" />
 
@@ -211,7 +269,29 @@ function QuotePreviewCard() {
         {/* Animation Container */}
         <div className="px-6 py-6 min-h-[310px] flex items-center justify-center">
 
-          {/* STEP 1: ZIP CODE */}
+          {/* API FETCH LOADER — steps 2–4 */}
+          {apiLoader && step >= 2 && (
+            <div className="w-full animate-fade-in">
+              <div className="flex items-center gap-2.5 mb-6">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-400" />
+                </span>
+                <span className="text-[11px] text-blue-400 font-mono font-semibold tracking-wider">{apiMessages[step]}</span>
+              </div>
+              <div className="space-y-3">
+                {[68, 44, 58].map((w, i) => (
+                  <div
+                    key={i}
+                    className="h-2 rounded-full animate-pulse"
+                    style={{ background: "rgba(59,130,246,0.10)", width: `${w}%`, animationDelay: `${i * 130}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 1: ZIP CODE */
           {step === 0 && (
             <div className="w-full animate-fade-in">
               <p className="text-[10px] text-slate-500 uppercase tracking-[0.18em] font-semibold mb-1">Step 1 of 5</p>
@@ -288,7 +368,7 @@ function QuotePreviewCard() {
           )}
 
           {/* STEP 3: INDUSTRY */}
-          {step === 2 && (
+          {step === 2 && !apiLoader && (
             <div className="w-full animate-fade-in">
               <p className="text-[10px] text-slate-500 uppercase tracking-[0.18em] font-semibold mb-1">Step 3 of 5</p>
               <h4 className="text-lg font-bold text-white mb-5" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -321,43 +401,61 @@ function QuotePreviewCard() {
             </div>
           )}
 
-          {/* STEP 4: MAGICFIT */}
-          {step === 3 && (
+          {/* STEP 4: MAGICFIT — animated energy bars */}
+          {step === 3 && !apiLoader && (
             <div className="w-full animate-fade-in">
               <p className="text-[10px] text-slate-500 uppercase tracking-[0.18em] font-semibold mb-1">Step 4 of 5</p>
-              <h4 className="text-lg font-bold text-white mb-5" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <h4 className="text-lg font-bold text-white mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 ⚡ AI-powered optimization
               </h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.12),rgba(59,130,246,0.08))", border: "1.5px solid rgba(16,185,129,0.30)", boxShadow: "0 0 20px rgba(16,185,129,0.12)" }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-lg" style={{ background: "rgba(16,185,129,0.15)" }}>⚡</div>
-                    <span className="text-sm font-bold text-white">MagicFit Auto-Sizing</span>
-                  </div>
-                  <div className="w-12 h-6 bg-emerald-500 rounded-full relative shadow-lg shadow-emerald-500/40">
-                    <div className="absolute right-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-sm" />
-                  </div>
+              {/* MagicFit active badge */}
+              <div className="flex items-center justify-between px-4 py-3 rounded-xl mb-4" style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.10),rgba(59,130,246,0.06))", border: "1.5px solid rgba(16,185,129,0.25)" }}>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">⚡</span>
+                  <span className="text-sm font-bold text-white">MagicFit™ Energy Model</span>
                 </div>
+                <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Active</span>
+              </div>
+              {/* Animated energy bars */}
+              <div className="space-y-3.5">
                 {[
-                  { text: `Analyzing ${currentIndustry.name} energy profile`, delay: "100ms" },
-                  { text: "Optimizing for peak demand", delay: "350ms" },
-                  { text: "Calculating ROI & incentives", delay: "600ms" }
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 text-sm text-emerald-400 font-medium animate-fade-in px-4 py-2.5 rounded-lg"
-                    style={{ background: "rgba(16,185,129,0.05)", animationDelay: item.delay }}
-                  >
-                    <span className="text-base font-bold">✓</span>
-                    <span>{item.text}</span>
+                  { label: "Peak Demand Offset", target: barTargets[0], color: "#facc15", glow: "rgba(250,204,21,0.45)" },
+                  { label: "Solar Production",    target: barTargets[1], color: "#10b981", glow: "rgba(16,185,129,0.45)" },
+                  { label: "BESS Dispatch",       target: barTargets[2], color: "#3b82f6", glow: "rgba(59,130,246,0.45)" },
+                ].map((bar, i) => (
+                  <div key={bar.label}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] text-slate-400 font-medium">{bar.label}</span>
+                      <span className="text-[11px] font-bold tabular-nums" style={{ color: bar.color }}>
+                        {barsActive[i] ? <AnimatedNumber value={bar.target} suffix="%" className="" /> : "—"}
+                      </span>
+                    </div>
+                    <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                      <div
+                        style={{
+                          height: "100%",
+                          borderRadius: "9999px",
+                          width: barsActive[i] ? `${bar.target}%` : "0%",
+                          background: bar.color,
+                          boxShadow: barsActive[i] ? `0 0 10px ${bar.glow}` : "none",
+                          transition: "width 0.75s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s ease",
+                        }}
+                      />
+                    </div>
                   </div>
+                ))}
+              </div>
+              {/* Data sources */}
+              <div className="flex gap-1.5 mt-4">
+                {["NREL ATB", "EIA", "IRA 2022"].map((src) => (
+                  <span key={src} className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider" style={{ background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.22)", color: "rgba(147,197,253,0.9)" }}>{src}</span>
                 ))}
               </div>
             </div>
           )}
 
           {/* STEP 5: QUOTE READY */}
-          {step === 4 && (
+          {step === 4 && !apiLoader && (
             <div className="w-full animate-fade-in">
               {/* Hero ROI metric */}
               <div className="text-center px-4 py-5 rounded-2xl mb-3" style={{ background: "linear-gradient(160deg,rgba(16,185,129,0.12) 0%,rgba(16,185,129,0.04) 100%)", border: "1px solid rgba(16,185,129,0.22)", boxShadow: "0 0 30px rgba(16,185,129,0.10)" }}>
