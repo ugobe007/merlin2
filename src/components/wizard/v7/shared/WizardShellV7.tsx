@@ -85,6 +85,9 @@ export default function WizardShellV7({
         data-merlin="hud"
         style={{
           minHeight: "100vh",
+          // svh = small viewport height — accounts for browser chrome on mobile
+          // Falls back to 100vh on browsers that don't support svh
+          minHeight: "100svh" as string,
           background: `
             radial-gradient(ellipse 1400px 900px at 50% 15%, rgba(62,207,142,0.15) 0%, rgba(62,207,142,0.05) 40%, transparent 60%),
             linear-gradient(160deg, #080b14 0%, #0f1420 40%, #0a0d16 100%)
@@ -105,9 +108,9 @@ export default function WizardShellV7({
             display: "grid",
             gridTemplateColumns: "360px 1fr",
             gap: 28,
-            maxWidth: 1440,
-            margin: "0 auto",
+            /* No maxWidth cap — fill the full browser landscape width */
             width: "100%",
+            maxWidth: "100%",
             padding: "24px 32px",
           }}
         >
@@ -461,6 +464,64 @@ export default function WizardShellV7({
                 padding: 12px 16px !important;
               }
             }
+
+            /* ── LANDSCAPE PHONE (short viewport, wide) ───────────────────────
+               Handles iPhone landscape (390×844 → 844×390 rotated).
+               Goal: everything fits on screen without scrolling. */
+            @media (orientation: landscape) and (max-height: 520px) {
+              .merlin-shell-grid {
+                grid-template-columns: 1fr !important;
+                padding: 6px 12px !important;
+                gap: 8px !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+              }
+              .merlin-shell-rail {
+                display: none !important;
+              }
+              .merlin-progress-bar {
+                padding: 6px 12px !important;
+                gap: 3px !important;
+                border-radius: 8px !important;
+              }
+              .merlin-progress-label {
+                display: none !important;
+              }
+              .merlin-step {
+                padding: 12px 16px !important;
+                min-height: 180px !important;
+                border-radius: 8px !important;
+              }
+              .merlin-nexthint {
+                display: none !important;
+              }
+              .merlin-shell-bottomnav {
+                padding: 6px 12px 10px !important;
+                width: 100% !important;
+              }
+              .merlin-step-panel {
+                width: 100% !important;
+                max-width: 100vw !important;
+                overflow-x: hidden !important;
+              }
+            }
+
+            /* ── LANDSCAPE TABLET (iPad, 521-900px height, landscape) ─────────
+               Handles iPad mini/Air in landscape. Show narrow rail. */
+            @media (orientation: landscape) and (min-height: 521px) and (max-height: 900px) and (min-width: 901px) {
+              .merlin-shell-grid {
+                grid-template-columns: 220px 1fr !important;
+                gap: 16px !important;
+                padding: 16px 20px !important;
+              }
+              .merlin-step {
+                padding: 20px 24px !important;
+                min-height: 280px !important;
+              }
+              .merlin-shell-bottomnav {
+                padding: 0 20px 16px !important;
+              }
+            }
           `}</style>
         </div>
 
@@ -468,9 +529,7 @@ export default function WizardShellV7({
         <div
           className="merlin-shell-bottomnav"
           style={{
-            padding: "0 28px 28px",
-            maxWidth: 1400,
-            margin: "0 auto",
+            padding: "0 32px 28px",
             width: "100%",
           }}
         >
