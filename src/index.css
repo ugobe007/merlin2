@@ -952,3 +952,37 @@ body [class*="WizardBottomNav"]:not([data-wizard-v5-nav]) {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ── TrueQuote™ marquee strip ─────────────────────────────────────── */
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee-scroll {
+  animation: marquee-scroll 32s linear infinite;
+  will-change: transform;
+}
+.animate-marquee-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* ── TrueQuote™ badge shimmer sweep ──────────────────────────────── */
+@keyframes badge-shimmer {
+  0%          { opacity: 0; transform: translateX(-120%) skewX(-20deg); }
+  15%, 25%    { opacity: 1; }
+  40%         { opacity: 0; transform: translateX(220%) skewX(-20deg); }
+  100%        { opacity: 0; transform: translateX(220%) skewX(-20deg); }
+}
+.truequote-shimmer {
+  animation: badge-shimmer 4s ease-in-out infinite;
+  animation-delay: 1.8s;
+}
+
+/* ── TrueQuote™ pill glow pulse ──────────────────────────────────── */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(62,207,142,0.08); }
+  50%      { box-shadow: 0 0 28px rgba(62,207,142,0.22), 0 0 48px rgba(62,207,142,0.08); }
+}
+.truequote-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}

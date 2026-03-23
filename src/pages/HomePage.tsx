@@ -21,6 +21,33 @@ import {
   Globe,
 } from "lucide-react";
 
+const DATA_SOURCES = [
+  "NREL ATB 2024",
+  "IRA 2022 ITC",
+  "Live EIA Utility Rates",
+  "IEEE 446-1995",
+  "CBECS 2018",
+  "ASHRAE 90.1",
+  "LBNL Commercial",
+  "DOE DSIRE Database",
+  "SAM v2024.1",
+  "S&P LCOE Index",
+  "NFPA 855-2023",
+  "UL 9540A",
+  "NREL ATB 2024",
+  "IRA 2022 ITC",
+  "Live EIA Utility Rates",
+  "IEEE 446-1995",
+  "CBECS 2018",
+  "ASHRAE 90.1",
+  "LBNL Commercial",
+  "DOE DSIRE Database",
+  "SAM v2024.1",
+  "S&P LCOE Index",
+  "NFPA 855-2023",
+  "UL 9540A",
+];
+
 const INDUSTRIES = [
   { slug: "/hotel", label: "Hotel", icon: "🏨", savings: "$180K/yr" },
   { slug: "/car-wash", label: "Car Wash", icon: "🚗", savings: "$95K/yr" },
@@ -116,10 +143,22 @@ export default function HomePage() {
 
       {/* ── Hero ────────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#3ECF8E]/25 bg-[#3ECF8E]/5 mb-8"
-          style={{ boxShadow: "0 0 20px rgba(62,207,142,0.08)" }}>
-          <div className="w-1.5 h-1.5 bg-[#3ECF8E] rounded-full animate-pulse" />
-          <span className="text-[#3ECF8E] text-xs font-semibold tracking-wider uppercase">
+        <div
+          className="relative inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#3ECF8E]/30 bg-[#3ECF8E]/5 mb-8 overflow-hidden truequote-glow"
+        >
+          {/* shimmer sweep */}
+          <span
+            className="truequote-shimmer pointer-events-none absolute inset-0"
+            style={{
+              background: "linear-gradient(90deg, transparent 0%, rgba(62,207,142,0.22) 50%, transparent 100%)",
+            }}
+          />
+          {/* live dot */}
+          <span className="relative z-10 flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#3ECF8E] opacity-50" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#3ECF8E]" />
+          </span>
+          <span className="text-[#3ECF8E] text-xs font-semibold tracking-wider uppercase relative z-10">
             TrueQuote™ — Every number is sourced
           </span>
         </div>
@@ -175,6 +214,28 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ── TrueQuote™ Data Sources Marquee ──────────────────────── */}
+      <div className="border-y border-white/[0.05] overflow-hidden" style={{ background: "rgba(255,255,255,0.01)" }}>
+        {/* top label */}
+        <div className="flex items-center gap-2 px-4 pt-2.5 pb-1">
+          <span className="text-[9px] font-bold tracking-[0.12em] uppercase text-[#3ECF8E]/40">Verified data sources</span>
+          <span className="h-px flex-1" style={{ background: "linear-gradient(90deg, rgba(62,207,142,0.12) 0%, transparent 100%)" }} />
+        </div>
+        {/* scrolling strip */}
+        <div className="flex whitespace-nowrap pb-2.5 animate-marquee-scroll">
+          {DATA_SOURCES.map((src, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-2.5 px-5 text-[11px] font-medium"
+              style={{ color: i % 2 === 0 ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.38)" }}
+            >
+              <span style={{ color: "rgba(62,207,142,0.45)", fontSize: 8 }}>✦</span>
+              {src}
+            </span>
+          ))}
+        </div>
+      </div>
 
       {/* ── Industries Grid ─────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 pb-16">
