@@ -73,9 +73,12 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy server code and dependencies
+# Copy server code
 COPY server/ /app/server/
-COPY --from=builder /app/node_modules /app/node_modules
+
+# Install server dependencies separately (express, nodemailer, dotenv are NOT in
+# the root package.json — they live only in server/package.json)
+RUN cd /app/server && npm ci --omit=dev --no-audit --prefer-offline
 
 # Create supervisor config
 RUN mkdir -p /etc/supervisor.d

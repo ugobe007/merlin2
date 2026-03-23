@@ -45,7 +45,7 @@ router.post("/resolve", async (req, res) => {
       });
     }
 
-    const key = process.env.GOOGLE_MAPS_API_KEY;
+    const key = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
     if (!key) {
       console.error("[location/resolve] GOOGLE_MAPS_API_KEY not set");
       return res.json({
@@ -235,8 +235,8 @@ router.post("/intel", async (req, res) => {
   try {
     const { zipCode, state, lat, lon } = req.body;
 
-    // Placeholder for now - wire to real services later
-    // Services to integrate:
+    // Placeholder — wire to NREL/EIA services
+    // Key available as: process.env.GOOGLE_MAPS_API_KEY || VITE_GOOGLE_MAPS_API_KEY
     // - src/services/utilityRateService.ts → getCommercialRateByZip(zipCode)
     // - src/services/pvWattsService.ts → estimateSolarProduction(kW, state)
     // - src/services/weatherService.ts → getWeatherData(zipCode)
