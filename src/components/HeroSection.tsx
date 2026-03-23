@@ -172,7 +172,7 @@ function QuotePreviewCard() {
   }, [step, industryIndex]);
 
   return (
-    <div className="relative w-full max-w-lg mx-auto">
+    <div className="relative w-full">
       {/* Multi-layer outer glow */}
       <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-yellow-500/25 via-emerald-500/10 to-blue-600/10 blur-2xl" />
       <div className="absolute -inset-6 rounded-3xl bg-yellow-400/8 blur-3xl" />
@@ -378,6 +378,12 @@ function QuotePreviewCard() {
                   <p className="text-[10px] text-slate-600 mt-0.5">Full system ROI</p>
                 </div>
               </div>
+              {/* Data sources strip */}
+              <div className="flex flex-wrap gap-1.5 mb-2.5">
+                {["NREL ATB", "DOE", "Sandia", "EIA", "IRA 2022"].map(src => (
+                  <span key={src} className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider" style={{ background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.22)", color: "rgba(147,197,253,0.9)" }}>{src}</span>
+                ))}
+              </div>
               {/* Verified badge */}
               <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-3" style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.18)" }}>
                 <span className="text-emerald-400 font-black text-sm">✓</span>
@@ -388,9 +394,9 @@ function QuotePreviewCard() {
               <a
                 href="/wizard"
                 className="inline-flex items-center justify-center w-full px-5 py-3.5 rounded-xl text-sm font-bold transition-all duration-200"
-                style={{ background: "linear-gradient(135deg,#d97706,#b45309)", color: "#fff", boxShadow: "0 4px 20px rgba(217,119,6,0.35)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 6px 28px rgba(217,119,6,0.55)")}
-                onMouseLeave={e => (e.currentTarget.style.boxShadow = "0 4px 20px rgba(217,119,6,0.35)")}
+                style={{ background: "linear-gradient(135deg,#eab308,#ca8a04)", color: "#0a0f1a", boxShadow: "0 4px 20px rgba(234,179,8,0.35)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 6px 28px rgba(234,179,8,0.55)")}
+                onMouseLeave={e => (e.currentTarget.style.boxShadow = "0 4px 20px rgba(234,179,8,0.35)")}
               >
                 See full quote →
               </a>
@@ -478,7 +484,7 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-<div className="grid lg:grid-cols-[55%_45%] gap-8 lg:gap-12 items-center">
+<div className="grid lg:grid-cols-[50%_50%] gap-8 lg:gap-10 items-center">
 
           {/* Left: headline */}
           <div className="max-w-2xl">
@@ -490,7 +496,7 @@ export default function HeroSection() {
 
             {/* Headline — "Energy ROI" in bright green */}
             <h1
-              className="animate-fade-up-delay-1 text-5xl sm:text-6xl md:text-7xl font-extrabold leading-[0.95] tracking-tight mb-7"
+              className="animate-fade-up-delay-1 text-6xl sm:text-7xl md:text-8xl font-extrabold leading-[0.92] tracking-tight mb-7"
               style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
             >
               <span className="text-emerald-400">Energy ROI</span>
@@ -499,7 +505,7 @@ export default function HeroSection() {
             </h1>
 
             {/* Subheadline */}
-            <p className="animate-fade-up-delay-1 text-lg text-white leading-relaxed max-w-xl mb-6" style={{ fontFamily: "'Manrope', sans-serif" }}>
+            <p className="animate-fade-up-delay-1 text-xl sm:text-2xl text-white leading-relaxed max-w-xl mb-6" style={{ fontFamily: "'Manrope', sans-serif" }}>
               <strong>Real costs. Real savings. Real decisions.</strong>{" "}
               <span className="text-slate-400">Build a TrueQuote or ProQuote and know what to build before you build it.</span>
             </p>
@@ -517,26 +523,54 @@ export default function HeroSection() {
             {/* Choose your path */}
             <div className="animate-fade-up-delay-3 mb-5">
               <p className="text-[10px] text-slate-600 uppercase tracking-[0.2em] font-medium mb-3">Choose your path</p>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <a
                   href="/wizard"
-                  className="flex items-center gap-3 px-5 py-4 rounded-xl border border-yellow-500/25 bg-yellow-500/5 hover:bg-yellow-500/10 hover:border-yellow-500/40 transition-all duration-200 group"
+                  className="flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-200 group"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(234,179,8,0.18) 0%, rgba(234,179,8,0.08) 100%)",
+                    border: "1.5px solid rgba(234,179,8,0.55)",
+                    boxShadow: "0 0 24px rgba(234,179,8,0.12)"
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "linear-gradient(135deg, rgba(234,179,8,0.28) 0%, rgba(234,179,8,0.14) 100%)";
+                    e.currentTarget.style.boxShadow = "0 0 32px rgba(234,179,8,0.22)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "linear-gradient(135deg, rgba(234,179,8,0.18) 0%, rgba(234,179,8,0.08) 100%)";
+                    e.currentTarget.style.boxShadow = "0 0 24px rgba(234,179,8,0.12)";
+                  }}
                 >
-                  <img src={SHIELD_GOLD} alt="TrueQuote" className="w-8 h-8 object-contain flex-shrink-0" />
+                  <img src={SHIELD_GOLD} alt="TrueQuote" className="w-11 h-11 object-contain flex-shrink-0 drop-shadow-lg" />
                   <div>
-                    <div className="text-base font-bold text-yellow-400 group-hover:text-yellow-300 transition-colors" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>TrueQuote</div>
-                    <div className="text-xs text-slate-500">For facility owners &amp; operators</div>
+                    <div className="text-lg font-bold text-yellow-400 group-hover:text-yellow-300 transition-colors" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>TrueQuote</div>
+                    <div className="text-sm text-slate-400">For facility owners &amp; operators</div>
                   </div>
+                  <svg className="ml-auto text-yellow-500/50 group-hover:text-yellow-400 transition-colors flex-shrink-0" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M6 3l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </a>
                 <a
                   href="/proquote"
-                  className="flex items-center gap-3 px-5 py-4 rounded-xl border border-blue-500/25 bg-blue-500/5 hover:bg-blue-500/10 hover:border-blue-500/40 transition-all duration-200 group"
+                  className="flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-200 group"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(59,130,246,0.14) 0%, rgba(59,130,246,0.06) 100%)",
+                    border: "1.5px solid rgba(59,130,246,0.40)",
+                    boxShadow: "0 0 24px rgba(59,130,246,0.08)"
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "linear-gradient(135deg, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.10) 100%)";
+                    e.currentTarget.style.boxShadow = "0 0 32px rgba(59,130,246,0.18)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "linear-gradient(135deg, rgba(59,130,246,0.14) 0%, rgba(59,130,246,0.06) 100%)";
+                    e.currentTarget.style.boxShadow = "0 0 24px rgba(59,130,246,0.08)";
+                  }}
                 >
-                  <img src={SHIELD_BLUE} alt="ProQuote" className="w-8 h-8 object-contain flex-shrink-0" />
+                  <img src={SHIELD_BLUE} alt="ProQuote" className="w-11 h-11 object-contain flex-shrink-0 drop-shadow-lg" />
                   <div>
-                    <div className="text-base font-bold text-blue-400 group-hover:text-blue-300 transition-colors" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>ProQuote</div>
-                    <div className="text-xs text-slate-500">For vendors &amp; EPCs</div>
+                    <div className="text-lg font-bold text-blue-400 group-hover:text-blue-300 transition-colors" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>ProQuote</div>
+                    <div className="text-sm text-slate-400">For vendors &amp; EPCs</div>
                   </div>
+                  <svg className="ml-auto text-blue-500/50 group-hover:text-blue-400 transition-colors flex-shrink-0" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M6 3l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </a>
               </div>
             </div>
