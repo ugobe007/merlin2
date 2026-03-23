@@ -425,7 +425,7 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center overflow-hidden pt-16 bg-[#060D1F]"
+      className="relative min-h-[90vh] flex items-center overflow-x-hidden pt-16 bg-[#060D1F]"
     >
       {/* Subtle radial glow */}
       <div className="absolute inset-0 hero-glow" />
@@ -441,7 +441,7 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="grid lg:grid-cols-[1fr_1fr] gap-10 lg:gap-16 items-center">
+<div className="grid lg:grid-cols-[55%_45%] gap-8 lg:gap-12 items-center">
 
           {/* Left: headline */}
           <div className="max-w-2xl">
@@ -453,7 +453,7 @@ export default function HeroSection() {
 
             {/* Headline — "Energy ROI" in bright green */}
             <h1
-              className="animate-fade-up-delay-1 text-6xl sm:text-7xl lg:text-8xl font-extrabold leading-[0.95] tracking-tight mb-7"
+              className="animate-fade-up-delay-1 text-5xl sm:text-6xl md:text-7xl font-extrabold leading-[0.95] tracking-tight mb-7"
               style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
             >
               <span className="text-emerald-400">Energy ROI</span>
@@ -547,7 +547,7 @@ export default function HeroSection() {
       </div>
 
       {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#060D1F] to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#060D1F] to-transparent" />
     </section>
   );
 }
