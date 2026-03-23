@@ -215,7 +215,7 @@ function App() {
   if (pathname === "/") {
     return (
       <Suspense fallback={<PageLoader />}>
-        <Home />
+        <HomePage />
       </Suspense>
     );
   }
