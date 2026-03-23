@@ -25,7 +25,7 @@ router.post("/lookup-business", async (req, res) => {
       return res.status(400).json({ error: "Query must be at least 3 characters" });
     }
 
-    const key = process.env.GOOGLE_MAPS_API_KEY;
+    const key = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
     if (!key) {
       console.error("GOOGLE_MAPS_API_KEY not set in environment");
       return res.status(500).json({ error: "API key not configured" });
@@ -82,7 +82,7 @@ router.post("/place-details", async (req, res) => {
       return res.status(400).json({ error: "Missing placeId" });
     }
 
-    const key = process.env.GOOGLE_MAPS_API_KEY;
+    const key = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
     if (!key) {
       return res.status(500).json({ error: "API key not configured" });
     }
@@ -156,7 +156,7 @@ router.get("/photo/:photoReference", async (req, res) => {
       return res.status(400).json({ error: "Missing photo reference" });
     }
 
-    const key = process.env.GOOGLE_MAPS_API_KEY;
+    const key = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
     if (!key) {
       return res.status(500).json({ error: "API key not configured" });
     }
