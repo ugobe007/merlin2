@@ -404,7 +404,7 @@ const BREAKDOWN_LINES = [
   { label: "Battery Storage (LFP cells)", pct: 0.55, color: "#34d399" },
   { label: "Power Conversion System (PCS)", pct: 0.18, color: "#38bdf8" },
   { label: "Balance of System (BMS, enclosure, cabling)", pct: 0.12, color: "#a78bfa" },
-  { label: "EMS / Energy Management Controls", pct: 0.08, color: "#f59e0b" },
+  { label: "EMS / Energy Management Controls", pct: 0.08, color: "#F59E0B" },
   { label: "Transformer & Grid Interconnect", pct: 0.07, color: "#fb923c" },
 ] as const;
 

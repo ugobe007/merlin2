@@ -114,7 +114,7 @@ export default function HomePage() {
   return (
     <div
       className="min-h-screen text-white"
-      style={{ background: "#0c0c0c", fontFamily: "'Inter', system-ui, sans-serif" }}
+      style={{ background: "#080B10", fontFamily: "'Inter', system-ui, sans-serif" }}
     >
       {/* ── Top Nav ─────────────────────────────────────────────── */}
       <nav className="sticky top-0 z-50 border-b border-white/[0.06] backdrop-blur-xl"

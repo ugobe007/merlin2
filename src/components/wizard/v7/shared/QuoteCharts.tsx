@@ -497,12 +497,12 @@ function DegradationChart({ yearlyPct, warrantyYears }: { yearlyPct: number[]; w
           y1={warrantyY}
           x2={svgW - padR}
           y2={warrantyY}
-          stroke="#f59e0b"
+          stroke="#F59E0B"
           strokeWidth="0.5"
           strokeDasharray="3,2"
           opacity="0.5"
         />
-        <text x={svgW - padR + 2} y={warrantyY + 3} fill="#f59e0b" fontSize="7" opacity="0.6">
+        <text x={svgW - padR + 2} y={warrantyY + 3} fill="#F59E0B" fontSize="7" opacity="0.6">
           80%
         </text>
 

@@ -348,7 +348,7 @@ function TrendChart({
         {/* Series lines */}
         <path d={buildPath(views, globalMax)} stroke="#3ECF8E" strokeWidth="2" fill="none" strokeLinecap="round" />
         <path d={buildPath(quotes, globalMax)} stroke="#60a5fa" strokeWidth="2" fill="none" strokeLinecap="round" />
-        <path d={buildPath(signups, globalMax)} stroke="#f59e0b" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <path d={buildPath(signups, globalMax)} stroke="#F59E0B" strokeWidth="2" fill="none" strokeLinecap="round" />
       </svg>
 
       {/* Legend */}
@@ -356,7 +356,7 @@ function TrendChart({
         {[
           { color: "#3ECF8E", label: "Page Views" },
           { color: "#60a5fa", label: "Quotes" },
-          { color: "#f59e0b", label: "Sign-ups" },
+          { color: "#F59E0B", label: "Sign-ups" },
         ].map((s) => (
           <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div style={{ width: 20, height: 2, background: s.color, borderRadius: 1 }} />
@@ -576,7 +576,7 @@ export default function AnalyticsDashboard() {
     ? [
         { label: "Page Views", value: s.totalPageViews30d, color: "#3ECF8E", pct: 100 },
         { label: "Quotes Built", value: s.totalQuotes30d, color: "#60a5fa", pct: Math.min(100, (s.totalQuotes30d / funnelMax) * 100) },
-        { label: "Leads", value: s.totalLeads30d, color: "#f59e0b", pct: Math.min(100, (s.totalLeads30d / funnelMax) * 100) },
+        { label: "Leads", value: s.totalLeads30d, color: "#F59E0B", pct: Math.min(100, (s.totalLeads30d / funnelMax) * 100) },
         { label: "Sign-ups", value: s.totalSignups30d, color: "#a78bfa", pct: Math.min(100, (s.totalSignups30d / funnelMax) * 100) },
       ]
     : [];
@@ -747,7 +747,7 @@ export default function AnalyticsDashboard() {
                 label="Leads (30d)"
                 value={s.totalLeads30d}
                 sub={`${s.totalLeadsToday.toLocaleString()} today`}
-                color="#f59e0b"
+                color="#F59E0B"
               />
               <KpiCard
                 icon="🔗"

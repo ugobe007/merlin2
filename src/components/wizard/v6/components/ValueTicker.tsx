@@ -112,7 +112,7 @@ const getTemperatureState = (percent: number) => {
   if (percent < 10) return { emoji: '❄️', label: 'Starting', color: '#3b82f6', glow: 'rgba(59,130,246,0.5)' };
   if (percent < 25) return { emoji: '🌡️', label: 'Warming', color: '#06b6d4', glow: 'rgba(6,182,212,0.5)' };
   if (percent < 45) return { emoji: '📈', label: 'Building', color: '#10b981', glow: 'rgba(16,185,129,0.5)' };
-  if (percent < 65) return { emoji: '🔥', label: 'Strong', color: '#f59e0b', glow: 'rgba(245,158,11,0.5)' };
+  if (percent < 65) return { emoji: '🔥', label: 'Strong', color: '#F59E0B', glow: 'rgba(245,158,11,0.5)' };
   if (percent < 85) return { emoji: '💰', label: 'Excellent', color: '#ef4444', glow: 'rgba(239,68,68,0.5)' };
   return { emoji: '🚀', label: 'Maximum', color: '#dc2626', glow: 'rgba(220,38,38,0.6)' };
 };
@@ -205,7 +205,7 @@ const ValueTicker: React.FC<ValueTickerProps> = (props) => {
               style={{
                 width: `${values.temperaturePercent}%`,
                 height: '100%',
-                background: `linear-gradient(90deg, #3b82f6, #06b6d4, #10b981, #f59e0b, #ef4444)`,
+                background: `linear-gradient(90deg, #3b82f6, #06b6d4, #10b981, #F59E0B, #ef4444)`,
                 backgroundSize: '500% 100%',
                 backgroundPosition: `${100 - values.temperaturePercent}% 0`,
                 borderRadius: 5,

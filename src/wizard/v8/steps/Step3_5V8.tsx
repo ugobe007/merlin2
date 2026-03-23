@@ -225,7 +225,7 @@ export default function Step3_5V8({ state, actions }: Props) {
               ? `Grade ${state.intel.solarGrade}${state.intel.peakSunHours ? ` · ${state.intel.peakSunHours.toFixed(1)} PSH` : ""}`
               : undefined
           }
-          headerBadgeColor="#f59e0b"
+          headerBadgeColor="#F59E0B"
           contextNote={
             roofAreaSqFt && roofAreaSqFt > 0
               ? `Based on your ${roofAreaSqFt.toLocaleString()} sq ft roof · ${effectiveSolarCapKW} kW physical capacity · ${state.intel?.peakSunHours?.toFixed(1) ?? "4.5"} PSH factored in`
@@ -355,7 +355,7 @@ function AlwaysIncludedCard({ icon, name, description, bessKW, bessKWh }: Always
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{name}</span>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: "#10b981", background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 4, padding: "2px 6px", textTransform: "uppercase" }}>Always included</span>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: "#3ECF8E", background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 4, padding: "2px 6px", textTransform: "uppercase" }}>Always included</span>
         </div>
         <p style={{ fontSize: 12, color: "rgba(148,163,184,0.8)", margin: 0, lineHeight: 1.5 }}>{description}</p>
         {bessKW != null && bessKW > 0 && (
@@ -440,12 +440,12 @@ function IntentCard<T extends string>({
               <span style={{ fontSize: 10, fontWeight: 600, color: headerBadgeColor ?? "#94a3b8", background: "rgba(100,116,139,0.12)", border: "1px solid rgba(100,116,139,0.22)", borderRadius: 4, padding: "1px 5px" }}>{headerBadge}</span>
             )}
             {isOn && selectedBadge && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#10b981", background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 4, padding: "1px 6px" }}>{selectedBadge}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#3ECF8E", background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 4, padding: "1px 6px" }}>{selectedBadge}</span>
             )}
           </div>
           <p style={{ fontSize: 12, color: "rgba(148,163,184,0.7)", margin: "2px 0 0", lineHeight: 1.4 }}>{description}</p>
         </div>
-        <div style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)", background: isOn ? "#10b981" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#0f1117", transition: "all 0.15s ease", boxShadow: isOn ? "0 0 8px rgba(16,185,129,0.45)" : "none" }}>
+        <div style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)", background: isOn ? "#3ECF8E" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#0D1117", transition: "all 0.15s ease", boxShadow: isOn ? "0 0 8px rgba(16,185,129,0.45)" : "none" }}>
           {isOn && "✓"}
         </div>
       </button>
@@ -476,12 +476,12 @@ function IntentCard<T extends string>({
                 >
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: active ? "#6EE7B7" : "rgba(255,255,255,0.82)", lineHeight: 1.2 }}>{s.label}</span>
-                    <div style={{ flexShrink: 0, width: 14, height: 14, borderRadius: "50%", border: active ? "none" : "1.5px solid rgba(255,255,255,0.18)", background: active ? "#10b981" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#0f1117", transition: "all 0.12s" }}>{active && "✓"}</div>
+                    <div style={{ flexShrink: 0, width: 14, height: 14, borderRadius: "50%", border: active ? "none" : "1.5px solid rgba(255,255,255,0.18)", background: active ? "#3ECF8E" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#0D1117", transition: "all 0.12s" }}>{active && "✓"}</div>
                   </div>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: active ? "#10b981" : "rgba(255,255,255,0.72)", letterSpacing: "-0.3px", lineHeight: 1 }}>{valLabel}</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: active ? "#3ECF8E" : "rgba(255,255,255,0.72)", letterSpacing: "-0.3px", lineHeight: 1 }}>{valLabel}</span>
                   <span style={{ fontSize: 10, color: active ? "rgba(110,231,183,0.58)" : "rgba(148,163,184,0.48)", lineHeight: 1.3 }}>{valNote}</span>
                   {s.recommended && (
-                    <span style={{ position: "absolute", top: 5, right: active ? 22 : 6, fontSize: 8, fontWeight: 700, textTransform: "uppercase", color: "#10b981", background: "rgba(16,185,129,0.13)", border: "1px solid rgba(16,185,129,0.22)", borderRadius: 3, padding: "1px 4px", letterSpacing: "0.04em" }}>Best</span>
+                    <span style={{ position: "absolute", top: 5, right: active ? 22 : 6, fontSize: 8, fontWeight: 700, textTransform: "uppercase", color: "#3ECF8E", background: "rgba(16,185,129,0.13)", border: "1px solid rgba(16,185,129,0.22)", borderRadius: 3, padding: "1px 4px", letterSpacing: "0.04em" }}>Best</span>
                   )}
                 </button>
               );
@@ -535,7 +535,7 @@ function EVPackageCard({ isOn, onToggle, selectedPackage, onSelectPackage, peakL
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: isOn ? "#6EE7B7" : "#fff" }}>EV Charging</span>
             {isOn && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#10b981", background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 4, padding: "1px 6px" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#3ECF8E", background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 4, padding: "1px 6px" }}>
                 ~{fmtRevenue(selected.annualRevenue)}/yr revenue
               </span>
             )}
@@ -544,7 +544,7 @@ function EVPackageCard({ isOn, onToggle, selectedPackage, onSelectPackage, peakL
             Level 2 and DC fast chargers for customers, staff, or fleet vehicles.
           </p>
         </div>
-        <div style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)", background: isOn ? "#10b981" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#0f1117", transition: "all 0.15s ease", boxShadow: isOn ? "0 0 8px rgba(16,185,129,0.45)" : "none" }}>
+        <div style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)", background: isOn ? "#3ECF8E" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#0D1117", transition: "all 0.15s ease", boxShadow: isOn ? "0 0 8px rgba(16,185,129,0.45)" : "none" }}>
           {isOn && "✓"}
         </div>
       </button>
@@ -568,14 +568,14 @@ function EVPackageCard({ isOn, onToggle, selectedPackage, onSelectPackage, peakL
                   {/* Package name + checkmark */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: active ? "#6EE7B7" : "rgba(255,255,255,0.88)", lineHeight: 1.2 }}>{pkg.label}</span>
-                    <div style={{ flexShrink: 0, width: 14, height: 14, borderRadius: "50%", border: active ? "none" : "1.5px solid rgba(255,255,255,0.18)", background: active ? "#10b981" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#0f1117" }}>{active && "✓"}</div>
+                    <div style={{ flexShrink: 0, width: 14, height: 14, borderRadius: "50%", border: active ? "none" : "1.5px solid rgba(255,255,255,0.18)", background: active ? "#3ECF8E" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#0D1117" }}>{active && "✓"}</div>
                   </div>
                   {/* Charger counts */}
                   <div style={{ fontSize: 10, color: active ? "rgba(110,231,183,0.70)" : "rgba(148,163,184,0.55)", lineHeight: 1.3 }}>
                     {pkg.l2} L2{pkg.dcfc > 0 ? ` + ${pkg.dcfc} L3` : ""}
                   </div>
                   {/* Revenue — THE key number */}
-                  <div style={{ fontSize: 14, fontWeight: 800, color: active ? "#10b981" : "rgba(255,255,255,0.70)", letterSpacing: "-0.3px", lineHeight: 1, marginTop: 2 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: active ? "#3ECF8E" : "rgba(255,255,255,0.70)", letterSpacing: "-0.3px", lineHeight: 1, marginTop: 2 }}>
                     {fmtRevenue(pkg.annualRevenue)}/yr
                   </div>
                   <div style={{ fontSize: 9, color: active ? "rgba(110,231,183,0.50)" : "rgba(148,163,184,0.40)", lineHeight: 1.2 }}>
@@ -584,7 +584,7 @@ function EVPackageCard({ isOn, onToggle, selectedPackage, onSelectPackage, peakL
                   {/* Load impact */}
                   <div style={{ fontSize: 9, color: "rgba(148,163,184,0.38)", marginTop: 1 }}>{loadImpact(pkg)} · {kw} kW</div>
                   {pkg.recommended && (
-                    <span style={{ position: "absolute", top: 5, right: active ? 22 : 6, fontSize: 8, fontWeight: 700, textTransform: "uppercase", color: "#10b981", background: "rgba(16,185,129,0.13)", border: "1px solid rgba(16,185,129,0.22)", borderRadius: 3, padding: "1px 4px", letterSpacing: "0.04em" }}>Best</span>
+                    <span style={{ position: "absolute", top: 5, right: active ? 22 : 6, fontSize: 8, fontWeight: 700, textTransform: "uppercase", color: "#3ECF8E", background: "rgba(16,185,129,0.13)", border: "1px solid rgba(16,185,129,0.22)", borderRadius: 3, padding: "1px 4px", letterSpacing: "0.04em" }}>Best</span>
                   )}
                 </button>
               );

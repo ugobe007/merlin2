@@ -172,7 +172,7 @@ export function Step2V8({ state, actions }: Props) {
                       width: 22, height: 22, borderRadius: "50%",
                       background: "rgba(62,207,142,0.90)",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 12, fontWeight: 700, color: "#0f1117",
+                      fontSize: 12, fontWeight: 700, color: "#0D1117",
                       zIndex: 10, boxShadow: "0 0 10px rgba(62,207,142,0.55)",
                     }}
                   >

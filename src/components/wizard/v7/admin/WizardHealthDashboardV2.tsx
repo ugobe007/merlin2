@@ -56,7 +56,7 @@ export default function WizardHealthDashboard() {
 
   const statusColor = {
     healthy: '#22c55e',
-    warning: '#f59e0b',
+    warning: '#F59E0B',
     critical: '#ef4444',
   }[report.status];
 
@@ -136,7 +136,7 @@ export default function WizardHealthDashboard() {
               style={{
                 padding: 20,
                 background: alert.severity === 'critical' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
-                border: `2px solid ${alert.severity === 'critical' ? '#ef4444' : '#f59e0b'}`,
+                border: `2px solid ${alert.severity === 'critical' ? '#ef4444' : '#F59E0B'}`,
                 borderRadius: 8,
                 marginBottom: 16,
               }}
@@ -147,7 +147,7 @@ export default function WizardHealthDashboard() {
                     style={{
                       padding: '4px 10px',
                       borderRadius: 4,
-                      background: alert.severity === 'critical' ? '#ef4444' : '#f59e0b',
+                      background: alert.severity === 'critical' ? '#ef4444' : '#F59E0B',
                       fontSize: 12,
                       fontWeight: 'bold',
                       marginRight: 10,
@@ -263,7 +263,7 @@ export default function WizardHealthDashboard() {
                   marginBottom: 12,
                   borderLeft: `4px solid ${
                     issue.severity === 'critical' ? '#ef4444' :
-                    issue.severity === 'high' ? '#f59e0b' :
+                    issue.severity === 'high' ? '#F59E0B' :
                     issue.severity === 'medium' ? '#3b82f6' : '#6b7280'
                   }`,
                 }}
@@ -324,7 +324,7 @@ export default function WizardHealthDashboard() {
           </div>
           <div style={{ padding: 15, background: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>
             <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 5 }}>Bottlenecks</div>
-            <div style={{ fontSize: 24, fontWeight: 'bold', color: report.metricsSnapshot.bottlenecks.length > 0 ? '#f59e0b' : '#22c55e' }}>
+            <div style={{ fontSize: 24, fontWeight: 'bold', color: report.metricsSnapshot.bottlenecks.length > 0 ? '#F59E0B' : '#22c55e' }}>
               {report.metricsSnapshot.bottlenecks.length}
             </div>
           </div>
@@ -358,7 +358,7 @@ export default function WizardHealthDashboard() {
                   <td style={{ padding: 12, textAlign: 'right', color: b.exitRate > 50 ? '#ef4444' : 'inherit' }}>
                     {Math.round(b.exitRate)}%
                   </td>
-                  <td style={{ padding: 12, textAlign: 'right', color: b.gateFailureRate > 30 ? '#f59e0b' : 'inherit' }}>
+                  <td style={{ padding: 12, textAlign: 'right', color: b.gateFailureRate > 30 ? '#F59E0B' : 'inherit' }}>
                     {Math.round(b.gateFailureRate)}%
                   </td>
                   <td style={{ padding: 12, textAlign: 'right' }}>{Math.round(b.avgTimeSpent)}s</td>

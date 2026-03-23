@@ -122,7 +122,7 @@ const ACCENT = {
     border: "rgba(251,191,36,0.3)",
     bg: "rgba(251,191,36,0.08)",
     text: "#fbbf24",
-    gradient: "linear-gradient(135deg, #f59e0b, #d97706)",
+    gradient: "linear-gradient(135deg, #F59E0B, #d97706)",
   },
   cyan: {
     ring: "rgba(6,182,212,0.5)",

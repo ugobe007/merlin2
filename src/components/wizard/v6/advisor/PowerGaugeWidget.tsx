@@ -60,7 +60,7 @@ export function PowerGaugeWidget({
     if (peakKW >= 100)
       return {
         status: "Medium",
-        color: "#f59e0b",
+        color: "#F59E0B",
         icon: Zap,
         textColor: "text-amber-400",
         message: "Commercial scale",
@@ -91,7 +91,7 @@ export function PowerGaugeWidget({
   const getGaugeColor = (peakKW: number) => {
     if (isPlaceholder) return "#6366f1"; // Indigo for "Analyzing..."
     if (peakKW >= 500) return "#ef4444"; // Red - Large
-    if (peakKW >= 100) return "#f59e0b"; // Amber - Medium
+    if (peakKW >= 100) return "#F59E0B"; // Amber - Medium
     return "#10b981"; // Green - Small
   };
 

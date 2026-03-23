@@ -90,7 +90,7 @@ const EQUIPMENT_TYPES = [
 
 const CHEMISTRY_OPTIONS = [
   { key: 'lfp' as const, label: 'LFP (Lithium Iron Phosphate)', color: '#3b82f6' },
-  { key: 'nmc' as const, label: 'NMC (Nickel Manganese Cobalt)', color: '#f59e0b' },
+  { key: 'nmc' as const, label: 'NMC (Nickel Manganese Cobalt)', color: '#F59E0B' },
   { key: 'nca' as const, label: 'NCA (Nickel Cobalt Aluminum)', color: '#ef4444' },
   { key: 'flow-vrb' as const, label: 'Flow (VRB)', color: '#10b981' },
   { key: 'sodium-ion' as const, label: 'Sodium-Ion', color: '#8b5cf6' },
