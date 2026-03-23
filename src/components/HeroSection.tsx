@@ -231,7 +231,7 @@ function QuotePreviewCard() {
         willChange: "transform",
       }}
     >
-      {/* Multi-layer outer glow */
+      {/* Multi-layer outer glow */}
       <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-yellow-500/25 via-emerald-500/10 to-blue-600/10 blur-2xl" />
       <div className="absolute -inset-6 rounded-3xl bg-yellow-400/8 blur-3xl" />
 
