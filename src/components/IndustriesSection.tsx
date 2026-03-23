@@ -70,7 +70,7 @@ export default function IndustriesSection() {
 
   return (
     <section id="industries" className="py-28 bg-[#060D1F]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
 
         {/* Header */}
         <div className="mb-10">
