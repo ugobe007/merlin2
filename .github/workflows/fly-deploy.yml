@@ -55,6 +55,7 @@ jobs:
       - name: Deploy
         run: |
           flyctl deploy --remote-only \
+            --build-arg CACHEBUST=$(date +%s) \
             --build-arg VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
             --build-arg VITE_SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY" \
             --build-arg VITE_STRIPE_PUBLISHABLE_KEY="$VITE_STRIPE_PUBLISHABLE_KEY" \
