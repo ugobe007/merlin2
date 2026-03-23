@@ -139,7 +139,7 @@ const customStyles = `
   
   /* STARTER */
   .headline-starter {
-    background: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
+    background: linear-gradient(135deg, #3ECF8E 0%, #2aad70 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -147,7 +147,7 @@ const customStyles = `
   
   /* OPTIMIZED */
   .headline-perfect {
-    background: linear-gradient(135deg, #6ee7b7 0%, #10b981 100%);
+    background: linear-gradient(135deg, #3ECF8E 0%, #3ECF8E 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -155,7 +155,7 @@ const customStyles = `
   
   /* PREMIUM */
   .headline-beast {
-    background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+    background: linear-gradient(135deg, #F59E0B 0%, #d97706 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

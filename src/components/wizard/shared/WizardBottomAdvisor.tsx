@@ -90,7 +90,7 @@ const formatCurrency = (amount: number): string => {
 
 const getConfidenceColor = (confidence: number): string => {
   if (confidence < 40) return "#ef4444"; // Red
-  if (confidence < 70) return "#f59e0b"; // Amber
+  if (confidence < 70) return "#F59E0B"; // Amber
   return "#10b981"; // Green
 };
 

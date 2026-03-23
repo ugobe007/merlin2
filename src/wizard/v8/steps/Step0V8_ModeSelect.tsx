@@ -45,7 +45,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
       title: "Upload Quote",
       subtitle: "Review • Enhance",
       description: "Import existing quotes to review and enhance with TrueQuote™ verification",
-      accent: "#8B5CF6",
+      accent: "#F59E0B",
       comingSoon: false,
     },
   ];

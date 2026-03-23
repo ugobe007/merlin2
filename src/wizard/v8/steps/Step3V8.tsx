@@ -297,7 +297,7 @@ export function Step3V8({ state, actions }: Props) {
         }}>
           <div style={{
             background: "rgba(99, 102, 241, 0.2)",
-            color: "#A5B4FC",
+            color: "#94a3b8",
             width: 24,
             height: 24,
             borderRadius: "50%",
@@ -316,7 +316,7 @@ export function Step3V8({ state, actions }: Props) {
               marginLeft: "auto",
               background: "rgba(34, 197, 94, 0.15)",
               border: "1px solid rgba(34, 197, 94, 0.3)",
-              color: "#4ADE80",
+              color: "#3ECF8E",
               padding: "3px 8px",
               borderRadius: 5,
               fontSize: 9,
@@ -378,9 +378,9 @@ export function Step3V8({ state, actions }: Props) {
               marginBottom: 14,
             }}>
               <div style={{ display: "flex", alignItems: "start", gap: 8 }}>
-                <div style={{ color: "#60A5FA", fontSize: 14, flexShrink: 0, marginTop: 1 }}>💡</div>
+                <div style={{ color: "#94a3b8", fontSize: 14, flexShrink: 0, marginTop: 1 }}>💡</div>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#60A5FA", marginBottom: 3 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", marginBottom: 3 }}>
                     Merlin's Tip
                   </div>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>
@@ -457,13 +457,13 @@ export function Step3V8({ state, actions }: Props) {
                       height: 22,
                       borderRadius: "50%",
                       border: isSelected ? "none" : "1.5px solid rgba(255,255,255,0.25)",
-                      background: isSelected ? "#10b981" : "transparent",
+                      background: isSelected ? "#3ECF8E" : "transparent",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: 11,
                       fontWeight: 700,
-                      color: "#0f1117",
+                      color: "#0D1117",
                       transition: "all 0.15s ease",
                       boxShadow: isSelected ? "0 0 8px rgba(16,185,129,0.5)" : "none",
                     }}>
@@ -525,13 +525,13 @@ export function Step3V8({ state, actions }: Props) {
                       height: 18,
                       borderRadius: "50%",
                       border: isSelected ? "none" : "1.5px solid rgba(255,255,255,0.25)",
-                      background: isSelected ? "#10b981" : "transparent",
+                      background: isSelected ? "#3ECF8E" : "transparent",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: 10,
                       fontWeight: 700,
-                      color: "#0f1117",
+                      color: "#0D1117",
                       transition: "all 0.15s ease",
                       flexShrink: 0,
                     }}>
@@ -562,7 +562,7 @@ export function Step3V8({ state, actions }: Props) {
   // No-questions fallback
   if (visibleQuestions.length === 0) {
     return (
-      <div style={{ background: "#0f172a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: "#0D1117", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{
           maxWidth: 480,
           padding: 32,
@@ -601,7 +601,7 @@ export function Step3V8({ state, actions }: Props) {
   }
 
   return (
-    <div style={{ background: "#0f172a", minHeight: "100vh" }}>
+    <div style={{ background: "#0D1117", minHeight: "100vh" }}>
       <div ref={sectionTopRef} style={{ maxWidth: 720, margin: "0 auto", padding: "16px 20px 40px" }}>
 
         {/* ── Section pill nav (only when multi-section) ── */}
@@ -650,9 +650,9 @@ export function Step3V8({ state, actions }: Props) {
                   {complete ? (
                     <span style={{
                       width: 16, height: 16, borderRadius: "50%",
-                      background: "#10b981",
+                      background: "#3ECF8E",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 9, fontWeight: 800, color: "#052e16",
+                      fontSize: 9, fontWeight: 800, color: "#080B10",
                     }}>✓</span>
                   ) : (
                     <span style={{
@@ -718,7 +718,7 @@ export function Step3V8({ state, actions }: Props) {
                     <div style={{
                       height: "100%",
                       borderRadius: 2,
-                      background: "#10b981",
+                      background: "#3ECF8E",
                       width: `${currentSectionQuestions.length > 0
                         ? (getSectionAnswered(currentSection.id) / currentSectionQuestions.length) * 100
                         : 0}%`,
@@ -803,8 +803,8 @@ export function Step3V8({ state, actions }: Props) {
                   padding: "13px 22px",
                   borderRadius: 10,
                   border: "none",
-                  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                  color: "#052e16",
+                  background: "linear-gradient(135deg, #3ECF8E 0%, #2aad70 100%)",
+                  color: "#080B10",
                   fontSize: 14,
                   fontWeight: 900,
                   cursor: "pointer",
@@ -835,7 +835,7 @@ export function Step3V8({ state, actions }: Props) {
                   padding: "13px 22px",
                   borderRadius: 10,
                   border: "none",
-                  background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                  background: "linear-gradient(135deg, #F59E0B 0%, #d97706 100%)",
                   color: "white",
                   fontSize: 14,
                   fontWeight: 800,

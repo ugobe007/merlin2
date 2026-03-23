@@ -843,7 +843,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                   <option
                     key={code}
                     value={code}
-                    style={{ background: "#1a1f2e", color: T.textPrimary }}
+                    style={{ background: "#161C26", color: T.textPrimary }}
                   >
                     {name} ({code})
                   </option>
@@ -1467,13 +1467,13 @@ export function Step1V8({ state, actions }: Step1Props) {
                           height: 20,
                           borderRadius: "50%",
                           border: state.gridReliability === option.value ? "none" : "1.5px solid rgba(255,255,255,0.20)",
-                          background: state.gridReliability === option.value ? "#10b981" : "transparent",
+                          background: state.gridReliability === option.value ? "#3ECF8E" : "transparent",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           fontSize: 10,
                           fontWeight: 800,
-                          color: "#0f1117",
+                          color: "#0D1117",
                           transition: "all 0.15s ease",
                           boxShadow: state.gridReliability === option.value ? "0 0 6px rgba(16,185,129,0.5)" : "none",
                         }}>
@@ -1514,7 +1514,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                     borderRadius: 12,
                     border: "none",
                     background: T.accent,
-                    color: "#03140b",
+                    color: "#080B10",
                     fontSize: 14,
                     fontWeight: 900,
                     cursor: "pointer",

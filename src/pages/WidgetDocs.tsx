@@ -137,7 +137,7 @@ export default function WidgetDocs() {
   apiKey: 'YOUR_API_KEY',
   industry: 'vendor-solar',
   theme: 'light',
-  primaryColor: '#f59e0b',
+  primaryColor: '#F59E0B',
   logo: 'https://solar-co.com/logo.png',
   hideAttribution: true,
   fields: {
