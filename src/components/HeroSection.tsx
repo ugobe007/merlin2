@@ -291,7 +291,7 @@ function QuotePreviewCard() {
             </div>
           )}
 
-          {/* STEP 1: ZIP CODE */
+          {/* STEP 1: ZIP CODE */}
           {step === 0 && (
             <div className="w-full animate-fade-in">
               <p className="text-[10px] text-slate-500 uppercase tracking-[0.18em] font-semibold mb-1">Step 1 of 5</p>
