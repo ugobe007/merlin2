@@ -477,7 +477,7 @@ export default function HeroSection() {
       />
 
       {/* Content */}
-      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
 <div className="grid lg:grid-cols-[55%_45%] gap-8 lg:gap-12 items-center">
 
           {/* Left: headline */}
