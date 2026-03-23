@@ -84,9 +84,6 @@ export default function WizardShellV7({
         ref={shellRef}
         data-merlin="hud"
         style={{
-          minHeight: "100vh",
-          // svh = small viewport height — accounts for browser chrome on mobile
-          // Falls back to 100vh on browsers that don't support svh
           minHeight: "100svh" as string,
           background: `
             radial-gradient(ellipse 1400px 900px at 50% 15%, rgba(62,207,142,0.15) 0%, rgba(62,207,142,0.05) 40%, transparent 60%),
