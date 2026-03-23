@@ -653,10 +653,33 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
   /**
    * confirmBusiness — confirms business and advances (skips Step 2 if industry detected)
+   *
+   * BUG FIX: When CONFIRM_BUSINESS auto-detects the industry and skips Step 2,
+   * the SET_INDUSTRY reducer resets solarPhysicalCapKW to 0 but SET_INDUSTRY_META
+   * is never dispatched (setIndustry() is only called from Step 2 UI cards).
+   * We must dispatch SET_INDUSTRY_META here so solarPhysicalCapKW is populated
+   * even on the auto-skip path.
    */
   const confirmBusiness = useCallback(() => {
     dispatch({ type: "CONFIRM_BUSINESS" });
-  }, []);
+
+    // If a high-confidence industry was detected, populate solar cap + critical
+    // load % immediately — exactly what setIndustry() does for the manual path.
+    const detectedSlug = state.business?.detectedIndustry;
+    const confidence   = state.business?.confidence ?? 0;
+    if (detectedSlug && confidence >= 0.75) {
+      const constraints = getFacilityConstraints(detectedSlug);
+      const solarPhysicalCapKW = constraints?.totalRealisticSolarKW ?? 0;
+      let criticalLoadPct = 0.4;
+      try {
+        const critInfo = getCriticalLoadWithSource(detectedSlug);
+        criticalLoadPct = critInfo.percentage;
+      } catch { /* slug not in table — use default */ }
+
+      dispatch({ type: "SET_INDUSTRY_META", solarPhysicalCapKW, criticalLoadPct });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.business?.detectedIndustry, state.business?.confidence]);
 
   // ── Step 3: Reactive power calculation ─────────────────────────────────────
   //
@@ -774,6 +797,37 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       // baseLoadKW stays at 0 until enough answers are present
     }
   }, [powerAnswersKey, state.industry]);
+
+  // ── roofArea → solarPhysicalCapKW reactive update ──────────────────────────
+  // When the user provides an actual roof/site area in Step 3 answers, compute
+  // a more accurate solar cap and update state. Applies to all industries.
+  // Formula: roofArea (sqft) × usableRoofPercent × SOLAR_WATTS_PER_SQFT / 1000
+  // Capped at the industry static max to prevent over-sizing.
+  useEffect(() => {
+    if (!state.industry) return;
+    const roofArea = Number(state.step3Answers?.roofArea ?? 0);
+    const totalSiteArea = Number(state.step3Answers?.totalSiteArea ?? 0);
+    const usedArea = roofArea > 0 ? roofArea : totalSiteArea;
+    if (usedArea <= 0) return;
+
+    const constraints = getFacilityConstraints(state.industry);
+    const usableRoofPercent = constraints?.usableRoofPercent ?? 0.4;
+    const staticCap = constraints?.totalRealisticSolarKW ?? 0;
+
+    // SOLAR_WATTS_PER_SQFT = 15 (from useCasePowerCalculations SSOT)
+    const calculatedKW = Math.round((usedArea * usableRoofPercent * 15) / 1000);
+
+    // Use calculated cap when it's meaningfully different (>10%) from static,
+    // otherwise keep static (avoids jitter on small area inputs).
+    const newCap = staticCap > 0
+      ? Math.round((calculatedKW + staticCap) / 2) // blend: user data + SSOT
+      : calculatedKW;
+
+    if (newCap > 0 && newCap !== state.solarPhysicalCapKW) {
+      let criticalLoadPct = state.criticalLoadPct ?? 0.4;
+      dispatch({ type: "SET_INDUSTRY_META", solarPhysicalCapKW: newCap, criticalLoadPct });
+    }
+  }, [state.step3Answers?.roofArea, state.step3Answers?.totalSiteArea, state.industry]);
 
   // ── Step 2: Industry selection ─────────────────────────────────────────
 
