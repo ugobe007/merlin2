@@ -66,6 +66,8 @@
  * =============================================================================
  */
 
+import { hasStep35Addons } from "./addonIntent";
+
 // ── Solar grade type ─────────────────────────────────────────────────────────
 // Maps to gradeFromPSH() in wizardAPI.ts. Order matters for isSolarFeasible().
 export type SolarGrade = "A" | "A-" | "B+" | "B" | "B-" | "C+" | "C" | "D";
@@ -85,7 +87,7 @@ export function isSolarFeasible(grade: SolarGrade | null): boolean {
 
 // ── Domain types ─────────────────────────────────────────────────────────────
 
-export type WizardStep = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type WizardStep = 0 | 1 | 2 | 3 | 3.5 | 4 | 5 | 6;
 
 // Step mapping:
 // 0 = Mode selection
@@ -356,9 +358,9 @@ export function initialState(): WizardState {
     peakLoadKW: 0,
     criticalLoadKW: 0, // Critical loads for generator sizing
     evRevenuePerYear: 0,
-    wantsSolar: true,
-    wantsEVCharging: true,
-    wantsGenerator: true,
+    wantsSolar: false,
+    wantsEVCharging: false,
+    wantsGenerator: false,
     // Addon config defaults (Step 3.5)
     solarKW: 0,
     generatorKW: 0,
@@ -566,7 +568,14 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
       return { ...state, tiersStatus: intent.status };
 
     case "SET_TIERS":
-      return { ...state, tiers: intent.tiers, tiersStatus: "ready" };
+      // Auto-select the middle "Recommended" tier (index 1) when tiers first become
+      // ready. User can still change it — this just ensures Step 5 is never blank.
+      return {
+        ...state,
+        tiers: intent.tiers,
+        tiersStatus: "ready",
+        selectedTierIndex: state.selectedTierIndex ?? 1,
+      };
 
     // ── Step 5 ───────────────────────────────────────────────────────────
 
@@ -579,20 +588,33 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
       return { ...state, step: intent.step, error: null };
 
     case "GO_BACK": {
+      const _has35 = hasStep35Addons(
+        state.wantsSolar,
+        state.wantsEVCharging,
+        state.wantsGenerator,
+        state.step3Answers,
+        state.intel?.solarFeasible ?? false,
+        state.solarPhysicalCapKW,
+      );
+      // Step 4 = Add-ons (Step3_5V8). Going back from Add-ons always returns to
+      // Profile (step 3). Step 3.5 is kept as a fallback identity for safety but
+      // should never be the active step — WizardV8Page has no renderer for it.
       const prev: WizardStep =
         state.step === 6
           ? 5
           : state.step === 5
             ? 4
             : state.step === 4
-              ? 3
-              : state.step === 3
-                ? 2
-                : state.step === 2
-                  ? 1
-                  : state.step === 1
-                    ? 0
-                    : 0;
+              ? 3          // Add-ons → Profile (not 3.5 — no renderer)
+              : state.step === 3.5
+                ? 3        // safety: 3.5 → Profile
+                : state.step === 3
+                  ? 2
+                  : state.step === 2
+                    ? 1
+                    : state.step === 1
+                      ? 0
+                      : 0;
       return { ...state, step: prev };
     }
 

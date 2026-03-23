@@ -22,20 +22,13 @@ import {
   Building2,
   Sparkles,
   RefreshCw,
-  ArrowLeft,
   Shield,
   Download,
   FileText,
   Bookmark,
   X,
-  Share2,
-  Linkedin,
-  Twitter,
-  Facebook,
   Mail,
-  Link,
 } from "lucide-react";
-import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import TrueQuoteFinancialModal from "@/components/wizard/v7/shared/TrueQuoteFinancialModal";
 import { buildV8ExportData } from "../utils/buildV8ExportData";
@@ -99,7 +92,6 @@ export default function Step5V8({ state, actions }: Props) {
   const [showProQuoteModal, setShowProQuoteModal] = useState(false);
   const [exportingFormat, setExportingFormat] = useState<"pdf" | "word" | "excel" | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
-  const [shareSuccess, setShareSuccess] = useState<string | null>(null);
 
   // Installer recommendations
   const [installers, setInstallers] = useState<RecommendedInstaller[]>([]);
@@ -214,70 +206,6 @@ export default function Step5V8({ state, actions }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── handleShare needs tier data, so define it after validation ──
-  const handleShare = useCallback(
-    (platform: "linkedin" | "twitter" | "facebook" | "email" | "copy") => {
-      if (!tier) return; // Guard against missing tier
-
-      setShareSuccess(null);
-
-      const industryName = industry?.replace(/_/g, " ") || "business";
-      const shareTitle = `Energy Quote for ${industryName}`;
-      const shareText =
-        `💡 Just got my energy quote from Merlin BESS!\n\n` +
-        `💰 ${fmt$(tier.annualSavings, countryCode)}/year savings\n` +
-        `⚡ ${fmtNum(tier.bessKWh)} kWh storage\n` +
-        `📊 ${Math.round(tier.paybackYears)} year payback\n` +
-        `📈 ${tier.roi10Year.toFixed(0)}% 10-year ROI`;
-      const shareUrl = window.location.href;
-
-      switch (platform) {
-        case "linkedin":
-          window.open(
-            `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle)}&summary=${encodeURIComponent(shareText)}`,
-            "_blank",
-            "noopener,noreferrer,width=600,height=600"
-          );
-          setShareSuccess("Shared to LinkedIn!");
-          break;
-
-        case "twitter":
-          window.open(
-            `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
-            "_blank",
-            "noopener,noreferrer,width=600,height=400"
-          );
-          setShareSuccess("Shared to Twitter/X!");
-          break;
-
-        case "facebook":
-          window.open(
-            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`,
-            "_blank",
-            "noopener,noreferrer,width=600,height=600"
-          );
-          setShareSuccess("Shared to Facebook!");
-          break;
-
-        case "email":
-          window.location.href = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`;
-          setShareSuccess("Email client opened!");
-          break;
-
-        case "copy":
-          navigator.clipboard
-            .writeText(`${shareText}\n\n${shareUrl}`)
-            .then(() => setShareSuccess("Link copied to clipboard!"))
-            .catch(() => setShareSuccess("Failed to copy"));
-          break;
-      }
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setShareSuccess(null), 3000);
-    },
-    [industry, tier, countryCode]
-  );
-
   // ── Auto-trigger pending export after lead capture completes ──
   React.useEffect(() => {
     if (leadCaptured && pendingFormat && !showLeadGate && !exportingFormat) {
@@ -389,88 +317,44 @@ export default function Step5V8({ state, actions }: Props) {
 
   const locationLine = location ? [location.city, location.state].filter(Boolean).join(", ") : "";
 
+  const quoteRef = `MQ-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${location?.zip?.slice(0, 4) ?? '0000'}`;
+  const quoteDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
   return (
     <div className="max-w-5xl mx-auto space-y-5 p-4">
       {/* ================================================================
-          HEADER — Industry + Location + Navigation
+          HEADER — Document-style quote header
       ================================================================ */}
-      <div className="flex items-start justify-between gap-6">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-slate-400 mb-2">
-            <Building2 className="w-4 h-4" />
-            <span className="text-sm font-medium">
-              {industry?.replace(/_/g, " ") || "Industry"}
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <span className="text-[10px] font-bold tracking-[0.18em] text-slate-500 uppercase">
+              Quote Ref:
             </span>
-            <span className="text-slate-600">•</span>
-            <MapPin className="w-4 h-4" />
-            <span className="text-sm">{locationLine || "—"}</span>
+            <span className="text-xs font-mono font-bold text-emerald-400/80">{quoteRef}</span>
+            <span className="text-slate-700">·</span>
+            <span className="text-[10px] text-slate-500">{quoteDate}</span>
           </div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
-            <Zap className="w-5 h-5 text-[#3ECF8E]" />
-            Your Energy Quote
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <span className="capitalize">
+              {industry?.replace(/_/g, " ") || "Facility"} Energy System
+            </span>
           </h1>
+          <div className="flex items-center gap-1.5 mt-1 text-slate-400">
+            <MapPin className="w-3.5 h-3.5" />
+            <span className="text-xs">{locationLine || "—"}</span>
+          </div>
         </div>
-        <div className="flex gap-2.5">
+        <div className="shrink-0 flex items-center gap-2">
           <button
-            onClick={() => actions.goToStep(5)}
-            className="h-9 px-3.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-300 hover:bg-white/[0.06] font-medium text-sm flex items-center gap-1.5 transition-colors"
+            onClick={() => setShowFinancialModal(true)}
+            className="h-8 px-3 rounded-lg border border-amber-500/25 bg-amber-500/[0.06] text-amber-400/80 hover:bg-amber-500/[0.10] font-medium text-xs flex items-center gap-1.5 transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back
-          </button>
-          <button
-            onClick={() => {
-              actions.reset();
-              actions.goToStep(0);
-            }}
-            className="h-9 px-3.5 rounded-lg border border-red-500/20 bg-red-500/[0.08] text-red-400 hover:bg-red-500/[0.12] font-medium text-sm flex items-center gap-1.5 transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Reset
+            <Shield className="w-3 h-3" />
+            TrueQuote™
           </button>
         </div>
       </div>
-
-      {/* ================================================================
-          TRUEQUOTE™ GOLD BADGE — Always visible at top, opens financial modal
-      ================================================================ */}
-      <button
-        type="button"
-        onClick={() => setShowFinancialModal(true)}
-        className="group w-full flex items-center gap-4 p-4 rounded-xl border-2 border-amber-500/30 bg-amber-500/[0.04] hover:border-amber-400/50 hover:bg-amber-500/[0.08] transition-all duration-300 cursor-pointer"
-        aria-label="Open TrueQuote financial summary"
-      >
-        <div className="shrink-0">
-          <img
-            src={badgeGoldIcon}
-            alt="TrueQuote Verified"
-            className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
-          />
-        </div>
-        <div className="flex-1 text-left">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-xl font-bold text-amber-400 tracking-tight">TrueQuote™</span>
-            <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-              Verified
-            </span>
-          </div>
-          <p className="text-sm text-slate-400 leading-snug">
-            Every number is sourced. Click to view full financial projection, ROI analysis, and
-            payback timeline.
-          </p>
-        </div>
-        <div className="shrink-0 text-amber-500/50 group-hover:text-amber-400 group-hover:translate-x-1 transition-all duration-300">
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
-      </button>
 
       {/* ================================================================
           HERO SAVINGS — Big number, compelling
@@ -496,19 +380,16 @@ export default function Step5V8({ state, actions }: Props) {
               <div
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4"
                 style={{
-                  background: "rgba(62,207,142,0.12)",
-                  border: "1px solid rgba(62,207,142,0.38)",
-                  boxShadow: "0 0 18px rgba(62,207,142,0.18)",
+                  background: "rgba(62,207,142,0.10)",
+                  border: "1px solid rgba(62,207,142,0.28)",
                 }}
               >
-                <div className="w-2 h-2 bg-[#3ECF8E] rounded-full animate-pulse" />
                 <span className="text-[#3ECF8E] font-semibold text-xs uppercase tracking-wider">
                   Projected Annual Savings
                 </span>
               </div>
               <div
                 className="text-5xl md:text-6xl font-bold text-[#3ECF8E] leading-none"
-                style={{ textShadow: "0 0 40px rgba(62,207,142,0.40)" }}
               >
                 {fmt$(tier.annualSavings, countryCode)}
               </div>
@@ -817,25 +698,25 @@ export default function Step5V8({ state, actions }: Props) {
           RECOMMENDED INSTALLERS
       ================================================================ */}
       {location?.state && (
-        <div className="rounded-xl border-2 border-purple-500/20 bg-purple-500/[0.03] p-4 sm:p-6">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-purple-400" />
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+              <Building2 className="w-3.5 h-3.5 text-emerald-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-slate-100 tracking-tight">
-                Recommended Installers in {location?.state || "Your Area"}
+              <h3 className="text-sm font-bold text-slate-100 tracking-tight">
+                Certified Installers — {location?.state || "Your Area"}
               </h3>
-              <p className="text-sm text-slate-400 mt-0.5">
-                Top-rated companies for your project size and location
+              <p className="text-xs text-slate-500 mt-0.5">
+                Top-rated contractors for your project size
               </p>
             </div>
           </div>
 
           {loadingInstallers ? (
-            <div className="flex items-center justify-center py-8">
-              <RefreshCw className="w-5 h-5 text-purple-400 animate-spin" />
-              <span className="ml-2 text-sm text-slate-400">Loading installers...</span>
+            <div className="flex items-center justify-center py-6">
+              <RefreshCw className="w-4 h-4 text-emerald-400 animate-spin" />
+              <span className="ml-2 text-xs text-slate-400">Loading installers...</span>
             </div>
           ) : installers.length === 0 ? (
             <div className="py-8 text-center">
@@ -852,12 +733,12 @@ export default function Step5V8({ state, actions }: Props) {
                 {installers.map((installer, idx) => (
                   <div
                     key={idx}
-                    className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 hover:border-purple-500/30 hover:bg-purple-500/[0.04] transition-all group"
+                    className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 hover:border-emerald-500/25 hover:bg-emerald-500/[0.03] transition-all group"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-bold text-purple-400">
+                          <span className="text-xs font-bold text-emerald-400/70">
                             #{installer.rank}
                           </span>
                           {installer.tier === 1 && (
@@ -878,37 +759,36 @@ export default function Step5V8({ state, actions }: Props) {
                           <span className="text-slate-500">📞</span>
                           <a
                             href={`tel:${installer.phone}`}
-                            className="hover:text-purple-400 transition-colors"
-                          >
-                            {installer.phone}
-                          </a>
-                        </div>
-                      )}
-                      {installer.email && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-500">✉️</span>
-                          <a
-                            href={`mailto:${installer.email}`}
-                            className="hover:text-purple-400 transition-colors truncate"
-                          >
-                            {installer.email}
-                          </a>
-                        </div>
-                      )}
-                      {installer.website && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-500">🌐</span>
-                          <a
-                            href={installer.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-purple-400 transition-colors truncate"
-                          >
-                            Visit Website →
-                          </a>
-                        </div>
-                      )}
-                    </div>
+                              className="hover:text-emerald-400 transition-colors"
+                            >
+                              {installer.phone}
+                            </a>
+                          </div>
+                        )}
+                        {installer.email && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500">✉️</span>
+                            <a
+                              href={`mailto:${installer.email}`}
+                              className="hover:text-emerald-400 transition-colors truncate"
+                            >
+                              {installer.email}
+                            </a>
+                          </div>
+                        )}
+                        {installer.website && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500">🌐</span>
+                            <a
+                              href={installer.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-emerald-400 transition-colors truncate"
+                            >
+                              {installer.website.replace(/^https?:\/\//, "")}
+                            </a>
+                          </div>
+                        )}
 
                     {installer.recommendation_reason && (
                       <div className="mt-2 pt-2 border-t border-white/[0.06]">
@@ -917,6 +797,7 @@ export default function Step5V8({ state, actions }: Props) {
                         </p>
                       </div>
                     )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -942,10 +823,10 @@ export default function Step5V8({ state, actions }: Props) {
                   );
                   window.location.href = `mailto:${emails}?subject=${subject}&body=${body}`;
                 }}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold hover:from-purple-500 hover:to-purple-400 transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 group"
+                className="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-500 transition-all flex items-center justify-center gap-2 group"
               >
-                <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                Request Bids from All {installers.length} Companies
+                <Mail className="w-4 h-4" />
+                Request Bids from {installers.length} Installer{installers.length !== 1 ? 's' : ''}
               </button>
             </>
           )}
@@ -998,83 +879,6 @@ export default function Step5V8({ state, actions }: Props) {
         {exportError && (
           <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400 text-center">
             {exportError}
-          </div>
-        )}
-      </div>
-
-      {/* ================================================================
-          SOCIAL MEDIA SHARING
-      ================================================================ */}
-      <div className="rounded-xl border-2 border-blue-500/20 bg-blue-500/[0.03] p-4 sm:p-6">
-        <div className="flex flex-wrap justify-between items-center gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <Share2 className="w-5 h-5 text-blue-400" />
-              <div className="text-lg font-bold text-slate-100 tracking-tight">
-                Share Your Quote
-              </div>
-            </div>
-            <p className="text-sm text-slate-400">Share your energy savings with your network</p>
-          </div>
-
-          <div className="flex gap-2 flex-shrink-0 flex-wrap">
-            <button
-              type="button"
-              onClick={() => handleShare("linkedin")}
-              className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border-2 border-[#0A66C2]/30 bg-[#0A66C2]/[0.06] hover:border-[#0A66C2]/50 hover:bg-[#0A66C2]/[0.12] transition-all group"
-              title="Share on LinkedIn"
-            >
-              <Linkedin className="w-4 h-4 text-[#0A66C2] group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-semibold text-[#0A66C2]">LinkedIn</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleShare("twitter")}
-              className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border-2 border-[#1DA1F2]/30 bg-[#1DA1F2]/[0.06] hover:border-[#1DA1F2]/50 hover:bg-[#1DA1F2]/[0.12] transition-all group"
-              title="Share on Twitter/X"
-            >
-              <Twitter className="w-4 h-4 text-[#1DA1F2] group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-semibold text-[#1DA1F2]">Twitter</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleShare("facebook")}
-              className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border-2 border-[#1877F2]/30 bg-[#1877F2]/[0.06] hover:border-[#1877F2]/50 hover:bg-[#1877F2]/[0.12] transition-all group"
-              title="Share on Facebook"
-            >
-              <Facebook className="w-4 h-4 text-[#1877F2] group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-semibold text-[#1877F2]">Facebook</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleShare("email")}
-              className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border-2 border-slate-400/30 bg-slate-400/[0.06] hover:border-slate-400/50 hover:bg-slate-400/[0.12] transition-all group"
-              title="Share via Email"
-            >
-              <Mail className="w-4 h-4 text-slate-400 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-semibold text-slate-400">Email</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleShare("copy")}
-              className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border-2 border-emerald-400/30 bg-emerald-400/[0.06] hover:border-emerald-400/50 hover:bg-emerald-400/[0.12] transition-all group"
-              title="Copy Link"
-            >
-              <Link className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-semibold text-emerald-400">Copy</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Share success message */}
-        {shareSuccess && (
-          <div className="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-400 text-center flex items-center justify-center gap-2">
-            <Shield className="w-4 h-4" />
-            {shareSuccess}
           </div>
         )}
       </div>
@@ -1187,26 +991,6 @@ export default function Step5V8({ state, actions }: Props) {
             <span className="text-sm font-bold text-[#3ECF8E] tracking-wide">Open ProQuote™</span>
           </button>
         </div>
-      </div>
-
-      {/* ================================================================
-          BOTTOM NAVIGATION
-      ================================================================ */}
-      <div className="flex justify-between items-center pt-8 mt-8 border-t border-white/[0.08]">
-        <button
-          onClick={() => actions.goToStep(5)}
-          className="px-6 py-3 bg-white/5 text-slate-300 rounded-xl hover:bg-white/10 transition-all border border-white/10 flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Tiers
-        </button>
-        <button
-          onClick={() => actions.goToStep(1)}
-          className="px-8 py-4 rounded-xl font-bold text-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
-        >
-          <RefreshCw className="w-5 h-5" />
-          Start Over
-        </button>
       </div>
 
       {/* ================================================================

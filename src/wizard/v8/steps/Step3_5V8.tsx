@@ -1,901 +1,614 @@
 /**
- * WIZARD V8 — STEP 3.5: ADDON CONFIGURATION
+ * WIZARD V8 — STEP 3.5: ADD-ON INTENTS
  * ============================================================================
- * Conditional step shown ONLY if user selected addons in Step 1
- *
- * Configures:
- * - Solar capacity (kW)
- * - Generator capacity (kW) + fuel type
- * - EV charger counts (L2 / DCFC / HPC)
- *
- * Smart Defaults:
- * - Based on facility size and peak load from Step 3
- * - Industry-appropriate sizing
+ * Solar recommendation is derived from the user's roof area (step 3).
+ * Generator recommendation is driven by grid reliability (step 1).
+ * EV Charging uses 3 specific packages with annual revenue estimates.
  * ============================================================================
  */
 
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import type { WizardState, WizardActions } from "../wizardState";
-import { hasSolarAddonOpportunity } from "../addonIntent";
-import { Sun, Zap, Fuel, Info } from "lucide-react";
-import { EQUIPMENT_UNIT_COSTS } from "@/services/pricingServiceV45";
 
 interface Props {
   state: WizardState;
   actions: WizardActions;
 }
 
-export default function Step3_5V8({ state, actions }: Props) {
-  console.log("[Step3_5V8] Component rendering, state:", {
-    step: state.step,
-    wantsSolar: state.wantsSolar,
-    wantsGenerator: state.wantsGenerator,
-    wantsEVCharging: state.wantsEVCharging,
-    peakLoadKW: state.peakLoadKW,
-    industry: state.industry,
-  });
+// ── Constants ─────────────────────────────────────────────────────────────────
 
-  const { wantsSolar, wantsEVCharging, wantsGenerator, peakLoadKW, criticalLoadKW, industry } =
-    state;
-  const showSolar = hasSolarAddonOpportunity(
-    wantsSolar,
-    state.intel?.solarFeasible ?? false,
-    state.solarPhysicalCapKW
+/** sq ft per kW installed (standard 400W panel ≈ 40 sqft + 60% usable factor) */
+const SQFT_PER_KW = 100;
+
+const SOLAR_SCOPES = [
+  { id: "roof_only",   label: "Roof only",         penetration: 0.55, recommended: false },
+  { id: "roof_canopy", label: "Roof + canopy",      penetration: 0.80, recommended: true  },
+  { id: "maximum",     label: "Maximum coverage",   penetration: 1.00, recommended: false },
+] as const;
+
+const GENERATOR_SCOPES = [
+  { id: "essential", label: "Critical loads",   desc: "Essential circuits only",   recommended: false },
+  { id: "full",      label: "Full facility",    desc: "Entire facility + 10% margin", recommended: true  },
+  { id: "critical",  label: "Mission critical", desc: "Full load + 35% headroom",  recommended: false },
+] as const;
+
+// EV packages — specific charger counts + annual revenue estimates
+const EV_PACKAGES = [
+  {
+    id: "pkg_basic",
+    label: "Starter",
+    l2: 4,
+    dcfc: 0,
+    annualRevenue: 7200,
+    recommended: false,
+    tagline: "Employee & visitor charging",
+  },
+  {
+    id: "pkg_pro",
+    label: "Pro Hub",
+    l2: 6,
+    dcfc: 2,
+    annualRevenue: 34800,
+    recommended: true,
+    tagline: "Public + fast charging revenue",
+  },
+  {
+    id: "pkg_fleet",
+    label: "Fleet+",
+    l2: 6,
+    dcfc: 4,
+    annualRevenue: 58800,
+    recommended: false,
+    tagline: "Fleet depot or high-traffic site",
+  },
+] as const;
+
+type SolarScope     = (typeof SOLAR_SCOPES)[number]["id"];
+type GeneratorScope = (typeof GENERATOR_SCOPES)[number]["id"];
+type EVPackage      = (typeof EV_PACKAGES)[number]["id"];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Derive solar cap from step 3 roofArea answer first, fall back to SSOT */
+function getEffectiveSolarCapKW(state: WizardState): number {
+  const roofAreaSqFt = state.step3Answers?.roofArea as number | undefined;
+  if (roofAreaSqFt && roofAreaSqFt > 0) {
+    return Math.round((roofAreaSqFt * 0.75) / SQFT_PER_KW); // 75% usable
+  }
+  return state.solarPhysicalCapKW;
+}
+
+function estimateSolarKW(scope: SolarScope, state: WizardState): number {
+  const cap = getEffectiveSolarCapKW(state);
+  if (cap <= 0) return 0;
+  const sunFactor = Math.max(0, Math.min(1.0, ((state.intel?.peakSunHours ?? 4.5) - 3.0) / 2.5));
+  const pen = SOLAR_SCOPES.find((s) => s.id === scope)?.penetration ?? 0.80;
+  return Math.round(cap * (0.7 + sunFactor * 0.3) * pen);
+}
+
+function estimateGenKW(scope: GeneratorScope, state: WizardState): number {
+  const { peakLoadKW, criticalLoadPct } = state;
+  if (peakLoadKW <= 0) return 0;
+  if (scope === "essential") return Math.max(10, Math.round(peakLoadKW * criticalLoadPct * 1.25));
+  if (scope === "critical")  return Math.max(10, Math.round(peakLoadKW * 1.35));
+  return Math.max(10, Math.round(peakLoadKW * 1.10));
+}
+
+/** Smart default generator scope based on grid reliability */
+function defaultGeneratorScope(state: WizardState): GeneratorScope {
+  if (state.gridReliability === "unreliable") return "critical";
+  if (state.gridReliability === "frequent-outages") return "full";
+  return "essential";
+}
+
+function fmtKW(kw: number): string {
+  return kw >= 1000 ? `${(kw / 1000).toFixed(1)} MW` : `${kw} kW`;
+}
+
+function fmtRevenue(annual: number): string {
+  if (annual >= 1000) return `$${(annual / 1000).toFixed(0)}K`;
+  return `$${annual}`;
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export default function Step3_5V8({ state, actions }: Props) {
+  const solarFeasible =
+    (state.intel?.solarFeasible ?? false) || state.solarPhysicalCapKW > 0 ||
+    !!(state.step3Answers?.roofArea as number | undefined);
+
+  // Toggle state
+  const [wantsSolar,     setWantsSolar]     = useState(state.wantsSolar);
+  const [wantsGenerator, setWantsGenerator] = useState(state.wantsGenerator);
+  const [wantsEV,        setWantsEV]        = useState(state.wantsEVCharging);
+
+  // Scope state
+  const [solarScope,     setSolarScope]     = useState<SolarScope>(
+    (state.step3Answers?.solarScope as SolarScope | undefined) ?? "roof_canopy"
+  );
+  const [generatorScope, setGeneratorScope] = useState<GeneratorScope>(
+    (state.step3Answers?.generatorScope as GeneratorScope | undefined) ?? defaultGeneratorScope(state)
+  );
+  const [evPackage, setEvPackage] = useState<EVPackage>(
+    (state.step3Answers?.evScope as EVPackage | undefined) ?? "pkg_pro"
   );
 
-  // Local confirmation states
-  const [solarConfirmed, setSolarConfirmed] = React.useState(false);
-  const [generatorConfirmed, setGeneratorConfirmed] = React.useState(false);
-  const [evConfirmed, setEvConfirmed] = React.useState(false);
-  const [isGeneratingTiers, setIsGeneratingTiers] = React.useState(false);
-
-  // Real-time cost estimates helper
-  const calculateAddonCosts = () => {
-    const costs = {
-      solar: state.solarKW * EQUIPMENT_UNIT_COSTS.solar.pricePerWatt * 1000,
-      generator: state.generatorKW * EQUIPMENT_UNIT_COSTS.generator.pricePerKW,
-      evCharging:
-        state.level2Chargers * EQUIPMENT_UNIT_COSTS.evCharging.level2 +
-        state.dcfcChargers * EQUIPMENT_UNIT_COSTS.evCharging.dcfc +
-        state.hpcChargers * EQUIPMENT_UNIT_COSTS.evCharging.hpc,
-      total: 0,
-    };
-    costs.total = costs.solar + costs.generator + costs.evCharging;
-    return costs;
+  // Toggle handlers
+  const toggleSolar = () => {
+    const next = !wantsSolar;
+    setWantsSolar(next);
+    actions.setAddonPreference("solar", next);
+    if (next) actions.setAnswer("solarScope", solarScope);
+  };
+  const toggleGenerator = () => {
+    const next = !wantsGenerator;
+    setWantsGenerator(next);
+    actions.setAddonPreference("generator", next);
+    if (next) actions.setAnswer("generatorScope", generatorScope);
+  };
+  const toggleEV = () => {
+    const next = !wantsEV;
+    setWantsEV(next);
+    actions.setAddonPreference("ev", next);
+    if (next) actions.setAnswer("evScope", evPackage);
   };
 
-  const addonCosts = calculateAddonCosts();
-
-  // Solar sizing guidance based on industry with physical space constraints
-  const getSolarGuidance = () => {
-    // Industry-specific maximum based on physical space
-    const INDUSTRY_SOLAR_CAPS: Record<string, number> = {
-      "car-wash": 100, // Limited bay roof space
-      car_wash: 100, // Alternate slug format
-      "gas-station": 120, // Canopy space
-      gas_station: 120,
-      retail: 150, // Limited roof area
-      office: 250, // Medium roof space
-      warehouse: 400, // Large flat roofs
-      manufacturing: 600, // Industrial roofs
-      hotel: 200, // Multi-story with rooftop
-      hospital: 300, // Hospital roof space
-      "data-center": 200, // Data center roof
-      data_center: 200,
-    };
-
-    const physicalCap = industry
-      ? INDUSTRY_SOLAR_CAPS[industry] || peakLoadKW * 1.0
-      : peakLoadKW * 1.0;
-
-    const minSize = Math.round(Math.min(peakLoadKW * 0.5, physicalCap * 0.5));
-    const recommended = Math.round(Math.min(peakLoadKW * 0.8, physicalCap * 0.85)); // Reduced from 1.4x
-    const maxSize = Math.round(Math.min(peakLoadKW * 1.0, physicalCap));
-
-    return {
-      minSize,
-      recommended,
-      maxSize,
-      label:
-        state.solarKW < minSize
-          ? "Undersized"
-          : state.solarKW > maxSize
-            ? "Oversized"
-            : Math.abs(state.solarKW - recommended) < recommended * 0.2
-              ? "Optimal"
-              : "Good",
-    };
+  const handleSolarScope = (s: SolarScope) => {
+    setSolarScope(s);
+    actions.setAnswer("solarScope", s);
+  };
+  const handleGeneratorScope = (s: GeneratorScope) => {
+    setGeneratorScope(s);
+    actions.setAnswer("generatorScope", s);
+  };
+  const handleEVPackage = (pkg: EVPackage) => {
+    setEvPackage(pkg);
+    actions.setAnswer("evScope", pkg);
   };
 
-  const solarGuidance = getSolarGuidance();
+  // Derived values
+  const effectiveSolarCapKW = getEffectiveSolarCapKW(state);
+  const roofAreaSqFt = state.step3Answers?.roofArea as number | undefined;
+  const activeSolarKW = wantsSolar && solarFeasible ? estimateSolarKW(solarScope, state) : 0;
+  const activeGenKW   = wantsGenerator ? estimateGenKW(generatorScope, state) : 0;
+  const activeEVPkg   = wantsEV ? EV_PACKAGES.find((p) => p.id === evPackage) ?? EV_PACKAGES[1] : null;
+  const hasAnyAddon   = wantsSolar || wantsGenerator || wantsEV;
 
-  // Smart defaults based on facility peak load - SET TO RECOMMENDED VALUES
-  useEffect(() => {
-    const updates: Record<string, unknown> = {};
-
-    // Solar: Set to recommended value from guidance (respects physical constraints)
-    if (showSolar && state.solarKW === 0) {
-      updates.solarKW = solarGuidance.recommended;
-
-      if (import.meta.env.DEV) {
-        console.log("[Step3_5V8] Solar sizing:", {
-          industry,
-          peakLoadKW,
-          physicalCap: solarGuidance.maxSize,
-          recommended: solarGuidance.recommended,
-          minSize: solarGuidance.minSize,
-          showSolar,
-          currentSolarKW: state.solarKW,
-        });
-      }
-    } else if (import.meta.env.DEV) {
-      console.log("[Step3_5V8] Solar NOT set:", {
-        showSolar,
-        currentSolarKW: state.solarKW,
-        wantsSolar: state.wantsSolar,
-        solarFeasible: state.intel?.solarFeasible,
-        solarPhysicalCapKW: state.solarPhysicalCapKW,
-      });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════════
-    // Generator: Use CRITICAL LOAD for non-critical facilities (car wash, retail, office)
-    // Use FULL LOAD for critical facilities (hospital, data center, cold storage)
-    // ══════════════════════════════════════════════════════════════════════════
-    if (wantsGenerator && state.generatorKW === 0) {
-      // Determine if this is a critical facility
-      const criticalFacilities = [
-        "hospital",
-        "healthcare",
-        "data-center",
-        "data_center",
-        "cold-storage",
-        "cold_storage",
-        "manufacturing",
-      ];
-      const isCritical = industry ? criticalFacilities.includes(industry) : false;
-
-      // Use critical load if available and facility is non-critical
-      const targetLoadKW =
-        !isCritical && criticalLoadKW && criticalLoadKW > 0 ? criticalLoadKW : peakLoadKW;
-
-      // Apply 1.25x reserve margin per NREL/WPP Guide
-      updates.generatorKW = Math.round(targetLoadKW * 1.25);
-
-      if (import.meta.env.DEV) {
-        console.log("[Step3_5V8] Generator sizing:", {
-          industry,
-          isCritical,
-          peakLoadKW,
-          criticalLoadKW,
-          targetLoadKW,
-          generatorKW: updates.generatorKW,
-          strategy: isCritical ? "full backup" : "critical loads only",
-          savingsVsFullBackup: isCritical ? 0 : Math.round((peakLoadKW - criticalLoadKW) * 1.25),
-        });
-      }
-    }
-
-    // EV Chargers: Default split based on facility size
-    if (wantsEVCharging && state.level2Chargers === 0 && state.dcfcChargers === 0) {
-      if (peakLoadKW < 500) {
-        updates.level2Chargers = 4;
-      } else if (peakLoadKW < 1500) {
-        updates.level2Chargers = 8;
-        updates.dcfcChargers = 2;
-      } else {
-        updates.level2Chargers = 12;
-        updates.dcfcChargers = 4;
-        updates.hpcChargers = 2;
-      }
-    }
-
-    if (Object.keys(updates).length > 0) {
-      actions.setAddonConfig(updates);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    showSolar,
-    wantsEVCharging,
-    wantsGenerator,
-    peakLoadKW,
-    criticalLoadKW,
-    industry,
-    state.solarKW,
-    state.generatorKW,
-    state.level2Chargers,
-    state.dcfcChargers,
-    solarGuidance.recommended,
-  ]);
+  // Generator smart recommendation signal
+  const gridReliability = state.gridReliability;
+  const generatorSuggested =
+    gridReliability === "frequent-outages" || gridReliability === "unreliable";
+  const gridReliabilityLabel: Record<string, string> = {
+    "reliable": "Reliable grid",
+    "occasional-outages": "Occasional outages",
+    "frequent-outages": "Frequent outages",
+    "unreliable": "Unreliable grid",
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Configuration Summary Card - Floating */}
-      {(showSolar || wantsGenerator || wantsEVCharging) && (
-        <div className="bg-gradient-to-br from-emerald-950/60 via-slate-900/95 to-slate-950/95 border-2 border-emerald-500/30 rounded-xl p-4 shadow-xl shadow-emerald-500/10 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="text-2xl">🧙‍♂️</div>
-              <div>
-                <h3 className="text-sm font-bold text-emerald-400">Your Configuration</h3>
-                <p className="text-[10px] text-slate-400">
-                  {state.location?.city || "Location"} •{" "}
-                  {state.industry?.replace(/_/g, " ") || "Industry"} • {Math.round(peakLoadKW)} kW
-                  peak
-                </p>
-              </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 4 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.3px" }}>
+          Customize your scope
+        </h2>
+        <p style={{ fontSize: 13, color: "rgba(148,163,184,0.85)", marginTop: 6, lineHeight: 1.5 }}>
+          Toggle what to include. Estimates are calculated from your facility profile.
+        </p>
+      </div>
+
+      {/* Battery — always included */}
+      <AlwaysIncludedCard
+        icon="🔋"
+        name="Battery Storage"
+        description="Shifts load to off-peak hours, shaves demand charges, and powers through outages. Merlin sizes it to your exact load profile."
+        bessKW={state.baseLoadKW}
+        bessKWh={state.baseLoadKW > 0 ? Math.round(state.baseLoadKW * 4) : null}
+      />
+
+      {/* Solar */}
+      {solarFeasible && (
+        <IntentCard
+          icon="☀️"
+          name="Solar Generation"
+          description="Generate clean electricity from your facility's roof or canopy."
+          isOn={wantsSolar}
+          onToggle={toggleSolar}
+          scopes={SOLAR_SCOPES}
+          selectedScope={solarScope}
+          onScopeChange={handleSolarScope}
+          scopeQuestion="How much of your facility will have panels?"
+          estimateKW={(id) => estimateSolarKW(id as SolarScope, state)}
+          estimateLabel="est. at your site"
+          headerBadge={
+            state.intel?.solarGrade
+              ? `Grade ${state.intel.solarGrade}${state.intel.peakSunHours ? ` · ${state.intel.peakSunHours.toFixed(1)} PSH` : ""}`
+              : undefined
+          }
+          headerBadgeColor="#f59e0b"
+          contextNote={
+            roofAreaSqFt && roofAreaSqFt > 0
+              ? `Based on your ${roofAreaSqFt.toLocaleString()} sq ft roof · ${effectiveSolarCapKW} kW physical capacity · ${state.intel?.peakSunHours?.toFixed(1) ?? "4.5"} PSH factored in`
+              : state.solarPhysicalCapKW > 0
+                ? `Roof capacity: ${state.solarPhysicalCapKW} kW · Sun quality (${state.intel?.peakSunHours?.toFixed(1) ?? "?"} PSH) factored into estimate`
+                : undefined
+          }
+          confirmLines={
+            activeSolarKW > 0
+              ? [
+                  `${fmtKW(activeSolarKW)} solar generation added to your quote`,
+                  `Tiers scale: Essential ~${fmtKW(Math.round(activeSolarKW * 0.75))}  ·  Optimized ~${fmtKW(activeSolarKW)}  ·  Premium ~${fmtKW(Math.min(Math.round(activeSolarKW * 1.1), effectiveSolarCapKW))}`,
+                ]
+              : undefined
+          }
+        />
+      )}
+
+      {/* Generator */}
+      <IntentCard
+        icon="⚡"
+        name="Backup Generator"
+        description={
+          generatorSuggested
+            ? `Recommended based on your grid profile: ${gridReliabilityLabel[gridReliability ?? ""] ?? "grid issues detected"}.`
+            : "Natural gas or diesel power for outages and grid-independence goals."
+        }
+        isOn={wantsGenerator}
+        onToggle={toggleGenerator}
+        scopes={GENERATOR_SCOPES}
+        selectedScope={generatorScope}
+        onScopeChange={handleGeneratorScope}
+        scopeQuestion="What load must the generator cover?"
+        estimateKW={(id) => estimateGenKW(id as GeneratorScope, state)}
+        estimateLabel={(id) => GENERATOR_SCOPES.find((s) => s.id === id)?.desc ?? ""}
+        headerBadge={
+          gridReliability
+            ? gridReliabilityLabel[gridReliability]
+            : state.criticalLoadPct > 0
+              ? `${Math.round(state.criticalLoadPct * 100)}% critical · ${Math.round(state.peakLoadKW * state.criticalLoadPct)} kW`
+              : undefined
+        }
+        headerBadgeColor={generatorSuggested ? "#f87171" : "#94a3b8"}
+        recommendedAlert={
+          generatorSuggested
+            ? `Your grid is ${gridReliabilityLabel[gridReliability ?? ""] ?? "unreliable"} — a generator protects your revenue during outages.`
+            : undefined
+        }
+        contextNote={
+          state.peakLoadKW > 0
+            ? `Facility peak: ${state.peakLoadKW} kW · Critical systems: ${Math.round(state.criticalLoadPct * 100)}% (${Math.round(state.peakLoadKW * state.criticalLoadPct)} kW)`
+            : undefined
+        }
+        confirmLines={
+          activeGenKW > 0
+            ? [
+                `${fmtKW(activeGenKW)} generator added to your quote`,
+                `Tiers scale: Essential ~${fmtKW(Math.round(activeGenKW * 0.8))}  ·  Optimized ~${fmtKW(activeGenKW)}  ·  Premium ~${fmtKW(Math.round(activeGenKW * 1.25))}`,
+              ]
+            : undefined
+        }
+      />
+
+      {/* EV Charging — package selector */}
+      <EVPackageCard
+        isOn={wantsEV}
+        onToggle={toggleEV}
+        selectedPackage={evPackage}
+        onSelectPackage={handleEVPackage}
+        peakLoadKW={state.peakLoadKW}
+      />
+
+      {/* Summary strip */}
+      {hasAnyAddon && (
+        <div style={{ padding: "11px 14px", borderRadius: 10, border: "1px solid rgba(16,185,129,0.18)", background: "rgba(15,17,23,0.65)", marginTop: 2 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(16,185,129,0.65)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>Quote scope — what Merlin is sizing</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ fontSize: 12 }}>🔋</span>
+              <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>BESS:</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#6EE7B7" }}>{state.baseLoadKW} kW facility load</span>
             </div>
-            <div className="text-right">
-              <div className="text-xs text-slate-400">Estimated Investment</div>
-              <div className="text-lg font-bold text-emerald-400">
-                ${Math.round(addonCosts.total / 1000)}K
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            {showSolar && (
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2">
-                <div className="text-xs text-amber-400 font-medium mb-0.5">☀️ Solar</div>
-                <div className="text-sm font-bold text-white">{state.solarKW} kW</div>
-                <div className="text-[9px] text-slate-400">
-                  ~${Math.round(addonCosts.solar / 1000)}K
-                </div>
+            {activeSolarKW > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ fontSize: 12 }}>☀️</span>
+                <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>Solar:</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>~{fmtKW(activeSolarKW)}</span>
               </div>
             )}
-            {wantsGenerator && (
-              <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-2">
-                <div className="text-xs text-orange-400 font-medium mb-0.5">🔥 Generator</div>
-                <div className="text-sm font-bold text-white">{state.generatorKW} kW</div>
-                <div className="text-[9px] text-slate-400">
-                  ~${Math.round(addonCosts.generator / 1000)}K
-                </div>
+            {activeGenKW > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ fontSize: 12 }}>⚡</span>
+                <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>Generator:</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>~{fmtKW(activeGenKW)}</span>
               </div>
             )}
-            {wantsEVCharging && (
-              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-2">
-                <div className="text-xs text-cyan-400 font-medium mb-0.5">⚡ EV Charging</div>
-                <div className="text-sm font-bold text-white">
-                  {state.level2Chargers + state.dcfcChargers + state.hpcChargers} ports
-                </div>
-                <div className="text-[9px] text-slate-400">
-                  ~${Math.round(addonCosts.evCharging / 1000)}K
-                </div>
+            {activeEVPkg && (
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ fontSize: 12 }}>🚗</span>
+                <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>EV:</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>
+                  {activeEVPkg.l2} L2{activeEVPkg.dcfc > 0 ? ` + ${activeEVPkg.dcfc} DCFC` : ""} · ~{fmtRevenue(activeEVPkg.annualRevenue)}/yr revenue
+                </span>
               </div>
             )}
           </div>
         </div>
       )}
+    </div>
+  );
+}
 
-      {/* Header */}
-      <div className="text-center">
-        <p className="text-purple-400 uppercase tracking-[0.3em] text-xs font-medium mb-2">
-          Step 3.5 of 5
-        </p>
-        <h1
-          className="text-3xl md:text-4xl font-bold text-white mb-2"
-          style={{ fontFamily: "Outfit, sans-serif" }}
-        >
-          Configure Your Add-ons
-        </h1>
-        <p className="text-slate-400 text-sm">Fine-tune solar, EV charging, and backup generator</p>
-      </div>
+// ── Always-included card (Battery) ────────────────────────────────────────────
 
-      {/* Configuration Cards */}
-      <div className="space-y-4">
-        {/* Solar Configuration */}
-        {showSolar && (
-          <div className="bg-gradient-to-br from-amber-950/40 via-slate-900 to-slate-950 border-2 border-amber-500/40 rounded-xl p-4 shadow-xl shadow-amber-500/10">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="bg-amber-500/10 p-2 rounded-lg">
-                <Sun className="w-5 h-5 text-amber-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-white">Solar PV Array</h3>
-                <p className="text-slate-400 text-xs">
-                  {Math.round(peakLoadKW)} kW peak • Max: {Math.round(solarGuidance.maxSize)} kW
-                </p>
-              </div>
-              <div
-                className={`
-                px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide
-                ${
-                  solarGuidance.label === "Optimal"
-                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50"
-                    : solarGuidance.label === "Good"
-                      ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                      : solarGuidance.label === "Undersized"
-                        ? "bg-amber-500/20 text-amber-400 border border-amber-500/50"
-                        : "bg-red-500/20 text-red-400 border border-red-500/50"
-                }
-              `}
-              >
-                {solarGuidance.label}
-              </div>
+interface AlwaysIncludedCardProps {
+  icon: string;
+  name: string;
+  description: string;
+  bessKW?: number;
+  bessKWh?: number | null;
+}
+
+function AlwaysIncludedCard({ icon, name, description, bessKW, bessKWh }: AlwaysIncludedCardProps) {
+  return (
+    <div style={{ padding: "13px 15px", borderRadius: 10, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.06)", display: "flex", alignItems: "flex-start", gap: 12 }}>
+      <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{icon}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{name}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: "#10b981", background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 4, padding: "2px 6px", textTransform: "uppercase" }}>Always included</span>
+        </div>
+        <p style={{ fontSize: 12, color: "rgba(148,163,184,0.8)", margin: 0, lineHeight: 1.5 }}>{description}</p>
+        {bessKW != null && bessKW > 0 && (
+          <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 1, padding: "5px 9px", borderRadius: 6, background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.18)" }}>
+              <span style={{ fontSize: 9, color: "rgba(16,185,129,0.6)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Facility load</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#6EE7B7" }}>{bessKW} kW</span>
             </div>
-
-            <div className="space-y-3">
-              {/* Solar Capacity Slider */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-medium text-slate-300">Solar Capacity</label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        actions.setAddonConfig({
-                          solarKW: Math.max(solarGuidance.minSize, state.solarKW - 50),
-                        })
-                      }
-                      className="w-8 h-8 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xl font-bold transition-all border border-amber-500/30"
-                    >
-                      −
-                    </button>
-                    <div className="text-right flex items-center gap-1.5">
-                      <div>
-                        <div className="text-xl font-bold text-amber-400 flex items-center gap-1.5">
-                          {state.solarKW.toLocaleString()} kW
-                          <svg
-                            className="w-4 h-4 text-emerald-400"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                        <div className="text-[10px] text-slate-500">
-                          {((state.solarKW / peakLoadKW) * 100).toFixed(0)}%
-                        </div>
-                        <div className="text-[10px] font-medium text-emerald-400">
-                          +${Math.round(addonCosts.solar / 1000)}K
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() =>
-                        actions.setAddonConfig({
-                          solarKW: Math.min(solarGuidance.maxSize, state.solarKW + 50),
-                        })
-                      }
-                      className="w-8 h-8 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xl font-bold transition-all border border-amber-500/30"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                <style>
-                  {`
-                    .solar-slider::-webkit-slider-thumb {
-                      appearance: none;
-                      width: 24px;
-                      height: 24px;
-                      border-radius: 50%;
-                      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-                      cursor: pointer;
-                      border: 3px solid #0f172a;
-                      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3), 0 4px 12px rgba(0,0,0,0.5);
-                    }
-                    .solar-slider::-moz-range-thumb {
-                      width: 24px;
-                      height: 24px;
-                      border-radius: 50%;
-                      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-                      cursor: pointer;
-                      border: 3px solid #0f172a;
-                      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3), 0 4px 12px rgba(0,0,0,0.5);
-                    }
-                    .solar-slider::-webkit-slider-runnable-track {
-                      height: 8px;
-                      border-radius: 4px;
-                      background: linear-gradient(to right, 
-                        #1e293b 0%, 
-                        rgba(251, 191, 36, 0.3) ${((state.solarKW - solarGuidance.minSize) / (solarGuidance.maxSize - solarGuidance.minSize)) * 100}%, 
-                        #1e293b ${((state.solarKW - solarGuidance.minSize) / (solarGuidance.maxSize - solarGuidance.minSize)) * 100}%
-                      );
-                    }
-                  `}
-                </style>
-                <input
-                  type="range"
-                  min={solarGuidance.minSize}
-                  max={solarGuidance.maxSize}
-                  step={5}
-                  value={state.solarKW}
-                  onChange={(e) => actions.setAddonConfig({ solarKW: Number(e.target.value) })}
-                  className="solar-slider w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer"
-                />
-                <div className="flex justify-between items-center text-[10px] text-slate-500 mt-1.5">
-                  <span>{solarGuidance.minSize} kW</span>
-                  <button
-                    onClick={() => actions.setAddonConfig({ solarKW: solarGuidance.recommended })}
-                    className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 text-[10px] font-medium"
-                  >
-                    ⭐ {solarGuidance.recommended} kW
-                  </button>
-                  <span>{solarGuidance.maxSize} kW</span>
-                </div>
+            {bessKWh != null && bessKWh > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 1, padding: "5px 9px", borderRadius: 6, background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.18)" }}>
+                <span style={{ fontSize: 9, color: "rgba(16,185,129,0.6)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Est. storage · 4h baseline</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#6EE7B7" }}>~{bessKWh} kWh</span>
               </div>
-              {/* Solar Confirm Button */}
-              <div className="flex justify-center mt-3">
-                <button
-                  onClick={() => setSolarConfirmed(true)}
-                  disabled={solarConfirmed}
-                  className={`
-                    px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all duration-200
-                    flex items-center gap-1.5
-                    ${
-                      solarConfirmed
-                        ? "bg-emerald-500/30 border-2 border-emerald-500 text-emerald-300 cursor-default scale-95"
-                        : "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30 hover:scale-105 active:scale-95"
-                    }
-                    shadow-lg
-                  `}
-                >
-                  {solarConfirmed ? (
-                    <>
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      Solar Confirmed
-                    </>
-                  ) : (
-                    "Confirm Solar Capacity"
-                  )}
-                </button>
-              </div>
-              {/* Sizing Info */}
-              <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3">
-                <div className="flex gap-2 text-xs">
-                  <Info className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <div className="text-slate-300 leading-snug">
-                    <strong className="text-amber-400">
-                      🧙‍♂️ Merlin: {solarGuidance.recommended.toLocaleString()} kW recommended
-                    </strong>
-                    <span className="text-slate-400">
-                      {" "}
-                      based on {Math.round(solarGuidance.maxSize)} kW roof space and{" "}
-                      {Math.round(peakLoadKW)} kW peak load.
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         )}
-
-        {/* EV Charging Configuration */}
-        {wantsEVCharging && (
-          <div className="bg-gradient-to-br from-cyan-950/40 via-slate-900 to-slate-950 border-2 border-cyan-500/40 rounded-xl p-4 shadow-xl shadow-cyan-500/10">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="bg-cyan-500/10 p-2 rounded-lg">
-                <Zap className="w-5 h-5 text-cyan-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">EV Charging</h3>
-                <p className="text-slate-400 text-xs">Employee & customer charging</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {/* Merlin's EV Charging Recommendation - At the top for visibility */}
-              <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3">
-                <div className="flex gap-2 text-xs">
-                  <Info className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
-                  <div className="text-slate-300 leading-snug">
-                    <strong className="text-cyan-400">
-                      🧙‍♂️ Merlin: {state.level2Chargers} L2 chargers recommended
-                    </strong>
-                    <span className="text-slate-400"> for employee daily charging.</span>
-                  </div>
-                </div>
-              </div>
-              {/* Level 2 Chargers */}
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-xs font-medium text-slate-300">Level 2 (7-22 kW)</label>
-                  <span className="text-base font-bold text-cyan-400">{state.level2Chargers}</span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={20}
-                  step={1}
-                  value={state.level2Chargers}
-                  onChange={(e) =>
-                    actions.setAddonConfig({ level2Chargers: Number(e.target.value) })
-                  }
-                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                />
-              </div>
-              {/* DCFC Chargers */}
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-xs font-medium text-slate-300">DC Fast (50-150 kW)</label>
-                  <span className="text-base font-bold text-purple-400">{state.dcfcChargers}</span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={10}
-                  step={1}
-                  value={state.dcfcChargers}
-                  onChange={(e) => actions.setAddonConfig({ dcfcChargers: Number(e.target.value) })}
-                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                />
-              </div>
-              {/* HPC Chargers */}
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-xs font-medium text-slate-300">
-                    High Power (250-350 kW)
-                  </label>
-                  <span className="text-base font-bold text-fuchsia-400">{state.hpcChargers}</span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={5}
-                  step={1}
-                  value={state.hpcChargers}
-                  onChange={(e) => actions.setAddonConfig({ hpcChargers: Number(e.target.value) })}
-                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-fuchsia-500"
-                />
-              </div>
-              {/* Total Power Summary */}
-              <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-cyan-300">Total Capacity:</span>
-                  <span className="text-base font-bold text-cyan-400">
-                    {(
-                      state.level2Chargers * 11 +
-                      state.dcfcChargers * 150 +
-                      state.hpcChargers * 350
-                    ).toLocaleString()}{" "}
-                    kW
-                  </span>
-                </div>
-              </div>
-              {/* Confirmation Button */}
-              <button
-                onClick={() => setEvConfirmed(true)}
-                disabled={evConfirmed}
-                className={`
-                  w-full px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-wider
-                  flex items-center justify-center gap-1.5
-                  ${
-                    evConfirmed
-                      ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 scale-95 cursor-default"
-                      : "bg-transparent border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 hover:scale-105 active:scale-95"
-                  }
-                  transition-all duration-200
-                `}
-              >
-                {evConfirmed ? (
-                  <>
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    EV Charging Confirmed
-                  </>
-                ) : (
-                  "Confirm EV Charging"
-                )}
-              </button>{" "}
-            </div>
-          </div>
-        )}
-
-        {/* Generator Configuration */}
-        {wantsGenerator && (
-          <div className="bg-gradient-to-br from-red-950/40 via-slate-900 to-slate-950 border-2 border-red-500/40 rounded-xl p-4 shadow-xl shadow-red-500/10">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="bg-orange-500/10 p-2 rounded-lg">
-                <Fuel className="w-5 h-5 text-orange-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Backup Generator</h3>
-                <p className="text-slate-400 text-xs">Critical load protection</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {/* Generator Capacity Slider */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-medium text-slate-300">Generator Capacity</label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        actions.setAddonConfig({
-                          generatorKW: Math.max(
-                            Math.round(peakLoadKW * 0.5),
-                            state.generatorKW - 50
-                          ),
-                        })
-                      }
-                      className="w-8 h-8 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-xl font-bold transition-all border border-orange-500/30"
-                    >
-                      −
-                    </button>
-                    <span className="text-xl font-bold text-orange-400 flex items-center gap-1.5">
-                      {state.generatorKW.toLocaleString()} kW
-                      <svg
-                        className="w-4 h-4 text-emerald-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                    <div className="text-[10px] font-medium text-emerald-400 text-right mr-2">
-                      +${Math.round(addonCosts.generator / 1000)}K
-                    </div>
-                    <button
-                      onClick={() =>
-                        actions.setAddonConfig({
-                          generatorKW: Math.min(Math.round(peakLoadKW * 2), state.generatorKW + 50),
-                        })
-                      }
-                      className="w-10 h-10 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-2xl font-bold transition-all border border-orange-500/30"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                <style>
-                  {`
-                    .generator-slider::-webkit-slider-thumb {
-                      appearance: none;
-                      width: 24px;
-                      height: 24px;
-                      border-radius: 50%;
-                      background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
-                      cursor: pointer;
-                      border: 3px solid #0f172a;
-                      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.3), 0 4px 12px rgba(0,0,0,0.5);
-                    }
-                    .generator-slider::-moz-range-thumb {
-                      width: 24px;
-                      height: 24px;
-                      border-radius: 50%;
-                      background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
-                      cursor: pointer;
-                      border: 3px solid #0f172a;
-                      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.3), 0 4px 12px rgba(0,0,0,0.5);
-                    }
-                    .generator-slider::-webkit-slider-runnable-track {
-                      height: 8px;
-                      border-radius: 4px;
-                      background: linear-gradient(to right, 
-                        #1e293b 0%, 
-                        rgba(249, 115, 22, 0.3) ${((state.generatorKW - Math.round(peakLoadKW * 0.5)) / (Math.round(peakLoadKW * 2) - Math.round(peakLoadKW * 0.5))) * 100}%, 
-                        #1e293b ${((state.generatorKW - Math.round(peakLoadKW * 0.5)) / (Math.round(peakLoadKW * 2) - Math.round(peakLoadKW * 0.5))) * 100}%
-                      );
-                    }
-                  `}
-                </style>
-                <input
-                  type="range"
-                  min={Math.round(peakLoadKW * 0.5)}
-                  max={Math.round(peakLoadKW * 2)}
-                  step={10}
-                  value={state.generatorKW}
-                  onChange={(e) => actions.setAddonConfig({ generatorKW: Number(e.target.value) })}
-                  className="generator-slider w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer"
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>{Math.round(peakLoadKW * 0.5)} kW (50% of peak)</span>
-                  <span>{Math.round(peakLoadKW * 2)} kW (2x peak)</span>
-                </div>
-              </div>
-
-              {/* Fuel Type Selector */}
-              <div>
-                <label className="text-sm font-medium text-slate-300 mb-3 block">Fuel Type</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {(["diesel", "natural-gas", "dual-fuel"] as const).map((fuelType) => {
-                    const isSelected = state.generatorFuelType === fuelType;
-                    return (
-                      <button
-                        key={fuelType}
-                        type="button"
-                        onClick={() => {
-                          console.log("🔥 Fuel type clicked:", fuelType);
-                          actions.setAddonConfig({ generatorFuelType: fuelType });
-                        }}
-                        className={`
-                          relative py-4 px-4 rounded-xl font-semibold text-sm transition-all duration-200
-                          ${
-                            isSelected
-                              ? "bg-orange-500/30 border-2 border-orange-500 text-orange-200 shadow-lg shadow-orange-500/20 scale-105"
-                              : "bg-white/5 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:bg-white/10"
-                          }
-                        `}
-                      >
-                        {/* Selection Checkmark */}
-                        {isSelected && (
-                          <div className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center border-2 border-slate-950 shadow-lg">
-                            <span className="text-white text-xs font-bold">✓</span>
-                          </div>
-                        )}
-
-                        <div className={`transition-transform ${isSelected ? "scale-105" : ""}`}>
-                          {fuelType === "diesel" && "⛽ Diesel"}
-                          {fuelType === "natural-gas" && "🔥 Natural Gas"}
-                          {fuelType === "dual-fuel" && "⚡ Dual Fuel"}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  {state.generatorFuelType === "diesel" &&
-                    "Traditional backup power • High reliability"}
-                  {state.generatorFuelType === "natural-gas" &&
-                    "Cleaner emissions • Lower operating cost"}
-                  {state.generatorFuelType === "dual-fuel" &&
-                    "Maximum flexibility • Best resilience"}
-                </p>
-              </div>
-
-              {/* Generator Confirm Button */}
-              <div className="flex justify-center mt-4">
-                <button
-                  onClick={() => setGeneratorConfirmed(true)}
-                  disabled={generatorConfirmed}
-                  className={`
-                    px-8 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-200
-                    flex items-center gap-2
-                    ${
-                      generatorConfirmed
-                        ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 cursor-default scale-95"
-                        : "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30 hover:scale-105 active:scale-95"
-                    }
-                    shadow-lg
-                  `}
-                >
-                  {generatorConfirmed ? (
-                    <>
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      Generator Confirmed
-                    </>
-                  ) : (
-                    "Confirm Generator Setup"
-                  )}
-                </button>
-              </div>
-
-              {/* Sizing Info - Explains critical load vs full load strategy */}
-              <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
-                <div className="flex gap-2 text-sm">
-                  <Info className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
-                  <div className="text-slate-300 leading-relaxed">
-                    {criticalLoadKW && criticalLoadKW < peakLoadKW ? (
-                      <>
-                        <div className="mb-2">
-                          <strong className="text-orange-400">
-                            🧙‍♂️ Merlin suggests {Math.round(criticalLoadKW * 1.25).toLocaleString()}{" "}
-                            kW for power generation
-                          </strong>
-                          <span className="text-slate-400">
-                            {" "}
-                            to cover your {criticalLoadKW.toLocaleString()} kW critical loads with
-                            reserve margin.
-                          </span>
-                        </div>
-                        <strong className="text-orange-400">Critical Loads Sizing:</strong> This
-                        facility can operate without full backup power during outages. Generator
-                        sized for{" "}
-                        <strong className="text-orange-300">
-                          {criticalLoadKW.toLocaleString()} kW critical loads
-                        </strong>{" "}
-                        (payment systems, security, emergency lighting, office equipment) vs{" "}
-                        {peakLoadKW.toLocaleString()} kW full facility load. This saves ~$
-                        {Math.round((peakLoadKW - criticalLoadKW) * 0.7).toLocaleString()}K on
-                        generator costs.
-                      </>
-                    ) : (
-                      <>
-                        <div className="mb-2">
-                          <strong className="text-orange-400">
-                            🧙‍♂️ Merlin suggests {Math.round(peakLoadKW * 1.25).toLocaleString()} kW
-                            for power generation
-                          </strong>
-                          <span className="text-slate-400">
-                            {" "}
-                            to cover your {peakLoadKW.toLocaleString()} kW peak load with 1.25x
-                            reserve margin.
-                          </span>
-                        </div>
-                        <strong className="text-orange-400">Full Backup Sizing:</strong> Generator
-                        sized with 1.25x reserve margin per NREL/WPP guidelines. This facility
-                        requires full backup power for critical operations (life-safety, data
-                        integrity, or process continuity).
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="flex justify-between pt-6">
-        <button
-          onClick={() => actions.goBack()}
-          disabled={isGeneratingTiers}
-          className="px-6 py-3 bg-white/5 text-slate-300 rounded-xl hover:bg-white/10 transition-all border border-white/10 disabled:opacity-50"
-        >
-          ← Back
-        </button>
-        <button
-          onClick={() => {
-            setIsGeneratingTiers(true);
-            // ⚡ CRITICAL FIX: Reset tiers status to 'idle' to force rebuild with addon values
-            // Tiers were built in background after Step 3, but addon values are set in Step 3.5
-            // We need to rebuild tiers with the configured solar/generator/EV values
-            console.log("[Step3_5V8] Resetting tiers status to force rebuild with addon values");
-            actions.setTiersStatus("idle");
-            // Small delay to show loading state before navigating
-            setTimeout(() => actions.goToStep(5), 100);
-          }}
-          disabled={isGeneratingTiers}
-          className={`
-            px-6 py-3 rounded-xl font-semibold transition-all shadow-lg
-            ${
-              isGeneratingTiers
-                ? "bg-emerald-500/50 text-emerald-200 cursor-wait border-2 border-emerald-400"
-                : "bg-transparent border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 shadow-emerald-500/20"
-            }
-          `}
-        >
-          {isGeneratingTiers ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              Generating Your Tiers...
-            </span>
-          ) : (
-            "Continue to MagicFit →"
-          )}
-        </button>
       </div>
     </div>
   );
 }
+
+// ── Intent card (Solar + Generator) ──────────────────────────────────────────
+
+interface ScopeOption {
+  id: string;
+  label: string;
+  recommended?: boolean;
+  sub?: string;
+  desc?: string;
+}
+
+interface IntentCardProps<T extends string> {
+  icon: string;
+  name: string;
+  description: string;
+  isOn: boolean;
+  onToggle: () => void;
+  scopes: readonly ScopeOption[];
+  selectedScope: T;
+  onScopeChange: (scope: T) => void;
+  scopeQuestion?: string;
+  estimateKW?: (id: string) => number;
+  estimateLabel?: string | ((id: string) => string);
+  estimateNote?: string | ((id: string) => string);
+  headerBadge?: string;
+  headerBadgeColor?: string;
+  /** Red alert banner shown when add-on is strongly recommended */
+  recommendedAlert?: string;
+  contextNote?: string;
+  confirmLines?: string[];
+}
+
+function IntentCard<T extends string>({
+  icon, name, description, isOn, onToggle, scopes, selectedScope, onScopeChange,
+  scopeQuestion, estimateKW, estimateLabel, estimateNote, headerBadge, headerBadgeColor,
+  recommendedAlert, contextNote, confirmLines,
+}: IntentCardProps<T>) {
+  const selectedKWVal = isOn && estimateKW ? estimateKW(selectedScope) : 0;
+  const selectedLabelFn = typeof estimateLabel === "function" ? estimateLabel : undefined;
+  const selectedBadge = isOn && selectedKWVal > 0
+    ? (selectedLabelFn ? selectedLabelFn(selectedScope) : fmtKW(selectedKWVal))
+    : undefined;
+
+  return (
+    <div style={{ borderRadius: 12, border: isOn ? "1.5px solid rgba(16,185,129,0.45)" : (recommendedAlert ? "1.5px solid rgba(248,113,113,0.35)" : "1px solid rgba(255,255,255,0.08)"), background: isOn ? "rgba(16,185,129,0.07)" : (recommendedAlert ? "rgba(248,113,113,0.04)" : "rgba(51,65,85,0.45)"), overflow: "hidden", transition: "border-color 0.15s, background 0.15s" }}>
+      {/* Recommended alert banner (shown when not yet toggled on) */}
+      {!isOn && recommendedAlert && (
+        <div style={{ padding: "7px 14px", background: "rgba(248,113,113,0.10)", borderBottom: "1px solid rgba(248,113,113,0.18)", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 11 }}>⚠️</span>
+          <span style={{ fontSize: 11, color: "#fca5a5", fontWeight: 500 }}>{recommendedAlert}</span>
+        </div>
+      )}
+      {/* Header */}
+      <button onClick={onToggle} style={{ width: "100%", padding: "13px 14px", display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+        <div style={{ width: 38, height: 38, borderRadius: 9, flexShrink: 0, background: isOn ? "rgba(16,185,129,0.14)" : "rgba(255,255,255,0.05)", border: isOn ? "1px solid rgba(16,185,129,0.28)" : "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, transition: "all 0.15s" }}>
+          {icon}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: isOn ? "#6EE7B7" : "#fff" }}>{name}</span>
+            {headerBadge && (
+              <span style={{ fontSize: 10, fontWeight: 600, color: headerBadgeColor ?? "#94a3b8", background: "rgba(100,116,139,0.12)", border: "1px solid rgba(100,116,139,0.22)", borderRadius: 4, padding: "1px 5px" }}>{headerBadge}</span>
+            )}
+            {isOn && selectedBadge && (
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#10b981", background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 4, padding: "1px 6px" }}>{selectedBadge}</span>
+            )}
+          </div>
+          <p style={{ fontSize: 12, color: "rgba(148,163,184,0.7)", margin: "2px 0 0", lineHeight: 1.4 }}>{description}</p>
+        </div>
+        <div style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)", background: isOn ? "#10b981" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#0f1117", transition: "all 0.15s ease", boxShadow: isOn ? "0 0 8px rgba(16,185,129,0.45)" : "none" }}>
+          {isOn && "✓"}
+        </div>
+      </button>
+
+      {/* Scope pills */}
+      {isOn && (
+        <div style={{ padding: "0 14px 14px" }}>
+          {scopeQuestion && (
+            <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(148,163,184,0.55)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>{scopeQuestion}</div>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+            {scopes.map((s) => {
+              const active = selectedScope === s.id;
+              const kwVal   = estimateKW ? estimateKW(s.id) : 0;
+              const valLabel = typeof estimateLabel === "function" ? estimateLabel(s.id)
+                             : typeof estimateLabel === "string"   ? estimateLabel
+                             : kwVal > 0 ? fmtKW(kwVal) : "—";
+              const valNote  = typeof estimateNote === "function" ? estimateNote(s.id)
+                             : typeof estimateNote === "string"   ? estimateNote
+                             : kwVal > 0 ? "est. at your site" : (s.desc ?? s.sub ?? "");
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => onScopeChange(s.id as T)}
+                  style={{ padding: "10px 10px 9px", borderRadius: 8, border: active ? "1.5px solid rgba(16,185,129,0.55)" : "1px solid rgba(255,255,255,0.08)", background: active ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.45)", cursor: "pointer", textAlign: "left", transition: "all 0.12s", display: "flex", flexDirection: "column", gap: 3, position: "relative" }}
+                  onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = "rgba(51,65,85,0.65)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; } }}
+                  onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = "rgba(51,65,85,0.45)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; } }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: active ? "#6EE7B7" : "rgba(255,255,255,0.82)", lineHeight: 1.2 }}>{s.label}</span>
+                    <div style={{ flexShrink: 0, width: 14, height: 14, borderRadius: "50%", border: active ? "none" : "1.5px solid rgba(255,255,255,0.18)", background: active ? "#10b981" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#0f1117", transition: "all 0.12s" }}>{active && "✓"}</div>
+                  </div>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: active ? "#10b981" : "rgba(255,255,255,0.72)", letterSpacing: "-0.3px", lineHeight: 1 }}>{valLabel}</span>
+                  <span style={{ fontSize: 10, color: active ? "rgba(110,231,183,0.58)" : "rgba(148,163,184,0.48)", lineHeight: 1.3 }}>{valNote}</span>
+                  {s.recommended && (
+                    <span style={{ position: "absolute", top: 5, right: active ? 22 : 6, fontSize: 8, fontWeight: 700, textTransform: "uppercase", color: "#10b981", background: "rgba(16,185,129,0.13)", border: "1px solid rgba(16,185,129,0.22)", borderRadius: 3, padding: "1px 4px", letterSpacing: "0.04em" }}>Best</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {contextNote && (
+            <div style={{ fontSize: 10, color: "rgba(148,163,184,0.42)", marginTop: 7, lineHeight: 1.4 }}>{contextNote}</div>
+          )}
+          {confirmLines && confirmLines.length > 0 && (
+            <div style={{ marginTop: 10, padding: "9px 11px", borderRadius: 8, background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.18)", display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>{icon}</span>
+              <div style={{ flex: 1 }}>
+                {confirmLines.map((line, i) => (
+                  <div key={i} style={{ fontSize: i === 0 ? 12 : 11, fontWeight: i === 0 ? 600 : 400, color: i === 0 ? "#6EE7B7" : "rgba(148,163,184,0.60)", lineHeight: 1.4, marginTop: i > 0 ? 2 : 0 }}>{line}</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── EV Package Card ───────────────────────────────────────────────────────────
+
+interface EVPackageCardProps {
+  isOn: boolean;
+  onToggle: () => void;
+  selectedPackage: EVPackage;
+  onSelectPackage: (pkg: EVPackage) => void;
+  peakLoadKW: number;
+}
+
+function EVPackageCard({ isOn, onToggle, selectedPackage, onSelectPackage, peakLoadKW }: EVPackageCardProps) {
+  const selected = EV_PACKAGES.find((p) => p.id === selectedPackage) ?? EV_PACKAGES[1];
+  const totalKW = (pkg: typeof EV_PACKAGES[number]) => Math.round(pkg.l2 * 7.2 + pkg.dcfc * 50);
+  const loadImpact = (pkg: typeof EV_PACKAGES[number]) => {
+    const kw = totalKW(pkg);
+    return peakLoadKW > 0 ? `+${Math.round((kw / peakLoadKW) * 100)}% peak load` : `${kw} kW peak`;
+  };
+
+  return (
+    <div style={{ borderRadius: 12, border: isOn ? "1.5px solid rgba(16,185,129,0.45)" : "1px solid rgba(255,255,255,0.08)", background: isOn ? "rgba(16,185,129,0.07)" : "rgba(51,65,85,0.45)", overflow: "hidden", transition: "border-color 0.15s, background 0.15s" }}>
+      {/* Header */}
+      <button onClick={onToggle} style={{ width: "100%", padding: "13px 14px", display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+        <div style={{ width: 38, height: 38, borderRadius: 9, flexShrink: 0, background: isOn ? "rgba(16,185,129,0.14)" : "rgba(255,255,255,0.05)", border: isOn ? "1px solid rgba(16,185,129,0.28)" : "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, transition: "all 0.15s" }}>
+          🚗
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: isOn ? "#6EE7B7" : "#fff" }}>EV Charging</span>
+            {isOn && (
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#10b981", background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 4, padding: "1px 6px" }}>
+                ~{fmtRevenue(selected.annualRevenue)}/yr revenue
+              </span>
+            )}
+          </div>
+          <p style={{ fontSize: 12, color: "rgba(148,163,184,0.7)", margin: "2px 0 0", lineHeight: 1.4 }}>
+            Level 2 and DC fast chargers for customers, staff, or fleet vehicles.
+          </p>
+        </div>
+        <div style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)", background: isOn ? "#10b981" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#0f1117", transition: "all 0.15s ease", boxShadow: isOn ? "0 0 8px rgba(16,185,129,0.45)" : "none" }}>
+          {isOn && "✓"}
+        </div>
+      </button>
+
+      {/* Package selector */}
+      {isOn && (
+        <div style={{ padding: "0 14px 14px" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(148,163,184,0.55)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Select your charging package</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+            {EV_PACKAGES.map((pkg) => {
+              const active = selectedPackage === pkg.id;
+              const kw = totalKW(pkg);
+              return (
+                <button
+                  key={pkg.id}
+                  onClick={() => onSelectPackage(pkg.id)}
+                  style={{ padding: "10px 10px 10px", borderRadius: 8, border: active ? "1.5px solid rgba(16,185,129,0.55)" : "1px solid rgba(255,255,255,0.08)", background: active ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.45)", cursor: "pointer", textAlign: "left", transition: "all 0.12s", display: "flex", flexDirection: "column", gap: 4, position: "relative" }}
+                  onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = "rgba(51,65,85,0.65)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; } }}
+                  onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = "rgba(51,65,85,0.45)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; } }}
+                >
+                  {/* Package name + checkmark */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: active ? "#6EE7B7" : "rgba(255,255,255,0.88)", lineHeight: 1.2 }}>{pkg.label}</span>
+                    <div style={{ flexShrink: 0, width: 14, height: 14, borderRadius: "50%", border: active ? "none" : "1.5px solid rgba(255,255,255,0.18)", background: active ? "#10b981" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#0f1117" }}>{active && "✓"}</div>
+                  </div>
+                  {/* Charger counts */}
+                  <div style={{ fontSize: 10, color: active ? "rgba(110,231,183,0.70)" : "rgba(148,163,184,0.55)", lineHeight: 1.3 }}>
+                    {pkg.l2} L2{pkg.dcfc > 0 ? ` + ${pkg.dcfc} L3` : ""}
+                  </div>
+                  {/* Revenue — THE key number */}
+                  <div style={{ fontSize: 14, fontWeight: 800, color: active ? "#10b981" : "rgba(255,255,255,0.70)", letterSpacing: "-0.3px", lineHeight: 1, marginTop: 2 }}>
+                    {fmtRevenue(pkg.annualRevenue)}/yr
+                  </div>
+                  <div style={{ fontSize: 9, color: active ? "rgba(110,231,183,0.50)" : "rgba(148,163,184,0.40)", lineHeight: 1.2 }}>
+                    est. revenue
+                  </div>
+                  {/* Load impact */}
+                  <div style={{ fontSize: 9, color: "rgba(148,163,184,0.38)", marginTop: 1 }}>{loadImpact(pkg)} · {kw} kW</div>
+                  {pkg.recommended && (
+                    <span style={{ position: "absolute", top: 5, right: active ? 22 : 6, fontSize: 8, fontWeight: 700, textTransform: "uppercase", color: "#10b981", background: "rgba(16,185,129,0.13)", border: "1px solid rgba(16,185,129,0.22)", borderRadius: 3, padding: "1px 4px", letterSpacing: "0.04em" }}>Best</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {/* Revenue note */}
+          <div style={{ fontSize: 10, color: "rgba(148,163,184,0.40)", marginTop: 7, lineHeight: 1.4 }}>
+            L2 = 7.2 kW · L3 (DCFC) = 50 kW · Revenue estimates based on avg utilization &amp; $0.40/kWh charging rate
+          </div>
+          {/* Confirm banner */}
+          <div style={{ marginTop: 10, padding: "9px 11px", borderRadius: 8, background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.18)", display: "flex", gap: 8, alignItems: "flex-start" }}>
+            <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>🚗</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#6EE7B7", lineHeight: 1.4 }}>
+                {selected.l2} Level 2 + {selected.dcfc} DC fast chargers · {totalKW(selected)} kW peak demand
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(148,163,184,0.60)", lineHeight: 1.4, marginTop: 2 }}>
+                ~{fmtRevenue(selected.annualRevenue)}/year estimated revenue · EV load integrated into BESS sizing
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+

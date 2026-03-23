@@ -1,7 +1,7 @@
 /**
  * Complete Hotel Questionnaire Configuration
  *
- * 18 questions across 4 sections — matching car wash gold-standard format.
+ * 16 questions across 4 sections — focused on technical facility profile.
  * All question IDs align with the HOTEL_LOAD_V1_SSOT calculator adapter
  * in registry.ts (requiredInputs: roomCount, hotelClass, occupancyRate).
  *
@@ -9,7 +9,9 @@
  *   1. Facility (Q1-5)   — hotelCategory, numRooms, squareFootage, occupancyRate, buildingAge
  *   2. Amenities (Q6-10) — poolOnSite, restaurantOnSite, spaOnSite, laundryOnSite, evChargingForGuests
  *   3. Energy (Q11-13)   — gridConnection, gridReliability, existingGenerator
- *   4. Solar & Goals (Q14-18) — roofArea, canopyInterest, existingSolar, primaryGoal, budgetTimeline
+ *   4. Solar (Q14-16) — roofArea, canopyInterest, existingSolar, (solarCapacityKW conditional)
+ *
+ * NOTE: Business goals (primaryGoal, budgetTimeline) moved to Step 3.5 (Add-ons) intro screen.
  *
  * Calculator mapping:
  *   hotelCategory → hotelClass (via option value mapping)
@@ -131,8 +133,8 @@ export const hotelSections: Section[] = [
   },
   {
     id: 'solar',
-    title: 'Solar & Goals',
-    description: 'Renewable interest and project goals',
+    title: 'Solar & Renewables',
+    description: 'Renewable energy interest and existing systems',
     icon: '☀️',
   },
 ];
@@ -668,76 +670,5 @@ export const hotelQuestionsComplete: Question[] = [
       showIf: (value: unknown) => value === 'yes',
     },
   },
-  {
-    id: 'primaryGoal',
-    type: 'buttons',
-    section: 'solar',
-    title: 'Primary goal for energy storage',
-    subtitle: 'This shapes system sizing and financial projections',
-    options: [
-      {
-        value: 'cost-savings',
-        label: 'Cost Savings',
-        icon: '💰',
-        description: 'Reduce utility bills and demand charges',
-      },
-      {
-        value: 'backup-power',
-        label: 'Backup Power',
-        icon: '🔋',
-        description: 'Protect guest experience during outages',
-      },
-      {
-        value: 'peak-shaving',
-        label: 'Peak Shaving',
-        icon: '📉',
-        description: 'Flatten demand peaks, lower demand charges',
-      },
-      {
-        value: 'sustainability',
-        label: 'Sustainability',
-        icon: '🌍',
-        description: 'ESG goals, green certification, brand value',
-      },
-    ],
-    smartDefault: 'cost-savings',
-    validation: { required: true },
-    impactsCalculations: ['systemSizing', 'financials'],
-  },
-  {
-    id: 'budgetTimeline',
-    type: 'buttons',
-    section: 'solar',
-    title: 'Project timeline',
-    subtitle: 'When are you looking to move forward?',
-    options: [
-      {
-        value: 'immediate',
-        label: 'ASAP',
-        icon: '🚀',
-        description: 'Ready to start in 1-3 months',
-      },
-      {
-        value: '6-months',
-        label: '6 Months',
-        icon: '📅',
-        description: 'Planning for next budget cycle',
-      },
-      {
-        value: '12-months',
-        label: '12+ Months',
-        icon: '📆',
-        description: 'Long-term planning',
-      },
-      {
-        value: 'exploring',
-        label: 'Just Exploring',
-        icon: '🔍',
-        description: 'Researching options',
-      },
-    ],
-    smartDefault: 'exploring',
-    validation: { required: false },
-    impactsCalculations: [],
-  },
 ];
+

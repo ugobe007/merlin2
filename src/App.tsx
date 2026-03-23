@@ -22,6 +22,7 @@ const CasinoEnergy = lazy(() => import("./components/verticals/CasinoEnergy"));
 const AirportEnergy = lazy(() => import("./components/verticals/AirportEnergy"));
 const CollegeEnergy = lazy(() => import("./components/verticals/CollegeEnergy"));
 const HomePage = lazy(() => import("./pages/HomePage"));
+const Home = lazy(() => import("./pages/Home"));
 const LaunchPage = lazy(() => import("./pages/LaunchPage"));
 const PressKit = lazy(() => import("./pages/PressKit"));
 const ReferralPage = lazy(() => import("./pages/ReferralPage"));
@@ -206,6 +207,24 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <VendorPortal />
+      </Suspense>
+    );
+  }
+
+  // NEW HOMEPAGE at root "/" - modern marketing page
+  if (pathname === "/") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Home />
+      </Suspense>
+    );
+  }
+
+  // Wizard at /wizard - WizardV8Page (TrueQuote builder)
+  if (pathname === "/wizard") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <WizardV8Page />
       </Suspense>
     );
   }
@@ -430,14 +449,8 @@ function App() {
   //   return <Suspense fallback={<PageLoader />}><SharedQuotePage /></Suspense>;
   // }
 
-  // Marketing home page
-  if (pathname === "/home" || pathname === "/about") {
-    return (
-      <Suspense fallback={<PageLoader />}>
-        <HomePage />
-      </Suspense>
-    );
-  }
+  // OLD HomePage removed from production routes (kept as legacy component)
+  // Access new homepage at / instead
 
   // Product Hunt / HN launch page
   if (pathname === "/launch" || pathname === "/producthunt" || pathname === "/ph") {

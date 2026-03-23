@@ -28,6 +28,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
       subtitle: "Free • AI-Powered",
       description: "Get a bankable BESS quote in 3 minutes with TrueQuote™ verified pricing",
       accent: "#3ECF8E",
+      comingSoon: false,
     },
     {
       id: "proquote" as const,
@@ -36,6 +37,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
       subtitle: "Advanced • Custom",
       description: "Full engineering control for complex projects with custom equipment",
       accent: "#F59E0B",
+      comingSoon: false,
     },
     {
       id: "upload" as const,
@@ -44,6 +46,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
       subtitle: "Review • Enhance",
       description: "Import existing quotes to review and enhance with TrueQuote™ verification",
       accent: "#8B5CF6",
+      comingSoon: false,
     },
   ];
 
@@ -62,8 +65,9 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
           return (
             <button
               key={mode.id}
-              onClick={() => onSelectMode(mode.id)}
-              className="group relative overflow-hidden rounded-xl transition-all duration-300"
+            onClick={() => !mode.comingSoon && onSelectMode(mode.id)}
+            disabled={mode.comingSoon}
+            className={`group relative overflow-hidden rounded-xl transition-all duration-300${mode.comingSoon ? " opacity-60 cursor-not-allowed" : ""}`}
               style={{
                 background:
                   "linear-gradient(135deg, rgba(15,23,42,0.9) 0%, rgba(30,41,59,0.8) 100%)",
@@ -121,6 +125,29 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
                       >
                         {mode.subtitle}
                       </span>
+                      {mode.id === "wizard" && (
+                        <span
+                          className="inline-flex items-center gap-1"
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: "#F59E0B",
+                            border: "1px solid rgba(245,158,11,0.35)",
+                            padding: "2px 8px",
+                            borderRadius: 5,
+                            background: "rgba(245,158,11,0.08)",
+                            letterSpacing: "0.01em",
+                          }}
+                        >
+                          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />
+                          TrueQuote™
+                        </span>
+                      )}
+                      {mode.comingSoon && (
+                        <span className="ml-1 text-[10px] font-semibold px-2 py-0.5 rounded-md text-slate-400 bg-slate-700/50 border border-slate-600/40">
+                          Coming soon
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-slate-400 leading-relaxed">{mode.description}</p>
                   </div>

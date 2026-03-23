@@ -66,7 +66,6 @@ const CONSUMED_KEYS = [
   "gridReliability",
   "existingGenerator",
   "existingSolar",
-  "primaryGoal",
 ] as const;
 
 // ============================================================================

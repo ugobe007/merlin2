@@ -53,7 +53,6 @@ const CONSUMED_KEYS = [
   "gridConnection",     // Curated Q10: on-grid / limited / off-grid
   "demandCharges",      // Curated Q13: high / moderate / low / unknown
   "existingSolar",      // Curated Q14: existing / planned / none
-  "primaryGoal",        // Curated Q15: peak-shaving / backup / sustainability / cost
 ] as const;
 
 // ============================================================================

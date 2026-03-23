@@ -8,7 +8,7 @@
  *   1. Facility (Q1-4)    — dataCenterTier, squareFootage, itLoadCapacity, currentPUE
  *   2. Operations (Q5-9)  — itUtilization, coolingSystem, redundancy, rackDensity, requiredRuntime
  *   3. Energy (Q10-13)    — gridConnection, gridReliability, existingGenerator, existingUPS
- *   4. Solar & Goals (Q14-18) — roofArea, canopyInterest, existingSolar, primaryGoal, budgetTimeline
+ *   4. Solar & Goals (Q14-16) — roofArea, canopyInterest, existingSolar
  *
  * Created: Feb 2026
  */
@@ -320,39 +320,5 @@ export const datacenterQuestionsComplete: Question[] = [
       dependsOn: 'existingSolar',
       showIf: (value: unknown) => value === 'existing',
     },
-  },
-  {
-    id: 'primaryGoal',
-    type: 'buttons',
-    section: 'solar',
-    title: 'Primary project goal',
-    subtitle: 'What is the #1 reason you are exploring BESS?',
-    options: [
-      { value: 'uptime', label: 'Maximize Uptime', icon: '🛡️', description: 'Zero-downtime protection' },
-      { value: 'cost', label: 'Reduce Energy Costs', icon: '💰', description: 'Peak shaving + TOU arbitrage' },
-      { value: 'sustainability', label: 'Sustainability Goals', icon: '🌿', description: 'Reduce carbon, ESG reporting' },
-      { value: 'grid-constraint', label: 'Grid Capacity Limit', icon: '⚡', description: 'Cannot get more utility power' },
-      { value: 'generator-replacement', label: 'Replace Generators', icon: '🔄', description: 'Eliminate diesel dependency' },
-    ],
-    smartDefault: 'uptime',
-    merlinTip: 'BESS provides instant power (< 10ms switchover) vs 10-30 seconds for diesel generators — eliminating the "gap" that causes IT crashes.',
-    validation: { required: true },
-    impactsCalculations: ['bessMode', 'bessCapacity'],
-  },
-  {
-    id: 'budgetTimeline',
-    type: 'buttons',
-    section: 'solar',
-    title: 'Project timeline',
-    subtitle: 'When do you need the system operational?',
-    options: [
-      { value: 'urgent', label: 'ASAP (< 6 months)', icon: '🚨', description: 'Critical need, fast deployment' },
-      { value: 'planned', label: 'This Year', icon: '📅', description: '6-12 month planning horizon' },
-      { value: 'budgeting', label: 'Next Budget Cycle', icon: '💼', description: '12-18 months, needs capex approval' },
-      { value: 'exploring', label: 'Just Exploring', icon: '🔍', description: 'Early research phase' },
-    ],
-    smartDefault: 'planned',
-    validation: { required: false },
-    impactsCalculations: [],
   },
 ];

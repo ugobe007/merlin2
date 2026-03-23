@@ -9,7 +9,7 @@
  *   1. Site (Q1-4)              — stationType, operatingHours, siteSize, parkingSpaces
  *   2. Chargers (Q5-10)         — level2Chargers, level2Power, dcFastChargers, dcFastPower, hpcChargers, utilizationProfile
  *   3. Grid & Demand (Q11-13)   — gridConnection, peakConcurrency, siteDemandCap
- *   4. Solar & Goals (Q14-18)   — roofArea, canopyInterest, existingSolar, primaryGoal, budgetTimeline
+ *   4. Solar & Goals (Q14-16)   — roofArea, canopyInterest, existingSolar
  *
  * Calculator mapping:
  *   level2Chargers → level2Chargers (adapter) → numberOfLevel2Chargers (SSOT)
@@ -655,85 +655,5 @@ export const evChargingQuestionsComplete: Question[] = [
       dependsOn: 'existingSolar',
       showIf: (value: unknown) => value === 'yes' || value === 'canopy',
     },
-  },
-  {
-    id: 'primaryGoal',
-    type: 'buttons',
-    section: 'solar',
-    title: 'Primary goal for energy storage',
-    subtitle: 'This shapes system sizing and financial projections',
-    options: [
-      {
-        value: 'demand-management',
-        label: 'Demand Management',
-        icon: '📉',
-        description: 'Reduce demand charges from EV chargers',
-      },
-      {
-        value: 'grid-constraint',
-        label: 'Grid Constraint Workaround',
-        icon: '⚠️',
-        description: 'Deploy more chargers within grid limits',
-      },
-      {
-        value: 'cost-savings',
-        label: 'Energy Cost Savings',
-        icon: '💰',
-        description: 'TOU arbitrage + demand charge reduction',
-      },
-      {
-        value: 'resilience',
-        label: 'Resilience / Backup',
-        icon: '🔋',
-        description: 'Keep chargers running during outages',
-      },
-      {
-        value: 'sustainability',
-        label: 'Sustainability',
-        icon: '🌍',
-        description: 'Net-zero charging, green branding',
-      },
-    ],
-    smartDefault: 'demand-management',
-    merlinTip:
-      'For most EV charging sites, demand management is the #1 ROI driver — BESS typically reduces demand charges by 40-70%.',
-    validation: { required: true },
-    impactsCalculations: ['systemSizing', 'financials'],
-  },
-  {
-    id: 'budgetTimeline',
-    type: 'buttons',
-    section: 'solar',
-    title: 'Project timeline',
-    subtitle: 'When are you looking to deploy?',
-    options: [
-      {
-        value: 'immediate',
-        label: 'ASAP',
-        icon: '🚀',
-        description: 'Ready to start in 1-3 months',
-      },
-      {
-        value: '6-months',
-        label: '6 Months',
-        icon: '📅',
-        description: 'Planning phase, site prep underway',
-      },
-      {
-        value: '12-months',
-        label: '12+ Months',
-        icon: '📆',
-        description: 'Long-term infrastructure plan',
-      },
-      {
-        value: 'exploring',
-        label: 'Just Exploring',
-        icon: '🔍',
-        description: 'Researching options and costs',
-      },
-    ],
-    smartDefault: 'exploring',
-    validation: { required: false },
-    impactsCalculations: [],
   },
 ];

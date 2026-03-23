@@ -16,15 +16,16 @@ export function hasGeneratorIntent(step3Answers: Record<string, unknown>): boole
     return true;
   }
 
-  // FIXED: If user has existing generator, DON'T add another one to the quote
-  // "yes-partial" / "yes-extensive" means they HAVE one already
+  // If the user already has a generator (partial or extensive), include it in scope
   const existingGenerator = String(step3Answers.existingGenerator ?? "").toLowerCase();
-  if (existingGenerator === "none" || existingGenerator === "need-backup") {
-    // Only if they DON'T have one, consider adding it
-    const gridReliability = String(step3Answers.gridReliability ?? "").toLowerCase();
-    if (gridReliability === "frequent" || gridReliability === "unreliable") {
-      return true;
-    }
+  if (existingGenerator === "yes-partial" || existingGenerator === "yes-extensive") {
+    return true;
+  }
+
+  // Poor grid reliability indicates backup power need
+  const gridReliability = String(step3Answers.gridReliability ?? "").toLowerCase();
+  if (gridReliability === "frequent" || gridReliability === "unreliable") {
+    return true;
   }
 
   const primaryGoal = String(step3Answers.primaryGoal ?? "").toLowerCase();
