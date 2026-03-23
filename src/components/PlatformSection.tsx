@@ -41,7 +41,7 @@ export default function PlatformSection() {
         PLATFORM
       </div>
 
-      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="grid lg:grid-cols-[80px_1fr_1fr] gap-8 lg:gap-12 items-start">
 
           {/* Left: vertical label */}

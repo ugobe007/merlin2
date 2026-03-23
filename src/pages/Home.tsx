@@ -25,7 +25,7 @@ export default function Home() {
       
       {/* Footer */}
       <footer className="bg-[#060D1F] border-t border-white/[0.05] py-12">
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
             {/* Brand */}
             <div className="flex items-center gap-3">

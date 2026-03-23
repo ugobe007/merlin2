@@ -21,7 +21,7 @@ export default function ValueSection() {
         M
       </div>
 
-      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="flex items-start gap-6 lg:gap-10">
           {/* Vertical label */}
           <div className="hidden lg:flex flex-col items-center gap-3 pt-3 flex-shrink-0">

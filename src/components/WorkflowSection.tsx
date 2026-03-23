@@ -67,7 +67,7 @@ export default function WorkflowSection() {
       {/* Collapsible toggle bar */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-5 group transition-all duration-200 hover:opacity-80"
+        className="w-full flex items-center justify-between max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-5 group transition-all duration-200 hover:opacity-80"
         aria-expanded={open}
       >
         <div className="flex items-center gap-4">
@@ -112,7 +112,7 @@ export default function WorkflowSection() {
           open ? "max-h-[1200px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 pb-16 pt-4">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pb-16 pt-4">
           {/* Timeline */}
           <div className="relative">
             {/* Center vertical line — desktop */}

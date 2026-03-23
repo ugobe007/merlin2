@@ -27,7 +27,7 @@ const proQuoteOutcomes = [
 export default function ProductsSection() {
   return (
     <section id="products" className="pt-8 pb-20 bg-[#060D1F]">
-      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
 
         {/* Section label — left-edge vertical style */}
         <div className="flex items-start gap-8 mb-16">
