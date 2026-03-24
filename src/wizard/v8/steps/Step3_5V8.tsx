@@ -7,7 +7,7 @@
  * ============================================================================
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { WizardState, WizardActions } from "../wizardState";
 import {
   estimateSolarKW,
@@ -40,10 +40,41 @@ export default function Step3_5V8({ state, actions }: Props) {
     state.solarPhysicalCapKW > 0 ||
     !!(state.step3Answers?.roofArea as number | undefined);
 
-  // Toggle state
-  const [wantsSolar, setWantsSolar] = useState(state.wantsSolar);
-  const [wantsGenerator, setWantsGenerator] = useState(state.wantsGenerator);
-  const [wantsEV, setWantsEV] = useState(state.wantsEVCharging);
+  // Open all panels by default on first visit to this step
+  const isFirstVisit = !state.step3Answers?.step3_5Visited;
+
+  // Toggle state — default ON for first visit so users see everything immediately
+  const [wantsSolar, setWantsSolar] = useState(isFirstVisit ? true : state.wantsSolar);
+  const [wantsGenerator, setWantsGenerator] = useState(isFirstVisit ? true : state.wantsGenerator);
+  const [wantsEV, setWantsEV] = useState(isFirstVisit ? true : state.wantsEVCharging);
+
+  // Seed global state with Merlin recommendations on first visit
+  useEffect(() => {
+    if (!isFirstVisit) return;
+    if (solarFeasible) {
+      actions.setAddonPreference("solar", true);
+      const recKW = estimateSolarKW("roof_canopy", state);
+      if (recKW > 0) actions.setAddonConfig({ solarKW: recKW });
+    }
+    actions.setAddonPreference("generator", true);
+    const recGenKW = estimateGenKW(defaultGeneratorScope(state), state);
+    if (recGenKW > 0) actions.setAddonConfig({ generatorKW: recGenKW });
+    actions.setAddonPreference("ev", true);
+    actions.setAnswer("evScope", "custom");
+    const rl2 = Math.min(
+      12,
+      Math.max(4, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 150) : 6)
+    );
+    const rdcfc = Math.min(
+      8,
+      Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 600) : 2)
+    );
+    const rhpc = Math.min(
+      4,
+      Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 1200) : 0)
+    );
+    actions.setAddonConfig({ level2Chargers: rl2, dcfcChargers: rdcfc, hpcChargers: rhpc });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [fuelType, setFuelType] = useState<"diesel" | "natural-gas">(
     state.generatorFuelType === "diesel" ? "diesel" : "natural-gas"
@@ -1322,68 +1353,47 @@ function EVPackageCard({
     <div
       style={{
         borderRadius: 12,
-        border: isOn ? "1.5px solid rgba(56,189,248,0.40)" : "1px solid rgba(255,255,255,0.08)",
-        background: isOn ? "rgba(14,165,233,0.06)" : "rgba(30,41,59,0.5)",
+        border: isOn ? "1.5px solid rgba(56,189,248,0.35)" : "1px solid rgba(255,255,255,0.07)",
+        background: isOn ? "rgba(14,165,233,0.06)" : "rgba(15,17,23,0.55)",
         overflow: "hidden",
-        transition: "border-color 0.15s, background 0.15s",
+        transition: "all 0.15s",
       }}
     >
-      {/* Gradient accent line when on */}
-      {isOn && (
-        <div
-          style={{
-            height: 3,
-            background: "linear-gradient(90deg, #22d3ee 0%, #818cf8 50%, #c084fc 100%)",
-          }}
-        />
-      )}
-      {/* Header */}
-      <button
-        onClick={onToggle}
+      {/* Accent bar */}
+      <div
         style={{
-          width: "100%",
-          padding: "14px 16px",
+          height: 3,
+          background: isOn
+            ? "linear-gradient(90deg, #22d3ee 0%, #818cf8 50%, #c084fc 100%)"
+            : "rgba(255,255,255,0.06)",
+        }}
+      />
+      {/* Header */}
+      <div
+        style={{
           display: "flex",
           alignItems: "center",
-          gap: 12,
-          background: "none",
-          border: "none",
+          gap: 11,
+          padding: "12px 14px 10px",
           cursor: "pointer",
-          textAlign: "left",
         }}
+        onClick={onToggle}
       >
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            flexShrink: 0,
-            background: isOn ? "rgba(56,189,248,0.15)" : "rgba(255,255,255,0.05)",
-            border: isOn ? "1px solid rgba(56,189,248,0.30)" : "1px solid rgba(255,255,255,0.08)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 20,
-            transition: "all 0.15s",
-          }}
-        >
-          ⚡
-        </div>
+        <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>⚡</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: isOn ? "#7dd3fc" : "#fff" }}>
-              EV Charging
-            </span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>EV Charging</span>
             {isOn && totalKW > 0 && (
               <span
                 style={{
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: 700,
                   color: "#38bdf8",
                   background: "rgba(56,189,248,0.12)",
                   border: "1px solid rgba(56,189,248,0.28)",
                   borderRadius: 4,
-                  padding: "1px 6px",
+                  padding: "2px 6px",
+                  letterSpacing: "0.04em",
                 }}
               >
                 {l2 + dcfc + hpc} ports · {totalKW.toLocaleString()} kW
@@ -1393,35 +1403,41 @@ function EVPackageCard({
           <p
             style={{
               fontSize: 12,
-              color: "rgba(148,163,184,0.7)",
-              margin: "2px 0 0",
+              color: "rgba(148,163,184,0.75)",
+              margin: "3px 0 0",
               lineHeight: 1.4,
             }}
           >
             Employee &amp; customer charging
           </p>
         </div>
+        {/* Toggle pill — same as Solar / Generator */}
         <div
           style={{
+            width: 36,
+            height: 20,
+            borderRadius: 10,
+            background: isOn ? "#38bdf8" : "rgba(255,255,255,0.12)",
+            position: "relative",
             flexShrink: 0,
-            width: 22,
-            height: 22,
-            borderRadius: "50%",
-            border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)",
-            background: isOn ? "#38bdf8" : "transparent",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 11,
-            fontWeight: 700,
-            color: "#0D1117",
-            transition: "all 0.15s ease",
-            boxShadow: isOn ? "0 0 8px rgba(56,189,248,0.50)" : "none",
+            transition: "background 0.15s",
           }}
         >
-          {isOn && "✓"}
+          <div
+            style={{
+              position: "absolute",
+              top: 2,
+              left: isOn ? 18 : 2,
+              width: 16,
+              height: 16,
+              borderRadius: "50%",
+              background: "#fff",
+              transition: "left 0.15s",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+            }}
+          />
         </div>
-      </button>
+      </div>
 
       {/* Expanded content */}
       {isOn && (
