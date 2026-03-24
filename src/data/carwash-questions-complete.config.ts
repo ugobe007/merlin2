@@ -628,12 +628,42 @@ export const carWashQuestionsComplete: Question[] = [
     type: 'slider',
     section: 'solar',
     title: 'Available roof area for solar panels?',
-      subtitle: 'Total roof space (we\'ll calculate usable area)',
+    subtitle: 'Building roof space only — not the full property',
     range: { min: 0, max: 25000, step: 100 },
-    smartDefault: 5000,
+    smartDefault: 4500,
     unit: ' sq ft',
-    helpText: 'Solar preview will appear below after entering',
-    validation: { required: true, min: 0, max: 25000 },
+    helpText: 'Typical express tunnel: 4,000–6,500 sq ft. We\'ll calculate usable area from roof type below.',
+    validation: { required: false, min: 0, max: 25000 },
+    impactsCalculations: ['roofSolar', 'solarCapacity']
+  },
+  {
+    id: 'roofType',
+    type: 'buttons',
+    section: 'solar',
+    title: 'What is your building\'s roof construction?',
+    subtitle: 'Roof type determines how much of the roof area can hold solar panels',
+    options: [
+      {
+        value: 'opaque',
+        label: 'Metal / Concrete',
+        icon: '🏗️',
+        description: 'Standard opaque roof — best solar economics (70% usable)',
+      },
+      {
+        value: 'mixed',
+        label: 'Mixed (Some Skylights)',
+        icon: '🌤️',
+        description: 'Partial skylights or polycarbonate strips (55% usable)',
+      },
+      {
+        value: 'polycarbonate',
+        label: 'Heavy Polycarbonate',
+        icon: '🔆',
+        description: 'Tommy\'s / Quick Quack daylight-roof style (40% usable)',
+      },
+    ],
+    smartDefault: 'opaque',
+    validation: { required: false },
     impactsCalculations: ['roofSolar', 'solarCapacity']
   },
   {
