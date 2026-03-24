@@ -9,6 +9,14 @@
 
 import React, { useState } from "react";
 import type { WizardState, WizardActions } from "../wizardState";
+import {
+  estimateSolarKW,
+  estimateGenKW,
+  getEffectiveSolarCapKW,
+  defaultGeneratorScope,
+  type SolarScopeId,
+  type GeneratorScopeId,
+} from "../addonSizing";
 
 interface Props {
   state: WizardState;
@@ -16,9 +24,6 @@ interface Props {
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-/** sq ft per kW installed (standard 400W panel ≈ 40 sqft + 60% usable factor) */
-const SQFT_PER_KW = 100;
 
 const SOLAR_SCOPES = [
   { id: "roof_only",   label: "Roof only",         penetration: 0.55, recommended: false },
@@ -63,43 +68,9 @@ const EV_PACKAGES = [
   },
 ] as const;
 
-type SolarScope     = (typeof SOLAR_SCOPES)[number]["id"];
-type GeneratorScope = (typeof GENERATOR_SCOPES)[number]["id"];
+type SolarScope     = SolarScopeId;
+type GeneratorScope = GeneratorScopeId;
 type EVPackage      = (typeof EV_PACKAGES)[number]["id"];
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/** Derive solar cap from step 3 roofArea answer first, fall back to SSOT */
-function getEffectiveSolarCapKW(state: WizardState): number {
-  const roofAreaSqFt = state.step3Answers?.roofArea as number | undefined;
-  if (roofAreaSqFt && roofAreaSqFt > 0) {
-    return Math.round((roofAreaSqFt * 0.75) / SQFT_PER_KW); // 75% usable
-  }
-  return state.solarPhysicalCapKW;
-}
-
-function estimateSolarKW(scope: SolarScope, state: WizardState): number {
-  const cap = getEffectiveSolarCapKW(state);
-  if (cap <= 0) return 0;
-  const sunFactor = Math.max(0, Math.min(1.0, ((state.intel?.peakSunHours ?? 4.5) - 3.0) / 2.5));
-  const pen = SOLAR_SCOPES.find((s) => s.id === scope)?.penetration ?? 0.80;
-  return Math.round(cap * (0.7 + sunFactor * 0.3) * pen);
-}
-
-function estimateGenKW(scope: GeneratorScope, state: WizardState): number {
-  const { peakLoadKW, criticalLoadPct } = state;
-  if (peakLoadKW <= 0) return 0;
-  if (scope === "essential") return Math.max(10, Math.round(peakLoadKW * criticalLoadPct * 1.25));
-  if (scope === "critical")  return Math.max(10, Math.round(peakLoadKW * 1.35));
-  return Math.max(10, Math.round(peakLoadKW * 1.10));
-}
-
-/** Smart default generator scope based on grid reliability */
-function defaultGeneratorScope(state: WizardState): GeneratorScope {
-  if (state.gridReliability === "unreliable") return "critical";
-  if (state.gridReliability === "frequent-outages") return "full";
-  return "essential";
-}
 
 function fmtKW(kw: number): string {
   return kw >= 1000 ? `${(kw / 1000).toFixed(1)} MW` : `${kw} kW`;
