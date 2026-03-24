@@ -56,20 +56,30 @@
  * SSOT SOURCES (DO NOT INLINE THESE VALUES):
  *   getBESSSizingRatioWithSource()        → benchmarkSources.ts (IEEE/MDPI)
  *   getGeneratorReserveMarginWithSource() → benchmarkSources.ts (NEC/LADWP)
- *   calculateQuote()                      → unifiedQuoteCalculator.ts (NREL ATB)
+ *   calculateSystemCosts()                → pricingServiceV45.ts (V4.5 pricing SSOT)
+ *   calculateAnnualSavings()              → pricingServiceV45.ts (V4.5 savings SSOT)
+ *   calculateROI()                        → pricingServiceV45.ts (V4.5 ROI/NPV SSOT)
+ *
+ * NOTE: unifiedQuoteCalculator / centralizedCalculations are NO LONGER used for
+ * financial outputs. All costs, savings, ITC, ROI, and NPV flow through
+ * pricingServiceV45 for single-source-of-truth compliance.
  *
  * PROTECTED: Do not import from other step files. This is Layer 2 logic.
  * =============================================================================
  */
 
-import { calculateQuote } from "@/services/unifiedQuoteCalculator";
 import {
   getBESSSizingRatioWithSource,
   getGeneratorReserveMarginWithSource,
   type BESSUseCase,
 } from "@/services/benchmarkSources";
-// V4.5 enhancements: Annual reserves for honest TCO + single-source pricing
-import { ANNUAL_RESERVES, calculateSystemCosts } from "@/services/pricingServiceV45";
+// V4.5 SSOT: All financial outputs (costs, savings, ITC, ROI, NPV) flow through
+// pricingServiceV45. unifiedQuoteCalculator is no longer used for financials.
+import {
+  calculateSystemCosts,
+  calculateAnnualSavings,
+  calculateROI,
+} from "@/services/pricingServiceV45";
 import { hasGeneratorIntent } from "./addonIntent";
 import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
 
@@ -398,17 +408,26 @@ function computeEVChargerKW(state: WizardState): number {
 }
 
 // =============================================================================
-// BUILD ONE TIER — calls calculateQuote() SSOT for a single tier
+// BUILD ONE TIER — uses pricingServiceV45 as single SSOT for costs, savings, ROI, and NPV.
+// All financial outputs are traceable to benchmarkSources.ts constants.
+// This function is synchronous (no network calls).
 // =============================================================================
 
-async function buildOneTier(
+function buildOneTier(
   state: WizardState,
   goal: GoalChoice,
   tierLabel: TierLabel,
   baseNotes: string[]
-): Promise<QuoteTier> {
-  const { intel, location, industry, evRevenuePerYear, solarKW, generatorKW, generatorFuelType } =
-    state;
+): QuoteTier {
+  const {
+    intel,
+    location: _location,
+    industry: _industry,
+    evRevenuePerYear,
+    solarKW,
+    generatorKW,
+    generatorFuelType,
+  } = state;
 
   // Step 3.5 visited flag: when set, the user explicitly toggled each addon.
   // Gate solar/generator on their explicit choices; when not visited, fall back
@@ -463,31 +482,11 @@ async function buildOneTier(
         ? `${state.evChargers.count} × ${state.evChargers.type.toUpperCase()}`
         : "";
 
-  // ── Call SSOT (calculateQuote) ──────────────────────────────────────────
-  const result = await calculateQuote({
-    storageSizeMW: Math.max(0.01, bessKW / 1000),
-    durationHours,
-    solarMW: finalSolarKW / 1000,
-    generatorMW: finalGenKW / 1000,
-    generatorFuelType: generatorFuelType || "natural-gas", // Use configured fuel type
-    electricityRate: intel?.utilityRate ?? 0.15,
-    demandCharge: intel?.demandCharge ?? 15,
-    zipCode: location?.zip,
-    location: location?.state ?? "CA",
-    useCase: industry ?? "office",
-    gridConnection: "on-grid",
-    // ITC: assume prevailing wage compliance (standard for commercial BESS ≥ 1 MW)
-    itcConfig: {
-      prevailingWage: true,
-      apprenticeship: true,
-    },
-  });
-
-  // ── V4.5 SSOT PRICING (replaces applyMarginPolicy for cost calculations) ──
+  // ── V4.5 SSOT PRICING ──────────────────────────────────────────────────
   // calculateSystemCosts is the single source of truth for all equipment costs.
-  // It includes: BESS, solar, generator (fuel-type aware), EV chargers,
+  // Includes: BESS, solar, generator (fuel-type aware), EV chargers,
   // site engineering, 7.5% contingency, tiered Merlin fee, and correct ITC
-  // (30% on solar + BESS only — not generator or EV, which are ineligible).
+  // (30% on solar + BESS only per IRA 2022 — generator/EV/Merlin fee ineligible).
   const v45Costs = calculateSystemCosts({
     solarKW: finalSolarKW,
     bessKW,
@@ -499,28 +498,55 @@ async function buildOneTier(
     hpcChargers: hpc,
   });
 
+  // ── V4.5 SSOT SAVINGS ──────────────────────────────────────────────────
+  // calculateAnnualSavings uses real project inputs (electricity rate, demand
+  // charge, sun hours) — NOT the generic MW multipliers in centralizedCalculations.
+  // EV charging revenue is captured here via evChargers count parameter.
+  const electricityRate = intel?.utilityRate ?? 0.15;
+  const demandCharge = intel?.demandCharge ?? 15;
+  const sunHoursPerDay = intel?.peakSunHours ?? 5;
+  const evChargerCount = level2 + dcfc + hpc;
+
+  const v45Savings = calculateAnnualSavings(
+    {
+      bessKW,
+      bessKWh,
+      solarKW: finalSolarKW,
+      generatorKW: finalGenKW,
+      evChargers: evChargerCount,
+      electricityRate,
+      demandCharge,
+      sunHoursPerDay,
+      cyclesPerYear: 250,
+      hasTOU: false, // conservative: no TOU arbitrage unless confirmed
+    },
+    finalSolarKW
+  );
+
   // ── Assemble QuoteTier ──────────────────────────────────────────────────
   const itcRate = 0.3; // Federal ITC base rate (IRA 2022); applied to solar+BESS only
   const grossCost = v45Costs.totalInvestment; // equipment + site + contingency + Merlin fee
   const itcAmount = v45Costs.federalITC; // 30% of (solarCost + bessCost) only
   const netCost = v45Costs.netInvestment; // grossCost − itcAmount
 
-  // V4.5 Enhancement: Calculate annual reserves for honest TCO
-  const annualReserves = ANNUAL_RESERVES.total(finalSolarKW);
+  // V4.5 honest TCO: gross = BESS + solar + EV revenue; net = gross − reserves
+  // EV revenue already included in v45Savings.evChargingRevenue — do not double-add.
+  // evRevenuePerYear from state is kept additive for backward compatibility but
+  // v45Savings is the primary source; sum only if evRevenuePerYear came from a
+  // different evChargers source (e.g., wizard state.evChargers legacy path).
+  const grossAnnualSavings =
+    evChargerCount > 0
+      ? v45Savings.grossAnnualSavings // evChargers already counted in v45Savings
+      : v45Savings.grossAnnualSavings + evRevenuePerYear; // legacy ev path
 
-  // EV revenue (money from selling charging service) is additive to SSOT savings.
-  // It is NOT in result.financials.annualSavings — that covers energy cost savings only.
-  const grossAnnualSavings = result.financials.annualSavings + evRevenuePerYear;
-
-  // V4.5: Deduct annual reserves for honest net savings
+  const annualReserves = v45Savings.annualReserves; // from ANNUAL_RESERVES.total(solarKW)
   const annualSavings = grossAnnualSavings - annualReserves;
 
-  // Recalculate payback with honest net savings (v4.5 improvement)
-  const paybackYears = netCost / annualSavings;
-
-  // Recalculate ROI using the correct (v45) cost basis
-  // roi10Year: percentage return relative to net investment over 10 years
-  const roi10Year = netCost > 0 ? ((annualSavings * 10 - netCost) / netCost) * 100 : 0;
+  // ── V4.5 SSOT ROI / NPV ────────────────────────────────────────────────
+  // calculateROI uses pricingServiceV45 net cost + v45 savings for consistency.
+  const v45ROI = calculateROI(netCost, annualSavings);
+  const paybackYears = v45ROI.paybackYears;
+  const roi10Year = v45ROI.roi10Year;
 
   // Map v45 equipment subtotal to a margin band label for transparency
   const equipSubtotal = v45Costs.equipmentSubtotal;
@@ -543,10 +569,8 @@ async function buildOneTier(
     evChargerKW > 0
       ? `EV chargers: ${evChargerKW} kW (${evChargerDetails}, already in base load)`
       : "EV chargers: none",
-    // V4.5 transparency: Show gross vs net savings
-    `Gross annual savings: $${Math.round(grossAnnualSavings).toLocaleString()}`,
-    `Annual reserves: -$${Math.round(annualReserves).toLocaleString()} (insurance, inverter, degradation)`,
-    `Net annual savings: $${Math.round(annualSavings).toLocaleString()} (honest TCO)`,
+    `Savings model: V4.5 (pricingServiceV45.calculateAnnualSavings) — demand charge reduction + solar generation + EV revenue`,
+    `Savings inputs: rate=$${electricityRate}/kWh, demand=$${demandCharge}/kW, sun=${sunHoursPerDay.toFixed(1)}h/day`,
     `Pricing: V4.5 model (pricingServiceV45) — equipment + site + 7.5% contingency + Merlin ${blendedMarginPercent.toFixed(0)}% fee`,
     `ITC: 30% on solar ($${Math.round(v45Costs.solarCost).toLocaleString()}) + BESS ($${Math.round(v45Costs.bessCost).toLocaleString()}) = $${Math.round(itcAmount).toLocaleString()}`,
   ];
@@ -570,7 +594,7 @@ async function buildOneTier(
     evRevenuePerYear,
     paybackYears,
     roi10Year,
-    npv: result.financials.npv,
+    npv: v45ROI.npv25Year, // 25-year NPV, 5% discount rate (pricingServiceV45.calculateROI)
     // V4.5 margin transparency (from pricingServiceV45 tiered Merlin fee)
     marginBandId,
     blendedMarginPercent,
@@ -630,12 +654,11 @@ export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteT
     `Critical load: ${(state.criticalLoadPct * 100).toFixed(0)}% of peak`,
   ];
 
-  // Run all three tiers in parallel (each makes one calculateQuote() call)
-  const [starter, recommended, complete] = await Promise.all([
-    buildOneTier(state, goal, "Starter", baseNotes),
-    buildOneTier(state, goal, "Recommended", baseNotes),
-    buildOneTier(state, goal, "Complete", baseNotes),
-  ]);
+  // buildOneTier is synchronous (pricingServiceV45 only, no network calls).
+  // buildTiers remains async for backwards compatibility with all callers.
+  const starter = buildOneTier(state, goal, "Starter", baseNotes);
+  const recommended = buildOneTier(state, goal, "Recommended", baseNotes);
+  const complete = buildOneTier(state, goal, "Complete", baseNotes);
 
   return [starter, recommended, complete];
 }
