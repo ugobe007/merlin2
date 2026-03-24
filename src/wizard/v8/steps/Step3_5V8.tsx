@@ -42,40 +42,8 @@ const GENERATOR_SCOPES = [
   },
 ] as const;
 
-// EV packages — specific charger counts + annual revenue estimates
-const EV_PACKAGES = [
-  {
-    id: "pkg_basic",
-    label: "Starter",
-    l2: 4,
-    dcfc: 0,
-    annualRevenue: 7200,
-    recommended: false,
-    tagline: "Employee & visitor charging",
-  },
-  {
-    id: "pkg_pro",
-    label: "Pro Hub",
-    l2: 6,
-    dcfc: 2,
-    annualRevenue: 34800,
-    recommended: true,
-    tagline: "Public + fast charging revenue",
-  },
-  {
-    id: "pkg_fleet",
-    label: "Fleet+",
-    l2: 6,
-    dcfc: 4,
-    annualRevenue: 58800,
-    recommended: false,
-    tagline: "Fleet depot or high-traffic site",
-  },
-] as const;
-
 type SolarScope = SolarScopeId;
 type GeneratorScope = GeneratorScopeId;
-type EVPackage = (typeof EV_PACKAGES)[number]["id"];
 
 function fmtKW(kw: number): string {
   return kw >= 1000 ? `${(kw / 1000).toFixed(1)} MW` : `${kw} kW`;
@@ -107,9 +75,6 @@ export default function Step3_5V8({ state, actions }: Props) {
     (state.step3Answers?.generatorScope as GeneratorScope | undefined) ??
       defaultGeneratorScope(state)
   );
-  const [evPackage, setEvPackage] = useState<EVPackage>(
-    (state.step3Answers?.evScope as EVPackage | undefined) ?? "pkg_pro"
-  );
   const [fuelType, setFuelType] = useState<"diesel" | "natural-gas">(
     state.generatorFuelType === "diesel" ? "diesel" : "natural-gas"
   );
@@ -131,7 +96,7 @@ export default function Step3_5V8({ state, actions }: Props) {
     const next = !wantsEV;
     setWantsEV(next);
     actions.setAddonPreference("ev", next);
-    if (next) actions.setAnswer("evScope", evPackage);
+    if (next) actions.setAnswer("evScope", "custom");
   };
 
   const handleSolarScope = (s: SolarScope) => {
@@ -142,13 +107,9 @@ export default function Step3_5V8({ state, actions }: Props) {
     setGeneratorScope(s);
     actions.setAnswer("generatorScope", s);
   };
-  const handleEVPackage = (pkg: EVPackage) => {
-    setEvPackage(pkg);
-    actions.setAnswer("evScope", pkg);
-  };
-  const handleEVCustom = (l2: number, dcfc: number) => {
+  const handleEVConfig = (l2: number, dcfc: number, hpc: number) => {
     actions.setAnswer("evScope", "custom");
-    actions.setAddonConfig({ level2Chargers: l2, dcfcChargers: dcfc });
+    actions.setAddonConfig({ level2Chargers: l2, dcfcChargers: dcfc, hpcChargers: hpc });
   };
   const handleFuelType = (fuel: "diesel" | "natural-gas") => {
     setFuelType(fuel);
@@ -160,9 +121,6 @@ export default function Step3_5V8({ state, actions }: Props) {
   const roofAreaSqFt = state.step3Answers?.roofArea as number | undefined;
   const activeSolarKW = wantsSolar && solarFeasible ? estimateSolarKW(solarScope, state) : 0;
   const activeGenKW = wantsGenerator ? estimateGenKW(generatorScope, state) : 0;
-  const activeEVPkg = wantsEV
-    ? (EV_PACKAGES.find((p) => p.id === evPackage) ?? EV_PACKAGES[1])
-    : null;
   const hasAnyAddon = wantsSolar || wantsGenerator || wantsEV;
 
   // Generator smart recommendation signal
@@ -375,14 +333,15 @@ export default function Step3_5V8({ state, actions }: Props) {
         }
       />
 
-      {/* EV Charging — package selector */}
+      {/* EV Charging */}
       <EVPackageCard
         isOn={wantsEV}
         onToggle={toggleEV}
-        selectedPackage={evPackage}
-        onSelectPackage={handleEVPackage}
-        onCustomConfig={handleEVCustom}
         peakLoadKW={state.peakLoadKW}
+        initialL2={state.level2Chargers}
+        initialDcfc={state.dcfcChargers}
+        initialHpc={state.hpcChargers}
+        onConfig={handleEVConfig}
       />
 
       {/* Summary strip */}
@@ -434,16 +393,24 @@ export default function Step3_5V8({ state, actions }: Props) {
                 </span>
               </div>
             )}
-            {activeEVPkg && (
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ fontSize: 12 }}>🚗</span>
-                <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>EV:</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>
-                  {activeEVPkg.l2} L2{activeEVPkg.dcfc > 0 ? ` + ${activeEVPkg.dcfc} DCFC` : ""} · ~
-                  {fmtRevenue(activeEVPkg.annualRevenue)}/yr revenue
-                </span>
-              </div>
-            )}
+            {wantsEV &&
+              (state.level2Chargers > 0 || state.dcfcChargers > 0 || state.hpcChargers > 0) && (
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ fontSize: 12 }}>⚡</span>
+                  <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>EV:</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>
+                    {state.level2Chargers > 0 ? `${state.level2Chargers} L2` : ""}
+                    {state.dcfcChargers > 0 ? ` + ${state.dcfcChargers} DCFC` : ""}
+                    {state.hpcChargers > 0 ? ` + ${state.hpcChargers} HPC` : ""} ·{" "}
+                    {(
+                      state.level2Chargers * 11 +
+                      state.dcfcChargers * 100 +
+                      state.hpcChargers * 300
+                    ).toLocaleString()}{" "}
+                    kW
+                  </span>
+                </div>
+              )}
           </div>
         </div>
       )}
@@ -1025,55 +992,173 @@ function IntentCard<T extends string>({
   );
 }
 
+// ── Slider Row Helper ────────────────────────────────────────────────────────
+
+function SliderRow({
+  label,
+  value,
+  max,
+  color,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+  onChange: (v: number) => void;
+}) {
+  const pct = max > 0 ? (value / max) * 100 : 0;
+  return (
+    <div style={{ marginBottom: 22 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 10,
+        }}
+      >
+        <span style={{ fontSize: 13, color: "rgba(203,213,225,0.85)", fontWeight: 400 }}>
+          {label}
+        </span>
+        <span style={{ fontSize: 24, fontWeight: 700, color: "#e2e8f0", lineHeight: 1 }}>
+          {value}
+        </span>
+      </div>
+      <div style={{ position: "relative", height: 20, display: "flex", alignItems: "center" }}>
+        {/* Track background */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            height: 5,
+            borderRadius: 3,
+            background: "rgba(255,255,255,0.08)",
+          }}
+        />
+        {/* Colored fill */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            height: 5,
+            width: `${pct}%`,
+            borderRadius: 3,
+            background: color,
+            transition: "width 0.06s",
+          }}
+        />
+        {/* Thumb dot */}
+        <div
+          style={{
+            position: "absolute",
+            left: `calc(${pct}% - 9px)`,
+            width: 18,
+            height: 18,
+            borderRadius: "50%",
+            background: color,
+            boxShadow: `0 0 10px ${color}99`,
+            transition: "left 0.06s",
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        />
+        {/* Invisible range input */}
+        <input
+          type="range"
+          min={0}
+          max={max}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          style={{
+            position: "absolute",
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            cursor: "pointer",
+            margin: 0,
+            zIndex: 2,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── EV Package Card ───────────────────────────────────────────────────────────
 
 interface EVPackageCardProps {
   isOn: boolean;
   onToggle: () => void;
-  selectedPackage: EVPackage;
-  onSelectPackage: (pkg: EVPackage) => void;
-  onCustomConfig: (l2: number, dcfc: number) => void;
   peakLoadKW: number;
+  initialL2: number;
+  initialDcfc: number;
+  initialHpc: number;
+  onConfig: (l2: number, dcfc: number, hpc: number) => void;
 }
 
 function EVPackageCard({
   isOn,
   onToggle,
-  selectedPackage,
-  onSelectPackage,
-  onCustomConfig,
   peakLoadKW,
+  initialL2,
+  initialDcfc,
+  initialHpc,
+  onConfig,
 }: EVPackageCardProps) {
-  const [evMode, setEvMode] = React.useState<"packages" | "custom">("packages");
-  const [customL2, setCustomL2] = React.useState(4);
-  const [customDcfc, setCustomDcfc] = React.useState(1);
+  // Smart Merlin recommendations based on peak load
+  const recL2 = Math.min(12, Math.max(4, peakLoadKW > 0 ? Math.round(peakLoadKW / 150) : 6));
+  const recDcfc = Math.min(8, Math.max(0, peakLoadKW > 0 ? Math.round(peakLoadKW / 600) : 2));
+  const recHpc = Math.min(4, Math.max(0, peakLoadKW > 0 ? Math.round(peakLoadKW / 1200) : 0));
 
-  const selected = EV_PACKAGES.find((p) => p.id === selectedPackage) ?? EV_PACKAGES[1];
-  const totalKW = (pkg: (typeof EV_PACKAGES)[number]) => Math.round(pkg.l2 * 7.2 + pkg.dcfc * 50);
-  const customKW = Math.round(customL2 * 7.2 + customDcfc * 50);
-  const customRevenue =
-    Math.round(((customL2 * 7.2 * 0.25 + customDcfc * 50 * 0.18) * 365 * 0.4) / 10) * 10;
-  const loadImpact = (pkg: (typeof EV_PACKAGES)[number]) => {
-    const kw = totalKW(pkg);
-    return peakLoadKW > 0 ? `+${Math.round((kw / peakLoadKW) * 100)}% peak load` : `${kw} kW peak`;
+  const [l2, setL2] = useState(initialL2 > 0 ? initialL2 : recL2);
+  const [dcfc, setDcfc] = useState(initialDcfc > 0 ? initialDcfc : recDcfc);
+  const [hpc, setHpc] = useState(initialHpc > 0 ? initialHpc : recHpc);
+  const [confirmed, setConfirmed] = useState(false);
+
+  // kW midpoints per charger type
+  const L2_KW = 11; // 7–22 kW range
+  const DCFC_KW = 100; // 50–150 kW range
+  const HPC_KW = 300; // 250–350 kW range
+
+  const totalKW = l2 * L2_KW + dcfc * DCFC_KW + hpc * HPC_KW;
+  const annualRevenue =
+    Math.round(
+      ((l2 * L2_KW * 0.25 + dcfc * DCFC_KW * 0.18 + hpc * HPC_KW * 0.15) * 365 * 0.4) / 100
+    ) * 100;
+
+  const updateCounts = (newL2: number, newDcfc: number, newHpc: number) => {
+    setConfirmed(false);
+    onConfig(newL2, newDcfc, newHpc);
   };
 
   return (
     <div
       style={{
         borderRadius: 12,
-        border: isOn ? "1.5px solid rgba(16,185,129,0.45)" : "1px solid rgba(255,255,255,0.08)",
-        background: isOn ? "rgba(16,185,129,0.07)" : "rgba(51,65,85,0.45)",
+        border: isOn ? "1.5px solid rgba(56,189,248,0.40)" : "1px solid rgba(255,255,255,0.08)",
+        background: isOn ? "rgba(14,165,233,0.06)" : "rgba(30,41,59,0.5)",
         overflow: "hidden",
         transition: "border-color 0.15s, background 0.15s",
       }}
     >
+      {/* Gradient accent line when on */}
+      {isOn && (
+        <div
+          style={{
+            height: 3,
+            background: "linear-gradient(90deg, #22d3ee 0%, #818cf8 50%, #c084fc 100%)",
+          }}
+        />
+      )}
       {/* Header */}
       <button
         onClick={onToggle}
         style={{
           width: "100%",
-          padding: "13px 14px",
+          padding: "14px 16px",
           display: "flex",
           alignItems: "center",
           gap: 12,
@@ -1085,54 +1170,39 @@ function EVPackageCard({
       >
         <div
           style={{
-            width: 38,
-            height: 38,
-            borderRadius: 9,
+            width: 40,
+            height: 40,
+            borderRadius: 10,
             flexShrink: 0,
-            background: isOn ? "rgba(16,185,129,0.14)" : "rgba(255,255,255,0.05)",
-            border: isOn ? "1px solid rgba(16,185,129,0.28)" : "1px solid rgba(255,255,255,0.08)",
+            background: isOn ? "rgba(56,189,248,0.15)" : "rgba(255,255,255,0.05)",
+            border: isOn ? "1px solid rgba(56,189,248,0.30)" : "1px solid rgba(255,255,255,0.08)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 19,
+            fontSize: 20,
             transition: "all 0.15s",
           }}
         >
-          🚗
+          ⚡
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: isOn ? "#6EE7B7" : "#fff" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: isOn ? "#7dd3fc" : "#fff" }}>
               EV Charging
             </span>
-            {isOn && evMode === "packages" && (
+            {isOn && totalKW > 0 && (
               <span
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "#3ECF8E",
-                  background: "rgba(16,185,129,0.12)",
-                  border: "1px solid rgba(16,185,129,0.25)",
+                  color: "#38bdf8",
+                  background: "rgba(56,189,248,0.12)",
+                  border: "1px solid rgba(56,189,248,0.28)",
                   borderRadius: 4,
                   padding: "1px 6px",
                 }}
               >
-                ~{fmtRevenue(selected.annualRevenue)}/yr revenue
-              </span>
-            )}
-            {isOn && evMode === "custom" && (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#3ECF8E",
-                  background: "rgba(16,185,129,0.12)",
-                  border: "1px solid rgba(16,185,129,0.25)",
-                  borderRadius: 4,
-                  padding: "1px 6px",
-                }}
-              >
-                ~{fmtRevenue(customRevenue)}/yr · custom
+                {l2 + dcfc + hpc} ports · {totalKW.toLocaleString()} kW
               </span>
             )}
           </div>
@@ -1144,7 +1214,7 @@ function EVPackageCard({
               lineHeight: 1.4,
             }}
           >
-            Level 2 and DC fast chargers for customers, staff, or fleet vehicles.
+            Employee &amp; customer charging
           </p>
         </div>
         <div
@@ -1154,7 +1224,7 @@ function EVPackageCard({
             height: 22,
             borderRadius: "50%",
             border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)",
-            background: isOn ? "#3ECF8E" : "transparent",
+            background: isOn ? "#38bdf8" : "transparent",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -1162,461 +1232,145 @@ function EVPackageCard({
             fontWeight: 700,
             color: "#0D1117",
             transition: "all 0.15s ease",
-            boxShadow: isOn ? "0 0 8px rgba(16,185,129,0.45)" : "none",
+            boxShadow: isOn ? "0 0 8px rgba(56,189,248,0.50)" : "none",
           }}
         >
           {isOn && "✓"}
         </div>
       </button>
 
-      {/* Mode selector + content */}
+      {/* Expanded content */}
       {isOn && (
-        <div style={{ padding: "0 14px 14px" }}>
-          {/* Recommended / Customize tab row */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-            <button
-              onClick={() => setEvMode("packages")}
-              style={{
-                flex: 1,
-                padding: "7px 10px",
-                borderRadius: 7,
-                border:
-                  evMode === "packages"
-                    ? "1.5px solid rgba(16,185,129,0.55)"
-                    : "1px solid rgba(255,255,255,0.08)",
-                background: evMode === "packages" ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.3)",
-                cursor: "pointer",
-                fontSize: 11,
-                fontWeight: 700,
-                color: evMode === "packages" ? "#6EE7B7" : "rgba(255,255,255,0.55)",
-                transition: "all 0.12s",
-              }}
-            >
-              📦 Recommended Packages
-            </button>
-            <button
-              onClick={() => {
-                setEvMode("custom");
-                onCustomConfig(customL2, customDcfc);
-              }}
-              style={{
-                flex: 1,
-                padding: "7px 10px",
-                borderRadius: 7,
-                border:
-                  evMode === "custom"
-                    ? "1.5px solid rgba(16,185,129,0.55)"
-                    : "1px solid rgba(255,255,255,0.08)",
-                background: evMode === "custom" ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.3)",
-                cursor: "pointer",
-                fontSize: 11,
-                fontWeight: 700,
-                color: evMode === "custom" ? "#6EE7B7" : "rgba(255,255,255,0.55)",
-                transition: "all 0.12s",
-              }}
-            >
-              ⚙️ Customize
-            </button>
+        <div style={{ padding: "0 16px 16px" }}>
+          {/* Merlin recommendation banner */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 8,
+              padding: "10px 12px",
+              borderRadius: 8,
+              background: "rgba(16,185,129,0.07)",
+              border: "1px solid rgba(16,185,129,0.16)",
+              marginBottom: 20,
+            }}
+          >
+            <span style={{ fontSize: 14, flexShrink: 0, lineHeight: 1.4 }}>ℹ️</span>
+            <div style={{ fontSize: 12, color: "rgba(203,213,225,0.85)", lineHeight: 1.6 }}>
+              <span style={{ fontSize: 14 }}>🧙 </span>
+              <strong style={{ color: "#3ECF8E", fontWeight: 700 }}>
+                Merlin: {recL2 > 0 ? `${recL2} L2` : ""}
+                {recDcfc > 0 ? ` + ${recDcfc} DC Fast` : ""}
+                {recHpc > 0 ? ` + ${recHpc} High Power` : ""} chargers recommended
+              </strong>{" "}
+              {peakLoadKW > 0
+                ? `based on your ${peakLoadKW.toLocaleString()} kW facility load.`
+                : "for employee and customer charging."}
+            </div>
           </div>
 
-          {/* PACKAGES MODE */}
-          {evMode === "packages" && (
-            <>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: "rgba(148,163,184,0.55)",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  marginBottom: 7,
-                }}
-              >
-                Select your charging package
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
-                {EV_PACKAGES.map((pkg) => {
-                  const active = selectedPackage === pkg.id;
-                  const kw = totalKW(pkg);
-                  return (
-                    <button
-                      key={pkg.id}
-                      onClick={() => onSelectPackage(pkg.id)}
-                      style={{
-                        padding: "10px 10px 10px",
-                        borderRadius: 8,
-                        border: active
-                          ? "1.5px solid rgba(16,185,129,0.55)"
-                          : "1px solid rgba(255,255,255,0.08)",
-                        background: active ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.45)",
-                        cursor: "pointer",
-                        textAlign: "left",
-                        transition: "all 0.12s",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 4,
-                        position: "relative",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!active) {
-                          e.currentTarget.style.background = "rgba(51,65,85,0.65)";
-                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!active) {
-                          e.currentTarget.style.background = "rgba(51,65,85,0.45)";
-                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                        }
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 3,
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 700,
-                            color: active ? "#6EE7B7" : "rgba(255,255,255,0.88)",
-                            lineHeight: 1.2,
-                          }}
-                        >
-                          {pkg.label}
-                        </span>
-                        <div
-                          style={{
-                            flexShrink: 0,
-                            width: 14,
-                            height: 14,
-                            borderRadius: "50%",
-                            border: active ? "none" : "1.5px solid rgba(255,255,255,0.18)",
-                            background: active ? "#3ECF8E" : "transparent",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 8,
-                            fontWeight: 700,
-                            color: "#0D1117",
-                          }}
-                        >
-                          {active && "✓"}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 10,
-                          color: active ? "rgba(110,231,183,0.70)" : "rgba(148,163,184,0.55)",
-                          lineHeight: 1.3,
-                        }}
-                      >
-                        {pkg.l2} L2{pkg.dcfc > 0 ? ` + ${pkg.dcfc} L3` : ""}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 800,
-                          color: active ? "#3ECF8E" : "rgba(255,255,255,0.70)",
-                          letterSpacing: "-0.3px",
-                          lineHeight: 1,
-                          marginTop: 2,
-                        }}
-                      >
-                        {fmtRevenue(pkg.annualRevenue)}/yr
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 9,
-                          color: active ? "rgba(110,231,183,0.50)" : "rgba(148,163,184,0.40)",
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        est. revenue
-                      </div>
-                      <div style={{ fontSize: 9, color: "rgba(148,163,184,0.38)", marginTop: 1 }}>
-                        {loadImpact(pkg)} · {kw} kW
-                      </div>
-                      {pkg.recommended && (
-                        <span
-                          style={{
-                            position: "absolute",
-                            top: 5,
-                            right: active ? 22 : 6,
-                            fontSize: 8,
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            color: "#3ECF8E",
-                            background: "rgba(16,185,129,0.13)",
-                            border: "1px solid rgba(16,185,129,0.22)",
-                            borderRadius: 3,
-                            padding: "1px 4px",
-                            letterSpacing: "0.04em",
-                          }}
-                        >
-                          Best
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              <div
-                style={{
-                  fontSize: 10,
-                  color: "rgba(148,163,184,0.40)",
-                  marginTop: 7,
-                  lineHeight: 1.4,
-                }}
-              >
-                L2 = 7.2 kW · L3 (DCFC) = 50 kW · Revenue based on avg utilization &amp; $0.40/kWh
-              </div>
-              <div
-                style={{
-                  marginTop: 10,
-                  padding: "9px 11px",
-                  borderRadius: 8,
-                  background: "rgba(16,185,129,0.07)",
-                  border: "1px solid rgba(16,185,129,0.18)",
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "flex-start",
-                }}
-              >
-                <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>🚗</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#6EE7B7", lineHeight: 1.4 }}>
-                    {selected.l2} Level 2 + {selected.dcfc} DC fast chargers · {totalKW(selected)}{" "}
-                    kW peak demand
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "rgba(148,163,184,0.60)",
-                      lineHeight: 1.4,
-                      marginTop: 2,
-                    }}
-                  >
-                    ~{fmtRevenue(selected.annualRevenue)}/year estimated revenue · EV load
-                    integrated into BESS sizing
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
+          {/* Sliders */}
+          <SliderRow
+            label="Level 2 (7–22 kW)"
+            value={l2}
+            max={12}
+            color="#22d3ee"
+            onChange={(v) => {
+              setL2(v);
+              updateCounts(v, dcfc, hpc);
+            }}
+          />
+          <SliderRow
+            label="DC Fast (50–150 kW)"
+            value={dcfc}
+            max={8}
+            color="#a78bfa"
+            onChange={(v) => {
+              setDcfc(v);
+              updateCounts(l2, v, hpc);
+            }}
+          />
+          <SliderRow
+            label="High Power (250–350 kW)"
+            value={hpc}
+            max={4}
+            color="#c084fc"
+            onChange={(v) => {
+              setHpc(v);
+              updateCounts(l2, dcfc, v);
+            }}
+          />
 
-          {/* CUSTOM MODE */}
-          {evMode === "custom" && (
-            <>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: "rgba(148,163,184,0.55)",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  marginBottom: 10,
-                }}
-              >
-                Set your charger counts
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {/* L2 stepper */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "10px 12px",
-                    borderRadius: 8,
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    background: "rgba(51,65,85,0.45)",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.88)" }}>
-                      Level 2 Chargers
-                    </div>
-                    <div style={{ fontSize: 10, color: "rgba(148,163,184,0.55)" }}>
-                      7.2 kW each · employee &amp; customer
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <button
-                      onClick={() => {
-                        const n = Math.max(0, customL2 - 1);
-                        setCustomL2(n);
-                        onCustomConfig(n, customDcfc);
-                      }}
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 6,
-                        border: "1px solid rgba(255,255,255,0.12)",
-                        background: "rgba(51,65,85,0.6)",
-                        cursor: "pointer",
-                        color: "#fff",
-                        fontSize: 16,
-                        fontWeight: 700,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      −
-                    </button>
-                    <span
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 700,
-                        color: "#6EE7B7",
-                        minWidth: 24,
-                        textAlign: "center",
-                      }}
-                    >
-                      {customL2}
-                    </span>
-                    <button
-                      onClick={() => {
-                        const n = Math.min(12, customL2 + 1);
-                        setCustomL2(n);
-                        onCustomConfig(n, customDcfc);
-                      }}
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 6,
-                        border: "1px solid rgba(255,255,255,0.12)",
-                        background: "rgba(51,65,85,0.6)",
-                        cursor: "pointer",
-                        color: "#fff",
-                        fontSize: 16,
-                        fontWeight: 700,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                {/* DCFC stepper */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "10px 12px",
-                    borderRadius: 8,
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    background: "rgba(51,65,85,0.45)",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.88)" }}>
-                      DC Fast Chargers (DCFC)
-                    </div>
-                    <div style={{ fontSize: 10, color: "rgba(148,163,184,0.55)" }}>
-                      50 kW each · rapid public charging
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <button
-                      onClick={() => {
-                        const n = Math.max(0, customDcfc - 1);
-                        setCustomDcfc(n);
-                        onCustomConfig(customL2, n);
-                      }}
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 6,
-                        border: "1px solid rgba(255,255,255,0.12)",
-                        background: "rgba(51,65,85,0.6)",
-                        cursor: "pointer",
-                        color: "#fff",
-                        fontSize: 16,
-                        fontWeight: 700,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      −
-                    </button>
-                    <span
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 700,
-                        color: "#6EE7B7",
-                        minWidth: 24,
-                        textAlign: "center",
-                      }}
-                    >
-                      {customDcfc}
-                    </span>
-                    <button
-                      onClick={() => {
-                        const n = Math.min(8, customDcfc + 1);
-                        setCustomDcfc(n);
-                        onCustomConfig(customL2, n);
-                      }}
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 6,
-                        border: "1px solid rgba(255,255,255,0.12)",
-                        background: "rgba(51,65,85,0.6)",
-                        cursor: "pointer",
-                        color: "#fff",
-                        fontSize: 16,
-                        fontWeight: 700,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-              {/* Custom summary */}
-              <div
-                style={{
-                  marginTop: 10,
-                  padding: "9px 11px",
-                  borderRadius: 8,
-                  background: "rgba(16,185,129,0.07)",
-                  border: "1px solid rgba(16,185,129,0.18)",
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "flex-start",
-                }}
-              >
-                <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>🚗</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#6EE7B7", lineHeight: 1.4 }}>
-                    {customL2} Level 2 + {customDcfc} DC fast chargers · {customKW} kW peak demand
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "rgba(148,163,184,0.60)",
-                      lineHeight: 1.4,
-                      marginTop: 2,
-                    }}
-                  >
-                    ~{fmtRevenue(customRevenue)}/year estimated revenue · EV load integrated into
-                    BESS sizing
-                  </div>
-                </div>
-              </div>
-            </>
+          {/* Total capacity */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "12px 14px",
+              borderRadius: 8,
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              marginBottom: 14,
+            }}
+          >
+            <span style={{ fontSize: 14, color: "rgba(203,213,225,0.65)", fontWeight: 500 }}>
+              Total Capacity:
+            </span>
+            <span
+              style={{
+                fontSize: 22,
+                fontWeight: 800,
+                color: "#f1f5f9",
+                letterSpacing: "-0.5px",
+              }}
+            >
+              {totalKW.toLocaleString()} kW
+            </span>
+          </div>
+
+          {/* Confirm button */}
+          <button
+            onClick={() => {
+              onConfig(l2, dcfc, hpc);
+              setConfirmed(true);
+            }}
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              borderRadius: 8,
+              border: confirmed
+                ? "1px solid rgba(16,185,129,0.40)"
+                : "1px solid rgba(255,255,255,0.10)",
+              background: confirmed ? "rgba(16,185,129,0.10)" : "rgba(15,23,42,0.80)",
+              cursor: "pointer",
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: "0.10em",
+              textTransform: "uppercase" as const,
+              color: confirmed ? "#3ECF8E" : "rgba(226,232,240,0.80)",
+              transition: "all 0.15s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            {confirmed ? "✓ EV CHARGING CONFIRMED" : "CONFIRM EV CHARGING"}
+          </button>
+
+          {annualRevenue > 0 && (
+            <div
+              style={{
+                fontSize: 11,
+                color: "rgba(148,163,184,0.40)",
+                textAlign: "center",
+                marginTop: 8,
+                lineHeight: 1.4,
+              }}
+            >
+              Est. ~{fmtRevenue(annualRevenue)}/yr charging revenue · load integrated into BESS
+            </div>
           )}
         </div>
       )}

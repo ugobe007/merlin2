@@ -537,12 +537,13 @@ export default function WizardV8Page() {
                 : { level2: 0, dcfc: 0 };
             }
 
-            // Commit all three in one dispatch
+            // Commit all four in one dispatch
             actions.setAddonConfig({
               solarKW: committedSolarKW,
               generatorKW: committedGenKW,
               level2Chargers: evCounts.level2,
               dcfcChargers: evCounts.dcfc,
+              hpcChargers: state.wantsEVCharging ? state.hpcChargers : 0,
             });
             actions.setAnswer("step3_5Visited", true);
             actions.goToStep(5);
