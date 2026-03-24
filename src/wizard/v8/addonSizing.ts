@@ -6,16 +6,20 @@
  * These functions mirror exactly what Step3_5V8 shows the user so that when
  * WizardV8Page calls setAddonConfig({ solarKW, generatorKW }) on Continue, the
  * values persisted to state match what was displayed.
+ *
+ * SSOT RULE: All numeric constants must trace to benchmarkSources.ts (IEEE/MDPI/NEC).
+ * Never hardcode benchmark values here — always call the source function.
  * =============================================================================
  */
 
 import type { WizardState } from "./wizardState";
+import { getGeneratorReserveMarginWithSource } from "@/services/benchmarkSources";
 
-// ── Constants (single source of truth) ────────────────────────────────────────
-
-/** sq ft per kW installed (standard 400W panel ~40 sqft panel area +
- *  racking / wiring / row spacing losses → effective 100 sqft per installed kW AC) */
-export const SQFT_PER_KW = 100;
+// ── NOTE: Solar density constant ─────────────────────────────────────────────
+// Physical density is 15 W/sqft × usableRoofPercent (SOLAR_WATTS_PER_SQFT in
+// useCasePowerCalculations.ts). useWizardV8.ts applies this to roofArea and
+// stores the result in state.solarPhysicalCapKW — that value is the SSOT cap.
+// We do NOT re-derive it here; getEffectiveSolarCapKW() simply reads it.
 
 export type SolarScopeId = "roof_only" | "roof_canopy" | "maximum";
 export type GeneratorScopeId = "essential" | "full" | "critical";
@@ -42,12 +46,18 @@ export function getEffectiveSolarCapKW(state: WizardState): number {
 }
 
 /**
- * Estimated solar generation (kW AC) for a given scope at this site.
+ * Estimated solar capacity (kW installed) for a given scope at this site.
  *
- * Formula: physicalCap × sunQualityFactor × scopePenetration
- *   - physicalCap: from solarPhysicalCapKW (authoritative, per-industry)
- *   - sunQualityFactor: normalized 3.0→0, 5.5+→1.0 (linear interpolation)
+ * Formula: physicalCap × sunFactor × scopePenetration
+ *   — matches step4Logic.computeSolarKW exactly so display = committed = auto-calc.
+ *
+ *   - physicalCap:      solarPhysicalCapKW — roof area × usable% × 15 W/sqft (NREL)
+ *   - sunFactor:        clamp((PSH − 3.0) / 2.5, 0, 1) — 0 at marginal, 1.0 at 5.5+ PSH
  *   - scopePenetration: roof_only=0.55, roof_canopy=0.80, maximum=1.00
+ *
+ * NOTE: sunFactor scales the DEPLOYED fraction of the physical cap. A site with
+ * poor sun deploys a smaller fraction because economics won't justify full buildout.
+ * Returns 0 if cap ≤ 0 (no feasible roof) or PSH ≤ 3.0 (below viable threshold).
  */
 export function estimateSolarKW(scope: SolarScopeId, state: WizardState): number {
   const cap = getEffectiveSolarCapKW(state);
@@ -55,22 +65,28 @@ export function estimateSolarKW(scope: SolarScopeId, state: WizardState): number
   const psh = state.intel?.peakSunHours ?? 4.5;
   const sunFactor = Math.max(0, Math.min(1.0, (psh - 3.0) / 2.5));
   const pen = SOLAR_SCOPE_PENETRATION[scope] ?? 0.80;
-  return Math.round(cap * (0.7 + sunFactor * 0.3) * pen);
+  // Pure linear — no artificial floor. Matches step4Logic.computeSolarKW.
+  return Math.round(Math.min(cap * sunFactor * pen, cap));
 }
 
 /**
  * Estimated generator capacity (kW) for a given scope.
  *
- * essential: critical loads only (criticalLoadPct × peakLoadKW × 1.25)
+ * essential: critical loads only — criticalLoadPct × peakLoadKW × NEC reserve margin
  * full:      entire facility + 10% headroom
  * critical:  full load + 35% headroom (data center / mission critical)
+ *
+ * SSOT: reserve margin comes from getGeneratorReserveMarginWithSource() in
+ * benchmarkSources.ts (currently 1.25 — NEC 700/701/702 + IEEE 446).
  */
 export function estimateGenKW(scope: GeneratorScopeId, state: WizardState): number {
   const { peakLoadKW, criticalLoadPct } = state;
   if (peakLoadKW <= 0) return 0;
-  if (scope === "essential") return Math.max(10, Math.round(peakLoadKW * criticalLoadPct * 1.25));
+  // Pull NEC reserve margin from SSOT — do not hardcode
+  const { margin } = getGeneratorReserveMarginWithSource();
+  if (scope === "essential") return Math.max(10, Math.round(peakLoadKW * criticalLoadPct * margin));
   if (scope === "critical")  return Math.max(10, Math.round(peakLoadKW * 1.35));
-  // "full" (default)
+  // "full" (default) — full facility + 10% headroom
   return Math.max(10, Math.round(peakLoadKW * 1.10));
 }
 
@@ -97,6 +113,31 @@ export const EV_KW = {
   dcfc: 50,
   hpc:  250,
 } as const;
+
+/**
+ * Canonical EV package charger counts — SSOT shared by Step3_5V8 (display)
+ * and WizardV8Page (commit-to-state). Never define these counts anywhere else.
+ *
+ * Revenue estimates (approximate, for display only — not a financial guarantee):
+ *   pkg_basic:  4 L2 (employee/visitor only) — ~$7,200/yr
+ *   pkg_pro:    6 L2 + 2 DCFC (public + fast charging) — ~$34,800/yr
+ *   pkg_fleet:  6 L2 + 4 DCFC (fleet depot / high-traffic) — ~$58,800/yr
+ *
+ * Legacy scope aliases (small/medium/large) kept for backward compatibility with
+ * old state that may have been saved before pkg_ IDs were introduced.
+ */
+export const EV_PACKAGE_COUNTS = {
+  // Current package IDs
+  pkg_basic: { l2: 4,  dcfc: 0 },
+  pkg_pro:   { l2: 6,  dcfc: 2 },
+  pkg_fleet: { l2: 6,  dcfc: 4 },
+  // Legacy scope IDs (backward compat)
+  small:     { l2: 4,  dcfc: 0 },
+  medium:    { l2: 8,  dcfc: 2 },
+  large:     { l2: 12, dcfc: 4 },
+} as const;
+
+export type EVPackageId = keyof typeof EV_PACKAGE_COUNTS;
 
 export function computeEVPackageKW(l2Count: number, dcfcCount: number, hpcCount = 0): number {
   return Math.round(l2Count * EV_KW.l2 + dcfcCount * EV_KW.dcfc + hpcCount * EV_KW.hpc);
