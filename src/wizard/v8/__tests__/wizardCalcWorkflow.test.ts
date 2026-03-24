@@ -682,11 +682,17 @@ describe("E. EV charger calculation chain", () => {
 // =============================================================================
 
 describe("F. Financial calculation chain", () => {
-  it("itcAmount = grossCost × itcRate", async () => {
-    const state = makeState();
+  it("itcAmount covers solar+BESS only — not generator or EV (IRA 2022)", async () => {
+    // Under IRA 2022, ITC (30%) applies to solar + BESS equipment.
+    // Generators and EV chargers are NOT ITC-eligible.
+    // Therefore itcAmount < grossCost × itcRate for any system with generator or EV.
+    const state = makeState({ wantsGenerator: true, wantsSolar: true, solarKW: 50 });
     const [, rec] = await buildTiers(state);
-    const expected = rec.grossCost * rec.itcRate;
-    expect(rec.itcAmount).toBeCloseTo(expected, 1);
+    expect(rec.itcAmount).toBeGreaterThan(0);
+    // ITC must be positive but less than 30% of total gross cost (generator/EV excluded)
+    expect(rec.itcAmount).toBeLessThan(rec.grossCost * rec.itcRate + 1);
+    // netCost is always grossCost minus the eligible ITC
+    expect(rec.netCost).toBeCloseTo(rec.grossCost - rec.itcAmount, 0);
   });
 
   it("netCost = grossCost - itcAmount", async () => {

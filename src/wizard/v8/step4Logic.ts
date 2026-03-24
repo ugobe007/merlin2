@@ -68,10 +68,8 @@ import {
   getGeneratorReserveMarginWithSource,
   type BESSUseCase,
 } from "@/services/benchmarkSources";
-import { applyMarginPolicy } from "@/services/marginPolicyEngine";
-
-// V4.5 enhancements: Annual reserves for honest TCO
-import { ANNUAL_RESERVES } from "@/services/pricingServiceV45";
+// V4.5 enhancements: Annual reserves for honest TCO + single-source pricing
+import { ANNUAL_RESERVES, calculateSystemCosts } from "@/services/pricingServiceV45";
 import { hasGeneratorIntent } from "./addonIntent";
 import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
 
@@ -485,40 +483,27 @@ async function buildOneTier(
     },
   });
 
-  // ── Apply Margin Policy (CRITICAL FOR COMMERCIALIZATION) ────────────────
-  const withMargin = applyMarginPolicy({
-    lineItems: [
-      {
-        sku: "bess-equipment",
-        category: "bess",
-        description: "Battery Energy Storage System",
-        baseCost: result.costs.equipmentCost,
-        quantity: 1,
-        unitCost: result.costs.equipmentCost,
-        unit: "system",
-        costSource: "NREL ATB 2024",
-      },
-      {
-        sku: "bess-installation",
-        category: "construction_labor",
-        description: "Installation & Soft Costs",
-        baseCost: result.costs.installationCost,
-        quantity: 1,
-        unitCost: result.costs.installationCost,
-        unit: "system",
-        costSource: "NREL ATB 2024",
-      },
-    ],
-    totalBaseCost: result.costs.totalProjectCost,
-    riskLevel: "standard",
-    customerSegment: "direct",
+  // ── V4.5 SSOT PRICING (replaces applyMarginPolicy for cost calculations) ──
+  // calculateSystemCosts is the single source of truth for all equipment costs.
+  // It includes: BESS, solar, generator (fuel-type aware), EV chargers,
+  // site engineering, 7.5% contingency, tiered Merlin fee, and correct ITC
+  // (30% on solar + BESS only — not generator or EV, which are ineligible).
+  const v45Costs = calculateSystemCosts({
+    solarKW: finalSolarKW,
+    bessKW,
+    bessKWh,
+    generatorKW: finalGenKW,
+    generatorFuelType: generatorFuelType || "natural-gas",
+    level2Chargers: level2,
+    dcfcChargers: dcfc,
+    hpcChargers: hpc,
   });
 
   // ── Assemble QuoteTier ──────────────────────────────────────────────────
-  const itcRate = result.metadata.itcDetails?.totalRate ?? 0.3;
-  const grossCost = withMargin.sellPriceTotal; // USE SELL PRICE (not base cost)
-  const itcAmount = grossCost * itcRate;
-  const netCost = grossCost - itcAmount;
+  const itcRate = 0.3; // Federal ITC base rate (IRA 2022); applied to solar+BESS only
+  const grossCost = v45Costs.totalInvestment; // equipment + site + contingency + Merlin fee
+  const itcAmount = v45Costs.federalITC; // 30% of (solarCost + bessCost) only
+  const netCost = v45Costs.netInvestment; // grossCost − itcAmount
 
   // V4.5 Enhancement: Calculate annual reserves for honest TCO
   const annualReserves = ANNUAL_RESERVES.total(finalSolarKW);
@@ -532,6 +517,16 @@ async function buildOneTier(
 
   // Recalculate payback with honest net savings (v4.5 improvement)
   const paybackYears = netCost / annualSavings;
+
+  // Recalculate ROI using the correct (v45) cost basis
+  // roi10Year: percentage return relative to net investment over 10 years
+  const roi10Year = netCost > 0 ? ((annualSavings * 10 - netCost) / netCost) * 100 : 0;
+
+  // Map v45 equipment subtotal to a margin band label for transparency
+  const equipSubtotal = v45Costs.equipmentSubtotal;
+  const marginBandId =
+    equipSubtotal < 200_000 ? "micro" : equipSubtotal < 800_000 ? "small" : "medium";
+  const blendedMarginPercent = v45Costs.merlinFees.effectiveMargin * 100;
 
   // Audit trail notes for this tier
   const tierNotes: string[] = [
@@ -552,7 +547,8 @@ async function buildOneTier(
     `Gross annual savings: $${Math.round(grossAnnualSavings).toLocaleString()}`,
     `Annual reserves: -$${Math.round(annualReserves).toLocaleString()} (insurance, inverter, degradation)`,
     `Net annual savings: $${Math.round(annualSavings).toLocaleString()} (honest TCO)`,
-    `Margin band: ${withMargin.marginBandId} (${withMargin.blendedMarginPercent.toFixed(1)}%)`,
+    `Pricing: V4.5 model (pricingServiceV45) — equipment + site + 7.5% contingency + Merlin ${blendedMarginPercent.toFixed(0)}% fee`,
+    `ITC: 30% on solar ($${Math.round(v45Costs.solarCost).toLocaleString()}) + BESS ($${Math.round(v45Costs.bessCost).toLocaleString()}) = $${Math.round(itcAmount).toLocaleString()}`,
   ];
 
   return {
@@ -573,11 +569,11 @@ async function buildOneTier(
     annualSavings, // NET savings (gross - reserves)
     evRevenuePerYear,
     paybackYears,
-    roi10Year: result.financials.roi10Year,
+    roi10Year,
     npv: result.financials.npv,
-    // V4.5 margin transparency
-    marginBandId: withMargin.marginBandId,
-    blendedMarginPercent: withMargin.blendedMarginPercent,
+    // V4.5 margin transparency (from pricingServiceV45 tiered Merlin fee)
+    marginBandId,
+    blendedMarginPercent,
     notes: tierNotes,
   };
 }
