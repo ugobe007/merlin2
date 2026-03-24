@@ -129,6 +129,23 @@ export const AUTHORITATIVE_SOURCES: Record<string, BenchmarkSource> = {
     notes: "Comprehensive storage technology comparison and cost projections",
   },
 
+  // MERLIN INTERNAL — Vendor-Validated Quotes
+  "merlin-vendor-quotes-2025": {
+    id: "merlin-vendor-quotes-2025",
+    name: "Merlin Energy Vendor Quote Compilation Q4 2025",
+    organization: "Merlin Energy / in:r labs",
+    type: "secondary",
+    url: "https://merlinenergy.com/internal/vendor-quotes-2025",
+    publicationDate: "2025-11-01",
+    retrievalDate: "2025-11-15",
+    vintage: "Q4 2025",
+    lastVerified: "2025-11-15",
+    notes:
+      "Aggregated C&I equipment quotes from Caterpillar, Cummins, Kohler, ASCO, MTU Onsite. " +
+      "California, Texas, Nevada projects. Generator range: NG $450–$560/kW, Diesel $620–$760/kW " +
+      "(50–500 kW capacity). Mid-point values used. Excludes ATS and fuel storage (billed separately).",
+  },
+
   // SECONDARY REFERENCES
   "eia-electricity": {
     id: "eia-electricity",
@@ -558,7 +575,7 @@ export const PRICING_BENCHMARKS: Record<string, PricingBenchmark> = {
     deviationNotes: "NREL ATB 2024 utility-scale transformer (34.5 kV)",
   },
 
-  // GENERATORS
+  // GENERATORS — Utility-Scale (EIA source, reciprocating engine additions)
   "generator-natural-gas": {
     value: 700,
     unit: "$/kW",
@@ -567,7 +584,9 @@ export const PRICING_BENCHMARKS: Record<string, PricingBenchmark> = {
     confidence: "medium",
     validFrom: "2024-11-01",
     validUntil: "2025-10-31",
-    deviationNotes: "EIA capacity addition costs for natural gas reciprocating engines",
+    deviationNotes:
+      "EIA capacity addition costs for utility-scale natural gas reciprocating engines. " +
+      "NOT applicable to C&I packaged gensets — see generator-natural-gas-ci-2025.",
   },
   "generator-diesel": {
     value: 800,
@@ -577,7 +596,42 @@ export const PRICING_BENCHMARKS: Record<string, PricingBenchmark> = {
     confidence: "medium",
     validFrom: "2024-11-01",
     validUntil: "2025-10-31",
-    deviationNotes: "EIA capacity addition costs for diesel backup generators",
+    deviationNotes:
+      "EIA capacity addition costs for utility-scale diesel backup generators. " +
+      "NOT applicable to C&I packaged gensets — see generator-diesel-ci-2025.",
+  },
+
+  // GENERATORS — Commercial & Industrial Packaged Gensets (vendor-validated Q4 2025)
+  // These are the values used by pricingServiceV45.ts for C&I project quotes.
+  // Source: 5 vendor quotes from Caterpillar, Cummins, Kohler, ASCO, MTU Onsite
+  // across California, Texas, and Nevada projects (Oct–Nov 2025). Range $450–$560/kW
+  // for NG and $620–$760/kW for diesel (50–500 kW capacity range). Mid-point used.
+  "generator-natural-gas-ci-2025": {
+    value: 500,
+    unit: "$/kW",
+    sourceId: "merlin-vendor-quotes-2025",
+    scenario: "moderate",
+    confidence: "high",
+    validFrom: "2025-10-01",
+    validUntil: "2026-09-30",
+    deviationNotes:
+      "C&I packaged NG genset installed cost. Includes unit, controls, exhaust, startup. " +
+      "ATS ($8,000) billed separately. No fuel tank (NG draws from utility gas line). " +
+      "Lower than EIA utility figure ($700/kW) because EIA includes site civil/electrical " +
+      "work for large utility additions; C&I packaged gensets are skid-mounted plug-and-play.",
+  },
+  "generator-diesel-ci-2025": {
+    value: 690,
+    unit: "$/kW",
+    sourceId: "merlin-vendor-quotes-2025",
+    scenario: "moderate",
+    confidence: "high",
+    validFrom: "2025-10-01",
+    validUntil: "2026-09-30",
+    deviationNotes:
+      "C&I packaged diesel genset installed cost. Includes unit, controls, exhaust, startup. " +
+      "ATS ($8,000) and diesel fuel tank ($15,000 day tank) billed separately. " +
+      "Lower than EIA utility figure ($800/kW) for same reason as NG above.",
   },
 
   // INSTALLATION & SOFT COSTS
