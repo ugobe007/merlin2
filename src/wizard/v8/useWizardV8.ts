@@ -49,7 +49,7 @@ const devWarn = import.meta.env.DEV
 // utility-rate-service fallback. No dependency on V7's backend /api/location/resolve.
 import { fetchUtility, fetchSolar, fetchWeather } from "@/wizard/v7/api/wizardAPI";
 
-import { getFacilityConstraints } from "@/services/useCasePowerCalculations";
+import { getFacilityConstraints, getCarWashSolarCapacity } from "@/services/useCasePowerCalculations";
 import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
 import { buildTiers } from "./step4Logic";
@@ -809,35 +809,55 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   }, [powerAnswersKey, state.industry]);
 
   // ── roofArea → solarPhysicalCapKW reactive update ──────────────────────────
-  // When the user provides an actual roof/site area in Step 3 answers, compute
-  // a more accurate solar cap and update state. Applies to all industries.
-  // Formula: roofArea (sqft) × usableRoofPercent × SOLAR_WATTS_PER_SQFT / 1000
-  // Capped at the industry static max to prevent over-sizing.
+  // When the user updates solar-related Step 3 answers, compute a more accurate
+  // solar cap and update state.
+  //
+  // Car wash uses getCarWashSolarCapacity() which implements Vineet's model:
+  //   building roof (by facilityType + roofType) + vacuum canopy + carport
+  //   NOTE: totalSiteArea (~45k sqft) is the property — NOT usable for solar sizing.
+  //   Building is only 4,500-6,500 sqft; vacuum canopy is the best solar surface.
+  //
+  // All other industries: roofArea × usableRoofPercent × 15 W/sqft / 1000
+  //   totalSiteArea is intentionally ignored here — it includes parking and driveways.
   useEffect(() => {
     if (!state.industry) return;
-    const roofArea = Number(state.step3Answers?.roofArea ?? 0);
-    const totalSiteArea = Number(state.step3Answers?.totalSiteArea ?? 0);
-    const usedArea = roofArea > 0 ? roofArea : totalSiteArea;
-    if (usedArea <= 0) return;
+    const criticalLoadPct = state.criticalLoadPct ?? 0.4;
+    let newCap = 0;
 
-    const constraints = getFacilityConstraints(state.industry);
-    const usableRoofPercent = constraints?.usableRoofPercent ?? 0.4;
-    const staticCap = constraints?.totalRealisticSolarKW ?? 0;
+    const isCarWash = state.industry === "car_wash" || state.industry === "car-wash";
 
-    // SOLAR_WATTS_PER_SQFT = 15 (from useCasePowerCalculations SSOT)
-    const calculatedKW = Math.round((usedArea * usableRoofPercent * 15) / 1000);
-
-    // Use calculated cap when it's meaningfully different (>10%) from static,
-    // otherwise keep static (avoids jitter on small area inputs).
-    const newCap = staticCap > 0
-      ? Math.round((calculatedKW + staticCap) / 2) // blend: user data + SSOT
-      : calculatedKW;
+    if (isCarWash) {
+      // Dynamic cap: building roof (facilityType + roofType) + vacuum canopy + carport
+      const dynamicCap = getCarWashSolarCapacity(state.step3Answers ?? {});
+      const staticCap = getFacilityConstraints(state.industry)?.totalRealisticSolarKW ?? 60;
+      // Use dynamic if we have meaningful answers (at least facilityType selected)
+      newCap = dynamicCap > 0 ? dynamicCap : staticCap;
+    } else {
+      // All other industries: use roofArea only — totalSiteArea is NOT roof area
+      const roofArea = Number(state.step3Answers?.roofArea ?? 0);
+      if (roofArea <= 0) return; // no roof area entered → keep static cap from setIndustry
+      const constraints = getFacilityConstraints(state.industry);
+      const usableRoofPercent = constraints?.usableRoofPercent ?? 0.4;
+      const staticCap = constraints?.totalRealisticSolarKW ?? 0;
+      // 15 W/sqft (SOLAR_WATTS_PER_SQFT) — modern 400-500W panels with row spacing
+      const calculatedKW = Math.round((roofArea * usableRoofPercent * 15) / 1000);
+      newCap = staticCap > 0
+        ? Math.round((calculatedKW + staticCap) / 2) // blend: user data + SSOT
+        : calculatedKW;
+    }
 
     if (newCap > 0 && newCap !== state.solarPhysicalCapKW) {
-      let criticalLoadPct = state.criticalLoadPct ?? 0.4;
       dispatch({ type: "SET_INDUSTRY_META", solarPhysicalCapKW: newCap, criticalLoadPct });
     }
-  }, [state.step3Answers?.roofArea, state.step3Answers?.totalSiteArea, state.industry]);
+  }, [
+    state.industry,
+    state.step3Answers?.roofArea,
+    state.step3Answers?.facilityType,
+    state.step3Answers?.roofType,
+    state.step3Answers?.vacuumStations,
+    state.step3Answers?.carportInterest,
+    state.step3Answers?.carportArea,
+  ]);
 
   // ── Step 2: Industry selection ─────────────────────────────────────────
 

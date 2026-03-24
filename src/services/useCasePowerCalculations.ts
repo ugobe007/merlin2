@@ -6916,21 +6916,24 @@ export const CANOPY_WATTS_PER_SQFT = 12; // 12 W/sqft (carport/canopy, slightly 
 
 export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstraint> = {
   car_wash: {
-    typicalFootprintSqFt: 5500,
-    footprintRange: [4000, 7000],
-    usableRoofPercent: 0.45,
-    maxRooftopSolarKW: 37,
+    typicalFootprintSqFt: 4500,   // Building only — NOT total site (site avg ~38-45k sqft)
+    footprintRange: [2800, 10000], // mini-tunnel → full-service
+    usableRoofPercent: 0.65,       // Default pre-selection (conservative middle); opaque=0.70, mixed=0.55, poly=0.40
+    maxRooftopSolarKW: 29,         // 4500 sqft × 0.65 usable / 100 sqft/kW
     canopyApplicable: true,
-    typicalCanopyAreaSqFt: 1800,
-    canopyPotentialKW: 23,
-    totalRealisticSolarKW: 60,
+    typicalCanopyAreaSqFt: 2000,   // Vacuum canopy (flat metal, best surface on site; 90% usable)
+    canopyPotentialKW: 18,         // 2000 × 0.90 / 100
+    totalRealisticSolarKW: 60,     // Static fallback: ~30 kW roof + 18 kW vac canopy + ~12 kW carport
     sources: [
       "ICA 2024 Industry Study",
-      "Professional Carwash & Detailing Magazine",
-      "NREL Rooftop PV",
+      "Vineet carWashSolarModule.js — top-15 operator dimension data",
+      "NREL Rooftop PV Technical Potential",
     ],
     notes:
-      "Vineet confirmed: max 30-40 kW rooftop + 20-25 kW canopy. Total realistic ~60 kW for automated wash.",
+      "Building footprint 2,800–10,000 sqft (NOT total site area of 22k-90k sqft). " +
+      "Roof type factors: opaque metal=0.70, mixed skylights=0.55, polycarbonate=0.40 (default 0.65). " +
+      "Vacuum canopy is the BEST solar surface — flat metal, no obstructions, 90% usable. " +
+      "getCarWashSolarCapacity() computes dynamic cap from facilityType+roofType+vacuumStations+carport.",
   },
   hotel: {
     typicalFootprintSqFt: 20000,
@@ -7317,7 +7320,75 @@ export function getFacilityConstraints(industry: string): FacilitySolarConstrain
 }
 
 /**
- * GROUND-MOUNT SOLAR CONSTRAINTS - Industry Standards
+ * getCarWashSolarCapacity — Dynamic solar cap from user Step 3 answers
+ *
+ * Implements Vineet's carWashSolarModule model:
+ *   1. Building roof: facilityType → typical roof sqft × roofTypeFactor / 100 sqft per kW
+ *   2. Vacuum canopy: vacuumStations × 65 sqft × 0.90 usable / 100 sqft per kW
+ *      (flat metal, no obstructions — best solar surface on site)
+ *   3. Carport: carportArea × 0.95 usable / 100 sqft per kW (if yes/learn_more)
+ *
+ * KEY INSIGHT: Car wash SITE is ~38-45k sqft total property but the BUILDING is
+ * only 4,500-6,500 sqft. Never use totalSiteArea for solar sizing.
+ *
+ * Roof type factors (from top-15 operator data):
+ *   opaque (metal/concrete)   = 0.70 — standard pre-2018 builds, majority of installed base
+ *   mixed (partial skylights)  = 0.55 — mid-2010s builds with skylight strips
+ *   polycarbonate (heavy)      = 0.40 — Tommy's Express, Quick Quack 2.0 style
+ *   default (not yet selected) = 0.65 — conservative pre-selection middle ground
+ *
+ * Source: VineetK2004/Merlin-Wizard-2.0 carWashSolarModule.js, Feb 2026
+ */
+export function getCarWashSolarCapacity(step3Answers: Record<string, unknown>): number {
+  // ── 1. Facility type → building roof area (Vineet tier data) ──────────────
+  const facilityType = String(step3Answers?.facilityType ?? "express_tunnel");
+  const FACILITY_ROOF_SF: Record<string, number> = {
+    mini_tunnel:       2800,  // 22,000 sqft site; 2,800 sqft roof
+    express_tunnel:    4500,  // 38,000 sqft site; 4,500 sqft roof (standard)
+    in_bay_automatic:  2000,  // smaller building footprint
+    self_serve:        1500,  // mostly open bays, minimal building
+  };
+
+  // ── 2. Roof type → usable fraction ────────────────────────────────────────
+  const roofType = String(step3Answers?.roofType ?? "default");
+  const ROOF_TYPE_FACTORS: Record<string, number> = {
+    opaque:        0.70,  // Standard metal/concrete (50-60% of installed base)
+    mixed:         0.55,  // Partial skylights / polycarbonate strips
+    polycarbonate: 0.40,  // Heavy polycarbonate daylight roof (Tommy's, Quick Quack)
+    default:       0.65,  // Conservative pre-selection middle ground
+  };
+
+  // If user provided an explicit roof area, trust it; otherwise use tier default
+  const userRoofArea = Number(step3Answers?.roofArea ?? 0);
+  const buildingRoofSf = userRoofArea > 0
+    ? userRoofArea
+    : (FACILITY_ROOF_SF[facilityType] ?? 4500);
+
+  const roofFactor = ROOF_TYPE_FACTORS[roofType] ?? 0.65;
+  // 100 sqft per kW (= 10 W/sqft AC — industry standard after losses/spacing/DC-AC ratio)
+  const buildingRoofKW = Math.round(buildingRoofSf * roofFactor / 100);
+
+  // ── 3. Vacuum canopy (flat metal, 90% usable — best solar surface on site) ─
+  const vacuumCount = Number(step3Answers?.vacuumStations ?? 0);
+  // ~65 sqft canopy coverage per vacuum station; minimum 800 sqft if any vacuums present
+  const vacuumSf = vacuumCount > 0 ? Math.max(vacuumCount * 65, 800) : 0;
+  const vacuumKW = Math.round(vacuumSf * 0.90 / 100);
+
+  // ── 4. Carport solar (queue lane / vacuum carport structure) ──────────────
+  const carportInterest = String(step3Answers?.carportInterest ?? "no");
+  const carportArea = Number(step3Answers?.carportArea ?? 0);
+  // yes=100%, learn_more=50% credit (to show upside), no=0%
+  const carportFactor = carportInterest === "yes" ? 1.0
+    : carportInterest === "learn_more" ? 0.5
+    : 0.0;
+  const carportKW = carportArea > 0
+    ? Math.round(carportArea * carportFactor * 0.95 / 100)
+    : 0;
+
+  return buildingRoofKW + vacuumKW + carportKW;
+}
+
+/**
  * Source: NREL Solar Land Use Requirements, SEIA Ground-Mount Best Practices
  *
  * TrueQuote™ Sources:
