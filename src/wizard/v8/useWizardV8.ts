@@ -34,6 +34,16 @@ import {
   type SolarGrade,
 } from "./wizardState";
 
+// Dev-only logging helpers — compiled away in production bundles
+/* eslint-disable no-console */
+const devLog = import.meta.env.DEV
+  ? (...a: unknown[]) => console.log(...a)
+  : () => undefined;
+const devWarn = import.meta.env.DEV
+  ? (...a: unknown[]) => console.warn(...a)
+  : () => undefined;
+/* eslint-enable no-console */
+
 // Intel fetches (utility, solar, weather) use local services — no backend needed.
 // Location resolution is V8-native: direct ZIP lookup (zippopotam.us) with
 // utility-rate-service fallback. No dependency on V7's backend /api/location/resolve.
@@ -372,10 +382,10 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       dispatch({ type: "SET_LOCATION", location: locationData });
       
       // Fetch utility rates with country code for international locations
-      console.log(`[submitLocation] Fetching utility rates for ${finalCountryCode}`);
+      devLog(`[submitLocation] Fetching utility rates for ${finalCountryCode}`);
       try {
         const utilityData = await fetchUtility(raw, finalCountryCode);
-        console.log(`[submitLocation] Utility data:`, utilityData);
+        devLog(`[submitLocation] Utility data:`, utilityData);
         dispatch({
           type: "PATCH_INTEL",
           patch: {
@@ -386,7 +396,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
           },
         });
       } catch (utilityError) {
-        console.error(`[submitLocation] Failed to fetch utility for ${finalCountryCode}:`, utilityError);
+        devWarn(`[submitLocation] Failed to fetch utility for ${finalCountryCode}:`, utilityError);
         dispatch({ type: "PATCH_INTEL", patch: { utilityStatus: "error" } });
       }
       
@@ -734,24 +744,24 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   useEffect(() => {
     const slug = state.industry;
     if (!slug) {
-      console.log('[useWizardV8] Power calc skipped: no industry');
+      devLog('[useWizardV8] Power calc skipped: no industry');
       return;
     }
 
     const answers = step3AnswersRef.current;
     if (Object.keys(answers).length === 0) {
-      console.log('[useWizardV8] Power calc skipped: no answers');
+      devLog('[useWizardV8] Power calc skipped: no answers');
       return;
     }
 
-    console.log('[useWizardV8] Running power calculation for:', slug, 'with answers:', answers);
+    devLog('[useWizardV8] Running power calculation for:', slug, 'with answers:', answers);
 
     // Convert underscore slug (V8 type) → hyphen slug (SSOT function convention)
     const ssotSlug = slug.replace(/_/g, "-");
 
     try {
       const result = calculateUseCasePower(ssotSlug, answers as Record<string, unknown>);
-      console.log('[useWizardV8] Power calculation result:', result);
+      devLog('[useWizardV8] Power calculation result:', result);
 
       // PowerCalculationResult returns powerMW (megawatts), convert to kW
       // Legacy results may have averageLoadKW/baseLoadKW/peakLoadKW
@@ -982,7 +992,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
     if (!shouldBuild) return;
 
-    console.log('[useWizardV8] 🔄 Building tiers', cacheStale ? '(addons changed — rebuilding)' : '(initial build)', {
+    devLog('[useWizardV8] 🔄 Building tiers', cacheStale ? '(addons changed — rebuilding)' : '(initial build)', {
       step: state.step,
       wantsSolar: state.wantsSolar,
       solarScope: state.step3Answers?.solarScope,
@@ -992,7 +1002,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
     void getOrStartTierBuild(state)
       .then(tiers => {
-        console.log('[useWizardV8] ✅ Background tier build complete', tiers.length);
+        devLog('[useWizardV8] ✅ Background tier build complete', tiers.length);
         dispatch({ type: "SET_TIERS", tiers });
         dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
       })

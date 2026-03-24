@@ -40,6 +40,21 @@ interface WizardShellV7Props {
  * CHANGE Feb 11, 2026: Progress steps moved from left rail to horizontal bar
  * at the top of the content panel. Freed ~280px for Merlin's cross-slot insights.
  */
+
+// Live clock — signals the engine is running in real-time (from merlin-energy design system)
+function LiveClock() {
+  const [time, setTime] = React.useState(() =>
+    new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })
+  );
+  React.useEffect(() => {
+    const id = setInterval(() => {
+      setTime(new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }));
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return <span style={{ fontFamily: "'JetBrains Mono', 'Courier New', monospace" }}>{time}</span>;
+}
+
 export default function WizardShellV7({
   currentStep,
   stepLabels,
@@ -157,8 +172,16 @@ export default function WizardShellV7({
 
               <div>
                 <div style={{ fontSize: 16, fontWeight: 600, color: "#fff" }}>Merlin AI</div>
-                <div style={{ fontSize: 12, color: "rgba(62, 207, 142, 0.8)", fontWeight: 500 }}>
-                  ● Active — Step {safeStep + 1} of {totalSteps}
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600 }}>
+                  <span style={{ position: "relative", display: "inline-flex", width: 8, height: 8, flexShrink: 0 }}>
+                    <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(62,207,142,0.35)", animation: "merlin-pulse 1.5s ease-in-out infinite" }} />
+                    <span style={{ position: "relative", borderRadius: "50%", width: "100%", height: "100%", background: "#3ECF8E" }} />
+                  </span>
+                  <span style={{ color: "rgba(62,207,142,0.85)", letterSpacing: "0.04em" }}>LIVE</span>
+                  <span style={{ color: "rgba(255,255,255,0.18)" }}>·</span>
+                  <span style={{ color: "rgba(255,255,255,0.32)", fontFamily: "'JetBrains Mono', 'Courier New', monospace" }}>
+                    <LiveClock />
+                  </span>
                 </div>
               </div>
             </div>
@@ -228,8 +251,8 @@ export default function WizardShellV7({
                   height: 28,
                   padding: "0 12px",
                   borderRadius: 14,
-                  background: "rgba(30, 32, 48, 0.6)",
-                  border: "1px solid rgba(99, 102, 241, 0.4)",
+                  background: "rgba(18, 13, 3, 0.55)",
+                  border: "1px solid rgba(245, 158, 11, 0.35)",
                   cursor: "pointer",
                   transition: "all 0.2s ease",
                   fontSize: 12,
@@ -237,12 +260,12 @@ export default function WizardShellV7({
                   WebkitFontSmoothing: "antialiased",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.6)";
-                  e.currentTarget.style.background = "rgba(30, 32, 48, 0.8)";
+                  e.currentTarget.style.borderColor = "rgba(245, 158, 11, 0.55)";
+                  e.currentTarget.style.background = "rgba(26, 18, 2, 0.75)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.4)";
-                  e.currentTarget.style.background = "rgba(30, 32, 48, 0.6)";
+                  e.currentTarget.style.borderColor = "rgba(245, 158, 11, 0.35)";
+                  e.currentTarget.style.background = "rgba(18, 13, 3, 0.55)";
                 }}
                 aria-label="Learn about TrueQuote verification"
               >
@@ -389,7 +412,7 @@ export default function WizardShellV7({
                 border: "1px solid rgba(255, 255, 255, 0.05)",
                 borderTop: "none",
                 minHeight: 400,
-                animation: "merlin-step-fadein 0.3s ease-out",
+                animation: "merlin-step-fadein 0.3s ease-out, heartbeatBorder 4s ease-in-out 0.4s infinite",
               }}
             >
               {children}
@@ -398,6 +421,14 @@ export default function WizardShellV7({
 
           {/* Step transition animation + responsive */}
           <style>{`
+            @keyframes heartbeatBorder {
+              0%, 100% { box-shadow: 0 0 0 0 transparent; }
+              50%       { box-shadow: 0 0 0 1px rgba(245,158,11,0.09), 0 24px 48px rgba(0,0,0,0.22); }
+            }
+            @keyframes merlin-pulse {
+              0%, 100% { transform: scale(1); opacity: 0.75; }
+              50%       { transform: scale(1.9); opacity: 0; }
+            }
             @keyframes merlin-step-fadein {
               from { opacity: 0; transform: translateY(12px); }
               to   { opacity: 1; transform: translateY(0); }

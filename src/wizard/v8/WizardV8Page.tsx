@@ -82,7 +82,11 @@ function bullet(text: string): React.ReactNode {
 // ── Per-step advisor content rendered in the left rail ────────────────────────
 type S = ReturnType<typeof useWizardV8>["state"];
 
-function getAdvisorContent(step: number, state: S): React.ReactNode {
+function getAdvisorContent(
+  step: number,
+  opts: { industry: S["industry"]; baseLoadKW: number; peakLoadKW: number; intel: S["intel"] }
+): React.ReactNode {
+  const { industry, baseLoadKW, peakLoadKW, intel } = opts;
   switch (step) {
     case 0:
       return (
@@ -108,17 +112,57 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
-            Let's find your facility.
+            {intel ? "Here's what I found." : "Let's find your facility."}
           </div>
-          <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            I'll use your location to look up {hi("local utility rates")} and{" "}
-            {hi("solar irradiance")} — two of the biggest factors in your savings estimate.
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
-            {["Utility rates by zip code", "Peak demand windows", "Solar potential score"].map(
-              bullet
-            )}
-          </div>
+          {intel ? (
+            <>
+              <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
+                Your local utility is {hi(intel.utilityProvider)} at{" "}
+                {hi(`$${intel.utilityRate.toFixed(2)}/kWh`)}. Solar grade is{" "}
+                {hi(intel.solarGrade)} — {intel.peakSunHours} peak sun hours per day.
+              </div>
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: 10,
+                  background: "rgba(62,207,142,0.06)",
+                  border: "1px solid rgba(62,207,142,0.22)",
+                  marginTop: 4,
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "rgba(62,207,142,0.6)", marginBottom: 4, textTransform: "uppercase" }}>Rate</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: ACCENT, fontVariantNumeric: "tabular-nums", fontFamily: "'JetBrains Mono', 'Courier New', monospace" }}>
+                    ${intel.utilityRate.toFixed(2)}
+                  </div>
+                  <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>/kWh</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "rgba(62,207,142,0.6)", marginBottom: 4, textTransform: "uppercase" }}>Solar</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: ACCENT, fontVariantNumeric: "tabular-nums", fontFamily: "'JetBrains Mono', 'Courier New', monospace" }}>
+                    {intel.solarGrade}
+                  </div>
+                  <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>{intel.peakSunHours}h / day</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+                {["Business name helps auto-detect industry", "Skip to select manually"].map(bullet)}
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
+                I'll use your location to look up {hi("local utility rates")} and{" "}
+                {hi("solar irradiance")} — two of the biggest factors in your savings estimate.
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+                {["Utility rates by zip code", "Peak demand windows", "Solar potential score"].map(bullet)}
+              </div>
+            </>
+          )}
         </div>
       );
 
@@ -141,17 +185,17 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
       );
 
     case 3: {
-      const industry = state.industry ? state.industry.replace(/_/g, " ") : "your facility";
+      const industryLabel = industry ? industry.replace(/_/g, " ") : "your facility";
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
             Facility profile.
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Questions are pre-filled with {hi(`${industry} industry defaults`)}. Accept them or
+            Questions are pre-filled with {hi(`${industryLabel} industry defaults`)}. Accept them or
             review — the more accurate your inputs, the better your quote.
           </div>
-          {state.baseLoadKW > 0 && (
+          {baseLoadKW > 0 && (
             <div
               style={{
                 padding: "14px 16px",
@@ -182,7 +226,7 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                ~{Math.round(state.baseLoadKW).toLocaleString()} kW
+                ~{Math.round(baseLoadKW).toLocaleString()} kW
               </div>
             </div>
           )}
@@ -199,7 +243,7 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
             Add-ons are optional but can significantly improve your ROI. Merlin has pre-selected
             the most common upgrades for{" "}
-            {hi(state.industry ? state.industry.replace(/_/g, " ") : "your facility")}.
+            {hi(industry ? industry.replace(/_/g, " ") : "your facility")}.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
             {[
@@ -208,7 +252,7 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
               "EV Charging: Based on facility type",
             ].map(bullet)}
           </div>
-          {state.peakLoadKW > 0 && (
+          {peakLoadKW > 0 && (
             <div
               style={{
                 padding: "14px 16px",
@@ -239,7 +283,7 @@ function getAdvisorContent(step: number, state: S): React.ReactNode {
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                {Math.round(state.peakLoadKW).toLocaleString()} kW
+                {Math.round(peakLoadKW).toLocaleString()} kW
               </div>
               <div style={{ fontSize: 11, color: T.muted, marginTop: 4 }}>
                 All recommendations sized from this baseline
@@ -348,14 +392,15 @@ export default function WizardV8Page() {
         actions.goToStep(targetStep as WizardStep);
 
         // If industry provided, pre-populate it
-        if (industryParam && targetStep >= 3) {
+        if (industryParam && targetStep >= 3 && import.meta.env.DEV) {
           // Set industry silently (without triggering navigation)
           // This will be picked up when step 3 renders
           console.log("[WizardV8Page] Pre-populating industry from URL:", industryParam);
         }
       }
     }
-  }, []); // Run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally mount-only: URL params are read once; actions is a stable ref
 
   useEffect(() => {
     // Step 0 → preload Step1 immediately (16 kB, hides lazy latency)
@@ -389,71 +434,19 @@ export default function WizardV8Page() {
 
   // Memoize advisor sidebar content — getAdvisorContent builds React nodes, so
   // calling it inline would create fresh objects on every state dispatch.
-  // Only re-compute when the values it actually renders change.
+  // Dep array lists exactly the fields getAdvisorContent reads — no disable needed.
   const advisorContent = useMemo(
-    () => getAdvisorContent(step, state),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [step, state.baseLoadKW, state.peakLoadKW, state.industry,
-     state.wantsSolar, state.wantsGenerator, state.wantsEVCharging]
+    () => getAdvisorContent(step, {
+      industry: state.industry,
+      baseLoadKW: state.baseLoadKW,
+      peakLoadKW: state.peakLoadKW,
+      intel: state.intel,
+    }),
+    [step, state.industry, state.baseLoadKW, state.peakLoadKW, state.intel]
   );
 
   return (
     <div style={{ position: "relative" }}>
-      {/* Reset button - top right */}
-      <button
-        onClick={() => {
-          if (confirm("Start over? This will clear all your answers.")) {
-            actions.reset();
-          }
-        }}
-        style={{
-          position: "fixed",
-          top: 20,
-          right: 20,
-          zIndex: 9999,
-          padding: "8px 16px",
-          borderRadius: 8,
-          border: "1px solid rgba(255,255,255,0.12)",
-          background: "rgba(8,11,20,0.85)",
-          backdropFilter: "blur(12px)",
-          color: "rgba(255,255,255,0.65)",
-          fontSize: 12,
-          fontWeight: 600,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          transition: "all 0.15s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = "rgba(239,68,68,0.35)";
-          e.currentTarget.style.background = "rgba(8,11,20,0.95)";
-          e.currentTarget.style.color = "#f87171";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-          e.currentTarget.style.background = "rgba(8,11,20,0.85)";
-          e.currentTarget.style.color = "rgba(255,255,255,0.65)";
-        }}
-      >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-          <path d="M21 3v5h-5" />
-          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-          <path d="M3 21v-5h5" />
-        </svg>
-        Start Over
-      </button>
-
       <WizardShellV7
         currentStep={wizardStepToDisplayIndex(step)}
         stepLabels={STEP_LABELS}
