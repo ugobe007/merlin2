@@ -3,7 +3,7 @@
  * CAR WASH MATH SMOKE TESTS — Solar + Generator + BESS + EV Charging
  * =============================================================================
  *
- * 5 real-world car wash scenarios across US locations:
+ * 6 real-world car wash scenarios across US locations:
  *
  *   1. Phoenix AZ  — excellent sun (6.5 PSH), full-service tunnel, opaque roof
  *                    Solar: maximum scope | Generator: essential | BESS: peak_shaving
@@ -20,11 +20,19 @@
  *   5. Chicago IL  + pkg_basic EV — 4 L2 = 29 kW EV demand (+80 base)
  *                    Combined peak: 109 kW | EV revenue: $7,200/yr
  *
+ *   6. WOW Car Wash (Scottsdale AZ) — 1 express tunnel + 24 vacuum stations
+ *                    Tunnel: 110 kW + 24 vac × 1.2 kW = 140 kW car wash peak
+ *                    Solar cap: 46 kW (32 kW roof + 14 kW vacuum canopy, opaque roof)
+ *                    EV: pkg_pro (6 L2 + 2 DCFC = 143 kW) → combined peak 283 kW
+ *                    BESS: 113 kW (283 kW × 0.40, above 75 kW floor)
+ *                    Generator: 44 kW essential | EV revenue: $34,800/yr
+ *
  * WHAT WE VERIFY:
  *   - Solar kW ≤ solarPhysicalCapKW (never exceeds physical cap)
  *   - Solar kW = 0 when PSH ≤ 3.0 (Seattle should be ~0)
  *   - Generator kW = criticalLoadKW × 1.25 (NEC reserve) for essential scope
  *   - BESS kW = peakLoadKW × ratio (0.40 peak_shaving / 0.70 resilience)
+ *   - Vacuum canopy adds solar area: 24 vac × 65 sqft × 0.90 / 100 = +14 kW
  *   - EV charger kW = l2 × 7.2 + dcfc × 50 (display field; load pre-merged into peakLoadKW)
  *   - EV revenue is additive to annualSavings in buildOneTier
  *   - BESS grows when EV demand is pre-merged into peakLoadKW
@@ -825,6 +833,165 @@ describe("Scenario 5 — Chicago IL car wash + pkg_basic EV (4 L2, no DCFC)", ()
   it("Recommended BESS duration is 4h", async () => {
     if (!tiers) tiers = await buildTiers(state);
     expect(tiers[1].durationHours).toBe(4);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCENARIO 6 — WOW Car Wash style: 1 express tunnel + 24 vacuum stations
+// ─────────────────────────────────────────────────────────────────────────────
+describe("Scenario 6 — WOW Car Wash (1 tunnel + 24 vacuums, solar + EV + generator)", () => {
+  // Real-world profile based on WOW Car Wash express format (HQ: Scottsdale AZ)
+  //
+  // LOAD BREAKDOWN:
+  //   Tunnel equipment  : ~110 kW peak (3× high-pressure pumps + 2× blowers + conveyor)
+  //   24 vacuum stations: 24 × 1.2 kW = 28.8 kW ≈ 29 kW (all running simultaneously)
+  //   Car wash peak     : 110 + 29 = 139 → 140 kW (rounded)
+  //   Car wash base     : ~75 kW (steady-state tunnel + partial vacuum load)
+  //
+  // SOLAR — vacuum canopy boosts cap beyond roof-only:
+  //   Building roof (express_tunnel, opaque): 4500 sqft × 0.70 / 100 = 32 kW
+  //   Vacuum canopy (24 × 65 sqft × 0.90 usable): 1560 × 0.90 / 100 = 14 kW
+  //   Solar cap total: 32 + 14 = 46 kW  (vs 32 kW without canopy)
+  //   PSH 6.5 → sunFactor 1.0 → committed: 46 × 1.0 × 1.00 (maximum scope) = 46 kW
+  //
+  // EV — pkg_pro (6 L2 + 2 DCFC):
+  //   6 × 7.2 = 43.2 kW + 2 × 50 = 100 kW → 143 kW EV demand
+  //   Combined peak: 140 (car wash) + 143 (EV) = 283 kW
+  //   Revenue: $34,800/yr (additive to annualSavings)
+  //
+  // BESS — peak_shaving (0.40 ratio):
+  //   max(75, round(283 × 0.40)) = max(75, 113) = 113 kW Recommended
+  //   Without EV: max(75, round(140 × 0.40)) = max(75, 56) = 75 kW (hits floor)
+  //   EV demand lifts BESS 75 → 113 kW
+  //
+  // GENERATOR — essential scope:
+  //   round(140 × 0.25 × 1.25) = round(43.75) = 44 kW
+
+  const step3Answers = {
+    primaryBESSApplication: "peak_shaving",
+    generatorNeed: "partial",
+    facilityType: "express_tunnel",
+    roofType: "opaque", // 0.70 factor — correct key for opaque metal
+    solarScope: "maximum",
+    generatorScope: "essential",
+    vacuumStations: 24, // ← drives vacuum canopy solar (+14 kW)
+  };
+
+  const solarCapKW = getCarWashSolarCapacity(step3Answers); // 32 + 14 = 46 kW
+  const evL2 = 6;
+  const evDCFC = 2;
+  const evKW = Math.round(evL2 * EV_KW.l2 + evDCFC * EV_KW.dcfc); // 143 kW
+  const carWashPeakKW = 140; // 110 kW tunnel + 29 kW vacuums
+  const combinedPeakKW = carWashPeakKW + evKW; // 283 kW
+
+  const state = carWashState({
+    location: {
+      zip: "85251",
+      city: "Scottsdale",
+      state: "AZ",
+      formattedAddress: "Scottsdale AZ",
+      lat: 33.4942,
+      lng: -111.9261,
+    },
+    intel: {
+      utilityRate: 0.13,
+      demandCharge: 14,
+      peakSunHours: 6.5,
+      solarGrade: "A",
+      solarFeasible: true,
+      utilityProvider: "APS",
+      weatherRisk: "Low",
+    },
+    solarPhysicalCapKW: solarCapKW,
+    baseLoadKW: 75,
+    peakLoadKW: combinedPeakKW,
+    criticalLoadKW: 35, // 140 × 0.25 = 35 kW
+    step3Answers,
+    solarKW: estimateSolarKW("maximum", {
+      solarPhysicalCapKW: solarCapKW,
+      intel: { peakSunHours: 6.5, solarFeasible: true },
+    } as WizardState),
+    generatorKW: estimateGenKW("essential", {
+      peakLoadKW: carWashPeakKW, // generator sized to car wash only (not EV)
+      criticalLoadPct: 0.25,
+    } as WizardState),
+    wantsSolar: true,
+    wantsGenerator: true,
+    wantsEVCharging: true,
+    level2Chargers: evL2,
+    dcfcChargers: evDCFC,
+    evRevenuePerYear: 34800,
+  });
+
+  let tiers: Awaited<ReturnType<typeof buildTiers>>;
+
+  it("builds 3 tiers without error and prints WOW profile", async () => {
+    tiers = await buildTiers(state);
+    printScenario("WOW Car Wash (Scottsdale AZ) — 1 tunnel + 24 vac + pkg_pro EV", state, tiers);
+    expect(tiers).toHaveLength(3);
+    expect(tiers[0].label).toBe("Starter");
+    expect(tiers[1].label).toBe("Recommended");
+    expect(tiers[2].label).toBe("Complete");
+  });
+
+  it("solar cap = 46 kW (32 kW roof + 14 kW vacuum canopy for 24 stations)", () => {
+    // Vacuum canopy: max(24 × 65, 800) = 1560 sqft × 0.90 / 100 = 14 kW
+    expect(solarCapKW).toBe(46);
+  });
+
+  it("solar kW = 46 kW for Recommended (PSH 6.5, sunFactor 1.0, maximum scope)", async () => {
+    if (!tiers) tiers = await buildTiers(state);
+    // maximum scope × sunFactor 1.0 × cap 46 kW = 46 kW exactly
+    expect(tiers[1].solarKW).toBe(46);
+  });
+
+  it("evChargerKW = 143 kW for all tiers (6×7.2 + 2×50 = 143.2 → 143)", async () => {
+    if (!tiers) tiers = await buildTiers(state);
+    for (const t of tiers) {
+      expect(t.evChargerKW).toBe(143);
+    }
+  });
+
+  it("BESS Recommended = 113 kW (283 kW combined peak × 0.40, well above 75 kW floor)", async () => {
+    if (!tiers) tiers = await buildTiers(state);
+    const expectedRec = Math.max(75, Math.round(combinedPeakKW * 0.4)); // 113
+    // Without EV: max(75, round(140×0.40)) = max(75,56) = 75 (floor)
+    // With EV:    max(75, round(283×0.40)) = max(75,113) = 113 (above floor)
+    expect(tiers[1].bessKW).toBeGreaterThanOrEqual(expectedRec - 1); // −1 rounding tolerance
+    expect(tiers[1].bessKW).toBeGreaterThan(75); // must beat floor
+  });
+
+  it("generator kW ≈ 44 kW for Recommended (140 × 0.25 × 1.25 NEC margin, car wash only)", async () => {
+    if (!tiers) tiers = await buildTiers(state);
+    // essential scope: round(140 × 0.25 × 1.25) = round(43.75) = 44
+    expect(tiers[1].generatorKW).toBeGreaterThanOrEqual(40);
+    expect(tiers[1].generatorKW).toBeLessThanOrEqual(50);
+  });
+
+  it("annual savings boosted by EV revenue ($34,800/yr additive)", async () => {
+    if (!tiers) tiers = await buildTiers(state);
+    for (const t of tiers) {
+      expect(t.annualSavings).toBeGreaterThan(30000);
+    }
+  });
+
+  it("Recommended BESS duration is 4h", async () => {
+    if (!tiers) tiers = await buildTiers(state);
+    expect(tiers[1].durationHours).toBe(4);
+  });
+
+  it("Starter < Recommended < Complete for gross cost", async () => {
+    if (!tiers) tiers = await buildTiers(state);
+    expect(tiers[0].grossCost).toBeLessThan(tiers[1].grossCost);
+    expect(tiers[1].grossCost).toBeLessThan(tiers[2].grossCost);
+  });
+
+  it("net cost > 0 and payback > 0 for all tiers", async () => {
+    if (!tiers) tiers = await buildTiers(state);
+    for (const t of tiers) {
+      expect(t.netCost).toBeGreaterThan(0);
+      expect(t.paybackYears).toBeGreaterThan(0);
+    }
   });
 });
 
