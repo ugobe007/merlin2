@@ -7,7 +7,8 @@
  * Created: Jan 17, 2026
  */
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyDppNx91-dadZiyNJBcqDhQn9H5mkDdruw";
+// API key must be provided via VITE_GOOGLE_MAPS_API_KEY env var (never hardcode)
+const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) ?? "";
 
 export interface GeocodeResult {
   lat: number;

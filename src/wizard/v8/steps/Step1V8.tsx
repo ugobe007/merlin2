@@ -2,10 +2,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import IntelStripInline from "@/components/wizard/v7/shared/IntelStripInline";
 import type { BusinessData, WizardActions, WizardState } from "../wizardState";
 
-// CRITICAL: Google Maps API key from environment
-// Fallback to hardcoded key if env var not available (Docker build issue)
-const GOOGLE_MAPS_API_KEY =
-  import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyDppNx91-dadZiyNJBcqDhQn9H5mkDdruw";
+// Google Maps API key — must be set via VITE_GOOGLE_MAPS_API_KEY env var
+// Never hardcode API keys: use .env (local) or Fly.io secrets (production)
+const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) ?? "";
 
 
 
@@ -252,10 +251,29 @@ export function Step1V8({ state, actions }: Step1Props) {
     country === "US" ? locationRaw.replace(/\D/g, "").slice(0, 5) : locationRaw.trim();
   // For US: require 5-digit ZIP. For International: accept country name (2+ chars) or postal code (optional)
   const isValidZip = country === "US" ? /^\d{5}$/.test(normalizedZip) : normalizedZip.length >= 2;
+
+  // Blocked test / nonsense ZIPs — reject before geocoding to prevent quota waste
+  const BLOCKED_ZIPS = new Set([
+    "00000", "11111", "22222", "33333", "44444", "55555",
+    "66666", "77777", "88888", "99999", "12345", "54321",
+    "11223", "10000",
+  ]);
+  const isBlockedZip = country === "US" && BLOCKED_ZIPS.has(normalizedZip);
+  const isZipReady = isValidZip && !isBlockedZip;
   const isLocationBusy = locationStatus === "fetching" || isBusy;
+
+  // Detection phase animation — mirrors CalculationCard UX (locating → fetching)
+  const [zipPhase, setZipPhase] = useState<"idle" | "locating" | "fetching">("idle");
+  useEffect(() => {
+    if (locationConfirmed || !isZipReady) { setZipPhase("idle"); return; }
+    setZipPhase("locating");
+    const t1 = setTimeout(() => setZipPhase("fetching"), 600);
+    return () => clearTimeout(t1);
+  }, [isZipReady, locationConfirmed]);
+
   const activeBusiness = state.business ?? previewBusiness;
   const showIntelStrip =
-    isValidZip &&
+    isZipReady &&
     (intel !== null ||
       intelStatus.utility === "fetching" ||
       intelStatus.solar === "fetching" ||
@@ -480,7 +498,7 @@ export function Step1V8({ state, actions }: Step1Props) {
   };
 
   const handleLocationSubmit = () => {
-    if (!isValidZip || isLocationBusy) return;
+    if (!isZipReady || isLocationBusy) return;
     // Pass country code to submitLocation so it knows how to geocode
     void actions.submitLocation(country === "US" ? "US" : selectedCountryCode);
   };
@@ -876,28 +894,72 @@ export function Step1V8({ state, actions }: Step1Props) {
                   padding: "0 14px",
                   fontSize: 18,
                   outline: "none",
-                  marginBottom: 12,
+                  marginBottom: zipPhase !== "idle" ? 6 : 12,
                 }}
               />
+
+              {/* ZIP detection status line — locating → fetching phases */}
+              {zipPhase !== "idle" && (
+                <div style={{ height: 20, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ position: "relative", display: "inline-flex", width: 7, height: 7, flexShrink: 0 }}>
+                    <span style={{
+                      position: "absolute", inset: 0, borderRadius: "50%",
+                      background: zipPhase === "fetching" ? "rgba(62,207,142,0.35)" : "rgba(245,158,11,0.35)",
+                      animation: "merlin-pulse 1.4s ease-in-out infinite",
+                    }} />
+                    <span style={{
+                      position: "relative", width: "100%", height: "100%", borderRadius: "50%",
+                      background: zipPhase === "fetching" ? "#3ECF8E" : "#F59E0B",
+                    }} />
+                  </span>
+                  <span style={{
+                    fontSize: 11,
+                    fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                    color: zipPhase === "fetching" ? "rgba(62,207,142,0.75)" : "rgba(245,158,11,0.70)",
+                    letterSpacing: "0.01em",
+                    transition: "color 0.3s",
+                  }}>
+                    {zipPhase === "locating"
+                      ? "Locating facility..."
+                      : `Fetching utility rates for ${normalizedZip}...`}
+                  </span>
+                </div>
+              )}
 
               {/* Row 3: Confirmation Button */}
               <button
                 type="button"
                 onClick={handleLocationSubmit}
-                disabled={!isValidZip || isLocationBusy}
+                disabled={!isZipReady || isLocationBusy}
                 style={{
                   width: "100%",
                   height: 46,
                   borderRadius: 10,
-                  border: `1px solid ${isValidZip ? T.accentBorder : "rgba(255,255,255,0.08)"}`,
-                  background: isValidZip ? T.accentSoft : "rgba(255,255,255,0.03)",
-                  color: isValidZip ? T.accent : T.textMuted,
+                  border: `1px solid ${isZipReady ? T.accentBorder : "rgba(255,255,255,0.08)"}`,
+                  background: isZipReady ? T.accentSoft : "rgba(255,255,255,0.03)",
+                  color: isZipReady ? T.accent : T.textMuted,
                   fontWeight: 700,
-                  cursor: isValidZip ? "pointer" : "not-allowed",
+                  cursor: isZipReady ? "pointer" : "not-allowed",
                 }}
               >
                 {isLocationBusy ? "Checking..." : "Confirm Location"}
               </button>
+              {isBlockedZip && (
+                <div
+                  style={{
+                    marginTop: 8,
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: T.warning,
+                    border: `1px solid ${T.warningBorder}`,
+                    color: "rgba(251,191,36,0.90)",
+                    fontSize: 12,
+                    fontWeight: 500,
+                  }}
+                >
+                  Please enter a real US ZIP code to continue.
+                </div>
+              )}
             </>
           ) : (
             <div
@@ -924,6 +986,17 @@ export function Step1V8({ state, actions }: Step1Props) {
                     ? `${location.city}, ${location.state}`
                     : location.formattedAddress}
                 </div>
+                {intel?.utilityProvider && (
+                  <div style={{
+                    fontSize: 11,
+                    color: "rgba(62,207,142,0.65)",
+                    fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                    marginTop: 2,
+                    letterSpacing: "0.01em",
+                  }}>
+                    {intel.utilityProvider}{intel.utilityRate != null ? ` · $${intel.utilityRate.toFixed(2)}/kWh` : ""}
+                  </div>
+                )}
               </div>
               <button
                 type="button"

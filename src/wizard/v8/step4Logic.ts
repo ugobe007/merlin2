@@ -75,6 +75,13 @@ import { ANNUAL_RESERVES } from "@/services/pricingServiceV45";
 import { hasGeneratorIntent } from "./addonIntent";
 import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
 
+// Dev-only logging helper — compiled away in production bundles
+/* eslint-disable no-console */
+const devLog = import.meta.env.DEV
+  ? (...a: unknown[]) => console.log(...a)
+  : () => undefined;
+/* eslint-enable no-console */
+
 // =============================================================================
 // GOAL GUIDANCE TABLE
 //
@@ -322,7 +329,7 @@ function computeBESSSizing(
     };
   }
 
-  console.log(
+  devLog(
     `🔋 [BESS Sizing] effectivePeakKW=${effectivePeakKW}, state.peakLoadKW=${state.peakLoadKW}, state.baseLoadKW=${state.baseLoadKW}`
   );
 
@@ -590,7 +597,7 @@ async function buildOneTier(
  * @throws If goalChoice is null or baseLoadKW has not been established.
  */
 export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteTier, QuoteTier]> {
-  console.log("[buildTiers] Called with state:", {
+  devLog("[buildTiers] Called with state:", {
     baseLoadKW: state.baseLoadKW,
     peakLoadKW: state.peakLoadKW,
     location: state.location,

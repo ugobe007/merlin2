@@ -505,34 +505,6 @@ export const carWashQuestionsComplete: Question[] = [
     impactsCalculations: ['brushLoad', 'mechanicalLoad']
   },
   {
-    id: 'blowerCount',
-    type: 'increment_box',
-    section: 'equipment',
-    title: 'Number of blowers?',
-    subtitle: 'Individual blower units',
-    range: { min: 0, max: 20, step: 1 },
-    smartDefault: 10,
-    unit: ' blowers',
-    helpText: '10-15 HP each',
-    merlinTip: '🚨 CRITICAL: Dryers account for 40-50% of your total electric bill!',
-    validation: { required: true, min: 0, max: 20 },
-    impactsCalculations: ['blowerLoad', 'peakDemand']
-  },
-  {
-    id: 'heatedDryers',
-    type: 'toggle',
-    section: 'equipment',
-    title: 'Heated dryers?',
-    subtitle: 'Electric heating elements (adds 30-50 kW)',
-    conditionalLogic: {
-      dependsOn: 'blowerCount',
-      showIf: (count) => count > 0,
-    },
-    smartDefault: false,
-    validation: { required: false },
-    impactsCalculations: ['heatingLoad', 'peakDemand']
-  },
-  {
     id: 'centralVacuumHP',
     type: 'slider',
     section: 'equipment',

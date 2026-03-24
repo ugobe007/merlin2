@@ -358,7 +358,7 @@ function renderInputComponent(
                   }
                 }}
                 placeholder={getPlaceholder()}
-                className="w-full px-4 py-3 bg-slate-800/60 border border-slate-700 rounded-xl text-white text-lg font-medium text-center focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 placeholder:text-slate-500"
+                className="w-full px-4 py-3 bg-slate-800/60 border border-slate-700 rounded-xl text-white text-xl font-semibold text-center focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 placeholder:text-slate-500"
               />
               {getSuffix() && (
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
@@ -490,8 +490,8 @@ function TypeThenQuantity({ question, value, onChange }: { question: Question; v
     // Step 1: Select type
     return (
       <div className="space-y-4">
-        <div className="text-center text-slate-400 mb-4">
-          Step 1: Select Type
+        <div className="text-center text-slate-300 text-sm font-medium mb-4">
+          Step 1 of 2 — Select Type
         </div>
         <PanelButtonGroup
           options={question.options || []}
@@ -511,7 +511,7 @@ function TypeThenQuantity({ question, value, onChange }: { question: Question; v
         <div className="text-center">
           <div className="text-sm text-slate-400 mb-2">Selected Type</div>
           <div className="inline-flex items-center gap-3 px-6 py-3 bg-purple-600/20 border border-purple-500 rounded-xl">
-            <span className="font-semibold text-white">
+            <span className="font-bold text-white text-base">
               {question.options?.find((o: any) => o.value === selectedType)?.label}
             </span>
             <button
@@ -519,15 +519,15 @@ function TypeThenQuantity({ question, value, onChange }: { question: Question; v
                 setSelectedType(null);
                 onChange({ type: null, quantity: null });
               }}
-              className="text-purple-300 hover:text-white text-sm"
+              className="text-purple-300 hover:text-white text-sm font-medium"
             >
               Change
             </button>
           </div>
         </div>
 
-        <div className="text-center text-slate-400 mb-4">
-          Step 2: Select Quantity
+        <div className="text-center text-slate-300 text-sm font-medium mb-4">
+          Step 2 of 2 — Select Quantity
         </div>
         <PanelButtonGroup
           options={question.quantityOptions || []}

@@ -58,6 +58,160 @@ function fmtNum(n: number | null | undefined, fallback = "—"): string {
   return String(Math.round(n));
 }
 
+// ── State-specific incentive data ────────────────────────────────────────────
+interface StateIncentive {
+  name: string;
+  description: string;
+  /** Estimated dollar value string, e.g. "$250–$400/kWh" or "varies" */
+  value: string;
+  url?: string;
+}
+
+const STATE_INCENTIVES: Record<string, StateIncentive[]> = {
+  CA: [
+    {
+      name: "SGIP Storage Rebate",
+      description: "Self-Generation Incentive Program — commercial BESS rebate",
+      value: "$250–$400/kWh",
+      url: "https://www.cpuc.ca.gov/sgip",
+    },
+    {
+      name: "ITC Adder (Energy Community)",
+      description: "Additional 10% ITC if site is in a qualified energy community",
+      value: "+10% ITC",
+    },
+  ],
+  MA: [
+    {
+      name: "SMART Solar Tariff",
+      description: "Solar Massachusetts Renewable Target — per-kWh production incentive",
+      value: "up to $0.17/kWh",
+      url: "https://www.mass.gov/smart",
+    },
+    {
+      name: "Mass Save® Battery Rebate",
+      description: "Commercial battery storage rebate through Mass Save program",
+      value: "varies by utility",
+      url: "https://www.masssave.com",
+    },
+  ],
+  NY: [
+    {
+      name: "NY-Sun Commercial Incentive",
+      description: "NYSERDA commercial solar incentive per installed watt",
+      value: "$0.20–$0.50/W",
+      url: "https://www.nyserda.ny.gov/ny-sun",
+    },
+    {
+      name: "Inflation Reduction Act Adder",
+      description: "Low-income community / energy community ITC adder",
+      value: "+10–20% ITC",
+    },
+  ],
+  NJ: [
+    {
+      name: "SuSI Solar Incentive",
+      description: "Successor Solar Incentive (TRECs) — tradeable renewable energy credits",
+      value: "~$90/yr per kW",
+      url: "https://www.njcleanenergy.com",
+    },
+    {
+      name: "NJCEP Storage Incentive",
+      description: "NJ Clean Energy Program commercial storage rebates",
+      value: "contact utility",
+    },
+  ],
+  TX: [
+    {
+      name: "Bonus Depreciation (MACRS)",
+      description: "5-year accelerated depreciation for commercial energy property",
+      value: "up to 60% yr 1",
+    },
+    {
+      name: "Demand Response Rebate",
+      description: "Utility-specific demand response credits (CPS/Austin/Oncor)",
+      value: "varies by utility",
+    },
+  ],
+  CO: [
+    {
+      name: "Colorado Solar & Storage Credit",
+      description: "State income tax credit for commercial solar installations",
+      value: "varies",
+      url: "https://energyoffice.colorado.gov",
+    },
+  ],
+  MD: [
+    {
+      name: "Maryland CleanEnergy Incentive",
+      description: "CleanEnergy Incentive for energy storage and solar",
+      value: "varies",
+      url: "https://energy.maryland.gov",
+    },
+  ],
+  CT: [
+    {
+      name: "CT Green Bank Commercial PACE",
+      description: "C-PACE financing for commercial solar and storage",
+      value: "100% financed",
+      url: "https://ctgreenbank.com",
+    },
+  ],
+  IL: [
+    {
+      name: "Illinois Shines (ILSFA)",
+      description: "Adjustable block program solar renewable energy credits",
+      value: "~$0.07/kWh",
+      url: "https://illinoisshines.com",
+    },
+  ],
+  MN: [
+    {
+      name: "Made in Minnesota Solar Incentive",
+      description: "Per-kWh production incentive for MN-made equipment",
+      value: "$0.07–$0.14/kWh",
+    },
+  ],
+  AZ: [
+    {
+      name: "AZ Solar Equipment Sales Tax Exemption",
+      description: "100% sales tax exemption on qualifying solar equipment",
+      value: "sales tax exempt",
+    },
+  ],
+  NV: [
+    {
+      name: "Nevada Property Tax Abatement",
+      description: "Property tax abatement for commercial solar + storage",
+      value: "55% for 10 yrs",
+    },
+  ],
+  OR: [
+    {
+      name: "Oregon Solar + Storage Rebate",
+      description: "Residential and commercial rebate program",
+      value: "up to $5,000",
+      url: "https://www.oregon.gov/energy",
+    },
+  ],
+  WA: [
+    {
+      name: "WA Sales/Use Tax Exemption",
+      description: "Sales and use tax exemption for solar energy equipment",
+      value: "sales tax exempt",
+    },
+  ],
+};
+
+/**
+ * Returns any known state-level incentives for a given 2-letter state code.
+ * Returns an empty array for states not in the map.
+ */
+function getStateIncentives(stateCode: string | undefined): StateIncentive[] {
+  if (!stateCode) return [];
+  return STATE_INCENTIVES[stateCode.toUpperCase()] ?? [];
+}
+
 interface StatItemProps {
   icon: React.ReactNode;
   label: string;
@@ -600,6 +754,54 @@ export default function Step5V8({ state, actions }: Props) {
                   </div>
                 </div>
               </div>
+
+              {/* State-specific incentives — shown only when location has known state credits */}
+              {(() => {
+                const stateCode = location?.state;
+                const incentives = getStateIncentives(stateCode);
+                if (!stateCode || incentives.length === 0) return null;
+                return (
+                  <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/[0.04] p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-300/80">
+                        {stateCode} State Incentives
+                      </div>
+                      <span className="text-[10px] text-cyan-400/50 font-medium">— may stack with Federal ITC</span>
+                    </div>
+                    <div className="space-y-2">
+                      {incentives.map((inc) => (
+                        <div key={inc.name} className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-slate-200 truncate">
+                              {inc.url ? (
+                                <a
+                                  href={inc.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="hover:text-cyan-400 transition-colors"
+                                >
+                                  {inc.name} ↗
+                                </a>
+                              ) : (
+                                inc.name
+                              )}
+                            </div>
+                            <div className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                              {inc.description}
+                            </div>
+                          </div>
+                          <div className="shrink-0 text-xs font-bold text-cyan-400 tabular-nums text-right">
+                            {inc.value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 pt-2 border-t border-cyan-500/10 text-[10px] text-slate-600">
+                      Consult your installer for current program availability and qualification requirements.
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="rounded-2xl border border-white/[0.06] bg-slate-950/35 p-4">
                 <div className="flex items-center justify-between gap-3">
