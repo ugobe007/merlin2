@@ -27,7 +27,7 @@ import { useWizardV8 } from "./useWizardV8";
 import type { WizardStep } from "./wizardState";
 import { Step0V8_ModeSelect } from "./steps/Step0V8_ModeSelect";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
-import { estimateSolarKW, estimateGenKW, defaultGeneratorScope, type SolarScopeId, type GeneratorScopeId } from "./addonSizing";
+import { estimateSolarKW, estimateGenKW, defaultGeneratorScope, EV_PACKAGE_COUNTS, type SolarScopeId, type GeneratorScopeId } from "./addonSizing";
 
 // Lazy-load all steps — Step0 (mode select) is the true entry point and is
 // eagerly imported above. Step1 is preloaded immediately so it feels instant.
@@ -469,20 +469,12 @@ export default function WizardV8Page() {
               ? estimateGenKW(generatorScope, state)
               : 0;
 
-            // EV Chargers
+            // EV Chargers — counts from SSOT (addonSizing.EV_PACKAGE_COUNTS)
             const evScope = (state.step3Answers?.evScope as string) ?? "pkg_pro";
-            const EV_COUNTS: Record<string, { level2: number; dcfc: number }> = {
-              // legacy scope IDs
-              small:     { level2: 4,  dcfc: 0 },
-              medium:    { level2: 8,  dcfc: 2 },
-              large:     { level2: 12, dcfc: 4 },
-              // new package IDs
-              pkg_basic: { level2: 4,  dcfc: 0 },
-              pkg_pro:   { level2: 6,  dcfc: 2 },
-              pkg_fleet: { level2: 6,  dcfc: 4 },
-            };
+            const pkgCounts = (EV_PACKAGE_COUNTS as Record<string, { l2: number; dcfc: number }>)[evScope]
+              ?? EV_PACKAGE_COUNTS.pkg_pro;
             const evCounts = state.wantsEVCharging
-              ? (EV_COUNTS[evScope] ?? { level2: 8, dcfc: 2 })
+              ? { level2: pkgCounts.l2, dcfc: pkgCounts.dcfc }
               : { level2: 0, dcfc: 0 };
 
             // Commit all three in one dispatch

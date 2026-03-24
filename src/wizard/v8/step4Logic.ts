@@ -458,7 +458,7 @@ async function buildOneTier(
   const hpc = stateWithEV.hpcChargers ?? 0;
   const evChargerDetails =
     level2 > 0 || dcfc > 0 || hpc > 0
-      ? `${level2} Level 2 (${(level2 * 7.2).toFixed(0)} kW) + ${dcfc} DCFC (${dcfc * 150} kW) + ${hpc} HPC (${hpc * 250} kW)`
+      ? `${level2} Level 2 (${(level2 * 7.2).toFixed(0)} kW) + ${dcfc} DCFC (${dcfc * 50} kW) + ${hpc} HPC (${hpc * 250} kW)`
       : state.evChargers
         ? `${state.evChargers.count} × ${state.evChargers.type.toUpperCase()}`
         : "";
