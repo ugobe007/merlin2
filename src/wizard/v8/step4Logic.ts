@@ -76,11 +76,8 @@ import { hasGeneratorIntent } from "./addonIntent";
 import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
 
 // Dev-only logging helper — compiled away in production bundles
-/* eslint-disable no-console */
-const devLog = import.meta.env.DEV
-  ? (...a: unknown[]) => console.log(...a)
-  : () => undefined;
-/* eslint-enable no-console */
+
+const devLog = import.meta.env.DEV ? (...a: unknown[]) => console.log(...a) : () => undefined;
 
 // =============================================================================
 // GOAL GUIDANCE TABLE
@@ -180,8 +177,8 @@ function computeSolarKW(state: WizardState, goal: GoalChoice, tierLabel: TierLab
 
   if (solarScope === "roof_only" || solarScope === "roof_canopy" || solarScope === "maximum") {
     // Scope-driven penetration (Step 3.5 intent overrides goal)
-    const scopeBase = solarScope === "roof_only" ? 0.55 : solarScope === "maximum" ? 1.0 : 0.80;
-    const tierMult  = tierLabel === "Starter" ? 0.75 : tierLabel === "Complete" ? 1.10 : 1.0;
+    const scopeBase = solarScope === "roof_only" ? 0.55 : solarScope === "maximum" ? 1.0 : 0.8;
+    const tierMult = tierLabel === "Starter" ? 0.75 : tierLabel === "Complete" ? 1.1 : 1.0;
     penetration = Math.min(scopeBase * tierMult, 1.0);
   } else {
     // Goal-guided penetration (Step 3.5 not visited or scope not set)
@@ -265,7 +262,7 @@ function computeGeneratorKW(state: WizardState, goal: GoalChoice, tierLabel: Tie
     basePowerKW = peakLoadKW * 1.35;
   } else if (generatorScope === "full") {
     // Full facility: full peak + 10% headroom
-    basePowerKW = peakLoadKW * 1.10;
+    basePowerKW = peakLoadKW * 1.1;
   } else {
     // Goal/policy default: criticalLoad fraction × NEC margin
     const { margin } = getGeneratorReserveMarginWithSource();
@@ -370,9 +367,9 @@ function computeBESSSizing(
 // =============================================================================
 
 const EV_KW_BY_TYPE: Record<string, number> = {
-  l2: 7.2,   // Level 2 standard (7.2 kW, J1772 / SAE)
-  dcfc: 50,  // DC Fast Charger (50 kW — standard CCS Combo / CHAdeMO for retail)
-  hpc: 250,  // High Power Charger (250 kW — Tesla V3 / Electrify America Hyper)
+  l2: 7.2, // Level 2 standard (7.2 kW, J1772 / SAE)
+  dcfc: 50, // DC Fast Charger (50 kW — standard CCS Combo / CHAdeMO for retail)
+  hpc: 250, // High Power Charger (250 kW — Tesla V3 / Electrify America Hyper)
 };
 
 /**
@@ -381,14 +378,19 @@ const EV_KW_BY_TYPE: Record<string, number> = {
  * setBaseLoad() call. This field is for display isolation in the quote only.
  */
 function computeEVChargerKW(state: WizardState): number {
-  // Check for Step 3.5 EV charger configuration (level2Chargers + dcfcChargers)
-  const stateWithEV = state as WizardState & { level2Chargers?: number; dcfcChargers?: number };
+  // Check for Step 3.5 EV charger configuration (level2Chargers + dcfcChargers + hpcChargers)
+  const stateWithEV = state as WizardState & {
+    level2Chargers?: number;
+    dcfcChargers?: number;
+    hpcChargers?: number;
+  };
   const level2 = stateWithEV.level2Chargers ?? 0;
   const dcfc = stateWithEV.dcfcChargers ?? 0;
+  const hpc = stateWithEV.hpcChargers ?? 0;
 
-  if (level2 > 0 || dcfc > 0) {
-    // Level 2: 7.2 kW each, DCFC: 50 kW each (standard retail CCS/CHAdeMO)
-    return Math.round(level2 * 7.2 + dcfc * 50);
+  if (level2 > 0 || dcfc > 0 || hpc > 0) {
+    // Level 2: 7.2 kW each, DCFC: 50 kW each (CCS/CHAdeMO), HPC: 250 kW each (Tesla V3 / EA)
+    return Math.round(level2 * 7.2 + dcfc * 50 + hpc * 250);
   }
 
   // Fallback to old evChargers object format
