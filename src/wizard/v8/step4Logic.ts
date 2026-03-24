@@ -370,9 +370,9 @@ function computeBESSSizing(
 // =============================================================================
 
 const EV_KW_BY_TYPE: Record<string, number> = {
-  l2: 7.2, // Level 2 standard (7.2 kW)
-  dcfc: 150, // DC Fast Charger (150 kW typical)
-  hpc: 250, // High Power Charger (250 kW)
+  l2: 7.2,   // Level 2 standard (7.2 kW, J1772 / SAE)
+  dcfc: 50,  // DC Fast Charger (50 kW — standard CCS Combo / CHAdeMO for retail)
+  hpc: 250,  // High Power Charger (250 kW — Tesla V3 / Electrify America Hyper)
 };
 
 /**
@@ -387,8 +387,8 @@ function computeEVChargerKW(state: WizardState): number {
   const dcfc = stateWithEV.dcfcChargers ?? 0;
 
   if (level2 > 0 || dcfc > 0) {
-    // Level 2: 7.2 kW each, DCFC: 150 kW each
-    return Math.round(level2 * 7.2 + dcfc * 150);
+    // Level 2: 7.2 kW each, DCFC: 50 kW each (standard retail CCS/CHAdeMO)
+    return Math.round(level2 * 7.2 + dcfc * 50);
   }
 
   // Fallback to old evChargers object format

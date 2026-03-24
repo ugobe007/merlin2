@@ -27,6 +27,7 @@ import { useWizardV8 } from "./useWizardV8";
 import type { WizardStep } from "./wizardState";
 import { Step0V8_ModeSelect } from "./steps/Step0V8_ModeSelect";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
+import { estimateSolarKW, estimateGenKW, defaultGeneratorScope, type SolarScopeId, type GeneratorScopeId } from "./addonSizing";
 
 // Lazy-load all steps — Step0 (mode select) is the true entry point and is
 // eagerly imported above. Step1 is preloaded immediately so it feels instant.
@@ -455,7 +456,20 @@ export default function WizardV8Page() {
         onBack={actions.goBack}
         onNext={() => {
           if (step === 4) {
-            // Persist EV charger counts + mark Add-ons visited before advancing
+            // ── Persist Step 3.5 Add-on configuration before advancing ────────
+            // Solar
+            const solarScope = ((state.step3Answers?.solarScope as SolarScopeId | undefined) ?? "roof_canopy");
+            const committedSolarKW = state.wantsSolar
+              ? estimateSolarKW(solarScope, state)
+              : 0;
+
+            // Generator
+            const generatorScope = ((state.step3Answers?.generatorScope as GeneratorScopeId | undefined) ?? defaultGeneratorScope(state));
+            const committedGenKW = state.wantsGenerator
+              ? estimateGenKW(generatorScope, state)
+              : 0;
+
+            // EV Chargers
             const evScope = (state.step3Answers?.evScope as string) ?? "pkg_pro";
             const EV_COUNTS: Record<string, { level2: number; dcfc: number }> = {
               // legacy scope IDs
@@ -467,12 +481,17 @@ export default function WizardV8Page() {
               pkg_pro:   { level2: 6,  dcfc: 2 },
               pkg_fleet: { level2: 6,  dcfc: 4 },
             };
-            if (state.wantsEVCharging) {
-              const counts = EV_COUNTS[evScope] ?? { level2: 8, dcfc: 2 };
-              actions.setAddonConfig({ level2Chargers: counts.level2, dcfcChargers: counts.dcfc });
-            } else {
-              actions.setAddonConfig({ level2Chargers: 0, dcfcChargers: 0 });
-            }
+            const evCounts = state.wantsEVCharging
+              ? (EV_COUNTS[evScope] ?? { level2: 8, dcfc: 2 })
+              : { level2: 0, dcfc: 0 };
+
+            // Commit all three in one dispatch
+            actions.setAddonConfig({
+              solarKW: committedSolarKW,
+              generatorKW: committedGenKW,
+              level2Chargers: evCounts.level2,
+              dcfcChargers: evCounts.dcfc,
+            });
             actions.setAnswer("step3_5Visited", true);
             actions.goToStep(5);
           } else {
