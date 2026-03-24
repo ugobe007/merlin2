@@ -26,15 +26,20 @@ interface Props {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const SOLAR_SCOPES = [
-  { id: "roof_only",   label: "Roof only",         penetration: 0.55, recommended: false },
-  { id: "roof_canopy", label: "Roof + canopy",      penetration: 0.80, recommended: true  },
-  { id: "maximum",     label: "Maximum coverage",   penetration: 1.00, recommended: false },
+  { id: "roof_only", label: "Roof only", penetration: 0.55, recommended: false },
+  { id: "roof_canopy", label: "Roof + canopy", penetration: 0.8, recommended: true },
+  { id: "maximum", label: "Maximum coverage", penetration: 1.0, recommended: false },
 ] as const;
 
 const GENERATOR_SCOPES = [
-  { id: "essential", label: "Critical loads",   desc: "Essential circuits only",   recommended: false },
-  { id: "full",      label: "Full facility",    desc: "Entire facility + 10% margin", recommended: true  },
-  { id: "critical",  label: "Mission critical", desc: "Full load + 35% headroom",  recommended: false },
+  { id: "essential", label: "Critical loads", desc: "Essential circuits only", recommended: false },
+  { id: "full", label: "Full facility", desc: "Entire facility + 10% margin", recommended: true },
+  {
+    id: "critical",
+    label: "Mission critical",
+    desc: "Full load + 35% headroom",
+    recommended: false,
+  },
 ] as const;
 
 // EV packages — specific charger counts + annual revenue estimates
@@ -68,9 +73,9 @@ const EV_PACKAGES = [
   },
 ] as const;
 
-type SolarScope     = SolarScopeId;
+type SolarScope = SolarScopeId;
 type GeneratorScope = GeneratorScopeId;
-type EVPackage      = (typeof EV_PACKAGES)[number]["id"];
+type EVPackage = (typeof EV_PACKAGES)[number]["id"];
 
 function fmtKW(kw: number): string {
   return kw >= 1000 ? `${(kw / 1000).toFixed(1)} MW` : `${kw} kW`;
@@ -85,23 +90,28 @@ function fmtRevenue(annual: number): string {
 
 export default function Step3_5V8({ state, actions }: Props) {
   const solarFeasible =
-    (state.intel?.solarFeasible ?? false) || state.solarPhysicalCapKW > 0 ||
+    (state.intel?.solarFeasible ?? false) ||
+    state.solarPhysicalCapKW > 0 ||
     !!(state.step3Answers?.roofArea as number | undefined);
 
   // Toggle state
-  const [wantsSolar,     setWantsSolar]     = useState(state.wantsSolar);
+  const [wantsSolar, setWantsSolar] = useState(state.wantsSolar);
   const [wantsGenerator, setWantsGenerator] = useState(state.wantsGenerator);
-  const [wantsEV,        setWantsEV]        = useState(state.wantsEVCharging);
+  const [wantsEV, setWantsEV] = useState(state.wantsEVCharging);
 
   // Scope state
-  const [solarScope,     setSolarScope]     = useState<SolarScope>(
+  const [solarScope, setSolarScope] = useState<SolarScope>(
     (state.step3Answers?.solarScope as SolarScope | undefined) ?? "roof_canopy"
   );
   const [generatorScope, setGeneratorScope] = useState<GeneratorScope>(
-    (state.step3Answers?.generatorScope as GeneratorScope | undefined) ?? defaultGeneratorScope(state)
+    (state.step3Answers?.generatorScope as GeneratorScope | undefined) ??
+      defaultGeneratorScope(state)
   );
   const [evPackage, setEvPackage] = useState<EVPackage>(
     (state.step3Answers?.evScope as EVPackage | undefined) ?? "pkg_pro"
+  );
+  const [fuelType, setFuelType] = useState<"diesel" | "natural-gas">(
+    state.generatorFuelType === "diesel" ? "diesel" : "natural-gas"
   );
 
   // Toggle handlers
@@ -136,31 +146,49 @@ export default function Step3_5V8({ state, actions }: Props) {
     setEvPackage(pkg);
     actions.setAnswer("evScope", pkg);
   };
+  const handleEVCustom = (l2: number, dcfc: number) => {
+    actions.setAnswer("evScope", "custom");
+    actions.setAddonConfig({ level2Chargers: l2, dcfcChargers: dcfc });
+  };
+  const handleFuelType = (fuel: "diesel" | "natural-gas") => {
+    setFuelType(fuel);
+    actions.setAddonConfig({ generatorFuelType: fuel });
+  };
 
   // Derived values
   const effectiveSolarCapKW = getEffectiveSolarCapKW(state);
   const roofAreaSqFt = state.step3Answers?.roofArea as number | undefined;
   const activeSolarKW = wantsSolar && solarFeasible ? estimateSolarKW(solarScope, state) : 0;
-  const activeGenKW   = wantsGenerator ? estimateGenKW(generatorScope, state) : 0;
-  const activeEVPkg   = wantsEV ? EV_PACKAGES.find((p) => p.id === evPackage) ?? EV_PACKAGES[1] : null;
-  const hasAnyAddon   = wantsSolar || wantsGenerator || wantsEV;
+  const activeGenKW = wantsGenerator ? estimateGenKW(generatorScope, state) : 0;
+  const activeEVPkg = wantsEV
+    ? (EV_PACKAGES.find((p) => p.id === evPackage) ?? EV_PACKAGES[1])
+    : null;
+  const hasAnyAddon = wantsSolar || wantsGenerator || wantsEV;
 
   // Generator smart recommendation signal
   const gridReliability = state.gridReliability;
   const generatorSuggested =
     gridReliability === "frequent-outages" || gridReliability === "unreliable";
   const gridReliabilityLabel: Record<string, string> = {
-    "reliable": "Reliable grid",
+    reliable: "Reliable grid",
     "occasional-outages": "Occasional outages",
     "frequent-outages": "Frequent outages",
-    "unreliable": "Unreliable grid",
+    unreliable: "Unreliable grid",
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {/* Header */}
       <div style={{ marginBottom: 4 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.3px" }}>
+        <h2
+          style={{
+            fontSize: 20,
+            fontWeight: 700,
+            color: "#fff",
+            margin: 0,
+            letterSpacing: "-0.3px",
+          }}
+        >
           Customize your scope
         </h2>
         <p style={{ fontSize: 13, color: "rgba(148,163,184,0.85)", marginTop: 6, lineHeight: 1.5 }}>
@@ -212,6 +240,19 @@ export default function Step3_5V8({ state, actions }: Props) {
                 ]
               : undefined
           }
+          expansionNotice={
+            wantsSolar &&
+            solarScope === "roof_only" &&
+            effectiveSolarCapKW > 0 &&
+            state.baseLoadKW > 0 &&
+            effectiveSolarCapKW < state.baseLoadKW * 0.5
+              ? {
+                  roofKW: effectiveSolarCapKW,
+                  canopyKW: Math.round((effectiveSolarCapKW / 0.55) * 0.8),
+                  onExpand: () => handleSolarScope("roof_canopy"),
+                }
+              : undefined
+          }
         />
       )}
 
@@ -219,6 +260,80 @@ export default function Step3_5V8({ state, actions }: Props) {
       <IntentCard
         icon="⚡"
         name="Backup Generator"
+        topContent={
+          <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: "rgba(148,163,184,0.55)",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                marginBottom: 7,
+              }}
+            >
+              Fuel type
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {(["diesel", "natural-gas"] as const).map((fuel) => {
+                const active = fuelType === fuel;
+                return (
+                  <button
+                    key={fuel}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFuelType(fuel);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: "9px 12px",
+                      borderRadius: 8,
+                      border: active
+                        ? "1.5px solid rgba(16,185,129,0.55)"
+                        : "1px solid rgba(255,255,255,0.08)",
+                      background: active ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.45)",
+                      cursor: "pointer",
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "center",
+                      transition: "all 0.12s",
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>{fuel === "diesel" ? "⛽" : "🔥"}</span>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: active ? "#6EE7B7" : "rgba(255,255,255,0.82)",
+                      }}
+                    >
+                      {fuel === "diesel" ? "Diesel" : "Natural Gas"}
+                    </span>
+                    {active && (
+                      <div
+                        style={{
+                          marginLeft: "auto",
+                          width: 14,
+                          height: 14,
+                          borderRadius: "50%",
+                          background: "#3ECF8E",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 8,
+                          fontWeight: 700,
+                          color: "#0D1117",
+                        }}
+                      >
+                        ✓
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        }
         description={
           generatorSuggested
             ? `Recommended based on your grid profile: ${gridReliabilityLabel[gridReliability ?? ""] ?? "grid issues detected"}.`
@@ -266,31 +381,57 @@ export default function Step3_5V8({ state, actions }: Props) {
         onToggle={toggleEV}
         selectedPackage={evPackage}
         onSelectPackage={handleEVPackage}
+        onCustomConfig={handleEVCustom}
         peakLoadKW={state.peakLoadKW}
       />
 
       {/* Summary strip */}
       {hasAnyAddon && (
-        <div style={{ padding: "11px 14px", borderRadius: 10, border: "1px solid rgba(16,185,129,0.18)", background: "rgba(15,17,23,0.65)", marginTop: 2 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(16,185,129,0.65)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>Quote scope — what Merlin is sizing</div>
+        <div
+          style={{
+            padding: "11px 14px",
+            borderRadius: 10,
+            border: "1px solid rgba(16,185,129,0.18)",
+            background: "rgba(15,17,23,0.65)",
+            marginTop: 2,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: "rgba(16,185,129,0.65)",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              marginBottom: 8,
+            }}
+          >
+            Quote scope — what Merlin is sizing
+          </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "5px 16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ fontSize: 12 }}>🔋</span>
               <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>BESS:</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#6EE7B7" }}>{state.baseLoadKW} kW facility load</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#6EE7B7" }}>
+                {state.baseLoadKW} kW facility load
+              </span>
             </div>
             {activeSolarKW > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ fontSize: 12 }}>☀️</span>
                 <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>Solar:</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>~{fmtKW(activeSolarKW)}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>
+                  ~{fmtKW(activeSolarKW)}
+                </span>
               </div>
             )}
             {activeGenKW > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ fontSize: 12 }}>⚡</span>
                 <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>Generator:</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>~{fmtKW(activeGenKW)}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>
+                  ~{fmtKW(activeGenKW)}
+                </span>
               </div>
             )}
             {activeEVPkg && (
@@ -298,7 +439,8 @@ export default function Step3_5V8({ state, actions }: Props) {
                 <span style={{ fontSize: 12 }}>🚗</span>
                 <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>EV:</span>
                 <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>
-                  {activeEVPkg.l2} L2{activeEVPkg.dcfc > 0 ? ` + ${activeEVPkg.dcfc} DCFC` : ""} · ~{fmtRevenue(activeEVPkg.annualRevenue)}/yr revenue
+                  {activeEVPkg.l2} L2{activeEVPkg.dcfc > 0 ? ` + ${activeEVPkg.dcfc} DCFC` : ""} · ~
+                  {fmtRevenue(activeEVPkg.annualRevenue)}/yr revenue
                 </span>
               </div>
             )}
@@ -321,24 +463,100 @@ interface AlwaysIncludedCardProps {
 
 function AlwaysIncludedCard({ icon, name, description, bessKW, bessKWh }: AlwaysIncludedCardProps) {
   return (
-    <div style={{ padding: "13px 15px", borderRadius: 10, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.06)", display: "flex", alignItems: "flex-start", gap: 12 }}>
+    <div
+      style={{
+        padding: "13px 15px",
+        borderRadius: 10,
+        border: "1px solid rgba(16,185,129,0.25)",
+        background: "rgba(16,185,129,0.06)",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 12,
+      }}
+    >
       <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 4,
+            flexWrap: "wrap",
+          }}
+        >
           <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{name}</span>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: "#3ECF8E", background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 4, padding: "2px 6px", textTransform: "uppercase" }}>Always included</span>
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.05em",
+              color: "#3ECF8E",
+              background: "rgba(16,185,129,0.15)",
+              border: "1px solid rgba(16,185,129,0.3)",
+              borderRadius: 4,
+              padding: "2px 6px",
+              textTransform: "uppercase",
+            }}
+          >
+            Always included
+          </span>
         </div>
-        <p style={{ fontSize: 12, color: "rgba(148,163,184,0.8)", margin: 0, lineHeight: 1.5 }}>{description}</p>
+        <p style={{ fontSize: 12, color: "rgba(148,163,184,0.8)", margin: 0, lineHeight: 1.5 }}>
+          {description}
+        </p>
         {bessKW != null && bessKW > 0 && (
           <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 1, padding: "5px 9px", borderRadius: 6, background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.18)" }}>
-              <span style={{ fontSize: 9, color: "rgba(16,185,129,0.6)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Facility load</span>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 1,
+                padding: "5px 9px",
+                borderRadius: 6,
+                background: "rgba(16,185,129,0.08)",
+                border: "1px solid rgba(16,185,129,0.18)",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 9,
+                  color: "rgba(16,185,129,0.6)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  fontWeight: 600,
+                }}
+              >
+                Facility load
+              </span>
               <span style={{ fontSize: 13, fontWeight: 700, color: "#6EE7B7" }}>{bessKW} kW</span>
             </div>
             {bessKWh != null && bessKWh > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 1, padding: "5px 9px", borderRadius: 6, background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.18)" }}>
-                <span style={{ fontSize: 9, color: "rgba(16,185,129,0.6)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Est. storage · 4h baseline</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#6EE7B7" }}>~{bessKWh} kWh</span>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                  padding: "5px 9px",
+                  borderRadius: 6,
+                  background: "rgba(16,185,129,0.08)",
+                  border: "1px solid rgba(16,185,129,0.18)",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 9,
+                    color: "rgba(16,185,129,0.6)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    fontWeight: 600,
+                  }}
+                >
+                  Est. storage · 4h baseline
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#6EE7B7" }}>
+                  ~{bessKWh} kWh
+                </span>
               </div>
             )}
           </div>
@@ -377,46 +595,175 @@ interface IntentCardProps<T extends string> {
   recommendedAlert?: string;
   contextNote?: string;
   confirmLines?: string[];
+  /** Optional content rendered between the header and scope pills when isOn */
+  topContent?: React.ReactNode;
+  /** Solar expansion gate: shown when roof-only is too small */
+  expansionNotice?: { roofKW: number; canopyKW: number; onExpand: () => void } | undefined;
 }
 
 function IntentCard<T extends string>({
-  icon, name, description, isOn, onToggle, scopes, selectedScope, onScopeChange,
-  scopeQuestion, estimateKW, estimateLabel, estimateNote, headerBadge, headerBadgeColor,
-  recommendedAlert, contextNote, confirmLines,
+  icon,
+  name,
+  description,
+  isOn,
+  onToggle,
+  scopes,
+  selectedScope,
+  onScopeChange,
+  scopeQuestion,
+  estimateKW,
+  estimateLabel,
+  estimateNote,
+  headerBadge,
+  headerBadgeColor,
+  recommendedAlert,
+  contextNote,
+  confirmLines,
+  topContent,
+  expansionNotice,
 }: IntentCardProps<T>) {
   const selectedKWVal = isOn && estimateKW ? estimateKW(selectedScope) : 0;
   const selectedLabelFn = typeof estimateLabel === "function" ? estimateLabel : undefined;
-  const selectedBadge = isOn && selectedKWVal > 0
-    ? (selectedLabelFn ? selectedLabelFn(selectedScope) : fmtKW(selectedKWVal))
-    : undefined;
+  const selectedBadge =
+    isOn && selectedKWVal > 0
+      ? selectedLabelFn
+        ? selectedLabelFn(selectedScope)
+        : fmtKW(selectedKWVal)
+      : undefined;
 
   return (
-    <div style={{ borderRadius: 12, border: isOn ? "1.5px solid rgba(16,185,129,0.45)" : (recommendedAlert ? "1.5px solid rgba(248,113,113,0.35)" : "1px solid rgba(255,255,255,0.08)"), background: isOn ? "rgba(16,185,129,0.07)" : (recommendedAlert ? "rgba(248,113,113,0.04)" : "rgba(51,65,85,0.45)"), overflow: "hidden", transition: "border-color 0.15s, background 0.15s" }}>
+    <div
+      style={{
+        borderRadius: 12,
+        border: isOn
+          ? "1.5px solid rgba(16,185,129,0.45)"
+          : recommendedAlert
+            ? "1.5px solid rgba(248,113,113,0.35)"
+            : "1px solid rgba(255,255,255,0.08)",
+        background: isOn
+          ? "rgba(16,185,129,0.07)"
+          : recommendedAlert
+            ? "rgba(248,113,113,0.04)"
+            : "rgba(51,65,85,0.45)",
+        overflow: "hidden",
+        transition: "border-color 0.15s, background 0.15s",
+      }}
+    >
       {/* Recommended alert banner (shown when not yet toggled on) */}
       {!isOn && recommendedAlert && (
-        <div style={{ padding: "7px 14px", background: "rgba(248,113,113,0.10)", borderBottom: "1px solid rgba(248,113,113,0.18)", display: "flex", alignItems: "center", gap: 6 }}>
+        <div
+          style={{
+            padding: "7px 14px",
+            background: "rgba(248,113,113,0.10)",
+            borderBottom: "1px solid rgba(248,113,113,0.18)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
           <span style={{ fontSize: 11 }}>⚠️</span>
-          <span style={{ fontSize: 11, color: "#fca5a5", fontWeight: 500 }}>{recommendedAlert}</span>
+          <span style={{ fontSize: 11, color: "#fca5a5", fontWeight: 500 }}>
+            {recommendedAlert}
+          </span>
         </div>
       )}
       {/* Header */}
-      <button onClick={onToggle} style={{ width: "100%", padding: "13px 14px", display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
-        <div style={{ width: 38, height: 38, borderRadius: 9, flexShrink: 0, background: isOn ? "rgba(16,185,129,0.14)" : "rgba(255,255,255,0.05)", border: isOn ? "1px solid rgba(16,185,129,0.28)" : "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, transition: "all 0.15s" }}>
+      <button
+        onClick={onToggle}
+        style={{
+          width: "100%",
+          padding: "13px 14px",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 9,
+            flexShrink: 0,
+            background: isOn ? "rgba(16,185,129,0.14)" : "rgba(255,255,255,0.05)",
+            border: isOn ? "1px solid rgba(16,185,129,0.28)" : "1px solid rgba(255,255,255,0.08)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 19,
+            transition: "all 0.15s",
+          }}
+        >
           {icon}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: isOn ? "#6EE7B7" : "#fff" }}>{name}</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: isOn ? "#6EE7B7" : "#fff" }}>
+              {name}
+            </span>
             {headerBadge && (
-              <span style={{ fontSize: 10, fontWeight: 600, color: headerBadgeColor ?? "#94a3b8", background: "rgba(100,116,139,0.12)", border: "1px solid rgba(100,116,139,0.22)", borderRadius: 4, padding: "1px 5px" }}>{headerBadge}</span>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: headerBadgeColor ?? "#94a3b8",
+                  background: "rgba(100,116,139,0.12)",
+                  border: "1px solid rgba(100,116,139,0.22)",
+                  borderRadius: 4,
+                  padding: "1px 5px",
+                }}
+              >
+                {headerBadge}
+              </span>
             )}
             {isOn && selectedBadge && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#3ECF8E", background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 4, padding: "1px 6px" }}>{selectedBadge}</span>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#3ECF8E",
+                  background: "rgba(16,185,129,0.12)",
+                  border: "1px solid rgba(16,185,129,0.25)",
+                  borderRadius: 4,
+                  padding: "1px 6px",
+                }}
+              >
+                {selectedBadge}
+              </span>
             )}
           </div>
-          <p style={{ fontSize: 12, color: "rgba(148,163,184,0.7)", margin: "2px 0 0", lineHeight: 1.4 }}>{description}</p>
+          <p
+            style={{
+              fontSize: 12,
+              color: "rgba(148,163,184,0.7)",
+              margin: "2px 0 0",
+              lineHeight: 1.4,
+            }}
+          >
+            {description}
+          </p>
         </div>
-        <div style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)", background: isOn ? "#3ECF8E" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#0D1117", transition: "all 0.15s ease", boxShadow: isOn ? "0 0 8px rgba(16,185,129,0.45)" : "none" }}>
+        <div
+          style={{
+            flexShrink: 0,
+            width: 22,
+            height: 22,
+            borderRadius: "50%",
+            border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)",
+            background: isOn ? "#3ECF8E" : "transparent",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#0D1117",
+            transition: "all 0.15s ease",
+            boxShadow: isOn ? "0 0 8px rgba(16,185,129,0.45)" : "none",
+          }}
+        >
           {isOn && "✓"}
         </div>
       </button>
@@ -424,51 +771,252 @@ function IntentCard<T extends string>({
       {/* Scope pills */}
       {isOn && (
         <div style={{ padding: "0 14px 14px" }}>
+          {topContent}
           {scopeQuestion && (
-            <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(148,163,184,0.55)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>{scopeQuestion}</div>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: "rgba(148,163,184,0.55)",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                marginBottom: 7,
+              }}
+            >
+              {scopeQuestion}
+            </div>
           )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
             {scopes.map((s) => {
               const active = selectedScope === s.id;
-              const kwVal   = estimateKW ? estimateKW(s.id) : 0;
-              const valLabel = typeof estimateLabel === "function" ? estimateLabel(s.id)
-                             : typeof estimateLabel === "string"   ? estimateLabel
-                             : kwVal > 0 ? fmtKW(kwVal) : "—";
-              const valNote  = typeof estimateNote === "function" ? estimateNote(s.id)
-                             : typeof estimateNote === "string"   ? estimateNote
-                             : kwVal > 0 ? "est. at your site" : (s.desc ?? s.sub ?? "");
+              const kwVal = estimateKW ? estimateKW(s.id) : 0;
+              const valLabel =
+                typeof estimateLabel === "function"
+                  ? estimateLabel(s.id)
+                  : typeof estimateLabel === "string"
+                    ? estimateLabel
+                    : kwVal > 0
+                      ? fmtKW(kwVal)
+                      : "—";
+              const valNote =
+                typeof estimateNote === "function"
+                  ? estimateNote(s.id)
+                  : typeof estimateNote === "string"
+                    ? estimateNote
+                    : kwVal > 0
+                      ? "est. at your site"
+                      : (s.desc ?? s.sub ?? "");
               return (
                 <button
                   key={s.id}
                   onClick={() => onScopeChange(s.id as T)}
-                  style={{ padding: "10px 10px 9px", borderRadius: 8, border: active ? "1.5px solid rgba(16,185,129,0.55)" : "1px solid rgba(255,255,255,0.08)", background: active ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.45)", cursor: "pointer", textAlign: "left", transition: "all 0.12s", display: "flex", flexDirection: "column", gap: 3, position: "relative" }}
-                  onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = "rgba(51,65,85,0.65)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; } }}
-                  onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = "rgba(51,65,85,0.45)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; } }}
+                  style={{
+                    padding: "10px 10px 9px",
+                    borderRadius: 8,
+                    border: active
+                      ? "1.5px solid rgba(16,185,129,0.55)"
+                      : "1px solid rgba(255,255,255,0.08)",
+                    background: active ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.45)",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.12s",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 3,
+                    position: "relative",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.background = "rgba(51,65,85,0.65)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.background = "rgba(51,65,85,0.45)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                    }
+                  }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: active ? "#6EE7B7" : "rgba(255,255,255,0.82)", lineHeight: 1.2 }}>{s.label}</span>
-                    <div style={{ flexShrink: 0, width: 14, height: 14, borderRadius: "50%", border: active ? "none" : "1.5px solid rgba(255,255,255,0.18)", background: active ? "#3ECF8E" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#0D1117", transition: "all 0.12s" }}>{active && "✓"}</div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 3,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: active ? "#6EE7B7" : "rgba(255,255,255,0.82)",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {s.label}
+                    </span>
+                    <div
+                      style={{
+                        flexShrink: 0,
+                        width: 14,
+                        height: 14,
+                        borderRadius: "50%",
+                        border: active ? "none" : "1.5px solid rgba(255,255,255,0.18)",
+                        background: active ? "#3ECF8E" : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 8,
+                        fontWeight: 700,
+                        color: "#0D1117",
+                        transition: "all 0.12s",
+                      }}
+                    >
+                      {active && "✓"}
+                    </div>
                   </div>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: active ? "#3ECF8E" : "rgba(255,255,255,0.72)", letterSpacing: "-0.3px", lineHeight: 1 }}>{valLabel}</span>
-                  <span style={{ fontSize: 10, color: active ? "rgba(110,231,183,0.58)" : "rgba(148,163,184,0.48)", lineHeight: 1.3 }}>{valNote}</span>
+                  <span
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: active ? "#3ECF8E" : "rgba(255,255,255,0.72)",
+                      letterSpacing: "-0.3px",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {valLabel}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      color: active ? "rgba(110,231,183,0.58)" : "rgba(148,163,184,0.48)",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {valNote}
+                  </span>
                   {s.recommended && (
-                    <span style={{ position: "absolute", top: 5, right: active ? 22 : 6, fontSize: 8, fontWeight: 700, textTransform: "uppercase", color: "#3ECF8E", background: "rgba(16,185,129,0.13)", border: "1px solid rgba(16,185,129,0.22)", borderRadius: 3, padding: "1px 4px", letterSpacing: "0.04em" }}>Best</span>
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: 5,
+                        right: active ? 22 : 6,
+                        fontSize: 8,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        color: "#3ECF8E",
+                        background: "rgba(16,185,129,0.13)",
+                        border: "1px solid rgba(16,185,129,0.22)",
+                        borderRadius: 3,
+                        padding: "1px 4px",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      Best
+                    </span>
                   )}
                 </button>
               );
             })}
           </div>
           {contextNote && (
-            <div style={{ fontSize: 10, color: "rgba(148,163,184,0.42)", marginTop: 7, lineHeight: 1.4 }}>{contextNote}</div>
+            <div
+              style={{
+                fontSize: 10,
+                color: "rgba(148,163,184,0.42)",
+                marginTop: 7,
+                lineHeight: 1.4,
+              }}
+            >
+              {contextNote}
+            </div>
           )}
           {confirmLines && confirmLines.length > 0 && (
-            <div style={{ marginTop: 10, padding: "9px 11px", borderRadius: 8, background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.18)", display: "flex", gap: 8, alignItems: "flex-start" }}>
+            <div
+              style={{
+                marginTop: 10,
+                padding: "9px 11px",
+                borderRadius: 8,
+                background: "rgba(16,185,129,0.07)",
+                border: "1px solid rgba(16,185,129,0.18)",
+                display: "flex",
+                gap: 8,
+                alignItems: "flex-start",
+              }}
+            >
               <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>{icon}</span>
               <div style={{ flex: 1 }}>
                 {confirmLines.map((line, i) => (
-                  <div key={i} style={{ fontSize: i === 0 ? 12 : 11, fontWeight: i === 0 ? 600 : 400, color: i === 0 ? "#6EE7B7" : "rgba(148,163,184,0.60)", lineHeight: 1.4, marginTop: i > 0 ? 2 : 0 }}>{line}</div>
+                  <div
+                    key={i}
+                    style={{
+                      fontSize: i === 0 ? 12 : 11,
+                      fontWeight: i === 0 ? 600 : 400,
+                      color: i === 0 ? "#6EE7B7" : "rgba(148,163,184,0.60)",
+                      lineHeight: 1.4,
+                      marginTop: i > 0 ? 2 : 0,
+                    }}
+                  >
+                    {line}
+                  </div>
                 ))}
               </div>
+            </div>
+          )}
+          {expansionNotice && (
+            <div
+              style={{
+                marginTop: 8,
+                padding: "9px 11px",
+                borderRadius: 8,
+                background: "rgba(245,158,11,0.06)",
+                border: "1px solid rgba(245,158,11,0.22)",
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontSize: 14, flexShrink: 0 }}>⬆️</span>
+              <div style={{ flex: 1 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "rgba(245,158,11,0.85)",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  Roof-only cap: {fmtKW(expansionNotice.roofKW)} — covers less than 50% of your load
+                </div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: "rgba(148,163,184,0.55)",
+                    lineHeight: 1.4,
+                    marginTop: 1,
+                  }}
+                >
+                  Add canopy panels to reach ~{fmtKW(expansionNotice.canopyKW)}
+                </div>
+              </div>
+              <button
+                onClick={expansionNotice.onExpand}
+                style={{
+                  flexShrink: 0,
+                  padding: "5px 10px",
+                  borderRadius: 6,
+                  border: "1px solid rgba(245,158,11,0.35)",
+                  background: "rgba(245,158,11,0.10)",
+                  cursor: "pointer",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "rgba(245,158,11,0.90)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Add canopy ↗
+              </button>
             </div>
           )}
         </div>
@@ -484,102 +1032,594 @@ interface EVPackageCardProps {
   onToggle: () => void;
   selectedPackage: EVPackage;
   onSelectPackage: (pkg: EVPackage) => void;
+  onCustomConfig: (l2: number, dcfc: number) => void;
   peakLoadKW: number;
 }
 
-function EVPackageCard({ isOn, onToggle, selectedPackage, onSelectPackage, peakLoadKW }: EVPackageCardProps) {
+function EVPackageCard({
+  isOn,
+  onToggle,
+  selectedPackage,
+  onSelectPackage,
+  onCustomConfig,
+  peakLoadKW,
+}: EVPackageCardProps) {
+  const [evMode, setEvMode] = React.useState<"packages" | "custom">("packages");
+  const [customL2, setCustomL2] = React.useState(4);
+  const [customDcfc, setCustomDcfc] = React.useState(1);
+
   const selected = EV_PACKAGES.find((p) => p.id === selectedPackage) ?? EV_PACKAGES[1];
-  const totalKW = (pkg: typeof EV_PACKAGES[number]) => Math.round(pkg.l2 * 7.2 + pkg.dcfc * 50);
-  const loadImpact = (pkg: typeof EV_PACKAGES[number]) => {
+  const totalKW = (pkg: (typeof EV_PACKAGES)[number]) => Math.round(pkg.l2 * 7.2 + pkg.dcfc * 50);
+  const customKW = Math.round(customL2 * 7.2 + customDcfc * 50);
+  const customRevenue =
+    Math.round(((customL2 * 7.2 * 0.25 + customDcfc * 50 * 0.18) * 365 * 0.4) / 10) * 10;
+  const loadImpact = (pkg: (typeof EV_PACKAGES)[number]) => {
     const kw = totalKW(pkg);
     return peakLoadKW > 0 ? `+${Math.round((kw / peakLoadKW) * 100)}% peak load` : `${kw} kW peak`;
   };
 
   return (
-    <div style={{ borderRadius: 12, border: isOn ? "1.5px solid rgba(16,185,129,0.45)" : "1px solid rgba(255,255,255,0.08)", background: isOn ? "rgba(16,185,129,0.07)" : "rgba(51,65,85,0.45)", overflow: "hidden", transition: "border-color 0.15s, background 0.15s" }}>
+    <div
+      style={{
+        borderRadius: 12,
+        border: isOn ? "1.5px solid rgba(16,185,129,0.45)" : "1px solid rgba(255,255,255,0.08)",
+        background: isOn ? "rgba(16,185,129,0.07)" : "rgba(51,65,85,0.45)",
+        overflow: "hidden",
+        transition: "border-color 0.15s, background 0.15s",
+      }}
+    >
       {/* Header */}
-      <button onClick={onToggle} style={{ width: "100%", padding: "13px 14px", display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
-        <div style={{ width: 38, height: 38, borderRadius: 9, flexShrink: 0, background: isOn ? "rgba(16,185,129,0.14)" : "rgba(255,255,255,0.05)", border: isOn ? "1px solid rgba(16,185,129,0.28)" : "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, transition: "all 0.15s" }}>
+      <button
+        onClick={onToggle}
+        style={{
+          width: "100%",
+          padding: "13px 14px",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 9,
+            flexShrink: 0,
+            background: isOn ? "rgba(16,185,129,0.14)" : "rgba(255,255,255,0.05)",
+            border: isOn ? "1px solid rgba(16,185,129,0.28)" : "1px solid rgba(255,255,255,0.08)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 19,
+            transition: "all 0.15s",
+          }}
+        >
           🚗
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: isOn ? "#6EE7B7" : "#fff" }}>EV Charging</span>
-            {isOn && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#3ECF8E", background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 4, padding: "1px 6px" }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: isOn ? "#6EE7B7" : "#fff" }}>
+              EV Charging
+            </span>
+            {isOn && evMode === "packages" && (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#3ECF8E",
+                  background: "rgba(16,185,129,0.12)",
+                  border: "1px solid rgba(16,185,129,0.25)",
+                  borderRadius: 4,
+                  padding: "1px 6px",
+                }}
+              >
                 ~{fmtRevenue(selected.annualRevenue)}/yr revenue
               </span>
             )}
+            {isOn && evMode === "custom" && (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#3ECF8E",
+                  background: "rgba(16,185,129,0.12)",
+                  border: "1px solid rgba(16,185,129,0.25)",
+                  borderRadius: 4,
+                  padding: "1px 6px",
+                }}
+              >
+                ~{fmtRevenue(customRevenue)}/yr · custom
+              </span>
+            )}
           </div>
-          <p style={{ fontSize: 12, color: "rgba(148,163,184,0.7)", margin: "2px 0 0", lineHeight: 1.4 }}>
+          <p
+            style={{
+              fontSize: 12,
+              color: "rgba(148,163,184,0.7)",
+              margin: "2px 0 0",
+              lineHeight: 1.4,
+            }}
+          >
             Level 2 and DC fast chargers for customers, staff, or fleet vehicles.
           </p>
         </div>
-        <div style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)", background: isOn ? "#3ECF8E" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#0D1117", transition: "all 0.15s ease", boxShadow: isOn ? "0 0 8px rgba(16,185,129,0.45)" : "none" }}>
+        <div
+          style={{
+            flexShrink: 0,
+            width: 22,
+            height: 22,
+            borderRadius: "50%",
+            border: isOn ? "none" : "1.5px solid rgba(255,255,255,0.22)",
+            background: isOn ? "#3ECF8E" : "transparent",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#0D1117",
+            transition: "all 0.15s ease",
+            boxShadow: isOn ? "0 0 8px rgba(16,185,129,0.45)" : "none",
+          }}
+        >
           {isOn && "✓"}
         </div>
       </button>
 
-      {/* Package selector */}
+      {/* Mode selector + content */}
       {isOn && (
         <div style={{ padding: "0 14px 14px" }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(148,163,184,0.55)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Select your charging package</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
-            {EV_PACKAGES.map((pkg) => {
-              const active = selectedPackage === pkg.id;
-              const kw = totalKW(pkg);
-              return (
-                <button
-                  key={pkg.id}
-                  onClick={() => onSelectPackage(pkg.id)}
-                  style={{ padding: "10px 10px 10px", borderRadius: 8, border: active ? "1.5px solid rgba(16,185,129,0.55)" : "1px solid rgba(255,255,255,0.08)", background: active ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.45)", cursor: "pointer", textAlign: "left", transition: "all 0.12s", display: "flex", flexDirection: "column", gap: 4, position: "relative" }}
-                  onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = "rgba(51,65,85,0.65)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; } }}
-                  onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = "rgba(51,65,85,0.45)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; } }}
+          {/* Recommended / Customize tab row */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+            <button
+              onClick={() => setEvMode("packages")}
+              style={{
+                flex: 1,
+                padding: "7px 10px",
+                borderRadius: 7,
+                border:
+                  evMode === "packages"
+                    ? "1.5px solid rgba(16,185,129,0.55)"
+                    : "1px solid rgba(255,255,255,0.08)",
+                background: evMode === "packages" ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.3)",
+                cursor: "pointer",
+                fontSize: 11,
+                fontWeight: 700,
+                color: evMode === "packages" ? "#6EE7B7" : "rgba(255,255,255,0.55)",
+                transition: "all 0.12s",
+              }}
+            >
+              📦 Recommended Packages
+            </button>
+            <button
+              onClick={() => {
+                setEvMode("custom");
+                onCustomConfig(customL2, customDcfc);
+              }}
+              style={{
+                flex: 1,
+                padding: "7px 10px",
+                borderRadius: 7,
+                border:
+                  evMode === "custom"
+                    ? "1.5px solid rgba(16,185,129,0.55)"
+                    : "1px solid rgba(255,255,255,0.08)",
+                background: evMode === "custom" ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.3)",
+                cursor: "pointer",
+                fontSize: 11,
+                fontWeight: 700,
+                color: evMode === "custom" ? "#6EE7B7" : "rgba(255,255,255,0.55)",
+                transition: "all 0.12s",
+              }}
+            >
+              ⚙️ Customize
+            </button>
+          </div>
+
+          {/* PACKAGES MODE */}
+          {evMode === "packages" && (
+            <>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "rgba(148,163,184,0.55)",
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  marginBottom: 7,
+                }}
+              >
+                Select your charging package
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                {EV_PACKAGES.map((pkg) => {
+                  const active = selectedPackage === pkg.id;
+                  const kw = totalKW(pkg);
+                  return (
+                    <button
+                      key={pkg.id}
+                      onClick={() => onSelectPackage(pkg.id)}
+                      style={{
+                        padding: "10px 10px 10px",
+                        borderRadius: 8,
+                        border: active
+                          ? "1.5px solid rgba(16,185,129,0.55)"
+                          : "1px solid rgba(255,255,255,0.08)",
+                        background: active ? "rgba(16,185,129,0.11)" : "rgba(51,65,85,0.45)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        transition: "all 0.12s",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                        position: "relative",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!active) {
+                          e.currentTarget.style.background = "rgba(51,65,85,0.65)";
+                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!active) {
+                          e.currentTarget.style.background = "rgba(51,65,85,0.45)";
+                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                        }
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 3,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: active ? "#6EE7B7" : "rgba(255,255,255,0.88)",
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {pkg.label}
+                        </span>
+                        <div
+                          style={{
+                            flexShrink: 0,
+                            width: 14,
+                            height: 14,
+                            borderRadius: "50%",
+                            border: active ? "none" : "1.5px solid rgba(255,255,255,0.18)",
+                            background: active ? "#3ECF8E" : "transparent",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 8,
+                            fontWeight: 700,
+                            color: "#0D1117",
+                          }}
+                        >
+                          {active && "✓"}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: active ? "rgba(110,231,183,0.70)" : "rgba(148,163,184,0.55)",
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {pkg.l2} L2{pkg.dcfc > 0 ? ` + ${pkg.dcfc} L3` : ""}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 800,
+                          color: active ? "#3ECF8E" : "rgba(255,255,255,0.70)",
+                          letterSpacing: "-0.3px",
+                          lineHeight: 1,
+                          marginTop: 2,
+                        }}
+                      >
+                        {fmtRevenue(pkg.annualRevenue)}/yr
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 9,
+                          color: active ? "rgba(110,231,183,0.50)" : "rgba(148,163,184,0.40)",
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        est. revenue
+                      </div>
+                      <div style={{ fontSize: 9, color: "rgba(148,163,184,0.38)", marginTop: 1 }}>
+                        {loadImpact(pkg)} · {kw} kW
+                      </div>
+                      {pkg.recommended && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: 5,
+                            right: active ? 22 : 6,
+                            fontSize: 8,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            color: "#3ECF8E",
+                            background: "rgba(16,185,129,0.13)",
+                            border: "1px solid rgba(16,185,129,0.22)",
+                            borderRadius: 3,
+                            padding: "1px 4px",
+                            letterSpacing: "0.04em",
+                          }}
+                        >
+                          Best
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <div
+                style={{
+                  fontSize: 10,
+                  color: "rgba(148,163,184,0.40)",
+                  marginTop: 7,
+                  lineHeight: 1.4,
+                }}
+              >
+                L2 = 7.2 kW · L3 (DCFC) = 50 kW · Revenue based on avg utilization &amp; $0.40/kWh
+              </div>
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: "9px 11px",
+                  borderRadius: 8,
+                  background: "rgba(16,185,129,0.07)",
+                  border: "1px solid rgba(16,185,129,0.18)",
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "flex-start",
+                }}
+              >
+                <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>🚗</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#6EE7B7", lineHeight: 1.4 }}>
+                    {selected.l2} Level 2 + {selected.dcfc} DC fast chargers · {totalKW(selected)}{" "}
+                    kW peak demand
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "rgba(148,163,184,0.60)",
+                      lineHeight: 1.4,
+                      marginTop: 2,
+                    }}
+                  >
+                    ~{fmtRevenue(selected.annualRevenue)}/year estimated revenue · EV load
+                    integrated into BESS sizing
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* CUSTOM MODE */}
+          {evMode === "custom" && (
+            <>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "rgba(148,163,184,0.55)",
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  marginBottom: 10,
+                }}
+              >
+                Set your charger counts
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* L2 stepper */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(51,65,85,0.45)",
+                  }}
                 >
-                  {/* Package name + checkmark */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: active ? "#6EE7B7" : "rgba(255,255,255,0.88)", lineHeight: 1.2 }}>{pkg.label}</span>
-                    <div style={{ flexShrink: 0, width: 14, height: 14, borderRadius: "50%", border: active ? "none" : "1.5px solid rgba(255,255,255,0.18)", background: active ? "#3ECF8E" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#0D1117" }}>{active && "✓"}</div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.88)" }}>
+                      Level 2 Chargers
+                    </div>
+                    <div style={{ fontSize: 10, color: "rgba(148,163,184,0.55)" }}>
+                      7.2 kW each · employee &amp; customer
+                    </div>
                   </div>
-                  {/* Charger counts */}
-                  <div style={{ fontSize: 10, color: active ? "rgba(110,231,183,0.70)" : "rgba(148,163,184,0.55)", lineHeight: 1.3 }}>
-                    {pkg.l2} L2{pkg.dcfc > 0 ? ` + ${pkg.dcfc} L3` : ""}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button
+                      onClick={() => {
+                        const n = Math.max(0, customL2 - 1);
+                        setCustomL2(n);
+                        onCustomConfig(n, customDcfc);
+                      }}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 6,
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        background: "rgba(51,65,85,0.6)",
+                        cursor: "pointer",
+                        color: "#fff",
+                        fontSize: 16,
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      −
+                    </button>
+                    <span
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: "#6EE7B7",
+                        minWidth: 24,
+                        textAlign: "center",
+                      }}
+                    >
+                      {customL2}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const n = Math.min(12, customL2 + 1);
+                        setCustomL2(n);
+                        onCustomConfig(n, customDcfc);
+                      }}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 6,
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        background: "rgba(51,65,85,0.6)",
+                        cursor: "pointer",
+                        color: "#fff",
+                        fontSize: 16,
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      +
+                    </button>
                   </div>
-                  {/* Revenue — THE key number */}
-                  <div style={{ fontSize: 14, fontWeight: 800, color: active ? "#3ECF8E" : "rgba(255,255,255,0.70)", letterSpacing: "-0.3px", lineHeight: 1, marginTop: 2 }}>
-                    {fmtRevenue(pkg.annualRevenue)}/yr
+                </div>
+                {/* DCFC stepper */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(51,65,85,0.45)",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.88)" }}>
+                      DC Fast Chargers (DCFC)
+                    </div>
+                    <div style={{ fontSize: 10, color: "rgba(148,163,184,0.55)" }}>
+                      50 kW each · rapid public charging
+                    </div>
                   </div>
-                  <div style={{ fontSize: 9, color: active ? "rgba(110,231,183,0.50)" : "rgba(148,163,184,0.40)", lineHeight: 1.2 }}>
-                    est. revenue
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button
+                      onClick={() => {
+                        const n = Math.max(0, customDcfc - 1);
+                        setCustomDcfc(n);
+                        onCustomConfig(customL2, n);
+                      }}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 6,
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        background: "rgba(51,65,85,0.6)",
+                        cursor: "pointer",
+                        color: "#fff",
+                        fontSize: 16,
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      −
+                    </button>
+                    <span
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: "#6EE7B7",
+                        minWidth: 24,
+                        textAlign: "center",
+                      }}
+                    >
+                      {customDcfc}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const n = Math.min(8, customDcfc + 1);
+                        setCustomDcfc(n);
+                        onCustomConfig(customL2, n);
+                      }}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 6,
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        background: "rgba(51,65,85,0.6)",
+                        cursor: "pointer",
+                        color: "#fff",
+                        fontSize: 16,
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      +
+                    </button>
                   </div>
-                  {/* Load impact */}
-                  <div style={{ fontSize: 9, color: "rgba(148,163,184,0.38)", marginTop: 1 }}>{loadImpact(pkg)} · {kw} kW</div>
-                  {pkg.recommended && (
-                    <span style={{ position: "absolute", top: 5, right: active ? 22 : 6, fontSize: 8, fontWeight: 700, textTransform: "uppercase", color: "#3ECF8E", background: "rgba(16,185,129,0.13)", border: "1px solid rgba(16,185,129,0.22)", borderRadius: 3, padding: "1px 4px", letterSpacing: "0.04em" }}>Best</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          {/* Revenue note */}
-          <div style={{ fontSize: 10, color: "rgba(148,163,184,0.40)", marginTop: 7, lineHeight: 1.4 }}>
-            L2 = 7.2 kW · L3 (DCFC) = 50 kW · Revenue estimates based on avg utilization &amp; $0.40/kWh charging rate
-          </div>
-          {/* Confirm banner */}
-          <div style={{ marginTop: 10, padding: "9px 11px", borderRadius: 8, background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.18)", display: "flex", gap: 8, alignItems: "flex-start" }}>
-            <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>🚗</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#6EE7B7", lineHeight: 1.4 }}>
-                {selected.l2} Level 2 + {selected.dcfc} DC fast chargers · {totalKW(selected)} kW peak demand
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: "rgba(148,163,184,0.60)", lineHeight: 1.4, marginTop: 2 }}>
-                ~{fmtRevenue(selected.annualRevenue)}/year estimated revenue · EV load integrated into BESS sizing
+              {/* Custom summary */}
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: "9px 11px",
+                  borderRadius: 8,
+                  background: "rgba(16,185,129,0.07)",
+                  border: "1px solid rgba(16,185,129,0.18)",
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "flex-start",
+                }}
+              >
+                <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>🚗</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#6EE7B7", lineHeight: 1.4 }}>
+                    {customL2} Level 2 + {customDcfc} DC fast chargers · {customKW} kW peak demand
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "rgba(148,163,184,0.60)",
+                      lineHeight: 1.4,
+                      marginTop: 2,
+                    }}
+                  >
+                    ~{fmtRevenue(customRevenue)}/year estimated revenue · EV load integrated into
+                    BESS sizing
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       )}
     </div>
   );
 }
-

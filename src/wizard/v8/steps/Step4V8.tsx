@@ -211,6 +211,105 @@ function formatCurrency(value: number): string {
 }
 
 // ============================================================================
+// GOAL RANKINGS PANEL
+// ============================================================================
+
+type TierTuple = [
+  import("../wizardState").QuoteTier,
+  import("../wizardState").QuoteTier,
+  import("../wizardState").QuoteTier,
+];
+
+interface GoalRankingsPanelProps {
+  tiers: TierTuple;
+}
+
+const GOALS = [
+  { id: "cost", label: "Cost Reduction", icon: "💰", desc: "Bill savings vs. baseline" },
+  { id: "resilience", label: "Resilience", icon: "🛡️", desc: "Backup duration at peak load" },
+  { id: "solar", label: "Sustainability", icon: "☀️", desc: "Solar offset of facility load" },
+  { id: "revenue", label: "Revenue Generation", icon: "📈", desc: "EV charging income stream" },
+  { id: "demand", label: "Demand Management", icon: "⚡", desc: "Peak demand shaving capacity" },
+  {
+    id: "independence",
+    label: "Grid Independence",
+    icon: "🔌",
+    desc: "Combined solar + storage coverage",
+  },
+] as const;
+
+function GoalRankingsPanel({ tiers }: GoalRankingsPanelProps) {
+  // Use recommended (index 1) tier for scoring
+  const rec = tiers[1];
+  const peak = Math.max(rec.bessKW, 1);
+
+  function score(goalId: string): number {
+    switch (goalId) {
+      case "cost":
+        return Math.min(
+          100,
+          Math.round((rec.annualSavings / Math.max(rec.grossCost, 1)) * 100 * 5)
+        );
+      case "resilience":
+        return Math.min(100, Math.round((rec.bessKWh / (peak * 4)) * 100));
+      case "solar":
+        return rec.solarKW > 0 ? Math.min(100, Math.round((rec.solarKW / peak) * 100)) : 0;
+      case "revenue":
+        return rec.evChargerKW > 0
+          ? Math.min(100, Math.round((rec.evChargerKW / peak) * 80 + 20))
+          : 0;
+      case "demand":
+        return Math.min(100, Math.round((rec.bessKW / peak) * 80 + 20));
+      case "independence":
+        return Math.min(100, Math.round(((rec.solarKW + rec.bessKW * 0.5) / peak) * 80));
+      default:
+        return 50;
+    }
+  }
+
+  const scored = GOALS.map((g) => ({ ...g, pct: score(g.id) })).sort((a, b) => b.pct - a.pct);
+
+  return (
+    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 mx-2 md:mx-4">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+          What Merlin Optimized For
+        </span>
+        <span className="text-[10px] text-slate-600">— based on your OPTIMIZED tier</span>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+        {scored.map((g, i) => (
+          <div key={g.id} className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">{g.icon}</span>
+                <span className="text-[11px] font-semibold text-slate-300">{g.label}</span>
+                {i === 0 && (
+                  <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded px-1 py-0.5">
+                    Top
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] font-bold text-slate-200 tabular-nums">{g.pct}%</span>
+            </div>
+            <div className="h-1 rounded-full bg-slate-800 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${g.pct}%`,
+                  background: g.pct >= 75 ? "#3ECF8E" : g.pct >= 45 ? "#F59E0B" : "#64748b",
+                }}
+              />
+            </div>
+            <span className="text-[9px] text-slate-600 leading-tight">{g.desc}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -438,7 +537,7 @@ export default function Step4V8({ state, actions }: Props) {
         <p className="text-slate-400 text-sm max-w-2xl mx-auto">
           {selectedTierIndex === null
             ? "Each configuration is sized to your facility profile. Select one to continue."
-            : "Selection confirmed. Review the details and click \"See your quote\" to proceed."}
+            : 'Selection confirmed. Review the details and click "See your quote" to proceed.'}
         </p>
         {selectedTierIndex === null && (
           <div className="mt-3 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg inline-block">
@@ -472,6 +571,7 @@ export default function Step4V8({ state, actions }: Props) {
       </div>
 
       {/* Cards Grid - Horizontal layout */}
+      <GoalRankingsPanel tiers={tiers} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 w-full px-2 md:px-4">
         {tiers.map((tier, index) => {
           const tierIndex = index as 0 | 1 | 2;
@@ -903,7 +1003,6 @@ export default function Step4V8({ state, actions }: Props) {
           );
         })}
       </div>
-
     </div>
   );
 }

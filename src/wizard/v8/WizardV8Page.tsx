@@ -27,7 +27,14 @@ import { useWizardV8 } from "./useWizardV8";
 import type { WizardStep } from "./wizardState";
 import { Step0V8_ModeSelect } from "./steps/Step0V8_ModeSelect";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
-import { estimateSolarKW, estimateGenKW, defaultGeneratorScope, EV_PACKAGE_COUNTS, type SolarScopeId, type GeneratorScopeId } from "./addonSizing";
+import {
+  estimateSolarKW,
+  estimateGenKW,
+  defaultGeneratorScope,
+  EV_PACKAGE_COUNTS,
+  type SolarScopeId,
+  type GeneratorScopeId,
+} from "./addonSizing";
 
 // Lazy-load all steps — Step0 (mode select) is the true entry point and is
 // eagerly imported above. Step1 is preloaded immediately so it feels instant.
@@ -51,11 +58,11 @@ const STEP_LABELS = ["Mode", "Location", "Industry", "Profile", "Add-ons", "Magi
 // Map WizardStep (0|1|2|3|3.5|4|5|6) → display index (0-6) for WizardShellV7.
 // Shell uses integer indices for progress bar; 3.5 must map to 4 (Add-ons slot).
 function wizardStepToDisplayIndex(step: number): number {
-  if (step <= 3) return step;          // 0→0, 1→1, 2→2, 3→3 (Profile)
-  if (step === 3.5) return 4;          // 3.5 → 4 (Add-ons)
-  if (step === 4) return 4;            // step=4 also renders Step3_5V8 → 4
-  if (step === 5) return 5;            // MagicFit
-  return 6;                            // Quote
+  if (step <= 3) return step; // 0→0, 1→1, 2→2, 3→3 (Profile)
+  if (step === 3.5) return 4; // 3.5 → 4 (Add-ons)
+  if (step === 4) return 4; // step=4 also renders Step3_5V8 → 4
+  if (step === 5) return 5; // MagicFit
+  return 6; // Quote
 }
 
 // ── Accent helpers ────────────────────────────────────────────────────────────
@@ -119,8 +126,8 @@ function getAdvisorContent(
             <>
               <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
                 Your local utility is {hi(intel.utilityProvider)} at{" "}
-                {hi(`$${intel.utilityRate.toFixed(2)}/kWh`)}. Solar grade is{" "}
-                {hi(intel.solarGrade)} — {intel.peakSunHours} peak sun hours per day.
+                {hi(`$${intel.utilityRate.toFixed(2)}/kWh`)}. Solar grade is {hi(intel.solarGrade)}{" "}
+                — {intel.peakSunHours} peak sun hours per day.
               </div>
               <div
                 style={{
@@ -135,22 +142,64 @@ function getAdvisorContent(
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "rgba(62,207,142,0.6)", marginBottom: 4, textTransform: "uppercase" }}>Rate</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: ACCENT, fontVariantNumeric: "tabular-nums", fontFamily: "'JetBrains Mono', 'Courier New', monospace" }}>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: "0.06em",
+                      color: "rgba(62,207,142,0.6)",
+                      marginBottom: 4,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Rate
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 800,
+                      color: ACCENT,
+                      fontVariantNumeric: "tabular-nums",
+                      fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                    }}
+                  >
                     ${intel.utilityRate.toFixed(2)}
                   </div>
                   <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>/kWh</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "rgba(62,207,142,0.6)", marginBottom: 4, textTransform: "uppercase" }}>Solar</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: ACCENT, fontVariantNumeric: "tabular-nums", fontFamily: "'JetBrains Mono', 'Courier New', monospace" }}>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: "0.06em",
+                      color: "rgba(62,207,142,0.6)",
+                      marginBottom: 4,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Solar
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 800,
+                      color: ACCENT,
+                      fontVariantNumeric: "tabular-nums",
+                      fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                    }}
+                  >
                     {intel.solarGrade}
                   </div>
-                  <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>{intel.peakSunHours}h / day</div>
+                  <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>
+                    {intel.peakSunHours}h / day
+                  </div>
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
-                {["Business name helps auto-detect industry", "Skip to select manually"].map(bullet)}
+                {["Business name helps auto-detect industry", "Skip to select manually"].map(
+                  bullet
+                )}
               </div>
             </>
           ) : (
@@ -160,7 +209,9 @@ function getAdvisorContent(
                 {hi("solar irradiance")} — two of the biggest factors in your savings estimate.
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
-                {["Utility rates by zip code", "Peak demand windows", "Solar potential score"].map(bullet)}
+                {["Utility rates by zip code", "Peak demand windows", "Solar potential score"].map(
+                  bullet
+                )}
               </div>
             </>
           )}
@@ -242,9 +293,8 @@ function getAdvisorContent(
             Customize your scope.
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Add-ons are optional but can significantly improve your ROI. Merlin has pre-selected
-            the most common upgrades for{" "}
-            {hi(industry ? industry.replace(/_/g, " ") : "your facility")}.
+            Add-ons are optional but can significantly improve your ROI. Merlin has pre-selected the
+            most common upgrades for {hi(industry ? industry.replace(/_/g, " ") : "your facility")}.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
             {[
@@ -338,8 +388,8 @@ function getAdvisorContent(
 // Step 5 is final step with export buttons - no Next button needed.
 function resolveCanGoNext(step: number, state: S): boolean {
   if (step === 3) return state.baseLoadKW > 0;
-  if (step === 4) return true;                              // Add-ons: always continuable
-  if (step === 5) return state.selectedTierIndex !== null;  // MagicFit: must pick a tier
+  if (step === 4) return true; // Add-ons: always continuable
+  if (step === 5) return state.selectedTierIndex !== null; // MagicFit: must pick a tier
   return false;
 }
 
@@ -400,7 +450,7 @@ export default function WizardV8Page() {
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Intentionally mount-only: URL params are read once; actions is a stable ref
 
   useEffect(() => {
@@ -437,12 +487,13 @@ export default function WizardV8Page() {
   // calling it inline would create fresh objects on every state dispatch.
   // Dep array lists exactly the fields getAdvisorContent reads — no disable needed.
   const advisorContent = useMemo(
-    () => getAdvisorContent(step, {
-      industry: state.industry,
-      baseLoadKW: state.baseLoadKW,
-      peakLoadKW: state.peakLoadKW,
-      intel: state.intel,
-    }),
+    () =>
+      getAdvisorContent(step, {
+        industry: state.industry,
+        baseLoadKW: state.baseLoadKW,
+        peakLoadKW: state.peakLoadKW,
+        intel: state.intel,
+      }),
     [step, state.industry, state.baseLoadKW, state.peakLoadKW, state.intel]
   );
 
@@ -458,24 +509,33 @@ export default function WizardV8Page() {
           if (step === 4) {
             // ── Persist Step 3.5 Add-on configuration before advancing ────────
             // Solar
-            const solarScope = ((state.step3Answers?.solarScope as SolarScopeId | undefined) ?? "roof_canopy");
-            const committedSolarKW = state.wantsSolar
-              ? estimateSolarKW(solarScope, state)
-              : 0;
+            const solarScope =
+              (state.step3Answers?.solarScope as SolarScopeId | undefined) ?? "roof_canopy";
+            const committedSolarKW = state.wantsSolar ? estimateSolarKW(solarScope, state) : 0;
 
             // Generator
-            const generatorScope = ((state.step3Answers?.generatorScope as GeneratorScopeId | undefined) ?? defaultGeneratorScope(state));
-            const committedGenKW = state.wantsGenerator
-              ? estimateGenKW(generatorScope, state)
-              : 0;
+            const generatorScope =
+              (state.step3Answers?.generatorScope as GeneratorScopeId | undefined) ??
+              defaultGeneratorScope(state);
+            const committedGenKW = state.wantsGenerator ? estimateGenKW(generatorScope, state) : 0;
 
             // EV Chargers — counts from SSOT (addonSizing.EV_PACKAGE_COUNTS)
+            // "custom" mode writes directly to state.level2Chargers/dcfcChargers via setAddonConfig
             const evScope = (state.step3Answers?.evScope as string) ?? "pkg_pro";
-            const pkgCounts = (EV_PACKAGE_COUNTS as Record<string, { l2: number; dcfc: number }>)[evScope]
-              ?? EV_PACKAGE_COUNTS.pkg_pro;
-            const evCounts = state.wantsEVCharging
-              ? { level2: pkgCounts.l2, dcfc: pkgCounts.dcfc }
-              : { level2: 0, dcfc: 0 };
+            let evCounts: { level2: number; dcfc: number };
+            if (evScope === "custom") {
+              // Custom mode: counts already committed to state via setAddonConfig
+              evCounts = state.wantsEVCharging
+                ? { level2: state.level2Chargers, dcfc: state.dcfcChargers }
+                : { level2: 0, dcfc: 0 };
+            } else {
+              const pkgCounts =
+                (EV_PACKAGE_COUNTS as Record<string, { l2: number; dcfc: number }>)[evScope] ??
+                EV_PACKAGE_COUNTS.pkg_pro;
+              evCounts = state.wantsEVCharging
+                ? { level2: pkgCounts.l2, dcfc: pkgCounts.dcfc }
+                : { level2: 0, dcfc: 0 };
+            }
 
             // Commit all three in one dispatch
             actions.setAddonConfig({
