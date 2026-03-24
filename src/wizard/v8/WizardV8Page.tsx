@@ -27,14 +27,7 @@ import { useWizardV8 } from "./useWizardV8";
 import type { WizardStep } from "./wizardState";
 import { Step0V8_ModeSelect } from "./steps/Step0V8_ModeSelect";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
-import {
-  estimateSolarKW,
-  estimateGenKW,
-  defaultGeneratorScope,
-  EV_PACKAGE_COUNTS,
-  type SolarScopeId,
-  type GeneratorScopeId,
-} from "./addonSizing";
+import { EV_PACKAGE_COUNTS } from "./addonSizing";
 
 // Lazy-load all steps — Step0 (mode select) is the true entry point and is
 // eagerly imported above. Step1 is preloaded immediately so it feels instant.
@@ -508,16 +501,9 @@ export default function WizardV8Page() {
         onNext={() => {
           if (step === 4) {
             // ── Persist Step 3.5 Add-on configuration before advancing ────────
-            // Solar
-            const solarScope =
-              (state.step3Answers?.solarScope as SolarScopeId | undefined) ?? "roof_canopy";
-            const committedSolarKW = state.wantsSolar ? estimateSolarKW(solarScope, state) : 0;
-
-            // Generator
-            const generatorScope =
-              (state.step3Answers?.generatorScope as GeneratorScopeId | undefined) ??
-              defaultGeneratorScope(state);
-            const committedGenKW = state.wantsGenerator ? estimateGenKW(generatorScope, state) : 0;
+            // Solar + Generator: kW already committed to state via setAddonConfig on CONFIRM
+            const committedSolarKW = state.wantsSolar ? state.solarKW : 0;
+            const committedGenKW = state.wantsGenerator ? state.generatorKW : 0;
 
             // EV Chargers — counts from SSOT (addonSizing.EV_PACKAGE_COUNTS)
             // "custom" mode writes directly to state.level2Chargers/dcfcChargers via setAddonConfig
