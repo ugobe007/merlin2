@@ -195,6 +195,10 @@ export interface EquipmentConfig {
   bessKW?: number;
   bessKWh?: number;
   generatorKW?: number;
+  /** 'natural-gas' | 'diesel' | 'dual-fuel'. Affects $/kW rate and whether a
+   *  fuel storage tank is required. Natural gas generators draw from the utility
+   *  line — no tank needed. Defaults to 'diesel' when omitted. */
+  generatorFuelType?: string;
   level2Chargers?: number;
   dcfcChargers?: number;
   hpcChargers?: number;
@@ -253,9 +257,14 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
     (config.bessKWh || 0) * EQUIPMENT_UNIT_COSTS.bess.pricePerKWh +
     (config.bessKW || 0) * EQUIPMENT_UNIT_COSTS.bess.pricePerKW;
 
+  const isNaturalGasGenerator = (config.generatorFuelType ?? "diesel") === "natural-gas";
+  // Natural gas: $500/kW (piped supply, no on-site tank) + ATS only
+  // Diesel: $690/kW (stored fuel) + $15K tank + $8K ATS
+  const genPricePerKW = isNaturalGasGenerator ? 500 : EQUIPMENT_UNIT_COSTS.generator.pricePerKW;
+  const genFuelTank = isNaturalGasGenerator ? 0 : EQUIPMENT_UNIT_COSTS.generator.fuelTankCost;
   const generatorCost =
-    (config.generatorKW || 0) * EQUIPMENT_UNIT_COSTS.generator.pricePerKW +
-    (config.generatorKW ? EQUIPMENT_UNIT_COSTS.generator.fuelTankCost : 0) +
+    (config.generatorKW || 0) * genPricePerKW +
+    (config.generatorKW ? genFuelTank : 0) +
     (config.generatorKW ? EQUIPMENT_UNIT_COSTS.generator.transferSwitchCost : 0);
 
   const evChargingCost =
@@ -352,7 +361,9 @@ export interface SavingsBreakdown {
 export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): SavingsBreakdown {
   // Warn on unrealistic electricity rates (>$1/kWh is unrealistic for commercial)
   if (inputs.electricityRate > 1.0) {
-    console.warn(`Unrealistic electricity rate: $${inputs.electricityRate}/kWh. Typical commercial rates are $0.08–$0.30/kWh.`);
+    console.warn(
+      `Unrealistic electricity rate: $${inputs.electricityRate}/kWh. Typical commercial rates are $0.08–$0.30/kWh.`
+    );
   }
 
   // BESS Demand Charge Savings
