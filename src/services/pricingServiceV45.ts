@@ -36,12 +36,13 @@ export const EQUIPMENT_UNIT_COSTS = {
     notes: "Modules, racking, BOS wiring, installation labor, basic permits. Inverter EXCLUDED.",
   },
 
-  // Battery Energy Storage System (BESS)
+  // Battery Energy Storage System (BESS) — PACK PRICING ONLY
   bess: {
-    pricePerKWh: 350, // $/kWh installed (LFP chemistry)
-    pricePerKW: 150, // $/kW for hybrid inverter (handles solar+battery+EV)
+    pricePerKWh: 350, // $/kWh — PACK ONLY (cells, BMS, thermal mgmt, enclosure). ❌ Excl. PCS & installation.
+    pricePerKW: 150, // $/kW — PCS / hybrid inverter (solar+battery+EV dispatch). Priced separately.
     source: "NREL ATB 2024, BloombergNEF",
-    notes: "Includes hybrid inverter, BMS, thermal management, enclosure, installation",
+    notes:
+      "Pack cost only. PCS in pricePerKW. Installation/civil in SITE_WORK_COSTS. Guardrails: $105–$250/kWh (DEFAULT_PRICE_GUARDS).",
   },
 
   // Backup Generator

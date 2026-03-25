@@ -79,8 +79,11 @@ import {
   calculateSystemCosts,
   calculateAnnualSavings,
   calculateROI,
+  EQUIPMENT_UNIT_COSTS,
 } from "@/services/pricingServiceV45";
 import { hasGeneratorIntent } from "./addonIntent";
+import { CalculationValidator, type ValidationInput } from "@/services/calculationValidator";
+import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
 import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
 
 // Dev-only logging helper — compiled away in production bundles
@@ -487,15 +490,28 @@ function buildOneTier(
   // Includes: BESS, solar, generator (fuel-type aware), EV chargers,
   // site engineering, 7.5% contingency, tiered Merlin fee, and correct ITC
   // (30% on solar + BESS only per IRA 2022 — generator/EV/Merlin fee ineligible).
+  // EV charger cost fallback: if old evChargers format is set but structured counts are all 0,
+  // convert to structured counts so calculateSystemCosts prices them correctly.
+  let costLevel2 = level2;
+  let costDcfc = dcfc;
+  let costHpc = hpc;
+  if (costLevel2 === 0 && costDcfc === 0 && costHpc === 0 && (state.evChargers?.count ?? 0) > 0) {
+    const t = state.evChargers!.type;
+    if (t === "l2" || t === "level2") costLevel2 = state.evChargers!.count;
+    else if (t === "dcfc") costDcfc = state.evChargers!.count;
+    else if (t === "hpc") costHpc = state.evChargers!.count;
+    else costLevel2 = state.evChargers!.count; // fallback to L2
+  }
+
   const v45Costs = calculateSystemCosts({
     solarKW: finalSolarKW,
     bessKW,
     bessKWh,
     generatorKW: finalGenKW,
-    generatorFuelType: generatorFuelType || "natural-gas",
-    level2Chargers: level2,
-    dcfcChargers: dcfc,
-    hpcChargers: hpc,
+    generatorFuelType: generatorFuelType || "diesel",
+    level2Chargers: costLevel2,
+    dcfcChargers: costDcfc,
+    hpcChargers: costHpc,
   });
 
   // ── V4.5 SSOT SAVINGS ──────────────────────────────────────────────────
@@ -598,8 +614,74 @@ function buildOneTier(
     // V4.5 margin transparency (from pricingServiceV45 tiered Merlin fee)
     marginBandId,
     blendedMarginPercent,
+    // Exposed for CalculationValidator background audit (not displayed in UI)
+    equipmentSubtotal: v45Costs.equipmentSubtotal,
     notes: tierNotes,
   };
+}
+
+// =============================================================================
+// BACKGROUND VALIDATION — Layer 3 (CalculationValidator: Supabase audit + alerts)
+// =============================================================================
+
+/**
+ * Fire-and-forget wrapper around CalculationValidator.validateQuote().
+ * Uses the Recommended tier as the representative quote for audit purposes.
+ * Never blocks buildTiers() — all I/O (Supabase, email/SMS) happens async.
+ */
+async function runV8ValidationBackground(state: WizardState, tier: QuoteTier): Promise<void> {
+  try {
+    const inputs: ValidationInput = {
+      storageSizeMW: tier.bessKW / 1000,
+      durationHours: tier.durationHours,
+      solarMW: tier.solarKW > 0 ? tier.solarKW / 1000 : undefined,
+      generatorMW: tier.generatorKW > 0 ? tier.generatorKW / 1000 : undefined,
+      location: state.location ? `${state.location.city}, ${state.location.state}` : "unknown",
+      useCase: state.industry ?? "default",
+      electricityRate: state.intel?.utilityRate ?? 0.12,
+    };
+
+    // Adapt QuoteTier → QuoteResult shape.
+    // BESS pack cost = pack-only (cells + BMS + thermal + enclosure), NO PCS/inverter.
+    // This keeps the validator's $/kWh check aligned with pack-only guardrails.
+    const bessPackCost = Math.round(
+      tier.bessKWh * EQUIPMENT_UNIT_COSTS.bess.pricePerKWh // $350/kWh pack rate from SSOT
+    );
+    const solarCost =
+      tier.solarKW > 0
+        ? Math.round(tier.solarKW * 1000 * EQUIPMENT_UNIT_COSTS.solar.pricePerWatt) // $1.51/W from SSOT
+        : 0;
+
+    const quoteResult = {
+      equipment: {
+        batteries: bessPackCost > 0 ? { totalCost: bessPackCost } : undefined,
+        solar: solarCost > 0 ? { totalCost: solarCost } : undefined,
+      },
+      costs: {
+        equipmentCost: tier.equipmentSubtotal ?? Math.round(tier.grossCost * 0.74),
+        installationCost: 0,
+        totalProjectCost: tier.grossCost,
+        taxCredit: tier.itcAmount,
+        netCost: tier.netCost,
+      },
+      financials: {
+        annualSavings: tier.annualSavings,
+        paybackYears: tier.paybackYears,
+        roi10Year: tier.roi10Year,
+        roi25Year: 0,
+        npv: tier.npv,
+        irr: 0,
+      },
+    } as unknown as QuoteResult;
+
+    await CalculationValidator.validateQuote(quoteResult, inputs, {
+      logToDatabase: true,
+      sessionId: `v8-${state.location?.zip ?? "unknown"}-${Date.now()}`,
+    });
+  } catch (err) {
+    // Never let background validation crash the wizard
+    devLog("[V8 CalculationValidator] Background validation error (non-fatal):", err);
+  }
 }
 
 // =============================================================================
@@ -659,6 +741,11 @@ export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteT
   const starter = buildOneTier(state, goal, "Starter", baseNotes);
   const recommended = buildOneTier(state, goal, "Recommended", baseNotes);
   const complete = buildOneTier(state, goal, "Complete", baseNotes);
+
+  // Layer 3 validation: fire-and-forget Supabase audit + email/SMS alerts.
+  // Uses the Recommended tier as the representative quote.
+  // Never blocks or throws — failures are logged silently.
+  void runV8ValidationBackground(state, recommended);
 
   return [starter, recommended, complete];
 }

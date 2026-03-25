@@ -1,5 +1,5 @@
 /**
- * WIZARD V8 — STEP 3.5: ADD-ON INTENTS
+ * WIZARD V8 — STEP 3.5: ADD-ON CONFIGURATION (v2 Design)
  * ============================================================================
  * Solar recommendation is derived from the user's roof area (step 3).
  * Generator recommendation is driven by grid reliability (step 1).
@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import type { WizardState, WizardActions } from "../wizardState";
+import type { WizardState, WizardActions, WizardStep } from "../wizardState";
 import {
   estimateSolarKW,
   estimateGenKW,
@@ -21,18 +21,1315 @@ interface Props {
   actions: WizardActions;
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
 function fmtKW(kw: number): string {
   return kw >= 1000 ? `${(kw / 1000).toFixed(1)} MW` : `${kw} kW`;
 }
-
-function fmtRevenue(annual: number): string {
-  if (annual >= 1000) return `$${(annual / 1000).toFixed(0)}K`;
-  return `$${annual}`;
+function fmtAbsK(dollars: number): string {
+  const k = Math.round(Math.abs(dollars) / 1000);
+  return k >= 1000 ? `$${(k / 1000).toFixed(1)}M` : `$${k}K`;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+type FuelType = "diesel" | "natural-gas" | "dual-fuel";
+
+// ── Stepper Button ────────────────────────────────────────────────────────────
+function StepperBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: 34,
+        height: 34,
+        borderRadius: "50%",
+        background: "rgba(255,255,255,0.06)",
+        border: "1.5px solid rgba(255,255,255,0.14)",
+        color: "rgba(255,255,255,0.85)",
+        fontSize: 20,
+        lineHeight: 1,
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ── Addon Slider (Solar / Generator) ─────────────────────────────────────────
+function AddonSlider({
+  value,
+  min,
+  max,
+  color,
+  onChange,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  color: string;
+  onChange: (v: number) => void;
+}) {
+  const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
+  return (
+    <div
+      style={{
+        position: "relative",
+        height: 44,
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          height: 5,
+          borderRadius: 3,
+          background: "rgba(255,255,255,0.08)",
+          top: "50%",
+          transform: "translateY(-50%)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          height: 5,
+          width: `${pct}%`,
+          borderRadius: 3,
+          background: color,
+          transition: "width 0.06s",
+          top: "50%",
+          transform: "translateY(-50%)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          left: `calc(${pct}% - 10px)`,
+          width: 22,
+          height: 22,
+          borderRadius: "50%",
+          background: color,
+          boxShadow: `0 0 12px ${color}99, 0 0 4px ${color}55`,
+          transition: "left 0.06s",
+          pointerEvents: "none",
+          zIndex: 1,
+          top: "50%",
+          transform: "translateY(-50%)",
+        }}
+      />
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        style={{
+          position: "absolute",
+          left: 0,
+          width: "100%",
+          height: "100%",
+          opacity: 0,
+          cursor: "pointer",
+          margin: 0,
+          zIndex: 2,
+          WebkitAppearance: "none",
+        }}
+      />
+    </div>
+  );
+}
+
+// ── EV Slider Row ─────────────────────────────────────────────────────────────
+function EVSliderRow({
+  label,
+  value,
+  max,
+  color,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+  onChange: (v: number) => void;
+}) {
+  const pct = max > 0 ? (value / max) * 100 : 0;
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 10,
+        }}
+      >
+        <span style={{ fontSize: 15, color: "rgba(203,213,225,0.85)" }}>{label}</span>
+        <span
+          style={{
+            fontSize: 24,
+            fontWeight: 700,
+            color: "#f1f5f9",
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {value}
+        </span>
+      </div>
+      <div
+        style={{
+          position: "relative",
+          height: 44,
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            height: 5,
+            borderRadius: 3,
+            background: "rgba(255,255,255,0.07)",
+            top: "50%",
+            transform: "translateY(-50%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            height: 5,
+            width: `${pct}%`,
+            borderRadius: 3,
+            background: color,
+            transition: "width 0.06s",
+            top: "50%",
+            transform: "translateY(-50%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: `calc(${pct}% - 9px)`,
+            width: 18,
+            height: 18,
+            borderRadius: "50%",
+            background: color,
+            boxShadow: `0 0 10px ${color}99`,
+            transition: "left 0.06s",
+            pointerEvents: "none",
+            zIndex: 1,
+            top: "50%",
+            transform: "translateY(-50%)",
+          }}
+        />
+        <input
+          type="range"
+          min={0}
+          max={max}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          style={{
+            position: "absolute",
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            cursor: "pointer",
+            margin: 0,
+            zIndex: 2,
+            WebkitAppearance: "none",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Confirm Button ────────────────────────────────────────────────────────────
+function ConfirmBtn({
+  confirmed,
+  label,
+  confirmedLabel,
+  onClick,
+}: {
+  confirmed: boolean;
+  label: string;
+  confirmedLabel: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: "100%",
+        padding: "15px 16px",
+        borderRadius: 10,
+        border: confirmed ? "2px solid #3ECF8E" : "2px solid rgba(62,207,142,0.5)",
+        background: confirmed ? "#3ECF8E" : "rgba(62,207,142,0.15)",
+        cursor: "pointer",
+        fontSize: 14,
+        fontWeight: 800,
+        letterSpacing: "0.07em",
+        textTransform: "uppercase" as const,
+        color: confirmed ? "#0D1117" : "#3ECF8E",
+        transition: "all 0.18s",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 9,
+        boxShadow: confirmed
+          ? "0 0 20px rgba(62,207,142,0.45), 0 4px 12px rgba(62,207,142,0.25)"
+          : "0 0 12px rgba(62,207,142,0.2)",
+      }}
+    >
+      {confirmed && (
+        <div
+          style={{
+            width: 20,
+            height: 20,
+            borderRadius: "50%",
+            background: "#0D1117",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 11,
+            fontWeight: 900,
+            color: "#3ECF8E",
+            flexShrink: 0,
+          }}
+        >
+          ✓
+        </div>
+      )}
+      {confirmed ? confirmedLabel : label}
+    </button>
+  );
+}
+
+// ── Summary Pill ──────────────────────────────────────────────────────────────
+function SummaryPill({
+  icon,
+  label,
+  value,
+  savingsK,
+  color,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+  savingsK: number;
+  color: string;
+}) {
+  return (
+    <div
+      style={{
+        flex: 1,
+        minWidth: 0,
+        padding: "9px 10px",
+        borderRadius: 8,
+        background: `${color}0d`,
+        border: `1px solid ${color}28`,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: 700,
+          color,
+          marginBottom: 4,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {icon} {label}
+      </div>
+      <div
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: "#f1f5f9",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {value}
+      </div>
+      {savingsK > 0 && (
+        <div
+          style={{
+            fontSize: 11,
+            color: "#3ECF8E",
+            fontWeight: 600,
+            marginTop: 2,
+          }}
+        >
+          -{fmtAbsK(savingsK * 1000)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Config Summary Bar ────────────────────────────────────────────────────────
+function ConfigSummaryBar({
+  city,
+  industry,
+  peakLoadKW,
+  totalInvestmentK,
+  solarKW,
+  solarSavingsK,
+  genKW,
+  genSavingsK,
+  evPorts,
+  evRevenueK,
+  solarFeasible,
+}: {
+  city: string;
+  industry: string;
+  peakLoadKW: number;
+  totalInvestmentK: number;
+  solarKW: number;
+  solarSavingsK: number;
+  genKW: number;
+  genSavingsK: number;
+  evPorts: number;
+  evRevenueK: number;
+  solarFeasible: boolean;
+}) {
+  return (
+    <div
+      style={{
+        background: "rgba(15,17,23,0.85)",
+        border: "1px solid rgba(255,255,255,0.09)",
+        borderRadius: 12,
+        padding: "14px 16px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: 12,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: "rgba(62,207,142,0.12)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 16,
+              flexShrink: 0,
+            }}
+          >
+            🧙
+          </div>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>Your Configuration</div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "rgba(148,163,184,0.55)",
+                marginTop: 2,
+              }}
+            >
+              {city}
+              {industry ? ` • ${industry}` : ""}
+              {peakLoadKW > 0 ? ` • ${peakLoadKW.toLocaleString()} kW peak` : ""}
+            </div>
+          </div>
+        </div>
+        <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: "rgba(148,163,184,0.5)",
+              letterSpacing: "0.07em",
+              textTransform: "uppercase",
+              marginBottom: 3,
+            }}
+          >
+            Estimated Investment
+          </div>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 800,
+              color: "#f1f5f9",
+              letterSpacing: "-0.5px",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            ${totalInvestmentK.toLocaleString()}K
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        {solarFeasible && solarKW > 0 && (
+          <SummaryPill
+            icon="⭐"
+            label="Solar"
+            value={`${Math.round(solarKW).toLocaleString()} kW`}
+            savingsK={solarSavingsK}
+            color="#fbbf24"
+          />
+        )}
+        {genKW > 0 && (
+          <SummaryPill
+            icon="🔥"
+            label="Generator"
+            value={`${Math.round(genKW).toLocaleString()} kW`}
+            savingsK={genSavingsK}
+            color="#fb923c"
+          />
+        )}
+        {evPorts > 0 && (
+          <SummaryPill
+            icon="⚡"
+            label="EV Charging"
+            value={`${evPorts} port${evPorts !== 1 ? "s" : ""}`}
+            savingsK={evRevenueK}
+            color="#38bdf8"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Card Shell ────────────────────────────────────────────────────────────────
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        borderRadius: 12,
+        background: "rgba(15,17,23,0.7)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        overflow: "hidden",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function CardDivider() {
+  return (
+    <div
+      style={{
+        height: 1,
+        background: "rgba(255,255,255,0.05)",
+        margin: "0 16px",
+      }}
+    />
+  );
+}
+
+// ── Solar PV Array Card ───────────────────────────────────────────────────────
+function SolarCard({
+  maxKW,
+  recKW,
+  initialKW,
+  peakSunHours,
+  utilityRate,
+  peakLoadKW,
+  solarGrade,
+  onConfig,
+}: {
+  maxKW: number;
+  recKW: number;
+  initialKW: number;
+  peakSunHours: number;
+  utilityRate: number;
+  peakLoadKW: number;
+  solarGrade?: string | null;
+  onConfig: (kw: number) => void;
+}) {
+  const safeMax = maxKW > 0 ? maxKW : 2000;
+  // solarMin must always be < safeMax; 10% of max, floored at 1 kW
+  const solarMin = Math.max(1, Math.min(Math.round(safeMax * 0.1), safeMax - 1));
+  const stepKW = safeMax <= 100 ? 5 : safeMax <= 500 ? 25 : safeMax <= 2000 ? 50 : 100;
+  const safeRec = recKW > 0 ? recKW : Math.round(safeMax * 0.8);
+  const [sliderKW, setSliderKW] = useState(() =>
+    Math.max(solarMin, Math.min(safeMax, initialKW > 0 ? initialKW : safeRec))
+  );
+  const [confirmed, setConfirmed] = useState(false);
+
+  const pct = peakLoadKW > 0 ? Math.min(100, Math.round((sliderKW / peakLoadKW) * 100)) : null;
+  const savingsK = Math.round((sliderKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
+  const isOptimal = safeRec > 0 && Math.abs(sliderKW - safeRec) / safeRec < 0.12;
+  const recPct = safeMax > solarMin ? ((safeRec - solarMin) / (safeMax - solarMin)) * 100 : 50;
+
+  const handleChange = (v: number) => {
+    const c = Math.max(solarMin, Math.min(safeMax, v));
+    setSliderKW(c);
+    setConfirmed(false);
+    onConfig(c);
+  };
+
+  return (
+    <Card>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "16px 16px 14px",
+        }}
+      >
+        <div
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 10,
+            background: "rgba(251,191,36,0.14)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 21,
+            flexShrink: 0,
+          }}
+        >
+          ☀️
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>Solar PV Array</div>
+          <div
+            style={{
+              fontSize: 14,
+              color: "rgba(148,163,184,0.6)",
+              marginTop: 2,
+            }}
+          >
+            {peakLoadKW > 0 ? `${peakLoadKW.toLocaleString()} kW peak` : ""}
+            {peakLoadKW > 0 && safeMax > 0 ? " • " : ""}
+            {safeMax > 0 ? `Max: ${safeMax.toLocaleString()} kW` : ""}
+            {solarGrade ? ` • ${solarGrade}` : ""}
+          </div>
+        </div>
+        {isOptimal && (
+          <div
+            style={{
+              padding: "3px 9px",
+              borderRadius: 5,
+              background: "rgba(16,185,129,0.12)",
+              border: "1px solid rgba(16,185,129,0.3)",
+              fontSize: 10,
+              fontWeight: 800,
+              color: "#3ECF8E",
+              letterSpacing: "0.07em",
+              textTransform: "uppercase",
+              flexShrink: 0,
+            }}
+          >
+            OPTIMAL
+          </div>
+        )}
+      </div>
+      <CardDivider />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "16px 16px 14px",
+        }}
+      >
+        <span
+          style={{
+            flex: 1,
+            fontSize: 15,
+            color: "rgba(203,213,225,0.8)",
+            fontWeight: 600,
+          }}
+        >
+          Solar Capacity
+        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <StepperBtn onClick={() => handleChange(sliderKW - stepKW)}>−</StepperBtn>
+          <div style={{ textAlign: "center", minWidth: 110 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 7,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 26,
+                  fontWeight: 800,
+                  color: "#f1f5f9",
+                  fontVariantNumeric: "tabular-nums",
+                  letterSpacing: "-0.3px",
+                }}
+              >
+                {sliderKW.toLocaleString()} kW
+              </span>
+              {confirmed && (
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "50%",
+                    background: "#3ECF8E",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 11,
+                    fontWeight: 900,
+                    color: "#0D1117",
+                    flexShrink: 0,
+                  }}
+                >
+                  ✓
+                </div>
+              )}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                justifyContent: "center",
+                marginTop: 3,
+                flexWrap: "wrap",
+              }}
+            >
+              {pct !== null && (
+                <span style={{ fontSize: 13, color: "rgba(148,163,184,0.6)" }}>{pct}%</span>
+              )}
+              {savingsK > 0 && (
+                <span style={{ fontSize: 13, color: "#3ECF8E", fontWeight: 600 }}>
+                  +${savingsK}K
+                </span>
+              )}
+            </div>
+          </div>
+          <StepperBtn onClick={() => handleChange(sliderKW + stepKW)}>+</StepperBtn>
+        </div>
+      </div>
+      <div style={{ padding: "0 16px 18px" }}>
+        <AddonSlider
+          value={sliderKW}
+          min={solarMin}
+          max={safeMax}
+          color="#fbbf24"
+          onChange={handleChange}
+        />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 8,
+          }}
+        >
+          <span style={{ fontSize: 11, color: "rgba(148,163,184,0.45)" }}>{fmtKW(solarMin)}</span>
+          <span style={{ fontSize: 11, color: "rgba(148,163,184,0.45)" }}>{fmtKW(safeMax)}</span>
+        </div>
+        {safeRec > 0 && safeRec >= solarMin && safeRec <= safeMax && (
+          <div style={{ position: "relative", height: 22, marginTop: 4 }}>
+            <div
+              style={{
+                position: "absolute",
+                left: `${Math.max(8, Math.min(92, recPct))}%`,
+                transform: "translateX(-50%)",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "3px 8px",
+                borderRadius: 20,
+                background: "rgba(251,191,36,0.13)",
+                border: "1px solid rgba(251,191,36,0.28)",
+                fontSize: 11,
+                fontWeight: 600,
+                color: "#fbbf24",
+                whiteSpace: "nowrap",
+              }}
+            >
+              ⭐ {safeRec.toLocaleString()} kW
+            </div>
+          </div>
+        )}
+      </div>
+      <div style={{ padding: "0 16px 14px" }}>
+        <ConfirmBtn
+          confirmed={confirmed}
+          label="Confirm Solar Capacity"
+          confirmedLabel={`${sliderKW.toLocaleString()} kW confirmed`}
+          onClick={() => {
+            onConfig(sliderKW);
+            setConfirmed(true);
+          }}
+        />
+      </div>
+      <div
+        style={{
+          padding: "10px 16px 12px",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          background: "rgba(255,255,255,0.015)",
+        }}
+      >
+        <div style={{ display: "flex", gap: 7, alignItems: "flex-start" }}>
+          <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
+          <div
+            style={{
+              fontSize: 14,
+              color: "rgba(203,213,225,0.8)",
+              lineHeight: 1.65,
+            }}
+          >
+            <span style={{ fontSize: 15 }}>🧙 </span>
+            <strong style={{ color: "#fbbf24", fontWeight: 700 }}>
+              Merlin: {safeRec.toLocaleString()} kW recommended
+            </strong>{" "}
+            based on{" "}
+            {safeMax > 0 ? `${safeMax.toLocaleString()} kW roof space` : "available roof area"}
+            {peakLoadKW > 0 ? ` and ${peakLoadKW.toLocaleString()} kW peak load` : ""}.
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ── EV Charging Card ──────────────────────────────────────────────────────────
+function EVChargingCard({
+  peakLoadKW,
+  initialL2,
+  initialDcfc,
+  initialHpc,
+  onConfig,
+}: {
+  peakLoadKW: number;
+  initialL2: number;
+  initialDcfc: number;
+  initialHpc: number;
+  onConfig: (l2: number, dcfc: number, hpc: number) => void;
+}) {
+  const recL2 = Math.min(12, Math.max(4, peakLoadKW > 0 ? Math.round(peakLoadKW / 150) : 6));
+  const recDcfc = Math.min(8, Math.max(0, peakLoadKW > 0 ? Math.round(peakLoadKW / 600) : 2));
+  const recHpc = Math.min(4, Math.max(0, peakLoadKW > 0 ? Math.round(peakLoadKW / 1200) : 0));
+  const [l2, setL2] = useState(initialL2 > 0 ? initialL2 : recL2);
+  const [dcfc, setDcfc] = useState(initialDcfc > 0 ? initialDcfc : recDcfc);
+  const [hpc, setHpc] = useState(initialHpc > 0 ? initialHpc : recHpc);
+  const [confirmed, setConfirmed] = useState(false);
+  const totalKW = l2 * 11 + dcfc * 100 + hpc * 300;
+
+  const handleChange = (nl2: number, nd: number, nh: number) => {
+    setConfirmed(false);
+    onConfig(nl2, nd, nh);
+  };
+
+  return (
+    <Card>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "16px 16px 14px",
+        }}
+      >
+        <div
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 10,
+            background: "rgba(56,189,248,0.12)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 21,
+            flexShrink: 0,
+          }}
+        >
+          ⚡
+        </div>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>EV Charging</div>
+          <div
+            style={{
+              fontSize: 14,
+              color: "rgba(148,163,184,0.6)",
+              marginTop: 2,
+            }}
+          >
+            Employee &amp; customer charging
+          </div>
+        </div>
+      </div>
+      <div
+        style={{
+          margin: "0 16px 14px",
+          padding: "9px 12px",
+          borderRadius: 8,
+          background: "rgba(56,189,248,0.07)",
+          border: "1px solid rgba(56,189,248,0.18)",
+          display: "flex",
+          gap: 7,
+          alignItems: "flex-start",
+        }}
+      >
+        <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
+        <div
+          style={{
+            fontSize: 14,
+            color: "rgba(203,213,225,0.85)",
+            lineHeight: 1.6,
+          }}
+        >
+          <span style={{ fontSize: 15 }}>🧙 </span>
+          <strong style={{ color: "#38bdf8", fontWeight: 700 }}>
+            Merlin: {recL2} L2 chargers recommended
+            {recDcfc > 0 ? ` + ${recDcfc} DC Fast` : ""}
+          </strong>{" "}
+          for employee daily charging.
+        </div>
+      </div>
+      <div style={{ padding: "0 16px" }}>
+        <EVSliderRow
+          label="Level 2 (7–22 kW)"
+          value={l2}
+          max={12}
+          color="#22d3ee"
+          onChange={(v) => {
+            setL2(v);
+            handleChange(v, dcfc, hpc);
+          }}
+        />
+        <EVSliderRow
+          label="DC Fast (50–150 kW)"
+          value={dcfc}
+          max={8}
+          color="#a78bfa"
+          onChange={(v) => {
+            setDcfc(v);
+            handleChange(l2, v, hpc);
+          }}
+        />
+        <EVSliderRow
+          label="High Power (250–350 kW)"
+          value={hpc}
+          max={4}
+          color="#c084fc"
+          onChange={(v) => {
+            setHpc(v);
+            handleChange(l2, dcfc, v);
+          }}
+        />
+      </div>
+      <div
+        style={{
+          margin: "0 16px 14px",
+          padding: "11px 14px",
+          borderRadius: 8,
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <span
+          style={{
+            fontSize: 15,
+            color: "rgba(203,213,225,0.75)",
+            fontWeight: 600,
+          }}
+        >
+          Total Capacity:
+        </span>
+        <span
+          style={{
+            fontSize: 24,
+            fontWeight: 800,
+            color: "#38bdf8",
+            fontVariantNumeric: "tabular-nums",
+            letterSpacing: "-0.3px",
+          }}
+        >
+          {totalKW.toLocaleString()} kW
+        </span>
+      </div>
+      <div style={{ padding: "0 16px 16px" }}>
+        <ConfirmBtn
+          confirmed={confirmed}
+          label="Confirm EV Charging"
+          confirmedLabel={`${l2 + dcfc + hpc} ports confirmed`}
+          onClick={() => {
+            onConfig(l2, dcfc, hpc);
+            setConfirmed(true);
+          }}
+        />
+      </div>
+    </Card>
+  );
+}
+
+// ── Backup Generator Card ─────────────────────────────────────────────────────
+function BackupGeneratorCard({
+  peakLoadKW,
+  criticalLoadPct,
+  minKW,
+  maxKW,
+  recKW,
+  initialKW,
+  fuelType,
+  onFuelChange,
+  gridReliability,
+  utilityRate,
+  onConfig,
+}: {
+  peakLoadKW: number;
+  criticalLoadPct: number;
+  minKW: number;
+  maxKW: number;
+  recKW: number;
+  initialKW: number;
+  fuelType: FuelType;
+  onFuelChange: (f: FuelType) => void;
+  gridReliability?: string;
+  utilityRate: number;
+  onConfig: (kw: number) => void;
+}) {
+  const safeMax = maxKW > 0 ? maxKW : peakLoadKW > 0 ? peakLoadKW * 2 : 2000;
+  const safeMin = minKW > 0 ? minKW : peakLoadKW > 0 ? Math.round(peakLoadKW * 0.5) : 0;
+  const stepKW = safeMax <= 1000 ? 50 : safeMax <= 4000 ? 100 : 200;
+  const safeRec = recKW > 0 ? recKW : Math.round(peakLoadKW * 1.25);
+  const [sliderKW, setSliderKW] = useState(() =>
+    Math.max(safeMin, Math.min(safeMax, initialKW > 0 ? initialKW : safeRec))
+  );
+  const [confirmed, setConfirmed] = useState(false);
+
+  const criticalKW = Math.round(peakLoadKW * (criticalLoadPct || 0.5));
+  const savingsK = Math.round((sliderKW * utilityRate * 8760 * 0.015 * 6.0) / 1000);
+  const coveragePct = peakLoadKW > 0 ? Math.round((sliderKW / peakLoadKW) * 100) : 0;
+  const isFullBackup = peakLoadKW > 0 && sliderKW >= peakLoadKW * 1.1;
+
+  const handleChange = (v: number) => {
+    const c = Math.max(safeMin, Math.min(safeMax, v));
+    setSliderKW(c);
+    setConfirmed(false);
+    onConfig(c);
+  };
+
+  const fuelOptions: {
+    key: FuelType;
+    icon: string;
+    label: string;
+    desc: string;
+  }[] = [
+    {
+      key: "diesel",
+      icon: "🛢️",
+      label: "Diesel",
+      desc: "Reliable • Higher operating cost",
+    },
+    {
+      key: "natural-gas",
+      icon: "🔥",
+      label: "Natural Gas",
+      desc: "Cleaner emissions • Lower operating cost",
+    },
+    {
+      key: "dual-fuel",
+      icon: "⚡",
+      label: "Dual Fuel",
+      desc: "Flexible • Redundant fuel source",
+    },
+  ];
+  const selectedFuel = fuelOptions.find((f) => f.key === fuelType) ?? fuelOptions[1];
+
+  return (
+    <Card>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "16px 16px 14px",
+        }}
+      >
+        <div
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 10,
+            background: "rgba(249,115,22,0.14)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 21,
+            flexShrink: 0,
+          }}
+        >
+          🏭
+        </div>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>Backup Generator</div>
+          <div
+            style={{
+              fontSize: 14,
+              color: "rgba(148,163,184,0.6)",
+              marginTop: 2,
+            }}
+          >
+            Critical load protection
+            {criticalKW > 0 ? ` • ${criticalKW.toLocaleString()} kW critical` : ""}
+          </div>
+        </div>
+      </div>
+      <CardDivider />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "16px 16px 14px",
+        }}
+      >
+        <span
+          style={{
+            flex: 1,
+            fontSize: 15,
+            color: "rgba(203,213,225,0.8)",
+            fontWeight: 600,
+          }}
+        >
+          Generator Capacity
+        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <StepperBtn onClick={() => handleChange(sliderKW - stepKW)}>−</StepperBtn>
+          <div style={{ textAlign: "center", minWidth: 130 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 7,
+                flexWrap: "wrap",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 26,
+                  fontWeight: 800,
+                  color: "#f1f5f9",
+                  fontVariantNumeric: "tabular-nums",
+                  letterSpacing: "-0.3px",
+                }}
+              >
+                {sliderKW.toLocaleString()} kW
+              </span>
+              {confirmed && (
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "50%",
+                    background: "#3ECF8E",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 11,
+                    fontWeight: 900,
+                    color: "#0D1117",
+                    flexShrink: 0,
+                  }}
+                >
+                  ✓
+                </div>
+              )}
+              {savingsK > 0 && (
+                <span style={{ fontSize: 13, color: "#3ECF8E", fontWeight: 700 }}>
+                  +${savingsK}K
+                </span>
+              )}
+            </div>
+            {coveragePct > 0 && (
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "rgba(148,163,184,0.6)",
+                  marginTop: 3,
+                }}
+              >
+                {coveragePct}% of peak load
+              </div>
+            )}
+          </div>
+          <StepperBtn onClick={() => handleChange(sliderKW + stepKW)}>+</StepperBtn>
+        </div>
+      </div>
+      <div style={{ padding: "0 16px 18px" }}>
+        <AddonSlider
+          value={sliderKW}
+          min={safeMin}
+          max={safeMax}
+          color="#fb923c"
+          onChange={handleChange}
+        />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 8,
+          }}
+        >
+          <span style={{ fontSize: 11, color: "rgba(148,163,184,0.45)" }}>
+            {fmtKW(safeMin)}
+            {peakLoadKW > 0 ? ` (${Math.round((safeMin / peakLoadKW) * 100)}% of peak)` : ""}
+          </span>
+          <span style={{ fontSize: 11, color: "rgba(148,163,184,0.45)" }}>
+            {fmtKW(safeMax)}
+            {peakLoadKW > 0 ? ` (${Math.round((safeMax / peakLoadKW) * 100)}% of peak)` : ""}
+          </span>
+        </div>
+      </div>
+      <CardDivider />
+      <div style={{ padding: "14px 16px" }}>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: "rgba(203,213,225,0.75)",
+            marginBottom: 10,
+            letterSpacing: "0.03em",
+          }}
+        >
+          Fuel Type
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {fuelOptions.map((opt) => {
+            const isSel = fuelType === opt.key;
+            return (
+              <button
+                key={opt.key}
+                onClick={() => onFuelChange(opt.key)}
+                style={{
+                  flex: 1,
+                  padding: "10px 6px",
+                  borderRadius: 8,
+                  border: isSel
+                    ? "1.5px solid rgba(249,115,22,0.45)"
+                    : "1px solid rgba(255,255,255,0.1)",
+                  background: isSel ? "rgba(249,115,22,0.11)" : "rgba(255,255,255,0.03)",
+                  color: isSel ? "#fb923c" : "rgba(203,213,225,0.65)",
+                  fontSize: 14,
+                  fontWeight: isSel ? 700 : 500,
+                  cursor: "pointer",
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 5,
+                  transition: "all 0.15s",
+                }}
+              >
+                <span style={{ fontSize: 14 }}>{opt.icon}</span>
+                {opt.label}
+                {isSel && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -7,
+                      right: -7,
+                      width: 17,
+                      height: 17,
+                      borderRadius: "50%",
+                      background: "#fb923c",
+                      border: "2px solid #0D1117",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 8,
+                      fontWeight: 900,
+                      color: "#0D1117",
+                    }}
+                  >
+                    ✓
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div
+          style={{
+            fontSize: 11,
+            color: "rgba(148,163,184,0.5)",
+            marginTop: 8,
+          }}
+        >
+          {selectedFuel.desc}
+        </div>
+      </div>
+      <div style={{ padding: "0 16px 14px" }}>
+        <ConfirmBtn
+          confirmed={confirmed}
+          label="Confirm Generator Setup"
+          confirmedLabel={`${sliderKW.toLocaleString()} kW confirmed`}
+          onClick={() => {
+            onConfig(sliderKW);
+            setConfirmed(true);
+          }}
+        />
+      </div>
+      <div
+        style={{
+          padding: "11px 16px 14px",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          background: "rgba(255,255,255,0.015)",
+        }}
+      >
+        <div style={{ display: "flex", gap: 7, alignItems: "flex-start" }}>
+          <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
+          <div
+            style={{
+              fontSize: 14,
+              color: "rgba(203,213,225,0.8)",
+              lineHeight: 1.65,
+            }}
+          >
+            <span style={{ fontSize: 15 }}>🧙 </span>
+            <strong style={{ color: "#fb923c", fontWeight: 700 }}>
+              Merlin suggests {safeRec.toLocaleString()} kW for power generation
+            </strong>{" "}
+            {peakLoadKW > 0
+              ? `to cover your ${peakLoadKW.toLocaleString()} kW peak load with 1.25× reserve margin.`
+              : "based on your facility requirements."}
+            {isFullBackup && (
+              <div style={{ marginTop: 6 }}>
+                <strong style={{ color: "rgba(203,213,225,0.9)" }}>Full Backup Sizing: </strong>
+                Generator sized with 1.25× reserve margin per NREL/WPP guidelines.
+                {gridReliability === "frequent-outages" || gridReliability === "unreliable"
+                  ? " This facility requires full backup power for critical operations (life-safety, data integrity, or process continuity)."
+                  : " Provides full facility backup with headroom for load growth."}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 export default function Step3_5V8({ state, actions }: Props) {
   const solarFeasible =
@@ -40,15 +1337,12 @@ export default function Step3_5V8({ state, actions }: Props) {
     state.solarPhysicalCapKW > 0 ||
     !!(state.step3Answers?.roofArea as number | undefined);
 
-  // Open all panels by default on first visit to this step
   const isFirstVisit = !state.step3Answers?.step3_5Visited;
 
-  // Toggle state — default ON for first visit so users see everything immediately
-  const [wantsSolar, setWantsSolar] = useState(isFirstVisit ? true : state.wantsSolar);
-  const [wantsGenerator, setWantsGenerator] = useState(isFirstVisit ? true : state.wantsGenerator);
-  const [wantsEV, setWantsEV] = useState(isFirstVisit ? true : state.wantsEVCharging);
+  const [fuelType, setFuelType] = useState<FuelType>(
+    (state.generatorFuelType as FuelType) ?? "natural-gas"
+  );
 
-  // Seed global state with Merlin recommendations on first visit
   useEffect(() => {
     if (!isFirstVisit) return;
     if (solarFeasible) {
@@ -73,1507 +1367,168 @@ export default function Step3_5V8({ state, actions }: Props) {
       4,
       Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 1200) : 0)
     );
-    actions.setAddonConfig({ level2Chargers: rl2, dcfcChargers: rdcfc, hpcChargers: rhpc });
+    actions.setAddonConfig({
+      level2Chargers: rl2,
+      dcfcChargers: rdcfc,
+      hpcChargers: rhpc,
+    });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [fuelType, setFuelType] = useState<"diesel" | "natural-gas">(
-    state.generatorFuelType === "diesel" ? "diesel" : "natural-gas"
-  );
-
-  // Toggle handlers
-  const toggleSolar = () => {
-    const next = !wantsSolar;
-    setWantsSolar(next);
-    actions.setAddonPreference("solar", next);
-  };
-  const toggleGenerator = () => {
-    const next = !wantsGenerator;
-    setWantsGenerator(next);
-    actions.setAddonPreference("generator", next);
-  };
-  const toggleEV = () => {
-    const next = !wantsEV;
-    setWantsEV(next);
-    actions.setAddonPreference("ev", next);
-    if (next) actions.setAnswer("evScope", "custom");
-  };
-
-  const handleSolarConfig = (kw: number) => {
-    actions.setAddonConfig({ solarKW: kw });
-  };
-  const handleGeneratorConfig = (kw: number) => {
-    actions.setAddonConfig({ generatorKW: kw });
-  };
+  const handleSolarConfig = (kw: number) => actions.setAddonConfig({ solarKW: kw });
+  const handleGeneratorConfig = (kw: number) => actions.setAddonConfig({ generatorKW: kw });
   const handleEVConfig = (l2: number, dcfc: number, hpc: number) => {
     actions.setAnswer("evScope", "custom");
-    actions.setAddonConfig({ level2Chargers: l2, dcfcChargers: dcfc, hpcChargers: hpc });
+    actions.setAddonConfig({
+      level2Chargers: l2,
+      dcfcChargers: dcfc,
+      hpcChargers: hpc,
+    });
   };
-  const handleFuelType = (fuel: "diesel" | "natural-gas") => {
+  const handleFuelType = (fuel: FuelType) => {
     setFuelType(fuel);
     actions.setAddonConfig({ generatorFuelType: fuel });
   };
 
-  // Derived values
   const effectiveSolarCapKW = getEffectiveSolarCapKW(state);
-  const roofAreaSqFt = state.step3Answers?.roofArea as number | undefined;
-  const activeSolarKW = wantsSolar && solarFeasible ? state.solarKW : 0;
-  const activeGenKW = wantsGenerator ? state.generatorKW : 0;
-  const hasAnyAddon = wantsSolar || wantsGenerator || wantsEV;
+  const solarMaxKW = effectiveSolarCapKW > 0 ? effectiveSolarCapKW : 2000;
+  const solarRecKW = estimateSolarKW("roof_canopy", state);
+  const genRecKW = estimateGenKW("full", state);
+  const genMaxKW = state.peakLoadKW > 0 ? Math.round(state.peakLoadKW * 2) : 2000;
+  const genMinKW = state.peakLoadKW > 0 ? Math.round(state.peakLoadKW * 0.5) : 0;
+  const utilityRate = state.intel?.utilityRate ?? 0.14;
+  const peakSunHours = state.intel?.peakSunHours ?? 4.5;
 
-  // Generator smart recommendation signal
-  const gridReliability = state.gridReliability;
-  const generatorSuggested =
-    gridReliability === "frequent-outages" || gridReliability === "unreliable";
-  const gridReliabilityLabel: Record<string, string> = {
-    reliable: "Reliable grid",
-    "occasional-outages": "Occasional outages",
-    "frequent-outages": "Frequent outages",
-    unreliable: "Unreliable grid",
-  };
+  const liveSolarKW = state.solarKW > 0 ? state.solarKW : solarFeasible ? solarRecKW : 0;
+  const liveGenKW = state.generatorKW > 0 ? state.generatorKW : genRecKW;
+  const liveL2 = state.level2Chargers || 0;
+  const liveDcfc = state.dcfcChargers || 0;
+  const liveHpc = state.hpcChargers || 0;
+  const liveTotalEVKW = liveL2 * 11 + liveDcfc * 100 + liveHpc * 300;
+  const totalPorts = liveL2 + liveDcfc + liveHpc;
+
+  const solarSavingsK = Math.round((liveSolarKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
+  const genSavingsK = Math.round((liveGenKW * utilityRate * 8760 * 0.015 * 5.0) / 1000);
+  const evRevenueK = Math.round((liveTotalEVKW * 0.12 * 8760 * 0.25) / 1000);
+  const genCostPerKW = fuelType === "diesel" ? 690 : 500;
+  const totalInvestmentK =
+    Math.round((liveSolarKW * 1400) / 1000) +
+    Math.round((liveGenKW * genCostPerKW) / 1000) +
+    Math.round((liveL2 * 9000 + liveDcfc * 55000 + liveHpc * 130000) / 1000);
+
+  const city =
+    state.location?.city ??
+    (state.locationRaw ? state.locationRaw.split(",")[0].trim() : "Your Facility");
+  const industryDisplay = state.industry
+    ? state.industry.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : "";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 4 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <ConfigSummaryBar
+        city={city}
+        industry={industryDisplay}
+        peakLoadKW={state.peakLoadKW}
+        totalInvestmentK={totalInvestmentK}
+        solarKW={liveSolarKW}
+        solarSavingsK={solarSavingsK}
+        genKW={liveGenKW}
+        genSavingsK={genSavingsK}
+        evPorts={totalPorts}
+        evRevenueK={evRevenueK}
+        solarFeasible={solarFeasible}
+      />
+      <div style={{ textAlign: "center", padding: "6px 0 10px" }}>
         <h2
           style={{
-            fontSize: 20,
-            fontWeight: 700,
+            fontSize: 28,
+            fontWeight: 800,
             color: "#fff",
-            margin: 0,
-            letterSpacing: "-0.3px",
+            margin: "0 0 8px",
+            letterSpacing: "-0.5px",
           }}
         >
-          Customize your scope
+          Configure Your Add-ons
         </h2>
-        <p style={{ fontSize: 13, color: "rgba(148,163,184,0.85)", marginTop: 6, lineHeight: 1.5 }}>
-          Toggle what to include. Estimates are calculated from your facility profile.
+        <p
+          style={{
+            fontSize: 15,
+            color: "rgba(148,163,184,0.65)",
+            margin: 0,
+            lineHeight: 1.5,
+          }}
+        >
+          Fine-tune solar, EV charging, and backup generator
         </p>
       </div>
-
-      {/* Battery — always included */}
-      <AlwaysIncludedCard
-        icon="🔋"
-        name="Battery Storage"
-        description="Shifts load to off-peak hours, shaves demand charges, and powers through outages. Merlin sizes it to your exact load profile."
-        bessKW={state.baseLoadKW}
-        bessKWh={state.baseLoadKW > 0 ? Math.round(state.baseLoadKW * 4) : null}
-      />
-
-      {/* Solar */}
       {solarFeasible && (
-        <SolarSliderCard
-          isOn={wantsSolar}
-          onToggle={toggleSolar}
-          baseLoadKW={state.baseLoadKW}
-          maxKW={estimateSolarKW("maximum", state)}
-          recKW={estimateSolarKW("roof_canopy", state)}
-          initialKW={state.solarKW > 0 ? state.solarKW : estimateSolarKW("roof_canopy", state)}
-          peakSunHours={state.intel?.peakSunHours ?? 4.5}
-          solarGrade={state.intel?.solarGrade ? `Grade ${state.intel.solarGrade}` : undefined}
-          roofAreaSqFt={roofAreaSqFt}
-          effectiveCapKW={effectiveSolarCapKW}
-          utilityRate={state.intel?.utilityRate ?? 0.14}
+        <SolarCard
+          maxKW={solarMaxKW}
+          recKW={solarRecKW}
+          initialKW={state.solarKW > 0 ? state.solarKW : solarRecKW}
+          peakSunHours={peakSunHours}
+          utilityRate={utilityRate}
+          peakLoadKW={state.peakLoadKW}
+          solarGrade={state.intel?.solarGrade ? `Grade ${state.intel.solarGrade}` : null}
           onConfig={handleSolarConfig}
         />
       )}
-
-      {/* Generator */}
-      <GeneratorSliderCard
-        isOn={wantsGenerator}
-        onToggle={toggleGenerator}
-        peakLoadKW={state.peakLoadKW}
-        criticalLoadPct={state.criticalLoadPct}
-        maxKW={estimateGenKW("critical", state)}
-        recKW={estimateGenKW("full", state)}
-        initialKW={
-          state.generatorKW > 0
-            ? state.generatorKW
-            : estimateGenKW(defaultGeneratorScope(state), state)
-        }
-        fuelType={fuelType}
-        onFuelChange={handleFuelType}
-        gridReliability={gridReliability ?? undefined}
-        gridReliabilityLabel={gridReliabilityLabel[gridReliability ?? ""] ?? undefined}
-        generatorSuggested={generatorSuggested}
-        onConfig={handleGeneratorConfig}
-      />
-
-      {/* EV Charging */}
-      <EVPackageCard
-        isOn={wantsEV}
-        onToggle={toggleEV}
+      <EVChargingCard
         peakLoadKW={state.peakLoadKW}
         initialL2={state.level2Chargers}
         initialDcfc={state.dcfcChargers}
         initialHpc={state.hpcChargers}
         onConfig={handleEVConfig}
       />
-
-      {/* Summary strip */}
-      {hasAnyAddon && (
-        <div
-          style={{
-            padding: "11px 14px",
-            borderRadius: 10,
-            border: "1px solid rgba(16,185,129,0.18)",
-            background: "rgba(15,17,23,0.65)",
-            marginTop: 2,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              color: "rgba(16,185,129,0.65)",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              marginBottom: 8,
-            }}
-          >
-            Quote scope — what Merlin is sizing
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px 16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <span style={{ fontSize: 12 }}>🔋</span>
-              <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>BESS:</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#6EE7B7" }}>
-                {state.baseLoadKW} kW facility load
-              </span>
-            </div>
-            {activeSolarKW > 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ fontSize: 12 }}>☀️</span>
-                <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>Solar:</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>
-                  ~{fmtKW(activeSolarKW)}
-                </span>
-              </div>
-            )}
-            {activeGenKW > 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ fontSize: 12 }}>⚡</span>
-                <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>Generator:</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>
-                  ~{fmtKW(activeGenKW)}
-                </span>
-              </div>
-            )}
-            {wantsEV &&
-              (state.level2Chargers > 0 || state.dcfcChargers > 0 || state.hpcChargers > 0) && (
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <span style={{ fontSize: 12 }}>⚡</span>
-                  <span style={{ fontSize: 11, color: "rgba(148,163,184,0.6)" }}>EV:</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>
-                    {state.level2Chargers > 0 ? `${state.level2Chargers} L2` : ""}
-                    {state.dcfcChargers > 0 ? ` + ${state.dcfcChargers} DCFC` : ""}
-                    {state.hpcChargers > 0 ? ` + ${state.hpcChargers} HPC` : ""} ·{" "}
-                    {(
-                      state.level2Chargers * 11 +
-                      state.dcfcChargers * 100 +
-                      state.hpcChargers * 300
-                    ).toLocaleString()}{" "}
-                    kW
-                  </span>
-                </div>
-              )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Always-included card (Battery) ────────────────────────────────────────────
-
-interface AlwaysIncludedCardProps {
-  icon: string;
-  name: string;
-  description: string;
-  bessKW?: number;
-  bessKWh?: number | null;
-}
-
-function AlwaysIncludedCard({ icon, name, description, bessKW, bessKWh }: AlwaysIncludedCardProps) {
-  return (
-    <div
-      style={{
-        padding: "13px 15px",
-        borderRadius: 10,
-        border: "1px solid rgba(16,185,129,0.25)",
-        background: "rgba(16,185,129,0.06)",
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 12,
-      }}
-    >
-      <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{icon}</span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 4,
-            flexWrap: "wrap",
-          }}
-        >
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{name}</span>
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "0.05em",
-              color: "#3ECF8E",
-              background: "rgba(16,185,129,0.15)",
-              border: "1px solid rgba(16,185,129,0.3)",
-              borderRadius: 4,
-              padding: "2px 6px",
-              textTransform: "uppercase",
-            }}
-          >
-            Always included
-          </span>
-        </div>
-        <p style={{ fontSize: 12, color: "rgba(148,163,184,0.8)", margin: 0, lineHeight: 1.5 }}>
-          {description}
-        </p>
-        {bessKW != null && bessKW > 0 && (
-          <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 1,
-                padding: "5px 9px",
-                borderRadius: 6,
-                background: "rgba(16,185,129,0.08)",
-                border: "1px solid rgba(16,185,129,0.18)",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 9,
-                  color: "rgba(16,185,129,0.6)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  fontWeight: 600,
-                }}
-              >
-                Facility load
-              </span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#6EE7B7" }}>{bessKW} kW</span>
-            </div>
-            {bessKWh != null && bessKWh > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 1,
-                  padding: "5px 9px",
-                  borderRadius: 6,
-                  background: "rgba(16,185,129,0.08)",
-                  border: "1px solid rgba(16,185,129,0.18)",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 9,
-                    color: "rgba(16,185,129,0.6)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    fontWeight: 600,
-                  }}
-                >
-                  Est. storage · 4h baseline
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#6EE7B7" }}>
-                  ~{bessKWh} kWh
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Solar Slider Card ─────────────────────────────────────────────────────────
-
-interface SolarSliderCardProps {
-  isOn: boolean;
-  onToggle: () => void;
-  baseLoadKW: number;
-  maxKW: number;
-  recKW: number;
-  initialKW: number;
-  peakSunHours: number;
-  solarGrade?: string;
-  roofAreaSqFt?: number;
-  effectiveCapKW: number;
-  utilityRate: number;
-  onConfig: (kw: number) => void;
-}
-
-function SolarSliderCard({
-  isOn,
-  onToggle,
-  baseLoadKW,
-  maxKW,
-  recKW,
-  initialKW,
-  peakSunHours,
-  solarGrade,
-  roofAreaSqFt,
-  effectiveCapKW,
-  utilityRate,
-  onConfig,
-}: SolarSliderCardProps) {
-  const safeMax = maxKW > 0 ? maxKW : 500;
-  const safeRec = recKW > 0 ? Math.min(recKW, safeMax) : Math.round(safeMax * 0.7);
-  const safeInitial = initialKW > 0 ? Math.min(initialKW, safeMax) : safeRec;
-
-  const [sliderKW, setSliderKW] = useState(safeInitial);
-  const [confirmed, setConfirmed] = useState(false);
-
-  const annualSavings = Math.round(sliderKW * peakSunHours * 365 * utilityRate);
-
-  const isSmall = baseLoadKW > 0 && effectiveCapKW > 0 && effectiveCapKW < baseLoadKW * 0.5;
-
-  const accentGrad = "linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)";
-  const amber = "#fbbf24";
-  const amberDim = "rgba(251,191,36,0.18)";
-  const amberBorder = "rgba(251,191,36,0.35)";
-
-  return (
-    <div
-      style={{
-        borderRadius: 12,
-        border: isOn ? `1.5px solid ${amberBorder}` : "1px solid rgba(255,255,255,0.07)",
-        background: isOn ? "rgba(245,158,11,0.05)" : "rgba(15,17,23,0.55)",
-        overflow: "hidden",
-        transition: "all 0.15s",
-      }}
-    >
-      {/* Accent bar */}
-      <div style={{ height: 3, background: isOn ? accentGrad : "rgba(255,255,255,0.06)" }} />
-
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 11,
-          padding: "12px 14px 10px",
-          cursor: "pointer",
-        }}
-        onClick={onToggle}
-      >
-        <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>☀️</span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>Solar Generation</span>
-            {solarGrade && (
-              <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: amber,
-                  background: amberDim,
-                  border: `1px solid ${amberBorder}`,
-                  borderRadius: 4,
-                  padding: "2px 6px",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                {solarGrade}
-                {peakSunHours > 0 ? ` · ${peakSunHours.toFixed(1)} PSH` : ""}
-              </span>
-            )}
-          </div>
-          <p
-            style={{
-              fontSize: 12,
-              color: "rgba(148,163,184,0.75)",
-              margin: "3px 0 0",
-              lineHeight: 1.4,
-            }}
-          >
-            Generate clean electricity from your facility's roof or canopy.
-          </p>
-        </div>
-        {/* Toggle pill */}
-        <div
-          style={{
-            width: 36,
-            height: 20,
-            borderRadius: 10,
-            background: isOn ? amber : "rgba(255,255,255,0.12)",
-            position: "relative",
-            flexShrink: 0,
-            transition: "background 0.15s",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: 2,
-              left: isOn ? 18 : 2,
-              width: 16,
-              height: 16,
-              borderRadius: "50%",
-              background: "#fff",
-              transition: "left 0.15s",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Expanded body */}
-      {isOn && (
-        <div style={{ padding: "0 14px 14px" }}>
-          {/* Merlin recommendation banner */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 9,
-              padding: "8px 11px",
-              borderRadius: 8,
-              background: amberDim,
-              border: `1px solid ${amberBorder}`,
-              marginBottom: 14,
-            }}
-          >
-            <span style={{ fontSize: 16, flexShrink: 0 }}>🧙</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: amber,
-                  letterSpacing: "0.05em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Merlin recommendation
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", marginTop: 2 }}>
-                {fmtKW(safeRec)} solar
-                {roofAreaSqFt && roofAreaSqFt > 0
-                  ? ` · ${roofAreaSqFt.toLocaleString()} sq ft roof · ${effectiveCapKW} kW capacity`
-                  : effectiveCapKW > 0
-                    ? ` · ${effectiveCapKW} kW roof capacity`
-                    : ""}
-              </div>
-            </div>
-            <button
-              onClick={() => setSliderKW(safeRec)}
-              style={{
-                padding: "4px 9px",
-                borderRadius: 6,
-                border: `1px solid ${amberBorder}`,
-                background: "rgba(251,191,36,0.12)",
-                color: amber,
-                fontSize: 10,
-                fontWeight: 700,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Use rec
-            </button>
-          </div>
-
-          {/* Solar expansion notice */}
-          {isSmall && (
-            <div
-              style={{
-                padding: "8px 11px",
-                borderRadius: 8,
-                background: "rgba(251,191,36,0.06)",
-                border: "1px solid rgba(251,191,36,0.22)",
-                marginBottom: 14,
-                fontSize: 11,
-                color: "rgba(251,191,36,0.85)",
-                lineHeight: 1.5,
-              }}
-            >
-              ⚠️ Roof-only ({effectiveCapKW} kW) covers less than 50% of your load. Consider adding
-              canopy panels to maximize offset.
-            </div>
-          )}
-
-          {/* kW Slider */}
-          <SliderRow
-            label="Solar capacity"
-            value={sliderKW}
-            max={safeMax}
-            color={amber}
-            onChange={(v) => {
-              setSliderKW(v);
-              setConfirmed(false);
-            }}
-          />
-
-          {/* Stats row */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-            <div
-              style={{
-                flex: 1,
-                minWidth: 100,
-                padding: "7px 10px",
-                borderRadius: 8,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 10,
-                  color: "rgba(148,163,184,0.55)",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  marginBottom: 2,
-                }}
-              >
-                Selected
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: amber }}>{fmtKW(sliderKW)}</div>
-              <div style={{ fontSize: 10, color: "rgba(148,163,184,0.55)" }}>at your site</div>
-            </div>
-            <div
-              style={{
-                flex: 1,
-                minWidth: 100,
-                padding: "7px 10px",
-                borderRadius: 8,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 10,
-                  color: "rgba(148,163,184,0.55)",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  marginBottom: 2,
-                }}
-              >
-                Est. savings
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#6EE7B7" }}>
-                {fmtRevenue(annualSavings)}/yr
-              </div>
-              <div style={{ fontSize: 10, color: "rgba(148,163,184,0.55)" }}>grid offset</div>
-            </div>
-            <div
-              style={{
-                flex: 1,
-                minWidth: 100,
-                padding: "7px 10px",
-                borderRadius: 8,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 10,
-                  color: "rgba(148,163,184,0.55)",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  marginBottom: 2,
-                }}
-              >
-                Sun hours
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0" }}>
-                {peakSunHours.toFixed(1)} PSH
-              </div>
-              <div style={{ fontSize: 10, color: "rgba(148,163,184,0.55)" }}>daily average</div>
-            </div>
-          </div>
-
-          {/* Confirm button */}
-          <button
-            onClick={() => {
-              onConfig(sliderKW);
-              setConfirmed(true);
-            }}
-            style={{
-              width: "100%",
-              padding: "11px 16px",
-              borderRadius: 9,
-              border: confirmed ? `1.5px solid ${amberBorder}` : "1px solid rgba(255,255,255,0.12)",
-              background: confirmed ? amberDim : "rgba(255,255,255,0.06)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              transition: "all 0.15s",
-            }}
-          >
-            {confirmed && (
-              <div
-                style={{
-                  width: 16,
-                  height: 16,
-                  borderRadius: "50%",
-                  background: amber,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 9,
-                  fontWeight: 700,
-                  color: "#0D1117",
-                  flexShrink: 0,
-                }}
-              >
-                ✓
-              </div>
-            )}
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: confirmed ? amber : "rgba(255,255,255,0.7)",
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
-              }}
-            >
-              {confirmed ? `${fmtKW(sliderKW)} solar added` : "Confirm Solar"}
-            </span>
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Generator Slider Card ─────────────────────────────────────────────────────
-
-interface GeneratorSliderCardProps {
-  isOn: boolean;
-  onToggle: () => void;
-  peakLoadKW: number;
-  criticalLoadPct: number;
-  maxKW: number;
-  recKW: number;
-  initialKW: number;
-  fuelType: "diesel" | "natural-gas";
-  onFuelChange: (fuel: "diesel" | "natural-gas") => void;
-  gridReliability?: string;
-  gridReliabilityLabel?: string;
-  generatorSuggested: boolean;
-  onConfig: (kw: number) => void;
-}
-
-function GeneratorSliderCard({
-  isOn,
-  onToggle,
-  peakLoadKW,
-  criticalLoadPct,
-  maxKW,
-  recKW,
-  initialKW,
-  fuelType,
-  onFuelChange,
-  gridReliability,
-  gridReliabilityLabel,
-  generatorSuggested,
-  onConfig,
-}: GeneratorSliderCardProps) {
-  const safeMax = maxKW > 0 ? maxKW : 1000;
-  const safeRec = recKW > 0 ? Math.min(recKW, safeMax) : Math.round(safeMax * 0.7);
-  const safeInitial = initialKW > 0 ? Math.min(initialKW, safeMax) : safeRec;
-
-  const [sliderKW, setSliderKW] = useState(safeInitial);
-  const [confirmed, setConfirmed] = useState(false);
-
-  const criticalKW = peakLoadKW > 0 ? Math.round(peakLoadKW * criticalLoadPct) : 0;
-
-  const orangeGrad = "linear-gradient(90deg, #fb923c 0%, #f97316 50%, #ea580c 100%)";
-  const orange = "#fb923c";
-  const orangeDim = "rgba(249,115,22,0.18)";
-  const orangeBorder = "rgba(249,115,22,0.35)";
-
-  return (
-    <div
-      style={{
-        borderRadius: 12,
-        border: isOn ? `1.5px solid ${orangeBorder}` : "1px solid rgba(255,255,255,0.07)",
-        background: isOn ? "rgba(249,115,22,0.05)" : "rgba(15,17,23,0.55)",
-        overflow: "hidden",
-        transition: "all 0.15s",
-      }}
-    >
-      {/* Accent bar */}
-      <div style={{ height: 3, background: isOn ? orangeGrad : "rgba(255,255,255,0.06)" }} />
-
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 11,
-          padding: "12px 14px 10px",
-          cursor: "pointer",
-        }}
-        onClick={onToggle}
-      >
-        <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>⚡</span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>Backup Generator</span>
-            {gridReliability && (
-              <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: generatorSuggested ? "#f87171" : "#94a3b8",
-                  background: generatorSuggested
-                    ? "rgba(248,113,113,0.12)"
-                    : "rgba(148,163,184,0.1)",
-                  border: `1px solid ${generatorSuggested ? "rgba(248,113,113,0.3)" : "rgba(148,163,184,0.2)"}`,
-                  borderRadius: 4,
-                  padding: "2px 6px",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                {gridReliabilityLabel ?? gridReliability}
-              </span>
-            )}
-          </div>
-          <p
-            style={{
-              fontSize: 12,
-              color: "rgba(148,163,184,0.75)",
-              margin: "3px 0 0",
-              lineHeight: 1.4,
-            }}
-          >
-            {generatorSuggested
-              ? `Recommended — grid issues detected.`
-              : "Natural gas or diesel backup for outages and grid independence."}
-          </p>
-        </div>
-        {/* Toggle pill */}
-        <div
-          style={{
-            width: 36,
-            height: 20,
-            borderRadius: 10,
-            background: isOn ? orange : "rgba(255,255,255,0.12)",
-            position: "relative",
-            flexShrink: 0,
-            transition: "background 0.15s",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: 2,
-              left: isOn ? 18 : 2,
-              width: 16,
-              height: 16,
-              borderRadius: "50%",
-              background: "#fff",
-              transition: "left 0.15s",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Expanded body */}
-      {isOn && (
-        <div style={{ padding: "0 14px 14px" }}>
-          {/* Red alert banner when grid is unreliable */}
-          {generatorSuggested && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 9,
-                padding: "8px 11px",
-                borderRadius: 8,
-                background: "rgba(248,113,113,0.08)",
-                border: "1px solid rgba(248,113,113,0.28)",
-                marginBottom: 12,
-              }}
-            >
-              <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
-              <p
-                style={{ fontSize: 11, color: "rgba(248,113,113,0.9)", margin: 0, lineHeight: 1.5 }}
-              >
-                Your grid is <strong>{gridReliabilityLabel ?? gridReliability}</strong> — a
-                generator protects your revenue during outages.
-              </p>
-            </div>
-          )}
-
-          {/* Fuel type toggle */}
-          <div style={{ marginBottom: 14 }}>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: "rgba(148,163,184,0.55)",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                marginBottom: 7,
-              }}
-            >
-              Fuel type
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {(["diesel", "natural-gas"] as const).map((fuel) => {
-                const active = fuelType === fuel;
-                return (
-                  <button
-                    key={fuel}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onFuelChange(fuel);
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: "9px 12px",
-                      borderRadius: 8,
-                      border: active
-                        ? `1.5px solid ${orangeBorder}`
-                        : "1px solid rgba(255,255,255,0.08)",
-                      background: active ? orangeDim : "rgba(51,65,85,0.45)",
-                      cursor: "pointer",
-                      display: "flex",
-                      gap: 8,
-                      alignItems: "center",
-                      transition: "all 0.12s",
-                    }}
-                  >
-                    <span style={{ fontSize: 16 }}>{fuel === "diesel" ? "⛽" : "🔥"}</span>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: active ? orange : "rgba(255,255,255,0.82)",
-                      }}
-                    >
-                      {fuel === "diesel" ? "Diesel" : "Natural Gas"}
-                    </span>
-                    {active && (
-                      <div
-                        style={{
-                          marginLeft: "auto",
-                          width: 14,
-                          height: 14,
-                          borderRadius: "50%",
-                          background: orange,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 8,
-                          fontWeight: 700,
-                          color: "#0D1117",
-                        }}
-                      >
-                        ✓
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Merlin recommendation banner */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 9,
-              padding: "8px 11px",
-              borderRadius: 8,
-              background: orangeDim,
-              border: `1px solid ${orangeBorder}`,
-              marginBottom: 14,
-            }}
-          >
-            <span style={{ fontSize: 16, flexShrink: 0 }}>🧙</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: orange,
-                  letterSpacing: "0.05em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Merlin recommendation
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", marginTop: 2 }}>
-                {fmtKW(safeRec)} generator
-                {peakLoadKW > 0 ? ` · Facility peak: ${peakLoadKW} kW` : ""}
-                {criticalKW > 0 ? ` · Critical: ${criticalKW} kW` : ""}
-              </div>
-            </div>
-            <button
-              onClick={() => setSliderKW(safeRec)}
-              style={{
-                padding: "4px 9px",
-                borderRadius: 6,
-                border: `1px solid ${orangeBorder}`,
-                background: "rgba(249,115,22,0.12)",
-                color: orange,
-                fontSize: 10,
-                fontWeight: 700,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Use rec
-            </button>
-          </div>
-
-          {/* kW Slider */}
-          <SliderRow
-            label="Generator capacity"
-            value={sliderKW}
-            max={safeMax}
-            color={orange}
-            onChange={(v) => {
-              setSliderKW(v);
-              setConfirmed(false);
-            }}
-          />
-
-          {/* Stats row */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-            <div
-              style={{
-                flex: 1,
-                minWidth: 100,
-                padding: "7px 10px",
-                borderRadius: 8,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 10,
-                  color: "rgba(148,163,184,0.55)",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  marginBottom: 2,
-                }}
-              >
-                Selected
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: orange }}>{fmtKW(sliderKW)}</div>
-              <div style={{ fontSize: 10, color: "rgba(148,163,184,0.55)" }}>
-                {fuelType === "diesel" ? "⛽ Diesel" : "🔥 Natural Gas"}
-              </div>
-            </div>
-            <div
-              style={{
-                flex: 1,
-                minWidth: 100,
-                padding: "7px 10px",
-                borderRadius: 8,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 10,
-                  color: "rgba(148,163,184,0.55)",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  marginBottom: 2,
-                }}
-              >
-                Coverage
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0" }}>
-                {peakLoadKW > 0
-                  ? `${Math.min(100, Math.round((sliderKW / peakLoadKW) * 100))}%`
-                  : "—"}
-              </div>
-              <div style={{ fontSize: 10, color: "rgba(148,163,184,0.55)" }}>of facility peak</div>
-            </div>
-            {criticalKW > 0 && (
-              <div
-                style={{
-                  flex: 1,
-                  minWidth: 100,
-                  padding: "7px 10px",
-                  borderRadius: 8,
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: "rgba(148,163,184,0.55)",
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    marginBottom: 2,
-                  }}
-                >
-                  Critical load
-                </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0" }}>
-                  {fmtKW(criticalKW)}
-                </div>
-                <div style={{ fontSize: 10, color: "rgba(148,163,184,0.55)" }}>
-                  {Math.round(criticalLoadPct * 100)}% of peak
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Confirm button */}
-          <button
-            onClick={() => {
-              onConfig(sliderKW);
-              setConfirmed(true);
-            }}
-            style={{
-              width: "100%",
-              padding: "11px 16px",
-              borderRadius: 9,
-              border: confirmed
-                ? `1.5px solid ${orangeBorder}`
-                : "1px solid rgba(255,255,255,0.12)",
-              background: confirmed ? orangeDim : "rgba(255,255,255,0.06)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              transition: "all 0.15s",
-            }}
-          >
-            {confirmed && (
-              <div
-                style={{
-                  width: 16,
-                  height: 16,
-                  borderRadius: "50%",
-                  background: orange,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 9,
-                  fontWeight: 700,
-                  color: "#0D1117",
-                  flexShrink: 0,
-                }}
-              >
-                ✓
-              </div>
-            )}
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: confirmed ? orange : "rgba(255,255,255,0.7)",
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
-              }}
-            >
-              {confirmed ? `${fmtKW(sliderKW)} generator added` : "Confirm Generator"}
-            </span>
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Slider Row Helper ────────────────────────────────────────────────────────
-// ── Slider Row Helper ────────────────────────────────────────────────────────
-
-function SliderRow({
-  label,
-  value,
-  max,
-  color,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  max: number;
-  color: string;
-  onChange: (v: number) => void;
-}) {
-  const pct = max > 0 ? (value / max) * 100 : 0;
-  return (
-    <div style={{ marginBottom: 22 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 10,
-        }}
-      >
-        <span style={{ fontSize: 13, color: "rgba(203,213,225,0.85)", fontWeight: 400 }}>
-          {label}
-        </span>
-        <span style={{ fontSize: 24, fontWeight: 700, color: "#e2e8f0", lineHeight: 1 }}>
-          {value}
-        </span>
-      </div>
-      <div style={{ position: "relative", height: 20, display: "flex", alignItems: "center" }}>
-        {/* Track background */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            height: 5,
-            borderRadius: 3,
-            background: "rgba(255,255,255,0.08)",
-          }}
-        />
-        {/* Colored fill */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            height: 5,
-            width: `${pct}%`,
-            borderRadius: 3,
-            background: color,
-            transition: "width 0.06s",
-          }}
-        />
-        {/* Thumb dot */}
-        <div
-          style={{
-            position: "absolute",
-            left: `calc(${pct}% - 9px)`,
-            width: 18,
-            height: 18,
-            borderRadius: "50%",
-            background: color,
-            boxShadow: `0 0 10px ${color}99`,
-            transition: "left 0.06s",
-            pointerEvents: "none",
-            zIndex: 1,
-          }}
-        />
-        {/* Invisible range input */}
-        <input
-          type="range"
-          min={0}
-          max={max}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          style={{
-            position: "absolute",
-            left: 0,
-            width: "100%",
-            height: "100%",
-            opacity: 0,
-            cursor: "pointer",
-            margin: 0,
-            zIndex: 2,
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
-// ── EV Package Card ───────────────────────────────────────────────────────────
-
-interface EVPackageCardProps {
-  isOn: boolean;
-  onToggle: () => void;
-  peakLoadKW: number;
-  initialL2: number;
-  initialDcfc: number;
-  initialHpc: number;
-  onConfig: (l2: number, dcfc: number, hpc: number) => void;
-}
-
-function EVPackageCard({
-  isOn,
-  onToggle,
-  peakLoadKW,
-  initialL2,
-  initialDcfc,
-  initialHpc,
-  onConfig,
-}: EVPackageCardProps) {
-  // Smart Merlin recommendations based on peak load
-  const recL2 = Math.min(12, Math.max(4, peakLoadKW > 0 ? Math.round(peakLoadKW / 150) : 6));
-  const recDcfc = Math.min(8, Math.max(0, peakLoadKW > 0 ? Math.round(peakLoadKW / 600) : 2));
-  const recHpc = Math.min(4, Math.max(0, peakLoadKW > 0 ? Math.round(peakLoadKW / 1200) : 0));
-
-  const [l2, setL2] = useState(initialL2 > 0 ? initialL2 : recL2);
-  const [dcfc, setDcfc] = useState(initialDcfc > 0 ? initialDcfc : recDcfc);
-  const [hpc, setHpc] = useState(initialHpc > 0 ? initialHpc : recHpc);
-  const [confirmed, setConfirmed] = useState(false);
-
-  // kW midpoints per charger type
-  const L2_KW = 11; // 7–22 kW range
-  const DCFC_KW = 100; // 50–150 kW range
-  const HPC_KW = 300; // 250–350 kW range
-
-  const totalKW = l2 * L2_KW + dcfc * DCFC_KW + hpc * HPC_KW;
-  const annualRevenue =
-    Math.round(
-      ((l2 * L2_KW * 0.25 + dcfc * DCFC_KW * 0.18 + hpc * HPC_KW * 0.15) * 365 * 0.4) / 100
-    ) * 100;
-
-  const updateCounts = (newL2: number, newDcfc: number, newHpc: number) => {
-    setConfirmed(false);
-    onConfig(newL2, newDcfc, newHpc);
-  };
-
-  return (
-    <div
-      style={{
-        borderRadius: 12,
-        border: isOn ? "1.5px solid rgba(56,189,248,0.35)" : "1px solid rgba(255,255,255,0.07)",
-        background: isOn ? "rgba(14,165,233,0.06)" : "rgba(15,17,23,0.55)",
-        overflow: "hidden",
-        transition: "all 0.15s",
-      }}
-    >
-      {/* Accent bar */}
-      <div
-        style={{
-          height: 3,
-          background: isOn
-            ? "linear-gradient(90deg, #22d3ee 0%, #818cf8 50%, #c084fc 100%)"
-            : "rgba(255,255,255,0.06)",
-        }}
+      <BackupGeneratorCard
+        peakLoadKW={state.peakLoadKW}
+        criticalLoadPct={state.criticalLoadPct}
+        minKW={genMinKW}
+        maxKW={genMaxKW}
+        recKW={genRecKW}
+        initialKW={state.generatorKW > 0 ? state.generatorKW : genRecKW}
+        fuelType={fuelType}
+        onFuelChange={handleFuelType}
+        gridReliability={state.gridReliability ?? undefined}
+        utilityRate={utilityRate}
+        onConfig={handleGeneratorConfig}
       />
-      {/* Header */}
-      <div
+
+      {/* ── Bottom CTA: mirrors shell nav so users don't need to scroll ── */}
+      <button
+        type="button"
+        onClick={() => {
+          actions.setAnswer("step3_5Visited", true);
+          actions.goToStep(5 as WizardStep);
+        }}
         style={{
+          width: "100%",
+          padding: "17px 24px",
+          borderRadius: 12,
+          border: "none",
+          background: "linear-gradient(135deg, #3ECF8E 0%, #2aad70 100%)",
+          color: "#080B10",
+          fontSize: 16,
+          fontWeight: 900,
+          cursor: "pointer",
           display: "flex",
           alignItems: "center",
-          gap: 11,
-          padding: "12px 14px 10px",
-          cursor: "pointer",
+          justifyContent: "center",
+          gap: 10,
+          boxShadow: "0 4px 20px rgba(16,185,129,0.40)",
+          marginTop: 8,
+          letterSpacing: "0.01em",
         }}
-        onClick={onToggle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = "0 6px 28px rgba(16,185,129,0.55)";
+          e.currentTarget.style.transform = "translateY(-1px)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = "0 4px 20px rgba(16,185,129,0.40)";
+          e.currentTarget.style.transform = "translateY(0)";
+        }}
       >
-        <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>⚡</span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>EV Charging</span>
-            {isOn && totalKW > 0 && (
-              <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: "#38bdf8",
-                  background: "rgba(56,189,248,0.12)",
-                  border: "1px solid rgba(56,189,248,0.28)",
-                  borderRadius: 4,
-                  padding: "2px 6px",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                {l2 + dcfc + hpc} ports · {totalKW.toLocaleString()} kW
-              </span>
-            )}
-          </div>
-          <p
-            style={{
-              fontSize: 12,
-              color: "rgba(148,163,184,0.75)",
-              margin: "3px 0 0",
-              lineHeight: 1.4,
-            }}
-          >
-            Employee &amp; customer charging
-          </p>
-        </div>
-        {/* Toggle pill — same as Solar / Generator */}
-        <div
-          style={{
-            width: 36,
-            height: 20,
-            borderRadius: 10,
-            background: isOn ? "#38bdf8" : "rgba(255,255,255,0.12)",
-            position: "relative",
-            flexShrink: 0,
-            transition: "background 0.15s",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: 2,
-              left: isOn ? 18 : 2,
-              width: 16,
-              height: 16,
-              borderRadius: "50%",
-              background: "#fff",
-              transition: "left 0.15s",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Expanded content */}
-      {isOn && (
-        <div style={{ padding: "0 16px 16px" }}>
-          {/* Merlin recommendation banner */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 8,
-              padding: "10px 12px",
-              borderRadius: 8,
-              background: "rgba(16,185,129,0.07)",
-              border: "1px solid rgba(16,185,129,0.16)",
-              marginBottom: 20,
-            }}
-          >
-            <span style={{ fontSize: 14, flexShrink: 0, lineHeight: 1.4 }}>ℹ️</span>
-            <div style={{ fontSize: 12, color: "rgba(203,213,225,0.85)", lineHeight: 1.6 }}>
-              <span style={{ fontSize: 14 }}>🧙 </span>
-              <strong style={{ color: "#3ECF8E", fontWeight: 700 }}>
-                Merlin: {recL2 > 0 ? `${recL2} L2` : ""}
-                {recDcfc > 0 ? ` + ${recDcfc} DC Fast` : ""}
-                {recHpc > 0 ? ` + ${recHpc} High Power` : ""} chargers recommended
-              </strong>{" "}
-              {peakLoadKW > 0
-                ? `based on your ${peakLoadKW.toLocaleString()} kW facility load.`
-                : "for employee and customer charging."}
-            </div>
-          </div>
-
-          {/* Sliders */}
-          <SliderRow
-            label="Level 2 (7–22 kW)"
-            value={l2}
-            max={12}
-            color="#22d3ee"
-            onChange={(v) => {
-              setL2(v);
-              updateCounts(v, dcfc, hpc);
-            }}
-          />
-          <SliderRow
-            label="DC Fast (50–150 kW)"
-            value={dcfc}
-            max={8}
-            color="#a78bfa"
-            onChange={(v) => {
-              setDcfc(v);
-              updateCounts(l2, v, hpc);
-            }}
-          />
-          <SliderRow
-            label="High Power (250–350 kW)"
-            value={hpc}
-            max={4}
-            color="#c084fc"
-            onChange={(v) => {
-              setHpc(v);
-              updateCounts(l2, dcfc, v);
-            }}
-          />
-
-          {/* Total capacity */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "12px 14px",
-              borderRadius: 8,
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.07)",
-              marginBottom: 14,
-            }}
-          >
-            <span style={{ fontSize: 14, color: "rgba(203,213,225,0.65)", fontWeight: 500 }}>
-              Total Capacity:
-            </span>
-            <span
-              style={{
-                fontSize: 22,
-                fontWeight: 800,
-                color: "#f1f5f9",
-                letterSpacing: "-0.5px",
-              }}
-            >
-              {totalKW.toLocaleString()} kW
-            </span>
-          </div>
-
-          {/* Confirm button */}
-          <button
-            onClick={() => {
-              onConfig(l2, dcfc, hpc);
-              setConfirmed(true);
-            }}
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              borderRadius: 8,
-              border: confirmed
-                ? "1px solid rgba(16,185,129,0.40)"
-                : "1px solid rgba(255,255,255,0.10)",
-              background: confirmed ? "rgba(16,185,129,0.10)" : "rgba(15,23,42,0.80)",
-              cursor: "pointer",
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: "0.10em",
-              textTransform: "uppercase" as const,
-              color: confirmed ? "#3ECF8E" : "rgba(226,232,240,0.80)",
-              transition: "all 0.15s",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
-          >
-            {confirmed ? "✓ EV CHARGING CONFIRMED" : "CONFIRM EV CHARGING"}
-          </button>
-
-          {annualRevenue > 0 && (
-            <div
-              style={{
-                fontSize: 11,
-                color: "rgba(148,163,184,0.40)",
-                textAlign: "center",
-                marginTop: 8,
-                lineHeight: 1.4,
-              }}
-            >
-              Est. ~{fmtRevenue(annualRevenue)}/yr charging revenue · load integrated into BESS
-            </div>
-          )}
-        </div>
-      )}
+        🧙 Build My Tiers →
+      </button>
     </div>
   );
 }
