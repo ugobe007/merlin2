@@ -28,7 +28,7 @@ interface WizardShellV7Props {
   isVerified?: boolean;
   /** Advisor narration + intel rendered in left rail below progress steps */
   advisorContent?: React.ReactNode;
-  /** Width of the Merlin advisor rail in px. Default 440. Increase for data-heavy steps. */
+  /** Width of the Merlin advisor rail in px. Default 520. Increase for data-heavy steps. */
   railWidth?: number;
   children: React.ReactNode;
 }
@@ -80,7 +80,7 @@ export default function WizardShellV7({
   onBack,
   onNext,
   advisorContent,
-  railWidth = 440,
+  railWidth = 520,
   children,
 }: WizardShellV7Props) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
@@ -553,7 +553,7 @@ export default function WizardShellV7({
             /* Tablet: narrower rail, compact progress labels */
             @media (min-width: 901px) and (max-width: 1200px) {
               .merlin-shell-grid {
-                grid-template-columns: 280px 1fr !important;
+                grid-template-columns: 380px 1fr !important;
                 gap: 20px !important;
                 padding: 20px 24px !important;
               }

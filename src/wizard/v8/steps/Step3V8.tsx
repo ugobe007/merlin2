@@ -437,7 +437,9 @@ export function Step3V8({ state, actions }: Props) {
                 gridTemplateColumns:
                   q.options && q.options.length <= 3
                     ? "repeat(auto-fit, minmax(200px, 1fr))"
-                    : "repeat(2, 1fr)",
+                    : q.options && q.options.length <= 6
+                      ? "repeat(3, 1fr)"
+                      : "repeat(auto-fill, minmax(220px, 1fr))",
                 gap: 8,
               }}
             >
@@ -677,7 +679,7 @@ export function Step3V8({ state, actions }: Props) {
     <div style={{ background: "#0D1117", minHeight: "100vh" }}>
       <div
         ref={sectionTopRef}
-        style={{ maxWidth: 720, margin: "0 auto", padding: "16px 20px 40px" }}
+        style={{ maxWidth: 920, margin: "0 auto", padding: "16px 24px 40px" }}
       >
         {/* ── Section pill nav (only when multi-section) ── */}
         {orderedSections.length > 1 && (
