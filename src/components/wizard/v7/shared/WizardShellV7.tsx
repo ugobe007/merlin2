@@ -147,9 +147,11 @@ export default function WizardShellV7({
           style={{
             flex: 1,
             display: "grid",
-            gridTemplateColumns: `${railWidth}px 1fr`,
+            // clamp(min, vw%, max) — vw% calibrated to hit railWidth at 1440px viewport.
+            // This lets the rail grow proportionally with the browser width instead
+            // of staying a fixed pixel that looks squeezed on wide screens.
+            gridTemplateColumns: `clamp(${Math.round(railWidth * 0.62)}px, ${Math.round(railWidth / 14.4)}vw, ${Math.round(railWidth * 1.12)}px) 1fr`,
             gap: 32,
-            /* No maxWidth cap — fill the full browser landscape width */
             width: "100%",
             maxWidth: "100%",
             padding: "24px 32px",
@@ -550,10 +552,9 @@ export default function WizardShellV7({
               }
             }
             
-            /* Tablet: narrower rail, compact progress labels */
+            /* Tablet: keep padding/gap compact — clamp() handles column width proportionally */
             @media (min-width: 901px) and (max-width: 1200px) {
               .merlin-shell-grid {
-                grid-template-columns: 380px 1fr !important;
                 gap: 20px !important;
                 padding: 20px 24px !important;
               }
