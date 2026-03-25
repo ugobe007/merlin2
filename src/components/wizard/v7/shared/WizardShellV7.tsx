@@ -302,58 +302,128 @@ export default function WizardShellV7({
             {/* Spacer to push TrueQuote badge to bottom */}
             <div style={{ marginTop: "auto" }} />
 
-            {/* TrueQuote Badge — Always visible, clickable to open modal */}
-            <div
-              style={{
-                padding: "12px 0",
-                borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-                display: "flex",
-                justifyContent: "center",
-              }}
-            >
+            {/* TrueQuote™ Badge — Canonical premium certification badge */}
+            <div style={{ padding: "14px 0 2px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
               <button
                 type="button"
                 onClick={() => setShowTrueQuoteModal(true)}
                 style={{
-                  display: "inline-flex",
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "column",
                   alignItems: "center",
                   gap: 8,
-                  height: 28,
-                  padding: "0 12px",
+                  padding: "14px 16px",
                   borderRadius: 14,
-                  background: "rgba(18, 13, 3, 0.55)",
-                  border: "1px solid rgba(245, 158, 11, 0.35)",
+                  background:
+                    "linear-gradient(145deg, rgba(28,18,4,0.92) 0%, rgba(18,12,2,0.96) 100%)",
+                  border: "1.5px solid rgba(245,158,11,0.45)",
+                  boxShadow: "0 0 28px rgba(245,158,11,0.10), inset 0 1px 0 rgba(245,158,11,0.08)",
                   cursor: "pointer",
                   transition: "all 0.2s ease",
-                  fontSize: 12,
-                  letterSpacing: "0.04em",
                   WebkitFontSmoothing: "antialiased",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(245, 158, 11, 0.55)";
-                  e.currentTarget.style.background = "rgba(26, 18, 2, 0.75)";
+                  e.currentTarget.style.borderColor = "rgba(245,158,11,0.70)";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 36px rgba(245,158,11,0.20), inset 0 1px 0 rgba(245,158,11,0.14)";
+                  e.currentTarget.style.background =
+                    "linear-gradient(145deg, rgba(36,23,5,0.95) 0%, rgba(22,15,3,0.98) 100%)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(245, 158, 11, 0.35)";
-                  e.currentTarget.style.background = "rgba(18, 13, 3, 0.55)";
+                  e.currentTarget.style.borderColor = "rgba(245,158,11,0.45)";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 28px rgba(245,158,11,0.10), inset 0 1px 0 rgba(245,158,11,0.08)";
+                  e.currentTarget.style.background =
+                    "linear-gradient(145deg, rgba(28,18,4,0.92) 0%, rgba(18,12,2,0.96) 100%)";
                 }}
                 aria-label="Learn about TrueQuote verification"
               >
-                <span style={{ color: "#F1F5F9", fontWeight: 700, letterSpacing: "0.02em" }}>
-                  TrueQuote™
-                </span>
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background:
-                      "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
-                    boxShadow: "0 0 6px rgba(242, 193, 79, 0.4)",
-                    flexShrink: 0,
-                  }}
-                />
-                <span style={{ color: "#94A3B8", fontWeight: 600 }}>Verified</span>
+                {/* Shield icon + TrueQuote™ wordmark */}
+                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                  {/* SVG Shield */}
+                  <svg
+                    width="20"
+                    height="22"
+                    viewBox="0 0 20 22"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <path
+                      d="M10 1L2 4.5V10C2 14.97 5.42 19.6 10 21C14.58 19.6 18 14.97 18 10V4.5L10 1Z"
+                      fill="rgba(245,158,11,0.15)"
+                      stroke="#F2C14F"
+                      strokeWidth="1.4"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M7 11L9.5 13.5L14 8.5"
+                      stroke="#3ECF8E"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 800,
+                      color: "#F5F0E8",
+                      letterSpacing: "0.01em",
+                    }}
+                  >
+                    TrueQuote™
+                  </span>
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background:
+                        "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
+                      boxShadow: "0 0 8px rgba(242,193,79,0.55)",
+                      flexShrink: 0,
+                    }}
+                  />
+                </div>
+                {/* Verified subtitle */}
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="6"
+                      cy="6"
+                      r="5.5"
+                      fill="rgba(62,207,142,0.15)"
+                      stroke="#3ECF8E"
+                      strokeWidth="1"
+                    />
+                    <path
+                      d="M3.5 6L5.5 8L8.5 4"
+                      stroke="#3ECF8E"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 600,
+                      color: "rgba(255,255,255,0.45)",
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Verified Pricing Sources
+                  </span>
+                </div>
               </button>
             </div>
           </div>
@@ -738,9 +808,9 @@ export default function WizardShellV7({
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
-                    padding: "11px 22px",
-                    borderRadius: 10,
-                    minHeight: 46,
+                    padding: isFilled ? "14px 28px" : "11px 22px",
+                    borderRadius: isFilled ? 12 : 10,
+                    minHeight: isFilled ? 54 : 46,
                     background: isFilled
                       ? "#3ECF8E"
                       : isActive
@@ -757,17 +827,20 @@ export default function WizardShellV7({
                         ? "#3ECF8E"
                         : "rgba(232, 235, 243, 0.28)",
                     cursor: isActive ? "pointer" : "not-allowed",
-                    fontSize: 14,
+                    fontSize: isFilled ? 16 : 14,
                     fontWeight: 700,
                     letterSpacing: "0.01em",
-                    boxShadow: isFilled ? "0 0 20px rgba(62, 207, 142, 0.25)" : "none",
+                    boxShadow: isFilled
+                      ? "0 0 32px rgba(62, 207, 142, 0.45), 0 4px 16px rgba(0,0,0,0.3)"
+                      : "none",
                     transition: "all 0.18s ease",
                   }}
                   onMouseEnter={(e) => {
                     if (isActive) {
                       if (isFilled) {
                         e.currentTarget.style.background = "#4DDBA0";
-                        e.currentTarget.style.boxShadow = "0 0 28px rgba(62, 207, 142, 0.40)";
+                        e.currentTarget.style.boxShadow =
+                          "0 0 44px rgba(62, 207, 142, 0.60), 0 4px 20px rgba(0,0,0,0.35)";
                         e.currentTarget.style.transform = "translateY(-1px)";
                       } else {
                         e.currentTarget.style.background = "rgba(62, 207, 142, 0.10)";
@@ -782,7 +855,7 @@ export default function WizardShellV7({
                         ? "transparent"
                         : "rgba(255,255,255,0.03)";
                     e.currentTarget.style.boxShadow = isFilled
-                      ? "0 0 20px rgba(62, 207, 142, 0.25)"
+                      ? "0 0 32px rgba(62, 207, 142, 0.45), 0 4px 16px rgba(0,0,0,0.3)"
                       : "none";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}

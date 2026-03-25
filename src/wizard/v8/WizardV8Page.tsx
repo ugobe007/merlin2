@@ -85,9 +85,17 @@ type S = ReturnType<typeof useWizardV8>["state"];
 
 function getAdvisorContent(
   step: number,
-  opts: { industry: S["industry"]; baseLoadKW: number; peakLoadKW: number; intel: S["intel"] }
+  opts: {
+    industry: S["industry"];
+    baseLoadKW: number;
+    peakLoadKW: number;
+    intel: S["intel"];
+    business: S["business"];
+    tiers: S["tiers"];
+    selectedTierIndex: number | null;
+  }
 ): React.ReactNode {
-  const { industry, baseLoadKW, peakLoadKW, intel } = opts;
+  const { industry, baseLoadKW, peakLoadKW, intel, business, tiers, selectedTierIndex } = opts;
   switch (step) {
     case 0:
       return (
@@ -357,18 +365,77 @@ function getAdvisorContent(
         </div>
       );
 
-    case 6:
+    case 6: {
+      // Pick the recommended tier (index 1 = middle) or the user's selection
+      const recIdx = selectedTierIndex ?? 1;
+      const tier = tiers?.[recIdx];
+      const bizName = business?.name;
+      const fmt$ = (n: number) =>
+        n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : `$${Math.round(n / 1_000)}k`;
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
-            Your quote is ready.
+          {/* Greeting */}
+          <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.35 }}>
+            {bizName ? <>{hi(bizName)} — your TrueQuote™ is ready.</> : "Your TrueQuote™ is ready."}
           </div>
-          <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Three tiers tailored to your facility. Each shows{" "}
-            {hi("cost, annual savings, and payback")}. Pick the one that fits.
+
+          {/* ROI snapshot card */}
+          {tier && (
+            <div
+              style={{
+                padding: "14px 16px",
+                borderRadius: 12,
+                background: "rgba(62,207,142,0.06)",
+                border: "1px solid rgba(62,207,142,0.22)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              {/* Annual savings hero */}
+              <div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "rgba(62,207,142,0.75)",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    marginBottom: 3,
+                  }}
+                >
+                  Annual Savings
+                </div>
+                <div style={{ fontSize: 30, fontWeight: 800, color: ACCENT, lineHeight: 1 }}>
+                  {fmt$(tier.annualSavings)}
+                  <span
+                    style={{ fontSize: 14, fontWeight: 600, color: T.secondary, marginLeft: 4 }}
+                  >
+                    /yr
+                  </span>
+                </div>
+              </div>
+              {/* Payback + ITC row */}
+              <div style={{ fontSize: 12.5, color: T.secondary, lineHeight: 1.55 }}>
+                Payback in {hi(`${tier.paybackYears.toFixed(1)} yrs`)} · Net cost{" "}
+                {hi(fmt$(tier.netCost))} after {hi(`${Math.round(tier.itcRate * 100)}% ITC`)}
+              </div>
+              {/* 10-Year ROI */}
+              {tier.roi10Year > 0 && (
+                <div style={{ fontSize: 12, color: T.muted }}>
+                  10-year ROI: {hi(`${Math.round(tier.roi10Year)}%`)}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ fontSize: 12.5, color: T.secondary, lineHeight: 1.6 }}>
+            Three tiers — {hi("Essential")}, {hi("Optimized")}, {hi("Premium")} — sized for your
+            facility. Compare and pick the one that fits your goals.
           </div>
         </div>
       );
+    }
 
     default:
       return null;
@@ -486,8 +553,21 @@ export default function WizardV8Page() {
         baseLoadKW: state.baseLoadKW,
         peakLoadKW: state.peakLoadKW,
         intel: state.intel,
+        business: state.business,
+        tiers: state.tiers,
+        selectedTierIndex: state.selectedTierIndex,
       }),
-    [step, state.industry, state.baseLoadKW, state.peakLoadKW, state.intel]
+
+    [
+      step,
+      state.industry,
+      state.baseLoadKW,
+      state.peakLoadKW,
+      state.intel,
+      state.business,
+      state.tiers,
+      state.selectedTierIndex,
+    ]
   );
 
   // Mode select renders outside the shell — no progress bar for the landing screen
