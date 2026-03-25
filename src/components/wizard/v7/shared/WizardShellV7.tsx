@@ -28,6 +28,8 @@ interface WizardShellV7Props {
   isVerified?: boolean;
   /** Advisor narration + intel rendered in left rail below progress steps */
   advisorContent?: React.ReactNode;
+  /** Width of the Merlin advisor rail in px. Default 440. Increase for data-heavy steps. */
+  railWidth?: number;
   children: React.ReactNode;
 }
 
@@ -44,11 +46,23 @@ interface WizardShellV7Props {
 // Live clock — signals the engine is running in real-time (from merlin-energy design system)
 function LiveClock() {
   const [time, setTime] = React.useState(() =>
-    new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })
+    new Date().toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    })
   );
   React.useEffect(() => {
     const id = setInterval(() => {
-      setTime(new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }));
+      setTime(
+        new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        })
+      );
     }, 1000);
     return () => clearInterval(id);
   }, []);
@@ -66,12 +80,15 @@ export default function WizardShellV7({
   onBack,
   onNext,
   advisorContent,
+  railWidth = 440,
   children,
 }: WizardShellV7Props) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   const shellRef = useRef<HTMLDivElement>(null);
+  const stepContentRef = useRef<HTMLDivElement>(null);
+  const prevStepRef = useRef(currentStep);
 
-  // ✅ SCROLL-TO-TOP on every step transition
+  // ✅ SCROLL-TO-TOP + flash-free step transition animation
   useEffect(() => {
     // 1) Try scrolling the wizard's own scroll container (modal path)
     const scrollContainer = shellRef.current?.closest("[data-wizard-scroll]") as HTMLElement | null;
@@ -80,6 +97,18 @@ export default function WizardShellV7({
     }
     // 2) Always also scroll window (direct /v7 route path)
     window.scrollTo({ top: 0, behavior: "instant" });
+
+    // 3) Re-trigger step-fadein animation without unmount/remount (prevents flash)
+    if (prevStepRef.current !== currentStep) {
+      prevStepRef.current = currentStep;
+      const el = stepContentRef.current;
+      if (el) {
+        el.style.animation = "none";
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        el.offsetHeight; // force reflow so animation restarts
+        el.style.animation = "";
+      }
+    }
   }, [currentStep]);
 
   const totalSteps = stepLabels?.length ?? 0;
@@ -118,8 +147,8 @@ export default function WizardShellV7({
           style={{
             flex: 1,
             display: "grid",
-            gridTemplateColumns: "360px 1fr",
-            gap: 28,
+            gridTemplateColumns: `${railWidth}px 1fr`,
+            gap: 32,
             /* No maxWidth cap — fill the full browser landscape width */
             width: "100%",
             maxWidth: "100%",
@@ -172,14 +201,53 @@ export default function WizardShellV7({
 
               <div>
                 <div style={{ fontSize: 16, fontWeight: 600, color: "#fff" }}>Merlin AI</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600 }}>
-                  <span style={{ position: "relative", display: "inline-flex", width: 8, height: 8, flexShrink: 0 }}>
-                    <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(62,207,142,0.35)", animation: "merlin-pulse 1.5s ease-in-out infinite" }} />
-                    <span style={{ position: "relative", borderRadius: "50%", width: "100%", height: "100%", background: "#3ECF8E" }} />
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "relative",
+                      display: "inline-flex",
+                      width: 8,
+                      height: 8,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: "50%",
+                        background: "rgba(62,207,142,0.35)",
+                        animation: "merlin-pulse 1.5s ease-in-out infinite",
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: "relative",
+                        borderRadius: "50%",
+                        width: "100%",
+                        height: "100%",
+                        background: "#3ECF8E",
+                      }}
+                    />
                   </span>
-                  <span style={{ color: "rgba(62,207,142,0.85)", letterSpacing: "0.04em" }}>LIVE</span>
+                  <span style={{ color: "rgba(62,207,142,0.85)", letterSpacing: "0.04em" }}>
+                    LIVE
+                  </span>
                   <span style={{ color: "rgba(255,255,255,0.18)" }}>·</span>
-                  <span style={{ color: "rgba(255,255,255,0.32)", fontFamily: "'JetBrains Mono', 'Courier New', monospace" }}>
+                  <span
+                    style={{
+                      color: "rgba(255,255,255,0.32)",
+                      fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                    }}
+                  >
                     <LiveClock />
                   </span>
                 </div>
@@ -401,9 +469,9 @@ export default function WizardShellV7({
               })}
             </div>
 
-            {/* Step Content */}
+            {/* Step Content — ref-based animation restart prevents flash on step change */}
             <div
-              key={`step-${safeStep}`}
+              ref={stepContentRef}
               className="merlin-step merlin-step-enter"
               style={{
                 background: "rgba(255, 255, 255, 0.02)",
@@ -412,7 +480,9 @@ export default function WizardShellV7({
                 border: "1px solid rgba(255, 255, 255, 0.05)",
                 borderTop: "none",
                 minHeight: 400,
-                animation: "merlin-step-fadein 0.3s ease-out, heartbeatBorder 4s ease-in-out 0.4s infinite",
+                willChange: "transform, opacity",
+                animation:
+                  "merlin-step-fadein 0.28s ease-out, heartbeatBorder 4s ease-in-out 0.4s infinite",
               }}
             >
               {children}
@@ -430,7 +500,7 @@ export default function WizardShellV7({
               50%       { transform: scale(1.9); opacity: 0; }
             }
             @keyframes merlin-step-fadein {
-              from { opacity: 0; transform: translateY(12px); }
+              from { opacity: 0.1; transform: translateY(10px); }
               to   { opacity: 1; transform: translateY(0); }
             }
             @keyframes merlin-spin {

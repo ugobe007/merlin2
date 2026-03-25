@@ -64,10 +64,26 @@ const DARK = {
 };
 
 const DISPLAY_ORDER = [
-  "car_wash", "ev_charging", "hotel", "restaurant", "retail", "warehouse",
-  "manufacturing", "office", "healthcare", "data_center", "gas_station",
-  "airport", "casino", "college", "apartment", "residential",
-  "cold_storage", "indoor_farm", "agriculture", "other",
+  "car_wash",
+  "ev_charging",
+  "hotel",
+  "restaurant",
+  "retail",
+  "warehouse",
+  "manufacturing",
+  "office",
+  "healthcare",
+  "data_center",
+  "gas_station",
+  "airport",
+  "casino",
+  "college",
+  "apartment",
+  "residential",
+  "cold_storage",
+  "indoor_farm",
+  "agriculture",
+  "other",
 ];
 
 const INDUSTRIES = DISPLAY_ORDER.map((slug) => {
@@ -94,15 +110,22 @@ export function Step2V8({ state, actions }: Props) {
   return (
     <div style={{ padding: "0", color: DARK.textPrimary }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }} className="grid gap-4 sm:gap-5 px-1 sm:px-0">
-
         {/* Guidance row */}
         <div>
           <div style={{ fontSize: 14, color: DARK.textSecondary, lineHeight: 1.6 }}>
             Select your industry
             {locationLine && (
               <>
-                <span style={{ color: "rgba(232,235,243,0.25)", margin: "0 8px" }} className="hidden sm:inline">·</span>
-                <span style={{ fontSize: 13, color: "rgba(232,235,243,0.35)" }} className="hidden sm:inline">
+                <span
+                  style={{ color: "rgba(232,235,243,0.25)", margin: "0 8px" }}
+                  className="hidden sm:inline"
+                >
+                  ·
+                </span>
+                <span
+                  style={{ fontSize: 13, color: "rgba(232,235,243,0.35)" }}
+                  className="hidden sm:inline"
+                >
                   📍 {locationLine}
                 </span>
               </>
@@ -111,16 +134,6 @@ export function Step2V8({ state, actions }: Props) {
           <div style={{ fontSize: 12, color: "rgba(232,235,243,0.35)", marginTop: 4 }}>
             This determines your facility's energy profile and custom questions.
           </div>
-        </div>
-
-        {/* Grid header */}
-        <div
-          style={{
-            fontSize: 13, fontWeight: 600, marginBottom: 4,
-            color: DARK.textSecondary, textTransform: "uppercase", letterSpacing: "0.5px",
-          }}
-        >
-          Select Industry
         </div>
 
         {/* Industry card grid */}
@@ -168,12 +181,21 @@ export function Step2V8({ state, actions }: Props) {
                 {isSelected && (
                   <div
                     style={{
-                      position: "absolute", top: 8, right: 8,
-                      width: 22, height: 22, borderRadius: "50%",
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
                       background: "rgba(62,207,142,0.90)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 12, fontWeight: 700, color: "#0D1117",
-                      zIndex: 10, boxShadow: "0 0 10px rgba(62,207,142,0.55)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#0D1117",
+                      zIndex: 10,
+                      boxShadow: "0 0 10px rgba(62,207,142,0.55)",
                     }}
                   >
                     ✓
@@ -193,7 +215,9 @@ export function Step2V8({ state, actions }: Props) {
                     <img src={it.image} alt={it.label} className="w-full h-full object-cover" />
                     <div
                       className="absolute inset-0"
-                      style={{ background: "linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 65%)" }}
+                      style={{
+                        background: "linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 65%)",
+                      }}
                     />
                   </div>
                 ) : (

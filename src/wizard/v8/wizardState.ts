@@ -203,6 +203,9 @@ export interface QuoteTier {
   // Margin policy (V4.5 transparency)
   marginBandId: string; // e.g., "micro", "small", "medium"
   blendedMarginPercent: number; // effective margin applied (e.g., 14.2)
+  /** Equipment subtotal (before site work, contingency, Merlin fee) — used by
+   *  CalculationValidator for Supabase audit + alert pipeline. */
+  equipmentSubtotal?: number;
   // TrueQuote™ audit trail
   notes: string[];
 }
@@ -364,7 +367,7 @@ export function initialState(): WizardState {
     // Addon config defaults (Step 3.5)
     solarKW: 0,
     generatorKW: 0,
-    generatorFuelType: "natural-gas",
+    generatorFuelType: "diesel",
     level2Chargers: 0,
     dcfcChargers: 0,
     hpcChargers: 0,
@@ -420,7 +423,7 @@ function resetEnergyProfileState(): Pick<
     evRevenuePerYear: 0,
     solarKW: 0,
     generatorKW: 0,
-    generatorFuelType: "natural-gas",
+    generatorFuelType: "diesel",
     level2Chargers: 0,
     dcfcChargers: 0,
     hpcChargers: 0,
@@ -594,7 +597,7 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
         state.wantsGenerator,
         state.step3Answers,
         state.intel?.solarFeasible ?? false,
-        state.solarPhysicalCapKW,
+        state.solarPhysicalCapKW
       );
       // Step 4 = Add-ons (Step3_5V8). Going back from Add-ons always returns to
       // Profile (step 3). Step 3.5 is kept as a fallback identity for safety but
@@ -605,9 +608,9 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
           : state.step === 5
             ? 4
             : state.step === 4
-              ? 3          // Add-ons → Profile (not 3.5 — no renderer)
+              ? 3 // Add-ons → Profile (not 3.5 — no renderer)
               : state.step === 3.5
-                ? 3        // safety: 3.5 → Profile
+                ? 3 // safety: 3.5 → Profile
                 : state.step === 3
                   ? 2
                   : state.step === 2

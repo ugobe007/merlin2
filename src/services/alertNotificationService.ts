@@ -24,8 +24,9 @@ import { supabase } from "@/services/supabaseClient";
 
 export const ALERT_CONFIG = {
   // Score thresholds that trigger alerts
-  criticalThreshold: 50, // Immediate alert (email + SMS)
-  warningThreshold: 70, // Warning alert (email only)
+  // 90+ = valid (SSOT Certified). <90 = all pricing reviewed. <70 = critical failure.
+  criticalThreshold: 70, // Immediate alert (email + SMS) — serious calculation error
+  warningThreshold: 90, // Pricing review alert — any quote scoring below 90 triggers review
 
   // Cooldown to prevent alert spam (minutes)
   alertCooldownMinutes: 15,
@@ -134,7 +135,10 @@ export async function checkAndAlert(payload: AlertPayload): Promise<{
     }
   }
 
-  if (import.meta.env.DEV) console.log(`🚨 SSOT Alert sent via: ${channels.join(", ") || "none (no channels configured)"}`);
+  if (import.meta.env.DEV)
+    console.log(
+      `🚨 SSOT Alert sent via: ${channels.join(", ") || "none (no channels configured)"}`
+    );
 
   return { alertSent: channels.length > 0, channels };
 }

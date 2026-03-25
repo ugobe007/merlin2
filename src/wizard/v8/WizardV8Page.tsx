@@ -46,16 +46,16 @@ const Step5V8 = lazy(() => import("./steps/Step5V8"));
 
 // Step labels — index 0 = step 0 (Mode Select), index 1 = step 1 (Location), etc.
 // Note: Step 3.5 (Add-ons) is inserted between Profile and MagicFit
-const STEP_LABELS = ["Mode", "Location", "Industry", "Profile", "Add-ons", "MagicFit", "Quote"];
+const STEP_LABELS = ["Location", "Industry", "Profile", "Add-ons", "MagicFit", "Quote"];
 
-// Map WizardStep (0|1|2|3|3.5|4|5|6) → display index (0-6) for WizardShellV7.
-// Shell uses integer indices for progress bar; 3.5 must map to 4 (Add-ons slot).
+// Map WizardStep (1|2|3|3.5|4|5|6) → display index (0-5) for WizardShellV7.
+// Step 0 (Mode Select) renders outside the shell — no progress bar needed.
+// Shell uses integer indices for progress bar; 3.5/4 both map to 3 (Add-ons slot).
 function wizardStepToDisplayIndex(step: number): number {
-  if (step <= 3) return step; // 0→0, 1→1, 2→2, 3→3 (Profile)
-  if (step === 3.5) return 4; // 3.5 → 4 (Add-ons)
-  if (step === 4) return 4; // step=4 also renders Step3_5V8 → 4
-  if (step === 5) return 5; // MagicFit
-  return 6; // Quote
+  if (step <= 3) return step - 1; // 1→0, 2→1, 3→2 (Profile)
+  if (step === 3.5 || step === 4) return 3; // Add-ons
+  if (step === 5) return 4; // MagicFit
+  return 5; // Quote
 }
 
 // ── Accent helpers ────────────────────────────────────────────────────────────
@@ -341,17 +341,17 @@ function getAdvisorContent(
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
-            What's your priority?
+            Pick your configuration.
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            I'll build three quote tiers — each with different{" "}
-            {hi("battery size, solar pairing, and payback period")}.
+            Three tiers sized to your facility — each with different{" "}
+            {hi("battery size, annual savings, and payback period")}.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
             {[
-              "Save More — max bill reduction",
-              "Best Balance — savings + resilience",
-              "Full Power — grid independence",
+              "Essential — right-sized, lowest cost",
+              "Optimized — best value (recommended)",
+              "Premium — maximum performance",
             ].map(bullet)}
           </div>
         </div>
@@ -490,6 +490,23 @@ export default function WizardV8Page() {
     [step, state.industry, state.baseLoadKW, state.peakLoadKW, state.intel]
   );
 
+  // Mode select renders outside the shell — no progress bar for the landing screen
+  if (step === 0) {
+    return (
+      <Step0V8_ModeSelect
+        onSelectMode={(mode) => {
+          if (mode === "wizard") {
+            actions.goToStep(1 as WizardStep);
+          } else if (mode === "proquote") {
+            window.location.href = "/pro-quote";
+          } else if (mode === "upload") {
+            window.location.href = "/upload-quote";
+          }
+        }}
+      />
+    );
+  }
+
   return (
     <div style={{ position: "relative" }}>
       <WizardShellV7
@@ -540,6 +557,7 @@ export default function WizardV8Page() {
         nextLabel={NEXT_LABELS[step]}
         nextHint={NEXT_HINTS[step]}
         advisorContent={advisorContent}
+        railWidth={step >= 3 && step <= 4 ? 616 : 440}
       >
         {/* Error banner */}
         {state.error && (
@@ -574,19 +592,6 @@ export default function WizardV8Page() {
 
         {/* Step router */}
         <Suspense fallback={<SpinnerFallback />}>
-          {step === 0 && (
-            <Step0V8_ModeSelect
-              onSelectMode={(mode) => {
-                if (mode === "wizard") {
-                  actions.goToStep(1 as WizardStep);
-                } else if (mode === "proquote") {
-                  window.location.href = "/pro-quote";
-                } else if (mode === "upload") {
-                  window.location.href = "/upload-quote";
-                }
-              }}
-            />
-          )}
           {step === 1 && <Step1V8 state={state} actions={actions} />}
           {step === 2 && <Step2V8 state={state} actions={actions} />}
           {step === 3 && <Step3V8 state={state} actions={actions} />}

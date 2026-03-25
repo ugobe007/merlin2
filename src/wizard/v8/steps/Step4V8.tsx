@@ -571,7 +571,6 @@ export default function Step4V8({ state, actions }: Props) {
       </div>
 
       {/* Cards Grid - Horizontal layout */}
-      <GoalRankingsPanel tiers={tiers} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 w-full px-2 md:px-4">
         {tiers.map((tier, index) => {
           const tierIndex = index as 0 | 1 | 2;
@@ -643,7 +642,7 @@ export default function Step4V8({ state, actions }: Props) {
                     {config.name}
                   </h2>
                   <p
-                    className={`text-xs uppercase tracking-widest mt-1 ${isPerfectFit ? "text-purple-300/50" : "text-slate-500"}`}
+                    className={`text-xs uppercase tracking-widest mt-1 ${isPerfectFit ? "text-emerald-300/50" : "text-slate-500"}`}
                   >
                     {config.tagline}
                   </p>
@@ -652,7 +651,7 @@ export default function Step4V8({ state, actions }: Props) {
                 {/* HERO: Annual Savings - Responsive sizing */}
                 <div className="text-center py-2 md:py-3">
                   <p
-                    className={`text-[10px] uppercase tracking-widest mb-1 ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
+                    className={`text-[10px] uppercase tracking-widest mb-1 ${isPerfectFit ? "text-emerald-400/50" : "text-slate-500"}`}
                   >
                     Annual Savings
                   </p>
@@ -667,7 +666,7 @@ export default function Step4V8({ state, actions }: Props) {
                 {/* Equipment Strip */}
                 <div className="mb-3">
                   <p
-                    className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
+                    className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-emerald-400/50" : "text-slate-500"}`}
                   >
                     System Configuration
                   </p>
@@ -717,10 +716,10 @@ export default function Step4V8({ state, actions }: Props) {
 
               {/* Financial Summary - Responsive padding and spacing */}
               <div
-                className={`border-t p-3 md:p-4 ${isPerfectFit ? "bg-slate-950/60 border-purple-500/20" : "bg-slate-950/80 border-slate-800"}`}
+                className={`border-t p-3 md:p-4 ${isPerfectFit ? "bg-slate-950/60 border-emerald-500/20" : "bg-slate-950/80 border-slate-800"}`}
               >
                 <p
-                  className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
+                  className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-emerald-400/50" : "text-slate-500"}`}
                 >
                   Financial Summary
                 </p>
@@ -739,7 +738,7 @@ export default function Step4V8({ state, actions }: Props) {
                     </span>
                   </div>
                   <div
-                    className={`h-px my-2 ${isPerfectFit ? "bg-purple-500/20" : "bg-white/5"}`}
+                    className={`h-px my-2 ${isPerfectFit ? "bg-emerald-500/20" : "bg-white/5"}`}
                   />
                   <div className="flex justify-between items-center font-semibold">
                     <span className="text-white">Net Cost</span>
@@ -790,7 +789,7 @@ export default function Step4V8({ state, actions }: Props) {
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 mb-2 rounded-lg transition-all ${
                     isPerfectFit
-                      ? "bg-purple-500/10 hover:bg-purple-500/15"
+                      ? "bg-emerald-500/10 hover:bg-emerald-500/15"
                       : "bg-white/5 hover:bg-white/8"
                   }`}
                 >
@@ -823,7 +822,7 @@ export default function Step4V8({ state, actions }: Props) {
                       <div
                         className={`mb-3 p-3 rounded-lg space-y-2 text-xs ${
                           isPerfectFit
-                            ? "bg-purple-950/30 border border-purple-500/20"
+                            ? "bg-emerald-950/30 border border-emerald-500/20"
                             : "bg-slate-900/50 border border-slate-700/30"
                         }`}
                       >
@@ -958,7 +957,7 @@ export default function Step4V8({ state, actions }: Props) {
                         {/* Pricing Notes */}
                         <div
                           className={`p-2 rounded text-[10px] ${
-                            isPerfectFit ? "bg-purple-900/20" : "bg-slate-800/50"
+                            isPerfectFit ? "bg-emerald-900/20" : "bg-slate-800/50"
                           }`}
                         >
                           <p className="text-slate-400 leading-relaxed">
@@ -1003,6 +1002,7 @@ export default function Step4V8({ state, actions }: Props) {
           );
         })}
       </div>
+      <GoalRankingsPanel tiers={tiers} />
     </div>
   );
 }
