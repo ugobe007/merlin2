@@ -987,40 +987,48 @@ export default function HeroSection() {
               <p className="text-xs text-slate-500 uppercase tracking-[0.2em] font-medium mb-3">
                 Choose your path
               </p>
-              <div className="grid grid-cols-2 gap-3 max-w-[480px]">
+              <div className="flex flex-col sm:flex-row gap-2.5">
                 <a
                   href="/wizard"
-                  className="flex flex-col items-center gap-3 px-5 py-5 rounded-2xl border border-yellow-500/30 bg-yellow-500/[0.06] hover:bg-yellow-500/[0.10] hover:border-yellow-500/50 transition-all duration-200 group text-center"
+                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.04] hover:bg-yellow-500/[0.08] hover:border-yellow-500/35 transition-all duration-200 group flex-1"
                 >
-                  <img src={SHIELD_GOLD} alt="TrueQuote" className="w-10 h-10 object-contain" />
-                  <div>
+                  <img
+                    src={SHIELD_GOLD}
+                    alt="TrueQuote"
+                    className="w-5 h-5 object-contain flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
                     <div
-                      className="text-base font-bold text-yellow-400/90 group-hover:text-yellow-300 transition-colors leading-tight mb-1"
+                      className="text-sm font-bold text-yellow-400/90 group-hover:text-yellow-300 transition-colors"
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
                       TrueQuote
                     </div>
-                    <div className="text-xs text-slate-500 leading-tight">
+                    <div className="text-[11px] text-slate-600">
                       For facility owners &amp; operators
                     </div>
                   </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-700 group-hover:text-yellow-400/50 transition-colors flex-shrink-0" />
                 </a>
                 <a
                   href="/proquote"
-                  className="flex flex-col items-center gap-3 px-5 py-5 rounded-2xl border border-blue-500/30 bg-blue-500/[0.06] hover:bg-blue-500/[0.10] hover:border-blue-500/50 transition-all duration-200 group text-center"
+                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-blue-500/20 bg-blue-500/[0.04] hover:bg-blue-500/[0.08] hover:border-blue-500/35 transition-all duration-200 group flex-1"
                 >
-                  <img src={SHIELD_BLUE} alt="ProQuote" className="w-10 h-10 object-contain" />
-                  <div>
+                  <img
+                    src={SHIELD_BLUE}
+                    alt="ProQuote"
+                    className="w-5 h-5 object-contain flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
                     <div
-                      className="text-base font-bold text-blue-400/90 group-hover:text-blue-300 transition-colors leading-tight mb-1"
+                      className="text-sm font-bold text-blue-400/90 group-hover:text-blue-300 transition-colors"
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
                       ProQuote
                     </div>
-                    <div className="text-xs text-slate-500 leading-tight">
-                      For vendors &amp; EPCs
-                    </div>
+                    <div className="text-[11px] text-slate-600">For vendors &amp; EPCs</div>
                   </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-700 group-hover:text-blue-400/50 transition-colors flex-shrink-0" />
                 </a>
               </div>
             </div>
