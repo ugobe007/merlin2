@@ -80,7 +80,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
               textShadow: "0 2px 30px rgba(62,207,142,0.12)",
             }}
           >
-            Build Your BESS Quote
+            Build Your Energy ROI
           </h1>
           <p className="text-slate-400 text-base" style={{ maxWidth: 400, margin: "0 auto" }}>
             Choose the workflow that fits your project — AI-guided or full engineering control.
