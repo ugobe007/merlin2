@@ -80,7 +80,7 @@ export default function WizardShellV7({
   onBack,
   onNext,
   advisorContent,
-  railWidth = 520,
+  railWidth: _railWidth = 520,
   children,
 }: WizardShellV7Props) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
@@ -147,13 +147,14 @@ export default function WizardShellV7({
           style={{
             flex: 1,
             display: "grid",
-            // clamp(min, vw%, max) — vw% calibrated to hit railWidth at 1440px viewport.
-            // This lets the rail grow proportionally with the browser width instead
-            // of staying a fixed pixel that looks squeezed on wide screens.
-            gridTemplateColumns: `clamp(${Math.round(railWidth * 0.62)}px, ${Math.round(railWidth / 14.4)}vw, ${Math.round(railWidth * 1.12)}px) 1fr`,
+            // Proportional: left advisor gets 1 unit, right content gets 2 units.
+            // minmax(240px, 1fr) prevents the advisor from collapsing on narrow desktops.
+            // maxWidth + margin center the layout on ultra-wide screens.
+            gridTemplateColumns: "minmax(240px, 1fr) 2fr",
             gap: 32,
             width: "100%",
-            maxWidth: "100%",
+            maxWidth: 1440,
+            margin: "0 auto",
             padding: "24px 32px",
           }}
         >
@@ -673,7 +674,7 @@ export default function WizardShellV7({
                Handles iPad mini/Air in landscape. Show narrow rail. */
             @media (orientation: landscape) and (min-height: 521px) and (max-height: 900px) and (min-width: 901px) {
               .merlin-shell-grid {
-                grid-template-columns: 220px 1fr !important;
+                grid-template-columns: 240px 1fr !important;
                 gap: 16px !important;
                 padding: 16px 20px !important;
               }
