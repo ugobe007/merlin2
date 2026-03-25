@@ -464,7 +464,7 @@ function CalculationCard() {
 
   return (
     <div
-      className="relative w-full max-w-[500px] rounded-2xl overflow-hidden"
+      className="relative w-full max-w-[440px] rounded-2xl overflow-hidden"
       style={{
         background: "linear-gradient(160deg, #0C1829 0%, #080F1E 100%)",
         animation: "heartbeatBorder 4s ease-in-out infinite",
@@ -939,7 +939,7 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-        <div className="grid lg:grid-cols-[1fr_520px] gap-8 xl:gap-14 items-center">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_440px] gap-8 xl:gap-12 items-center">
           {/* ── Left: headline + path selector ─────────────────────────────── */}
           <div>
             {/* Badge */}
