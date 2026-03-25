@@ -147,10 +147,10 @@ export default function WizardShellV7({
           style={{
             flex: 1,
             display: "grid",
-            // Proportional: left advisor gets 1 unit, right content gets 2 units.
-            // minmax(240px, 1fr) prevents the advisor from collapsing on narrow desktops.
+            // 2fr:3fr = 40%/60% — advisor panel is substantial, content gets majority.
+            // minmax(280px, 2fr) prevents collapse on narrow desktops.
             // maxWidth + margin center the layout on ultra-wide screens.
-            gridTemplateColumns: "minmax(240px, 1fr) 2fr",
+            gridTemplateColumns: "minmax(280px, 2fr) 3fr",
             gap: 32,
             width: "100%",
             maxWidth: 1440,
@@ -617,9 +617,10 @@ export default function WizardShellV7({
               }
             }
             
-            /* Tablet: keep padding/gap compact — clamp() handles column width proportionally */
+            /* Tablet: tighten spacing, fix left rail at 300px so content isn't cramped */
             @media (min-width: 901px) and (max-width: 1200px) {
               .merlin-shell-grid {
+                grid-template-columns: 300px 1fr !important;
                 gap: 20px !important;
                 padding: 20px 24px !important;
               }
