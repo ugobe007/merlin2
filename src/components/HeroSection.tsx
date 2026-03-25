@@ -464,7 +464,7 @@ function CalculationCard() {
 
   return (
     <div
-      className="relative w-full max-w-[400px] rounded-2xl overflow-hidden"
+      className="relative w-full max-w-[500px] rounded-2xl overflow-hidden"
       style={{
         background: "linear-gradient(160deg, #0C1829 0%, #080F1E 100%)",
         animation: "heartbeatBorder 4s ease-in-out infinite",
@@ -939,9 +939,9 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-        <div className="grid lg:grid-cols-[1fr_420px] gap-6 xl:gap-10 items-center">
+        <div className="grid lg:grid-cols-[1fr_520px] gap-8 xl:gap-14 items-center">
           {/* ── Left: headline + path selector ─────────────────────────────── */}
-          <div className="max-w-2xl">
+          <div>
             {/* Badge */}
             <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-300 text-xs font-medium tracking-wide mb-5">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
@@ -950,7 +950,7 @@ export default function HeroSection() {
 
             {/* Headline */}
             <h1
-              className="animate-fade-up-delay-1 text-6xl sm:text-7xl md:text-8xl font-extrabold leading-[0.92] tracking-tight mb-4"
+              className="animate-fade-up-delay-1 text-7xl sm:text-8xl md:text-9xl font-extrabold leading-[0.88] tracking-tight mb-5"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
               <span className="text-emerald-400">Energy ROI</span>
@@ -960,7 +960,7 @@ export default function HeroSection() {
 
             {/* Subheadline */}
             <p
-              className="animate-fade-up-delay-1 text-xl sm:text-2xl text-white leading-relaxed max-w-xl mb-4"
+              className="animate-fade-up-delay-1 text-2xl sm:text-3xl text-white leading-relaxed max-w-2xl mb-6"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             >
               <strong>Real costs. Real savings. Real decisions.</strong>{" "}
@@ -984,51 +984,51 @@ export default function HeroSection() {
 
             {/* Path selector */}
             <div className="animate-fade-up-delay-3 mb-4">
-              <p className="text-[10px] text-slate-600 uppercase tracking-[0.2em] font-medium mb-3">
+              <p className="text-xs text-slate-500 uppercase tracking-[0.2em] font-medium mb-3">
                 Choose your path
               </p>
-              <div className="flex flex-col sm:flex-row gap-2.5">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <a
                   href="/wizard"
-                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.04] hover:bg-yellow-500/[0.08] hover:border-yellow-500/35 transition-all duration-200 group flex-1"
+                  className="flex items-center gap-4 px-5 py-4 rounded-2xl border border-yellow-500/30 bg-yellow-500/[0.06] hover:bg-yellow-500/[0.10] hover:border-yellow-500/50 transition-all duration-200 group flex-1"
                 >
                   <img
                     src={SHIELD_GOLD}
                     alt="TrueQuote"
-                    className="w-5 h-5 object-contain flex-shrink-0"
+                    className="w-8 h-8 object-contain flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <div
-                      className="text-sm font-bold text-yellow-400/90 group-hover:text-yellow-300 transition-colors"
+                      className="text-base font-bold text-yellow-400/90 group-hover:text-yellow-300 transition-colors"
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
                       TrueQuote
                     </div>
-                    <div className="text-[11px] text-slate-600">
+                    <div className="text-xs text-slate-500">
                       For facility owners &amp; operators
                     </div>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-700 group-hover:text-yellow-400/50 transition-colors flex-shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-yellow-400/50 transition-colors flex-shrink-0" />
                 </a>
                 <a
                   href="/proquote"
-                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-blue-500/20 bg-blue-500/[0.04] hover:bg-blue-500/[0.08] hover:border-blue-500/35 transition-all duration-200 group flex-1"
+                  className="flex items-center gap-4 px-5 py-4 rounded-2xl border border-blue-500/30 bg-blue-500/[0.06] hover:bg-blue-500/[0.10] hover:border-blue-500/50 transition-all duration-200 group flex-1"
                 >
                   <img
                     src={SHIELD_BLUE}
                     alt="ProQuote"
-                    className="w-5 h-5 object-contain flex-shrink-0"
+                    className="w-8 h-8 object-contain flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <div
-                      className="text-sm font-bold text-blue-400/90 group-hover:text-blue-300 transition-colors"
+                      className="text-base font-bold text-blue-400/90 group-hover:text-blue-300 transition-colors"
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
                       ProQuote
                     </div>
-                    <div className="text-[11px] text-slate-600">For vendors &amp; EPCs</div>
+                    <div className="text-xs text-slate-500">For vendors &amp; EPCs</div>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-700 group-hover:text-blue-400/50 transition-colors flex-shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-blue-400/50 transition-colors flex-shrink-0" />
                 </a>
               </div>
             </div>
