@@ -106,18 +106,10 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      {/* Modal — no backdrop overlay */}
       <div
-        className={`absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300 ${
-          animateIn ? "opacity-100" : "opacity-0"
-        }`}
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div
-        className={`relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-xl overflow-hidden transition-all duration-500 ${
+        className={`relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-xl overflow-hidden transition-all duration-500 pointer-events-auto ${
           animateIn ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-8"
         }`}
         style={{
@@ -126,7 +118,10 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
         }}
       >
         {/* ── HEADER ── */}
-        <div className="relative px-6 pt-5 pb-4 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        <div
+          className="relative px-6 pt-5 pb-4 flex-shrink-0"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
+        >
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-1.5 rounded-md hover:bg-white/10 transition-colors"
@@ -147,7 +142,13 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
         </div>
 
         {/* ── TABS ── */}
-        <div className="flex px-6 gap-1 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+        <div
+          className="flex px-6 gap-1 flex-shrink-0"
+          style={{
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.02)",
+          }}
+        >
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -166,7 +167,6 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
 
         {/* ── CONTENT ── */}
         <div className="overflow-y-auto flex-1 min-h-0 p-6">
-
           {/* TAB: Why It Matters */}
           {activeTab === "why" && (
             <div className="space-y-6">
@@ -176,10 +176,12 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                   The Industry's Dirty Secret
                 </h3>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  When you get a BESS quote from most vendors, you're trusting a black box.
-                  They give you numbers, but{" "}
-                  <span className="text-slate-200 font-medium">can't tell you where they came from</span>.
-                  Banks know this. Investors know this. That's why projects stall.
+                  When you get a BESS quote from most vendors, you're trusting a black box. They
+                  give you numbers, but{" "}
+                  <span className="text-slate-200 font-medium">
+                    can't tell you where they came from
+                  </span>
+                  . Banks know this. Investors know this. That's why projects stall.
                 </p>
               </div>
 
@@ -190,7 +192,10 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                   className={`rounded-lg p-5 transition-all duration-500 ${
                     showComparison ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
                   }`}
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
                 >
                   <div className="flex items-center gap-2 mb-4">
                     <EyeOff className="w-4 h-4 text-slate-500" />
@@ -203,19 +208,33 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                       ["Annual Savings", "$450,000"],
                       ["Payback Period", "5.3 years"],
                     ].map(([label, value]) => (
-                      <div key={label} className="flex justify-between py-2 px-3 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
+                      <div
+                        key={label}
+                        className="flex justify-between py-2 px-3 rounded-md"
+                        style={{ background: "rgba(255,255,255,0.03)" }}
+                      >
                         <span className="text-slate-500">{label}</span>
                         <span className="text-slate-300 font-semibold">{value}</span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-4 p-3 rounded-md" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}>
+                  <div
+                    className="mt-4 p-3 rounded-md"
+                    style={{
+                      background: "rgba(239,68,68,0.08)",
+                      border: "1px solid rgba(239,68,68,0.15)",
+                    }}
+                  >
                     <div className="flex items-start gap-2">
                       <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
                       <div className="text-xs">
-                        <span className="text-red-300 font-medium">Where do these numbers come from?</span>
-                        <p className="text-red-400/70 mt-0.5">&quot;Trust us, we&apos;re experts.&quot;</p>
+                        <span className="text-red-300 font-medium">
+                          Where do these numbers come from?
+                        </span>
+                        <p className="text-red-400/70 mt-0.5">
+                          &quot;Trust us, we&apos;re experts.&quot;
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -226,7 +245,10 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                   className={`rounded-lg p-5 transition-all duration-500 delay-150 ${
                     showComparison ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
                   }`}
-                  style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.12)" }}
+                  style={{
+                    background: "rgba(16,185,129,0.04)",
+                    border: "1px solid rgba(16,185,129,0.12)",
+                  }}
                 >
                   <div className="flex items-center gap-2 mb-4">
                     <Shield className="w-4 h-4 text-emerald-400" />
@@ -235,11 +257,27 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
 
                   <div className="space-y-2 text-sm font-mono">
                     {[
-                      { label: "Battery System", value: "$2,400,000", source: "NREL ATB 2024, LFP 4-hr, $150/kWh" },
-                      { label: "Annual Savings", value: "$450,000", source: "StoreFAST methodology, EIA rates" },
-                      { label: "Payback Period", value: "5.3 years", source: "8% discount, 2% degradation, 30% ITC" },
+                      {
+                        label: "Battery System",
+                        value: "$2,400,000",
+                        source: "NREL ATB 2024, LFP 4-hr, $150/kWh",
+                      },
+                      {
+                        label: "Annual Savings",
+                        value: "$450,000",
+                        source: "StoreFAST methodology, EIA rates",
+                      },
+                      {
+                        label: "Payback Period",
+                        value: "5.3 years",
+                        source: "8% discount, 2% degradation, 30% ITC",
+                      },
                     ].map((row) => (
-                      <div key={row.label} className="py-2 px-3 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
+                      <div
+                        key={row.label}
+                        className="py-2 px-3 rounded-md"
+                        style={{ background: "rgba(255,255,255,0.03)" }}
+                      >
                         <div className="flex justify-between">
                           <span className="text-slate-500">{row.label}</span>
                           <span className="text-slate-200 font-semibold">{row.value}</span>
@@ -252,12 +290,22 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                     ))}
                   </div>
 
-                  <div className="mt-4 p-3 rounded-md" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.15)" }}>
+                  <div
+                    className="mt-4 p-3 rounded-md"
+                    style={{
+                      background: "rgba(16,185,129,0.08)",
+                      border: "1px solid rgba(16,185,129,0.15)",
+                    }}
+                  >
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                       <div className="text-xs">
-                        <span className="text-emerald-300 font-medium">Every number is verifiable.</span>
-                        <p className="text-emerald-400/60 mt-0.5">Export JSON audit trail for bank due diligence.</p>
+                        <span className="text-emerald-300 font-medium">
+                          Every number is verifiable.
+                        </span>
+                        <p className="text-emerald-400/60 mt-0.5">
+                          Export JSON audit trail for bank due diligence.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -320,14 +368,20 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                       className="w-9 h-9 rounded-lg flex items-center justify-center mb-3"
                       style={{ background: `rgba(${pillar.accent}, 0.1)` }}
                     >
-                      <pillar.icon className="w-4 h-4" style={{ color: `rgba(${pillar.accent}, 0.8)` }} />
+                      <pillar.icon
+                        className="w-4 h-4"
+                        style={{ color: `rgba(${pillar.accent}, 0.8)` }}
+                      />
                     </div>
                     <h4 className="text-sm font-semibold text-white mb-1">{pillar.title}</h4>
                     <p className="text-xs text-slate-500 mb-3">{pillar.desc}</p>
                     <ul className="space-y-1.5">
                       {pillar.items.map((item) => (
                         <li key={item} className="flex items-center gap-2 text-xs text-slate-400">
-                          <CheckCircle2 className="w-3 h-3" style={{ color: `rgba(${pillar.accent}, 0.6)` }} />
+                          <CheckCircle2
+                            className="w-3 h-3"
+                            style={{ color: `rgba(${pillar.accent}, 0.6)` }}
+                          />
                           {item}
                         </li>
                       ))}
@@ -350,10 +404,20 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                   {payload?.locationIntel && (
                     <>
                       {payload.locationIntel.utilityRate != null && (
-                        <span className="ml-2">Rate: <span className="text-emerald-400 font-medium">${payload.locationIntel.utilityRate}/kWh</span></span>
+                        <span className="ml-2">
+                          Rate:{" "}
+                          <span className="text-emerald-400 font-medium">
+                            ${payload.locationIntel.utilityRate}/kWh
+                          </span>
+                        </span>
                       )}
                       {payload.locationIntel.peakSunHours != null && (
-                        <span className="ml-2">Sun: <span className="text-amber-400 font-medium">{payload.locationIntel.peakSunHours} hrs</span></span>
+                        <span className="ml-2">
+                          Sun:{" "}
+                          <span className="text-amber-400 font-medium">
+                            {payload.locationIntel.peakSunHours} hrs
+                          </span>
+                        </span>
                       )}
                     </>
                   )}
@@ -362,7 +426,13 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
 
               {/* Facility Proof Card */}
               {payload && (
-                <div className="rounded-lg p-5" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.12)" }}>
+                <div
+                  className="rounded-lg p-5"
+                  style={{
+                    background: "rgba(16,185,129,0.04)",
+                    border: "1px solid rgba(16,185,129,0.12)",
+                  }}
+                >
                   <div className="flex items-center justify-between gap-4 mb-4">
                     <div>
                       <p className="text-xs text-slate-500 font-medium">Facility Data</p>
@@ -370,21 +440,49 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                         {payload.business?.name || "Your Facility"}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {[payload.location?.city, payload.location?.state, payload.location?.zipCode].filter(Boolean).join(", ")}
+                        {[
+                          payload.location?.city,
+                          payload.location?.state,
+                          payload.location?.zipCode,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")}
                       </p>
                     </div>
-                    <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold text-emerald-400" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                    <span
+                      className="px-2.5 py-1 rounded-md text-[11px] font-semibold text-emerald-400"
+                      style={{
+                        background: "rgba(16,185,129,0.1)",
+                        border: "1px solid rgba(16,185,129,0.2)",
+                      }}
+                    >
                       TrueQuote™
                     </span>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { label: "Utility Rate", value: payload.locationIntel?.utilityRate != null ? `$${payload.locationIntel.utilityRate}/kWh` : "—" },
-                      { label: "Peak Sun Hours", value: payload.locationIntel?.peakSunHours != null ? `${payload.locationIntel.peakSunHours}` : "—" },
+                      {
+                        label: "Utility Rate",
+                        value:
+                          payload.locationIntel?.utilityRate != null
+                            ? `$${payload.locationIntel.utilityRate}/kWh`
+                            : "—",
+                      },
+                      {
+                        label: "Peak Sun Hours",
+                        value:
+                          payload.locationIntel?.peakSunHours != null
+                            ? `${payload.locationIntel.peakSunHours}`
+                            : "—",
+                      },
                       { label: "Weather Risk", value: payload.locationIntel?.weatherRisk ?? "—" },
                     ].map((d) => (
-                      <div key={d.label} className="p-3 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
+                      <div
+                        key={d.label}
+                        className="p-3 rounded-md"
+                        style={{ background: "rgba(255,255,255,0.03)" }}
+                      >
                         <p className="text-[11px] text-slate-500 font-medium mb-1">{d.label}</p>
                         <p className="text-sm font-semibold text-white">{d.value}</p>
                       </div>
@@ -394,7 +492,10 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                   {payload.outputs && (
                     <div className="mt-4">
                       <p className="text-xs text-slate-500 font-medium mb-2">Outputs</p>
-                      <pre className="rounded-md p-3 text-[11px] text-slate-400 font-mono overflow-x-auto" style={{ background: "rgba(255,255,255,0.03)" }}>
+                      <pre
+                        className="rounded-md p-3 text-[11px] text-slate-400 font-mono overflow-x-auto"
+                        style={{ background: "rgba(255,255,255,0.03)" }}
+                      >
                         {JSON.stringify(payload.outputs, null, 2)}
                       </pre>
                     </div>
@@ -405,7 +506,11 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                       <p className="text-xs text-slate-500 font-medium mb-2">Assumptions</p>
                       <div className="grid grid-cols-2 gap-2">
                         {payload.assumptions.map((a, idx) => (
-                          <div key={idx} className="p-3 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
+                          <div
+                            key={idx}
+                            className="p-3 rounded-md"
+                            style={{ background: "rgba(255,255,255,0.03)" }}
+                          >
                             <p className="text-[11px] text-slate-500">{a.label}</p>
                             <p className="text-xs font-medium text-white mt-0.5">{a.value}</p>
                           </div>
@@ -425,7 +530,10 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group p-3 rounded-lg text-center transition-all hover:scale-[1.02]"
-                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
                   >
                     <div className="text-2xl mb-1">{source.logo}</div>
                     <p className="text-xs font-semibold text-slate-300">{source.name}</p>
@@ -437,14 +545,32 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
               {/* Audience cards */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { icon: "🏢", title: "For Businesses", desc: "Present quotes to your CFO with confidence.", accent: "59,130,246" },
-                  { icon: "🏛️", title: "For Banks", desc: "Due diligence without calling us.", accent: "16,185,129" },
-                  { icon: "⚡", title: "For Developers", desc: "Close deals faster with NREL alignment.", accent: "139,92,246" },
+                  {
+                    icon: "🏢",
+                    title: "For Businesses",
+                    desc: "Present quotes to your CFO with confidence.",
+                    accent: "59,130,246",
+                  },
+                  {
+                    icon: "🏛️",
+                    title: "For Banks",
+                    desc: "Due diligence without calling us.",
+                    accent: "16,185,129",
+                  },
+                  {
+                    icon: "⚡",
+                    title: "For Developers",
+                    desc: "Close deals faster with NREL alignment.",
+                    accent: "139,92,246",
+                  },
                 ].map((card) => (
                   <div
                     key={card.title}
                     className="p-4 rounded-lg"
-                    style={{ background: `rgba(${card.accent}, 0.04)`, border: `1px solid rgba(${card.accent}, 0.12)` }}
+                    style={{
+                      background: `rgba(${card.accent}, 0.04)`,
+                      border: `1px solid rgba(${card.accent}, 0.12)`,
+                    }}
                   >
                     <span className="text-xl">{card.icon}</span>
                     <h4 className="text-sm font-semibold text-white mt-2">{card.title}</h4>
@@ -457,7 +583,13 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
         </div>
 
         {/* ── FOOTER ── */}
-        <div className="px-6 py-4 flex items-center justify-between flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+        <div
+          className="px-6 py-4 flex items-center justify-between flex-shrink-0"
+          style={{
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.02)",
+          }}
+        >
           <span className="text-xs text-slate-600">
             TrueQuote™ Verified · Source-attributed pricing
           </span>
@@ -469,11 +601,21 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
               Close
             </button>
             <button
-              onClick={() => { onClose(); onGetQuote?.(); }}
+              onClick={() => {
+                onClose();
+                onGetQuote?.();
+              }}
               className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold text-white transition-all"
-              style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(16,185,129,0.25)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(16,185,129,0.15)"; }}
+              style={{
+                background: "rgba(16,185,129,0.15)",
+                border: "1px solid rgba(16,185,129,0.3)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(16,185,129,0.25)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(16,185,129,0.15)";
+              }}
             >
               Get Your TrueQuote™
               <ArrowRight className="w-3.5 h-3.5" />
