@@ -464,7 +464,7 @@ function CalculationCard() {
 
   return (
     <div
-      className="relative w-full max-w-[440px] rounded-2xl overflow-hidden"
+      className="relative w-full max-w-[380px] rounded-2xl overflow-hidden"
       style={{
         background: "linear-gradient(160deg, #0C1829 0%, #080F1E 100%)",
         animation: "heartbeatBorder 4s ease-in-out infinite",
@@ -938,8 +938,8 @@ export default function HeroSection() {
       />
 
       {/* Content */}
-      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_440px] gap-8 xl:gap-12 items-center">
+      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-8 w-full">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_500px] gap-6 xl:gap-10 items-center">
           {/* ── Left: headline + path selector ─────────────────────────────── */}
           <div>
             {/* Badge */}
@@ -987,48 +987,40 @@ export default function HeroSection() {
               <p className="text-xs text-slate-500 uppercase tracking-[0.2em] font-medium mb-3">
                 Choose your path
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="grid grid-cols-2 gap-3 max-w-[480px]">
                 <a
                   href="/wizard"
-                  className="flex items-center gap-4 px-5 py-4 rounded-2xl border border-yellow-500/30 bg-yellow-500/[0.06] hover:bg-yellow-500/[0.10] hover:border-yellow-500/50 transition-all duration-200 group flex-1"
+                  className="flex flex-col items-center gap-3 px-5 py-5 rounded-2xl border border-yellow-500/30 bg-yellow-500/[0.06] hover:bg-yellow-500/[0.10] hover:border-yellow-500/50 transition-all duration-200 group text-center"
                 >
-                  <img
-                    src={SHIELD_GOLD}
-                    alt="TrueQuote"
-                    className="w-8 h-8 object-contain flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
+                  <img src={SHIELD_GOLD} alt="TrueQuote" className="w-10 h-10 object-contain" />
+                  <div>
                     <div
-                      className="text-base font-bold text-yellow-400/90 group-hover:text-yellow-300 transition-colors"
+                      className="text-base font-bold text-yellow-400/90 group-hover:text-yellow-300 transition-colors leading-tight mb-1"
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
                       TrueQuote
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-slate-500 leading-tight">
                       For facility owners &amp; operators
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-yellow-400/50 transition-colors flex-shrink-0" />
                 </a>
                 <a
                   href="/proquote"
-                  className="flex items-center gap-4 px-5 py-4 rounded-2xl border border-blue-500/30 bg-blue-500/[0.06] hover:bg-blue-500/[0.10] hover:border-blue-500/50 transition-all duration-200 group flex-1"
+                  className="flex flex-col items-center gap-3 px-5 py-5 rounded-2xl border border-blue-500/30 bg-blue-500/[0.06] hover:bg-blue-500/[0.10] hover:border-blue-500/50 transition-all duration-200 group text-center"
                 >
-                  <img
-                    src={SHIELD_BLUE}
-                    alt="ProQuote"
-                    className="w-8 h-8 object-contain flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
+                  <img src={SHIELD_BLUE} alt="ProQuote" className="w-10 h-10 object-contain" />
+                  <div>
                     <div
-                      className="text-base font-bold text-blue-400/90 group-hover:text-blue-300 transition-colors"
+                      className="text-base font-bold text-blue-400/90 group-hover:text-blue-300 transition-colors leading-tight mb-1"
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
                       ProQuote
                     </div>
-                    <div className="text-xs text-slate-500">For vendors &amp; EPCs</div>
+                    <div className="text-xs text-slate-500 leading-tight">
+                      For vendors &amp; EPCs
+                    </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-blue-400/50 transition-colors flex-shrink-0" />
                 </a>
               </div>
             </div>
