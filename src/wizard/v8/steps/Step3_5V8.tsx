@@ -785,15 +785,15 @@ function SolarCard({
         }}
       >
         <div style={{ display: "flex", gap: 7, alignItems: "flex-start" }}>
-          <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
+          <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
           <div
             style={{
-              fontSize: 14,
-              color: "rgba(203,213,225,0.8)",
+              fontSize: 16,
+              color: "rgba(203,213,225,0.9)",
               lineHeight: 1.65,
             }}
           >
-            <span style={{ fontSize: 15 }}>🧙 </span>
+            <span style={{ fontSize: 18 }}>🧙 </span>
             <strong style={{ color: "#fbbf24", fontWeight: 700 }}>
               Merlin: {safeRec.toLocaleString()} kW recommended
             </strong>{" "}
@@ -885,15 +885,15 @@ function EVChargingCard({
           alignItems: "flex-start",
         }}
       >
-        <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
+        <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
         <div
           style={{
-            fontSize: 14,
-            color: "rgba(203,213,225,0.85)",
+            fontSize: 16,
+            color: "rgba(203,213,225,0.9)",
             lineHeight: 1.6,
           }}
         >
-          <span style={{ fontSize: 15 }}>🧙 </span>
+          <span style={{ fontSize: 18 }}>🧙 </span>
           <strong style={{ color: "#38bdf8", fontWeight: 700 }}>
             Merlin: {recL2} L2 chargers recommended
             {recDcfc > 0 ? ` + ${recDcfc} DC Fast` : ""}
@@ -1298,15 +1298,15 @@ function BackupGeneratorCard({
         }}
       >
         <div style={{ display: "flex", gap: 7, alignItems: "flex-start" }}>
-          <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
+          <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
           <div
             style={{
-              fontSize: 14,
-              color: "rgba(203,213,225,0.8)",
+              fontSize: 16,
+              color: "rgba(203,213,225,0.9)",
               lineHeight: 1.65,
             }}
           >
-            <span style={{ fontSize: 15 }}>🧙 </span>
+            <span style={{ fontSize: 18 }}>🧙 </span>
             <strong style={{ color: "#fb923c", fontWeight: 700 }}>
               Merlin suggests {safeRec.toLocaleString()} kW for power generation
             </strong>{" "}

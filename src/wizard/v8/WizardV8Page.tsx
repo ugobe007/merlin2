@@ -557,7 +557,7 @@ export default function WizardV8Page() {
         nextLabel={NEXT_LABELS[step]}
         nextHint={NEXT_HINTS[step]}
         advisorContent={advisorContent}
-        railWidth={step >= 3 && step <= 4 ? 616 : 440}
+        railWidth={step >= 3 && step <= 4 ? 680 : 520}
       >
         {/* Error banner */}
         {state.error && (
