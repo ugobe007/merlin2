@@ -265,51 +265,89 @@ function ConfirmBtn({
   confirmedLabel: string;
   onClick: () => void;
 }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: "100%",
-        padding: "15px 16px",
-        borderRadius: 10,
-        border: confirmed ? "2px solid #3ECF8E" : "2px solid rgba(62,207,142,0.5)",
-        background: confirmed ? "#3ECF8E" : "rgba(62,207,142,0.15)",
-        cursor: "pointer",
-        fontSize: 14,
-        fontWeight: 800,
-        letterSpacing: "0.07em",
-        textTransform: "uppercase" as const,
-        color: confirmed ? "#0D1117" : "#3ECF8E",
-        transition: "all 0.18s",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 9,
-        boxShadow: confirmed
-          ? "0 0 20px rgba(62,207,142,0.45), 0 4px 12px rgba(62,207,142,0.25)"
-          : "0 0 12px rgba(62,207,142,0.2)",
-      }}
-    >
-      {confirmed && (
+  if (confirmed) {
+    // Compact success badge — not a big CTA, just a status indicator
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 7,
+          padding: "9px 14px",
+          borderRadius: 8,
+          background: "rgba(62,207,142,0.10)",
+          border: "1.5px solid rgba(62,207,142,0.35)",
+          fontSize: 13,
+          fontWeight: 700,
+          color: "#3ECF8E",
+          letterSpacing: "0.04em",
+        }}
+      >
         <div
           style={{
-            width: 20,
-            height: 20,
+            width: 18,
+            height: 18,
             borderRadius: "50%",
-            background: "#0D1117",
+            background: "#3ECF8E",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: 900,
-            color: "#3ECF8E",
+            color: "#0D1117",
             flexShrink: 0,
           }}
         >
           ✓
         </div>
-      )}
-      {confirmed ? confirmedLabel : label}
+        {confirmedLabel}
+        <button
+          onClick={onClick}
+          style={{
+            marginLeft: 6,
+            padding: "2px 8px",
+            borderRadius: 5,
+            border: "1px solid rgba(62,207,142,0.3)",
+            background: "transparent",
+            color: "rgba(62,207,142,0.6)",
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Edit
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: "100%",
+        padding: "11px 16px",
+        borderRadius: 8,
+        border: "1.5px solid rgba(62,207,142,0.4)",
+        background: "transparent",
+        cursor: "pointer",
+        fontSize: 13,
+        fontWeight: 700,
+        letterSpacing: "0.05em",
+        textTransform: "uppercase" as const,
+        color: "#3ECF8E",
+        transition: "all 0.15s",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.background = "rgba(62,207,142,0.08)";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(62,207,142,0.65)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(62,207,142,0.4)";
+      }}
+    >
+      {label}
     </button>
   );
 }
@@ -463,7 +501,7 @@ function ConfigSummaryBar({
               marginBottom: 3,
             }}
           >
-            Estimated Investment
+            Add-ons Investment
           </div>
           <div
             style={{
@@ -475,6 +513,9 @@ function ConfigSummaryBar({
             }}
           >
             ${totalInvestmentK.toLocaleString()}K
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(148,163,184,0.4)", marginTop: 2 }}>
+            BESS system cost added at quote
           </div>
         </div>
       </div>
