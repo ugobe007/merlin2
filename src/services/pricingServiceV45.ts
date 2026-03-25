@@ -368,8 +368,10 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
   }
 
   // BESS Demand Charge Savings
-  // Assume 30% reduction of demand charges
-  const demandChargeSavings = inputs.bessKW * inputs.demandCharge * 12 * 0.3;
+  // Commercial BESS demand management effectiveness: 75% (NREL/EPRI benchmark
+  // for purpose-built demand-charge BESS — reflects months where peak is
+  // successfully clipped vs. months where SOC or dispatch timing falls short)
+  const demandChargeSavings = inputs.bessKW * inputs.demandCharge * 12 * 0.75;
 
   // BESS TOU Arbitrage (if applicable)
   let touArbitrageSavings = 0;

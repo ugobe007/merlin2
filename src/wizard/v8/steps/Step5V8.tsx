@@ -658,7 +658,10 @@ export default function Step5V8({ state, actions }: Props) {
                 </span>
                 <span className="text-slate-600">|</span>
                 <span className="text-sm text-slate-300">
-                  10yr ROI <strong className="text-[#3ECF8E]">{tier.roi10Year.toFixed(0)}%</strong>
+                  10yr ROI{" "}
+                  <strong className={tier.roi10Year >= 0 ? "text-[#3ECF8E]" : "text-red-400"}>
+                    {tier.roi10Year.toFixed(0)}%
+                  </strong>
                 </span>
               </div>
             </div>
@@ -952,7 +955,9 @@ export default function Step5V8({ state, actions }: Props) {
                   <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
                     10-Year ROI
                   </div>
-                  <div className="mt-2 text-3xl font-black text-emerald-400 tabular-nums">
+                  <div
+                    className={`mt-2 text-3xl font-black tabular-nums ${tier.roi10Year >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                  >
                     {tier.roi10Year.toFixed(0)}%
                   </div>
                   <div className="mt-1 text-sm text-slate-400">
