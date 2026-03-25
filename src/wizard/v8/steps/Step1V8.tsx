@@ -6,8 +6,6 @@ import type { BusinessData, WizardActions, WizardState } from "../wizardState";
 // Never hardcode API keys: use .env (local) or Fly.io secrets (production)
 const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) ?? "";
 
-
-
 const T = {
   accent: "#3ECF8E",
   accentSoft: "rgba(62,207,142,0.10)",
@@ -254,9 +252,20 @@ export function Step1V8({ state, actions }: Step1Props) {
 
   // Blocked test / nonsense ZIPs — reject before geocoding to prevent quota waste
   const BLOCKED_ZIPS = new Set([
-    "00000", "11111", "22222", "33333", "44444", "55555",
-    "66666", "77777", "88888", "99999", "12345", "54321",
-    "11223", "10000",
+    "00000",
+    "11111",
+    "22222",
+    "33333",
+    "44444",
+    "55555",
+    "66666",
+    "77777",
+    "88888",
+    "99999",
+    "12345",
+    "54321",
+    "11223",
+    "10000",
   ]);
   const isBlockedZip = country === "US" && BLOCKED_ZIPS.has(normalizedZip);
   const isZipReady = isValidZip && !isBlockedZip;
@@ -265,7 +274,10 @@ export function Step1V8({ state, actions }: Step1Props) {
   // Detection phase animation — mirrors CalculationCard UX (locating → fetching)
   const [zipPhase, setZipPhase] = useState<"idle" | "locating" | "fetching">("idle");
   useEffect(() => {
-    if (locationConfirmed || !isZipReady) { setZipPhase("idle"); return; }
+    if (locationConfirmed || !isZipReady) {
+      setZipPhase("idle");
+      return;
+    }
     setZipPhase("locating");
     const t1 = setTimeout(() => setZipPhase("fetching"), 600);
     return () => clearTimeout(t1);
@@ -814,20 +826,35 @@ export function Step1V8({ state, actions }: Step1Props) {
             ))}
 
             {/* TrueQuote™ badge */}
-            <div style={{
-              marginLeft: "auto",
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "0 10px",
-              height: 30,
-              borderRadius: 8,
-              border: "1px solid rgba(245,158,11,0.35)",
-              background: "rgba(245,158,11,0.07)",
-              flexShrink: 0,
-            }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#F59E0B", flexShrink: 0, display: "inline-block" }} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", letterSpacing: "0.01em" }}>TrueQuote™</span>
+            <div
+              style={{
+                marginLeft: "auto",
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "0 10px",
+                height: 30,
+                borderRadius: 8,
+                border: "1px solid rgba(245,158,11,0.35)",
+                background: "rgba(245,158,11,0.07)",
+                flexShrink: 0,
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "#F59E0B",
+                  flexShrink: 0,
+                  display: "inline-block",
+                }}
+              />
+              <span
+                style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", letterSpacing: "0.01em" }}
+              >
+                TrueQuote™
+              </span>
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Verified</span>
             </div>
 
@@ -900,25 +927,56 @@ export function Step1V8({ state, actions }: Step1Props) {
 
               {/* ZIP detection status line — locating → fetching phases */}
               {zipPhase !== "idle" && (
-                <div style={{ height: 20, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ position: "relative", display: "inline-flex", width: 7, height: 7, flexShrink: 0 }}>
-                    <span style={{
-                      position: "absolute", inset: 0, borderRadius: "50%",
-                      background: zipPhase === "fetching" ? "rgba(62,207,142,0.35)" : "rgba(245,158,11,0.35)",
-                      animation: "merlin-pulse 1.4s ease-in-out infinite",
-                    }} />
-                    <span style={{
-                      position: "relative", width: "100%", height: "100%", borderRadius: "50%",
-                      background: zipPhase === "fetching" ? "#3ECF8E" : "#F59E0B",
-                    }} />
+                <div
+                  style={{
+                    height: 20,
+                    marginBottom: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "relative",
+                      display: "inline-flex",
+                      width: 7,
+                      height: 7,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: "50%",
+                        background:
+                          zipPhase === "fetching"
+                            ? "rgba(62,207,142,0.35)"
+                            : "rgba(245,158,11,0.35)",
+                        animation: "merlin-pulse 1.4s ease-in-out infinite",
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: "relative",
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: "50%",
+                        background: zipPhase === "fetching" ? "#3ECF8E" : "#F59E0B",
+                      }}
+                    />
                   </span>
-                  <span style={{
-                    fontSize: 11,
-                    fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                    color: zipPhase === "fetching" ? "rgba(62,207,142,0.75)" : "rgba(245,158,11,0.70)",
-                    letterSpacing: "0.01em",
-                    transition: "color 0.3s",
-                  }}>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                      color:
+                        zipPhase === "fetching" ? "rgba(62,207,142,0.75)" : "rgba(245,158,11,0.70)",
+                      letterSpacing: "0.01em",
+                      transition: "color 0.3s",
+                    }}
+                  >
                     {zipPhase === "locating"
                       ? "Locating facility..."
                       : `Fetching utility rates for ${normalizedZip}...`}
@@ -944,6 +1002,44 @@ export function Step1V8({ state, actions }: Step1Props) {
               >
                 {isLocationBusy ? "Checking..." : "Confirm Location"}
               </button>
+              {/* Trust strip — fills the empty space and tells users what happens next */}
+              {!isBlockedZip && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr 1fr",
+                    gap: 8,
+                  }}
+                >
+                  {[
+                    { icon: "⚡", label: "Utility rates", sub: "by ZIP code" },
+                    { icon: "☀️", label: "Peak sun hours", sub: "solar potential" },
+                    { icon: "📍", label: "Demand windows", sub: "peak load timing" },
+                  ].map(({ icon, label, sub }) => (
+                    <div
+                      key={label}
+                      style={{
+                        padding: "10px 8px",
+                        borderRadius: 8,
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.07)",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div style={{ fontSize: 18, marginBottom: 4 }}>{icon}</div>
+                      <div
+                        style={{ fontSize: 11, fontWeight: 700, color: "rgba(203,213,225,0.85)" }}
+                      >
+                        {label}
+                      </div>
+                      <div style={{ fontSize: 10, color: "rgba(148,163,184,0.5)", marginTop: 2 }}>
+                        {sub}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               {isBlockedZip && (
                 <div
                   style={{
@@ -987,14 +1083,17 @@ export function Step1V8({ state, actions }: Step1Props) {
                     : location.formattedAddress}
                 </div>
                 {intel?.utilityProvider && (
-                  <div style={{
-                    fontSize: 11,
-                    color: "rgba(62,207,142,0.65)",
-                    fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                    marginTop: 2,
-                    letterSpacing: "0.01em",
-                  }}>
-                    {intel.utilityProvider}{intel.utilityRate != null ? ` · $${intel.utilityRate.toFixed(2)}/kWh` : ""}
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "rgba(62,207,142,0.65)",
+                      fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                      marginTop: 2,
+                      letterSpacing: "0.01em",
+                    }}
+                  >
+                    {intel.utilityProvider}
+                    {intel.utilityRate != null ? ` · $${intel.utilityRate.toFixed(2)}/kWh` : ""}
                   </div>
                 )}
               </div>
@@ -1526,7 +1625,14 @@ export function Step1V8({ state, actions }: Step1Props) {
                             : "0 2px 4px rgba(0, 0, 0, 0.1)",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                        }}
+                      >
                         <div>
                           <div style={{ fontWeight: 700 }}>{option.label}</div>
                           <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>
@@ -1534,22 +1640,31 @@ export function Step1V8({ state, actions }: Step1Props) {
                           </div>
                         </div>
                         {/* Circle checkmark */}
-                        <div style={{
-                          flexShrink: 0,
-                          width: 20,
-                          height: 20,
-                          borderRadius: "50%",
-                          border: state.gridReliability === option.value ? "none" : "1.5px solid rgba(255,255,255,0.20)",
-                          background: state.gridReliability === option.value ? "#3ECF8E" : "transparent",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 10,
-                          fontWeight: 800,
-                          color: "#0D1117",
-                          transition: "all 0.15s ease",
-                          boxShadow: state.gridReliability === option.value ? "0 0 6px rgba(16,185,129,0.5)" : "none",
-                        }}>
+                        <div
+                          style={{
+                            flexShrink: 0,
+                            width: 20,
+                            height: 20,
+                            borderRadius: "50%",
+                            border:
+                              state.gridReliability === option.value
+                                ? "none"
+                                : "1.5px solid rgba(255,255,255,0.20)",
+                            background:
+                              state.gridReliability === option.value ? "#3ECF8E" : "transparent",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 10,
+                            fontWeight: 800,
+                            color: "#0D1117",
+                            transition: "all 0.15s ease",
+                            boxShadow:
+                              state.gridReliability === option.value
+                                ? "0 0 6px rgba(16,185,129,0.5)"
+                                : "none",
+                          }}
+                        >
                           {state.gridReliability === option.value && "✓"}
                         </div>
                       </div>

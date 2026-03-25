@@ -945,7 +945,7 @@ export default function Step5V8({ state, actions }: Props) {
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400"
                       style={{
-                        width: `${Math.max(12, Math.min(100, 100 - tier.paybackYears * 7))}%`,
+                        width: `${Math.max(5, Math.min(95, Math.round((1 - tier.paybackYears / 25) * 100)))}%`,
                       }}
                     />
                   </div>
