@@ -256,54 +256,8 @@ export default function WizardShellV7({
               </div>
             </div>
 
-            {/* Unified Merlin Advisor — full rail height (Feb 11, 2026) */}
-            <div
-              style={{
-                flex: 1,
-                padding: 20,
-                borderRadius: 12,
-                background: "rgba(255, 255, 255, 0.02)",
-                border: "1px solid rgba(255, 255, 255, 0.04)",
-                transition: "all 0.2s ease",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              {advisorContent ? (
-                advisorContent
-              ) : (
-                /* Fallback welcome when no step-specific advisor data */
-                <>
-                  <div
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 600,
-                      lineHeight: 1.6,
-                      color: "rgba(255, 255, 255, 0.95)",
-                      marginBottom: 12,
-                    }}
-                  >
-                    Hi, I'm <span style={{ color: "#3ECF8E" }}>Merlin</span> — your energy savings
-                    advisor.
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      color: "rgba(232, 235, 243, 0.7)",
-                      lineHeight: 1.65,
-                    }}
-                  >
-                    In just a few steps, I'll help you discover how much you could save.
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Spacer to push TrueQuote badge to bottom */}
-            <div style={{ marginTop: "auto" }} />
-
-            {/* TrueQuote™ Badge — Canonical premium certification badge */}
-            <div style={{ padding: "14px 0 2px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            {/* TrueQuote™ Badge — top of rail, always visible */}
+            <div style={{ padding: "0 0 12px" }}>
               <button
                 type="button"
                 onClick={() => setShowTrueQuoteModal(true)}
@@ -339,9 +293,7 @@ export default function WizardShellV7({
                 }}
                 aria-label="Learn about TrueQuote verification"
               >
-                {/* Shield icon + TrueQuote™ wordmark */}
                 <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                  {/* SVG Shield */}
                   <svg
                     width="20"
                     height="22"
@@ -387,7 +339,6 @@ export default function WizardShellV7({
                     }}
                   />
                 </div>
-                {/* Verified subtitle */}
                 <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                   <svg
                     width="11"
@@ -425,6 +376,49 @@ export default function WizardShellV7({
                   </span>
                 </div>
               </button>
+            </div>
+
+            {/* Unified Merlin Advisor — full rail height (Feb 11, 2026) */}
+            <div
+              style={{
+                flex: 1,
+                padding: 20,
+                borderRadius: 12,
+                background: "rgba(255, 255, 255, 0.02)",
+                border: "1px solid rgba(255, 255, 255, 0.04)",
+                transition: "all 0.2s ease",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              {advisorContent ? (
+                advisorContent
+              ) : (
+                /* Fallback welcome when no step-specific advisor data */
+                <>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 600,
+                      lineHeight: 1.6,
+                      color: "rgba(255, 255, 255, 0.95)",
+                      marginBottom: 12,
+                    }}
+                  >
+                    Hi, I'm <span style={{ color: "#3ECF8E" }}>Merlin</span> — your energy savings
+                    advisor.
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      color: "rgba(232, 235, 243, 0.7)",
+                      lineHeight: 1.65,
+                    }}
+                  >
+                    In just a few steps, I'll help you discover how much you could save.
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
