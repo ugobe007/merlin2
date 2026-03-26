@@ -837,13 +837,22 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     const isCarWash = state.industry === "car_wash";
 
     if (isCarWash) {
-      // Dynamic cap: building roof (facilityType + roofType) + vacuum canopy + carport
-      const dynamicCap = getCarWashSolarCapacity(state.step3Answers ?? {});
+      // Base = building roof + vacuum canopy (no carport override)
+      const baseCapKW = getCarWashSolarCapacity({ ...(state.step3Answers ?? {}), carportInterest: "no" });
       const staticCap = getFacilityConstraints(state.industry)?.totalRealisticSolarKW ?? 60;
-      // Use dynamic if we have meaningful answers (at least facilityType selected)
-      newCap = dynamicCap > 0 ? dynamicCap : staticCap;
+      const baseKW = baseCapKW > 0 ? baseCapKW : staticCap;
+      // carportInterest='yes' but carportArea not entered → getCarWashSolarCapacity returns 0
+      // for carport. Add SSOT canopyPotentialKW as the default carport contribution.
+      const carportInterest = (state.step3Answers?.carportInterest ?? "no") as string;
+      const carportArea = Number(state.step3Answers?.carportArea ?? 0);
+      const canopyDefault = getFacilityConstraints("car_wash")?.canopyPotentialKW ?? 54;
+      if (carportInterest === "yes") {
+        const actual = carportArea > 0 ? Math.round(carportArea * 0.95 / 100) : canopyDefault;
+        newCap = baseKW + actual;
+      } else {
+        newCap = baseKW;
+      }
     } else {
-      // All other industries: roof solar + optional canopy solar
       // canopyInterest='yes' → add full canopy potential from SSOT
       // canopyInterest='learn_more' → add 50% canopy (shows upside, not committed)
       // canopyInterest='no' → roof only (maxRooftopSolarKW)
