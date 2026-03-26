@@ -52,13 +52,20 @@ export function getEffectiveSolarCapKW(state: WizardState): number {
  *   — matches step4Logic.computeSolarKW exactly so display = committed = auto-calc.
  *
  *   - physicalCap:      solarPhysicalCapKW — roof area × usable% × 15 W/sqft (NREL)
- *   - sunFactor:        clamp((PSH − 3.0) / 2.5, 0, 1) — 0 at marginal, 1.0 at 5.5+ PSH
+ *   - sunFactor:        clamp((PSH − 2.5) / 2.0, 0, 1), floor 0.40 for viable sites
+ *                       →0% at PSH 2.5, 50% at PSH 3.5, 100% at PSH 4.5+
  *   - scopePenetration: roof_only=0.55, roof_canopy=0.80, maximum=1.00
  *
+ * ⚠️  sunFactor here is an ECONOMIC SIZING decision (how much of the physical cap
+ *     to actually install given local sun economics), NOT a production calculation.
+ *     Annual kWh production uses the NREL Performance Ratio model:
+ *       annualKWh = installedKW × PSH × 365 × 0.77 (PR)
+ *     See addonGuardrails.computeSolarValueAnalysis() for the production side.
+ *
  * NOTE: sunFactor scales the DEPLOYED fraction of the physical cap. A site with
- * poor sun deploys a smaller fraction because economics won't justify full buildout.
+ * poor sun deploys a smaller fraction because economics won’t justify full buildout.
  * Returns 0 if cap ≤ 0 (no feasible roof) or PSH < 2.5 (unviable).
- * For PSH 2.5–3.5: sunFactor ramps 0→1; floor at 0.40 prevents near-zero
+ * For PSH 2.5–4.5: sunFactor ramps 0→1; floor at 0.40 prevents near-zero
  * recommendations for borderline sites (Michigan, Pacific NW, etc.).
  */
 export function estimateSolarKW(scope: SolarScopeId, state: WizardState): number {

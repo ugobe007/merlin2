@@ -39,18 +39,22 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * SOLAR SIZING FORMULA
  *
- *   sunFactor      = clamp((peakSunHours − 3.0) / 2.5, 0, 1)
- *                    → 1.0 at 5.5 PSH (A−), 0.32 at 3.8 PSH (Ann Arbor), etc.
+ *   sunFactor      = max(0.40, clamp((peakSunHours − 2.5) / 2.0, 0, 1))
+ *                    → floor 0.40 at PSH 2.5, 1.0 at PSH 4.5+
+ *                    (addonSizing.ts SSOT — see sunFactor JSDoc there)
  *
  *   solarOptimalKW = solarPhysicalCapKW × sunFactor × goalPenetration
  *   solarFinalKW   = min(solarOptimalKW, solarPhysicalCapKW)   ← never exceed cap
+ *
+ *   NOTE: sunFactor is an ECONOMIC SIZING DECISION — NOT a production model.
+ *   Annual kWh production uses: kW × PSH × 365 × 0.77 (NREL PR=0.77)
+ *   See addonGuardrails.computeSolarValueAnalysis() for the production side.
  *
  *   Example — Phoenix (6.5 PSH) car wash (60 kW cap), save_most Recommended:
  *     sunFactor = 1.0 (clamped), penetration = 0.85 → solarKW = 51 kW
  *
  *   Example — Ann Arbor (3.8 PSH) hotel (225 kW cap), save_most Recommended:
- *     sunFactor = 0.32, penetration = 0.85 → solarKW = 61 kW
- *     (Large roof can't overcome poor sun quality)
+ *     sunFactor = max(0.40, (3.8-2.5)/2.0) = 0.65, penetration = 0.85 → solarKW = 124 kW
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * SSOT SOURCES (DO NOT INLINE THESE VALUES):
@@ -81,6 +85,7 @@ import {
   calculateROI,
   EQUIPMENT_UNIT_COSTS,
 } from "@/services/pricingServiceV45";
+import { validateAddonConfig } from "@/services/addonGuardrails";
 import { hasGeneratorIntent } from "./addonIntent";
 import { CalculationValidator, type ValidationInput } from "@/services/calculationValidator";
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
@@ -552,6 +557,24 @@ function buildOneTier(
   const itcAmount = v45Costs.federalITC; // 30% of (solarCost + bessCost) only
   const netCost = v45Costs.netInvestment; // grossCost − itcAmount
 
+  // ── Addon guardrails: sizing checks + audit notes for TrueQuote ────────
+  // validateAddonConfig runs all three guardrails (solar NREL, EV NEC/SAE, generator IEEE 446)
+  // and returns per-technology audit notes + any warnings for the quote.
+  // evInfrastructureCost is already included in v45Costs (pricingServiceV45 v4.5.1) —
+  // this call is for audit trail notes and warnings only.
+  const addonValidation = validateAddonConfig({
+    solarInstalledKW: finalSolarKW,
+    solarPhysicalCapKW: state.solarPhysicalCapKW,
+    peakSunHours: sunHoursPerDay,
+    utilityRate: electricityRate,
+    l2Count: costLevel2,
+    dcfcCount: costDcfc,
+    hpcCount: costHpc,
+    generatorKW: finalGenKW,
+    criticalLoadKW: state.peakLoadKW * state.criticalLoadPct,
+    fuelType: (generatorFuelType || "diesel") as "diesel" | "natural-gas" | "dual-fuel",
+  });
+
   // V4.5 honest TCO: gross = BESS + solar + EV revenue; net = gross − reserves
   // EV revenue already included in v45Savings.evChargingRevenue — do not double-add.
   // evRevenuePerYear from state is kept additive for backward compatibility but
@@ -596,6 +619,16 @@ function buildOneTier(
     `Savings inputs: rate=$${electricityRate}/kWh, demand=$${demandCharge}/kW, sun=${sunHoursPerDay.toFixed(1)}h/day`,
     `Pricing: V4.5 model (pricingServiceV45) — equipment + site + 7.5% contingency + Merlin ${blendedMarginPercent.toFixed(0)}% fee`,
     `ITC: 30% on solar ($${Math.round(v45Costs.solarCost).toLocaleString()}) + BESS ($${Math.round(v45Costs.bessCost).toLocaleString()}) = $${Math.round(itcAmount).toLocaleString()}`,
+    // Addon guardrail audit notes (addonGuardrails.ts — NREL, NEC, IEEE 446)
+    ...(addonValidation.solarAuditNote ? [`📐 ${addonValidation.solarAuditNote}`] : []),
+    ...(addonValidation.evAuditNote ? [`⚡ ${addonValidation.evAuditNote}`] : []),
+    ...(addonValidation.generatorAuditNote ? [`🔋 ${addonValidation.generatorAuditNote}`] : []),
+    // EV electrical infrastructure cost (if any)
+    ...(v45Costs.evInfrastructureCost > 0
+      ? [`⚡ EV infrastructure: $${v45Costs.evInfrastructureCost.toLocaleString()} (480V service, conduit, transformer — NEC Art. 625/230)`]
+      : []),
+    // Warnings from all guardrails
+    ...addonValidation.allWarnings.map(w => `⚠️  ${w}`),
   ];
 
   return {
