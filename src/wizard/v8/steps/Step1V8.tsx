@@ -152,6 +152,16 @@ function loadGoogleMapsScript(): Promise<void> {
   }
 
   googleMapsPromise = new Promise((resolve, reject) => {
+    // Catch invalid key or HTTP-referrer restriction
+    (window as Window & { gm_authFailure?: () => void }).gm_authFailure = () => {
+      console.error(
+        "❌ Google Maps auth failure — key invalid or domain not whitelisted:",
+        GOOGLE_MAPS_API_KEY?.slice(0, 12) + "..."
+      );
+      googleMapsPromise = null; // allow retry
+      reject(new Error("Google Maps API key rejected (auth failure)"));
+    };
+
     // Check if script already exists (from index.html preload or previous load)
     const existing = document.querySelector('script[src*="maps.googleapis.com"]');
     if (existing) {
@@ -174,7 +184,7 @@ function loadGoogleMapsScript(): Promise<void> {
       `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}` +
       "&libraries=places&loading=async&v=weekly";
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Google Maps"));
+    script.onerror = () => reject(new Error("Failed to load Google Maps script (network error)"));
     document.head.appendChild(script);
   });
 
@@ -325,7 +335,8 @@ export function Step1V8({ state, actions }: Step1Props) {
       }
       setGoogleError(null);
       return placesLibraryRef.current;
-    } catch {
+    } catch (err) {
+      console.error("❌ ensurePlacesLibrary failed:", err);
       setGoogleError("Google business search is temporarily unavailable.");
       return null;
     }
