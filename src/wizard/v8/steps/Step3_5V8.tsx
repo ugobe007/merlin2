@@ -15,7 +15,7 @@ import {
   getEffectiveSolarCapKW,
   defaultGeneratorScope,
 } from "../addonSizing";
-import { getFacilityConstraints } from "@/services/useCasePowerCalculations";
+import { getFacilityConstraints, getCarWashSolarCapacity } from "@/services/useCasePowerCalculations";
 
 interface Props {
   state: WizardState;
@@ -597,7 +597,6 @@ function SolarCard({
   isCarWash = false,
   roofOnlyKW = 0,
   withCanopyKW = 0,
-  withUpsideKW = 0,
 }: {
   maxKW: number;
   recKW: number;
@@ -613,7 +612,6 @@ function SolarCard({
   isCarWash?: boolean;
   roofOnlyKW?: number;
   withCanopyKW?: number;
-  withUpsideKW?: number;
 }) {
   const safeMax = maxKW > 0 ? maxKW : 2000;
   // solarMin must always be < safeMax; 10% of max, floored at 1 kW
@@ -878,20 +876,11 @@ function SolarCard({
               {
                 value: "yes",
                 icon: "🏗️",
-                label: isCarWash ? "+Carport" : "+Canopy",
+                label: isCarWash ? "+ Carport" : "+ Canopy",
                 kw: withCanopyKW,
                 color: "#fbbf24",
                 borderColor: "rgba(251,191,36,0.8)",
                 bgColor: "rgba(251,191,36,0.14)",
-              },
-              {
-                value: "learn_more",
-                icon: "📊",
-                label: "50% Upside",
-                kw: withUpsideKW,
-                color: "rgba(148,163,184,1)",
-                borderColor: "rgba(148,163,184,0.4)",
-                bgColor: "rgba(148,163,184,0.08)",
               },
             ] as const).map((opt) => {
               // Default to 'no' visually when nothing selected yet
@@ -981,8 +970,6 @@ function SolarCard({
             based on{" "}
             {canopyInterest === "yes"
               ? `roof + ${isCarWash ? "carport" : "canopy"} (${safeMax.toLocaleString()} kW total)`
-              : canopyInterest === "learn_more"
-              ? `roof + partial ${isCarWash ? "carport" : "canopy"} upside (${safeMax.toLocaleString()} kW)`
               : safeMax > 0
               ? `${safeMax.toLocaleString()} kW roof space`
               : "available roof area"}
@@ -1604,14 +1591,32 @@ export default function Step3_5V8({ state, actions }: Props) {
   const canopyInterest = state.step3Answers?.[canopyFieldKey] as string | undefined;
   const constraints = getFacilityConstraints(state.industry ?? "");
   const canopyPotentialKW = constraints?.canopyPotentialKW ?? 0;
-  // Absolute kW totals per canopy option (shown in toggle buttons)
   const roofArea = Number(state.step3Answers?.roofArea ?? 0);
   const usablePct = constraints?.usableRoofPercent ?? 0.4;
-  const roofOnlyKW = roofArea > 0
-    ? Math.round(roofArea * usablePct * 15 / 1000)
-    : (constraints?.maxRooftopSolarKW ?? 0);
-  const withCanopyKW = roofOnlyKW + canopyPotentialKW;
-  const withUpsideKW = roofOnlyKW + Math.round(canopyPotentialKW * 0.5);
+
+  // Button label kW — must use the SAME formula as the actual slider max so they match.
+  // Car wash uses getCarWashSolarCapacity (Vineet 10 W/sqft model) not the generic 15 W/sqft.
+  // roofOnlyCapKW = building roof + vacuum only (no carport), regardless of current selection.
+  const roofOnlyCapKW = isCarWash
+    ? (getCarWashSolarCapacity({ ...(state.step3Answers ?? {}), carportInterest: "no" }) || (constraints?.maxRooftopSolarKW ?? 0))
+    : (roofArea > 0 ? Math.round(roofArea * usablePct * 15 / 1000) : (constraints?.maxRooftopSolarKW ?? 0));
+  // withCanopyCapKW = roof + canopyPotentialKW (SSOT default when no area entered)
+  const withCanopyCapKW = roofOnlyCapKW + canopyPotentialKW;
+
+  // Synchronous effective max — slider max updates immediately on toggle click,
+  // without waiting for the useWizardV8 reactive effect to propagate.
+  const solarEffectiveMaxKW = canopyInterest === "yes"
+    ? withCanopyCapKW
+    : canopyInterest === "no"
+    ? roofOnlyCapKW
+    : solarMaxKW; // unanswered → fall back to state.solarPhysicalCapKW
+
+  // Recommended kW for the new max — prevents stale low rec when max jumps up
+  const sunFactor = peakSunHours >= 2.5 ? Math.max(0.40, Math.min(1.0, (peakSunHours - 2.5) / 2.0)) : 0;
+  const solarEffectiveRecKW = solarEffectiveMaxKW > 0 && sunFactor > 0
+    ? Math.round(solarEffectiveMaxKW * sunFactor * 0.80)
+    : solarRecKW;
+
   const handleCanopyChange = (value: string) => actions.setAnswer(canopyFieldKey, value);
 
   const liveSolarKW = state.solarKW > 0 ? state.solarKW : solarFeasible ? solarRecKW : 0;
@@ -1682,9 +1687,9 @@ export default function Step3_5V8({ state, actions }: Props) {
       </div>
       {solarFeasible && (
         <SolarCard
-          maxKW={solarMaxKW}
-          recKW={solarRecKW}
-          initialKW={state.solarKW > 0 ? state.solarKW : solarRecKW}
+          maxKW={solarEffectiveMaxKW}
+          recKW={solarEffectiveRecKW}
+          initialKW={state.solarKW > 0 ? state.solarKW : solarEffectiveRecKW}
           peakSunHours={peakSunHours}
           utilityRate={utilityRate}
           peakLoadKW={state.peakLoadKW}
@@ -1694,9 +1699,8 @@ export default function Step3_5V8({ state, actions }: Props) {
           canopyInterest={canopyInterest}
           onCanopyChange={handleCanopyChange}
           isCarWash={isCarWash}
-          roofOnlyKW={roofOnlyKW}
-          withCanopyKW={withCanopyKW}
-          withUpsideKW={withUpsideKW}
+          roofOnlyKW={roofOnlyCapKW}
+          withCanopyKW={withCanopyCapKW}
         />
       )}
       {wantsEV ? (
