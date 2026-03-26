@@ -670,6 +670,90 @@ export default function Step5V8({ state, actions }: Props) {
       )}
 
       {/* ================================================================
+          ROI GUARDRAIL BANNER — shown when payback was auto-adjusted
+      ================================================================ */}
+      {tier.guardrail?.applied && (
+        <div
+          className="rounded-xl p-4"
+          style={{
+            background: "rgba(245, 158, 11, 0.05)",
+            border: "1px solid rgba(245, 158, 11, 0.25)",
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-0.5"
+              style={{ background: "rgba(245, 158, 11, 0.15)" }}
+            >
+              <span className="text-base">⚡</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-bold text-amber-300">ROI Guardrail Applied</span>
+                <span
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                  style={{
+                    background: "rgba(245, 158, 11, 0.15)",
+                    color: "#FCD34D",
+                    border: "1px solid rgba(245, 158, 11, 0.3)",
+                  }}
+                >
+                  AUTO-OPTIMIZED
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed mb-2">
+                This configuration was adjusted from a{" "}
+                <span className="text-amber-300 font-semibold">
+                  {Math.round(tier.guardrail.originalPaybackYears)}-year payback
+                </span>{" "}
+                to{" "}
+                <span className="text-emerald-400 font-semibold">
+                  {tier.guardrail.adjustedPaybackYears.toFixed(1)} years
+                </span>{" "}
+                by removing equipment that adds project cost without contributing to annual energy savings.
+              </p>
+              {tier.guardrail.removedComponents.length > 0 && (
+                <div className="space-y-1">
+                  {tier.guardrail.removedComponents.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-slate-400">
+                      <span className="text-amber-500 mt-0.5 shrink-0">→</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-[11px] text-slate-500 mt-2">
+                Resilience equipment (generator, extended backup) can be added back in Step 3.5 — they'll be presented as a separate resilience investment with their own cost breakdown.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tier.guardrail && !tier.guardrail.applied && tier.guardrail.originalPaybackYears > 7 && (
+        <div
+          className="rounded-xl p-4"
+          style={{
+            background: "rgba(239, 68, 68, 0.05)",
+            border: "1px solid rgba(239, 68, 68, 0.20)",
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-0.5"
+              style={{ background: "rgba(239, 68, 68, 0.12)" }}
+            >
+              <span className="text-base">⚠️</span>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-red-300 mb-1">Extended Payback Period</p>
+              <p className="text-xs text-slate-400 leading-relaxed">{tier.guardrail.reason}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================
           STATS BAR — Key metrics at a glance
       ================================================================ */}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 border-b border-white/[0.06]">

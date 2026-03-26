@@ -696,6 +696,174 @@ async function runV8ValidationBackground(state: WizardState, tier: QuoteTier): P
 }
 
 // =============================================================================
+// ROI GUARDRAIL — prevents unrealistically long-payback quotes
+// =============================================================================
+
+/**
+ * Maximum acceptable payback years by tier.
+ * Beyond these thresholds the guardrail kicks in and attempts to auto-fix the
+ * configuration by removing zero-savings-contribution equipment (generator first).
+ *
+ * Why these targets?
+ *   Starter:     fastest payback orientation — customers expect < 6 yr
+ *   Recommended: most common sales target — 5–7 yr is the industry sweet spot
+ *   Complete:    premium system — slightly longer acceptable, but ≤ 9 yr
+ */
+const PAYBACK_TARGETS: Record<TierLabel, number> = {
+  Starter:     6,
+  Recommended: 7,
+  Complete:    9,
+};
+
+/**
+ * Rebuild a tier's financials with the generator zeroed out.
+ * The generator contributes $0 to annual savings in the model
+ * (its value is resilience/insurance, not energy cost reduction).
+ * This is the primary lever to bring payback within target.
+ */
+function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier {
+  const electricityRate = state.intel?.utilityRate ?? 0.15;
+  const demandCharge    = state.intel?.demandCharge ?? 15;
+  const sunHoursPerDay  = state.intel?.peakSunHours ?? 5;
+
+  const stateWithEV = state as WizardState & {
+    level2Chargers?: number;
+    dcfcChargers?: number;
+    hpcChargers?: number;
+  };
+  const l2   = stateWithEV.level2Chargers ?? 0;
+  const dcfc = stateWithEV.dcfcChargers   ?? 0;
+  const hpc  = stateWithEV.hpcChargers    ?? 0;
+  const evChargerCount = l2 + dcfc + hpc;
+
+  const newCosts = calculateSystemCosts({
+    solarKW:        tier.solarKW,
+    bessKW:         tier.bessKW,
+    bessKWh:        tier.bessKWh,
+    generatorKW:    0,            // ← generator removed
+    generatorFuelType: "diesel",
+    level2Chargers: l2,
+    dcfcChargers:   dcfc,
+    hpcChargers:    hpc,
+  });
+
+  const newSavings = calculateAnnualSavings(
+    {
+      bessKW:         tier.bessKW,
+      bessKWh:        tier.bessKWh,
+      solarKW:        tier.solarKW,
+      generatorKW:    0,
+      evChargers:     evChargerCount,
+      l2Chargers:     l2,
+      dcfcChargers:   dcfc,
+      hpcChargers:    hpc,
+      electricityRate,
+      demandCharge,
+      sunHoursPerDay,
+      cyclesPerYear:  250,
+      hasTOU:         false,
+    },
+    tier.solarKW
+  );
+
+  const newGrossAnnualSavings =
+    evChargerCount > 0
+      ? newSavings.grossAnnualSavings
+      : newSavings.grossAnnualSavings + tier.evRevenuePerYear;
+  const newAnnualSavings = newGrossAnnualSavings - newSavings.annualReserves;
+  const newROI = calculateROI(newCosts.netInvestment, newAnnualSavings);
+
+  return {
+    ...tier,
+    generatorKW:         0,
+    grossCost:           newCosts.totalInvestment,
+    itcAmount:           newCosts.federalITC,
+    netCost:             newCosts.netInvestment,
+    grossAnnualSavings:  newGrossAnnualSavings,
+    annualReserves:      newSavings.annualReserves,
+    annualSavings:       newAnnualSavings,
+    paybackYears:        newROI.paybackYears,
+    roi10Year:           newROI.roi10Year,
+    npv:                 newROI.npv25Year,
+    equipmentSubtotal:   newCosts.equipmentSubtotal,
+    notes: [
+      ...tier.notes,
+      `[ROI Guardrail] Generator removed: was ${tier.generatorKW} kW, saved $${(tier.grossCost - newCosts.totalInvestment).toLocaleString("en-US", { maximumFractionDigits: 0 })} in project cost, payback improved ${tier.paybackYears.toFixed(1)} → ${newROI.paybackYears.toFixed(1)} yr`,
+    ],
+  };
+}
+
+/**
+ * Apply ROI payback guardrail to a built tier.
+ *
+ * Cascade (applied in order until payback ≤ target):
+ *   1. Remove generator — zero annual savings contribution, high upfront cost
+ *   2. (Future) Scale BESS toward minimum if still over target
+ *
+ * Sets tier.guardrail with metadata so the UI can surface what changed and why.
+ * Never throws — if nothing can be done, guardrail.applied = false + reason.
+ */
+function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
+  const target = PAYBACK_TARGETS[tier.label as TierLabel];
+
+  // No guardrail needed — already within target or payback is infinite (no savings)
+  if (!Number.isFinite(tier.paybackYears) || tier.paybackYears <= target) {
+    return tier;
+  }
+
+  const originalPayback   = tier.paybackYears;
+  const removedComponents: string[] = [];
+  let adjusted             = tier;
+
+  // ── Step 1: Remove generator ────────────────────────────────────────────────
+  // Generator adds $0 to annual energy savings. Its cost is pure resilience spend.
+  // Removing it often drops payback by 30–50% for high-critical-load industries.
+  if (adjusted.generatorKW > 0) {
+    const noGen = recalcWithoutGenerator(adjusted, state);
+    // Accept if it strictly improves payback (even if still over target)
+    if (noGen.paybackYears < adjusted.paybackYears) {
+      const genCostSaved = Math.round(adjusted.grossCost - noGen.grossCost);
+      removedComponents.push(
+        `Generator (${tier.generatorKW} kW) — removed to improve ROI. ` +
+        `Added $${genCostSaved.toLocaleString("en-US")} to project cost with $0 annual savings contribution. ` +
+        `It can be re-added in Step 3.5 as a resilience investment.`
+      );
+      adjusted = noGen;
+    }
+  }
+
+  // ── Future Step 2: BESS scale-down ─────────────────────────────────────────
+  // (Placeholder for v4.6 — BESS at minimum 75 kW if still over target)
+
+  // Build the guardrail metadata
+  const guardrail: QuoteTier["guardrail"] = removedComponents.length > 0
+    ? {
+        applied:              true,
+        originalPaybackYears: originalPayback,
+        adjustedPaybackYears: adjusted.paybackYears,
+        removedComponents,
+        reason:
+          `This configuration's payback was ${originalPayback.toFixed(0)} years — above the ` +
+          `${target}-year target for the ${tier.label} tier. Merlin automatically removed ` +
+          `equipment that adds project cost without contributing to annual energy savings. ` +
+          `You can restore any removed item in Step 3.5.`,
+      }
+    : {
+        applied:              false,
+        originalPaybackYears: originalPayback,
+        adjustedPaybackYears: originalPayback,
+        removedComponents:    [],
+        reason:
+          `Payback of ${originalPayback.toFixed(0)} years exceeds the ${target}-year target. ` +
+          `This is typically caused by limited solar capacity, low local electricity rates, or ` +
+          `high equipment cost relative to load size. No automatic adjustment was possible — ` +
+          `consider reducing scope in Step 3.5 or verifying your utility rates.`,
+      };
+
+  return { ...adjusted, guardrail };
+}
+
+// =============================================================================
 // EXPORTED: buildTiers — the only function callers should use
 // =============================================================================
 
@@ -749,9 +917,10 @@ export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteT
 
   // buildOneTier is synchronous (pricingServiceV45 only, no network calls).
   // buildTiers remains async for backwards compatibility with all callers.
-  const starter = buildOneTier(state, goal, "Starter", baseNotes);
-  const recommended = buildOneTier(state, goal, "Recommended", baseNotes);
-  const complete = buildOneTier(state, goal, "Complete", baseNotes);
+  // applyPaybackGuardrail runs after each tier to enforce 5–7 yr payback targets.
+  const starter     = applyPaybackGuardrail(buildOneTier(state, goal, "Starter",     baseNotes), state);
+  const recommended = applyPaybackGuardrail(buildOneTier(state, goal, "Recommended", baseNotes), state);
+  const complete    = applyPaybackGuardrail(buildOneTier(state, goal, "Complete",    baseNotes), state);
 
   // Layer 3 validation: fire-and-forget Supabase audit + email/SMS alerts.
   // Uses the Recommended tier as the representative quote.
