@@ -27,6 +27,12 @@ primary_region = 'lax'
     VITE_OPENAI_API_KEY = "VITE_OPENAI_API_KEY"
     VITE_ENABLE_AI_ANALYSIS = "VITE_ENABLE_AI_ANALYSIS"
 
+# Runtime environment variables — available to the Express server (port 3001) at run time
+[env]
+  GOOGLE_MAPS_API_KEY    = "AIzaSyAYGUXKEd7qh4P5ItCvjB-KqznvOcsQtAY"
+  VITE_GOOGLE_MAPS_API_KEY = "AIzaSyAYGUXKEd7qh4P5ItCvjB-KqznvOcsQtAY"
+  VITE_NREL_API_KEY      = "G9sYxfv89Vr9mjHD5zThWpBntyYkKJjP6iF8i3He"
+
 [http_service]
   internal_port = 80
   force_https = true
