@@ -104,6 +104,12 @@ export const carWashQuestionsComplete: Question[] = [
         description: "High-speed conveyor, 80-180 feet",
       },
       {
+        value: "flex_service",
+        label: "Flex / Full-Service",
+        icon: "✨",
+        description: "Interior + exterior, larger building 10-15K sqft",
+      },
+      {
         value: "mini_tunnel",
         label: "Mini-Tunnel",
         icon: "🚙",
@@ -621,11 +627,11 @@ export const carWashQuestionsComplete: Question[] = [
     section: "solar",
     title: "Available roof area for solar panels?",
     subtitle: "Building roof space only — not the full property",
-    range: { min: 0, max: 25000, step: 100 },
-    smartDefault: 4500,
+    range: { min: 0, max: 25000, step: 500 },
+    smartDefault: 6500,
     unit: " sq ft",
     helpText:
-      "Typical express tunnel: 4,000–6,500 sq ft. We'll calculate usable area from roof type below.",
+      "Express tunnel: 4,500–8,000 sq ft. Flex/full-service: 10,000–15,000 sq ft. Includes building, mechanical room, and customer lounge. Vacuum canopy and carport areas are counted separately below.",
     validation: { required: false, min: 0, max: 25000 },
     impactsCalculations: ["roofSolar", "solarCapacity"],
   },
