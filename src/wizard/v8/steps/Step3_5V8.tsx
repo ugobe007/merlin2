@@ -595,6 +595,9 @@ function SolarCard({
   canopyInterest,
   onCanopyChange,
   isCarWash = false,
+  roofOnlyKW = 0,
+  withCanopyKW = 0,
+  withUpsideKW = 0,
 }: {
   maxKW: number;
   recKW: number;
@@ -608,6 +611,9 @@ function SolarCard({
   canopyInterest?: string;
   onCanopyChange?: (value: string) => void;
   isCarWash?: boolean;
+  roofOnlyKW?: number;
+  withCanopyKW?: number;
+  withUpsideKW?: number;
 }) {
   const safeMax = maxKW > 0 ? maxKW : 2000;
   // solarMin must always be < safeMax; 10% of max, floored at 1 kW
@@ -850,67 +856,89 @@ function SolarCard({
             style={{
               fontSize: 11,
               fontWeight: 700,
-              color: "rgba(148,163,184,0.65)",
+              color: "rgba(148,163,184,0.85)",
               textTransform: "uppercase",
               letterSpacing: "0.09em",
               marginBottom: 8,
             }}
           >
-            {isCarWash ? "☀️ Solar Carports (vacuum / parking)" : "☀️ Solar Canopy (parking / carport)"}
+            {isCarWash ? "☀️ Solar Carport (vacuum / parking area)" : "☀️ Solar Canopy (parking / carport)"}
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             {([
-              { value: "no",         icon: "🏠", label: "Roof Only",                       extra: "" },
-              { value: "yes",        icon: "🏗️", label: isCarWash ? "+Carport" : "+Canopy", extra: `+${canopyPotentialKW} kW` },
-              { value: "learn_more", icon: "📊", label: "Show Upside",                     extra: `+${Math.round(canopyPotentialKW * 0.5)} kW` },
+              {
+                value: "no",
+                icon: "🏠",
+                label: "Roof Only",
+                kw: roofOnlyKW,
+                color: "rgba(100,116,139,1)",
+                borderColor: "rgba(100,116,139,0.5)",
+                bgColor: "rgba(100,116,139,0.12)",
+              },
+              {
+                value: "yes",
+                icon: "🏗️",
+                label: isCarWash ? "+Carport" : "+Canopy",
+                kw: withCanopyKW,
+                color: "#fbbf24",
+                borderColor: "rgba(251,191,36,0.8)",
+                bgColor: "rgba(251,191,36,0.14)",
+              },
+              {
+                value: "learn_more",
+                icon: "📊",
+                label: "50% Upside",
+                kw: withUpsideKW,
+                color: "rgba(148,163,184,1)",
+                borderColor: "rgba(148,163,184,0.4)",
+                bgColor: "rgba(148,163,184,0.08)",
+              },
             ] as const).map((opt) => {
+              // Default to 'no' visually when nothing selected yet
               const active = (canopyInterest ?? "no") === opt.value;
               return (
                 <button
                   key={opt.value}
                   onClick={() => {
                     onCanopyChange(opt.value);
-                    setConfirmed(false); // un-confirm so slider syncs to new rec
+                    setConfirmed(false);
                   }}
                   style={{
                     flex: 1,
-                    padding: "8px 4px",
-                    borderRadius: 8,
-                    border: active
-                      ? "1.5px solid rgba(251,191,36,0.7)"
-                      : "1.5px solid rgba(255,255,255,0.08)",
-                    background: active
-                      ? "rgba(251,191,36,0.11)"
-                      : "rgba(255,255,255,0.035)",
+                    padding: "10px 4px 8px",
+                    borderRadius: 10,
+                    border: active ? `2px solid ${opt.borderColor}` : "1.5px solid rgba(255,255,255,0.1)",
+                    background: active ? opt.bgColor : "rgba(255,255,255,0.03)",
                     cursor: "pointer",
                     textAlign: "center",
-                    transition: "border-color 0.15s, background 0.15s",
+                    transition: "border-color 0.12s, background 0.12s",
+                    outline: active ? `0px solid ${opt.borderColor}` : "none",
+                    boxShadow: active ? `0 0 0 3px ${opt.bgColor}` : "none",
                   }}
                 >
-                  <div style={{ fontSize: 18 }}>{opt.icon}</div>
+                  <div style={{ fontSize: 20, lineHeight: 1 }}>{opt.icon}</div>
                   <div
                     style={{
                       fontSize: 11,
                       fontWeight: 700,
-                      color: active ? "#fbbf24" : "rgba(203,213,225,0.65)",
-                      marginTop: 3,
+                      color: active ? opt.color : "rgba(148,163,184,0.7)",
+                      marginTop: 5,
                       lineHeight: 1.2,
                     }}
                   >
                     {opt.label}
                   </div>
-                  {opt.extra && (
-                    <div
-                      style={{
-                        fontSize: 10,
-                        color: active ? "rgba(251,191,36,0.75)" : "rgba(148,163,184,0.45)",
-                        marginTop: 2,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {opt.extra}
-                    </div>
-                  )}
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 800,
+                      color: active ? opt.color : "rgba(203,213,225,0.5)",
+                      marginTop: 2,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {opt.kw > 0 ? `${opt.kw.toLocaleString()} kW` : "—"}
+                  </div>
                 </button>
               );
             })}
@@ -918,14 +946,14 @@ function SolarCard({
           <div
             style={{
               fontSize: 11,
-              color: "rgba(148,163,184,0.4)",
+              color: "rgba(148,163,184,0.5)",
               marginTop: 7,
               lineHeight: 1.5,
             }}
           >
             {isCarWash
-              ? "Carports over vacuum/parking areas expand capacity beyond the main roof."
-              : "Canopy over parking expands capacity beyond rooftop. Slider max and rec update instantly."}
+              ? "Carport area expands solar beyond the main building roof. Slider updates on select."
+              : "Canopy over parking expands solar beyond rooftop. Slider updates on select."}
           </div>
         </div>
       )}
@@ -1508,6 +1536,8 @@ export default function Step3_5V8({ state, actions }: Props) {
       state.gridReliability === "frequent-outages" ||
       state.gridReliability === "unreliable"
   );
+  // EV charging is OPT-IN — defaults OFF unless user previously enabled it
+  const [wantsEV, setWantsEV] = useState<boolean>(() => state.wantsEVCharging === true);
 
   useEffect(() => {
     if (!isFirstVisit) return;
@@ -1516,25 +1546,7 @@ export default function Step3_5V8({ state, actions }: Props) {
       const recKW = estimateSolarKW("roof_canopy", state);
       if (recKW > 0) actions.setAddonConfig({ solarKW: recKW });
     }
-    actions.setAddonPreference("ev", true);
-    actions.setAnswer("evScope", "custom");
-    const rl2 = Math.min(
-      12,
-      Math.max(4, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 150) : 6)
-    );
-    const rdcfc = Math.min(
-      8,
-      Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 600) : 2)
-    );
-    const rhpc = Math.min(
-      4,
-      Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 1200) : 0)
-    );
-    actions.setAddonConfig({
-      level2Chargers: rl2,
-      dcfcChargers: rdcfc,
-      hpcChargers: rhpc,
-    });
+    // EV is NOT auto-enabled — user must opt in
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSolarConfig = (kw: number) => actions.setAddonConfig({ solarKW: kw });
@@ -1562,6 +1574,20 @@ export default function Step3_5V8({ state, actions }: Props) {
     actions.setAddonPreference("generator", false);
     actions.setAddonConfig({ generatorKW: 0 });
   };
+  const handleAddEV = () => {
+    setWantsEV(true);
+    actions.setAddonPreference("ev", true);
+    actions.setAnswer("evScope", "custom");
+    const rl2 = Math.min(12, Math.max(2, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 150) : 4));
+    const rdcfc = Math.min(8, Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 600) : 1));
+    const rhpc = Math.min(4, Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 1200) : 0));
+    actions.setAddonConfig({ level2Chargers: rl2, dcfcChargers: rdcfc, hpcChargers: rhpc });
+  };
+  const handleRemoveEV = () => {
+    setWantsEV(false);
+    actions.setAddonPreference("ev", false);
+    actions.setAddonConfig({ level2Chargers: 0, dcfcChargers: 0, hpcChargers: 0 });
+  };
 
   const effectiveSolarCapKW = getEffectiveSolarCapKW(state);
   const solarMaxKW = effectiveSolarCapKW > 0 ? effectiveSolarCapKW : 2000;
@@ -1578,6 +1604,14 @@ export default function Step3_5V8({ state, actions }: Props) {
   const canopyInterest = state.step3Answers?.[canopyFieldKey] as string | undefined;
   const constraints = getFacilityConstraints(state.industry ?? "");
   const canopyPotentialKW = constraints?.canopyPotentialKW ?? 0;
+  // Absolute kW totals per canopy option (shown in toggle buttons)
+  const roofArea = Number(state.step3Answers?.roofArea ?? 0);
+  const usablePct = constraints?.usableRoofPercent ?? 0.4;
+  const roofOnlyKW = roofArea > 0
+    ? Math.round(roofArea * usablePct * 15 / 1000)
+    : (constraints?.maxRooftopSolarKW ?? 0);
+  const withCanopyKW = roofOnlyKW + canopyPotentialKW;
+  const withUpsideKW = roofOnlyKW + Math.round(canopyPotentialKW * 0.5);
   const handleCanopyChange = (value: string) => actions.setAnswer(canopyFieldKey, value);
 
   const liveSolarKW = state.solarKW > 0 ? state.solarKW : solarFeasible ? solarRecKW : 0;
@@ -1660,15 +1694,95 @@ export default function Step3_5V8({ state, actions }: Props) {
           canopyInterest={canopyInterest}
           onCanopyChange={handleCanopyChange}
           isCarWash={isCarWash}
+          roofOnlyKW={roofOnlyKW}
+          withCanopyKW={withCanopyKW}
+          withUpsideKW={withUpsideKW}
         />
       )}
-      <EVChargingCard
-        peakLoadKW={state.peakLoadKW}
-        initialL2={state.level2Chargers}
-        initialDcfc={state.dcfcChargers}
-        initialHpc={state.hpcChargers}
-        onConfig={handleEVConfig}
-      />
+      {wantsEV ? (
+        <>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={handleRemoveEV}
+              style={{
+                padding: "5px 14px",
+                borderRadius: 6,
+                border: "1px solid rgba(56,189,248,0.25)",
+                background: "transparent",
+                color: "rgba(56,189,248,0.65)",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              ✕ Remove EV Charging
+            </button>
+          </div>
+          <EVChargingCard
+            peakLoadKW={state.peakLoadKW}
+            initialL2={state.level2Chargers}
+            initialDcfc={state.dcfcChargers}
+            initialHpc={state.hpcChargers}
+            onConfig={handleEVConfig}
+          />
+        </>
+      ) : (
+        <div
+          style={{
+            borderRadius: 12,
+            background: "rgba(15,17,23,0.7)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            padding: "16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 10,
+                background: "rgba(56,189,248,0.10)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 21,
+                flexShrink: 0,
+              }}
+            >
+              ⚡
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(203,213,225,0.85)" }}>
+                EV Charging
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(148,163,184,0.5)", marginTop: 2 }}>
+                Optional add-on · Customer &amp; fleet charging revenue
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={handleAddEV}
+            style={{
+              padding: "9px 16px",
+              borderRadius: 8,
+              border: "1.5px solid rgba(56,189,248,0.4)",
+              background: "transparent",
+              color: "#38bdf8",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
+            + Add EV Charging
+          </button>
+        </div>
+      )}
       {wantsGenerator ? (
         <>
           <div style={{ display: "flex", justifyContent: "flex-end" }}>

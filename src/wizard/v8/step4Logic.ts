@@ -390,6 +390,9 @@ const EV_KW_BY_TYPE: Record<string, number> = {
  * setBaseLoad() call. This field is for display isolation in the quote only.
  */
 function computeEVChargerKW(state: WizardState): number {
+  // EV is opt-in — return 0 unless user explicitly enabled it
+  if (!state.wantsEVCharging) return 0;
+
   // Check for Step 3.5 EV charger configuration (level2Chargers + dcfcChargers + hpcChargers)
   const stateWithEV = state as WizardState & {
     level2Chargers?: number;
