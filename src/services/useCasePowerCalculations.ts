@@ -7213,6 +7213,43 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
     notes:
       "Varies widely. Ground-mount common for larger microgrids. Solar essential for islanding.",
   },
+  // ── FITNESS / GYM ────────────────────────────────────────────────────────────
+  // Standalone fitness center: 5K-15K sqft, good flat commercial roof, parking.
+  // Solar is the primary ROI driver — demand charge reduction alone yields 9-16yr payback.
+  // Sources: CBECS 2018, IHRSA Industry Report, NREL Rooftop PV
+  fitness_center: {
+    typicalFootprintSqFt: 10000,
+    footprintRange: [5000, 20000],
+    usableRoofPercent: 0.55,     // Flat commercial roof; HVAC units reduce usable area
+    maxRooftopSolarKW: 83,        // 15,000 sqft × 0.55 / 100
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 8000,  // Parking lot canopy (20-40 spaces typical)
+    canopyPotentialKW: 96,        // 8,000 × 0.95 / 100 (flat, unobstructed)
+    totalRealisticSolarKW: 150,   // Roof + canopy; scales up with roofArea input
+    sources: [
+      "CBECS 2018 Commercial Buildings Energy Survey",
+      "IHRSA 2024 Health & Fitness Industry Report",
+      "NREL Rooftop PV Technical Potential",
+    ],
+    notes:
+      "Standalone fitness centers (5K-20K sqft) have excellent flat-roof solar potential. " +
+      "Solar + BESS demand charge reduction is the primary ROI path — BESS-only yields 9-16yr payback. " +
+      "Large-format gyms (15K-25K sqft, Planet Fitness / Anytime Fitness style) have more roof area. " +
+      "Parking canopy is a strong secondary solar surface.",
+  },
+  // Alias: 'gym' resolves to fitness_center
+  gym: {
+    typicalFootprintSqFt: 10000,
+    footprintRange: [5000, 20000],
+    usableRoofPercent: 0.55,
+    maxRooftopSolarKW: 83,
+    canopyApplicable: true,
+    typicalCanopyAreaSqFt: 8000,
+    canopyPotentialKW: 96,
+    totalRealisticSolarKW: 150,
+    sources: ["CBECS 2018", "IHRSA 2024", "NREL Rooftop PV"],
+    notes: "Alias for fitness_center. See fitness_center entry for full notes.",
+  },
 };
 
 /**
