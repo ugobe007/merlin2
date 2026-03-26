@@ -794,11 +794,98 @@ function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier 
 }
 
 /**
+ * Rebuild a tier's financials with BESS scaled to the commercial minimum
+ * (75 kW / 150 kWh, 2-hour duration). Applied as Step 2 of the guardrail
+ * cascade when removing the generator alone was insufficient or there was
+ * no generator to remove (e.g. limited-solar/low-rate locations).
+ */
+function recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
+  const MIN_BESS_KW  = 75;
+  const MIN_BESS_KWH = 150; // 75 kW × 2-hour duration
+
+  if (tier.bessKW <= MIN_BESS_KW) return tier; // already at or below minimum
+
+  const electricityRate = state.intel?.utilityRate ?? 0.15;
+  const demandCharge    = state.intel?.demandCharge ?? 15;
+  const sunHoursPerDay  = state.intel?.peakSunHours ?? 5;
+
+  const stateWithEV = state as WizardState & {
+    level2Chargers?: number;
+    dcfcChargers?: number;
+    hpcChargers?: number;
+  };
+  const l2   = stateWithEV.level2Chargers ?? 0;
+  const dcfc = stateWithEV.dcfcChargers   ?? 0;
+  const hpc  = stateWithEV.hpcChargers    ?? 0;
+  const evChargerCount = l2 + dcfc + hpc;
+
+  const newCosts = calculateSystemCosts({
+    solarKW:           tier.solarKW,
+    bessKW:            MIN_BESS_KW,
+    bessKWh:           MIN_BESS_KWH,
+    generatorKW:       tier.generatorKW,
+    generatorFuelType: "diesel",
+    level2Chargers:    l2,
+    dcfcChargers:      dcfc,
+    hpcChargers:       hpc,
+  });
+
+  const newSavings = calculateAnnualSavings(
+    {
+      bessKW:         MIN_BESS_KW,
+      bessKWh:        MIN_BESS_KWH,
+      solarKW:        tier.solarKW,
+      generatorKW:    tier.generatorKW,
+      evChargers:     evChargerCount,
+      l2Chargers:     l2,
+      dcfcChargers:   dcfc,
+      hpcChargers:    hpc,
+      electricityRate,
+      demandCharge,
+      sunHoursPerDay,
+      cyclesPerYear:  250,
+      hasTOU:         false,
+    },
+    tier.solarKW
+  );
+
+  const newGrossAnnualSavings =
+    evChargerCount > 0
+      ? newSavings.grossAnnualSavings
+      : newSavings.grossAnnualSavings + tier.evRevenuePerYear;
+  const newAnnualSavings = newGrossAnnualSavings - newSavings.annualReserves;
+  const newROI = calculateROI(newCosts.netInvestment, newAnnualSavings);
+
+  return {
+    ...tier,
+    bessKW:             MIN_BESS_KW,
+    bessKWh:            MIN_BESS_KWH,
+    grossCost:          newCosts.totalInvestment,
+    itcAmount:          newCosts.federalITC,
+    netCost:            newCosts.netInvestment,
+    grossAnnualSavings: newGrossAnnualSavings,
+    annualReserves:     newSavings.annualReserves,
+    annualSavings:      newAnnualSavings,
+    paybackYears:       newROI.paybackYears,
+    roi10Year:          newROI.roi10Year,
+    npv:                newROI.npv25Year,
+    equipmentSubtotal:  newCosts.equipmentSubtotal,
+    notes: [
+      ...tier.notes,
+      `[ROI Guardrail] BESS right-sized to minimum viable (${MIN_BESS_KW} kW / ${MIN_BESS_KWH} kWh, ` +
+      `was ${tier.bessKW} kW / ${tier.bessKWh} kWh): project cost reduced by ` +
+      `$${(tier.grossCost - newCosts.totalInvestment).toLocaleString("en-US", { maximumFractionDigits: 0 })}, ` +
+      `payback improved ${tier.paybackYears.toFixed(1)} → ${newROI.paybackYears.toFixed(1)} yr`,
+    ],
+  };
+}
+
+/**
  * Apply ROI payback guardrail to a built tier.
  *
  * Cascade (applied in order until payback ≤ target):
  *   1. Remove generator — zero annual savings contribution, high upfront cost
- *   2. (Future) Scale BESS toward minimum if still over target
+ *   2. Scale BESS to minimum viable (75 kW / 150 kWh) if still over target
  *
  * Sets tier.guardrail with metadata so the UI can surface what changed and why.
  * Never throws — if nothing can be done, guardrail.applied = false + reason.
@@ -832,10 +919,26 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
     }
   }
 
-  // ── Future Step 2: BESS scale-down ─────────────────────────────────────────
-  // (Placeholder for v4.6 — BESS at minimum 75 kW if still over target)
+  // ── Step 2: Scale BESS to minimum viable (75 kW / 150 kWh) ────────────────
+  // When solar is limited or utility rates are low, BESS cost is the main
+  // payback driver. Scaling to the commercial minimum cuts cost significantly
+  // while preserving demand charge reduction savings.
+  if (adjusted.paybackYears > target && adjusted.bessKW > 75) {
+    const minBESS = recalcWithMinBESS(adjusted, state);
+    if (minBESS.paybackYears < adjusted.paybackYears) {
+      const bessCostSaved = Math.round(adjusted.grossCost - minBESS.grossCost);
+      removedComponents.push(
+        `BESS right-sized to minimum viable (75 kW / 150 kWh, was ${adjusted.bessKW} kW / ${adjusted.bessKWh} kWh) — ` +
+        `reduced project cost by $${bessCostSaved.toLocaleString("en-US")}. ` +
+        `Payback improved from ${adjusted.paybackYears.toFixed(1)} → ${minBESS.paybackYears.toFixed(1)} yr. ` +
+        `Upsize BESS in Step 3.5 to increase demand charge savings.`
+      );
+      adjusted = minBESS;
+    }
+  }
 
   // Build the guardrail metadata
+  const utilityRateCents = Math.round((state.intel?.utilityRate ?? 0.15) * 100);
   const guardrail: QuoteTier["guardrail"] = removedComponents.length > 0
     ? {
         applied:              true,
@@ -844,9 +947,8 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
         removedComponents,
         reason:
           `This configuration's payback was ${originalPayback.toFixed(0)} years — above the ` +
-          `${target}-year target for the ${tier.label} tier. Merlin automatically removed ` +
-          `equipment that adds project cost without contributing to annual energy savings. ` +
-          `You can restore any removed item in Step 3.5.`,
+          `${target}-year target for the ${tier.label} tier. Merlin automatically adjusted ` +
+          `the scope to improve ROI. You can restore any item in Step 3.5.`,
       }
     : {
         applied:              false,
@@ -855,9 +957,11 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
         removedComponents:    [],
         reason:
           `Payback of ${originalPayback.toFixed(0)} years exceeds the ${target}-year target. ` +
-          `This is typically caused by limited solar capacity, low local electricity rates, or ` +
-          `high equipment cost relative to load size. No automatic adjustment was possible — ` +
-          `consider reducing scope in Step 3.5 or verifying your utility rates.`,
+          `At your local rate of ${utilityRateCents}¢/kWh, savings from demand charge reduction ` +
+          `and solar are limited for this configuration. To improve ROI: (1) add more solar ` +
+          `capacity in Step 3.5 — solar has the best per-kW savings at this location; (2) verify ` +
+          `your utility rate with your provider — some commercial accounts qualify for ` +
+          `demand-response programs that significantly improve BESS economics.`,
       };
 
   return { ...adjusted, guardrail };

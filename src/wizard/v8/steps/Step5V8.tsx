@@ -734,19 +734,19 @@ export default function Step5V8({ state, actions }: Props) {
         <div
           className="rounded-xl p-4"
           style={{
-            background: "rgba(239, 68, 68, 0.05)",
-            border: "1px solid rgba(239, 68, 68, 0.20)",
+            background: "rgba(245, 158, 11, 0.05)",
+            border: "1px solid rgba(245, 158, 11, 0.22)",
           }}
         >
           <div className="flex items-start gap-3">
             <div
               className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-0.5"
-              style={{ background: "rgba(239, 68, 68, 0.12)" }}
+              style={{ background: "rgba(245, 158, 11, 0.12)" }}
             >
-              <span className="text-base">⚠️</span>
+              <span className="text-base">⚡</span>
             </div>
             <div>
-              <p className="text-sm font-bold text-red-300 mb-1">Extended Payback Period</p>
+              <p className="text-sm font-bold text-amber-300 mb-1">ROI Review Suggested</p>
               <p className="text-xs text-slate-400 leading-relaxed">{tier.guardrail.reason}</p>
             </div>
           </div>
