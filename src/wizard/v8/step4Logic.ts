@@ -179,9 +179,10 @@ function computeSolarKW(state: WizardState, goal: GoalChoice, tierLabel: TierLab
   // Hard gate: location must be solar-viable and industry must have roof/land
   if (!intel || !intel.solarFeasible || solarPhysicalCapKW <= 0) return 0;
 
-  // Sun quality factor: normalized to 5.5 PSH (A− = excellent reference)
-  // At 3.0 PSH → 0 (just below viable), at 5.5+ PSH → 1.0 (clamped)
-  const sunFactor = Math.max(0, Math.min(1.0, (intel.peakSunHours - 3.0) / 2.5));
+  // Sun quality factor: ramps 2.5→4.5 PSH → 0%→100%; floor at 40% for any viable site.
+  // This prevents near-zero recommendations for moderate-sun states (Michigan, Pacific NW).
+  // Matches addonSizing.ts estimateSolarKW — update both together.
+  const sunFactor = Math.max(0.40, Math.min(1.0, (intel.peakSunHours - 2.5) / 2.0));
 
   const solarScope = step3Answers?.solarScope as string | undefined;
   let penetration: number;

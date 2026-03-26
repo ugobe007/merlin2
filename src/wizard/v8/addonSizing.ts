@@ -57,15 +57,21 @@ export function getEffectiveSolarCapKW(state: WizardState): number {
  *
  * NOTE: sunFactor scales the DEPLOYED fraction of the physical cap. A site with
  * poor sun deploys a smaller fraction because economics won't justify full buildout.
- * Returns 0 if cap ≤ 0 (no feasible roof) or PSH ≤ 3.0 (below viable threshold).
+ * Returns 0 if cap ≤ 0 (no feasible roof) or PSH < 2.5 (unviable).
+ * For PSH 2.5–3.5: sunFactor ramps 0→1; floor at 0.40 prevents near-zero
+ * recommendations for borderline sites (Michigan, Pacific NW, etc.).
  */
 export function estimateSolarKW(scope: SolarScopeId, state: WizardState): number {
   const cap = getEffectiveSolarCapKW(state);
   if (cap <= 0) return 0;
   const psh = state.intel?.peakSunHours ?? 4.5;
-  const sunFactor = Math.max(0, Math.min(1.0, (psh - 3.0) / 2.5));
+  if (psh < 2.5) return 0; // Truly unviable (Alaska winter avg)
+  // Linear ramp 2.5→4.5 PSH → 0%→100%; floor at 40% for any viable site.
+  // This prevents the old formula from crushing the recommendation to 1 kW
+  // for moderate-sun states like Michigan (PSH ~4.0 GHI, ~3.1 system AC).
+  const sunFactor = Math.max(0.40, Math.min(1.0, (psh - 2.5) / 2.0));
   const pen = SOLAR_SCOPE_PENETRATION[scope] ?? 0.80;
-  // Pure linear — no artificial floor. Matches step4Logic.computeSolarKW.
+  // Matches step4Logic.computeSolarKW (both updated together).
   return Math.round(Math.min(cap * sunFactor * pen, cap));
 }
 
