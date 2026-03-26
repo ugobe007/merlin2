@@ -368,8 +368,8 @@ describe("C. Solar calculation chain", () => {
       wantsSolar: true,
     });
     const [, rec] = await buildTiers(state);
-    const sunFactor = Math.max(0, Math.min(1.0, (4.0 - 3.0) / 2.5)); // 0.40
-    const expected = Math.round(Math.min(200 * sunFactor * 0.85, 200)); // 68 kW
+    const sunFactor = Math.max(0.40, Math.min(1.0, (4.0 - 2.5) / 2.0)); // 0.75 — new formula
+    const expected = Math.round(Math.min(200 * sunFactor * 0.85, 200)); // 128 kW
     expect(rec.solarKW).toBe(expected);
   });
 
@@ -991,7 +991,7 @@ describe("H. Addon sizing display ↔ step4Logic consistency", () => {
       }),
     });
     const displayRec = estimateSolarKW("roof_canopy", state);
-    const sunFactor = Math.max(0, Math.min(1.0, (5.1 - 3.0) / 2.5)); // 0.84
+    const sunFactor = Math.max(0.40, Math.min(1.0, (5.1 - 2.5) / 2.0)); // 1.0 — clamped at PSH 5.1
     const expected = Math.round(
       Math.min(200 * sunFactor * SOLAR_SCOPE_PENETRATION.roof_canopy, 200)
     );

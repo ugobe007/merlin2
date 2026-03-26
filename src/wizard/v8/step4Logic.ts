@@ -938,10 +938,20 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
   const removedComponents: string[] = [];
   let adjusted             = tier;
 
-  // ── Step 1: Remove generator ────────────────────────────────────────────────
+  // ── Step 1: Remove generator (only when NOT explicitly required) ────────────
   // Generator adds $0 to annual energy savings. Its cost is pure resilience spend.
-  // Removing it often drops payback by 30–50% for high-critical-load industries.
-  if (adjusted.generatorKW > 0) {
+  // However, we do NOT auto-remove it when:
+  //   a) The user explicitly requested it (wantsGenerator = true)
+  //   b) The facility has high critical loads (criticalLoadPct ≥ 50%) — safety requirement
+  //   c) The generator need was explicitly stated as full_backup or resilience
+  // In those cases the generator is a necessity, not an optional ROI lever.
+  const generatorIsExplicitlyNeeded =
+    state.wantsGenerator === true ||
+    state.criticalLoadPct >= 0.5 ||
+    state.step3Answers?.generatorNeed === "full_backup" ||
+    state.step3Answers?.generatorNeed === "resilience";
+
+  if (adjusted.generatorKW > 0 && !generatorIsExplicitlyNeeded) {
     const noGen = recalcWithoutGenerator(adjusted, state);
     // Accept if it strictly improves payback (even if still over target)
     if (noGen.paybackYears < adjusted.paybackYears) {
@@ -955,23 +965,18 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
     }
   }
 
-  // ── Step 2: Scale BESS to minimum viable (75 kW / 150 kWh) ────────────────
-  // When solar is limited or utility rates are low, BESS cost is the main
-  // payback driver. Scaling to the commercial minimum cuts cost significantly
-  // while preserving demand charge reduction savings.
-  if (adjusted.paybackYears > target && adjusted.bessKW > 75) {
-    const minBESS = recalcWithMinBESS(adjusted, state);
-    if (minBESS.paybackYears < adjusted.paybackYears) {
-      const bessCostSaved = Math.round(adjusted.grossCost - minBESS.grossCost);
-      removedComponents.push(
-        `BESS right-sized to minimum viable (75 kW / 150 kWh, was ${adjusted.bessKW} kW / ${adjusted.bessKWh} kWh) — ` +
-        `reduced project cost by $${bessCostSaved.toLocaleString("en-US")}. ` +
-        `Payback improved from ${adjusted.paybackYears.toFixed(1)} → ${minBESS.paybackYears.toFixed(1)} yr. ` +
-        `Upsize BESS in Step 3.5 to increase demand charge savings.`
-      );
-      adjusted = minBESS;
-    }
-  }
+  // ── Step 2: BESS downsize — DISABLED ────────────────────────────────────────
+  // The BESS is load-sized: peakLoadKW × ratio × TIER_SCALE. Auto-downsizing to
+  // the 75 kW floor when a large load (EV, data center, hotel) legitimately
+  // requires a bigger BESS produces incorrect quotes. Payback may be longer for
+  // large systems — that's honest. Surface a warning note instead of altering
+  // the system design.
+  //
+  // (Kept for reference — re-enable only for very small/low-rate edge cases)
+  // if (adjusted.paybackYears > target && adjusted.bessKW > 75) {
+  //   const minBESS = recalcWithMinBESS(adjusted, state);
+  //   if (minBESS.paybackYears < adjusted.paybackYears) { ... }
+  // }
 
   // Build the guardrail metadata
   const utilityRateCents = Math.round((state.intel?.utilityRate ?? 0.15) * 100);
