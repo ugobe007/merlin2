@@ -779,6 +779,48 @@ export default function Step4V8({ state, actions }: Props) {
                   </div>
                 </div>
 
+                {/* ROI Guardrail notice */}
+                {tier.guardrail?.applied && (
+                  <div
+                    className="mb-3 flex items-start gap-2 px-3 py-2.5 rounded-lg text-[11px] leading-snug"
+                    style={{
+                      background: "rgba(245, 158, 11, 0.07)",
+                      border: "1px solid rgba(245, 158, 11, 0.28)",
+                    }}
+                  >
+                    <span className="text-amber-400 mt-0.5 shrink-0">⚡</span>
+                    <div>
+                      <span className="font-semibold text-amber-300">ROI Optimized</span>
+                      <span className="text-slate-400 ml-1">
+                        — payback improved from{" "}
+                        <span className="text-amber-300">
+                          {Math.round(tier.guardrail.originalPaybackYears)} yrs
+                        </span>{" "}
+                        to{" "}
+                        <span className="text-emerald-400">
+                          {tier.paybackYears.toFixed(1)} yrs
+                        </span>
+                        . Generator moved to resilience scope (see quote details).
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {tier.guardrail && !tier.guardrail.applied && tier.guardrail.originalPaybackYears > 7 && (
+                  <div
+                    className="mb-3 flex items-start gap-2 px-3 py-2.5 rounded-lg text-[11px] leading-snug"
+                    style={{
+                      background: "rgba(239, 68, 68, 0.07)",
+                      border: "1px solid rgba(239, 68, 68, 0.25)",
+                    }}
+                  >
+                    <span className="text-red-400 mt-0.5 shrink-0">⚠️</span>
+                    <span className="text-slate-400">
+                      <span className="font-semibold text-red-300">Long payback detected</span>
+                      {" "}— limited solar or low utility rates at this location. Review Step 3.5 or contact Merlin.
+                    </span>
+                  </div>
+                )}
+
                 {/* V4.5 Cost Breakdown - Expandable */}
                 <button
                   onClick={(e) => {

@@ -208,6 +208,19 @@ export interface QuoteTier {
   equipmentSubtotal?: number;
   // TrueQuote™ audit trail
   notes: string[];
+  /**
+   * ROI Guardrail — set when payback exceeded the tier target and the system
+   * was automatically adjusted to bring it within range.
+   * applied=true  → equipment was changed (generator removed, BESS scaled down)
+   * applied=false → payback is still high but no auto-fix was possible (info only)
+   */
+  guardrail?: {
+    applied: boolean;
+    originalPaybackYears: number;
+    adjustedPaybackYears: number;
+    removedComponents: string[];
+    reason: string;
+  };
 }
 
 // ── Wizard state (the spine) ─────────────────────────────────────────────────
