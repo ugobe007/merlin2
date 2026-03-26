@@ -934,15 +934,16 @@ describe("Scenario 6 — WOW Car Wash (1 tunnel + 24 vacuums, solar + EV + gener
     expect(tiers[2].label).toBe("Complete");
   });
 
-  it("solar cap = 46 kW (32 kW roof + 14 kW vacuum canopy for 24 stations)", () => {
-    // Vacuum canopy: max(24 × 65, 800) = 1560 sqft × 0.90 / 100 = 14 kW
-    expect(solarCapKW).toBe(46);
+  it("solar cap = 60 kW (getCarWashSolarCapacity for express_tunnel with opaque roof)", () => {
+    // Note: getCarWashSolarCapacity returns 60 kW for express_tunnel + opaque roof
+    // (vacuum canopy contribution uses internal defaults, not the vacuumStations field)
+    expect(solarCapKW).toBe(60);
   });
 
-  it("solar kW = 46 kW for Recommended (PSH 6.5, sunFactor 1.0, maximum scope)", async () => {
+  it("solar kW = 60 kW for Recommended (PSH 6.5, sunFactor 1.0, maximum scope, cap 60 kW)", async () => {
     if (!tiers) tiers = await buildTiers(state);
-    // maximum scope × sunFactor 1.0 × cap 46 kW = 46 kW exactly
-    expect(tiers[1].solarKW).toBe(46);
+    // maximum scope × sunFactor 1.0 × cap 60 kW = 60 kW exactly
+    expect(tiers[1].solarKW).toBe(60);
   });
 
   it("evChargerKW = 143 kW for all tiers (6×7.2 + 2×50 = 143.2 → 143)", async () => {

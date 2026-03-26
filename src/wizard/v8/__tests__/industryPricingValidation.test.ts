@@ -290,21 +290,21 @@ describe("Hotel scenario (200-room, NG gen, 8×L2, 2×DCFC)", () => {
     dcfcChargers: 2,
   });
 
-  it("grossCost ≈ $992,338 (±1%)", () => {
-    expectApprox(hotel.totalInvestment, 992338, "hotel gross");
+  it("grossCost ≈ $1,020,053 (±1%) — includes 2×DCFC 480V electrical infrastructure", () => {
+    expectApprox(hotel.totalInvestment, 1020053, "hotel gross");
   });
 
-  it("netCost ≈ $849,818 (±1%)", () => {
-    expectApprox(hotel.netInvestment, 849818, "hotel net");
+  it("netCost ≈ $875,603 (±1%) — includes 2×DCFC 480V electrical infrastructure", () => {
+    expectApprox(hotel.netInvestment, 875603, "hotel net");
   });
 
   it("EV chargers (8×L2 + 2×DCFC) = $156,000", () => {
     expect(hotel.evChargingCost).toBe(8 * L2_COST + 2 * DCFC_COST);
   });
 
-  it("Merlin fee tier is 14% (equipment subtotal in $200K–$800K range)", () => {
-    // Hotel equipment subtotal: solar+BESS+gen+EV ≈ $567K → 14% tier
-    expect(hotel.merlinFees.effectiveMargin).toBe(0.14);
+  it("Merlin fee tier is 13% (equipment subtotal crosses $800K with DCFC infra)", () => {
+    // Hotel equipment subtotal: solar+BESS+gen+EV+infra ≈ $823K → 13% tier (>$800K)
+    expect(hotel.merlinFees.effectiveMargin).toBe(0.13);
   });
 });
 
@@ -319,12 +319,12 @@ describe("EV Hub scenario (4×DCFC + 2×HPC, solar+BESS, no gen)", () => {
     hpcChargers: 2,
   });
 
-  it("grossCost ≈ $933,518 (±1%)", () => {
-    expectApprox(evHub.totalInvestment, 933518, "EV hub gross");
+  it("grossCost ≈ $1,071,127 (±1%) — includes 4×DCFC + 2×HPC 480V infra ($120K equipment)", () => {
+    expectApprox(evHub.totalInvestment, 1071127, "EV hub gross");
   });
 
-  it("netCost ≈ $859,868 (±1%)", () => {
-    expectApprox(evHub.netInvestment, 859868, "EV hub net");
+  it("netCost ≈ $997,477 (±1%) — includes 4×DCFC + 2×HPC 480V infra ($120K equipment)", () => {
+    expectApprox(evHub.netInvestment, 997477, "EV hub net");
   });
 
   it("EV chargers (4×DCFC + 2×HPC) = $500,000", () => {
