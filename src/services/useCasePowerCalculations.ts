@@ -6916,23 +6916,24 @@ export const CANOPY_WATTS_PER_SQFT = 12; // 12 W/sqft (carport/canopy, slightly 
 
 export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstraint> = {
   car_wash: {
-    typicalFootprintSqFt: 4500,   // Building only — NOT total site (site avg ~38-45k sqft)
-    footprintRange: [2800, 10000], // mini-tunnel → full-service
-    usableRoofPercent: 0.65,       // Default pre-selection (conservative middle); opaque=0.70, mixed=0.55, poly=0.40
-    maxRooftopSolarKW: 29,         // 4500 sqft × 0.65 usable / 100 sqft/kW
+    typicalFootprintSqFt: 8000,   // Express tunnel 4,500-8,000; flex/full-service 10,000-15,000
+    footprintRange: [2800, 15000], // self-serve → full-service flex
+    usableRoofPercent: 0.65,       // Default pre-selection (conservative); opaque=0.70, mixed=0.55, poly=0.40
+    maxRooftopSolarKW: 70,         // 8,000 sqft × 0.65 / 100 = 52 kW; flex at 15K = 105 kW → 70 typical
     canopyApplicable: true,
-    typicalCanopyAreaSqFt: 2000,   // Vacuum canopy (flat metal, best surface on site; 90% usable)
-    canopyPotentialKW: 18,         // 2000 × 0.90 / 100
-    totalRealisticSolarKW: 60,     // Static fallback: ~30 kW roof + 18 kW vac canopy + ~12 kW carport
+    typicalCanopyAreaSqFt: 4000,   // Vacuum canopy (flat metal, best surface; 90% usable) + small carport
+    canopyPotentialKW: 54,         // 3,000 vacuum sqft × 0.90/100 + 1,000 carport × 0.95/100 ≈ 37+10
+    totalRealisticSolarKW: 120,    // 70 kW roof + 50 kW canopy (with carport); dynamic via getCarWashSolarCapacity()
     sources: [
       "ICA 2024 Industry Study",
       "Vineet carWashSolarModule.js — top-15 operator dimension data",
       "NREL Rooftop PV Technical Potential",
     ],
     notes:
-      "Building footprint 2,800–10,000 sqft (NOT total site area of 22k-90k sqft). " +
+      "Express tunnel building 4,500-8,000 sqft; flex/full-service 10,000-15,000 sqft (building only, NOT site). " +
       "Roof type factors: opaque metal=0.70, mixed skylights=0.55, polycarbonate=0.40 (default 0.65). " +
       "Vacuum canopy is the BEST solar surface — flat metal, no obstructions, 90% usable. " +
+      "Carport over queue lane / customer parking adds significant capacity. " +
       "getCarWashSolarCapacity() computes dynamic cap from facilityType+roofType+vacuumStations+carport.",
   },
   hotel: {
@@ -7381,7 +7382,9 @@ export function getCarWashSolarCapacity(step3Answers: Record<string, unknown>): 
   const facilityType = String(step3Answers?.facilityType ?? "express_tunnel");
   const FACILITY_ROOF_SF: Record<string, number> = {
     mini_tunnel:       2800,  // 22,000 sqft site; 2,800 sqft roof
-    express_tunnel:    4500,  // 38,000 sqft site; 4,500 sqft roof (standard)
+    express_tunnel:    6500,  // 38,000 sqft site; 4,500-8,000 sqft roof (standard)
+    flex_service:     12000,  // Full-service with customer lounge, detail bays
+    full_service:     15000,  // Large full-service with multiple bays
     in_bay_automatic:  2000,  // smaller building footprint
     self_serve:        1500,  // mostly open bays, minimal building
   };

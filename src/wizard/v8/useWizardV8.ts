@@ -622,29 +622,31 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
       // Industry-based roof space estimates (typical commercial buildings)
       const INDUSTRY_ROOF_ESTIMATES: Record<string, number> = {
-        car_wash: 5000, // Small building with bay canopy
-        gas_station: 8000, // Station + canopy
-        retail: 12000, // Strip mall unit
-        restaurant: 6000, // Single-story commercial
-        office: 20000, // Multi-story office building
-        hotel: 30000, // Large multi-story with rooftop
-        warehouse: 50000, // Large flat industrial roof
+        car_wash: 8000,       // Express tunnel 4.5-8K; flex/full-service 10-15K
+        gas_station: 8000,    // Station + canopy
+        retail: 12000,        // Strip mall unit
+        restaurant: 6000,     // Single-story commercial
+        office: 20000,        // Multi-story office building
+        hotel: 30000,         // Large multi-story with rooftop
+        warehouse: 50000,     // Large flat industrial roof
         manufacturing: 60000, // Industrial facility
-        data_center: 40000, // Large commercial tech facility
-        hospital: 50000, // Large institutional building
-        healthcare: 25000, // Medical office building
-        ev_charging: 10000, // Station with covered parking
+        data_center: 40000,   // Large commercial tech facility
+        hospital: 50000,      // Large institutional building
+        healthcare: 25000,    // Medical office building
+        ev_charging: 10000,   // Station with covered parking
         shopping_center: 80000, // Large retail complex
-        apartment: 25000, // Multi-family residential
-        college: 70000, // Campus building
-        airport: 100000, // Large terminal
-        casino: 60000, // Large entertainment complex
-        cold_storage: 45000, // Industrial warehouse
-        indoor_farm: 40000, // Controlled environment agriculture
-        truck_stop: 15000, // Large service station
-        microgrid: 30000, // Multi-building complex
-        government: 35000, // Public building
-        agricultural: 20000, // Farm building
+        apartment: 25000,     // Multi-family residential
+        college: 70000,       // Campus building
+        airport: 100000,      // Large terminal
+        casino: 60000,        // Large entertainment complex
+        cold_storage: 45000,  // Industrial warehouse
+        indoor_farm: 40000,   // Controlled environment agriculture
+        truck_stop: 15000,    // Large service station
+        microgrid: 30000,     // Multi-building complex
+        government: 35000,    // Public building
+        agricultural: 20000,  // Farm building
+        fitness_center: 10000, // Standalone gym: 5-15K sqft
+        gym: 10000,           // Alias for fitness_center
       };
 
       const estimatedRoofSpaceSqFt = industry
@@ -841,17 +843,40 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       // Use dynamic if we have meaningful answers (at least facilityType selected)
       newCap = dynamicCap > 0 ? dynamicCap : staticCap;
     } else {
-      // All other industries: use roofArea only — totalSiteArea is NOT roof area
+      // All other industries: roof solar + optional canopy solar
+      // canopyInterest='yes' → add full canopy potential from SSOT
+      // canopyInterest='learn_more' → add 50% canopy (shows upside, not committed)
+      // canopyInterest='no' → roof only (maxRooftopSolarKW)
+      // canopyInterest not answered → use totalRealisticSolarKW static blend
       const roofArea = Number(state.step3Answers?.roofArea ?? 0);
-      if (roofArea <= 0) return; // no roof area entered → keep static cap from setIndustry
+      const canopyInterest = state.step3Answers?.canopyInterest as string | undefined;
       const constraints = getFacilityConstraints(state.industry);
       const usableRoofPercent = constraints?.usableRoofPercent ?? 0.4;
       const staticCap = constraints?.totalRealisticSolarKW ?? 0;
-      // 15 W/sqft (SOLAR_WATTS_PER_SQFT) — modern 400-500W panels with row spacing
-      const calculatedKW = Math.round((roofArea * usableRoofPercent * 15) / 1000);
-      newCap = staticCap > 0
-        ? Math.round((calculatedKW + staticCap) / 2) // blend: user data + SSOT
-        : calculatedKW;
+      const maxRoofOnlyKW = constraints?.maxRooftopSolarKW ?? 0;
+      const canopyKW = constraints?.canopyPotentialKW ?? 0;
+
+      // Roof-only solar from user's entered area (15 W/sqft = NREL standard)
+      const roofKW = roofArea > 0
+        ? Math.round(roofArea * usableRoofPercent * 15 / 1000)
+        : maxRoofOnlyKW; // fall back to SSOT cap when no area entered
+
+      if (canopyInterest === "no") {
+        // User explicitly declined canopy — roof only
+        newCap = roofKW > 0 ? roofKW : maxRoofOnlyKW;
+      } else if (canopyInterest === "yes") {
+        // Full canopy included
+        newCap = roofKW + canopyKW;
+      } else if (canopyInterest === "learn_more") {
+        // Show 50% of canopy upside
+        newCap = roofKW + Math.round(canopyKW * 0.5);
+      } else {
+        // Not yet answered: use static SSOT blend (includes typical canopy)
+        if (roofArea <= 0) return; // no roof area entered → keep cap from setIndustry
+        newCap = staticCap > 0
+          ? Math.round((roofKW + staticCap) / 2) // blend user data + SSOT
+          : roofKW;
+      }
     }
 
     if (newCap > 0 && newCap !== state.solarPhysicalCapKW) {
@@ -860,6 +885,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   }, [
     state.industry,
     state.step3Answers?.roofArea,
+    state.step3Answers?.canopyInterest,
     state.step3Answers?.facilityType,
     state.step3Answers?.roofType,
     state.step3Answers?.vacuumStations,
