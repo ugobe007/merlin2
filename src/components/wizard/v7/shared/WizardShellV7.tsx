@@ -672,8 +672,11 @@ export default function WizardShellV7({
             }
 
             /* ── LANDSCAPE TABLET (iPad, 521-900px height, landscape) ─────────
-               Handles iPad mini/Air in landscape. Show narrow rail. */
-            @media (orientation: landscape) and (min-height: 521px) and (max-height: 900px) and (min-width: 901px) {
+               Handles iPad mini/Air in landscape. Show narrow rail.
+               (pointer: coarse) ensures this ONLY targets touch tablets,
+               NOT laptops — 1366×768 and 1440×900 laptops were being caught
+               by the height range and wrongly capped the advisor at 240px. */
+            @media (orientation: landscape) and (min-height: 521px) and (max-height: 900px) and (min-width: 901px) and (pointer: coarse) {
               .merlin-shell-grid {
                 grid-template-columns: 240px 1fr !important;
                 gap: 16px !important;
