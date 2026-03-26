@@ -571,6 +571,14 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     if (/\bfarm\b|ranch|\bagriculture\b|\bagricultural\b|organic\s*farm|dairy\s*farm|vineyard|winery|orchard|livestock/i.test(lowerName)) {
       return { industry: "agricultural", confidence: 0.80 };
     }
+    // Fitness / Gym: standalone gyms, health clubs, boutique studios
+    if (
+      /\bgym\b|fitness|health\s*club|crossfit|planet\s*fitness|anytime\s*fitness|la\s*fitness|crunch|orangetheory|f45|equinox|24\s*hour\s*fitness|gold'?s\s*gym|snap\s*fitness|magicfit|magic\s*fit|blink\s*fitness|workout|yoga\s*studio|pilates|boxing\s*gym|martial\s*arts|jiu[- ]jitsu|kickboxing|boot\s*camp\s*fitness/i.test(
+        lowerName
+      )
+    ) {
+      return { industry: "fitness_center", confidence: 0.88 };
+    }
 
     if (import.meta.env.DEV) {
       console.log("[detectIndustryFromName] ❌ No match found for:", lowerName);

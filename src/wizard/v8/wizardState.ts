@@ -123,6 +123,8 @@ export type IndustrySlug =
   | "agricultural"
   | "shopping_center"
   | "indoor_farm"
+  | "fitness_center"
+  | "gym"
   | "other";
 
 export type TierLabel = "Starter" | "Recommended" | "Complete";
