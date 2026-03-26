@@ -11,16 +11,21 @@
  * - Added annual operating reserves (insurance, inverter, BESS degradation)
  * - Implemented tiered margin structure (20% → 14% → 13%)
  * - Honest financial projections (4.5yr payback vs fabricated 4.0yr)
+ * - v4.5.1: Added EV electrical infrastructure cost (480V service, transformer, panel)
+ *   as a separate line item — DCFC/HPC charger unit prices do NOT cover service upgrades.
  *
  * Data Sources:
  * - NREL ATB 2024/2025 (battery, solar, wind)
  * - Industry benchmarks (generator, EV charging, site work)
  * - Government APIs (merlinDataService.js)
+ * - addonGuardrails.ts (EV electrical infrastructure, NEC/SAE/DOE)
  *
- * Version: 4.5.0
- * Date: March 19, 2026
+ * Version: 4.5.1
+ * Date: March 26, 2026
  * Author: Merlin Energy Systems
  */
+
+import { computeEVInfrastructureRequirements } from "./addonGuardrails";
 
 // ============================================================================
 // EQUIPMENT UNIT PRICING ($/unit)
@@ -54,13 +59,17 @@ export const EQUIPMENT_UNIT_COSTS = {
     notes: "Industrial-grade genset with ATS and fuel storage",
   },
 
-  // EV Charging Infrastructure
+  // EV Charging Infrastructure — CHARGER UNIT + BASIC INSTALL ONLY
+  // ⚠️  These prices DO NOT include electrical service upgrades for DCFC/HPC.
+  //     480V 3-phase service, transformers, and switchgear are calculated separately
+  //     by addonGuardrails.computeEVInfrastructureRequirements() and added as a
+  //     distinct line item (evInfrastructureCost) in calculateSystemCosts().
   evCharging: {
-    level2: 7000, // $/unit for 7.2kW Level 2 charger
-    dcfc: 50000, // $/unit for 50kW DC Fast Charger
-    hpc: 150000, // $/unit for 350kW High Power Charger
-    source: "DOE Alternative Fuels Data Center",
-    notes: "Includes equipment, installation, electrical service upgrades",
+    level2: 7000, // $/unit — 7.2 kW L2: hardware + mounting + 240V circuit run
+    dcfc: 50000,  // $/unit — 50 kW DCFC: hardware + basic 480V conduit run (assumes 3-phase already present)
+    hpc: 150000,  // $/unit — 250 kW HPC: hardware + basic 480V conduit run (assumes adequate service)
+    source: "DOE Alternative Fuels Data Center, evChargingCalculations.ts",
+    notes: "Unit price = charger hardware + mounting + conduit run. Electrical service upgrade (480V, transformer) is a SEPARATE line item computed by addonGuardrails.ts.",
   },
 } as const;
 
@@ -213,7 +222,8 @@ export interface CostBreakdown {
   solarCost: number;
   bessCost: number;
   generatorCost: number;
-  evChargingCost: number;
+  evChargingCost: number;           // Charger unit prices only
+  evInfrastructureCost: number;     // 480V service, transformer, panel — SEPARATE from charger unit price
   equipmentSubtotal: number;
 
   // Site work & soft costs
@@ -276,7 +286,22 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
     (config.dcfcChargers || 0) * EQUIPMENT_UNIT_COSTS.evCharging.dcfc +
     (config.hpcChargers || 0) * EQUIPMENT_UNIT_COSTS.evCharging.hpc;
 
-  const equipmentSubtotal = solarCost + bessCost + generatorCost + evChargingCost;
+  // EV electrical infrastructure — computed by addonGuardrails.ts (NEC/SAE/DOE).
+  // This is SEPARATE from charger unit prices above. Covers:
+  //   L2 only: basic 240V circuit additions (low cost)
+  //   DCFC:    480V 3-phase service entry, conduit runs (often $20K+ for 1st DCFC)
+  //   HPC:     dedicated 480V switchgear + transformer (often $35K+ per HPC)
+  // utilityRate=0 here because infrastructure cost doesn't depend on rate
+  const evInfra = computeEVInfrastructureRequirements({
+    l2Count: config.level2Chargers || 0,
+    dcfcCount: config.dcfcChargers || 0,
+    hpcCount: config.hpcChargers || 0,
+    utilityRate: 0, // rate not needed for infrastructure cost calculation
+  });
+  const evInfrastructureCost = evInfra.electricalInfrastructureCost;
+
+  // Equipment subtotal includes BOTH charger unit cost AND infrastructure cost
+  const equipmentSubtotal = solarCost + bessCost + generatorCost + evChargingCost + evInfrastructureCost;
 
   // Site work
   const siteEngineering = SITE_WORK_COSTS.total;
@@ -310,6 +335,7 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
     bessCost: Math.round(bessCost),
     generatorCost: Math.round(generatorCost),
     evChargingCost: Math.round(evChargingCost),
+    evInfrastructureCost: Math.round(evInfrastructureCost),
     equipmentSubtotal: Math.round(equipmentSubtotal),
     siteEngineering: Math.round(siteEngineering),
     constructionContingency: Math.round(constructionContingency),
