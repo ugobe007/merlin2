@@ -54,23 +54,52 @@ const CONTINGENCY_RATE        = 0.075;  // 7.5% construction contingency
 const FEDERAL_ITC_RATE        = 0.30;   // 30% IRA 2022 (solar + BESS eligible)
 const SOLAR_PR                = 0.77;   // NREL Performance Ratio (DC wiring, inverter, soiling, temp)
 
+// NREL PVWatts key — confirmed working 2025-12-11
+const NREL_API_KEY_FALLBACK = 'G9sYxfv89Vr9mjHD5zThWpBntyYkKJjP6iF8i3He';
+
 // ============================================================================
-// INDUSTRY DEFAULT SYSTEM PROFILES
+// INDUSTRY DEFAULTS
+// Source: step4Logic.ts comments, CBECS 2018, EIA Commercial Buildings Survey
+// peakLoadKW  — facility peak demand used for BESS sizing
+// solarCapKW  — max physical roof/canopy capacity (kW DC)
+// criticalLoadPct — fraction of load requiring backup power (0–1)
 // ============================================================================
 
-const INDUSTRY_PROFILES = {
-  hotel:      { bessKW: 150, bessKWh: 600, solarKW: 80,  demandCharge: 15, electricityRate: 0.14 },
-  restaurant: { bessKW: 80,  bessKWh: 320, solarKW: 25,  demandCharge: 18, electricityRate: 0.16 },
-  retail:     { bessKW: 100, bessKWh: 400, solarKW: 60,  demandCharge: 14, electricityRate: 0.13 },
-  car_wash:   { bessKW: 100, bessKWh: 400, solarKW: 30,  demandCharge: 20, electricityRate: 0.15 },
-  carwash:    { bessKW: 100, bessKWh: 400, solarKW: 30,  demandCharge: 20, electricityRate: 0.15 },
-  warehouse:  { bessKW: 200, bessKWh: 800, solarKW: 200, demandCharge: 12, electricityRate: 0.11 },
-  office:     { bessKW: 120, bessKWh: 480, solarKW: 50,  demandCharge: 13, electricityRate: 0.13 },
-  gym:        { bessKW: 100, bessKWh: 400, solarKW: 40,  demandCharge: 16, electricityRate: 0.14 },
-  healthcare: { bessKW: 200, bessKWh: 800, solarKW: 60,  demandCharge: 17, electricityRate: 0.15 },
-  school:     { bessKW: 150, bessKWh: 600, solarKW: 100, demandCharge: 14, electricityRate: 0.13 },
-  default:    { bessKW: 100, bessKWh: 400, solarKW: 50,  demandCharge: 15, electricityRate: 0.14 },
+const INDUSTRY_DEFAULTS = {
+  hotel:         { peakLoadKW: 500,  solarCapKW: 225,  criticalLoadPct: 0.45, electricityRate: 0.13, demandCharge: 18 },
+  restaurant:    { peakLoadKW: 80,   solarCapKW: 30,   criticalLoadPct: 0.60, electricityRate: 0.14, demandCharge: 16 },
+  retail:        { peakLoadKW: 300,  solarCapKW: 100,  criticalLoadPct: 0.35, electricityRate: 0.12, demandCharge: 15 },
+  car_wash:      { peakLoadKW: 247,  solarCapKW: 39,   criticalLoadPct: 0.80, electricityRate: 0.12, demandCharge: 15 },
+  carwash:       { peakLoadKW: 247,  solarCapKW: 39,   criticalLoadPct: 0.80, electricityRate: 0.12, demandCharge: 15 },
+  warehouse:     { peakLoadKW: 400,  solarCapKW: 819,  criticalLoadPct: 0.30, electricityRate: 0.10, demandCharge: 12 },
+  office:        { peakLoadKW: 200,  solarCapKW: 150,  criticalLoadPct: 0.40, electricityRate: 0.12, demandCharge: 15 },
+  gym:           { peakLoadKW: 150,  solarCapKW: 60,   criticalLoadPct: 0.30, electricityRate: 0.13, demandCharge: 15 },
+  healthcare:    { peakLoadKW: 1500, solarCapKW: 375,  criticalLoadPct: 0.90, electricityRate: 0.13, demandCharge: 20 },
+  hospital:      { peakLoadKW: 1500, solarCapKW: 375,  criticalLoadPct: 0.90, electricityRate: 0.13, demandCharge: 20 },
+  school:        { peakLoadKW: 200,  solarCapKW: 200,  criticalLoadPct: 0.40, electricityRate: 0.12, demandCharge: 13 },
+  manufacturing: { peakLoadKW: 800,  solarCapKW: 450,  criticalLoadPct: 0.50, electricityRate: 0.10, demandCharge: 14 },
+  default:       { peakLoadKW: 300,  solarCapKW: 100,  criticalLoadPct: 0.40, electricityRate: 0.12, demandCharge: 15 },
 };
+
+// ============================================================================
+// TIER SCALING CONSTANTS (step4Logic.ts — save_most goal / TrueQuote™ v4.5)
+// ============================================================================
+
+// BESS-to-peak-load sizing ratios (IEEE/MDPI benchmarks — benchmarkSources.ts)
+const BESS_RATIO = {
+  peak_shaving: 0.40,  // IEEE 4538388, MDPI Energies 11(8):2048
+  arbitrage:    0.50,  // peak shaving + TOU shifting
+  resilience:   0.70,  // IEEE 446 critical-load coverage
+  microgrid:    1.00,  // full islanding (NREL)
+};
+
+const TIER_BESS_SCALE        = { Starter: 0.55,  Recommended: 1.0,  Complete: 1.5  };
+const TIER_DURATION_HRS      = { Starter: 2,     Recommended: 4,    Complete: 6    };
+const TIER_SOLAR_PENETRATION = { Starter: 0.50,  Recommended: 0.85, Complete: 1.0  };
+// Generator: excluded at Starter by default; Complete gets 25% extra headroom
+const TIER_GEN_SCALE         = { Starter: 0,     Recommended: 1.0,  Complete: 1.25 };
+const NEC_GEN_MARGIN         = 1.25;  // NEC/LADWP reserve margin
+const BESS_COMMERCIAL_FLOOR  = 75;   // kW — minimum commercial BESS
 
 // ============================================================================
 // HELPERS
@@ -82,10 +111,143 @@ function calculateMerlinFees(equipmentSubtotal) {
   if (equipmentSubtotal < 200000)      marginRate = 0.20;
   else if (equipmentSubtotal < 800000) marginRate = 0.14;
   else                                  marginRate = 0.13;
+  const totalFee = equipmentSubtotal * marginRate;
   return {
-    totalFee: Math.round(equipmentSubtotal * marginRate),
-    effectiveMargin: marginRate,
-    annualMonitoring: 580,
+    designIntelligence:  Math.round(totalFee * 0.14),
+    procurementSourcing: Math.round(totalFee * 0.65),
+    pmConstruction:      Math.round(totalFee * 0.16),
+    incentiveFiling:     Math.round(totalFee * 0.05),
+    totalFee:            Math.round(totalFee),
+    effectiveMargin:     marginRate,
+    annualMonitoring:    580,
+  };
+}
+
+/** Annual operating reserves (pricingServiceV45.ts ANNUAL_RESERVES) */
+function calcAnnualReserves(solarKW, bessKWh) {
+  return Math.round(
+    1250                          // insurance rider
+    + solarKW  * 1000 * 0.01     // inverter reserve ($10/kW/yr)
+    + bessKWh  * BESS_PRICE_PER_KWH * 0.02  // BESS degradation reserve (2% pack/yr)
+  );
+}
+
+// ── Tier sizing helpers (ported from step4Logic.ts) ──────────────────────────
+
+function sizeBESS(peakLoadKW, tierLabel, bessApplication) {
+  const ratio       = BESS_RATIO[bessApplication] ?? BESS_RATIO.peak_shaving;
+  const bessKW      = Math.max(BESS_COMMERCIAL_FLOOR,
+                       Math.round(peakLoadKW * ratio * TIER_BESS_SCALE[tierLabel]));
+  const durationHrs = TIER_DURATION_HRS[tierLabel];
+  const bessKWh     = Math.round(bessKW * durationHrs);
+  return { bessKW, bessKWh, durationHrs };
+}
+
+function sizeSolar(solarCapKW, psh, tierLabel) {
+  // sunFactor: quality-adjusts for local irradiance (step4Logic.ts)
+  const sunFactor   = Math.max(0.40, Math.min(1.0, (psh - 2.5) / 2.0));
+  const penetration = TIER_SOLAR_PENETRATION[tierLabel];
+  return Math.round(Math.min(solarCapKW * sunFactor * penetration, solarCapKW));
+}
+
+function sizeGenerator(peakLoadKW, criticalLoadPct, tierLabel) {
+  const scale = TIER_GEN_SCALE[tierLabel];
+  if (scale === 0 || criticalLoadPct < 0.50) return 0;
+  return Math.max(10, Math.round(peakLoadKW * criticalLoadPct * NEC_GEN_MARGIN * scale));
+}
+
+function calcTierCosts(eq) {
+  const { solarKW = 0, bessKW = 0, bessKWh = 0, generatorKW = 0,
+          l2Chargers = 0, dcfcChargers = 0, hpcChargers = 0,
+          generatorFuelType = 'diesel' } = eq;
+  const isNatGas    = generatorFuelType === 'natural-gas';
+  const solarCost   = solarKW  * SOLAR_PRICE_PER_WATT * 1000;
+  const bessCost    = bessKWh  * BESS_PRICE_PER_KWH + bessKW * BESS_PRICE_PER_KW;
+  const genCost     = generatorKW > 0
+    ? generatorKW * (isNatGas ? GEN_PRICE_PER_KW_NATGAS : GEN_PRICE_PER_KW_DIESEL)
+      + (isNatGas ? 0 : GEN_FUEL_TANK + GEN_TRANSFER_SWITCH)
+    : 0;
+  const evCost      = l2Chargers * EV_L2_PRICE + dcfcChargers * EV_DCFC_PRICE + hpcChargers * EV_HPC_PRICE;
+  const equipTotal  = solarCost + bessCost + genCost + evCost;
+  const contingency = Math.round((equipTotal + SITE_WORK_TOTAL) * CONTINGENCY_RATE);
+  const subTotal    = equipTotal + SITE_WORK_TOTAL + contingency;
+  const merlinFees  = calculateMerlinFees(equipTotal);
+  const totalInv    = subTotal + merlinFees.totalFee;
+  const itc         = Math.round((solarCost + bessCost) * FEDERAL_ITC_RATE);
+  return {
+    solarCost:               Math.round(solarCost),
+    bessCost:                Math.round(bessCost),
+    generatorCost:           Math.round(genCost),
+    evChargingCost:          Math.round(evCost),
+    equipmentSubtotal:       Math.round(equipTotal),
+    siteEngineering:         SITE_WORK_TOTAL,
+    constructionContingency: contingency,
+    merlinFees,
+    totalInvestment:         Math.round(totalInv),
+    federalITC:              itc,
+    netInvestment:           Math.round(totalInv - itc),
+    annualReserves:          calcAnnualReserves(solarKW, bessKWh),
+  };
+}
+
+function calcTierSavings(eq, electricityRate, demandCharge, psh) {
+  const { bessKW, bessKWh, solarKW,
+          l2Chargers = 0, dcfcChargers = 0, hpcChargers = 0 } = eq;
+  const demandChargeSavings = bessKW * demandCharge * 12 * 0.75;
+  const solarKWhProduced    = solarKW * psh * 365 * SOLAR_PR;
+  const solarSavings        = solarKWhProduced * electricityRate;
+  const evRevenue           = l2Chargers * 1350 + dcfcChargers * 18000 + hpcChargers * 60000;
+  const gross               = demandChargeSavings + solarSavings + evRevenue;
+  const reserves            = calcAnnualReserves(solarKW, bessKWh);
+  return {
+    demandChargeSavings: Math.round(demandChargeSavings),
+    solarKWhProduced:    Math.round(solarKWhProduced),
+    solarSavings:        Math.round(solarSavings),
+    evChargingRevenue:   Math.round(evRevenue),
+    grossAnnualSavings:  Math.round(gross),
+    annualReserves:      reserves,
+    netAnnualSavings:    Math.round(gross - reserves),
+  };
+}
+
+function calcROI(netInvestment, netAnnualSavings) {
+  if (netInvestment <= 0 || netAnnualSavings <= 0) {
+    return { paybackYears: 999, year1ROI: 0, roi10Year: 0, roi25Year: 0, npv25Year: Math.round(-netInvestment) };
+  }
+  const payback = Math.round((netInvestment / netAnnualSavings) * 10) / 10;
+  let npv = -netInvestment;
+  for (let yr = 1; yr <= 25; yr++) npv += netAnnualSavings / Math.pow(1.05, yr);
+  return {
+    paybackYears: payback,
+    year1ROI:     Math.round((netAnnualSavings / netInvestment) * 100),
+    roi10Year:    Math.round(((netAnnualSavings * 10  - netInvestment) / netInvestment) * 100),
+    roi25Year:    Math.round(((netAnnualSavings * 25  - netInvestment) / netInvestment) * 100),
+    npv25Year:    Math.round(npv),
+  };
+}
+
+function buildTier(tierLabel, p) {
+  const { bessKW, bessKWh, durationHrs } = sizeBESS(p.peakLoadKW, tierLabel, p.bessApplication);
+  const solarKW     = p.overrideSolarKW != null
+    ? Math.round(p.overrideSolarKW * { Starter: 0.7, Recommended: 1.0, Complete: 1.3 }[tierLabel])
+    : sizeSolar(p.solarCapKW, p.psh, tierLabel);
+  const generatorKW = p.overrideGenKW != null
+    ? p.overrideGenKW
+    : sizeGenerator(p.peakLoadKW, p.criticalLoadPct, tierLabel);
+  const eq = {
+    solarKW, bessKW, bessKWh, generatorKW, generatorFuelType: p.generatorFuelType,
+    l2Chargers: p.l2Chargers, dcfcChargers: p.dcfcChargers, hpcChargers: p.hpcChargers,
+  };
+  const costs   = calcTierCosts(eq);
+  const savings = calcTierSavings(eq, p.electricityRate, p.demandCharge, p.psh);
+  const roi     = calcROI(costs.netInvestment, savings.netAnnualSavings);
+  return {
+    label: tierLabel,
+    equipment: { solarKW, bessKW, bessKWh, durationHrs, generatorKW,
+                 l2Chargers: p.l2Chargers, dcfcChargers: p.dcfcChargers, hpcChargers: p.hpcChargers },
+    costs,
+    savings,
+    roi,
   };
 }
 
@@ -177,7 +339,7 @@ router.post('/', async (req, res) => {
     }
 
     const googleKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
-    const nrelKey   = process.env.VITE_NREL_API_KEY   || process.env.NREL_API_KEY;
+    const nrelKey   = process.env.VITE_NREL_API_KEY || process.env.NREL_API_KEY || NREL_API_KEY_FALLBACK;
 
     if (!googleKey) {
       return res.status(500).json({ ok: false, error: 'Location service not configured' });
@@ -193,143 +355,81 @@ router.post('/', async (req, res) => {
     }
 
     // ── 2. Fetch solar resource (NREL PVWatts) ─────────────────────────────
-    const psh = nrelKey ? await fetchSolarPSH(geo.lat, geo.lon, nrelKey) : 4.5;
+    const psh = await fetchSolarPSH(geo.lat, geo.lon, nrelKey);
 
-    // ── 3. Resolve system sizing ───────────────────────────────────────────
+    // ── 3. Resolve industry + facility parameters ──────────────────────────
     const industryKey = (industry || 'default').toLowerCase().replace(/[\s-]+/g, '_');
-    const profile     = INDUSTRY_PROFILES[industryKey] || INDUSTRY_PROFILES.default;
+    const def         = INDUSTRY_DEFAULTS[industryKey] || INDUSTRY_DEFAULTS.default;
 
-    const bessKW          = Number(inputBessKW  ?? profile.bessKW);
-    const bessKWh         = Number(inputBessKWh ?? profile.bessKWh);
-    const solarKW         = Number(inputSolarKW ?? profile.solarKW);
-    const generatorKW     = Number(inputGenKW);
-    const electricityRate = Number(inputElecRate   ?? profile.electricityRate);
-    const demandCharge    = Number(inputDemandCharge ?? profile.demandCharge);
+    const p = {
+      peakLoadKW:      Number(req.body.peakLoadKW      ?? def.peakLoadKW),
+      solarCapKW:      Number(req.body.solarCapKW      ?? def.solarCapKW),
+      criticalLoadPct: Number(req.body.criticalLoadPct ?? def.criticalLoadPct),
+      electricityRate: Number(inputElecRate            ?? def.electricityRate),
+      demandCharge:    Number(inputDemandCharge        ?? def.demandCharge),
+      l2Chargers,
+      dcfcChargers,
+      hpcChargers,
+      generatorFuelType,
+      bessApplication: req.body.bessApplication ?? 'peak_shaving',
+      // Optional single-system overrides (bypass auto-sizing when provided)
+      overrideSolarKW: inputSolarKW != null ? Number(inputSolarKW) : null,
+      overrideGenKW:   inputGenKW   > 0     ? Number(inputGenKW)   : null,
+      psh,
+    };
 
-    // ── 4. Equipment costs ─────────────────────────────────────────────────
-    const solarCost = solarKW * SOLAR_PRICE_PER_WATT * 1000;
-
-    const bessCost = bessKWh * BESS_PRICE_PER_KWH + bessKW * BESS_PRICE_PER_KW;
-
-    const isNatGas = generatorFuelType === 'natural-gas';
-    const genCost  = generatorKW > 0
-      ? generatorKW * (isNatGas ? GEN_PRICE_PER_KW_NATGAS : GEN_PRICE_PER_KW_DIESEL)
-        + (isNatGas ? 0 : GEN_FUEL_TANK + GEN_TRANSFER_SWITCH)
-      : 0;
-
-    const evCost     = l2Chargers * EV_L2_PRICE + dcfcChargers * EV_DCFC_PRICE + hpcChargers * EV_HPC_PRICE;
-    const equipTotal = solarCost + bessCost + genCost + evCost;
-
-    const contingency     = (equipTotal + SITE_WORK_TOTAL) * CONTINGENCY_RATE;
-    const subtotalNoFee   = equipTotal + SITE_WORK_TOTAL + contingency;
-    const merlinFees      = calculateMerlinFees(equipTotal);
-    const totalInvestment = subtotalNoFee + merlinFees.totalFee;
-    const federalITC      = (solarCost + bessCost) * FEDERAL_ITC_RATE;
-    const netInvestment   = totalInvestment - federalITC;
-
-    // ── 5. Annual savings ──────────────────────────────────────────────────
-    // BESS demand charge reduction (75% effectiveness — NREL/EPRI benchmark)
-    const demandChargeSavings = bessKW * demandCharge * 12 * 0.75;
-
-    // Solar production: NREL GHI method → kW × PSH × 365 × PR
-    const solarKWhProduced = solarKW * psh * 365 * SOLAR_PR;
-    const solarSavings     = solarKWhProduced * electricityRate;
-
-    // EV revenue by type (DOE/EVI benchmarks, 300 operating days/yr)
-    const evRevenue = l2Chargers * 1350 + dcfcChargers * 18000 + hpcChargers * 60000;
-
-    const grossAnnualSavings = demandChargeSavings + solarSavings + evRevenue;
-
-    // Annual reserves (honest TCO — LFP degradation + inverter + insurance)
-    const insuranceRider         = 1250;
-    const inverterReserve        = solarKW * 1000 * 0.01;   // $0.01/W/yr
-    const bessLegradationReserve = bessKWh * BESS_PRICE_PER_KWH * 0.02; // 2% pack value/yr
-    const annualReserves         = insuranceRider + inverterReserve + bessLegradationReserve;
-    const netAnnualSavings       = grossAnnualSavings - annualReserves;
-
-    // ── 6. ROI / NPV ───────────────────────────────────────────────────────
-    const paybackYears = netInvestment > 0 && netAnnualSavings > 0
-      ? Math.round((netInvestment / netAnnualSavings) * 10) / 10
-      : 999;
-
-    let npv25Year = -netInvestment;
-    for (let yr = 1; yr <= 25; yr++) {
-      npv25Year += netAnnualSavings / Math.pow(1.05, yr); // 5% discount rate
-    }
-
-    const year1ROI = netInvestment > 0
-      ? Math.round((netAnnualSavings / netInvestment) * 100)
-      : 0;
+    // ── 4. Build three tiers ───────────────────────────────────────────────
+    const tiers = {
+      starter:     buildTier('Starter',     p),
+      recommended: buildTier('Recommended', p),
+      complete:    buildTier('Complete',     p),
+    };
 
     const elapsed = Date.now() - startTime;
-    console.log(`[/api/quote] ✅ Quote generated in ${elapsed}ms — net investment $${Math.round(netInvestment).toLocaleString()}, payback ${paybackYears}yr`);
+    const rec = tiers.recommended;
+    console.log(`[/api/quote] ✅ ${elapsed}ms — ${geo.formattedAddress} PSH=${psh}h | Rec: $${rec.costs.netInvestment.toLocaleString()} net, ${rec.roi.paybackYears}yr payback`);
 
-    // ── 7. Response ────────────────────────────────────────────────────────
+    // ── 5. Response ────────────────────────────────────────────────────────
     return res.json({
       ok: true,
-      quote: {
-
-        // What was sized
-        system: {
-          industry: industryKey,
-          location: geo.formattedAddress,
-          bessKW,
-          bessKWh,
-          solarKW,
-          generatorKW,
-          l2Chargers,
-          dcfcChargers,
-          hpcChargers,
-          peakSunHours: psh,
-          electricityRate,
-          demandCharge,
+      location: {
+        formattedAddress: geo.formattedAddress,
+        stateCode:        geo.stateCode,
+        lat:              geo.lat,
+        lon:              geo.lon,
+      },
+      solar: {
+        peakSunHours: psh,
+        source:       'NREL PVWatts v8',
+      },
+      inputs: {
+        industry: industryKey,
+        facilityParams: {
+          peakLoadKW:      p.peakLoadKW,
+          solarCapKW:      p.solarCapKW,
+          criticalLoadPct: p.criticalLoadPct,
+          electricityRate: p.electricityRate,
+          demandCharge:    p.demandCharge,
+          bessApplication: p.bessApplication,
         },
-
-        // Cost breakdown
-        costs: {
-          solarCost:               Math.round(solarCost),
-          bessCost:                Math.round(bessCost),
-          generatorCost:           Math.round(genCost),
-          evChargingCost:          Math.round(evCost),
-          equipmentSubtotal:       Math.round(equipTotal),
-          siteEngineering:         SITE_WORK_TOTAL,
-          constructionContingency: Math.round(contingency),
-          merlinFee:               merlinFees.totalFee,
-          merlinMargin:            `${Math.round(merlinFees.effectiveMargin * 100)}%`,
-          totalInvestment:         Math.round(totalInvestment),
-          federalITC:              Math.round(federalITC),
-          netInvestment:           Math.round(netInvestment),
-        },
-
-        // Annual savings
-        savings: {
-          demandChargeSavings:  Math.round(demandChargeSavings),
-          solarKWhProduced:     Math.round(solarKWhProduced),
-          solarSavings:         Math.round(solarSavings),
-          evChargingRevenue:    Math.round(evRevenue),
-          grossAnnualSavings:   Math.round(grossAnnualSavings),
-          annualReserves:       Math.round(annualReserves),
-          netAnnualSavings:     Math.round(netAnnualSavings),
-        },
-
-        // Financial metrics
-        financials: {
-          paybackYears,
-          year1ROI,
-          npv25Year:   Math.round(npv25Year),
-          irr25Yr:     year1ROI, // Simple approximation; full IRR via Newton-Raphson in wizard
-        },
-
-        // Methodology transparency
-        meta: {
-          methodology:    'Merlin TrueQuote™ v4.5',
-          solarMethod:    `NREL PVWatts v8 API (PR=${SOLAR_PR}, PSH=${psh} h/day)`,
-          bessMethod:     'NREL/EPRI demand management benchmark (75% effectiveness)',
-          pricingSource:  'NREL ATB 2024, BloombergNEF, DOE/EVI 2024',
-          itcRate:        '30% IRA 2022 (solar + standalone BESS)',
-          generatedAt:    new Date().toISOString(),
-          computeMs:      elapsed,
-        },
+        industryDefaultsApplied: !req.body.peakLoadKW,
+      },
+      tiers,
+      meta: {
+        methodology:   'Merlin TrueQuote™ v4.5',
+        solarMethod:   `NREL PVWatts v8 (PR=${SOLAR_PR}, PSH=${psh} h/day)`,
+        bessMethod:    'NREL/EPRI demand charge benchmark (75% effectiveness)',
+        pricingSource: 'NREL ATB 2024, BloombergNEF, DOE/EVI 2024',
+        itcRate:       '30% IRA 2022 §48 (solar + standalone BESS)',
+        generatedAt:   new Date().toISOString(),
+        computeMs:     elapsed,
+        tierLabels:    ['Starter', 'Recommended', 'Complete'],
+        notes: [
+          'Starter: no generator by default; 50% solar; 2h BESS duration',
+          'Recommended: generator if criticalLoadPct ≥ 0.50; 85% solar; 4h BESS',
+          'Complete: full headroom; 100% solar; 6h BESS; +25% generator capacity',
+          'Savings are NET of annual operating reserves (insurance + inverter + BESS degradation)',
+        ],
       },
     });
 
