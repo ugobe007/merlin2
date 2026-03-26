@@ -102,14 +102,17 @@ export const CONSTRUCTION_CONTINGENCY_RATE = 0.075; // 7.5% industry standard
 export const ANNUAL_RESERVES = {
   insuranceRider: 1250, // $/year for property insurance rider
   inverterReplacementReserve: (solarKW: number) => solarKW * 1000 * 0.01, // $0.01/W/yr
-  bessLegradationReserve: 500, // $/year for capacity fade accounting
+  // LFP capacity fade reserve: 2% of pack value/yr (industry standard)
+  // For 350 kWh @ $350/kWh = $2,450/yr vs. old flat $500 (84% underfunded)
+  bessLegradationReserve: (bessKWh: number) =>
+    bessKWh * EQUIPMENT_UNIT_COSTS.bess.pricePerKWh * 0.02,
 
   // Calculate total annual reserves
-  total: (solarKW: number): number => {
+  total: (solarKW: number, bessKWh = 0): number => {
     return (
       ANNUAL_RESERVES.insuranceRider +
       ANNUAL_RESERVES.inverterReplacementReserve(solarKW) +
-      ANNUAL_RESERVES.bessLegradationReserve
+      ANNUAL_RESERVES.bessLegradationReserve(bessKWh)
     );
   },
 } as const;
@@ -300,7 +303,7 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
   const netInvestment = totalInvestment - federalITC;
 
   // Annual operating reserves
-  const annualReserves = ANNUAL_RESERVES.total(config.solarKW || 0);
+  const annualReserves = ANNUAL_RESERVES.total(config.solarKW || 0, config.bessKWh || 0);
 
   return {
     solarCost: Math.round(solarCost),
@@ -329,7 +332,10 @@ export interface SavingsInputs {
   bessKWh: number;
   solarKW: number;
   generatorKW: number;
-  evChargers: number;
+  evChargers: number; // total count (fallback when typed counts not provided)
+  l2Chargers?: number; // Level 2 charger count (for per-type revenue calc)
+  dcfcChargers?: number; // DC Fast Charger count
+  hpcChargers?: number; // High Power Charger count
 
   // Utility rates
   electricityRate: number; // $/kWh
@@ -383,16 +389,27 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
   }
 
   // Solar Savings
+  // NREL methodology: production = systemKW × GHI_PSH × 365 × PR
+  // PR = 0.77 accounts for DC wiring losses, inverter efficiency, soiling, temperature
   const sunHoursPerDay = inputs.sunHoursPerDay || 5;
-  const productionDaysPerYear = 300; // Account for weather
-  const systemEfficiency = 0.85; // Inverter losses, soiling, etc.
-  const solarKWhProduced =
-    inputs.solarKW * sunHoursPerDay * productionDaysPerYear * systemEfficiency;
+  const PR = 0.77; // Performance Ratio (NREL standard for commercial C&I solar)
+  const solarKWhProduced = inputs.solarKW * sunHoursPerDay * 365 * PR;
   const solarSavings = solarKWhProduced * inputs.electricityRate;
 
-  // EV Charging Revenue (if applicable)
-  // Assume $8/session average, 2 sessions/charger/day, 300 days/year
-  const evChargingRevenue = inputs.evChargers * 8 * 2 * 300;
+  // EV Charging Revenue by charger type (DOE/EVI benchmarks, 300 operating days/yr)
+  // L2 (7.2 kW):    $3/session  × 1.5 sessions/day × 300 days = $1,350/charger/yr
+  // DCFC (50 kW):   $12/session × 5 sessions/day   × 300 days = $18,000/charger/yr
+  // HPC (150+ kW):  $25/session × 8 sessions/day   × 300 days = $60,000/charger/yr
+  let evChargingRevenue: number;
+  if (inputs.l2Chargers != null || inputs.dcfcChargers != null || inputs.hpcChargers != null) {
+    const l2 = inputs.l2Chargers ?? 0;
+    const dcfc = inputs.dcfcChargers ?? 0;
+    const hpc = inputs.hpcChargers ?? 0;
+    evChargingRevenue = l2 * 3 * 1.5 * 300 + dcfc * 12 * 5 * 300 + hpc * 25 * 8 * 300;
+  } else {
+    // Fallback: treat all as L2 (conservative — avoids prior 4x overestimate)
+    evChargingRevenue = inputs.evChargers * 1350;
+  }
 
   // Generator Backup Value (avoided downtime costs)
   // This is harder to quantify, typically not included in simple ROI
@@ -406,7 +423,7 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
     generatorBackupValue;
 
   // Deduct annual operating reserves for honest TCO
-  const annualReserves = ANNUAL_RESERVES.total(solarKW);
+  const annualReserves = ANNUAL_RESERVES.total(solarKW, inputs.bessKWh);
   const netAnnualSavings = grossAnnualSavings - annualReserves;
 
   return {
