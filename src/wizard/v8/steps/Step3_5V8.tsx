@@ -1383,6 +1383,13 @@ export default function Step3_5V8({ state, actions }: Props) {
   const [fuelType, setFuelType] = useState<FuelType>(
     (state.generatorFuelType as FuelType) ?? "natural-gas"
   );
+  // Generator is OPT-IN — defaults OFF unless grid is unreliable or user previously enabled it
+  const [wantsGenerator, setWantsGenerator] = useState<boolean>(
+    () =>
+      state.wantsGenerator === true ||
+      state.gridReliability === "frequent-outages" ||
+      state.gridReliability === "unreliable"
+  );
 
   useEffect(() => {
     if (!isFirstVisit) return;
@@ -1391,9 +1398,6 @@ export default function Step3_5V8({ state, actions }: Props) {
       const recKW = estimateSolarKW("roof_canopy", state);
       if (recKW > 0) actions.setAddonConfig({ solarKW: recKW });
     }
-    actions.setAddonPreference("generator", true);
-    const recGenKW = estimateGenKW(defaultGeneratorScope(state), state);
-    if (recGenKW > 0) actions.setAddonConfig({ generatorKW: recGenKW });
     actions.setAddonPreference("ev", true);
     actions.setAnswer("evScope", "custom");
     const rl2 = Math.min(
@@ -1429,6 +1433,17 @@ export default function Step3_5V8({ state, actions }: Props) {
     setFuelType(fuel);
     actions.setAddonConfig({ generatorFuelType: fuel });
   };
+  const handleAddGenerator = () => {
+    setWantsGenerator(true);
+    actions.setAddonPreference("generator", true);
+    const recKW = estimateGenKW(defaultGeneratorScope(state), state);
+    if (recKW > 0) actions.setAddonConfig({ generatorKW: recKW });
+  };
+  const handleRemoveGenerator = () => {
+    setWantsGenerator(false);
+    actions.setAddonPreference("generator", false);
+    actions.setAddonConfig({ generatorKW: 0 });
+  };
 
   const effectiveSolarCapKW = getEffectiveSolarCapKW(state);
   const solarMaxKW = effectiveSolarCapKW > 0 ? effectiveSolarCapKW : 2000;
@@ -1440,7 +1455,11 @@ export default function Step3_5V8({ state, actions }: Props) {
   const peakSunHours = state.intel?.peakSunHours ?? 4.5;
 
   const liveSolarKW = state.solarKW > 0 ? state.solarKW : solarFeasible ? solarRecKW : 0;
-  const liveGenKW = state.generatorKW > 0 ? state.generatorKW : genRecKW;
+  const liveGenKW = wantsGenerator
+    ? state.generatorKW > 0
+      ? state.generatorKW
+      : genRecKW
+    : 0;
   const liveL2 = state.level2Chargers || 0;
   const liveDcfc = state.dcfcChargers || 0;
   const liveHpc = state.hpcChargers || 0;
@@ -1520,19 +1539,96 @@ export default function Step3_5V8({ state, actions }: Props) {
         initialHpc={state.hpcChargers}
         onConfig={handleEVConfig}
       />
-      <BackupGeneratorCard
-        peakLoadKW={state.peakLoadKW}
-        criticalLoadPct={state.criticalLoadPct}
-        minKW={genMinKW}
-        maxKW={genMaxKW}
-        recKW={genRecKW}
-        initialKW={state.generatorKW > 0 ? state.generatorKW : genRecKW}
-        fuelType={fuelType}
-        onFuelChange={handleFuelType}
-        gridReliability={state.gridReliability ?? undefined}
-        utilityRate={utilityRate}
-        onConfig={handleGeneratorConfig}
-      />
+      {wantsGenerator ? (
+        <>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={handleRemoveGenerator}
+              style={{
+                padding: "5px 14px",
+                borderRadius: 6,
+                border: "1px solid rgba(249,115,22,0.25)",
+                background: "transparent",
+                color: "rgba(249,115,22,0.65)",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              ✕ Remove Generator
+            </button>
+          </div>
+          <BackupGeneratorCard
+            peakLoadKW={state.peakLoadKW}
+            criticalLoadPct={state.criticalLoadPct}
+            minKW={genMinKW}
+            maxKW={genMaxKW}
+            recKW={genRecKW}
+            initialKW={state.generatorKW > 0 ? state.generatorKW : genRecKW}
+            fuelType={fuelType}
+            onFuelChange={handleFuelType}
+            gridReliability={state.gridReliability ?? undefined}
+            utilityRate={utilityRate}
+            onConfig={handleGeneratorConfig}
+          />
+        </>
+      ) : (
+        <div
+          style={{
+            borderRadius: 12,
+            background: "rgba(15,17,23,0.7)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            padding: "16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 10,
+                background: "rgba(249,115,22,0.10)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 21,
+                flexShrink: 0,
+              }}
+            >
+              🏭
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(203,213,225,0.85)" }}>
+                Backup Generator
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(148,163,184,0.5)", marginTop: 2 }}>
+                Optional resilience add-on · Does not affect solar/BESS ROI
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={handleAddGenerator}
+            style={{
+              padding: "9px 16px",
+              borderRadius: 8,
+              border: "1.5px solid rgba(249,115,22,0.4)",
+              background: "transparent",
+              color: "#fb923c",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
+            + Add Generator
+          </button>
+        </div>
+      )}
 
       {/* ── Bottom CTA: mirrors shell nav so users don't need to scroll ── */}
       <button
