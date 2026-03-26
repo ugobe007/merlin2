@@ -213,13 +213,19 @@ export async function fetchSolar(
         systemLosses: 14,
       });
 
-      // PVWatts returns capacityFactor as a percentage (e.g., 20.4 = 20.4%)
-      // Peak sun hours per day = capacityFactor% / 100 × 24 h
-      const rawPSH = (pvResult.capacityFactor / 100) * 24;
+      // PVWatts returns AC system capacityFactor (e.g., 13.7% for Michigan).
+      // AC system PSH = CF% / 100 × 24 h — this is net AC output equivalent hours.
+      // To get solar resource PSH (GHI-equivalent) we divide by the Performance Ratio:
+      //   PR ≈ 0.77  (DC losses 14% + inverter ~4% + AC wiring/soiling ~5%)
+      //   GHI PSH = system PSH / PR   →  MI: (0.137 × 24) / 0.77 ≈ 4.27 h/day ✓
+      // Without this correction MI (CF≈13%) gets PSH=3.1 → Grade C and a 1 kW
+      // solar recommendation for a 39 kW roof — clearly wrong.
+      const PR = 0.77;
+      const rawPSH = (pvResult.capacityFactor / 100) * 24 / PR;
       const peakSunHours = Math.round(rawPSH * 10) / 10;
 
       devLog(
-        `[V7 PVWatts] ZIP=${zip} → capacityFactor=${pvResult.capacityFactor}% → PSH=${peakSunHours} h/day`
+        `[V7 PVWatts] ZIP=${zip} → capacityFactor=${pvResult.capacityFactor}% → PSH=${peakSunHours} h/day (GHI-corrected, PR=${PR})`
       );
 
       return { peakSunHours, grade: gradeFromPSH(peakSunHours) };
@@ -232,10 +238,12 @@ export async function fetchSolar(
     const utilityData = await getUtilityRatesByZip(zip);
     const stateCode = utilityData?.stateCode || "CA";
     const capacityFactor = REGIONAL_CAPACITY_FACTORS[stateCode] ?? 0.17;
-    const peakSunHours = Math.round(capacityFactor * 24 * 10) / 10;
+    // Apply same PR correction as the PVWatts path (system CF → GHI PSH)
+    const PR_fallback = 0.77;
+    const peakSunHours = Math.round(capacityFactor * 24 / PR_fallback * 10) / 10;
 
     devLog(
-      `[V7 Solar] Regional fallback: state=${stateCode}, CF=${capacityFactor}, PSH=${peakSunHours}`
+      `[V7 Solar] Regional fallback: state=${stateCode}, CF=${capacityFactor}, PSH=${peakSunHours} (GHI-corrected)`
     );
     return { peakSunHours, grade: gradeFromPSH(peakSunHours) };
   } catch (e) {
