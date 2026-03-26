@@ -15,6 +15,7 @@ import {
   getEffectiveSolarCapKW,
   defaultGeneratorScope,
 } from "../addonSizing";
+import { getFacilityConstraints } from "@/services/useCasePowerCalculations";
 
 interface Props {
   state: WizardState;
@@ -590,6 +591,10 @@ function SolarCard({
   peakLoadKW,
   solarGrade,
   onConfig,
+  canopyPotentialKW = 0,
+  canopyInterest,
+  onCanopyChange,
+  isCarWash = false,
 }: {
   maxKW: number;
   recKW: number;
@@ -599,6 +604,10 @@ function SolarCard({
   peakLoadKW: number;
   solarGrade?: string | null;
   onConfig: (kw: number) => void;
+  canopyPotentialKW?: number;
+  canopyInterest?: string;
+  onCanopyChange?: (value: string) => void;
+  isCarWash?: boolean;
 }) {
   const safeMax = maxKW > 0 ? maxKW : 2000;
   // solarMin must always be < safeMax; 10% of max, floored at 1 kW
@@ -609,6 +618,16 @@ function SolarCard({
     Math.max(solarMin, Math.min(safeMax, initialKW > 0 ? initialKW : safeRec))
   );
   const [confirmed, setConfirmed] = useState(false);
+
+  // When canopy interest changes → recKW & maxKW update → sync slider to new rec
+  useEffect(() => {
+    if (!confirmed && recKW > 0) {
+      const clamped = Math.max(solarMin, Math.min(safeMax, recKW));
+      setSliderKW(clamped);
+      onConfig(clamped);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recKW, safeMax]);
 
   const pct = peakLoadKW > 0 ? Math.min(100, Math.round((sliderKW / peakLoadKW) * 100)) : null;
   const savingsK = Math.round((sliderKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
@@ -818,6 +837,99 @@ function SolarCard({
           }}
         />
       </div>
+
+      {/* ── Carport / Canopy Toggle ── */}
+      {canopyPotentialKW > 0 && onCanopyChange && (
+        <div
+          style={{
+            padding: "12px 16px 14px",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: "rgba(148,163,184,0.65)",
+              textTransform: "uppercase",
+              letterSpacing: "0.09em",
+              marginBottom: 8,
+            }}
+          >
+            {isCarWash ? "☀️ Solar Carports (vacuum / parking)" : "☀️ Solar Canopy (parking / carport)"}
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            {([
+              { value: "no",         icon: "🏠", label: "Roof Only",                       extra: "" },
+              { value: "yes",        icon: "🏗️", label: isCarWash ? "+Carport" : "+Canopy", extra: `+${canopyPotentialKW} kW` },
+              { value: "learn_more", icon: "📊", label: "Show Upside",                     extra: `+${Math.round(canopyPotentialKW * 0.5)} kW` },
+            ] as const).map((opt) => {
+              const active = (canopyInterest ?? "no") === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    onCanopyChange(opt.value);
+                    setConfirmed(false); // un-confirm so slider syncs to new rec
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: "8px 4px",
+                    borderRadius: 8,
+                    border: active
+                      ? "1.5px solid rgba(251,191,36,0.7)"
+                      : "1.5px solid rgba(255,255,255,0.08)",
+                    background: active
+                      ? "rgba(251,191,36,0.11)"
+                      : "rgba(255,255,255,0.035)",
+                    cursor: "pointer",
+                    textAlign: "center",
+                    transition: "border-color 0.15s, background 0.15s",
+                  }}
+                >
+                  <div style={{ fontSize: 18 }}>{opt.icon}</div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: active ? "#fbbf24" : "rgba(203,213,225,0.65)",
+                      marginTop: 3,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {opt.label}
+                  </div>
+                  {opt.extra && (
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: active ? "rgba(251,191,36,0.75)" : "rgba(148,163,184,0.45)",
+                        marginTop: 2,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {opt.extra}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <div
+            style={{
+              fontSize: 11,
+              color: "rgba(148,163,184,0.4)",
+              marginTop: 7,
+              lineHeight: 1.5,
+            }}
+          >
+            {isCarWash
+              ? "Carports over vacuum/parking areas expand capacity beyond the main roof."
+              : "Canopy over parking expands capacity beyond rooftop. Slider max and rec update instantly."}
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           padding: "10px 16px 12px",
@@ -839,7 +951,13 @@ function SolarCard({
               Merlin: {safeRec.toLocaleString()} kW recommended
             </strong>{" "}
             based on{" "}
-            {safeMax > 0 ? `${safeMax.toLocaleString()} kW roof space` : "available roof area"}
+            {canopyInterest === "yes"
+              ? `roof + ${isCarWash ? "carport" : "canopy"} (${safeMax.toLocaleString()} kW total)`
+              : canopyInterest === "learn_more"
+              ? `roof + partial ${isCarWash ? "carport" : "canopy"} upside (${safeMax.toLocaleString()} kW)`
+              : safeMax > 0
+              ? `${safeMax.toLocaleString()} kW roof space`
+              : "available roof area"}
             {peakLoadKW > 0 ? ` and ${peakLoadKW.toLocaleString()} kW peak load` : ""}.
           </div>
         </div>
@@ -1454,6 +1572,14 @@ export default function Step3_5V8({ state, actions }: Props) {
   const utilityRate = state.intel?.utilityRate ?? 0.14;
   const peakSunHours = state.intel?.peakSunHours ?? 4.5;
 
+  // Canopy / carport toggle — drives solar cap reactively via useWizardV8 effect
+  const isCarWash = state.industry === "car_wash";
+  const canopyFieldKey = isCarWash ? "carportInterest" : "canopyInterest";
+  const canopyInterest = state.step3Answers?.[canopyFieldKey] as string | undefined;
+  const constraints = getFacilityConstraints(state.industry ?? "");
+  const canopyPotentialKW = constraints?.canopyPotentialKW ?? 0;
+  const handleCanopyChange = (value: string) => actions.setAnswer(canopyFieldKey, value);
+
   const liveSolarKW = state.solarKW > 0 ? state.solarKW : solarFeasible ? solarRecKW : 0;
   const liveGenKW = wantsGenerator
     ? state.generatorKW > 0
@@ -1530,6 +1656,10 @@ export default function Step3_5V8({ state, actions }: Props) {
           peakLoadKW={state.peakLoadKW}
           solarGrade={state.intel?.solarGrade ? `Grade ${state.intel.solarGrade}` : null}
           onConfig={handleSolarConfig}
+          canopyPotentialKW={canopyPotentialKW}
+          canopyInterest={canopyInterest}
+          onCanopyChange={handleCanopyChange}
+          isCarWash={isCarWash}
         />
       )}
       <EVChargingCard
