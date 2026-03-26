@@ -7,7 +7,7 @@
  * ============================================================================
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { WizardState, WizardActions, WizardStep } from "../wizardState";
 import {
   estimateSolarKW,
@@ -257,15 +257,34 @@ function EVSliderRow({
 // ── Confirm Button ────────────────────────────────────────────────────────────
 function ConfirmBtn({
   confirmed,
+  needsConfirm = false,
   label,
   confirmedLabel,
   onClick,
 }: {
   confirmed: boolean;
+  needsConfirm?: boolean;
   label: string;
   confirmedLabel: string;
   onClick: () => void;
 }) {
+  // Inject @keyframes once into <head> so the animation name is available for inline style
+  useEffect(() => {
+    const id = "merlin-confirm-pulse-style";
+    if (!document.getElementById(id)) {
+      const el = document.createElement("style");
+      el.id = id;
+      el.textContent = `
+        @keyframes confirmPulse {
+          0%   { box-shadow: 0 0 0 0 rgba(62,207,142,0.65); }
+          70%  { box-shadow: 0 0 0 10px rgba(62,207,142,0); }
+          100% { box-shadow: 0 0 0 0 rgba(62,207,142,0); }
+        }
+      `;
+      document.head.appendChild(el);
+    }
+  }, []);
+
   if (confirmed) {
     // Compact success badge — not a big CTA, just a status indicator
     return (
@@ -329,26 +348,29 @@ function ConfirmBtn({
         width: "100%",
         padding: "11px 16px",
         borderRadius: 8,
-        border: "1.5px solid rgba(62,207,142,0.4)",
-        background: "transparent",
+        border: needsConfirm
+          ? "1.5px solid rgba(62,207,142,0.85)"
+          : "1.5px solid rgba(62,207,142,0.4)",
+        background: needsConfirm ? "rgba(62,207,142,0.06)" : "transparent",
         cursor: "pointer",
         fontSize: 13,
         fontWeight: 700,
         letterSpacing: "0.05em",
         textTransform: "uppercase" as const,
         color: "#3ECF8E",
-        transition: "all 0.15s",
+        transition: "border-color 0.15s, background 0.15s",
+        animation: needsConfirm ? "confirmPulse 1.5s ease-in-out infinite" : "none",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "rgba(62,207,142,0.08)";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(62,207,142,0.65)";
+        (e.currentTarget as HTMLButtonElement).style.background = "rgba(62,207,142,0.12)";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(62,207,142,0.9)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(62,207,142,0.4)";
+        (e.currentTarget as HTMLButtonElement).style.background = needsConfirm ? "rgba(62,207,142,0.06)" : "transparent";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = needsConfirm ? "rgba(62,207,142,0.85)" : "rgba(62,207,142,0.4)";
       }}
     >
-      {label}
+      {needsConfirm ? `👆 ${label}` : label}
     </button>
   );
 }
@@ -622,9 +644,23 @@ function SolarCard({
     Math.max(solarMin, Math.min(safeMax, initialKW > 0 ? initialKW : safeRec))
   );
   const [confirmed, setConfirmed] = useState(false);
+  // Ref holds the exact kW a canopy toggle button shows — set before onCanopyChange
+  // so the useEffect uses that value instead of the auto-rec formula (cap × 0.80).
+  const pendingToggleKW = useRef<number | null>(null);
 
-  // When canopy interest changes → recKW & maxKW update → sync slider to new rec
+  // When canopy interest changes → recKW & maxKW update → sync slider.
+  // If the change came from a toggle button click, use the button's exact kW;
+  // otherwise fall back to rec (for any other parent-state-driven changes).
   useEffect(() => {
+    if (pendingToggleKW.current !== null) {
+      const target = pendingToggleKW.current;
+      pendingToggleKW.current = null;
+      const clamped = Math.max(solarMin, Math.min(safeMax, target));
+      setSliderKW(clamped);
+      onConfig(clamped);
+      setConfirmed(false);
+      return;
+    }
     if (!confirmed && recKW > 0) {
       const clamped = Math.max(solarMin, Math.min(safeMax, recKW));
       setSliderKW(clamped);
@@ -825,7 +861,7 @@ function SolarCard({
                 whiteSpace: "nowrap",
               }}
             >
-              ⭐ {safeRec.toLocaleString()} kW
+              🧙 rec: {safeRec.toLocaleString()} kW
             </div>
           </div>
         )}
@@ -833,6 +869,7 @@ function SolarCard({
       <div style={{ padding: "0 16px 14px" }}>
         <ConfirmBtn
           confirmed={confirmed}
+          needsConfirm={!confirmed}
           label="Confirm Solar Capacity"
           confirmedLabel={`${sliderKW.toLocaleString()} kW confirmed`}
           onClick={() => {
@@ -889,6 +926,7 @@ function SolarCard({
                 <button
                   key={opt.value}
                   onClick={() => {
+                    pendingToggleKW.current = opt.kw;
                     onCanopyChange(opt.value);
                     setConfirmed(false);
                   }}
@@ -1143,6 +1181,7 @@ function EVChargingCard({
       <div style={{ padding: "0 16px 16px" }}>
         <ConfirmBtn
           confirmed={confirmed}
+          needsConfirm={!confirmed}
           label="Confirm EV Charging"
           confirmedLabel={`${l2 + dcfc + hpc} ports confirmed`}
           onClick={() => {
@@ -1456,6 +1495,7 @@ function BackupGeneratorCard({
       <div style={{ padding: "0 16px 14px" }}>
         <ConfirmBtn
           confirmed={confirmed}
+          needsConfirm={!confirmed}
           label="Confirm Generator Setup"
           confirmedLabel={`${sliderKW.toLocaleString()} kW confirmed`}
           onClick={() => {
