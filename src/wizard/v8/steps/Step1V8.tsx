@@ -324,6 +324,14 @@ export function Step1V8({ state, actions }: Step1Props) {
     zipRef.current?.focus();
   }, []);
 
+  // Preload the Google Maps script as soon as location is confirmed so the
+  // Places library is warm before the user starts typing a business name.
+  useEffect(() => {
+    if (locationConfirmed) {
+      loadGoogleMapsScript().catch(() => { /* silent — ensurePlacesLibrary will surface the error */ });
+    }
+  }, [locationConfirmed]);
+
   const ensurePlacesLibrary = useCallback(async (): Promise<GooglePlacesLibrary | null> => {
     try {
       await loadGoogleMapsScript();
