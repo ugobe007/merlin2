@@ -26,12 +26,16 @@ export default function AuthModal({
     company: "",
   });
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
 
     try {
       if (mode === "signup") {
@@ -45,13 +49,13 @@ export default function AuthModal({
         );
 
         if (result.success && result.user) {
-          alert(
-            `✅ Welcome to Merlin Energy, ${result.user.firstName}!\n\nYour account has been created successfully.`
-          );
-          onLoginSuccess(result.user);
-          onClose();
+          setSuccessMessage(`Welcome to Merlin Energy, ${result.user.firstName}! Your account has been created.`);
+          setTimeout(() => {
+            onLoginSuccess(result.user);
+            onClose();
+          }, 1200);
         } else {
-          alert(result.error || "Signup failed");
+          setErrorMessage(result.error || "Signup failed. Please try again.");
           if (result.error?.includes("already exists")) {
             setMode("login");
           }
@@ -60,11 +64,13 @@ export default function AuthModal({
         const result = await authService.signIn(formData.email, formData.password);
 
         if (result.success && result.user) {
-          alert(`✅ Welcome back, ${result.user.firstName}!`);
-          onLoginSuccess(result.user);
-          onClose();
+          setSuccessMessage(`Welcome back, ${result.user.firstName}!`);
+          setTimeout(() => {
+            onLoginSuccess(result.user);
+            onClose();
+          }, 800);
         } else {
-          alert(result.error || "Login failed");
+          setErrorMessage(result.error || "Login failed. Please check your credentials.");
           if (result.error?.includes("No account found")) {
             setMode("signup");
           }
@@ -72,7 +78,7 @@ export default function AuthModal({
       }
     } catch (error) {
       console.error('Authentication error:', error);
-      alert("Authentication failed. Please try again.");
+      setErrorMessage("Authentication failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -232,6 +238,16 @@ export default function AuthModal({
             </div>
           </div>
 
+          {errorMessage && (
+            <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 font-medium" role="alert">
+              {errorMessage}
+            </div>
+          )}
+          {successMessage && (
+            <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 font-medium" role="status">
+              ✅ {successMessage}
+            </div>
+          )}
           <button
             type="submit"
             disabled={loading}
