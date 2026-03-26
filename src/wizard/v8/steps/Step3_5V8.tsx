@@ -370,7 +370,7 @@ function ConfirmBtn({
         (e.currentTarget as HTMLButtonElement).style.borderColor = needsConfirm ? "rgba(62,207,142,0.85)" : "rgba(62,207,142,0.4)";
       }}
     >
-      {needsConfirm ? `👆 ${label}` : label}
+      {label}
     </button>
   );
 }
