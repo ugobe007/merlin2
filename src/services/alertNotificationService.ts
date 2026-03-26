@@ -340,11 +340,15 @@ async function logAlertToDatabase(
   try {
     const { error } = await supabase.from("ssot_alerts").insert({
       alert_type: alertType,
-      score: payload.score,
-      use_case: payload.useCase,
-      location: payload.location,
-      errors: payload.errors,
-      session_id: payload.sessionId,
+      severity: alertType === "critical" ? "critical" : "warning",
+      message: `Score: ${payload.score}% | Use case: ${payload.useCase} | Errors: ${payload.errors.length}`,
+      details: {
+        score: payload.score,
+        useCase: payload.useCase,
+        location: payload.location,
+        errors: payload.errors,
+        sessionId: payload.sessionId,
+      },
     });
 
     if (error) {
