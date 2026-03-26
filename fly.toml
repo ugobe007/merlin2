@@ -18,7 +18,6 @@ primary_region = 'lax'
     VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2bXBtb3p5Ym10emp2aWtyY3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyODIyOTAsImV4cCI6MjA3Nzg1ODI5MH0.ACqSuHx_-uvrK6-e0sXQO5AmHlA2K0BQUIT3dMRQS_0"
     
     # Third-party API Keys (public, client-side)
-    VITE_GOOGLE_MAPS_API_KEY = "AIzaSyDppNx91-dadZiyNJBcqDhQn9H5mkDdruw"
     VITE_NREL_API_KEY = "G9sYxfv89Vr9mjHD5zThWpBntyYkKJjP6iF8i3He"
     VITE_VISUAL_CROSSING_API_KEY = "HQLBWQ3D3YLYKF2NLJL68EW4C"
   
@@ -26,6 +25,8 @@ primary_region = 'lax'
     # AI & Analysis Keys (passed from Fly.io secrets)
     VITE_OPENAI_API_KEY = "VITE_OPENAI_API_KEY"
     VITE_ENABLE_AI_ANALYSIS = "VITE_ENABLE_AI_ANALYSIS"
+    # Google Maps key — managed via fly secrets so it can be rotated without a code change
+    VITE_GOOGLE_MAPS_API_KEY = "VITE_GOOGLE_MAPS_API_KEY"
 
 [http_service]
   internal_port = 80
