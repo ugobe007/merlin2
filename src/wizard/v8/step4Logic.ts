@@ -628,8 +628,12 @@ function buildOneTier(
  * Fire-and-forget wrapper around CalculationValidator.validateQuote().
  * Uses the Recommended tier as the representative quote for audit purposes.
  * Never blocks buildTiers() — all I/O (Supabase, email/SMS) happens async.
+ * Hard-capped at 5s so a slow/broken Supabase connection can never stall the quote page.
  */
 async function runV8ValidationBackground(state: WizardState, tier: QuoteTier): Promise<void> {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("validation timeout")), 5000)
+  );
   try {
     const inputs: ValidationInput = {
       storageSizeMW: tier.bessKW / 1000,
@@ -674,10 +678,13 @@ async function runV8ValidationBackground(state: WizardState, tier: QuoteTier): P
       },
     } as unknown as QuoteResult;
 
-    await CalculationValidator.validateQuote(quoteResult, inputs, {
-      logToDatabase: true,
-      sessionId: `v8-${state.location?.zip ?? "unknown"}-${Date.now()}`,
-    });
+    await Promise.race([
+      CalculationValidator.validateQuote(quoteResult, inputs, {
+        logToDatabase: true,
+        sessionId: `v8-${state.location?.zip ?? "unknown"}-${Date.now()}`,
+      }),
+      timeout,
+    ]);
   } catch (err) {
     // Never let background validation crash the wizard
     devLog("[V8 CalculationValidator] Background validation error (non-fatal):", err);

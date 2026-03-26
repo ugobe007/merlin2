@@ -102,8 +102,10 @@ export async function checkAndAlert(payload: AlertPayload): Promise<{
   const isCritical = score < ALERT_CONFIG.criticalThreshold;
   const alertType = isCritical ? "critical" : "warning";
 
-  // Log alert to database first
-  await logAlertToDatabase(alertType, payload);
+  // Log to database — fire and forget, never block on a DB error
+  logAlertToDatabase(alertType, payload).catch((err) => {
+    console.warn("[alertNotificationService] DB log failed (non-fatal):", err);
+  });
 
   // Send notifications based on severity
   if (isCritical) {
