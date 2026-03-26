@@ -92,7 +92,7 @@ export default function PricingDashboard() {
       // Get source stats
       const { data: sourceData } = await supabase
         .from('market_data_sources')
-        .select('name, reliability_score, last_fetch_at, is_active')
+        .select('id, name, reliability_score, last_fetch_at, is_active')
         .order('reliability_score', { ascending: false });
 
       if (sourceData) {
@@ -113,6 +113,9 @@ export default function PricingDashboard() {
               ...source,
               total_articles: articleCount || 0,
               prices_extracted: priceCount || 0,
+              reliability_score: source.reliability_score ?? 0,
+              last_fetch_at: source.last_fetch_at ?? '',
+              is_active: source.is_active ?? false,
             };
           })
         );

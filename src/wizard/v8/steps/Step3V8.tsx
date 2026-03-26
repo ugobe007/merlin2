@@ -397,7 +397,7 @@ export function Step3V8({ state, actions }: Props) {
             {q.title || q.label}
           </div>
 
-          {qAny.description && (
+          {!!qAny.description && (
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>
               {String(qAny.description)}
             </div>
@@ -430,7 +430,7 @@ export function Step3V8({ state, actions }: Props) {
           )}
 
           {/* Answer Options */}
-          {q.type === "buttons" && qAny.options && (
+          {q.type === "buttons" && !!qAny.options && (
             <div
               style={{
                 display: "grid",
@@ -443,7 +443,7 @@ export function Step3V8({ state, actions }: Props) {
                 gap: 8,
               }}
             >
-              {q.options.map((opt) => {
+              {(q.options ?? []).map((opt) => {
                 const isSelected = answers[q.id] === opt.value;
                 return (
                   <button

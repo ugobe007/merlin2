@@ -180,6 +180,7 @@ export default function Navbar() {
       <AuthModal
         isOpen={showAuth}
         onClose={() => setShowAuth(false)}
+        onLoginSuccess={() => setShowAuth(false)}
         defaultMode={authMode}
       />
 

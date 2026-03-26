@@ -39,7 +39,7 @@ export interface Question {
   options?: Array<{
     value: string;
     label: string;
-    icon?: string | unknown;
+    icon?: string;
     description?: string;
     disabled?: boolean;
   }>;
@@ -65,20 +65,20 @@ export interface Question {
   quantityOptions?: Array<{
     value: string;
     label: string;
-    icon?: string | unknown;
+    icon?: string;
     description?: string;
   }>;
   existingOptions?: Array<{
     value: string;
     label: string;
-    icon?: string | unknown;
+    icon?: string;
     description?: string;
     quantityRange?: { min: number; max: number; step: number };
   }>;
   plannedOptions?: Array<{
     value: string;
     label: string;
-    icon?: string | unknown;
+    icon?: string;
     description?: string;
   }>;
   impactsCalculations?: string[];
@@ -141,7 +141,8 @@ export const carWashQuestionsComplete: Question[] = [
     conditionalLogic: {
       dependsOn: "facilityType",
       showIf: () => true,
-      modifyOptions: (facilityType: string) => {
+      modifyOptions: (value: unknown) => {
+        const facilityType = value as string;
         // Self-serve can have more bays
         if (facilityType === "self_serve") {
           return {
@@ -263,7 +264,8 @@ export const carWashQuestionsComplete: Question[] = [
     conditionalLogic: {
       dependsOn: "naturalGasLine",
       showIf: () => true,
-      modifyOptions: (gasLine: string) => {
+      modifyOptions: (value: unknown) => {
+        const gasLine = value as string;
         if (gasLine === "yes") {
           return {
             enabledOptions: ["natural_gas"],

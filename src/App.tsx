@@ -1,7 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 
 // ─── Lazy-loaded routes (code-split per page) ───
-const BessQuoteBuilder = lazy(() => import("./components/BessQuoteBuilder"));
 const ProQuoteConfigurationPage = lazy(() => import("./pages/ProQuoteConfigurationPage"));
 const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
 const VendorPortal = lazy(() => import("./components/VendorPortal"));
@@ -21,7 +20,7 @@ const ShoppingCenterEnergy = lazy(() => import("./components/verticals/ShoppingC
 const CasinoEnergy = lazy(() => import("./components/verticals/CasinoEnergy"));
 const AirportEnergy = lazy(() => import("./components/verticals/AirportEnergy"));
 const CollegeEnergy = lazy(() => import("./components/verticals/CollegeEnergy"));
-const HomePage = lazy(() => import("./pages/HomePage"));
+const _HomePage = lazy(() => import("./pages/HomePage")); // kept for legacy reference
 const Home = lazy(() => import("./pages/Home"));
 const LaunchPage = lazy(() => import("./pages/LaunchPage"));
 const PressKit = lazy(() => import("./pages/PressKit"));
@@ -47,7 +46,6 @@ const EnergyNews = lazy(() => import("./pages/EnergyNews"));
 const ElCarWashLanding = lazy(() => import("./pages/ElCarWashLanding"));
 const OpportunitiesDashboard = lazy(() => import("./pages/OpportunitiesDashboard"));
 // const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
-import { QuoteProvider } from "./contexts/QuoteContext";
 import { trackPageView } from "./services/analyticsService";
 
 // Test calculations temporarily disabled for production build
@@ -583,22 +581,20 @@ function App() {
   }
 
   return (
-    <QuoteProvider>
-      <Suspense fallback={<PageLoader />}>
-        <div>
-          <BessQuoteBuilder />
+    <Suspense fallback={<PageLoader />}>
+      <div>
+        <WizardV8Page />
 
-          {/* Floating Admin Access Button - Bottom Right */}
-          <button
-            onClick={handleAdminAccess}
-            className="fixed bottom-4 right-4 bg-gradient-to-br from-purple-700 to-slate-600 hover:from-purple-800 hover:to-slate-700 text-white p-4 rounded-full shadow-xl shadow-purple-700/30 transition-all z-40 opacity-90 hover:opacity-100 hover:scale-110 border-2 border-purple-500 animate-pulse hover:animate-none"
-            title="Admin Access (Ctrl+Shift+A)"
-          >
-            <span className="text-xl">⚙️</span>
-          </button>
-        </div>
-      </Suspense>
-    </QuoteProvider>
+        {/* Floating Admin Access Button - Bottom Right */}
+        <button
+          onClick={handleAdminAccess}
+          className="fixed bottom-4 right-4 bg-gradient-to-br from-purple-700 to-slate-600 hover:from-purple-800 hover:to-slate-700 text-white p-4 rounded-full shadow-xl shadow-purple-700/30 transition-all z-40 opacity-90 hover:opacity-100 hover:scale-110 border-2 border-purple-500 animate-pulse hover:animate-none"
+          title="Admin Access (Ctrl+Shift+A)"
+        >
+          <span className="text-xl">⚙️</span>
+        </button>
+      </div>
+    </Suspense>
   );
 }
 

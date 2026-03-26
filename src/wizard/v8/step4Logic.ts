@@ -497,7 +497,7 @@ function buildOneTier(
   let costHpc = hpc;
   if (costLevel2 === 0 && costDcfc === 0 && costHpc === 0 && (state.evChargers?.count ?? 0) > 0) {
     const t = state.evChargers!.type;
-    if (t === "l2" || t === "level2") costLevel2 = state.evChargers!.count;
+    if (t === "l2") costLevel2 = state.evChargers!.count;
     else if (t === "dcfc") costDcfc = state.evChargers!.count;
     else if (t === "hpc") costHpc = state.evChargers!.count;
     else costLevel2 = state.evChargers!.count; // fallback to L2

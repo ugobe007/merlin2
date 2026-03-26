@@ -578,7 +578,7 @@ export default function WizardV8Page() {
           if (mode === "wizard") {
             actions.goToStep(1 as WizardStep);
           } else if (mode === "proquote") {
-            window.location.href = "/pro-quote";
+            window.location.href = "/quote-builder";
           } else if (mode === "upload") {
             window.location.href = "/upload-quote";
           }

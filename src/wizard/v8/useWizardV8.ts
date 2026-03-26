@@ -824,7 +824,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     const criticalLoadPct = state.criticalLoadPct ?? 0.4;
     let newCap = 0;
 
-    const isCarWash = state.industry === "car_wash" || state.industry === "car-wash";
+    const isCarWash = state.industry === "car_wash";
 
     if (isCarWash) {
       // Dynamic cap: building roof (facilityType + roofType) + vacuum canopy + carport

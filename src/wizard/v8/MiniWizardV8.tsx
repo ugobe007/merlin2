@@ -436,7 +436,7 @@ export function MiniWizardV8({ industry, companyName, companyLogo }: MiniWizardV
         canGoNext={canGoNext}
         nextLabel="Continue"
         nextHint="Proceed to next step"
-        railWidth={currentMiniStep >= 2 && currentMiniStep <= 4 ? 680 : 520}
+        railWidth={miniStepIndex >= 2 && miniStepIndex <= 4 ? 680 : 520}
       >
         {renderStepContent()}
       </WizardShellV7>

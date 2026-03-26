@@ -1,0 +1,15 @@
+fix: ProQuote route, OpenAI key, BessQuoteBuilder deprecation, 29 TS build errors
+
+- Fix broken ProQuote link on Step 0 (/pro-quote to /quote-builder)
+- Fix .env duplicate/malformed VITE_OPENAI_API_KEY
+- Replace deprecated BessQuoteBuilder with WizardV8Page as default route
+- Remove unused BessQuoteBuilder and QuoteProvider imports from App.tsx
+- Fix Navbar: add missing onLoginSuccess prop to AuthModal
+- Fix carwash-questions-complete.config.ts: icon types, modifyOptions param
+- Fix CompleteQuestionRenderer: type modifications with proper interface
+- Fix PricingDashboard: add id to select(), null-coerce SourceStats fields
+- Fix curatedFieldsResolver: cast options/conditionalLogic to CuratedField types
+- Fix MiniWizardV8: railWidth comparison uses miniStepIndex not currentMiniStep
+- Fix step4Logic: remove dead level2 comparison (EVChargerType has no level2)
+- Fix Step3V8: guard unknown JSX, optional chain on q.options.map()
+- Fix useWizardV8: remove dead car-wash string (IndustrySlug only has car_wash)

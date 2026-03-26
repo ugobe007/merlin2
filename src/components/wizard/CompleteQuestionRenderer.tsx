@@ -62,7 +62,11 @@ export function CompleteQuestionRenderer({
   let modifiedOptions = question.options;
   if (question.conditionalLogic?.modifyOptions) {
     const dependentValue = allAnswers[question.conditionalLogic.dependsOn];
-    const modifications = question.conditionalLogic.modifyOptions(dependentValue);
+    const modifications = question.conditionalLogic.modifyOptions(dependentValue) as {
+      enabledOptions?: string[];
+      disabledOptions?: string[];
+      options?: typeof question.options;
+    };
     if (modifications.enabledOptions || modifications.disabledOptions) {
       modifiedOptions = question.options?.map(opt => ({
         ...opt,
@@ -187,7 +191,12 @@ function renderInputComponent(
     case 'auto_confirm':
       if (question.conditionalLogic) {
         const dependsOnValue = allAnswers?.[question.conditionalLogic.dependsOn];
-        const modifications = question.conditionalLogic.modifyOptions?.(dependsOnValue);
+        const modifications = question.conditionalLogic.modifyOptions?.(dependsOnValue) as {
+          locked?: boolean;
+          autoValue?: number | string;
+          message?: string;
+          range?: { min?: number; max?: number };
+        } | undefined;
         
         if (modifications?.locked) {
           return (
