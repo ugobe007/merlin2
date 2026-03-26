@@ -254,9 +254,9 @@ test.describe("5. Auth Flow", () => {
     await page.waitForTimeout(3000);
     await expect(page.locator("body")).toBeVisible();
     // Error should now appear inline (we replaced alert() with inline error)
-    await expect(page.locator("[role='alert'], text=/failed|invalid|incorrect|wrong|not found/i").first()).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(
+      page.locator("[role='alert']").or(page.locator("text=/failed|invalid|incorrect|wrong|not found/i")).first()
+    ).toBeVisible({ timeout: 10000 });
   });
 });
 
