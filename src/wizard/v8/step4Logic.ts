@@ -88,7 +88,8 @@ import {
 import { validateAddonConfig } from "@/services/addonGuardrails";
 import { hasGeneratorIntent } from "./addonIntent";
 import { CalculationValidator, type ValidationInput } from "@/services/calculationValidator";
-import { selectOptimalPanel, type SolarPanelSpec } from "@/services/solarPanelSelectionService";
+import { selectOptimalPanel } from "@/services/solarPanelSelectionService";
+import { selectOptimalBESS, type BESSSpec } from "@/services/bessSelectionService";
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
 import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
 
@@ -431,7 +432,8 @@ function buildOneTier(
   goal: GoalChoice,
   tierLabel: TierLabel,
   baseNotes: string[],
-  solarPricePerWatt: number = EQUIPMENT_UNIT_COSTS.solar.pricePerWatt
+  solarPricePerWatt: number = EQUIPMENT_UNIT_COSTS.solar.pricePerWatt,
+  bessSpec?: BESSSpec
 ): QuoteTier {
   const {
     intel,
@@ -525,6 +527,13 @@ function buildOneTier(
     hpcChargers: costHpc,
     solarPricePerWattOverride:
       solarPricePerWatt !== EQUIPMENT_UNIT_COSTS.solar.pricePerWatt ? solarPricePerWatt : undefined,
+    // BESS supplier DB overrides — scale from product unit price to system price
+    // bessSpec.effectivePricePerKwh is the pack $/kWh from the DB product.
+    // We only pass the override when a real (non-fallback) product is selected.
+    bessPackPricePerKWhOverride:
+      bessSpec && !bessSpec.isFallback ? bessSpec.effectivePricePerKwh : undefined,
+    bessInverterPricePerKWOverride:
+      bessSpec && !bessSpec.isFallback ? bessSpec.pricePerKw : undefined,
   });
 
   // ── V4.5 SSOT SAVINGS ──────────────────────────────────────────────────
@@ -699,7 +708,8 @@ async function runV8ValidationBackground(state: WizardState, tier: QuoteTier): P
     // BESS pack cost = pack-only (cells + BMS + thermal + enclosure), NO PCS/inverter.
     // This keeps the validator's $/kWh check aligned with pack-only guardrails.
     const bessPackCost = Math.round(
-      tier.bessKWh * EQUIPMENT_UNIT_COSTS.bess.pricePerKWh // $350/kWh pack rate from SSOT
+      tier.bessKWh *
+        (tier.selectedBESS?.effectivePricePerKwh ?? EQUIPMENT_UNIT_COSTS.bess.pricePerKWh) // DB price or SSOT $350/kWh
     );
     const solarCost =
       tier.solarKW > 0
@@ -1087,13 +1097,24 @@ export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteT
   // buildTiers remains async for backwards compatibility with all callers.
   // applyPaybackGuardrail runs after each tier to enforce 5–7 yr payback targets.
 
-  // Select optimal solar panel from supplier DB (async, falls back to SSOT silently).
-  // One lookup shared across all three tiers.
-  const selectedPanelFull: SolarPanelSpec = state.wantsSolar
-    ? await selectOptimalPanel(state.location.state)
-    : (await import("@/services/solarPanelSelectionService")).SSOT_FALLBACK_PANEL;
+  // ── PARALLEL DB LOOKUPS — solar panel + BESS product ──────────────────────
+  // Both queries are async (vendor_products DB). Run in parallel for performance.
+  // Falls back to SSOT silently when no approved products exist.
 
-  // Compact panel info stored on each tier (full SolarPanelSpec is not serialised to WizardState)
+  // Estimate BESS sizing for the recommended tier so selection targets the right
+  // unit size. Use the recommended-tier computed BESS sizing.
+  const { bessKW: estKW, bessKWh: estKWh } = computeBESSSizing(state, goal, "Recommended", 0, 0);
+
+  const [selectedPanelFull, selectedBESSFull] = await Promise.all([
+    state.wantsSolar
+      ? selectOptimalPanel(state.location.state)
+      : (await import("@/services/solarPanelSelectionService")).SSOT_FALLBACK_PANEL,
+    estKWh > 0
+      ? selectOptimalBESS(estKWh, estKW)
+      : (await import("@/services/bessSelectionService")).SSOT_FALLBACK_BESS,
+  ]);
+
+  // Compact panel info stored on each tier (full SolarPanelSpec not serialised to WizardState)
   const panelForTier = selectedPanelFull.isFallback
     ? undefined
     : {
@@ -1107,26 +1128,46 @@ export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteT
         isFallback: false,
       };
 
-  // Effective $/W from supplier DB (or SSOT fallback 1.00)
+  // Compact BESS info stored on each tier (full BESSSpec not serialised to WizardState)
+  const bessForTier = selectedBESSFull.isFallback
+    ? undefined
+    : {
+        manufacturer: selectedBESSFull.manufacturer,
+        model: selectedBESSFull.model,
+        chemistry: selectedBESSFull.chemistry,
+        capacityKwh: selectedBESSFull.capacityKwh,
+        powerKw: selectedBESSFull.powerKw,
+        effectivePricePerKwh: selectedBESSFull.effectivePricePerKwh,
+        roundtripEfficiencyPct: selectedBESSFull.roundtripEfficiencyPct,
+        cycleLife: selectedBESSFull.cycleLife,
+        warrantyYears: selectedBESSFull.warrantyYears,
+        leadTimeWeeks: selectedBESSFull.leadTimeWeeks,
+        isFallback: false,
+      };
+
+  // Effective $/W from supplier DB (or SSOT fallback $1.00/W)
   const solarPricePerWatt = selectedPanelFull.effectivePricePerWatt;
 
   const starter = applyPaybackGuardrail(
-    buildOneTier(state, goal, "Starter", baseNotes, solarPricePerWatt),
+    buildOneTier(state, goal, "Starter", baseNotes, solarPricePerWatt, selectedBESSFull),
     state
   );
   starter.selectedPanel = panelForTier;
+  starter.selectedBESS = bessForTier;
 
   const recommended = applyPaybackGuardrail(
-    buildOneTier(state, goal, "Recommended", baseNotes, solarPricePerWatt),
+    buildOneTier(state, goal, "Recommended", baseNotes, solarPricePerWatt, selectedBESSFull),
     state
   );
   recommended.selectedPanel = panelForTier;
+  recommended.selectedBESS = bessForTier;
 
   const complete = applyPaybackGuardrail(
-    buildOneTier(state, goal, "Complete", baseNotes, solarPricePerWatt),
+    buildOneTier(state, goal, "Complete", baseNotes, solarPricePerWatt, selectedBESSFull),
     state
   );
   complete.selectedPanel = panelForTier;
+  complete.selectedBESS = bessForTier;
 
   // Layer 3 validation: fire-and-forget Supabase audit + email/SMS alerts.
   // Uses the Recommended tier as the representative quote.

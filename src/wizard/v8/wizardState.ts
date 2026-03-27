@@ -245,6 +245,24 @@ export interface QuoteTier {
     countryOfOrigin: string;
     isFallback: boolean;
   };
+  /**
+   * Selected BESS product from supplier DB.
+   * Undefined when bessKWh === 0 or the SSOT fallback is used (isFallback=true).
+   * Used by Step 5 to display brand/model/chemistry on the quote card.
+   */
+  selectedBESS?: {
+    manufacturer: string;
+    model: string;
+    chemistry: string;
+    capacityKwh: number;
+    powerKw: number;
+    effectivePricePerKwh: number;
+    roundtripEfficiencyPct: number;
+    cycleLife: number;
+    warrantyYears: number;
+    leadTimeWeeks: number;
+    isFallback: boolean;
+  };
 }
 
 // ── Wizard state (the spine) ─────────────────────────────────────────────────

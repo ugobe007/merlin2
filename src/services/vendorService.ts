@@ -168,7 +168,15 @@ export const getCurrentVendor = async () => {
 // =====================================================
 
 export interface ProductSubmissionData {
-  product_category: "battery" | "inverter" | "ems" | "bos" | "container" | "solar";
+  product_category:
+    | "battery"
+    | "inverter"
+    | "ems"
+    | "bos"
+    | "container"
+    | "solar"
+    | "generator"
+    | "ev_charger";
   manufacturer: string;
   model: string;
   capacity_kwh?: number;
@@ -178,6 +186,49 @@ export interface ProductSubmissionData {
   efficiency_percent?: number;
   price_per_kwh?: number;
   price_per_kw?: number;
+  // ── BESS-specific fields (product_category === 'battery') ──────────────────
+  /** Rated cycle life to 80% SoH (e.g. 4000, 6000) */
+  cycle_life?: number;
+  /** AC-AC round-trip efficiency (%) — e.g. 85.0, 88.5 */
+  roundtrip_efficiency_pct?: number;
+  /** Usable depth of discharge (%) — typical LFP = 90% */
+  depth_of_discharge_pct?: number;
+  /** Continuous C-rate (e.g. 0.25 for 4-hr, 0.5 for 2-hr) */
+  c_rate_continuous?: number;
+  /** Annual capacity degradation (%/yr) — affects lifetime yield scoring */
+  annual_degradation_pct?: number;
+  /** Cycle warranty (separate from calendar warranty_years) */
+  warranty_cycles?: number;
+  // ── Generator-specific fields (product_category === 'generator') ───────────
+  /** 'diesel' | 'natural_gas' | 'dual_fuel' | 'propane' | 'biogas' */
+  fuel_type?: string;
+  /** Prime/continuous kW rating */
+  prime_rating_kw?: number;
+  /** Standby kW rating (higher, short-term) */
+  standby_rating_kw?: number;
+  /** Fuel consumption at 100% load (gal/hr diesel or scfm natural gas) */
+  fuel_consumption_gph?: number;
+  /** 'Tier 4 Final' | 'Tier 3' | 'EPA Tier 2' */
+  emissions_tier?: string;
+  /** 'open' | 'sound-attenuated' | 'weather-protected' */
+  enclosure_type?: string;
+  /** Automatic transfer switch included */
+  ats_included?: boolean;
+  // ── EV charger-specific fields (product_category === 'ev_charger') ─────────
+  /** 'L1' | 'L2' | 'DCFC' | 'HPC' */
+  charger_level?: string;
+  /** Maximum output per charging port (kW) */
+  output_kw_max?: number;
+  /** Number of simultaneous charging ports */
+  simultaneous_charges?: number;
+  /** Connector types: ['J1772', 'CCS', 'CHAdeMO', 'NACS'] */
+  connector_types?: string[];
+  /** Network provider: 'ChargePoint' | 'OCPP 2.0' | 'Proprietary' */
+  network_provider?: string;
+  /** Dynamic load management capable */
+  power_management?: boolean;
+  /** AC-DC charging efficiency (%) */
+  charger_efficiency_pct?: number;
   // ── Solar panel-specific fields (required when product_category === 'solar') ──
   /** Rated DC power at STC (Wp) — e.g. 400, 500 */
   watt_peak?: number;
@@ -326,6 +377,11 @@ export const approveVendorProduct = async (
       (async () => {
         const { bustSolarPanelCache } = await import("./solarPanelSelectionService");
         bustSolarPanelCache();
+      })(),
+      // Bust BESS selection cache so the next buildTiers() picks up the new BESS product
+      (async () => {
+        const { bustBESSCache } = await import("./bessSelectionService");
+        bustBESSCache();
       })(),
       // Add to ML training data
       (async () => {
