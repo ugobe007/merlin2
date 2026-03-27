@@ -1557,7 +1557,16 @@ function BackupGeneratorCard({
 }
 
 // ── ROI Intelligence Banner ─────────────────────────────────────────────────
-type RoiHint = { id: string; icon: string; color: "amber" | "blue" | "rose"; text: string };
+type RoiHint = {
+  id: string;
+  icon: string;
+  color: "amber" | "blue" | "rose";
+  text: string;
+  /** Label for the one-tap action button, if applicable */
+  actionLabel?: string;
+  /** Callback fired when the user taps the action button */
+  onAction?: () => void;
+};
 
 function RoiIntelBanner({
   peakSunHours,
@@ -1571,6 +1580,8 @@ function RoiIntelBanner({
   canopyPotentialKW,
   isCarWash,
   solarFeasible,
+  onApplyCarport,
+  onApplySolarRec,
 }: {
   peakSunHours: number;
   utilityRate: number;
@@ -1583,6 +1594,10 @@ function RoiIntelBanner({
   canopyPotentialKW: number;
   isCarWash: boolean;
   solarFeasible: boolean;
+  /** Fires handleCanopyChange("yes") in the parent — wires the carport toggle directly */
+  onApplyCarport?: () => void;
+  /** Fires handleSolarConfig(solarRecKW) in the parent — snaps slider to recommended */
+  onApplySolarRec?: () => void;
 }) {
   const hints: RoiHint[] = [];
 
@@ -1593,7 +1608,9 @@ function RoiIntelBanner({
       id: "carport_vacuum",
       icon: "☀️",
       color: "amber",
-      text: `Vacuum station canopies can support ${canopyPotentialKW} kW of additional solar (+$${extraK}K/yr estimated). Select "Solar Carport" below to include them and improve payback.`,
+      text: `Vacuum station canopies can support ${canopyPotentialKW} kW of additional solar (+$${extraK}K/yr est.). Including them improves payback — tap to add now.`,
+      actionLabel: "Add solar carport →",
+      onAction: onApplyCarport,
     });
   }
 
@@ -1604,11 +1621,13 @@ function RoiIntelBanner({
       id: "canopy_general",
       icon: "🏗️",
       color: "amber",
-      text: `A solar canopy over your parking area unlocks ${canopyPotentialKW} kW of additional capacity (+$${extraK}K/yr). Select "Solar Canopy" below.`,
+      text: `A solar canopy over your parking area unlocks ${canopyPotentialKW} kW of additional capacity (+$${extraK}K/yr est.). Tap to include it.`,
+      actionLabel: "Add solar canopy →",
+      onAction: onApplyCarport,
     });
   }
 
-  // 3. Solar set below recommended
+  // 3. Solar set below recommended — show before headroom hint so it takes priority
   if (solarFeasible && solarRecKW > 0 && liveSolarKW < solarRecKW * 0.85) {
     const deltaKW = Math.round(solarRecKW - liveSolarKW);
     const deltaK = Math.round((deltaKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
@@ -1617,7 +1636,9 @@ function RoiIntelBanner({
         id: "solar_below_rec",
         icon: "📈",
         color: "amber",
-        text: `Raising solar to the recommended ${solarRecKW} kW (currently ${Math.round(liveSolarKW)} kW) adds ~$${deltaK}K/yr in savings and shortens payback.`,
+        text: `Raising solar to the recommended ${solarRecKW} kW (currently ${Math.round(liveSolarKW)} kW) adds ~$${deltaK}K/yr est. and shortens payback. Tap to apply.`,
+        actionLabel: `Apply ${solarRecKW} kW →`,
+        onAction: onApplySolarRec,
       });
     }
   }
@@ -1629,18 +1650,18 @@ function RoiIntelBanner({
       id: "good_sun_headroom",
       icon: "⚡",
       color: "blue",
-      text: `${peakSunHours} hrs/day sun — ${headroom} kW of unused capacity available above your current setting. More solar = shorter payback at this location.`,
+      text: `${peakSunHours} hrs/day sun — ${headroom} kW of unused roof capacity available. More solar means shorter payback at this location.`,
     });
   }
 
-  // 5. TOU rates detected
+  // 5. TOU rates detected — informational only, no user action needed
   if (hasTOU && peakRate > utilityRate) {
     const spreadCents = Math.round((peakRate - utilityRate) * 100);
     hints.push({
       id: "tou_available",
       icon: "🔋",
       color: "blue",
-      text: `Time-of-Use rates detected (${spreadCents}¢ peak/off-peak spread). BESS will shift load off-peak — additional TOU savings appear on your quote.`,
+      text: `Time-of-Use rates detected (${spreadCents}¢ peak/off-peak spread). BESS will shift load off-peak — TOU arbitrage savings appear on your quote in Step 5.`,
     });
   }
 
@@ -1688,22 +1709,43 @@ function RoiIntelBanner({
             }}
           >
             <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{hint.icon}</span>
-            <div>
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color: labelColor,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.07em",
-                  marginRight: 6,
-                }}
-              >
-                {label}
-              </span>
-              <span style={{ fontSize: 13, color: "rgba(203,213,225,0.75)", lineHeight: 1.5 }}>
-                {hint.text}
-              </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ marginBottom: hint.actionLabel ? 6 : 0 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: labelColor,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.07em",
+                    marginRight: 6,
+                  }}
+                >
+                  {label}
+                </span>
+                <span style={{ fontSize: 13, color: "rgba(203,213,225,0.75)", lineHeight: 1.5 }}>
+                  {hint.text}
+                </span>
+              </div>
+              {hint.actionLabel && hint.onAction && (
+                <button
+                  onClick={hint.onAction}
+                  style={{
+                    marginTop: 4,
+                    padding: "5px 12px",
+                    borderRadius: 6,
+                    border: `1px solid ${labelColor}55`,
+                    background: `${labelColor}14`,
+                    color: labelColor,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  {hint.actionLabel}
+                </button>
+              )}
             </div>
           </div>
         );
@@ -1917,6 +1959,11 @@ export default function Step3_5V8({ state, actions }: Props) {
         canopyPotentialKW={canopyPotentialKW}
         isCarWash={isCarWash}
         solarFeasible={solarFeasible}
+        onApplyCarport={() => handleCanopyChange("yes")}
+        onApplySolarRec={() => {
+          const kw = solarEffectiveRecKW;
+          handleSolarConfig(kw);
+        }}
       />
       {solarFeasible && (
         <SolarCard
