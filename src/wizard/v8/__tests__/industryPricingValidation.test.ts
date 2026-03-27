@@ -6,12 +6,14 @@
  * using pricingServiceV45 as the single source of truth.
  *
  * Invariants validated here:
- *  - Solar $1.51/W, BESS $350/kWh + $150/kW (hybrid inverter)
+ *  - Solar $1.00/W equipment-only (field labor $0.51/W billed as Additional Costs)
+ *  - BESS $350/kWh + $150/kW (hybrid inverter)
  *  - NG gen $500/kW + $8K ATS (no tank)
  *  - Diesel gen $690/kW + $15K tank + $8K ATS
- *  - ITC = 30% × (solarCost + bessCost) only — excludes gen, EV, Merlin
+ *  - ITC = 30% × (solar equip+labor + BESS + site engineering + contingency + install labor)
+ *    per IRA 2022 Section 48 — generator and EV chargers excluded
  *  - Contingency = 7.5% × (equipTotal + siteWork)
- *  - Merlin fee: 20% <$200K / 14% $200K–$800K / 13% >$800K of equipSubtotal
+ *  - Merlin fee: 22% <$200K / 17% $200K–$800K / 15% >$800K of equipSubtotal
  *  - annualSavings model responds to utility rate, demand charge, sun hours
  *  - Savings = pricingServiceV45 (real inputs), NOT centralizedCalculations
  *
@@ -48,7 +50,7 @@ function expectApprox(actual: number, expected: number, label: string, pct = 0.0
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const SOLAR_PER_W = EQUIPMENT_UNIT_COSTS.solar.pricePerWatt; // 1.51
+const SOLAR_PER_W = EQUIPMENT_UNIT_COSTS.solar.pricePerWatt; // 1.00 (equipment-only)
 const BESS_PER_KWH = EQUIPMENT_UNIT_COSTS.bess.pricePerKWh; // 350
 const BESS_PER_KW = EQUIPMENT_UNIT_COSTS.bess.pricePerKW; // 150
 const GEN_DIESEL_PER_KW = EQUIPMENT_UNIT_COSTS.generator.pricePerKW; // 690
@@ -58,13 +60,13 @@ const DIESEL_TANK = EQUIPMENT_UNIT_COSTS.generator.fuelTankCost; // 15000
 const L2_COST = EQUIPMENT_UNIT_COSTS.evCharging.level2; // 7000
 const DCFC_COST = EQUIPMENT_UNIT_COSTS.evCharging.dcfc; // 50000
 const HPC_COST = EQUIPMENT_UNIT_COSTS.evCharging.hpc; // 150000
-const SITE_WORK = SITE_WORK_COSTS.total; // 25300
+const SITE_WORK = SITE_WORK_COSTS.total; // 25800 (all site work: soft costs + installation labor)
 
 // ── Tier 1: Constants smoke test ─────────────────────────────────────────────
 
 describe("pricingServiceV45 constants — SSOT anchors", () => {
-  it("solar is $1.51/W all-in", () => {
-    expect(SOLAR_PER_W).toBe(1.51);
+  it("solar equipment is $1.00/W (field labor $0.51/W billed separately)", () => {
+    expect(SOLAR_PER_W).toBe(1.0);
   });
   it("BESS is $350/kWh", () => {
     expect(BESS_PER_KWH).toBe(350);
@@ -112,10 +114,15 @@ describe("ITC basis — solar + BESS only (no gen, EV, Merlin)", () => {
       generatorKW: 200,
       generatorFuelType: "diesel",
     });
-    const solarCost = 100 * SOLAR_PER_W * 1000;
-    const bessCost = 400 * BESS_PER_KWH + 200 * BESS_PER_KW;
-    const expectedITC = Math.round((solarCost + bessCost) * FEDERAL_ITC_RATE);
-    expect(result.federalITC).toBe(expectedITC);
+    // ITC basis per IRA §48 includes solar (equip+labor) + BESS + site costs.
+    // Generator cost is NOT eligible — verify ITC < (solar + BESS + gen) × 30%
+    const upperBound =
+      (result.solarCost + result.bessCost + result.generatorCost) * FEDERAL_ITC_RATE;
+    expect(result.federalITC).toBeGreaterThan(0);
+    expect(result.federalITC).toBeLessThan(upperBound);
+    // ITC must exceed old equipment-only basis (labor & site costs now included)
+    const minBasis = Math.round((result.solarCost + result.bessCost) * FEDERAL_ITC_RATE);
+    expect(result.federalITC).toBeGreaterThan(minBasis);
   });
 
   it("ITC excludes EV charging cost", () => {
@@ -125,10 +132,15 @@ describe("ITC basis — solar + BESS only (no gen, EV, Merlin)", () => {
       bessKWh: 200,
       dcfcChargers: 4,
     });
-    const solarCost = 50 * SOLAR_PER_W * 1000;
-    const bessCost = 200 * BESS_PER_KWH + 100 * BESS_PER_KW;
-    const expectedITC = Math.round((solarCost + bessCost) * FEDERAL_ITC_RATE);
-    expect(result.federalITC).toBe(expectedITC);
+    // EV charging hardware (4×DCFC = $200K) is NOT ITC-eligible.
+    // ITC < (solar + BESS + EV) × 30%
+    const upperBound =
+      (result.solarCost + result.bessCost + result.evChargingCost) * FEDERAL_ITC_RATE;
+    expect(result.federalITC).toBeGreaterThan(0);
+    expect(result.federalITC).toBeLessThan(upperBound);
+    // ITC must exceed old equipment-only basis (labor & site costs now included)
+    const minBasis = Math.round((result.solarCost + result.bessCost) * FEDERAL_ITC_RATE);
+    expect(result.federalITC).toBeGreaterThan(minBasis);
   });
 
   it("ITC is zero when no solar or BESS", () => {
@@ -180,23 +192,22 @@ describe("Generator pricing: NG vs diesel", () => {
 // ── Tier 4: Merlin fee tiers ──────────────────────────────────────────────────
 
 describe("Merlin fee tiers (equipment subtotal threshold)", () => {
-  it("<$200K equipment → 20% margin", () => {
-    // Solar 50kW = $75.5K equipment only
+  it("<$200K equipment → 22% margin", () => {
+    // Solar 50kW = $50K equipment at $1.00/W
     const result = calculateSystemCosts({ solarKW: 50 });
-    expect(result.merlinFees.effectiveMargin).toBe(0.2);
+    expect(result.merlinFees.effectiveMargin).toBe(0.22);
   });
 
-  it("$200K–$800K equipment → 14% margin", () => {
-    // Solar 200kW = $302K equipment
+  it("$200K–$800K equipment → 17% margin", () => {
+    // Solar 200kW = $200K equipment at $1.00/W (boundary)
     const result = calculateSystemCosts({ solarKW: 200 });
-    expect(result.merlinFees.effectiveMargin).toBe(0.14);
+    expect(result.merlinFees.effectiveMargin).toBe(0.17);
   });
 
-  it(">$800K equipment → 13% margin", () => {
-    // BESS 2000 kWh + 500 kW = $700K + $75K = $775K... need bigger
-    // Solar 600kW = $906K equipment
-    const result = calculateSystemCosts({ solarKW: 600 });
-    expect(result.merlinFees.effectiveMargin).toBe(0.13);
+  it(">$800K equipment → 15% margin", () => {
+    // Solar 900kW = $900K equipment at $1.00/W (exceeds $800K threshold)
+    const result = calculateSystemCosts({ solarKW: 900 });
+    expect(result.merlinFees.effectiveMargin).toBe(0.15);
   });
 
   it("Merlin fee = effectiveMargin × equipmentSubtotal", () => {
@@ -219,19 +230,19 @@ describe("WOW Car Wash scenario (4-bay express, NG gen, 4×L2)", () => {
     level2Chargers: 4,
   });
 
-  it("grossCost ≈ $357,608 (±1%)", () => {
-    expectApprox(carWashNG.totalInvestment, 357608, "car wash NG gross");
+  it("grossCost ≈ $321,236 (±1%)", () => {
+    expectApprox(carWashNG.totalInvestment, 321236, "car wash NG gross");
   });
 
-  it("ITC base is solar+BESS only (≈ $113,075 → ITC ≈ $56,923)", () => {
+  it("ITC base: solarCost + bessCost matches SSOT formula (dynamic check)", () => {
     const solarCost = 50 * SOLAR_PER_W * 1000;
     const bessCost = 200 * BESS_PER_KWH + 100 * BESS_PER_KW;
     const expectedITCBase = solarCost + bessCost;
     expectApprox(carWashNG.solarCost + carWashNG.bessCost, expectedITCBase, "ITC base");
   });
 
-  it("netCost ≈ $309,458 (±1%)", () => {
-    expectApprox(carWashNG.netInvestment, 309458, "car wash NG net");
+  it("netCost ≈ $298,502 (±1%)", () => {
+    expectApprox(carWashNG.netInvestment, 298502, "car wash NG net");
   });
 
   it("EV chargers (4×L2) = $28,000", () => {
@@ -249,12 +260,12 @@ describe("WOW Car Wash — diesel variant", () => {
     level2Chargers: 4,
   });
 
-  it("grossCost ≈ $410,460 (±1%)", () => {
-    expectApprox(carWashDiesel.totalInvestment, 410460, "car wash diesel gross");
+  it("grossCost ≈ $375,393 (±1%)", () => {
+    expectApprox(carWashDiesel.totalInvestment, 375393, "car wash diesel gross");
   });
 
-  it("netCost ≈ $362,310 (±1%)", () => {
-    expectApprox(carWashDiesel.netInvestment, 362310, "car wash diesel net");
+  it("netCost ≈ $351,681 (±1%)", () => {
+    expectApprox(carWashDiesel.netInvestment, 351681, "car wash diesel net");
   });
 
   it("diesel costs more than NG variant by exactly $36,000 (200kW×$190+$15K tank)", () => {
@@ -290,21 +301,21 @@ describe("Hotel scenario (200-room, NG gen, 8×L2, 2×DCFC)", () => {
     dcfcChargers: 2,
   });
 
-  it("grossCost ≈ $1,020,053 (±1%) — includes 2×DCFC 480V electrical infrastructure", () => {
-    expectApprox(hotel.totalInvestment, 1020053, "hotel gross");
+  it("grossCost ≈ $943,238 (±1%) — includes 2×DCFC 480V electrical infrastructure", () => {
+    expectApprox(hotel.totalInvestment, 943238, "hotel gross");
   });
 
-  it("netCost ≈ $875,603 (±1%) — includes 2×DCFC 480V electrical infrastructure", () => {
-    expectApprox(hotel.netInvestment, 875603, "hotel net");
+  it("netCost ≈ $863,963 (±1%) — includes 2×DCFC 480V electrical infrastructure", () => {
+    expectApprox(hotel.netInvestment, 863963, "hotel net");
   });
 
   it("EV chargers (8×L2 + 2×DCFC) = $156,000", () => {
     expect(hotel.evChargingCost).toBe(8 * L2_COST + 2 * DCFC_COST);
   });
 
-  it("Merlin fee tier is 13% (equipment subtotal crosses $800K with DCFC infra)", () => {
-    // Hotel equipment subtotal: solar+BESS+gen+EV+infra ≈ $823K → 13% tier (>$800K)
-    expect(hotel.merlinFees.effectiveMargin).toBe(0.13);
+  it("Merlin fee tier is 17% (equipment subtotal $200K–$800K with new $1.00/W solar)", () => {
+    // Hotel equipment subtotal at $1.00/W solar: ~$580K → 17% tier ($200K–$800K)
+    expect(hotel.merlinFees.effectiveMargin).toBe(0.17);
   });
 });
 
@@ -319,12 +330,12 @@ describe("EV Hub scenario (4×DCFC + 2×HPC, solar+BESS, no gen)", () => {
     hpcChargers: 2,
   });
 
-  it("grossCost ≈ $1,071,127 (±1%) — includes 4×DCFC + 2×HPC 480V infra ($120K equipment)", () => {
-    expectApprox(evHub.totalInvestment, 1071127, "EV hub gross");
+  it("grossCost ≈ $1,042,695 (±1%) — includes 4×DCFC + 2×HPC 480V infra ($120K equipment)", () => {
+    expectApprox(evHub.totalInvestment, 1042695, "EV hub gross");
   });
 
-  it("netCost ≈ $997,477 (±1%) — includes 4×DCFC + 2×HPC 480V infra ($120K equipment)", () => {
-    expectApprox(evHub.netInvestment, 997477, "EV hub net");
+  it("netCost ≈ $981,120 (±1%) — includes 4×DCFC + 2×HPC 480V infra ($120K equipment)", () => {
+    expectApprox(evHub.netInvestment, 981120, "EV hub net");
   });
 
   it("EV chargers (4×DCFC + 2×HPC) = $500,000", () => {
@@ -347,12 +358,12 @@ describe("Data Center scenario (diesel, no EV)", () => {
     generatorFuelType: "diesel",
   });
 
-  it("grossCost ≈ $1,631,590 (±1%)", () => {
-    expectApprox(dc.totalInvestment, 1631590, "data center gross");
+  it("grossCost ≈ $1,456,273 (±1%)", () => {
+    expectApprox(dc.totalInvestment, 1456273, "data center gross");
   });
 
-  it("netCost ≈ $1,342,690 (±1%)", () => {
-    expectApprox(dc.netInvestment, 1342690, "data center net");
+  it("netCost ≈ $1,299,351 (±1%)", () => {
+    expectApprox(dc.netInvestment, 1299351, "data center net");
   });
 });
 
@@ -367,12 +378,12 @@ describe("Hospital scenario (diesel, large BESS, no EV)", () => {
     generatorFuelType: "diesel",
   });
 
-  it("grossCost ≈ $2,613,063 (±1%)", () => {
-    expectApprox(hospital.totalInvestment, 2613063, "hospital gross");
+  it("grossCost ≈ $2,329,085 (±1%)", () => {
+    expectApprox(hospital.totalInvestment, 2329085, "hospital gross");
   });
 
-  it("netCost ≈ $2,131,563 (±1%)", () => {
-    expectApprox(hospital.netInvestment, 2131563, "hospital net");
+  it("netCost ≈ $2,065,532 (±1%)", () => {
+    expectApprox(hospital.netInvestment, 2065532, "hospital net");
   });
 });
 

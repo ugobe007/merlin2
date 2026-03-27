@@ -59,7 +59,7 @@ describe("pricingServiceV45", () => {
       expect(result.totalInvestment).toBeGreaterThan(0); // Merlin fees + site work
     });
 
-    it("should apply correct ITC only to solar and BESS", () => {
+    it("should apply expanded ITC per IRA §48 (solar+labor, BESS, site costs — generator excluded)", () => {
       const config: EquipmentConfig = {
         solarKW: 100,
         bessKW: 150,
@@ -68,9 +68,15 @@ describe("pricingServiceV45", () => {
       };
 
       const result = calculateSystemCosts(config);
-      const expectedITC = (result.solarCost + result.bessCost) * 0.3;
-
-      expect(result.federalITC).toBeCloseTo(expectedITC, 0);
+      // ITC now covers full IRA §48 installed basis:
+      // solar (equip+labor) + BESS + site engineering + contingency + installation labor
+      // Generator cost is explicitly excluded — verify ITC < (solar+BESS+gen) × 30%
+      const upperBound = (result.solarCost + result.bessCost + result.generatorCost) * 0.3;
+      expect(result.federalITC).toBeGreaterThan(0);
+      expect(result.federalITC).toBeLessThan(upperBound);
+      // Verify ITC exceeds old solar+BESS-only basis (labor & site costs now included)
+      const minBasis = (result.solarCost + result.bessCost) * 0.3;
+      expect(result.federalITC).toBeGreaterThan(minBasis);
     });
 
     it("should apply tiered margin correctly", () => {
@@ -82,14 +88,14 @@ describe("pricingServiceV45", () => {
       const mediumResult = calculateSystemCosts(mediumConfig);
       const largeResult = calculateSystemCosts(largeConfig);
 
-      // Small projects should have 20% margin
-      expect(smallResult.merlinFees.effectiveMargin).toBe(0.2);
+      // Small projects (<$200K equipment) should have 22% margin
+      expect(smallResult.merlinFees.effectiveMargin).toBe(0.22);
 
-      // Medium projects should have 14% margin
-      expect(mediumResult.merlinFees.effectiveMargin).toBe(0.14);
+      // Medium projects ($200K–$800K equipment) should have 17% margin
+      expect(mediumResult.merlinFees.effectiveMargin).toBe(0.17);
 
-      // Large projects should have 13% margin
-      expect(largeResult.merlinFees.effectiveMargin).toBe(0.13);
+      // Large projects (>$800K equipment) should have 15% margin
+      expect(largeResult.merlinFees.effectiveMargin).toBe(0.15);
     });
   });
 
@@ -229,25 +235,25 @@ describe("pricingServiceV45", () => {
   });
 
   describe("calculateMerlinFees", () => {
-    it("should apply 20% margin for small projects (<$200K)", () => {
+    it("should apply 22% margin for small projects (<$200K)", () => {
       const result = calculateMerlinFees(150000);
 
-      expect(result.effectiveMargin).toBe(0.2);
-      expect(result.totalFee).toBe(30000);
+      expect(result.effectiveMargin).toBe(0.22);
+      expect(result.totalFee).toBe(33000);
     });
 
-    it("should apply 14% margin for medium projects ($200K-$800K)", () => {
+    it("should apply 17% margin for medium projects ($200K-$800K)", () => {
       const result = calculateMerlinFees(500000);
 
-      expect(result.effectiveMargin).toBe(0.14);
-      expect(result.totalFee).toBe(70000);
+      expect(result.effectiveMargin).toBe(0.17);
+      expect(result.totalFee).toBe(85000);
     });
 
-    it("should apply 13% margin for large projects (>$800K)", () => {
+    it("should apply 15% margin for large projects (>$800K)", () => {
       const result = calculateMerlinFees(1000000);
 
-      expect(result.effectiveMargin).toBe(0.13);
-      expect(result.totalFee).toBe(130000);
+      expect(result.effectiveMargin).toBe(0.15);
+      expect(result.totalFee).toBe(150000);
     });
 
     it("should break down fees into components", () => {
@@ -331,17 +337,17 @@ describe("pricingServiceV45", () => {
     });
 
     it("should handle margin tier boundaries correctly", () => {
-      // Just below 20% tier
+      // 22% tier: equipSub = 50+50kW solar+BESS = $127.5K (<$200K)
       const result1 = calculateSystemCosts({ solarKW: 50, bessKW: 50, bessKWh: 200 });
-      expect(result1.merlinFees.effectiveMargin).toBe(0.2);
+      expect(result1.merlinFees.effectiveMargin).toBe(0.22);
 
-      // Just above 14% tier threshold
+      // 17% tier: equipSub = 150+150kW solar+BESS = $382.5K ($200K–$800K)
       const result2 = calculateSystemCosts({ solarKW: 150, bessKW: 150, bessKWh: 600 });
-      expect(result2.merlinFees.effectiveMargin).toBe(0.14);
+      expect(result2.merlinFees.effectiveMargin).toBe(0.17);
 
-      // Just above 13% tier threshold
+      // 15% tier: equipSub = 600+600kW solar+BESS = $1.53M (>$800K)
       const result3 = calculateSystemCosts({ solarKW: 600, bessKW: 600, bessKWh: 2400 });
-      expect(result3.merlinFees.effectiveMargin).toBe(0.13);
+      expect(result3.merlinFees.effectiveMargin).toBe(0.15);
     });
 
     it("should handle rounding edge cases", () => {

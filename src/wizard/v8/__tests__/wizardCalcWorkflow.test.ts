@@ -368,7 +368,7 @@ describe("C. Solar calculation chain", () => {
       wantsSolar: true,
     });
     const [, rec] = await buildTiers(state);
-    const sunFactor = Math.max(0.40, Math.min(1.0, (4.0 - 2.5) / 2.0)); // 0.75 — new formula
+    const sunFactor = Math.max(0.4, Math.min(1.0, (4.0 - 2.5) / 2.0)); // 0.75 — new formula
     const expected = Math.round(Math.min(200 * sunFactor * 0.85, 200)); // 128 kW
     expect(rec.solarKW).toBe(expected);
   });
@@ -691,14 +691,16 @@ describe("F. Financial calculation chain", () => {
     expect(rec.itcAmount).toBeGreaterThan(0);
     // ITC must be positive but less than 30% of total gross cost (generator/EV excluded)
     expect(rec.itcAmount).toBeLessThan(rec.grossCost * rec.itcRate + 1);
-    // netCost is always grossCost minus the eligible ITC
-    expect(rec.netCost).toBeCloseTo(rec.grossCost - rec.itcAmount, 0);
+    // netCost = totalProjectCost - itcAmount (totalProjectCost includes installation labor)
+    // Allow ±1 rounding: each field is independently Math.round-ed, so round(a)-round(b) may differ from round(a-b) by 1
+    expect(Math.abs(rec.netCost - (rec.totalProjectCost - rec.itcAmount))).toBeLessThanOrEqual(1);
   });
 
-  it("netCost = grossCost - itcAmount", async () => {
+  it("netCost = totalProjectCost - itcAmount (totalProjectCost includes installation labor)", async () => {
     const state = makeState();
     const [, rec] = await buildTiers(state);
-    expect(rec.netCost).toBeCloseTo(rec.grossCost - rec.itcAmount, 0);
+    // Allow ±1 rounding: each field is independently Math.round-ed, so round(a)-round(b) may differ from round(a-b) by 1
+    expect(Math.abs(rec.netCost - (rec.totalProjectCost - rec.itcAmount))).toBeLessThanOrEqual(1);
   });
 
   it("paybackYears = netCost / annualSavings (net savings after reserves)", async () => {
@@ -991,7 +993,7 @@ describe("H. Addon sizing display ↔ step4Logic consistency", () => {
       }),
     });
     const displayRec = estimateSolarKW("roof_canopy", state);
-    const sunFactor = Math.max(0.40, Math.min(1.0, (5.1 - 2.5) / 2.0)); // 1.0 — clamped at PSH 5.1
+    const sunFactor = Math.max(0.4, Math.min(1.0, (5.1 - 2.5) / 2.0)); // 1.0 — clamped at PSH 5.1
     const expected = Math.round(
       Math.min(200 * sunFactor * SOLAR_SCOPE_PENETRATION.roof_canopy, 200)
     );
@@ -1349,7 +1351,7 @@ describe("K. Full end-to-end simulation (all layers → buildTiers)", () => {
     expect(rec.grossCost).toBeGreaterThan(0);
     expect(rec.netCost).toBeGreaterThan(0);
     expect(rec.paybackYears).toBeGreaterThan(0);
-    expect(rec.netCost).toBeCloseTo(rec.grossCost - rec.itcAmount, 0);
+    expect(Math.abs(rec.netCost - (rec.totalProjectCost - rec.itcAmount))).toBeLessThanOrEqual(1);
 
     // Tier ordering
     expect(starter.grossCost).toBeLessThan(rec.grossCost);
