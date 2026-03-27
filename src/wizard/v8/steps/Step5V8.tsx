@@ -710,7 +710,8 @@ export default function Step5V8({ state, actions }: Props) {
                 <span className="text-emerald-400 font-semibold">
                   {tier.guardrail.adjustedPaybackYears.toFixed(1)} years
                 </span>{" "}
-                by removing equipment that adds project cost without contributing to annual energy savings.
+                by removing equipment that adds project cost without contributing to annual energy
+                savings.
               </p>
               {tier.guardrail.removedComponents.length > 0 && (
                 <div className="space-y-1">
@@ -723,7 +724,9 @@ export default function Step5V8({ state, actions }: Props) {
                 </div>
               )}
               <p className="text-[11px] text-slate-500 mt-2">
-                Resilience equipment (generator, extended backup) can be added back in Step 3.5 — they'll be presented as a separate resilience investment with their own cost breakdown.
+                Resilience equipment (generator, extended backup) can be added back in Step 3.5 —
+                they'll be presented as a separate resilience investment with their own cost
+                breakdown.
               </p>
             </div>
           </div>
@@ -746,7 +749,7 @@ export default function Step5V8({ state, actions }: Props) {
               <span className="text-base">⚡</span>
             </div>
             <div>
-              <p className="text-sm font-bold text-amber-300 mb-1">ROI Review Suggested</p>
+              <p className="text-sm font-bold text-amber-300 mb-1">ROI Review</p>
               <p className="text-xs text-slate-400 leading-relaxed">{tier.guardrail.reason}</p>
             </div>
           </div>
