@@ -13,6 +13,14 @@
  *   2. Market data (collected_market_prices via getMarketAdjustedPrice) — scraper
  *   3. SSOT fallback (EQUIPMENT_UNIT_COSTS.bess — hardcoded constants)
  *
+ * TRUSTED PARTNERS (pre-seeded as approved, March 2026):
+ *   • Great Power Energy & Technology — GP-BESS-200 / GP-BESS-500
+ *     Top-5 global LFP manufacturer, IEC/UL certified, ~$255-262/kWh
+ *   • Discovery Energy Solutions — DCS-E 240
+ *     Field-proven C&I supplier, IEC 62619 + SANS 62619, ~$285/kWh
+ *   • LiON Energy — Guardian 250 / Guardian 500
+ *     US-assembled, UL-listed, shortest lead time (12 wk), ~$305-310/kWh
+ *
  * Key exports:
  *   selectOptimalBESS(requestedKwh, requestedKw) → BESSSpec (async)
  *   getLastSelectedBESSSync()                    → BESSSpec | null (sync cache)
