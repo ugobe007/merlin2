@@ -128,6 +128,18 @@ export function bustSolarPanelCache(): void {
   _cache = null;
 }
 
+/**
+ * Returns the best panel from cache synchronously — no DB round-trip.
+ * Returns null if the cache is cold (buildTiers hasn't run yet this session).
+ * Use this in reactive/synchronous contexts (useEffect, render-time calcs).
+ */
+export function getLastSelectedPanelSync(): SolarPanelSpec | null {
+  if (!isCacheValid() || !_cache || _cache.panels.length === 0) return null;
+  // panels are stored in insertion order (unsorted); re-sort and return best
+  const sorted = [..._cache.panels].sort((a, b) => b.score - a.score);
+  return sorted[0];
+}
+
 // ============================================================================
 // DB QUERY
 // ============================================================================
@@ -293,6 +305,7 @@ export function panelTariffNote(panel: SolarPanelSpec): string | null {
 export default {
   selectOptimalPanel,
   getApprovedSolarPanels,
+  getLastSelectedPanelSync,
   getSolarPricePerWatt,
   panelDensitySqftPerKWac,
   panelCount,

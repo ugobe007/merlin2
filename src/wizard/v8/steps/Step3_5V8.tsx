@@ -19,6 +19,7 @@ import {
   getFacilityConstraints,
   getCarWashSolarCapacity,
 } from "@/services/useCasePowerCalculations";
+import { getLastSelectedPanelSync } from "@/services/solarPanelSelectionService";
 
 interface Props {
   state: WizardState;
@@ -1857,8 +1858,13 @@ export default function Step3_5V8({ state, actions }: Props) {
   // Button label kW — must use the SAME formula as the actual slider max so they match.
   // Car wash uses getCarWashSolarCapacity (Vineet 10 W/sqft model) not the generic 15 W/sqft.
   // roofOnlyCapKW = building roof + vacuum only (no carport), regardless of current selection.
+  // Pass cached panel spec so density is consistent with what buildTiers uses.
+  const _cachedPanelSpec = getLastSelectedPanelSync();
   const roofOnlyCapKW = isCarWash
-    ? getCarWashSolarCapacity({ ...(state.step3Answers ?? {}), carportInterest: "no" }) ||
+    ? getCarWashSolarCapacity(
+        { ...(state.step3Answers ?? {}), carportInterest: "no" },
+        _cachedPanelSpec ?? undefined
+      ) ||
       (constraints?.maxRooftopSolarKW ?? 0)
     : roofArea > 0
       ? Math.round((roofArea * usablePct * 15) / 1000)

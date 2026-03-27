@@ -783,7 +783,11 @@ export default function Step5V8({ state, actions }: Props) {
           <StatItem
             icon={<Sun className="w-3.5 h-3.5" />}
             label="Solar"
-            value={`${fmtNum(tier.solarKW)} kW`}
+            value={`${fmtNum(tier.solarKW)} kW${
+              tier.selectedPanel && !tier.selectedPanel.isFallback
+                ? ` · ${tier.selectedPanel.wattPeak}W`
+                : ""
+            }`}
             accent="text-yellow-400"
           />
         )}

@@ -6,6 +6,7 @@
 
 import React from "react";
 import { calculateSolarSizing } from "@/services/useCasePowerCalculations";
+import { getLastSelectedPanelSync } from "@/services/solarPanelSelectionService";
 
 interface SolarPVConfigProps {
   // State
@@ -58,15 +59,19 @@ export const SolarPVConfig = React.memo(function SolarPVConfig({
   setSolarTrackingType,
 }: SolarPVConfigProps) {
   // Calculate solar sizing and space constraints
+  // Use cached supplier panel spec (wattPeak/area) when available — same panel buildTiers selected.
+  const _supplierPanel = getLastSelectedPanelSync();
   const solarSizing = calculateSolarSizing({
     solarCapacityKW,
     panelType: solarPanelType,
     panelEfficiency: solarPanelEfficiency,
     region: "midwest",
+    panelWattageOverride: _supplierPanel?.wattPeak,
+    panelAreaSqFtOverride: _supplierPanel?.areaSqft,
   });
 
-  const panelAreaSqFt = 21.5; // 400W panel footprint
-  const panelWattage = 400;
+  const panelAreaSqFt = _supplierPanel?.areaSqft ?? 21.5;
+  const panelWattage = _supplierPanel?.wattPeak ?? 400;
   const availableSqFt =
     solarInstallType === "rooftop"
       ? solarRoofSpaceSqFt

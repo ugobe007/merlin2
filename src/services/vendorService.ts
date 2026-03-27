@@ -322,6 +322,11 @@ export const approveVendorProduct = async (
           await import("./vendorPricingIntegrationService");
         return vendorPricingIntegrationService.syncVendorProductOnApproval(productId);
       })(),
+      // Bust solar panel selection cache so the next buildTiers() picks up the new panel
+      (async () => {
+        const { bustSolarPanelCache } = await import("./solarPanelSelectionService");
+        bustSolarPanelCache();
+      })(),
       // Add to ML training data
       (async () => {
         const { vendorDataToMLService } = await import("./vendorDataToMLService");
