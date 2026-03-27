@@ -20,7 +20,7 @@ export const supabase = (() => {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
-        storageKey: 'merlin-auth', // Unique key to avoid conflicts
+        storageKey: "merlin-auth", // Unique key to avoid conflicts
       },
     });
   }
@@ -360,7 +360,11 @@ export class PricingClient {
   async createPricingAlert(
     alert: Omit<PricingAlert, "id" | "created_at" | "triggered_at">
   ): Promise<PricingAlert | null> {
-    const { data, error } = await supabase.from("pricing_alerts").insert(alert as any).select().single();
+    const { data, error } = await supabase
+      .from("pricing_alerts")
+      .insert(alert as any)
+      .select()
+      .single();
 
     if (error) {
       console.error("Error creating pricing alert:", error);
@@ -449,7 +453,7 @@ export interface Vendor {
 export interface VendorProduct {
   id: string;
   vendor_id: string;
-  product_category: "battery" | "inverter" | "ems" | "bos" | "container";
+  product_category: "battery" | "inverter" | "ems" | "bos" | "container" | "solar";
   manufacturer: string;
   model: string;
   capacity_kwh?: number;
@@ -459,6 +463,28 @@ export interface VendorProduct {
   efficiency_percent?: number;
   price_per_kwh?: number;
   price_per_kw?: number;
+  // ── Solar panel-specific fields ──────────────────────────────────────────
+  /** Rated DC power at STC (Wp) — e.g. 400, 500 */
+  watt_peak?: number;
+  /** Module efficiency at STC (%) — e.g. 22.3 */
+  panel_efficiency_pct?: number;
+  /** Physical area per panel (sq ft) — e.g. 21.5 */
+  panel_area_sqft?: number;
+  /** monocrystalline | bifacial | perc | topcon | thin-film */
+  panel_type?: string;
+  /** ISO 3166-1 alpha-2 country of manufacture — e.g. 'US', 'CN' */
+  country_of_origin?: string;
+  /** Import tariff adder (%) — Section 301 CN panels = 25 */
+  tariff_adder_pct?: number;
+  /** Computed: price_per_watt × (1 + tariff_adder_pct/100) */
+  effective_price_per_watt?: number;
+  /** Base equipment price ($/Wp, excl. tariff) */
+  price_per_watt?: number;
+  /** Power temperature coefficient (%/°C) */
+  temp_coeff_pct?: number;
+  /** Annual degradation (%/yr) — default 0.5% */
+  degradation_pct_yr?: number;
+  // ─────────────────────────────────────────────────────────────────────────
   currency: string;
   lead_time_weeks: number;
   warranty_years: number;

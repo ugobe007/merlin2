@@ -168,7 +168,7 @@ export const getCurrentVendor = async () => {
 // =====================================================
 
 export interface ProductSubmissionData {
-  product_category: "battery" | "inverter" | "ems" | "bos" | "container";
+  product_category: "battery" | "inverter" | "ems" | "bos" | "container" | "solar";
   manufacturer: string;
   model: string;
   capacity_kwh?: number;
@@ -178,6 +178,26 @@ export interface ProductSubmissionData {
   efficiency_percent?: number;
   price_per_kwh?: number;
   price_per_kw?: number;
+  // ── Solar panel-specific fields (required when product_category === 'solar') ──
+  /** Rated DC power at STC (Wp) — e.g. 400, 500 */
+  watt_peak?: number;
+  /** Module efficiency at STC (%) — e.g. 22.3 */
+  panel_efficiency_pct?: number;
+  /** Physical area per panel (sq ft) — e.g. 21.5 */
+  panel_area_sqft?: number;
+  /** monocrystalline | bifacial | perc | topcon | thin-film */
+  panel_type?: string;
+  /** ISO 3166-1 alpha-2 country of manufacture — e.g. 'US', 'CN' */
+  country_of_origin?: string;
+  /** Import tariff adder (%) — Section 301 CN panels = 25.0 */
+  tariff_adder_pct?: number;
+  /** Base equipment price ($/Wp, excl. tariff) */
+  price_per_watt?: number;
+  /** Power temperature coefficient (%/°C) */
+  temp_coeff_pct?: number;
+  /** Annual degradation (%/yr) — default 0.5 */
+  degradation_pct_yr?: number;
+  // ──────────────────────────────────────────────────────────────────────────
   lead_time_weeks: number;
   warranty_years: number;
   minimum_order_quantity?: number;
@@ -774,7 +794,7 @@ export const getVendorStats = async () => {
     .eq("vendor_id", vendor.id);
 
   const activeSubmissions =
-    responses?.filter((r) => ["submitted", "under_review"].includes(r.status ?? '')).length || 0;
+    responses?.filter((r) => ["submitted", "under_review"].includes(r.status ?? "")).length || 0;
 
   // Get open RFQs count
   const { count: openRFQsCount } = await supabase

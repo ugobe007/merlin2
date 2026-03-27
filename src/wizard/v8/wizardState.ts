@@ -230,6 +230,21 @@ export interface QuoteTier {
     removedComponents: string[];
     reason: string;
   };
+  /**
+   * Selected solar panel from supplier DB.
+   * Undefined when solarKW === 0 or the SSOT fallback is used (isFallback=true).
+   * Used by Step 5 to display brand/model and tariff note on the quote card.
+   */
+  selectedPanel?: {
+    manufacturer: string;
+    model: string;
+    wattPeak: number;
+    efficiencyPct: number;
+    effectivePricePerWatt: number;
+    tariffAdderPct: number;
+    countryOfOrigin: string;
+    isFallback: boolean;
+  };
 }
 
 // ── Wizard state (the spine) ─────────────────────────────────────────────────

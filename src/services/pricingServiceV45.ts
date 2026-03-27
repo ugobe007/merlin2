@@ -276,6 +276,11 @@ export interface EquipmentConfig {
   level2Chargers?: number;
   dcfcChargers?: number;
   hpcChargers?: number;
+  /**
+   * Override solar $/W from supplier DB (effective price incl. any tariff adder).
+   * When omitted, falls back to EQUIPMENT_UNIT_COSTS.solar.pricePerWatt (SSOT default: $1.00/W).
+   */
+  solarPricePerWattOverride?: number;
 }
 
 export interface CostBreakdown {
@@ -331,7 +336,10 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
   }
 
   // Equipment costs (pricePerWatt = equipment/BOS only — NO field labor)
-  const solarCost = (config.solarKW || 0) * EQUIPMENT_UNIT_COSTS.solar.pricePerWatt * 1000;
+  // Use solarPricePerWattOverride (from supplier DB) when provided, else SSOT default
+  const effectiveSolarPricePerWatt =
+    config.solarPricePerWattOverride ?? EQUIPMENT_UNIT_COSTS.solar.pricePerWatt;
+  const solarCost = (config.solarKW || 0) * effectiveSolarPricePerWatt * 1000;
   const solarLaborCost = (config.solarKW || 0) * EQUIPMENT_UNIT_COSTS.solar.laborPerWatt * 1000;
 
   const bessCost =

@@ -41,6 +41,7 @@ import {
 import { supabase } from "@/services/supabaseClient";
 import { formatCurrency } from "@/services/internationalService";
 import { getRecommendedInstallers, type RecommendedInstaller } from "@/services/installerService";
+import { panelCount } from "@/services/solarPanelSelectionService";
 
 // Removed unused DARK color constants
 
@@ -834,13 +835,50 @@ export default function Step5V8({ state, actions }: Props) {
             </div>
 
             {tier.solarKW > 0 && (
-              <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <Sun className="w-3.5 h-3.5 text-amber-400" />
+              <div className="inline-flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <Sun className="w-3.5 h-3.5 text-amber-400 mt-0.5" />
                 <div className="flex flex-col">
                   <span className="text-[10px] text-slate-400 uppercase tracking-wider">Solar</span>
                   <span className="text-xs font-bold text-white tabular-nums">
                     {fmtNum(tier.solarKW)} kW
                   </span>
+                  {tier.selectedPanel && !tier.selectedPanel.isFallback && (
+                    <>
+                      <span className="text-[10px] text-slate-400 mt-0.5 leading-tight">
+                        {tier.selectedPanel.manufacturer} {tier.selectedPanel.model}
+                        {" · "}
+                        {tier.selectedPanel.wattPeak}W · {tier.selectedPanel.efficiencyPct}% eff.
+                      </span>
+                      <span className="text-[10px] text-slate-500 leading-tight">
+                        {panelCount(tier.solarKW, {
+                          wattPeak: tier.selectedPanel.wattPeak,
+                          areaSqft: 21.5,
+                          efficiencyPct: tier.selectedPanel.efficiencyPct,
+                          panelType: "monocrystalline",
+                          pricePerWatt: tier.selectedPanel.effectivePricePerWatt,
+                          tariffAdderPct: tier.selectedPanel.tariffAdderPct,
+                          effectivePricePerWatt: tier.selectedPanel.effectivePricePerWatt,
+                          countryOfOrigin: tier.selectedPanel.countryOfOrigin,
+                          id: "",
+                          vendorId: "",
+                          manufacturer: tier.selectedPanel.manufacturer,
+                          model: tier.selectedPanel.model,
+                          leadTimeWeeks: 8,
+                          warrantyYears: 25,
+                          degradationPctYr: 0.5,
+                          score: 0,
+                          isFallback: false,
+                        } as import("@/services/solarPanelSelectionService").SolarPanelSpec)}{" "}
+                        panels est.
+                      </span>
+                      {tier.selectedPanel.tariffAdderPct > 0 && (
+                        <span className="text-[10px] text-amber-400 leading-tight mt-0.5">
+                          ⚠ ~{tier.selectedPanel.tariffAdderPct}% tariff (
+                          {tier.selectedPanel.countryOfOrigin} origin)
+                        </span>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             )}

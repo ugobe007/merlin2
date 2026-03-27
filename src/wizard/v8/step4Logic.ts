@@ -88,6 +88,7 @@ import {
 import { validateAddonConfig } from "@/services/addonGuardrails";
 import { hasGeneratorIntent } from "./addonIntent";
 import { CalculationValidator, type ValidationInput } from "@/services/calculationValidator";
+import { selectOptimalPanel, type SolarPanelSpec } from "@/services/solarPanelSelectionService";
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
 import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
 
@@ -429,7 +430,8 @@ function buildOneTier(
   state: WizardState,
   goal: GoalChoice,
   tierLabel: TierLabel,
-  baseNotes: string[]
+  baseNotes: string[],
+  solarPricePerWatt: number = EQUIPMENT_UNIT_COSTS.solar.pricePerWatt
 ): QuoteTier {
   const {
     intel,
@@ -521,6 +523,8 @@ function buildOneTier(
     level2Chargers: costLevel2,
     dcfcChargers: costDcfc,
     hpcChargers: costHpc,
+    solarPricePerWattOverride:
+      solarPricePerWatt !== EQUIPMENT_UNIT_COSTS.solar.pricePerWatt ? solarPricePerWatt : undefined,
   });
 
   // ── V4.5 SSOT SAVINGS ──────────────────────────────────────────────────
@@ -699,7 +703,11 @@ async function runV8ValidationBackground(state: WizardState, tier: QuoteTier): P
     );
     const solarCost =
       tier.solarKW > 0
-        ? Math.round(tier.solarKW * 1000 * EQUIPMENT_UNIT_COSTS.solar.pricePerWatt) // $1.00/W equipment-only from SSOT
+        ? Math.round(
+            tier.solarKW *
+              1000 *
+              (tier.selectedPanel?.effectivePricePerWatt ?? EQUIPMENT_UNIT_COSTS.solar.pricePerWatt)
+          ) // $/W from supplier DB or SSOT fallback
         : 0;
 
     const quoteResult = {
@@ -787,6 +795,7 @@ function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier 
     level2Chargers: l2,
     dcfcChargers: dcfc,
     hpcChargers: hpc,
+    solarPricePerWattOverride: tier.selectedPanel?.effectivePricePerWatt,
   });
 
   const newSavings = calculateAnnualSavings(
@@ -873,6 +882,7 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
     level2Chargers: l2,
     dcfcChargers: dcfc,
     hpcChargers: hpc,
+    solarPricePerWattOverride: tier.selectedPanel?.effectivePricePerWatt,
   });
 
   const newSavings = calculateAnnualSavings(
@@ -1076,12 +1086,47 @@ export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteT
   // buildOneTier is synchronous (pricingServiceV45 only, no network calls).
   // buildTiers remains async for backwards compatibility with all callers.
   // applyPaybackGuardrail runs after each tier to enforce 5–7 yr payback targets.
-  const starter = applyPaybackGuardrail(buildOneTier(state, goal, "Starter", baseNotes), state);
-  const recommended = applyPaybackGuardrail(
-    buildOneTier(state, goal, "Recommended", baseNotes),
+
+  // Select optimal solar panel from supplier DB (async, falls back to SSOT silently).
+  // One lookup shared across all three tiers.
+  const selectedPanelFull: SolarPanelSpec = state.wantsSolar
+    ? await selectOptimalPanel(state.location.state)
+    : (await import("@/services/solarPanelSelectionService")).SSOT_FALLBACK_PANEL;
+
+  // Compact panel info stored on each tier (full SolarPanelSpec is not serialised to WizardState)
+  const panelForTier = selectedPanelFull.isFallback
+    ? undefined
+    : {
+        manufacturer: selectedPanelFull.manufacturer,
+        model: selectedPanelFull.model,
+        wattPeak: selectedPanelFull.wattPeak,
+        efficiencyPct: selectedPanelFull.efficiencyPct,
+        effectivePricePerWatt: selectedPanelFull.effectivePricePerWatt,
+        tariffAdderPct: selectedPanelFull.tariffAdderPct,
+        countryOfOrigin: selectedPanelFull.countryOfOrigin,
+        isFallback: false,
+      };
+
+  // Effective $/W from supplier DB (or SSOT fallback 1.00)
+  const solarPricePerWatt = selectedPanelFull.effectivePricePerWatt;
+
+  const starter = applyPaybackGuardrail(
+    buildOneTier(state, goal, "Starter", baseNotes, solarPricePerWatt),
     state
   );
-  const complete = applyPaybackGuardrail(buildOneTier(state, goal, "Complete", baseNotes), state);
+  starter.selectedPanel = panelForTier;
+
+  const recommended = applyPaybackGuardrail(
+    buildOneTier(state, goal, "Recommended", baseNotes, solarPricePerWatt),
+    state
+  );
+  recommended.selectedPanel = panelForTier;
+
+  const complete = applyPaybackGuardrail(
+    buildOneTier(state, goal, "Complete", baseNotes, solarPricePerWatt),
+    state
+  );
+  complete.selectedPanel = panelForTier;
 
   // Layer 3 validation: fire-and-forget Supabase audit + email/SMS alerts.
   // Uses the Recommended tier as the representative quote.
