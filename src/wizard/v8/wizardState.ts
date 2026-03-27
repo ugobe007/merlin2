@@ -211,6 +211,10 @@ export interface QuoteTier {
   /** Equipment subtotal (before site work, contingency, Merlin fee) — used by
    *  CalculationValidator for Supabase audit + alert pipeline. */
   equipmentSubtotal?: number;
+  /** Installation & field labor (concrete, trenching, commissioning, solar crew) — Additional Costs */
+  installationLaborCost?: number;
+  /** Total project cost = equipment quote + installation labor — true ROI/NPV investment basis */
+  totalProjectCost?: number;
   // TrueQuote™ audit trail
   notes: string[];
   /**

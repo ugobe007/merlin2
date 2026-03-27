@@ -113,7 +113,7 @@ export function buildV8ExportData(state: WizardState): QuoteExportData {
     dieselGenCapacityKW: generatorKW || undefined,
 
     // Financial
-    systemCost: grossCost,
+    systemCost: tier.totalProjectCost ?? grossCost,
 
     // Load Profile
     loadProfile: {
