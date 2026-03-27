@@ -22,7 +22,15 @@ import { supabase, isSupabaseConfigured } from "./supabaseClient";
 export interface VendorProductPricing {
   id: string;
   vendorId: string;
-  productCategory: "battery" | "inverter" | "ems" | "bos" | "container" | "solar";
+  productCategory:
+    | "battery"
+    | "inverter"
+    | "ems"
+    | "bos"
+    | "container"
+    | "solar"
+    | "generator"
+    | "ev_charger";
   manufacturer: string;
   model: string;
   capacityKwh?: number;
@@ -209,7 +217,7 @@ export async function syncApprovedVendorProducts(): Promise<{
  * Map vendor product category to equipment type for equipment_pricing table
  */
 function mapProductCategoryToEquipmentType(
-  category: "battery" | "inverter" | "ems" | "bos" | "container"
+  category: "battery" | "inverter" | "ems" | "bos" | "container" | "generator" | "ev_charger"
 ): string {
   const mapping: Record<string, string> = {
     battery: "bess",
@@ -217,6 +225,8 @@ function mapProductCategoryToEquipmentType(
     ems: "ems",
     bos: "bos",
     container: "container",
+    generator: "generator",
+    ev_charger: "ev-charger",
   };
   return mapping[category] || category;
 }
@@ -308,7 +318,10 @@ export async function getVendorPricing(
         | "inverter"
         | "ems"
         | "bos"
-        | "container",
+        | "container"
+        | "solar"
+        | "generator"
+        | "ev_charger",
       manufacturer: product.manufacturer,
       model: product.model,
       capacityKwh: product.capacity_kwh ? Number(product.capacity_kwh) : undefined,
@@ -331,8 +344,20 @@ export async function getVendorPricing(
  */
 function mapEquipmentTypeToProductCategory(
   equipmentType: string
-): "battery" | "inverter" | "ems" | "bos" | "container" | "solar" | null {
-  const mapping: Record<string, "battery" | "inverter" | "ems" | "bos" | "container" | "solar"> = {
+):
+  | "battery"
+  | "inverter"
+  | "ems"
+  | "bos"
+  | "container"
+  | "solar"
+  | "generator"
+  | "ev_charger"
+  | null {
+  const mapping: Record<
+    string,
+    "battery" | "inverter" | "ems" | "bos" | "container" | "solar" | "generator" | "ev_charger"
+  > = {
     bess: "battery",
     battery: "battery",
     inverter: "inverter",
@@ -341,6 +366,9 @@ function mapEquipmentTypeToProductCategory(
     container: "container",
     solar: "solar",
     panel: "solar",
+    generator: "generator",
+    "ev-charger": "ev_charger",
+    ev_charger: "ev_charger",
   };
   return mapping[equipmentType] || null;
 }

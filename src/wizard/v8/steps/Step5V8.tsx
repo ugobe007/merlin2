@@ -816,13 +816,30 @@ export default function Step5V8({ state, actions }: Props) {
 
           {/* Horizontal badge row */}
           <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
-              <Battery className="w-3.5 h-3.5 text-violet-400" />
+            <div className="inline-flex items-start gap-2 px-3 py-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
+              <Battery className="w-3.5 h-3.5 text-violet-400 mt-0.5" />
               <div className="flex flex-col">
                 <span className="text-[10px] text-slate-400 uppercase tracking-wider">Battery</span>
                 <span className="text-xs font-bold text-white tabular-nums">
                   {fmtNum(tier.bessKWh)} kWh
                 </span>
+                {tier.selectedBESS && !tier.selectedBESS.isFallback && (
+                  <>
+                    <span className="text-[10px] text-slate-400 mt-0.5 leading-tight">
+                      {tier.selectedBESS.manufacturer} {tier.selectedBESS.model}
+                    </span>
+                    <span className="text-[10px] text-slate-500 leading-tight">
+                      {tier.selectedBESS.chemistry} · {tier.selectedBESS.roundtripEfficiencyPct}%
+                      RTE
+                      {" · "}
+                      {tier.selectedBESS.cycleLife?.toLocaleString()} cycles
+                    </span>
+                    <span className="text-[10px] text-violet-400 leading-tight">
+                      ${tier.selectedBESS.effectivePricePerKwh.toFixed(0)}/kWh ·{" "}
+                      {tier.selectedBESS.warrantyYears}yr warranty
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 

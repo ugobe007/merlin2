@@ -153,8 +153,8 @@ export const ANNUAL_RESERVES = {
   inverterReplacementReserve: (solarKW: number) => solarKW * 1000 * 0.01, // $0.01/W/yr
   // LFP capacity fade reserve: 2% of pack value/yr (industry standard)
   // For 350 kWh @ $350/kWh = $2,450/yr vs. old flat $500 (84% underfunded)
-  bessLegradationReserve: (bessKWh: number) =>
-    bessKWh * EQUIPMENT_UNIT_COSTS.bess.pricePerKWh * 0.02,
+  bessLegradationReserve: (bessKWh: number, bessPackPricePerKWh?: number) =>
+    bessKWh * (bessPackPricePerKWh ?? EQUIPMENT_UNIT_COSTS.bess.pricePerKWh) * 0.02,
 
   // Calculate total annual reserves
   total: (solarKW: number, bessKWh = 0): number => {
@@ -281,6 +281,16 @@ export interface EquipmentConfig {
    * When omitted, falls back to EQUIPMENT_UNIT_COSTS.solar.pricePerWatt (SSOT default: $1.00/W).
    */
   solarPricePerWattOverride?: number;
+  /**
+   * Override BESS pack $/kWh from supplier DB (effective price incl. any tariff adder).
+   * When omitted, falls back to EQUIPMENT_UNIT_COSTS.bess.pricePerKWh (SSOT default: $350/kWh).
+   */
+  bessPackPricePerKWhOverride?: number;
+  /**
+   * Override BESS PCS/inverter $/kW from supplier DB.
+   * When omitted, falls back to EQUIPMENT_UNIT_COSTS.bess.pricePerKW (SSOT default: $150/kW).
+   */
+  bessInverterPricePerKWOverride?: number;
 }
 
 export interface CostBreakdown {
@@ -342,9 +352,14 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
   const solarCost = (config.solarKW || 0) * effectiveSolarPricePerWatt * 1000;
   const solarLaborCost = (config.solarKW || 0) * EQUIPMENT_UNIT_COSTS.solar.laborPerWatt * 1000;
 
+  // Use supplier DB overrides when provided; SSOT constants as fallback.
+  const effectiveBessPackPricePerKWh =
+    config.bessPackPricePerKWhOverride ?? EQUIPMENT_UNIT_COSTS.bess.pricePerKWh;
+  const effectiveBessPCSPricePerKW =
+    config.bessInverterPricePerKWOverride ?? EQUIPMENT_UNIT_COSTS.bess.pricePerKW;
   const bessCost =
-    (config.bessKWh || 0) * EQUIPMENT_UNIT_COSTS.bess.pricePerKWh +
-    (config.bessKW || 0) * EQUIPMENT_UNIT_COSTS.bess.pricePerKW;
+    (config.bessKWh || 0) * effectiveBessPackPricePerKWh +
+    (config.bessKW || 0) * effectiveBessPCSPricePerKW;
 
   const isNaturalGasGenerator = (config.generatorFuelType ?? "diesel") === "natural-gas";
   // Natural gas: $500/kW (piped supply, no on-site tank) + ATS only
