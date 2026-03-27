@@ -150,16 +150,19 @@ async function fetchApprovedPanels(): Promise<SolarPanelSpec[]> {
   const { data, error } = await supabase
     .from("vendor_products")
     .select(
+      // Only select columns that actually exist in the vendor_products schema.
+      // Solar-specific columns (watt_peak, panel_area_sqft, etc.) are not in the
+      // DB — their values are derived or use industry-standard fallbacks below.
       `id, vendor_id, manufacturer, model,
-       watt_peak, panel_efficiency_pct, panel_area_sqft, panel_type,
-       price_per_watt, tariff_adder_pct, effective_price_per_watt,
-       country_of_origin, lead_time_weeks, warranty_years, degradation_pct_yr`
+       power_kw, efficiency_percent,
+       price_per_kw, price_per_kwh,
+       lead_time_weeks, warranty_years`
     )
     .eq("product_category", "solar")
     .eq("status", "approved")
-    .not("watt_peak", "is", null)
-    .not("price_per_watt", "is", null)
-    .order("watt_peak", { ascending: false });
+    .not("power_kw", "is", null)
+    .not("price_per_kw", "is", null)
+    .order("power_kw", { ascending: false });
 
   if (error) {
     if (import.meta.env.DEV) {
@@ -171,29 +174,39 @@ async function fetchApprovedPanels(): Promise<SolarPanelSpec[]> {
   if (!data || data.length === 0) return [];
 
   return (data as unknown as Record<string, unknown>[]).map((row) => {
-    const basePrice = Number(row.price_per_watt ?? 1.0);
-    const tariffPct = Number(row.tariff_adder_pct ?? 0);
-    const effectivePrice =
-      row.effective_price_per_watt != null
-        ? Number(row.effective_price_per_watt)
-        : basePrice * (1 + tariffPct / 100);
+    // power_kw is the panel's rated DC output in kW; convert to Wp
+    const powerKw = Number(row.power_kw ?? 0.4);
+    const wattPeak = Math.round(powerKw * 1000); // e.g. 0.5 kW → 500 Wp
+
+    // price_per_kw is $/kW equipment; convert to $/Wp
+    const pricePerKw = Number(row.price_per_kw ?? 1000);
+    const basePrice = pricePerKw / 1000; // e.g. $1000/kW → $1.00/Wp
+
+    // No tariff column in DB yet — default to 0
+    const tariffPct = 0;
+    const effectivePrice = basePrice * (1 + tariffPct / 100);
 
     const spec: SolarPanelSpec = {
       id: String(row.id),
       vendorId: String(row.vendor_id ?? ""),
       manufacturer: String(row.manufacturer ?? ""),
       model: String(row.model ?? ""),
-      wattPeak: Number(row.watt_peak ?? 400),
-      efficiencyPct: Number(row.panel_efficiency_pct ?? 20.5),
-      areaSqft: Number(row.panel_area_sqft ?? 21.5),
-      panelType: String(row.panel_type ?? "monocrystalline"),
+      wattPeak,
+      // efficiency_percent is the DB column; maps to efficiencyPct in SolarPanelSpec
+      efficiencyPct: Number(row.efficiency_percent ?? 20.5),
+      // panel_area_sqft not in DB — 21.5 sqft is standard for ~400–500W mono panels
+      areaSqft: 21.5,
+      // panel_type not in DB — default to monocrystalline (most common C&I product)
+      panelType: "monocrystalline",
       pricePerWatt: basePrice,
       tariffAdderPct: tariffPct,
       effectivePricePerWatt: effectivePrice,
-      countryOfOrigin: String(row.country_of_origin ?? "US"),
+      // country_of_origin not in DB — default US
+      countryOfOrigin: "US",
       leadTimeWeeks: Number(row.lead_time_weeks ?? 8),
       warrantyYears: Number(row.warranty_years ?? 25),
-      degradationPctYr: Number(row.degradation_pct_yr ?? 0.5),
+      // degradation_pct_yr not in DB — NREL/IEA standard for mono Si
+      degradationPctYr: 0.5,
       score: 0,
       isFallback: false,
     };
