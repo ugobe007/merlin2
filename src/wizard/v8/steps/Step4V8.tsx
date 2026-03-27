@@ -582,7 +582,6 @@ export default function Step4V8({ state, actions }: Props) {
           const totalInvestment = tier.grossCost;
           const federalITC = tier.itcAmount;
           const netCost = tier.netCost;
-          const twentyFiveYearProfit = tier.annualSavings * 25 - netCost;
           const tenYearROI = tier.roi10Year;
 
           return (
@@ -771,10 +770,12 @@ export default function Step4V8({ state, actions }: Props) {
                   </div>
                   <div className={`text-center p-1.5 md:p-2 rounded-lg ${config.metricBg}`}>
                     <p className="text-[9px] md:text-[10px] text-slate-500 uppercase tracking-wider mb-1">
-                      25-Yr Gain
+                      25-Yr NPV
                     </p>
-                    <p className={`text-base md:text-lg font-bold ${config.accentColor}`}>
-                      {formatCurrency(twentyFiveYearProfit)}
+                    <p
+                      className={`text-base md:text-lg font-bold ${tier.npv >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                    >
+                      {formatCurrency(tier.npv)}
                     </p>
                   </div>
                 </div>
@@ -792,38 +793,42 @@ export default function Step4V8({ state, actions }: Props) {
                     <div>
                       <span className="font-semibold text-amber-300">ROI Optimized</span>
                       <span className="text-slate-400 ml-1">
-                        {" "}— payback improved from{" "}
+                        {" "}
+                        — payback improved from{" "}
                         <span className="text-amber-300">
                           {Math.round(tier.guardrail.originalPaybackYears)} yrs
                         </span>{" "}
                         to{" "}
-                        <span className="text-emerald-400">
-                          {tier.paybackYears.toFixed(1)} yrs
-                        </span>
+                        <span className="text-emerald-400">{tier.paybackYears.toFixed(1)} yrs</span>
                         .{" "}
-                        {tier.guardrail.removedComponents.some(c => c.startsWith("BESS"))
+                        {tier.guardrail.removedComponents.some((c) => c.startsWith("BESS"))
                           ? "BESS right-sized for this location's economics."
-                          : "Generator moved to resilience scope (see quote details)."
-                        }
+                          : "Generator moved to resilience scope (see quote details)."}
                       </span>
                     </div>
                   </div>
                 )}
-                {tier.guardrail && !tier.guardrail.applied && tier.guardrail.originalPaybackYears > 7 && (
-                  <div
-                    className="mb-3 flex items-start gap-2 px-3 py-2.5 rounded-lg text-[11px] leading-snug"
-                    style={{
-                      background: "rgba(245, 158, 11, 0.07)",
-                      border: "1px solid rgba(245, 158, 11, 0.28)",
-                    }}
-                  >
-                    <span className="text-amber-400 mt-0.5 shrink-0">⚡</span>
-                    <span className="text-slate-400">
-                      <span className="font-semibold text-amber-300">Extended payback</span>
-                      {" "}— {tier.guardrail.originalPaybackYears.toFixed(0)}-yr est. at this location's rates. Add solar in Step 3.5 to improve ROI.
-                    </span>
-                  </div>
-                )}
+                {tier.guardrail &&
+                  !tier.guardrail.applied &&
+                  tier.guardrail.originalPaybackYears > 7 && (
+                    <div
+                      className="mb-3 flex items-start gap-2 px-3 py-2.5 rounded-lg text-[11px] leading-snug"
+                      style={{
+                        background: "rgba(245, 158, 11, 0.07)",
+                        border: "1px solid rgba(245, 158, 11, 0.28)",
+                      }}
+                    >
+                      <span className="text-amber-400 mt-0.5 shrink-0">⚡</span>
+                      <span className="text-slate-400">
+                        <span className="font-semibold text-amber-300">Extended payback</span> —{" "}
+                        {tier.guardrail.originalPaybackYears.toFixed(0)}-yr est. at this location's
+                        rates.{" "}
+                        {tier.solarKW > 0
+                          ? "Increase solar capacity in Step 3.5 or verify demand charges with your utility to improve ROI."
+                          : "Add solar in Step 3.5 to improve ROI."}
+                      </span>
+                    </div>
+                  )}
 
                 {/* V4.5 Cost Breakdown - Expandable */}
                 <button
@@ -859,6 +864,7 @@ export default function Step4V8({ state, actions }: Props) {
                       bessKW: tier.bessKW,
                       bessKWh: tier.bessKWh,
                       generatorKW: tier.generatorKW,
+                      generatorFuelType: tier.generatorFuelType ?? "diesel",
                       level2Chargers: state.level2Chargers || 0,
                       dcfcChargers: state.dcfcChargers || 0,
                       hpcChargers: state.hpcChargers || 0,

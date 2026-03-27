@@ -66,10 +66,11 @@ export const EQUIPMENT_UNIT_COSTS = {
   //     distinct line item (evInfrastructureCost) in calculateSystemCosts().
   evCharging: {
     level2: 7000, // $/unit — 7.2 kW L2: hardware + mounting + 240V circuit run
-    dcfc: 50000,  // $/unit — 50 kW DCFC: hardware + basic 480V conduit run (assumes 3-phase already present)
-    hpc: 150000,  // $/unit — 250 kW HPC: hardware + basic 480V conduit run (assumes adequate service)
+    dcfc: 50000, // $/unit — 50 kW DCFC: hardware + basic 480V conduit run (assumes 3-phase already present)
+    hpc: 150000, // $/unit — 250 kW HPC: hardware + basic 480V conduit run (assumes adequate service)
     source: "DOE Alternative Fuels Data Center, evChargingCalculations.ts",
-    notes: "Unit price = charger hardware + mounting + conduit run. Electrical service upgrade (480V, transformer) is a SEPARATE line item computed by addonGuardrails.ts.",
+    notes:
+      "Unit price = charger hardware + mounting + conduit run. Electrical service upgrade (480V, transformer) is a SEPARATE line item computed by addonGuardrails.ts.",
   },
 } as const;
 
@@ -179,16 +180,32 @@ export function calculateMerlinFees(equipmentSubtotal: number): {
 export const FEDERAL_ITC_RATE = 0.3; // 30% Investment Tax Credit (IRA 2022)
 
 /**
- * Calculate Federal ITC for equipment
+ * Calculate Federal ITC for eligible installed costs.
+ *
+ * IRA 2022 (IRC Section 48) — credit basis includes all capitalized costs to
+ * acquire, engineer, construct, and commission the qualified energy property:
+ *   ✅ Equipment (solar + BESS)
+ *   ✅ Site engineering & construction (site work, contingency)
+ *   ❌ Developer/service fees (Merlin AI fees — excluded as soft costs)
+ *   ❌ EV chargers and generators (not qualified energy property under Sec 48)
+ *
+ * Omitting site work / contingency understates the credit by ~$13K on a
+ * typical $291K commercial install — now corrected.
  */
 export function calculateFederalITC(costs: {
   solar?: number;
   bess?: number;
   generator?: number;
   evCharging?: number;
+  siteEngineering?: number;
+  constructionContingency?: number;
 }): number {
-  // ITC applies to solar and BESS (standalone storage qualifies as of IRA 2022)
-  const itcEligible = (costs.solar || 0) + (costs.bess || 0);
+  // ITC-eligible basis: solar + BESS + installed hard costs (site + contingency)
+  const itcEligible =
+    (costs.solar || 0) +
+    (costs.bess || 0) +
+    (costs.siteEngineering || 0) +
+    (costs.constructionContingency || 0);
   return itcEligible * FEDERAL_ITC_RATE;
 }
 
@@ -222,8 +239,8 @@ export interface CostBreakdown {
   solarCost: number;
   bessCost: number;
   generatorCost: number;
-  evChargingCost: number;           // Charger unit prices only
-  evInfrastructureCost: number;     // 480V service, transformer, panel — SEPARATE from charger unit price
+  evChargingCost: number; // Charger unit prices only
+  evInfrastructureCost: number; // 480V service, transformer, panel — SEPARATE from charger unit price
   equipmentSubtotal: number;
 
   // Site work & soft costs
@@ -301,7 +318,8 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
   const evInfrastructureCost = evInfra.electricalInfrastructureCost;
 
   // Equipment subtotal includes BOTH charger unit cost AND infrastructure cost
-  const equipmentSubtotal = solarCost + bessCost + generatorCost + evChargingCost + evInfrastructureCost;
+  const equipmentSubtotal =
+    solarCost + bessCost + generatorCost + evChargingCost + evInfrastructureCost;
 
   // Site work
   const siteEngineering = SITE_WORK_COSTS.total;
@@ -319,10 +337,12 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
   // Total investment
   const totalInvestment = subtotalBeforeMerlin + merlinFees.totalFee;
 
-  // Federal ITC
+  // Federal ITC — applied to solar + BESS + site engineering + contingency (all hard installed costs)
   const federalITC = calculateFederalITC({
     solar: solarCost,
     bess: bessCost,
+    siteEngineering,
+    constructionContingency,
   });
 
   const netInvestment = totalInvestment - federalITC;

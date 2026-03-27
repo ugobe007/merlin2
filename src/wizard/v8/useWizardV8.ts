@@ -35,21 +35,19 @@ import {
 } from "./wizardState";
 
 // Dev-only logging helpers — compiled away in production bundles
-/* eslint-disable no-console */
-const devLog = import.meta.env.DEV
-  ? (...a: unknown[]) => console.log(...a)
-  : () => undefined;
-const devWarn = import.meta.env.DEV
-  ? (...a: unknown[]) => console.warn(...a)
-  : () => undefined;
-/* eslint-enable no-console */
+
+const devLog = import.meta.env.DEV ? (...a: unknown[]) => console.log(...a) : () => undefined;
+const devWarn = import.meta.env.DEV ? (...a: unknown[]) => console.warn(...a) : () => undefined;
 
 // Intel fetches (utility, solar, weather) use local services — no backend needed.
 // Location resolution is V8-native: direct ZIP lookup (zippopotam.us) with
 // utility-rate-service fallback. No dependency on V7's backend /api/location/resolve.
 import { fetchUtility, fetchSolar, fetchWeather } from "@/wizard/v7/api/wizardAPI";
 
-import { getFacilityConstraints, getCarWashSolarCapacity } from "@/services/useCasePowerCalculations";
+import {
+  getFacilityConstraints,
+  getCarWashSolarCapacity,
+} from "@/services/useCasePowerCalculations";
 import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
 import { buildTiers } from "./step4Logic";
@@ -284,6 +282,8 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
           utilityRate: u.rate ?? 0,
           demandCharge: u.demandCharge ?? 0,
           utilityProvider: u.provider ?? "",
+          hasTOU: u.hasTOU ?? false,
+          peakRate: u.peakRate,
           utilityStatus: "ready",
         },
       });
@@ -324,6 +324,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     } else {
       dispatch({ type: "PATCH_INTEL", patch: { weatherStatus: "error" } });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
@@ -331,84 +332,93 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
    * NO LONGER auto-advances to Step 2 — waits for business confirmation.
    * @param countryCode - US ZIP or 2-letter country code (e.g., "CA", "GB", "NZ")
    */
-  const submitLocation = useCallback(async (countryCode: string = "US") => {
-    const raw = state.locationRaw.trim();
-    
-    // US: 5-digit ZIP only
-    if (countryCode === "US") {
-      const zip = raw.replace(/\D/g, "").slice(0, 5);
-      if (zip.length !== 5) return;
+  const submitLocation = useCallback(
+    async (countryCode: string = "US") => {
+      const raw = state.locationRaw.trim();
+
+      // US: 5-digit ZIP only
+      if (countryCode === "US") {
+        const zip = raw.replace(/\D/g, "").slice(0, 5);
+        if (zip.length !== 5) return;
+
+        dispatch({ type: "SET_LOCATION_STATUS", status: "fetching" });
+
+        try {
+          const locationData = await resolveZip(zip, abortRef.current?.signal);
+          dispatch({ type: "SET_LOCATION", location: locationData });
+          // NO auto-advance - wait for business confirmation
+        } catch (e) {
+          dispatch({
+            type: "SET_ERROR",
+            code: "GEOCODE_FAILED",
+            message: e instanceof Error ? e.message : "Could not find that ZIP code.",
+          });
+        }
+        return;
+      }
+
+      // International: allow country name or postal code (minimum 2 chars)
+      if (raw.length < 2) return;
 
       dispatch({ type: "SET_LOCATION_STATUS", status: "fetching" });
 
       try {
-        const locationData = await resolveZip(zip, abortRef.current?.signal);
+        // Check if input matches a country name from our list
+        const matchedCountry = INTERNATIONAL_COUNTRIES.find(
+          (c) =>
+            c.name.toLowerCase() === raw.toLowerCase() ||
+            c.name.toLowerCase().includes(raw.toLowerCase()) ||
+            c.code.toLowerCase() === raw.toLowerCase()
+        );
+
+        // If matched, use the country code; otherwise use the provided code
+        const finalCountryCode = matchedCountry ? matchedCountry.code : countryCode;
+        const displayName = matchedCountry ? matchedCountry.name : raw;
+
+        // For international, create a basic location with country info
+        const locationData: LocationData = {
+          zip: raw,
+          city: displayName,
+          state: finalCountryCode, // Store country code in state field for international
+          formattedAddress: `${displayName}, ${finalCountryCode}`,
+        };
         dispatch({ type: "SET_LOCATION", location: locationData });
+
+        // Fetch utility rates with country code for international locations
+        devLog(`[submitLocation] Fetching utility rates for ${finalCountryCode}`);
+        try {
+          const utilityData = await fetchUtility(raw, finalCountryCode);
+          devLog(`[submitLocation] Utility data:`, utilityData);
+          dispatch({
+            type: "PATCH_INTEL",
+            patch: {
+              utilityRate: utilityData.rate ?? 0,
+              demandCharge: utilityData.demandCharge ?? 0,
+              utilityProvider: utilityData.provider ?? "",
+              hasTOU: utilityData.hasTOU ?? false,
+              peakRate: utilityData.peakRate,
+              utilityStatus: "ready",
+            },
+          });
+        } catch (utilityError) {
+          devWarn(
+            `[submitLocation] Failed to fetch utility for ${finalCountryCode}:`,
+            utilityError
+          );
+          dispatch({ type: "PATCH_INTEL", patch: { utilityStatus: "error" } });
+        }
+
         // NO auto-advance - wait for business confirmation
       } catch (e) {
         dispatch({
           type: "SET_ERROR",
           code: "GEOCODE_FAILED",
-          message: e instanceof Error ? e.message : "Could not find that ZIP code.",
+          message: e instanceof Error ? e.message : "Could not find that location.",
         });
       }
-      return;
-    }
-
-    // International: allow country name or postal code (minimum 2 chars)
-    if (raw.length < 2) return;
-
-    dispatch({ type: "SET_LOCATION_STATUS", status: "fetching" });
-
-    try {
-      // Check if input matches a country name from our list
-      const matchedCountry = INTERNATIONAL_COUNTRIES.find(
-        c => c.name.toLowerCase() === raw.toLowerCase() || 
-             c.name.toLowerCase().includes(raw.toLowerCase()) ||
-             c.code.toLowerCase() === raw.toLowerCase()
-      );
-      
-      // If matched, use the country code; otherwise use the provided code
-      const finalCountryCode = matchedCountry ? matchedCountry.code : countryCode;
-      const displayName = matchedCountry ? matchedCountry.name : raw;
-      
-      // For international, create a basic location with country info
-      const locationData: LocationData = {
-        zip: raw,
-        city: displayName,
-        state: finalCountryCode, // Store country code in state field for international
-        formattedAddress: `${displayName}, ${finalCountryCode}`,
-      };
-      dispatch({ type: "SET_LOCATION", location: locationData });
-      
-      // Fetch utility rates with country code for international locations
-      devLog(`[submitLocation] Fetching utility rates for ${finalCountryCode}`);
-      try {
-        const utilityData = await fetchUtility(raw, finalCountryCode);
-        devLog(`[submitLocation] Utility data:`, utilityData);
-        dispatch({
-          type: "PATCH_INTEL",
-          patch: {
-            utilityRate: utilityData.rate ?? 0,
-            demandCharge: utilityData.demandCharge ?? 0,
-            utilityProvider: utilityData.provider ?? "",
-            utilityStatus: "ready",
-          },
-        });
-      } catch (utilityError) {
-        devWarn(`[submitLocation] Failed to fetch utility for ${finalCountryCode}:`, utilityError);
-        dispatch({ type: "PATCH_INTEL", patch: { utilityStatus: "error" } });
-      }
-      
-      // NO auto-advance - wait for business confirmation
-    } catch (e) {
-      dispatch({
-        type: "SET_ERROR",
-        code: "GEOCODE_FAILED",
-        message: e instanceof Error ? e.message : "Could not find that location.",
-      });
-    }
-  }, [state.locationRaw]);
+    },
+    [state.locationRaw]
+  );
 
   const setGridReliability = useCallback(
     (reliability: "reliable" | "occasional-outages" | "frequent-outages" | "unreliable") => {
@@ -556,20 +566,36 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     if (/manufacturing|factory|plant|production/i.test(lowerName)) {
       return { industry: "manufacturing", confidence: 0.85 };
     }
-    if (/college|university|polytechnic|community\s+college|cal\s*(state|poly)|state\s+univ/i.test(lowerName)) {
-      return { industry: "college", confidence: 0.80 };
+    if (
+      /college|university|polytechnic|community\s+college|cal\s*(state|poly)|state\s+univ/i.test(
+        lowerName
+      )
+    ) {
+      return { industry: "college", confidence: 0.8 };
     }
     if (/airport|airfield|air\s*terminal|aviation|airstrip|aerodrome/i.test(lowerName)) {
-      return { industry: "airport", confidence: 0.90 };
+      return { industry: "airport", confidence: 0.9 };
     }
-    if (/cold\s*storage|cold\s*chain|refrigerated\s*(warehouse|facility)|freezer\s*(facility|storage)/i.test(lowerName)) {
+    if (
+      /cold\s*storage|cold\s*chain|refrigerated\s*(warehouse|facility)|freezer\s*(facility|storage)/i.test(
+        lowerName
+      )
+    ) {
       return { industry: "cold_storage", confidence: 0.85 };
     }
-    if (/indoor\s*farm|vertical\s*farm|hydroponic|aeroponic|aquaponic|greenhouse\s*(farm|grower)/i.test(lowerName)) {
+    if (
+      /indoor\s*farm|vertical\s*farm|hydroponic|aeroponic|aquaponic|greenhouse\s*(farm|grower)/i.test(
+        lowerName
+      )
+    ) {
       return { industry: "indoor_farm", confidence: 0.85 };
     }
-    if (/\bfarm\b|ranch|\bagriculture\b|\bagricultural\b|organic\s*farm|dairy\s*farm|vineyard|winery|orchard|livestock/i.test(lowerName)) {
-      return { industry: "agricultural", confidence: 0.80 };
+    if (
+      /\bfarm\b|ranch|\bagriculture\b|\bagricultural\b|organic\s*farm|dairy\s*farm|vineyard|winery|orchard|livestock/i.test(
+        lowerName
+      )
+    ) {
+      return { industry: "agricultural", confidence: 0.8 };
     }
     // Fitness / Gym: standalone gyms, health clubs, boutique studios
     if (
@@ -622,31 +648,31 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
       // Industry-based roof space estimates (typical commercial buildings)
       const INDUSTRY_ROOF_ESTIMATES: Record<string, number> = {
-        car_wash: 8000,       // Express tunnel 4.5-8K; flex/full-service 10-15K
-        gas_station: 8000,    // Station + canopy
-        retail: 12000,        // Strip mall unit
-        restaurant: 6000,     // Single-story commercial
-        office: 20000,        // Multi-story office building
-        hotel: 30000,         // Large multi-story with rooftop
-        warehouse: 50000,     // Large flat industrial roof
+        car_wash: 8000, // Express tunnel 4.5-8K; flex/full-service 10-15K
+        gas_station: 8000, // Station + canopy
+        retail: 12000, // Strip mall unit
+        restaurant: 6000, // Single-story commercial
+        office: 20000, // Multi-story office building
+        hotel: 30000, // Large multi-story with rooftop
+        warehouse: 50000, // Large flat industrial roof
         manufacturing: 60000, // Industrial facility
-        data_center: 40000,   // Large commercial tech facility
-        hospital: 50000,      // Large institutional building
-        healthcare: 25000,    // Medical office building
-        ev_charging: 10000,   // Station with covered parking
+        data_center: 40000, // Large commercial tech facility
+        hospital: 50000, // Large institutional building
+        healthcare: 25000, // Medical office building
+        ev_charging: 10000, // Station with covered parking
         shopping_center: 80000, // Large retail complex
-        apartment: 25000,     // Multi-family residential
-        college: 70000,       // Campus building
-        airport: 100000,      // Large terminal
-        casino: 60000,        // Large entertainment complex
-        cold_storage: 45000,  // Industrial warehouse
-        indoor_farm: 40000,   // Controlled environment agriculture
-        truck_stop: 15000,    // Large service station
-        microgrid: 30000,     // Multi-building complex
-        government: 35000,    // Public building
-        agricultural: 20000,  // Farm building
+        apartment: 25000, // Multi-family residential
+        college: 70000, // Campus building
+        airport: 100000, // Large terminal
+        casino: 60000, // Large entertainment complex
+        cold_storage: 45000, // Industrial warehouse
+        indoor_farm: 40000, // Controlled environment agriculture
+        truck_stop: 15000, // Large service station
+        microgrid: 30000, // Multi-building complex
+        government: 35000, // Public building
+        agricultural: 20000, // Farm building
         fitness_center: 10000, // Standalone gym: 5-15K sqft
-        gym: 10000,           // Alias for fitness_center
+        gym: 10000, // Alias for fitness_center
       };
 
       const estimatedRoofSpaceSqFt = industry
@@ -686,7 +712,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     // If a high-confidence industry was detected, populate solar cap + critical
     // load % immediately — exactly what setIndustry() does for the manual path.
     const detectedSlug = state.business?.detectedIndustry;
-    const confidence   = state.business?.confidence ?? 0;
+    const confidence = state.business?.confidence ?? 0;
     if (detectedSlug && confidence >= 0.75) {
       const constraints = getFacilityConstraints(detectedSlug);
       const solarPhysicalCapKW = constraints?.totalRealisticSolarKW ?? 0;
@@ -694,11 +720,12 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       try {
         const critInfo = getCriticalLoadWithSource(detectedSlug);
         criticalLoadPct = critInfo.percentage;
-      } catch { /* slug not in table — use default */ }
+      } catch {
+        /* slug not in table — use default */
+      }
 
       dispatch({ type: "SET_INDUSTRY_META", solarPhysicalCapKW, criticalLoadPct });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.business?.detectedIndustry, state.business?.confidence]);
 
   // ── Step 3: Reactive power calculation ─────────────────────────────────────
@@ -723,26 +750,25 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   // Non-power keys (solarScope, generatorScope, evScope, step3_5Visited,
   // carportInterest) are excluded so toggling add-ons or leaving the add-ons
   // step does NOT trigger a recalculation.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   const powerAnswersKey = useMemo(() => {
     return Object.entries(state.step3Answers)
       .filter(([k]) => !NON_POWER_ANSWER_KEYS.has(k))
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([k, v]) => `${k}:${String(v)}`)
       .join("|");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.step3Answers]);
 
   // Stable serialization of ALL step3 answers — replaces JSON.stringify(state.step3Answers)
   // in the tier-build effect dependency array so serialization cost is paid once
   // per object change rather than on every render.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   const step3AnswersKey = useMemo(() => {
     return Object.entries(state.step3Answers)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([k, v]) => `${k}:${String(v)}`)
       .join("|");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.step3Answers]);
 
   // Ref so the effect body can always read the latest full answers snapshot
@@ -754,24 +780,24 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   useEffect(() => {
     const slug = state.industry;
     if (!slug) {
-      devLog('[useWizardV8] Power calc skipped: no industry');
+      devLog("[useWizardV8] Power calc skipped: no industry");
       return;
     }
 
     const answers = step3AnswersRef.current;
     if (Object.keys(answers).length === 0) {
-      devLog('[useWizardV8] Power calc skipped: no answers');
+      devLog("[useWizardV8] Power calc skipped: no answers");
       return;
     }
 
-    devLog('[useWizardV8] Running power calculation for:', slug, 'with answers:', answers);
+    devLog("[useWizardV8] Running power calculation for:", slug, "with answers:", answers);
 
     // Convert underscore slug (V8 type) → hyphen slug (SSOT function convention)
     const ssotSlug = slug.replace(/_/g, "-");
 
     try {
       const result = calculateUseCasePower(ssotSlug, answers as Record<string, unknown>);
-      devLog('[useWizardV8] Power calculation result:', result);
+      devLog("[useWizardV8] Power calculation result:", result);
 
       // PowerCalculationResult returns powerMW (megawatts), convert to kW
       // Legacy results may have averageLoadKW/baseLoadKW/peakLoadKW
@@ -838,7 +864,10 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
     if (isCarWash) {
       // Base = building roof + vacuum canopy (no carport override)
-      const baseCapKW = getCarWashSolarCapacity({ ...(state.step3Answers ?? {}), carportInterest: "no" });
+      const baseCapKW = getCarWashSolarCapacity({
+        ...(state.step3Answers ?? {}),
+        carportInterest: "no",
+      });
       const staticCap = getFacilityConstraints(state.industry)?.totalRealisticSolarKW ?? 60;
       const baseKW = baseCapKW > 0 ? baseCapKW : staticCap;
       // carportInterest='yes' but carportArea not entered → getCarWashSolarCapacity returns 0
@@ -847,7 +876,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       const carportArea = Number(state.step3Answers?.carportArea ?? 0);
       const canopyDefault = getFacilityConstraints("car_wash")?.canopyPotentialKW ?? 54;
       if (carportInterest === "yes") {
-        const actual = carportArea > 0 ? Math.round(carportArea * 0.95 / 100) : canopyDefault;
+        const actual = carportArea > 0 ? Math.round((carportArea * 0.95) / 100) : canopyDefault;
         newCap = baseKW + actual;
       } else {
         newCap = baseKW;
@@ -866,9 +895,8 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       const canopyKW = constraints?.canopyPotentialKW ?? 0;
 
       // Roof-only solar from user's entered area (15 W/sqft = NREL standard)
-      const roofKW = roofArea > 0
-        ? Math.round(roofArea * usableRoofPercent * 15 / 1000)
-        : maxRoofOnlyKW; // fall back to SSOT cap when no area entered
+      const roofKW =
+        roofArea > 0 ? Math.round((roofArea * usableRoofPercent * 15) / 1000) : maxRoofOnlyKW; // fall back to SSOT cap when no area entered
 
       if (canopyInterest === "no") {
         // User explicitly declined canopy — roof only
@@ -882,15 +910,17 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       } else {
         // Not yet answered: use static SSOT blend (includes typical canopy)
         if (roofArea <= 0) return; // no roof area entered → keep cap from setIndustry
-        newCap = staticCap > 0
-          ? Math.round((roofKW + staticCap) / 2) // blend user data + SSOT
-          : roofKW;
+        newCap =
+          staticCap > 0
+            ? Math.round((roofKW + staticCap) / 2) // blend user data + SSOT
+            : roofKW;
       }
     }
 
     if (newCap > 0 && newCap !== state.solarPhysicalCapKW) {
       dispatch({ type: "SET_INDUSTRY_META", solarPhysicalCapKW: newCap, criticalLoadPct });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     state.industry,
     state.step3Answers?.roofArea,
@@ -1002,20 +1032,17 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
   // ── Navigation ────────────────────────────────────────────────────────────
 
-  const goToStep = useCallback(
-    async (step: WizardStep) => {
-      // ⚡ REMOVED SKIP LOGIC - Step 4 (Add-ons) should ALWAYS show
-      // Even if no addons initially selected, we show intelligent recommendations
-      // User can skip addons by clicking Continue, but we always present the opportunity
+  const goToStep = useCallback(async (step: WizardStep) => {
+    // ⚡ REMOVED SKIP LOGIC - Step 4 (Add-ons) should ALWAYS show
+    // Even if no addons initially selected, we show intelligent recommendations
+    // User can skip addons by clicking Continue, but we always present the opportunity
 
-      // ⚡ REMOVED MANUAL TIER BUILDING - useEffect handles it proactively
-      // Tiers are built in background during Step 3/4 via useEffect
-      // Navigation just moves to the next step - tiers should already be ready
+    // ⚡ REMOVED MANUAL TIER BUILDING - useEffect handles it proactively
+    // Tiers are built in background during Step 3/4 via useEffect
+    // Navigation just moves to the next step - tiers should already be ready
 
-      dispatch({ type: "GO_TO_STEP", step });
-    },
-    []
-  );
+    dispatch({ type: "GO_TO_STEP", step });
+  }, []);
 
   const goBack = useCallback(() => {
     dispatch({ type: "GO_BACK" });
@@ -1055,27 +1082,32 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
     if (!shouldBuild) return;
 
-    devLog('[useWizardV8] 🔄 Building tiers', cacheStale ? '(addons changed — rebuilding)' : '(initial build)', {
-      step: state.step,
-      wantsSolar: state.wantsSolar,
-      solarScope: state.step3Answers?.solarScope,
-    });
+    devLog(
+      "[useWizardV8] 🔄 Building tiers",
+      cacheStale ? "(addons changed — rebuilding)" : "(initial build)",
+      {
+        step: state.step,
+        wantsSolar: state.wantsSolar,
+        solarScope: state.step3Answers?.solarScope,
+      }
+    );
 
     dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
 
     void getOrStartTierBuild(state)
-      .then(tiers => {
-        devLog('[useWizardV8] ✅ Background tier build complete', tiers.length);
+      .then((tiers) => {
+        devLog("[useWizardV8] ✅ Background tier build complete", tiers.length);
         dispatch({ type: "SET_TIERS", tiers });
         dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
       })
       .catch((error) => {
-        console.error('[useWizardV8] ❌ Tier build failed:', error);
+        console.error("[useWizardV8] ❌ Tier build failed:", error);
         dispatch({ type: "SET_TIERS_STATUS", status: "error" });
         if (tierBuildRef.current?.key === createTierBuildKey(state)) {
           tierBuildRef.current = null;
         }
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     getOrStartTierBuild,
     state.step,
@@ -1095,10 +1127,11 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     state.level2Chargers,
     state.dcfcChargers,
     state.hpcChargers,
+    // state intentionally omitted — would fire on every render.
     // Use stable memoized key instead of inline JSON.stringify (saves
     // serialization cost on every render; same semantics, fires only when
     // step3Answers object reference changes).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     step3AnswersKey,
     state.intel?.utilityRate,
     state.intel?.demandCharge,
@@ -1139,10 +1172,26 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       clearError,
     }),
     [
-      setLocationRaw, submitLocation, clearLocation, setGridReliability, setBusiness,
-      setBusinessAddress, confirmBusiness, setIndustry, setAnswer, setAddonPreference,
-      setAddonConfig, setEVChargers, setBaseLoad, setTiers, setTiersStatus,
-      selectTier, goToStep, goBack, reset, clearError,
+      setLocationRaw,
+      submitLocation,
+      clearLocation,
+      setGridReliability,
+      setBusiness,
+      setBusinessAddress,
+      confirmBusiness,
+      setIndustry,
+      setAnswer,
+      setAddonPreference,
+      setAddonConfig,
+      setEVChargers,
+      setBaseLoad,
+      setTiers,
+      setTiersStatus,
+      selectTier,
+      goToStep,
+      goBack,
+      reset,
+      clearError,
     ]
   );
 

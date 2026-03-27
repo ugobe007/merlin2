@@ -31,7 +31,10 @@ function generateQuoteNumber(): string {
  * Requires: state.selectedTierIndex is valid (Step 6 validation ensures this)
  */
 export function buildV8ExportData(state: WizardState): QuoteExportData {
-  const tier = state.tiers && state.selectedTierIndex !== null ? state.tiers[state.selectedTierIndex] : undefined;
+  const tier =
+    state.tiers && state.selectedTierIndex !== null
+      ? state.tiers[state.selectedTierIndex]
+      : undefined;
   if (!tier) {
     throw new Error("Cannot export quote: no tier selected");
   }
@@ -40,13 +43,11 @@ export function buildV8ExportData(state: WizardState): QuoteExportData {
   const locationStr =
     state.location?.city && state.location?.state
       ? `${state.location.city}, ${state.location.state}`
-      : state.location?.formattedAddress ?? "Location TBD";
+      : (state.location?.formattedAddress ?? "Location TBD");
 
   // Industry label
   const industryLabel =
-    state.industry
-      ?.replace(/_/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase()) ?? "Commercial";
+    state.industry?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) ?? "Commercial";
 
   // Equipment sizing
   const bessKW = tier.bessKW ?? 0;
@@ -57,11 +58,8 @@ export function buildV8ExportData(state: WizardState): QuoteExportData {
 
   // Financial metrics
   const grossCost = tier.grossCost ?? 0;
-  const netCost = tier.netCost ?? 0;
-  const itcAmount = tier.itcAmount ?? 0;
   const annualSavings = tier.annualSavings ?? 0;
   const paybackYears = tier.paybackYears ?? 0;
-  const roi10Year = tier.roi10Year ?? 0;
 
   return {
     // Project Information
@@ -129,7 +127,12 @@ export function buildV8ExportData(state: WizardState): QuoteExportData {
       annualSavingsUSD: annualSavings,
       paybackYears,
       npv: tier.npv,
-      demandChargeSavings: annualSavings * 0.25,
+      // Use real demand savings from the tier's V4.5 savings model.
+      // grossAnnualSavings breakdown: demand + solar + EV revenue (no TOU in older sessions)
+      // Demand = bessKW * demandCharge * 12 * 0.75 — recomputed here from tier data
+      demandChargeSavings: Math.round(
+        (tier.bessKW ?? 0) * (state.intel?.demandCharge ?? 15) * 12 * 0.75
+      ),
     },
 
     // TrueQuote™ Validation
