@@ -18,6 +18,7 @@ import {
 import {
   getFacilityConstraints,
   getCarWashSolarCapacity,
+  computeSolarWattsPerSqft,
 } from "@/services/useCasePowerCalculations";
 import { getLastSelectedPanelSync } from "@/services/solarPanelSelectionService";
 
@@ -1860,6 +1861,8 @@ export default function Step3_5V8({ state, actions }: Props) {
   // roofOnlyCapKW = building roof + vacuum only (no carport), regardless of current selection.
   // Pass cached panel spec so density is consistent with what buildTiers uses.
   const _cachedPanelSpec = getLastSelectedPanelSync();
+  // Dynamic density for all non-car-wash industries — scales with supplier DB panel
+  const _solarWPerSqft = computeSolarWattsPerSqft(_cachedPanelSpec);
   const roofOnlyCapKW = isCarWash
     ? getCarWashSolarCapacity(
         { ...(state.step3Answers ?? {}), carportInterest: "no" },
@@ -1867,7 +1870,7 @@ export default function Step3_5V8({ state, actions }: Props) {
       ) ||
       (constraints?.maxRooftopSolarKW ?? 0)
     : roofArea > 0
-      ? Math.round((roofArea * usablePct * 15) / 1000)
+      ? Math.round((roofArea * usablePct * _solarWPerSqft) / 1000)
       : (constraints?.maxRooftopSolarKW ?? 0);
   // withCanopyCapKW = roof + canopyPotentialKW (SSOT default when no area entered)
   const withCanopyCapKW = roofOnlyCapKW + canopyPotentialKW;

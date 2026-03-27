@@ -6922,6 +6922,50 @@ export interface FacilitySolarConstraint {
 export const SOLAR_WATTS_PER_SQFT = 15; // 15 W/sqft installed (modern 400-500W panels with spacing)
 export const CANOPY_WATTS_PER_SQFT = 12; // 12 W/sqft (carport/canopy, slightly less dense)
 
+/**
+ * Dynamic solar roof density — W/sqft (AC-adjusted) — for a given supplier panel spec.
+ *
+ * Scales the SSOT constant (SOLAR_WATTS_PER_SQFT = 15) by the ratio of the
+ * actual panel's DC density to the SSOT panel (400W @ 21.5 sqft = 18.60 W/sqft DC).
+ *
+ * Examples:
+ *   No panel (fallback)          → 15.00 W/sqft
+ *   400W @ 21.5 sqft (SSOT)     → 15.00 W/sqft  (1.00 × 15)
+ *   450W @ 21.5 sqft             → 16.86 W/sqft  (1.125 × 15)
+ *   500W @ 21.5 sqft             → 18.75 W/sqft  (1.25 × 15)
+ *   480W @ 23.0 sqft (low eff)  → 14.58 W/sqft  (0.972 × 15)
+ *
+ * All industry slugs (non-car-wash) use this for live roof capacity calculations.
+ * Car wash uses getCarWashSolarCapacity() which applies the same physics via sqftPerKWac.
+ *
+ * @param panelSpec - Supplier DB panel spec. Null/undefined → SSOT fallback (15 W/sqft).
+ */
+export function computeSolarWattsPerSqft(
+  panelSpec?: { wattPeak: number; areaSqft: number } | null
+): number {
+  if (!panelSpec) return SOLAR_WATTS_PER_SQFT;
+  // Scale SSOT density proportionally to actual panel DC density
+  const SSOT_PANEL_WP = 400;
+  const SSOT_PANEL_SQFT = 21.5; // 18.60 W/sqft DC reference
+  return (
+    (SOLAR_WATTS_PER_SQFT * (panelSpec.wattPeak / panelSpec.areaSqft)) /
+    (SSOT_PANEL_WP / SSOT_PANEL_SQFT)
+  );
+}
+
+/**
+ * Dynamic canopy/carport density — W/sqft AC — for a given panel spec.
+ * Same formula as computeSolarWattsPerSqft but uses CANOPY_WATTS_PER_SQFT baseline.
+ */
+export function computeCanopyWattsPerSqft(
+  panelSpec?: { wattPeak: number; areaSqft: number } | null
+): number {
+  if (!panelSpec) return CANOPY_WATTS_PER_SQFT;
+  const panelWPerSqft = panelSpec.wattPeak / panelSpec.areaSqft;
+  const ssotPanelWPerSqft = 400 / 21.5;
+  return CANOPY_WATTS_PER_SQFT * (panelWPerSqft / ssotPanelWPerSqft);
+}
+
 export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstraint> = {
   car_wash: {
     typicalFootprintSqFt: 8000, // Express tunnel 4,500-8,000; flex/full-service 10,000-15,000
@@ -7275,7 +7319,8 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
 export function validateIndustrySolarCapacity(
   industry: string,
   solarKW: number,
-  buildingSqFt?: number
+  buildingSqFt?: number,
+  panelSpec?: { wattPeak: number; areaSqft: number } | null
 ): {
   isValid: boolean;
   maxRooftopSolarKW: number;
@@ -7291,19 +7336,21 @@ export function validateIndustrySolarCapacity(
   // Normalize industry slug
   const normalizedIndustry = industry.replace(/-/g, "_");
   const constraints = INDUSTRY_FACILITY_CONSTRAINTS[normalizedIndustry];
+  // Dynamic density — scales with actual panel Wp/sqft from supplier DB
+  const wPerSqft = computeSolarWattsPerSqft(panelSpec);
 
   if (!constraints) {
     // Unknown industry — use conservative defaults
     const defaultFootprint = buildingSqFt || 15000;
     const usableRoof = defaultFootprint * 0.4;
-    const maxKW = Math.floor((usableRoof * SOLAR_WATTS_PER_SQFT) / 1000);
+    const maxKW = Math.floor((usableRoof * wPerSqft) / 1000);
     return {
       isValid: solarKW <= maxKW,
       maxRooftopSolarKW: maxKW,
       canopyPotentialKW: 0,
       totalPotentialKW: maxKW,
       usableRoofSqFt: Math.round(usableRoof),
-      requiredRoofSqFt: Math.round((solarKW * 1000) / SOLAR_WATTS_PER_SQFT),
+      requiredRoofSqFt: Math.round((solarKW * 1000) / wPerSqft),
       canopyCanCover: false,
       warning: `Unknown industry "${industry}". Using conservative 40% roof utilization on ${defaultFootprint.toLocaleString()} sqft.`,
     };
@@ -7311,8 +7358,8 @@ export function validateIndustrySolarCapacity(
 
   const footprint = buildingSqFt || constraints.typicalFootprintSqFt;
   const usableRoofSqFt = Math.round(footprint * constraints.usableRoofPercent);
-  const maxRooftopKW = Math.floor((usableRoofSqFt * SOLAR_WATTS_PER_SQFT) / 1000);
-  const requiredRoofSqFt = Math.round((solarKW * 1000) / SOLAR_WATTS_PER_SQFT);
+  const maxRooftopKW = Math.floor((usableRoofSqFt * wPerSqft) / 1000);
+  const requiredRoofSqFt = Math.round((solarKW * 1000) / wPerSqft);
   const totalPotentialKW = maxRooftopKW + constraints.canopyPotentialKW;
 
   if (solarKW <= maxRooftopKW) {
