@@ -7,7 +7,7 @@
  * ============================================================================
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import type { WizardState, WizardActions, WizardStep } from "../wizardState";
 import {
   estimateSolarKW,
@@ -760,6 +760,7 @@ function SolarCard({
   withCanopyKW = 0,
   pendingExternalKW,
   onPendingConsumed,
+  onCarportToggle,
 }: {
   maxKW: number;
   recKW: number;
@@ -777,6 +778,8 @@ function SolarCard({
   withCanopyKW?: number;
   pendingExternalKW?: number | null;
   onPendingConsumed?: () => void;
+  /** Parent-computed: fires BEFORE onCanopyChange, updates both solar kW and slider */
+  onCarportToggle?: (nextVal: string, targetKW: number) => void;
 }) {
   const safeMax = maxKW > 0 ? maxKW : 2000;
   // solarMin must always be < safeMax; 10% of max, floored at 1 kW
@@ -787,23 +790,8 @@ function SolarCard({
     Math.max(solarMin, Math.min(safeMax, initialKW > 0 ? initialKW : safeRec))
   );
   const [confirmed, setConfirmed] = useState(false);
-  // Ref holds the exact kW a canopy toggle button shows — set before onCanopyChange
-  // so the useEffect uses that value instead of the auto-rec formula (cap × 0.80).
-  const pendingToggleKW = useRef<number | null>(null);
-
-  // When canopy interest changes → recKW & maxKW update → sync slider.
-  // If the change came from a toggle button click, use the button's exact kW;
-  // otherwise fall back to rec (for any other parent-state-driven changes).
+  // When canopy interest changes → recKW & maxKW update → snap slider to new rec.
   useEffect(() => {
-    if (pendingToggleKW.current !== null) {
-      const target = pendingToggleKW.current;
-      pendingToggleKW.current = null;
-      const clamped = Math.max(solarMin, Math.min(safeMax, target));
-      setSliderKW(clamped);
-      onConfig(clamped);
-      setConfirmed(false);
-      return;
-    }
     if (!confirmed && recKW > 0) {
       const clamped = Math.max(solarMin, Math.min(safeMax, recKW));
       setSliderKW(clamped);
@@ -1118,27 +1106,14 @@ function SolarCard({
                   <button
                     onClick={() => {
                       const nextVal = carportActive ? "no" : "yes";
-                      const targetCapKW = nextVal === "yes" ? withCanopyKW : roofOnlyKW;
-                      const sf =
-                        peakSunHours >= 2.5
-                          ? Math.max(0.4, Math.min(1.0, (peakSunHours - 2.5) / 2.0))
-                          : 0;
-                      const newMin = Math.max(
-                        1,
-                        Math.min(Math.round(targetCapKW * 0.1), targetCapKW - 1)
-                      );
-                      const targetKW =
-                        targetCapKW > 0 && sf > 0
-                          ? Math.max(
-                              newMin,
-                              Math.min(targetCapKW, Math.round(targetCapKW * sf * 0.8))
-                            )
-                          : targetCapKW;
-                      pendingToggleKW.current = targetKW;
-                      setSliderKW(targetKW);
-                      onConfig(targetKW);
+                      if (onCarportToggle) {
+                        // Parent pre-computes correct targetKW from its own sunFactor/caps
+                        // then pushes it via pendingExternalKW — no stale closure risk
+                        onCarportToggle(nextVal, 0); // targetKW ignored; parent uses its own calc
+                      } else {
+                        onCanopyChange?.(nextVal);
+                      }
                       setConfirmed(false);
-                      onCanopyChange(nextVal);
                     }}
                     style={{
                       flex: 1,
@@ -2104,6 +2079,19 @@ export default function Step3_5V8({ state, actions }: Props) {
 
   const handleCanopyChange = (value: string) => actions.setAnswer(canopyFieldKey, value);
 
+  // Carport toggle handler — lives in parent so it uses parent-scope sunFactor,
+  // withCanopyCapKW, roofOnlyCapKW (no stale closure risk inside SolarCard).
+  const handleCarportToggle = (nextVal: string) => {
+    const targetCapKW = nextVal === "yes" ? withCanopyCapKW : roofOnlyCapKW;
+    const targetKW =
+      targetCapKW > 0 && sunFactor > 0
+        ? Math.max(1, Math.round(targetCapKW * sunFactor * 0.8))
+        : targetCapKW;
+    handleSolarConfig(targetKW);
+    setPendingSolarKW(targetKW); // drives slider via pendingExternalKW path
+    handleCanopyChange(nextVal);
+  };
+
   const liveSolarKW = state.solarKW > 0 ? state.solarKW : solarFeasible ? solarRecKW : 0;
   const liveGenKW = wantsGenerator ? (state.generatorKW > 0 ? state.generatorKW : genRecKW) : 0;
   const liveL2 = state.level2Chargers || 0;
@@ -2213,6 +2201,7 @@ export default function Step3_5V8({ state, actions }: Props) {
           withCanopyKW={withCanopyCapKW}
           pendingExternalKW={pendingSolarKW}
           onPendingConsumed={() => setPendingSolarKW(null)}
+          onCarportToggle={handleCarportToggle}
         />
       )}
       {wantsEV ? (
