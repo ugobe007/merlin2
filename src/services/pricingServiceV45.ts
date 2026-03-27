@@ -9,7 +9,7 @@
  * - Added site engineering & construction costs ($25,800 baseline)
  * - Added 7.5% construction contingency
  * - Added annual operating reserves (insurance, inverter, BESS degradation)
- * - Implemented tiered margin structure (20% → 14% → 13%)
+ * - Implemented tiered margin structure (22% → 17% → 15%, equipment-only quote basis)
  * - Honest financial projections (4.5yr payback vs fabricated 4.0yr)
  * - v4.5.1: Added EV electrical infrastructure cost (480V service, transformer, panel)
  *   as a separate line item — DCFC/HPC charger unit prices do NOT cover service upgrades.
@@ -32,13 +32,15 @@ import { computeEVInfrastructureRequirements } from "./addonGuardrails";
 // ============================================================================
 
 export const EQUIPMENT_UNIT_COSTS = {
-  // Solar PV - Net cost after inverter deduction
+  // Solar PV — equipment-only (NO field labor)
   solar: {
-    pricePerWatt: 1.51, // $/W net (inverter cost removed: $1.70/W - $0.19/W)
+    pricePerWatt: 1.0, // $/W equipment-only: modules, racking, BOS wiring, basic permits. NO field labor.
+    laborPerWatt: 0.51, // $/W field installation labor — shown as Additional Costs, NOT in equipment quote.
     inverterDeduction: 0.19, // $/W (inverter now in BESS hybrid system)
     grossPricePerWatt: 1.7, // $/W gross before inverter deduction
-    source: "NREL ATB 2024",
-    notes: "Modules, racking, BOS wiring, installation labor, basic permits. Inverter EXCLUDED.",
+    source: "NREL ATB 2024 / NREL C&I Rooftop 2024",
+    notes:
+      "Equipment quote: modules, racking, BOS wiring, basic permits. Inverter EXCLUDED. Field labor at $0.51/W billed separately.",
   },
 
   // Battery Energy Storage System (BESS) — PACK PRICING ONLY
@@ -103,6 +105,43 @@ export const SITE_WORK_COSTS = {
   },
 } as const;
 
+/**
+ * Non-labor soft costs — included in the equipment quote.
+ * Engineering, permits, monitoring hardware, documentation.
+ */
+export const SOFT_COSTS = {
+  structuralEngineering: 3500, // PE/structural stamped drawings
+  monitoringHardware: 4000, // Monitoring hardware + software (IoT, SCADA)
+  interconnectionStudy: 2500, // Utility interconnection study + filing fees
+  asBuiltDrawings: 1500, // As-built documentation package
+  necSignage: 800, // NEC-required safety signage (materials)
+
+  get total(): number {
+    return (
+      this.structuralEngineering +
+      this.monitoringHardware +
+      this.interconnectionStudy +
+      this.asBuiltDrawings +
+      this.necSignage
+    );
+  },
+} as const;
+
+/**
+ * Installation & field labor costs — ADDITIONAL COSTS, shown separately from
+ * the equipment quote. NOT included in the Merlin equipment/software quote.
+ * Displayed as a separate line per quote policy (human labor costs).
+ */
+export const INSTALLATION_COSTS = {
+  concretePad: 5000, // BESS + generator foundation: concrete pour, rebar
+  trenchingConduit: 5000, // Underground conduit runs, cable trays
+  commissioning: 3500, // System startup, testing, utility inspection
+
+  get total(): number {
+    return this.concretePad + this.trenchingConduit + this.commissioning;
+  },
+} as const;
+
 export const CONSTRUCTION_CONTINGENCY_RATE = 0.075; // 7.5% industry standard
 
 // ============================================================================
@@ -144,14 +183,16 @@ export function calculateMerlinFees(equipmentSubtotal: number): {
   annualMonitoring: number;
   effectiveMargin: number;
 } {
-  // Determine margin tier based on project size
+  // Rates calibrated for equipment-only quote basis (labor excluded from quote).
+  // Higher vs. EPC model: Merlin provides design intelligence, procurement,
+  // software platform, and incentive filing; field labor is a separate cost center.
   let marginRate: number;
   if (equipmentSubtotal < 200000) {
-    marginRate = 0.2; // 20% for small projects (<$200K)
+    marginRate = 0.22; // 22% for small projects (<$200K)
   } else if (equipmentSubtotal < 800000) {
-    marginRate = 0.14; // 14% for medium projects ($200K-$800K)
+    marginRate = 0.17; // 17% for medium projects ($200K–$800K)
   } else {
-    marginRate = 0.13; // 13% for large projects (>$800K)
+    marginRate = 0.15; // 15% for large projects (>$800K)
   }
 
   const totalFee = equipmentSubtotal * marginRate;
@@ -199,13 +240,16 @@ export function calculateFederalITC(costs: {
   evCharging?: number;
   siteEngineering?: number;
   constructionContingency?: number;
+  installationLabor?: number; // field labor: concrete, trenching, commissioning
 }): number {
-  // ITC-eligible basis: solar + BESS + installed hard costs (site + contingency)
+  // ITC-eligible basis per IRA 2022 Section 48: all capitalized installed costs
+  // for qualified energy property — equipment + labor + site engineering.
   const itcEligible =
     (costs.solar || 0) +
     (costs.bess || 0) +
     (costs.siteEngineering || 0) +
-    (costs.constructionContingency || 0);
+    (costs.constructionContingency || 0) +
+    (costs.installationLabor || 0);
   return itcEligible * FEDERAL_ITC_RATE;
 }
 
@@ -260,6 +304,11 @@ export interface CostBreakdown {
   federalITC: number;
   netInvestment: number;
 
+  // Installation & field labor (ADDITIONAL COSTS — NOT in equipment quote, shown separately)
+  installationLaborCost: number;
+  // Total project cost (equipment quote + installation labor) — true ROI/NPV investment basis
+  totalProjectCost: number;
+
   // Annual operating reserves
   annualReserves: number;
 }
@@ -281,8 +330,9 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
     throw new Error("Equipment quantities cannot be negative");
   }
 
-  // Equipment costs
+  // Equipment costs (pricePerWatt = equipment/BOS only — NO field labor)
   const solarCost = (config.solarKW || 0) * EQUIPMENT_UNIT_COSTS.solar.pricePerWatt * 1000;
+  const solarLaborCost = (config.solarKW || 0) * EQUIPMENT_UNIT_COSTS.solar.laborPerWatt * 1000;
 
   const bessCost =
     (config.bessKWh || 0) * EQUIPMENT_UNIT_COSTS.bess.pricePerKWh +
@@ -321,10 +371,11 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
   const equipmentSubtotal =
     solarCost + bessCost + generatorCost + evChargingCost + evInfrastructureCost;
 
-  // Site work
-  const siteEngineering = SITE_WORK_COSTS.total;
+  // Non-labor soft costs only (engineering, permits, monitoring hardware)
+  // Labor (concrete pad, trenching, commissioning) is in installationLaborCost below
+  const siteEngineering = SOFT_COSTS.total;
 
-  // Construction contingency (7.5% of equipment + site work)
+  // Construction contingency (7.5% of equipment + soft costs)
   const constructionContingency = calculateConstructionContingency(
     equipmentSubtotal + siteEngineering
   );
@@ -337,15 +388,23 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
   // Total investment
   const totalInvestment = subtotalBeforeMerlin + merlinFees.totalFee;
 
-  // Federal ITC — applied to solar + BESS + site engineering + contingency (all hard installed costs)
+  // Installation & field labor — ADDITIONAL COSTS (not in equipment quote)
+  const installationLaborCost = solarLaborCost + INSTALLATION_COSTS.total;
+
+  // Federal ITC basis — full installed cost per IRA 2022 Section 48:
+  // solar equipment + solar labor + BESS + soft costs + contingency + site labor
   const federalITC = calculateFederalITC({
-    solar: solarCost,
+    solar: solarCost + solarLaborCost, // full solar installed cost (equip + labor)
     bess: bessCost,
     siteEngineering,
     constructionContingency,
+    installationLabor: INSTALLATION_COSTS.total,
   });
 
-  const netInvestment = totalInvestment - federalITC;
+  // Quote total (equipment + soft costs + contingency + Merlin fee) — NO labor
+  // totalProjectCost = full project (quote + labor) — ROI/NPV investment basis
+  const totalProjectCost = totalInvestment + installationLaborCost;
+  const netInvestment = totalProjectCost - federalITC;
 
   // Annual operating reserves
   const annualReserves = ANNUAL_RESERVES.total(config.solarKW || 0, config.bessKWh || 0);
@@ -364,6 +423,8 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
     totalInvestment: Math.round(totalInvestment),
     federalITC: Math.round(federalITC),
     netInvestment: Math.round(netInvestment),
+    installationLaborCost: Math.round(installationLaborCost),
+    totalProjectCost: Math.round(totalProjectCost),
     annualReserves: Math.round(annualReserves),
   };
 }

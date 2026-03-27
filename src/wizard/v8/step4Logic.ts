@@ -620,9 +620,8 @@ function buildOneTier(
       : "EV chargers: none",
     `Savings model: V4.5 (pricingServiceV45.calculateAnnualSavings) — demand charge reduction + solar generation + EV revenue`,
     `Savings inputs: rate=$${electricityRate}/kWh, demand=$${demandCharge}/kW, sun=${sunHoursPerDay.toFixed(1)}h/day`,
-    `Pricing: V4.5 model (pricingServiceV45) — equipment + site + 7.5% contingency + Merlin ${blendedMarginPercent.toFixed(0)}% fee`,
-    `ITC: 30% on solar ($${Math.round(v45Costs.solarCost).toLocaleString()}) + BESS ($${Math.round(v45Costs.bessCost).toLocaleString()}) = $${Math.round(itcAmount).toLocaleString()}`,
-    // Addon guardrail audit notes (addonGuardrails.ts — NREL, NEC, IEEE 446)
+    `Pricing: V4.5 model (pricingServiceV45) — equipment quote (no labor) + 7.5% contingency + Merlin AI services. Installation labor ($${Math.round(v45Costs.installationLaborCost).toLocaleString()}) billed separately.`,
+    `ITC: 30% on full installed cost = $${Math.round(itcAmount).toLocaleString()} (solar equip+labor + BESS + site engineering + installation per IRA 2022 Sec 48)`, // Addon guardrail audit notes (addonGuardrails.ts — NREL, NEC, IEEE 446)
     ...(addonValidation.solarAuditNote ? [`📐 ${addonValidation.solarAuditNote}`] : []),
     ...(addonValidation.evAuditNote ? [`⚡ ${addonValidation.evAuditNote}`] : []),
     ...(addonValidation.generatorAuditNote ? [`🔋 ${addonValidation.generatorAuditNote}`] : []),
@@ -661,6 +660,8 @@ function buildOneTier(
     blendedMarginPercent,
     // Exposed for CalculationValidator background audit (not displayed in UI)
     equipmentSubtotal: v45Costs.equipmentSubtotal,
+    installationLaborCost: v45Costs.installationLaborCost,
+    totalProjectCost: v45Costs.totalProjectCost,
     notes: tierNotes,
   };
 }
@@ -708,8 +709,8 @@ async function runV8ValidationBackground(state: WizardState, tier: QuoteTier): P
       },
       costs: {
         equipmentCost: tier.equipmentSubtotal ?? Math.round(tier.grossCost * 0.74),
-        installationCost: 0,
-        totalProjectCost: tier.grossCost,
+        installationCost: tier.installationLaborCost ?? 0,
+        totalProjectCost: tier.totalProjectCost ?? tier.grossCost,
         taxCredit: tier.itcAmount,
         netCost: tier.netCost,
       },
@@ -828,6 +829,8 @@ function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier 
     roi10Year: newROI.roi10Year,
     npv: newROI.npv25Year,
     equipmentSubtotal: newCosts.equipmentSubtotal,
+    installationLaborCost: newCosts.installationLaborCost,
+    totalProjectCost: newCosts.totalProjectCost,
     notes: [
       ...tier.notes,
       `[ROI Guardrail] Generator removed: was ${tier.generatorKW} kW, saved $${(tier.grossCost - newCosts.totalInvestment).toLocaleString("en-US", { maximumFractionDigits: 0 })} in project cost, payback improved ${tier.paybackYears.toFixed(1)} → ${newROI.paybackYears.toFixed(1)} yr`,
@@ -913,6 +916,8 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
     roi10Year: newROI.roi10Year,
     npv: newROI.npv25Year,
     equipmentSubtotal: newCosts.equipmentSubtotal,
+    installationLaborCost: newCosts.installationLaborCost,
+    totalProjectCost: newCosts.totalProjectCost,
     notes: [
       ...tier.notes,
       `[ROI Guardrail] BESS right-sized to minimum viable (${MIN_BESS_KW} kW / ${MIN_BESS_KWH} kWh, ` +

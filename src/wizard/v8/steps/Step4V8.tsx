@@ -725,9 +725,27 @@ export default function Step4V8({ state, actions }: Props) {
 
                 <div className="space-y-1.5 text-xs md:text-sm mb-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500">Total Investment</span>
+                    <span className="text-slate-500">Equipment Quote</span>
                     <span className="text-slate-300 font-medium">
                       {formatCurrency(totalInvestment)}
+                    </span>
+                  </div>
+                  {(tier.installationLaborCost ?? 0) > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">+ Installation &amp; Labor</span>
+                      <span className="text-slate-400 font-medium">
+                        {formatCurrency(tier.installationLaborCost ?? 0)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">
+                      {(tier.installationLaborCost ?? 0) > 0
+                        ? "= Total Project Cost"
+                        : "Total Project Cost"}
+                    </span>
+                    <span className="text-slate-200 font-medium">
+                      {formatCurrency(tier.totalProjectCost ?? totalInvestment)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -936,13 +954,13 @@ export default function Step4V8({ state, actions }: Props) {
                           </div>
                         </div>
 
-                        {/* Site Work & Soft Costs */}
+                        {/* Engineering & Permits */}
                         <div className="pb-2 border-b border-slate-700/50">
                           <p className="text-[11px] uppercase tracking-wider text-emerald-400 mb-1.5 font-bold">
-                            Site Work & Soft Costs
+                            Engineering &amp; Permits
                           </p>
                           <div className="flex justify-between items-center text-slate-300">
-                            <span>Site Engineering & Construction</span>
+                            <span>Engineering, Permits &amp; Monitoring</span>
                             <span className="font-medium">
                               {formatCurrency(v45Costs.siteEngineering)}
                             </span>
@@ -955,37 +973,29 @@ export default function Step4V8({ state, actions }: Props) {
                           </div>
                         </div>
 
+                        {/* Installation & Field Labor — Additional Costs */}
+                        <div className="pb-2 border-b border-slate-700/50">
+                          <p className="text-[11px] uppercase tracking-wider text-amber-400 mb-1 font-bold">
+                            Installation &amp; Field Labor
+                          </p>
+                          <p className="text-[10px] text-slate-500 mb-1.5 italic">
+                            Additional Costs — billed separately, not included in equipment quote
+                          </p>
+                          <div className="flex justify-between items-center text-slate-400">
+                            <span>Foundation, Trenching, Conduit &amp; Commissioning</span>
+                            <span className="font-medium">
+                              {formatCurrency(v45Costs.installationLaborCost)}
+                            </span>
+                          </div>
+                        </div>
+
                         {/* Merlin AI Services */}
                         <div className="pb-2 border-b border-slate-700/50">
                           <p className="text-[11px] uppercase tracking-wider text-emerald-400 mb-1.5 font-bold">
                             Merlin AI Services
                           </p>
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span>◈ Design Intelligence</span>
-                            <span className="font-medium">
-                              {formatCurrency(v45Costs.merlinFees.designIntelligence)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span>Procurement & Sourcing</span>
-                            <span className="font-medium">
-                              {formatCurrency(v45Costs.merlinFees.procurementSourcing)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span>PM & Construction Oversight</span>
-                            <span className="font-medium">
-                              {formatCurrency(v45Costs.merlinFees.pmConstruction)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span>Incentive Filing</span>
-                            <span className="font-medium">
-                              {formatCurrency(v45Costs.merlinFees.incentiveFiling)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-slate-200 font-semibold mt-1.5 pt-1.5 border-t border-slate-700/30">
-                            <span>Total Merlin Fee</span>
+                          <div className="flex justify-between items-center text-slate-200 font-semibold">
+                            <span>&#9672; Design, Procurement &amp; Software</span>
                             <span>{formatCurrency(v45Costs.merlinFees.totalFee)}</span>
                           </div>
                         </div>
@@ -1013,9 +1023,10 @@ export default function Step4V8({ state, actions }: Props) {
                           }`}
                         >
                           <p className="text-slate-400 leading-relaxed">
-                            <span className="font-semibold text-slate-300">V4.5 Pricing:</span> NREL
-                            ATB 2024, tiered margin (20%→14%→13%), 7.5% contingency, honest
-                            reserves. Payback {tier.paybackYears.toFixed(1)}yr includes all costs.
+                            <span className="font-semibold text-slate-300">Equipment Quote:</span>{" "}
+                            NREL ATB 2024 pricing, 7.5% contingency, Merlin AI services included.
+                            Installation labor billed separately. Payback{" "}
+                            {tier.paybackYears.toFixed(1)}yr based on total project cost after ITC.
                           </p>
                         </div>
                       </div>
