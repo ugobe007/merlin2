@@ -803,8 +803,8 @@ function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier 
       demandCharge,
       sunHoursPerDay,
       cyclesPerYear: 250,
-      hasTOU: intel?.hasTOU ?? false,
-      peakRate: intel?.peakRate ?? electricityRate + 0.05,
+      hasTOU: state.intel?.hasTOU ?? false,
+      peakRate: state.intel?.peakRate ?? electricityRate + 0.05,
     },
     tier.solarKW
   );
@@ -889,8 +889,8 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
       demandCharge,
       sunHoursPerDay,
       cyclesPerYear: 250,
-      hasTOU: intel?.hasTOU ?? false,
-      peakRate: intel?.peakRate ?? electricityRate + 0.05,
+      hasTOU: state.intel?.hasTOU ?? false,
+      peakRate: state.intel?.peakRate ?? electricityRate + 0.05,
     },
     tier.solarKW
   );
