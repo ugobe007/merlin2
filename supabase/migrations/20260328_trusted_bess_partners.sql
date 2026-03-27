@@ -73,21 +73,21 @@ FROM (
     -- ── Great Power GP-BESS-200 (200 kWh, 50 kW — 4-hr, LFP)
     -- Great Power Energy & Technology Co., Ltd. (Guangzhou, CN)
     -- One of the top-5 global LFP cell manufacturers by volume (2024 SNE data).
-    -- Price: ~$262/kWh pack (ex-works + freight + tariff), $128/kW PCS.
+    -- Price: $112/kWh pack (direct partner pricing), $120/kW PCS.
     -- RTE: 88.5% AC-AC. Cycle life 6,000 to 80% SoH (0.5C).
     -- Strong track record in C&I and utility-scale. IEC + UL certified.
     -- Lead time: 18 weeks (ocean freight + US customs).
     ('Great Power', 'GP-BESS-200', 200.0::numeric, 50.0::numeric,
-     'LFP', 614::numeric, 262.0::numeric, 128.0::numeric,
+     'LFP', 614::numeric, 112.0::numeric, 120.0::numeric,
      88.5::numeric, 90.0::numeric, 6000, 0.250::numeric,
      1.8::numeric, 6000, 10, 18, 1,
      ARRAY['IEC 62619', 'UL 9540', 'UL 1973', 'CE', 'UN 38.3', 'UL 9540A']),
 
     -- ── Great Power GP-BESS-500 (500 kWh, 125 kW — 4-hr, LFP, large C&I)
     -- Higher capacity unit for multi-MW sites. Same cell chemistry and warranty.
-    -- Price slightly lower at scale: ~$255/kWh pack, $125/kW PCS.
+    -- Price at scale: $108/kWh pack (direct partner), $118/kW PCS.
     ('Great Power', 'GP-BESS-500', 500.0::numeric, 125.0::numeric,
-     'LFP', 1000::numeric, 255.0::numeric, 125.0::numeric,
+     'LFP', 1000::numeric, 108.0::numeric, 118.0::numeric,
      88.5::numeric, 90.0::numeric, 6000, 0.250::numeric,
      1.8::numeric, 6000, 10, 18, 1,
      ARRAY['IEC 62619', 'UL 9540', 'UL 1973', 'CE', 'UN 38.3', 'UL 9540A']),
@@ -96,11 +96,11 @@ FROM (
     -- Discovery Energy Solutions (South Africa / NA)
     -- Well-established C&I BESS supplier, ISO 9001:2015 QMS.
     -- Field-proven in commercial and light-industrial applications.
-    -- Price: ~$285/kWh pack, $138/kW PCS (2025 list, USD equiv.).
+    -- Price: $130/kWh pack (direct partner pricing), $128/kW PCS.
     -- RTE: 87.5% AC-AC. SANS 62619 / IEC 62619 / CE certified.
     -- Lead time: 14 weeks (US delivery via established import channel).
     ('Discovery Energy', 'DCS-E 240', 240.0::numeric, 60.0::numeric,
-     'LFP', 768::numeric, 285.0::numeric, 138.0::numeric,
+     'LFP', 768::numeric, 130.0::numeric, 128.0::numeric,
      87.5::numeric, 90.0::numeric, 5000, 0.250::numeric,
      2.0::numeric, 5000, 10, 14, 1,
      ARRAY['IEC 62619', 'SANS 62619', 'CE', 'ISO 9001']),
@@ -109,11 +109,11 @@ FROM (
     -- LiON Energy (Salt Lake City, UT)
     -- UL-listed US assembler with domestic supply chain advantages:
     --   shortest lead time in pool, simplified AHJ approval path.
-    -- Price: ~$310/kWh pack, $142/kW PCS (2025 published list).
+    -- Price: $150/kWh pack (direct partner pricing), $135/kW PCS.
     -- RTE: 89.0% AC-AC. Cycle life 4,500 to 80% SoH.
     -- Lead time: 12 weeks (domestic assembly, rail/truck delivery).
     ('LiON Energy', 'Guardian 250', 250.0::numeric, 62.5::numeric,
-     'LFP', 800::numeric, 310.0::numeric, 142.0::numeric,
+     'LFP', 800::numeric, 150.0::numeric, 135.0::numeric,
      89.0::numeric, 90.0::numeric, 4500, 0.250::numeric,
      2.0::numeric, 4500, 10, 12, 1,
      ARRAY['UL 1973', 'UL 9540', 'UL 9540A', 'IEC 62619', 'NFPA 855']),
@@ -122,7 +122,7 @@ FROM (
     -- Same platform scaled for larger C&I and light-utility sites.
     -- Lead time advantage is retained at larger capacity.
     ('LiON Energy', 'Guardian 500', 500.0::numeric, 125.0::numeric,
-     'LFP', 800::numeric, 305.0::numeric, 140.0::numeric,
+     'LFP', 800::numeric, 145.0::numeric, 132.0::numeric,
      89.0::numeric, 90.0::numeric, 4500, 0.250::numeric,
      2.0::numeric, 4500, 10, 12, 1,
      ARRAY['UL 1973', 'UL 9540', 'UL 9540A', 'IEC 62619', 'NFPA 855'])

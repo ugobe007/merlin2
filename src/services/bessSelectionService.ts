@@ -15,11 +15,11 @@
  *
  * TRUSTED PARTNERS (pre-seeded as approved, March 2026):
  *   • Great Power Energy & Technology — GP-BESS-200 / GP-BESS-500
- *     Top-5 global LFP manufacturer, IEC/UL certified, ~$255-262/kWh
+ *     Top-5 global LFP manufacturer, IEC/UL certified, $108–$112/kWh (direct)
  *   • Discovery Energy Solutions — DCS-E 240
- *     Field-proven C&I supplier, IEC 62619 + SANS 62619, ~$285/kWh
+ *     Field-proven C&I supplier, IEC 62619 + SANS 62619, $130/kWh (direct)
  *   • LiON Energy — Guardian 250 / Guardian 500
- *     US-assembled, UL-listed, shortest lead time (12 wk), ~$305-310/kWh
+ *     US-assembled, UL-listed, shortest lead time (12 wk), $145–$150/kWh (direct)
  *
  * Key exports:
  *   selectOptimalBESS(requestedKwh, requestedKw) → BESSSpec (async)
