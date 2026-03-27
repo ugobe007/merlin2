@@ -392,14 +392,19 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
   const installationLaborCost = solarLaborCost + INSTALLATION_COSTS.total;
 
   // Federal ITC basis — full installed cost per IRA 2022 Section 48:
-  // solar equipment + solar labor + BESS + soft costs + contingency + site labor
-  const federalITC = calculateFederalITC({
-    solar: solarCost + solarLaborCost, // full solar installed cost (equip + labor)
-    bess: bessCost,
-    siteEngineering,
-    constructionContingency,
-    installationLabor: INSTALLATION_COSTS.total,
-  });
+  // solar equipment + solar labor + BESS + soft costs + contingency + site labor.
+  // ITC requires qualifying energy property (solar or BESS) to be present.
+  // A generator-only project has no qualifying property and receives no ITC.
+  const hasQualifyingEquipment = solarCost + bessCost > 0;
+  const federalITC = hasQualifyingEquipment
+    ? calculateFederalITC({
+        solar: solarCost + solarLaborCost, // full solar installed cost (equip + labor)
+        bess: bessCost,
+        siteEngineering,
+        constructionContingency,
+        installationLabor: INSTALLATION_COSTS.total,
+      })
+    : 0;
 
   // Quote total (equipment + soft costs + contingency + Merlin fee) — NO labor
   // totalProjectCost = full project (quote + labor) — ROI/NPV investment basis

@@ -557,8 +557,8 @@ function buildOneTier(
   // ── Assemble QuoteTier ──────────────────────────────────────────────────
   const itcRate = 0.3; // Federal ITC base rate (IRA 2022); applied to solar+BESS only
   const grossCost = v45Costs.totalInvestment; // equipment + site + contingency + Merlin fee
-  const itcAmount = v45Costs.federalITC; // 30% of (solarCost + bessCost) only
-  const netCost = v45Costs.netInvestment; // grossCost − itcAmount
+  const itcAmount = v45Costs.federalITC; // 30% of full §48 basis: solar+labor, BESS, site engineering, contingency, installation labor
+  const netCost = v45Costs.netInvestment; // totalProjectCost − itcAmount (totalProjectCost includes installation labor)
 
   // ── Addon guardrails: sizing checks + audit notes for TrueQuote ────────
   // validateAddonConfig runs all three guardrails (solar NREL, EV NEC/SAE, generator IEEE 446)
@@ -699,7 +699,7 @@ async function runV8ValidationBackground(state: WizardState, tier: QuoteTier): P
     );
     const solarCost =
       tier.solarKW > 0
-        ? Math.round(tier.solarKW * 1000 * EQUIPMENT_UNIT_COSTS.solar.pricePerWatt) // $1.51/W from SSOT
+        ? Math.round(tier.solarKW * 1000 * EQUIPMENT_UNIT_COSTS.solar.pricePerWatt) // $1.00/W equipment-only from SSOT
         : 0;
 
     const quoteResult = {
