@@ -15,7 +15,10 @@ import {
   getEffectiveSolarCapKW,
   defaultGeneratorScope,
 } from "../addonSizing";
-import { getFacilityConstraints, getCarWashSolarCapacity } from "@/services/useCasePowerCalculations";
+import {
+  getFacilityConstraints,
+  getCarWashSolarCapacity,
+} from "@/services/useCasePowerCalculations";
 
 interface Props {
   state: WizardState;
@@ -366,8 +369,12 @@ function ConfirmBtn({
         (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(62,207,142,0.9)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = needsConfirm ? "rgba(62,207,142,0.06)" : "transparent";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = needsConfirm ? "rgba(62,207,142,0.85)" : "rgba(62,207,142,0.4)";
+        (e.currentTarget as HTMLButtonElement).style.background = needsConfirm
+          ? "rgba(62,207,142,0.06)"
+          : "transparent";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = needsConfirm
+          ? "rgba(62,207,142,0.85)"
+          : "rgba(62,207,142,0.4)";
       }}
     >
       {label}
@@ -897,29 +904,33 @@ function SolarCard({
               marginBottom: 8,
             }}
           >
-            {isCarWash ? "☀️ Solar Carport (vacuum / parking area)" : "☀️ Solar Canopy (parking / carport)"}
+            {isCarWash
+              ? "☀️ Solar Carport (vacuum / parking area)"
+              : "☀️ Solar Canopy (parking / carport)"}
           </div>
           <div style={{ display: "flex", gap: 6 }}>
-            {([
-              {
-                value: "no",
-                icon: "🏠",
-                label: "Roof Only",
-                kw: roofOnlyKW,
-                color: "rgba(100,116,139,1)",
-                borderColor: "rgba(100,116,139,0.5)",
-                bgColor: "rgba(100,116,139,0.12)",
-              },
-              {
-                value: "yes",
-                icon: "🏗️",
-                label: isCarWash ? "+ Carport" : "+ Canopy",
-                kw: withCanopyKW,
-                color: "#fbbf24",
-                borderColor: "rgba(251,191,36,0.8)",
-                bgColor: "rgba(251,191,36,0.14)",
-              },
-            ] as const).map((opt) => {
+            {(
+              [
+                {
+                  value: "no",
+                  icon: "🏠",
+                  label: "Roof Only",
+                  kw: roofOnlyKW,
+                  color: "rgba(100,116,139,1)",
+                  borderColor: "rgba(100,116,139,0.5)",
+                  bgColor: "rgba(100,116,139,0.12)",
+                },
+                {
+                  value: "yes",
+                  icon: "🏗️",
+                  label: isCarWash ? "+ Carport" : "+ Canopy",
+                  kw: withCanopyKW,
+                  color: "#fbbf24",
+                  borderColor: "rgba(251,191,36,0.8)",
+                  bgColor: "rgba(251,191,36,0.14)",
+                },
+              ] as const
+            ).map((opt) => {
               // Default to 'no' visually when nothing selected yet
               const active = (canopyInterest ?? "no") === opt.value;
               return (
@@ -934,7 +945,9 @@ function SolarCard({
                     flex: 1,
                     padding: "10px 4px 8px",
                     borderRadius: 10,
-                    border: active ? `2px solid ${opt.borderColor}` : "1.5px solid rgba(255,255,255,0.1)",
+                    border: active
+                      ? `2px solid ${opt.borderColor}`
+                      : "1.5px solid rgba(255,255,255,0.1)",
                     background: active ? opt.bgColor : "rgba(255,255,255,0.03)",
                     cursor: "pointer",
                     textAlign: "center",
@@ -1009,8 +1022,8 @@ function SolarCard({
             {canopyInterest === "yes"
               ? `roof + ${isCarWash ? "carport" : "canopy"} (${safeMax.toLocaleString()} kW total)`
               : safeMax > 0
-              ? `${safeMax.toLocaleString()} kW roof space`
-              : "available roof area"}
+                ? `${safeMax.toLocaleString()} kW roof space`
+                : "available roof area"}
             {peakLoadKW > 0 ? ` and ${peakLoadKW.toLocaleString()} kW peak load` : ""}.
           </div>
         </div>
@@ -1543,6 +1556,162 @@ function BackupGeneratorCard({
   );
 }
 
+// ── ROI Intelligence Banner ─────────────────────────────────────────────────
+type RoiHint = { id: string; icon: string; color: "amber" | "blue" | "rose"; text: string };
+
+function RoiIntelBanner({
+  peakSunHours,
+  utilityRate,
+  hasTOU,
+  peakRate,
+  liveSolarKW,
+  solarMaxKW,
+  solarRecKW,
+  canopyInterest,
+  canopyPotentialKW,
+  isCarWash,
+  solarFeasible,
+}: {
+  peakSunHours: number;
+  utilityRate: number;
+  hasTOU: boolean;
+  peakRate: number;
+  liveSolarKW: number;
+  solarMaxKW: number;
+  solarRecKW: number;
+  canopyInterest?: string;
+  canopyPotentialKW: number;
+  isCarWash: boolean;
+  solarFeasible: boolean;
+}) {
+  const hints: RoiHint[] = [];
+
+  // 1. Car wash: vacuum station / carport solar opportunity
+  if (isCarWash && canopyPotentialKW > 0 && canopyInterest !== "yes") {
+    const extraK = Math.round((canopyPotentialKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
+    hints.push({
+      id: "carport_vacuum",
+      icon: "☀️",
+      color: "amber",
+      text: `Vacuum station canopies can support ${canopyPotentialKW} kW of additional solar (+$${extraK}K/yr estimated). Select "Solar Carport" below to include them and improve payback.`,
+    });
+  }
+
+  // 2. Non-car-wash: parking canopy opportunity
+  if (!isCarWash && canopyPotentialKW > 0 && canopyInterest !== "yes") {
+    const extraK = Math.round((canopyPotentialKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
+    hints.push({
+      id: "canopy_general",
+      icon: "🏗️",
+      color: "amber",
+      text: `A solar canopy over your parking area unlocks ${canopyPotentialKW} kW of additional capacity (+$${extraK}K/yr). Select "Solar Canopy" below.`,
+    });
+  }
+
+  // 3. Solar set below recommended
+  if (solarFeasible && solarRecKW > 0 && liveSolarKW < solarRecKW * 0.85) {
+    const deltaKW = Math.round(solarRecKW - liveSolarKW);
+    const deltaK = Math.round((deltaKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
+    if (deltaK > 0) {
+      hints.push({
+        id: "solar_below_rec",
+        icon: "📈",
+        color: "amber",
+        text: `Raising solar to the recommended ${solarRecKW} kW (currently ${Math.round(liveSolarKW)} kW) adds ~$${deltaK}K/yr in savings and shortens payback.`,
+      });
+    }
+  }
+
+  // 4. Good sun with unused capacity headroom
+  if (solarFeasible && peakSunHours >= 5.0 && solarMaxKW > 0 && liveSolarKW < solarMaxKW * 0.75) {
+    const headroom = Math.round(solarMaxKW - liveSolarKW);
+    hints.push({
+      id: "good_sun_headroom",
+      icon: "⚡",
+      color: "blue",
+      text: `${peakSunHours} hrs/day sun — ${headroom} kW of unused capacity available above your current setting. More solar = shorter payback at this location.`,
+    });
+  }
+
+  // 5. TOU rates detected
+  if (hasTOU && peakRate > utilityRate) {
+    const spreadCents = Math.round((peakRate - utilityRate) * 100);
+    hints.push({
+      id: "tou_available",
+      icon: "🔋",
+      color: "blue",
+      text: `Time-of-Use rates detected (${spreadCents}¢ peak/off-peak spread). BESS will shift load off-peak — additional TOU savings appear on your quote.`,
+    });
+  }
+
+  // 6. Low utility rate warning
+  if (utilityRate < 0.1) {
+    hints.push({
+      id: "low_rate",
+      icon: "⚠️",
+      color: "rose",
+      text: `At ${Math.round(utilityRate * 100)}¢/kWh, solar energy savings are limited here. EV charging revenue or demand charge reduction typically offers stronger ROI at this rate.`,
+    });
+  }
+
+  const shown = hints.slice(0, 2);
+  if (shown.length === 0) return null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {shown.map((hint) => {
+        const isAmber = hint.color === "amber";
+        const isBlue = hint.color === "blue";
+        const bg = isAmber
+          ? "rgba(245,158,11,0.07)"
+          : isBlue
+            ? "rgba(56,189,248,0.07)"
+            : "rgba(239,68,68,0.07)";
+        const border = isAmber
+          ? "1px solid rgba(245,158,11,0.22)"
+          : isBlue
+            ? "1px solid rgba(56,189,248,0.22)"
+            : "1px solid rgba(239,68,68,0.22)";
+        const labelColor = isAmber ? "#fbbf24" : isBlue ? "#38bdf8" : "#f87171";
+        const label = isAmber ? "ROI Tip" : isBlue ? "Solar Intel" : "Rate Alert";
+        return (
+          <div
+            key={hint.id}
+            style={{
+              borderRadius: 10,
+              background: bg,
+              border,
+              padding: "12px 14px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+            }}
+          >
+            <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{hint.icon}</span>
+            <div>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: labelColor,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.07em",
+                  marginRight: 6,
+                }}
+              >
+                {label}
+              </span>
+              <span style={{ fontSize: 13, color: "rgba(203,213,225,0.75)", lineHeight: 1.5 }}>
+                {hint.text}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function Step3_5V8({ state, actions }: Props) {
@@ -1605,9 +1774,18 @@ export default function Step3_5V8({ state, actions }: Props) {
     setWantsEV(true);
     actions.setAddonPreference("ev", true);
     actions.setAnswer("evScope", "custom");
-    const rl2 = Math.min(12, Math.max(2, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 150) : 4));
-    const rdcfc = Math.min(8, Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 600) : 1));
-    const rhpc = Math.min(4, Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 1200) : 0));
+    const rl2 = Math.min(
+      12,
+      Math.max(2, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 150) : 4)
+    );
+    const rdcfc = Math.min(
+      8,
+      Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 600) : 1)
+    );
+    const rhpc = Math.min(
+      4,
+      Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 1200) : 0)
+    );
     actions.setAddonConfig({ level2Chargers: rl2, dcfcChargers: rdcfc, hpcChargers: rhpc });
   };
   const handleRemoveEV = () => {
@@ -1638,33 +1816,35 @@ export default function Step3_5V8({ state, actions }: Props) {
   // Car wash uses getCarWashSolarCapacity (Vineet 10 W/sqft model) not the generic 15 W/sqft.
   // roofOnlyCapKW = building roof + vacuum only (no carport), regardless of current selection.
   const roofOnlyCapKW = isCarWash
-    ? (getCarWashSolarCapacity({ ...(state.step3Answers ?? {}), carportInterest: "no" }) || (constraints?.maxRooftopSolarKW ?? 0))
-    : (roofArea > 0 ? Math.round(roofArea * usablePct * 15 / 1000) : (constraints?.maxRooftopSolarKW ?? 0));
+    ? getCarWashSolarCapacity({ ...(state.step3Answers ?? {}), carportInterest: "no" }) ||
+      (constraints?.maxRooftopSolarKW ?? 0)
+    : roofArea > 0
+      ? Math.round((roofArea * usablePct * 15) / 1000)
+      : (constraints?.maxRooftopSolarKW ?? 0);
   // withCanopyCapKW = roof + canopyPotentialKW (SSOT default when no area entered)
   const withCanopyCapKW = roofOnlyCapKW + canopyPotentialKW;
 
   // Synchronous effective max — slider max updates immediately on toggle click,
   // without waiting for the useWizardV8 reactive effect to propagate.
-  const solarEffectiveMaxKW = canopyInterest === "yes"
-    ? withCanopyCapKW
-    : canopyInterest === "no"
-    ? roofOnlyCapKW
-    : solarMaxKW; // unanswered → fall back to state.solarPhysicalCapKW
+  const solarEffectiveMaxKW =
+    canopyInterest === "yes"
+      ? withCanopyCapKW
+      : canopyInterest === "no"
+        ? roofOnlyCapKW
+        : solarMaxKW; // unanswered → fall back to state.solarPhysicalCapKW
 
   // Recommended kW for the new max — prevents stale low rec when max jumps up
-  const sunFactor = peakSunHours >= 2.5 ? Math.max(0.40, Math.min(1.0, (peakSunHours - 2.5) / 2.0)) : 0;
-  const solarEffectiveRecKW = solarEffectiveMaxKW > 0 && sunFactor > 0
-    ? Math.round(solarEffectiveMaxKW * sunFactor * 0.80)
-    : solarRecKW;
+  const sunFactor =
+    peakSunHours >= 2.5 ? Math.max(0.4, Math.min(1.0, (peakSunHours - 2.5) / 2.0)) : 0;
+  const solarEffectiveRecKW =
+    solarEffectiveMaxKW > 0 && sunFactor > 0
+      ? Math.round(solarEffectiveMaxKW * sunFactor * 0.8)
+      : solarRecKW;
 
   const handleCanopyChange = (value: string) => actions.setAnswer(canopyFieldKey, value);
 
   const liveSolarKW = state.solarKW > 0 ? state.solarKW : solarFeasible ? solarRecKW : 0;
-  const liveGenKW = wantsGenerator
-    ? state.generatorKW > 0
-      ? state.generatorKW
-      : genRecKW
-    : 0;
+  const liveGenKW = wantsGenerator ? (state.generatorKW > 0 ? state.generatorKW : genRecKW) : 0;
   const liveL2 = state.level2Chargers || 0;
   const liveDcfc = state.dcfcChargers || 0;
   const liveHpc = state.hpcChargers || 0;
@@ -1725,6 +1905,19 @@ export default function Step3_5V8({ state, actions }: Props) {
           Fine-tune solar, EV charging, and backup generator
         </p>
       </div>
+      <RoiIntelBanner
+        peakSunHours={peakSunHours}
+        utilityRate={utilityRate}
+        hasTOU={state.intel?.hasTOU ?? false}
+        peakRate={state.intel?.peakRate ?? 0}
+        liveSolarKW={liveSolarKW}
+        solarMaxKW={solarEffectiveMaxKW}
+        solarRecKW={solarEffectiveRecKW}
+        canopyInterest={canopyInterest}
+        canopyPotentialKW={canopyPotentialKW}
+        isCarWash={isCarWash}
+        solarFeasible={solarFeasible}
+      />
       {solarFeasible && (
         <SolarCard
           maxKW={solarEffectiveMaxKW}
