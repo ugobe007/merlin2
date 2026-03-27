@@ -47,6 +47,8 @@ import { fetchUtility, fetchSolar, fetchWeather } from "@/wizard/v7/api/wizardAP
 import {
   getFacilityConstraints,
   getCarWashSolarCapacity,
+  computeSolarWattsPerSqft,
+  computeCanopyWattsPerSqft,
 } from "@/services/useCasePowerCalculations";
 import { getLastSelectedPanelSync } from "@/services/solarPanelSelectionService";
 import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
@@ -897,19 +899,31 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       const maxRoofOnlyKW = constraints?.maxRooftopSolarKW ?? 0;
       const canopyKW = constraints?.canopyPotentialKW ?? 0;
 
-      // Roof-only solar from user's entered area (15 W/sqft = NREL standard)
+      // Roof-only solar from user's entered area — density scales with supplier DB panel spec.
+      // computeSolarWattsPerSqft() returns 15 W/sqft when no panel is cached (SSOT default).
+      const _cachedPanel = getLastSelectedPanelSync();
+      const solarWPerSqft = computeSolarWattsPerSqft(_cachedPanel);
+      const canopyWPerSqft = computeCanopyWattsPerSqft(_cachedPanel);
       const roofKW =
-        roofArea > 0 ? Math.round((roofArea * usableRoofPercent * 15) / 1000) : maxRoofOnlyKW; // fall back to SSOT cap when no area entered
+        roofArea > 0
+          ? Math.round((roofArea * usableRoofPercent * solarWPerSqft) / 1000)
+          : maxRoofOnlyKW; // fall back to SSOT cap when no area entered
+
+      // For canopy kW: if user provided an explicit area, scale by panel spec;
+      // otherwise use the SSOT canopyPotentialKW from constraints (already at 15 W/sqft)
+      const canopyArea = Number(state.step3Answers?.canopyArea ?? 0);
+      const dynamicCanopyKW =
+        canopyArea > 0 ? Math.round((canopyArea * 0.95 * canopyWPerSqft) / 1000) : canopyKW; // fall back to SSOT constant when no area entered
 
       if (canopyInterest === "no") {
         // User explicitly declined canopy — roof only
         newCap = roofKW > 0 ? roofKW : maxRoofOnlyKW;
       } else if (canopyInterest === "yes") {
         // Full canopy included
-        newCap = roofKW + canopyKW;
+        newCap = roofKW + dynamicCanopyKW;
       } else if (canopyInterest === "learn_more") {
         // Show 50% of canopy upside
-        newCap = roofKW + Math.round(canopyKW * 0.5);
+        newCap = roofKW + Math.round(dynamicCanopyKW * 0.5);
       } else {
         // Not yet answered: use static SSOT blend (includes typical canopy)
         if (roofArea <= 0) return; // no roof area entered → keep cap from setIndustry
