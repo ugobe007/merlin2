@@ -253,16 +253,9 @@ export async function selectOptimalBESS(
             "chemistry",
             "price_per_kwh",
             "price_per_kw",
-            "effective_price_per_kwh",
-            "roundtrip_efficiency_pct",
-            "depth_of_discharge_pct",
-            "cycle_life",
-            "annual_degradation_pct",
+            "efficiency_percent", // DB col — maps to roundtripEfficiencyPct
             "warranty_years",
-            "warranty_cycles",
             "lead_time_weeks",
-            "c_rate_continuous",
-            "tariff_adder_pct",
           ].join(", ")
         )
         .eq("status", "approved")
@@ -278,19 +271,16 @@ export async function selectOptimalBESS(
         const candidates: BESSSpec[] = rows.map((row) => {
           const pricePerKwh = Number(row["price_per_kwh"] ?? SSOT_FALLBACK_BESS.pricePerKwh);
           const pricePerKw = Number(row["price_per_kw"] ?? SSOT_FALLBACK_BESS.pricePerKw);
-          const effectivePrice = Number(
-            row["effective_price_per_kwh"] ?? row["price_per_kwh"] ?? SSOT_FALLBACK_BESS.pricePerKwh
-          );
+          // effective_price_per_kwh not in DB — use pack price directly (no tariff adder yet)
+          const effectivePrice = pricePerKwh;
+          // efficiency_percent is the DB column name for round-trip efficiency
           const rte = Number(
-            row["roundtrip_efficiency_pct"] ?? SSOT_FALLBACK_BESS.roundtripEfficiencyPct
+            row["efficiency_percent"] ?? SSOT_FALLBACK_BESS.roundtripEfficiencyPct
           );
-          const dod = Number(
-            row["depth_of_discharge_pct"] ?? SSOT_FALLBACK_BESS.depthOfDischargePct
-          );
-          const cycles = Number(row["cycle_life"] ?? SSOT_FALLBACK_BESS.cycleLife);
-          const degradation = Number(
-            row["annual_degradation_pct"] ?? SSOT_FALLBACK_BESS.annualDegradationPct
-          );
+          // Columns not yet in DB schema — use SSOT fallback constants
+          const dod = SSOT_FALLBACK_BESS.depthOfDischargePct; // 90%
+          const cycles = SSOT_FALLBACK_BESS.cycleLife; // 4000
+          const degradation = SSOT_FALLBACK_BESS.annualDegradationPct; // 2.5%
           const warrantyYrs = Number(row["warranty_years"] ?? SSOT_FALLBACK_BESS.warrantyYears);
           const capacityKwh = Number(row["capacity_kwh"]);
           const powerKw = Number(row["power_kw"] ?? capacityKwh * 0.25); // Default 4-hr
@@ -322,11 +312,9 @@ export async function selectOptimalBESS(
             cycleLife: cycles,
             annualDegradationPct: degradation,
             warrantyYears: warrantyYrs,
-            warrantyCycles: row["warranty_cycles"] ? Number(row["warranty_cycles"]) : undefined,
+            // warranty_cycles not in DB schema — field is optional, leave undefined
             leadTimeWeeks: Number(row["lead_time_weeks"] ?? 16),
-            cRateContinuous: row["c_rate_continuous"]
-              ? Number(row["c_rate_continuous"])
-              : undefined,
+            // warranty_cycles and c_rate_continuous not in DB — omit (fields are optional)
             score,
             isFallback: false,
           };
