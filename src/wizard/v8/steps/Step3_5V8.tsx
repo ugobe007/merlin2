@@ -280,10 +280,17 @@ function ConfirmBtn({
       const el = document.createElement("style");
       el.id = id;
       el.textContent = `
-        @keyframes confirmPulse {
-          0%   { box-shadow: 0 0 0 0 rgba(62,207,142,0.65); }
-          70%  { box-shadow: 0 0 0 10px rgba(62,207,142,0); }
-          100% { box-shadow: 0 0 0 0 rgba(62,207,142,0); }
+        @keyframes confirmGlow {
+          0%, 100% {
+            box-shadow: 0 0 6px 0 rgba(62,207,142,0.5), 0 0 0 0 rgba(62,207,142,0.3);
+            border-color: rgba(62,207,142,0.8);
+            background: rgba(62,207,142,0.10);
+          }
+          50% {
+            box-shadow: 0 0 24px 8px rgba(62,207,142,0.45), 0 0 4px 2px rgba(62,207,142,0.7);
+            border-color: rgba(62,207,142,1.0);
+            background: rgba(62,207,142,0.20);
+          }
         }
       `;
       document.head.appendChild(el);
@@ -351,35 +358,36 @@ function ConfirmBtn({
       onClick={onClick}
       style={{
         width: "100%",
-        padding: "11px 16px",
-        borderRadius: 8,
+        padding: needsConfirm ? "13px 16px" : "11px 16px",
+        borderRadius: 10,
         border: needsConfirm
-          ? "1.5px solid rgba(62,207,142,0.85)"
+          ? "2px solid rgba(62,207,142,0.95)"
           : "1.5px solid rgba(62,207,142,0.4)",
-        background: needsConfirm ? "rgba(62,207,142,0.06)" : "transparent",
+        background: needsConfirm ? "rgba(62,207,142,0.12)" : "transparent",
         cursor: "pointer",
-        fontSize: 13,
-        fontWeight: 700,
-        letterSpacing: "0.05em",
+        fontSize: needsConfirm ? 14 : 13,
+        fontWeight: 800,
+        letterSpacing: "0.06em",
         textTransform: "uppercase" as const,
-        color: "#3ECF8E",
-        transition: "border-color 0.15s, background 0.15s",
-        animation: needsConfirm ? "confirmPulse 1.5s ease-in-out infinite" : "none",
+        color: needsConfirm ? "#fff" : "#3ECF8E",
+        transition: "border-color 0.15s, background 0.15s, box-shadow 0.15s",
+        animation: needsConfirm ? "confirmGlow 1.6s ease-in-out infinite" : "none",
+        position: "relative" as const,
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "rgba(62,207,142,0.12)";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(62,207,142,0.9)";
+        (e.currentTarget as HTMLButtonElement).style.background = "rgba(62,207,142,0.22)";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(62,207,142,1.0)";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLButtonElement).style.background = needsConfirm
-          ? "rgba(62,207,142,0.06)"
+          ? "rgba(62,207,142,0.12)"
           : "transparent";
         (e.currentTarget as HTMLButtonElement).style.borderColor = needsConfirm
-          ? "rgba(62,207,142,0.85)"
+          ? "rgba(62,207,142,0.95)"
           : "rgba(62,207,142,0.4)";
       }}
     >
-      {label}
+      {needsConfirm ? `✓ ${label}` : label}
     </button>
   );
 }
@@ -461,6 +469,9 @@ function ConfigSummaryBar({
   evPorts,
   evRevenueK,
   solarFeasible,
+  annualSavingsK,
+  paybackYears,
+  roi10YrK,
 }: {
   city: string;
   industry: string;
@@ -473,6 +484,9 @@ function ConfigSummaryBar({
   evPorts: number;
   evRevenueK: number;
   solarFeasible: boolean;
+  annualSavingsK: number;
+  paybackYears: string;
+  roi10YrK: number;
 }) {
   return (
     <div
@@ -580,6 +594,122 @@ function ConfigSummaryBar({
           />
         )}
       </div>
+
+      {/* ── Live ROI Strip ── */}
+      {annualSavingsK > 0 && (
+        <div
+          style={{
+            marginTop: 12,
+            padding: "10px 12px",
+            borderRadius: 9,
+            background: "rgba(62,207,142,0.07)",
+            border: "1px solid rgba(62,207,142,0.18)",
+            display: "flex",
+            alignItems: "center",
+            gap: 0,
+          }}
+        >
+          <div style={{ fontSize: 14, marginRight: 8, flexShrink: 0 }}>🧙</div>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: "#3ECF8E",
+              textTransform: "uppercase",
+              letterSpacing: "0.07em",
+              marginRight: 10,
+              flexShrink: 0,
+            }}
+          >
+            Merlin ROI
+          </div>
+          <div style={{ display: "flex", gap: 14, flex: 1, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+              <span
+                style={{
+                  fontSize: 10,
+                  color: "rgba(148,163,184,0.5)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                Annual Savings
+              </span>
+              <span
+                style={{
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: "#3ECF8E",
+                  fontVariantNumeric: "tabular-nums",
+                  lineHeight: 1.2,
+                }}
+              >
+                ${annualSavingsK.toLocaleString()}K/yr
+              </span>
+            </div>
+            <div
+              style={{
+                width: 1,
+                background: "rgba(255,255,255,0.07)",
+                alignSelf: "stretch",
+              }}
+            />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+              <span
+                style={{
+                  fontSize: 10,
+                  color: "rgba(148,163,184,0.5)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                Payback
+              </span>
+              <span
+                style={{
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: "#f1f5f9",
+                  fontVariantNumeric: "tabular-nums",
+                  lineHeight: 1.2,
+                }}
+              >
+                {paybackYears} yrs
+              </span>
+            </div>
+            <div
+              style={{
+                width: 1,
+                background: "rgba(255,255,255,0.07)",
+                alignSelf: "stretch",
+              }}
+            />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+              <span
+                style={{
+                  fontSize: 10,
+                  color: "rgba(148,163,184,0.5)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                10-yr Value
+              </span>
+              <span
+                style={{
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: roi10YrK > 0 ? "#3ECF8E" : "#f87171",
+                  fontVariantNumeric: "tabular-nums",
+                  lineHeight: 1.2,
+                }}
+              >
+                {roi10YrK >= 0 ? "+" : ""}${Math.abs(roi10YrK).toLocaleString()}K
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1988,6 +2118,12 @@ export default function Step3_5V8({ state, actions }: Props) {
     Math.round((liveSolarKW * 1400) / 1000) +
     Math.round((liveGenKW * genCostPerKW) / 1000) +
     Math.round((liveL2 * 9000 + liveDcfc * 55000 + liveHpc * 130000) / 1000);
+  const annualSavingsK = solarSavingsK + genSavingsK + evRevenueK;
+  const paybackYears =
+    annualSavingsK > 0 && totalInvestmentK > 0
+      ? (totalInvestmentK / annualSavingsK).toFixed(1)
+      : "—";
+  const roi10YrK = annualSavingsK * 10 - totalInvestmentK;
 
   const city =
     state.location?.city ??
@@ -2010,6 +2146,9 @@ export default function Step3_5V8({ state, actions }: Props) {
         evPorts={totalPorts}
         evRevenueK={evRevenueK}
         solarFeasible={solarFeasible}
+        annualSavingsK={annualSavingsK}
+        paybackYears={paybackYears}
+        roi10YrK={roi10YrK}
       />
       <div style={{ textAlign: "center", padding: "6px 0 10px" }}>
         <h2
