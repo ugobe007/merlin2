@@ -187,7 +187,7 @@ function computeSolarKW(state: WizardState, goal: GoalChoice, tierLabel: TierLab
   // Sun quality factor: ramps 2.5→4.5 PSH → 0%→100%; floor at 40% for any viable site.
   // This prevents near-zero recommendations for moderate-sun states (Michigan, Pacific NW).
   // Matches addonSizing.ts estimateSolarKW — update both together.
-  const sunFactor = Math.max(0.40, Math.min(1.0, (intel.peakSunHours - 2.5) / 2.0));
+  const sunFactor = Math.max(0.4, Math.min(1.0, (intel.peakSunHours - 2.5) / 2.0));
 
   const solarScope = step3Answers?.solarScope as string | undefined;
   let penetration: number;
@@ -546,7 +546,10 @@ function buildOneTier(
       demandCharge,
       sunHoursPerDay,
       cyclesPerYear: 250,
-      hasTOU: false, // conservative: no TOU arbitrage unless confirmed
+      // Use real TOU data from utility lookup (utilityRateService hasTOU flag)
+      // Peak rate: if no peakRate in intel, estimate peak = base + $0.05/kWh spread
+      hasTOU: intel?.hasTOU ?? false,
+      peakRate: intel?.peakRate ?? electricityRate + 0.05,
     },
     finalSolarKW
   );
@@ -625,10 +628,12 @@ function buildOneTier(
     ...(addonValidation.generatorAuditNote ? [`🔋 ${addonValidation.generatorAuditNote}`] : []),
     // EV electrical infrastructure cost (if any)
     ...(v45Costs.evInfrastructureCost > 0
-      ? [`⚡ EV infrastructure: $${v45Costs.evInfrastructureCost.toLocaleString()} (480V service, conduit, transformer — NEC Art. 625/230)`]
+      ? [
+          `⚡ EV infrastructure: $${v45Costs.evInfrastructureCost.toLocaleString()} (480V service, conduit, transformer — NEC Art. 625/230)`,
+        ]
       : []),
     // Warnings from all guardrails
-    ...addonValidation.allWarnings.map(w => `⚠️  ${w}`),
+    ...addonValidation.allWarnings.map((w) => `⚠️  ${w}`),
   ];
 
   return {
@@ -746,9 +751,9 @@ async function runV8ValidationBackground(state: WizardState, tier: QuoteTier): P
  *   Complete:    premium system — slightly longer acceptable, but ≤ 9 yr
  */
 const PAYBACK_TARGETS: Record<TierLabel, number> = {
-  Starter:     6,
+  Starter: 6,
   Recommended: 7,
-  Complete:    9,
+  Complete: 9,
 };
 
 /**
@@ -759,45 +764,46 @@ const PAYBACK_TARGETS: Record<TierLabel, number> = {
  */
 function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier {
   const electricityRate = state.intel?.utilityRate ?? 0.15;
-  const demandCharge    = state.intel?.demandCharge ?? 15;
-  const sunHoursPerDay  = state.intel?.peakSunHours ?? 5;
+  const demandCharge = state.intel?.demandCharge ?? 15;
+  const sunHoursPerDay = state.intel?.peakSunHours ?? 5;
 
   const stateWithEV = state as WizardState & {
     level2Chargers?: number;
     dcfcChargers?: number;
     hpcChargers?: number;
   };
-  const l2   = stateWithEV.level2Chargers ?? 0;
-  const dcfc = stateWithEV.dcfcChargers   ?? 0;
-  const hpc  = stateWithEV.hpcChargers    ?? 0;
+  const l2 = stateWithEV.level2Chargers ?? 0;
+  const dcfc = stateWithEV.dcfcChargers ?? 0;
+  const hpc = stateWithEV.hpcChargers ?? 0;
   const evChargerCount = l2 + dcfc + hpc;
 
   const newCosts = calculateSystemCosts({
-    solarKW:        tier.solarKW,
-    bessKW:         tier.bessKW,
-    bessKWh:        tier.bessKWh,
-    generatorKW:    0,            // ← generator removed
+    solarKW: tier.solarKW,
+    bessKW: tier.bessKW,
+    bessKWh: tier.bessKWh,
+    generatorKW: 0, // ← generator removed
     generatorFuelType: "diesel",
     level2Chargers: l2,
-    dcfcChargers:   dcfc,
-    hpcChargers:    hpc,
+    dcfcChargers: dcfc,
+    hpcChargers: hpc,
   });
 
   const newSavings = calculateAnnualSavings(
     {
-      bessKW:         tier.bessKW,
-      bessKWh:        tier.bessKWh,
-      solarKW:        tier.solarKW,
-      generatorKW:    0,
-      evChargers:     evChargerCount,
-      l2Chargers:     l2,
-      dcfcChargers:   dcfc,
-      hpcChargers:    hpc,
+      bessKW: tier.bessKW,
+      bessKWh: tier.bessKWh,
+      solarKW: tier.solarKW,
+      generatorKW: 0,
+      evChargers: evChargerCount,
+      l2Chargers: l2,
+      dcfcChargers: dcfc,
+      hpcChargers: hpc,
       electricityRate,
       demandCharge,
       sunHoursPerDay,
-      cyclesPerYear:  250,
-      hasTOU:         false,
+      cyclesPerYear: 250,
+      hasTOU: intel?.hasTOU ?? false,
+      peakRate: intel?.peakRate ?? electricityRate + 0.05,
     },
     tier.solarKW
   );
@@ -811,17 +817,17 @@ function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier 
 
   return {
     ...tier,
-    generatorKW:         0,
-    grossCost:           newCosts.totalInvestment,
-    itcAmount:           newCosts.federalITC,
-    netCost:             newCosts.netInvestment,
-    grossAnnualSavings:  newGrossAnnualSavings,
-    annualReserves:      newSavings.annualReserves,
-    annualSavings:       newAnnualSavings,
-    paybackYears:        newROI.paybackYears,
-    roi10Year:           newROI.roi10Year,
-    npv:                 newROI.npv25Year,
-    equipmentSubtotal:   newCosts.equipmentSubtotal,
+    generatorKW: 0,
+    grossCost: newCosts.totalInvestment,
+    itcAmount: newCosts.federalITC,
+    netCost: newCosts.netInvestment,
+    grossAnnualSavings: newGrossAnnualSavings,
+    annualReserves: newSavings.annualReserves,
+    annualSavings: newAnnualSavings,
+    paybackYears: newROI.paybackYears,
+    roi10Year: newROI.roi10Year,
+    npv: newROI.npv25Year,
+    equipmentSubtotal: newCosts.equipmentSubtotal,
     notes: [
       ...tier.notes,
       `[ROI Guardrail] Generator removed: was ${tier.generatorKW} kW, saved $${(tier.grossCost - newCosts.totalInvestment).toLocaleString("en-US", { maximumFractionDigits: 0 })} in project cost, payback improved ${tier.paybackYears.toFixed(1)} → ${newROI.paybackYears.toFixed(1)} yr`,
@@ -835,52 +841,53 @@ function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier 
  * cascade when removing the generator alone was insufficient or there was
  * no generator to remove (e.g. limited-solar/low-rate locations).
  */
-function recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
-  const MIN_BESS_KW  = 75;
+function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
+  const MIN_BESS_KW = 75;
   const MIN_BESS_KWH = 150; // 75 kW × 2-hour duration
 
   if (tier.bessKW <= MIN_BESS_KW) return tier; // already at or below minimum
 
   const electricityRate = state.intel?.utilityRate ?? 0.15;
-  const demandCharge    = state.intel?.demandCharge ?? 15;
-  const sunHoursPerDay  = state.intel?.peakSunHours ?? 5;
+  const demandCharge = state.intel?.demandCharge ?? 15;
+  const sunHoursPerDay = state.intel?.peakSunHours ?? 5;
 
   const stateWithEV = state as WizardState & {
     level2Chargers?: number;
     dcfcChargers?: number;
     hpcChargers?: number;
   };
-  const l2   = stateWithEV.level2Chargers ?? 0;
-  const dcfc = stateWithEV.dcfcChargers   ?? 0;
-  const hpc  = stateWithEV.hpcChargers    ?? 0;
+  const l2 = stateWithEV.level2Chargers ?? 0;
+  const dcfc = stateWithEV.dcfcChargers ?? 0;
+  const hpc = stateWithEV.hpcChargers ?? 0;
   const evChargerCount = l2 + dcfc + hpc;
 
   const newCosts = calculateSystemCosts({
-    solarKW:           tier.solarKW,
-    bessKW:            MIN_BESS_KW,
-    bessKWh:           MIN_BESS_KWH,
-    generatorKW:       tier.generatorKW,
+    solarKW: tier.solarKW,
+    bessKW: MIN_BESS_KW,
+    bessKWh: MIN_BESS_KWH,
+    generatorKW: tier.generatorKW,
     generatorFuelType: "diesel",
-    level2Chargers:    l2,
-    dcfcChargers:      dcfc,
-    hpcChargers:       hpc,
+    level2Chargers: l2,
+    dcfcChargers: dcfc,
+    hpcChargers: hpc,
   });
 
   const newSavings = calculateAnnualSavings(
     {
-      bessKW:         MIN_BESS_KW,
-      bessKWh:        MIN_BESS_KWH,
-      solarKW:        tier.solarKW,
-      generatorKW:    tier.generatorKW,
-      evChargers:     evChargerCount,
-      l2Chargers:     l2,
-      dcfcChargers:   dcfc,
-      hpcChargers:    hpc,
+      bessKW: MIN_BESS_KW,
+      bessKWh: MIN_BESS_KWH,
+      solarKW: tier.solarKW,
+      generatorKW: tier.generatorKW,
+      evChargers: evChargerCount,
+      l2Chargers: l2,
+      dcfcChargers: dcfc,
+      hpcChargers: hpc,
       electricityRate,
       demandCharge,
       sunHoursPerDay,
-      cyclesPerYear:  250,
-      hasTOU:         false,
+      cyclesPerYear: 250,
+      hasTOU: intel?.hasTOU ?? false,
+      peakRate: intel?.peakRate ?? electricityRate + 0.05,
     },
     tier.solarKW
   );
@@ -894,24 +901,24 @@ function recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
 
   return {
     ...tier,
-    bessKW:             MIN_BESS_KW,
-    bessKWh:            MIN_BESS_KWH,
-    grossCost:          newCosts.totalInvestment,
-    itcAmount:          newCosts.federalITC,
-    netCost:            newCosts.netInvestment,
+    bessKW: MIN_BESS_KW,
+    bessKWh: MIN_BESS_KWH,
+    grossCost: newCosts.totalInvestment,
+    itcAmount: newCosts.federalITC,
+    netCost: newCosts.netInvestment,
     grossAnnualSavings: newGrossAnnualSavings,
-    annualReserves:     newSavings.annualReserves,
-    annualSavings:      newAnnualSavings,
-    paybackYears:       newROI.paybackYears,
-    roi10Year:          newROI.roi10Year,
-    npv:                newROI.npv25Year,
-    equipmentSubtotal:  newCosts.equipmentSubtotal,
+    annualReserves: newSavings.annualReserves,
+    annualSavings: newAnnualSavings,
+    paybackYears: newROI.paybackYears,
+    roi10Year: newROI.roi10Year,
+    npv: newROI.npv25Year,
+    equipmentSubtotal: newCosts.equipmentSubtotal,
     notes: [
       ...tier.notes,
       `[ROI Guardrail] BESS right-sized to minimum viable (${MIN_BESS_KW} kW / ${MIN_BESS_KWH} kWh, ` +
-      `was ${tier.bessKW} kW / ${tier.bessKWh} kWh): project cost reduced by ` +
-      `$${(tier.grossCost - newCosts.totalInvestment).toLocaleString("en-US", { maximumFractionDigits: 0 })}, ` +
-      `payback improved ${tier.paybackYears.toFixed(1)} → ${newROI.paybackYears.toFixed(1)} yr`,
+        `was ${tier.bessKW} kW / ${tier.bessKWh} kWh): project cost reduced by ` +
+        `$${(tier.grossCost - newCosts.totalInvestment).toLocaleString("en-US", { maximumFractionDigits: 0 })}, ` +
+        `payback improved ${tier.paybackYears.toFixed(1)} → ${newROI.paybackYears.toFixed(1)} yr`,
     ],
   };
 }
@@ -934,9 +941,9 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
     return tier;
   }
 
-  const originalPayback   = tier.paybackYears;
+  const originalPayback = tier.paybackYears;
   const removedComponents: string[] = [];
-  let adjusted             = tier;
+  let adjusted = tier;
 
   // ── Step 1: Remove generator (only when NOT explicitly required) ────────────
   // Generator adds $0 to annual energy savings. Its cost is pure resilience spend.
@@ -958,8 +965,8 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
       const genCostSaved = Math.round(adjusted.grossCost - noGen.grossCost);
       removedComponents.push(
         `Generator (${tier.generatorKW} kW) — removed to improve ROI. ` +
-        `Added $${genCostSaved.toLocaleString("en-US")} to project cost with $0 annual savings contribution. ` +
-        `It can be re-added in Step 3.5 as a resilience investment.`
+          `Added $${genCostSaved.toLocaleString("en-US")} to project cost with $0 annual savings contribution. ` +
+          `It can be re-added in Step 3.5 as a resilience investment.`
       );
       adjusted = noGen;
     }
@@ -980,30 +987,31 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
 
   // Build the guardrail metadata
   const utilityRateCents = Math.round((state.intel?.utilityRate ?? 0.15) * 100);
-  const guardrail: QuoteTier["guardrail"] = removedComponents.length > 0
-    ? {
-        applied:              true,
-        originalPaybackYears: originalPayback,
-        adjustedPaybackYears: adjusted.paybackYears,
-        removedComponents,
-        reason:
-          `This configuration's payback was ${originalPayback.toFixed(0)} years — above the ` +
-          `${target}-year target for the ${tier.label} tier. Merlin automatically adjusted ` +
-          `the scope to improve ROI. You can restore any item in Step 3.5.`,
-      }
-    : {
-        applied:              false,
-        originalPaybackYears: originalPayback,
-        adjustedPaybackYears: originalPayback,
-        removedComponents:    [],
-        reason:
-          `Payback of ${originalPayback.toFixed(0)} years exceeds the ${target}-year target. ` +
-          `At your local rate of ${utilityRateCents}¢/kWh, savings from demand charge reduction ` +
-          `and solar are limited for this configuration. To improve ROI: (1) add more solar ` +
-          `capacity in Step 3.5 — solar has the best per-kW savings at this location; (2) verify ` +
-          `your utility rate with your provider — some commercial accounts qualify for ` +
-          `demand-response programs that significantly improve BESS economics.`,
-      };
+  const guardrail: QuoteTier["guardrail"] =
+    removedComponents.length > 0
+      ? {
+          applied: true,
+          originalPaybackYears: originalPayback,
+          adjustedPaybackYears: adjusted.paybackYears,
+          removedComponents,
+          reason:
+            `This configuration's payback was ${originalPayback.toFixed(0)} years — above the ` +
+            `${target}-year target for the ${tier.label} tier. Merlin automatically adjusted ` +
+            `the scope to improve ROI. You can restore any item in Step 3.5.`,
+        }
+      : {
+          applied: false,
+          originalPaybackYears: originalPayback,
+          adjustedPaybackYears: originalPayback,
+          removedComponents: [],
+          reason:
+            `Payback of ${originalPayback.toFixed(0)} years exceeds the ${target}-year target. ` +
+            `At your local rate of ${utilityRateCents}¢/kWh, savings from demand charge reduction ` +
+            `and solar are limited for this configuration. To improve ROI: (1) add more solar ` +
+            `capacity in Step 3.5 — solar has the best per-kW savings at this location; (2) verify ` +
+            `your utility rate with your provider — some commercial accounts qualify for ` +
+            `demand-response programs that significantly improve BESS economics.`,
+        };
 
   return { ...adjusted, guardrail };
 }
@@ -1063,9 +1071,12 @@ export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteT
   // buildOneTier is synchronous (pricingServiceV45 only, no network calls).
   // buildTiers remains async for backwards compatibility with all callers.
   // applyPaybackGuardrail runs after each tier to enforce 5–7 yr payback targets.
-  const starter     = applyPaybackGuardrail(buildOneTier(state, goal, "Starter",     baseNotes), state);
-  const recommended = applyPaybackGuardrail(buildOneTier(state, goal, "Recommended", baseNotes), state);
-  const complete    = applyPaybackGuardrail(buildOneTier(state, goal, "Complete",    baseNotes), state);
+  const starter = applyPaybackGuardrail(buildOneTier(state, goal, "Starter", baseNotes), state);
+  const recommended = applyPaybackGuardrail(
+    buildOneTier(state, goal, "Recommended", baseNotes),
+    state
+  );
+  const complete = applyPaybackGuardrail(buildOneTier(state, goal, "Complete", baseNotes), state);
 
   // Layer 3 validation: fire-and-forget Supabase audit + email/SMS alerts.
   // Uses the Recommended tier as the representative quote.

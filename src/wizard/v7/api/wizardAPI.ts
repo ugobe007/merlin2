@@ -119,9 +119,15 @@ export async function resolveLocation(input: string, signal?: AbortSignal): Prom
 export async function fetchUtility(
   zipOrInput: string,
   countryCode?: string
-): Promise<{ rate?: number; demandCharge?: number; provider?: string }> {
+): Promise<{
+  rate?: number;
+  demandCharge?: number;
+  provider?: string;
+  hasTOU?: boolean;
+  peakRate?: number;
+}> {
   const zip = zipOrInput.replace(/\D/g, "").slice(0, 5);
-  
+
   // US ZIP lookup
   if (zip && zip.length === 5) {
     try {
@@ -134,16 +140,21 @@ export async function fetchUtility(
           rate: data.rate,
           demandCharge: data.demandCharge,
           provider: data.utilityName,
+          hasTOU: data.hasTOU,
+          peakRate: data.peakRate,
         };
       }
     } catch (e) {
       devError("[V7] Utility rate fetch error:", e);
     }
   }
-  
+
   // International fallback rates by country/region
   if (countryCode) {
-    const internationalRates: Record<string, { rate: number; demandCharge: number; provider: string }> = {
+    const internationalRates: Record<
+      string,
+      { rate: number; demandCharge: number; provider: string }
+    > = {
       // Middle East
       KW: { rate: 0.016, demandCharge: 2, provider: "Kuwait Ministry of Electricity & Water" }, // Kuwait: Very low subsidized rates
       QA: { rate: 0.027, demandCharge: 3, provider: "Qatar General Electricity & Water" }, // Qatar: Subsidized
@@ -154,7 +165,7 @@ export async function fetchUtility(
       DE: { rate: 0.32, demandCharge: 20, provider: "German Grid" }, // Germany: High rates
       FR: { rate: 0.19, demandCharge: 15, provider: "EDF" }, // France: Moderate
       // Asia Pacific
-      AU: { rate: 0.20, demandCharge: 18, provider: "Australian Grid" }, // Australia
+      AU: { rate: 0.2, demandCharge: 18, provider: "Australian Grid" }, // Australia
       NZ: { rate: 0.18, demandCharge: 16, provider: "NZ Grid" }, // New Zealand
       SG: { rate: 0.15, demandCharge: 12, provider: "SP Group" }, // Singapore
       JP: { rate: 0.25, demandCharge: 20, provider: "Japanese Grid" }, // Japan
@@ -162,14 +173,14 @@ export async function fetchUtility(
       CA: { rate: 0.11, demandCharge: 13, provider: "Canadian Grid" }, // Canada
       MX: { rate: 0.09, demandCharge: 8, provider: "CFE" }, // Mexico
     };
-    
+
     const countryData = internationalRates[countryCode.toUpperCase()];
     if (countryData) {
       devLog(`[V7] Using international rates for ${countryCode}:`, countryData);
       return countryData;
     }
   }
-  
+
   // No data found
   devWarn("[V7] No utility data for input:", zipOrInput, "country:", countryCode);
   return { rate: undefined, demandCharge: undefined, provider: undefined };
@@ -221,7 +232,7 @@ export async function fetchSolar(
       // Without this correction MI (CF≈13%) gets PSH=3.1 → Grade C and a 1 kW
       // solar recommendation for a 39 kW roof — clearly wrong.
       const PR = 0.77;
-      const rawPSH = (pvResult.capacityFactor / 100) * 24 / PR;
+      const rawPSH = ((pvResult.capacityFactor / 100) * 24) / PR;
       const peakSunHours = Math.round(rawPSH * 10) / 10;
 
       devLog(
@@ -240,7 +251,7 @@ export async function fetchSolar(
     const capacityFactor = REGIONAL_CAPACITY_FACTORS[stateCode] ?? 0.17;
     // Apply same PR correction as the PVWatts path (system CF → GHI PSH)
     const PR_fallback = 0.77;
-    const peakSunHours = Math.round(capacityFactor * 24 / PR_fallback * 10) / 10;
+    const peakSunHours = Math.round(((capacityFactor * 24) / PR_fallback) * 10) / 10;
 
     devLog(
       `[V7 Solar] Regional fallback: state=${stateCode}, CF=${capacityFactor}, PSH=${peakSunHours} (GHI-corrected)`

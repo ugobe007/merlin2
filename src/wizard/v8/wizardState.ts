@@ -167,6 +167,9 @@ export interface LocationIntel {
   utilityRate: number; // $/kWh, e.g. 0.10
   demandCharge: number; // $/kW/month, e.g. 10.00
   utilityProvider: string; // "NV Energy"
+  // TOU rate data (from utilityRateService hasTOU flag)
+  hasTOU: boolean; // true when utility offers Time-of-Use rates (enables BESS arbitrage)
+  peakRate?: number; // $/kWh peak rate (for TOU arbitrage spread calc); defaults to utilityRate + 0.05
   // Solar (from fetchSolar → NREL PVWatts or regional fallback)
   solarGrade: SolarGrade; // "B+"
   solarFeasible: boolean; // computed: grade >= B-  (THRESHOLD B-)
@@ -402,6 +405,8 @@ function emptyIntel(): LocationIntel {
     utilityRate: 0,
     demandCharge: 0,
     utilityProvider: "",
+    hasTOU: false,
+    peakRate: undefined,
     solarGrade: "C",
     solarFeasible: false,
     peakSunHours: 0,

@@ -1,10 +1,23 @@
-fix: add page title, replace alert() with inline errors, fix audit test selectors
+fix(pricing): correct 3 structural calculation bugs
 
-- index.html: add <title>Merlin Energy — Smart BESS & Solar Quotes</title> (was missing — SEO critical)
-- AuthModal.tsx: replace all 5 alert() calls with inline errorMessage/successMessage state
-  - Red banner with role=alert for errors, green banner with role=status for success
-  - Auto-close modal 800ms after successful sign-in, 1200ms after sign-up
-- pre-launch-audit.spec.ts: fix strict-mode locator violations
-  - Use .first() on multi-match text selectors (TrueQuote, Guided Wizard)
-  - Steps 1+2 self-advance by design — removed incorrect Continue button clicks
-  - 8a quote test: non-crashing assertion + logs dollar count (full flow requires real inputs)
+Bug 1 - ITC basis understated by $13,200
+- calculateFederalITC() now includes siteEngineering + constructionContingency
+  in the ITC basis per IRA 2022 Section 48 (all capitalized installed costs)
+- calculateSystemCosts() passes those fields to calculateFederalITC()
+
+Bug 2 - TOU arbitrage hardcoded to zero ($3,960/yr missing for NV)
+- step4Logic.ts had hasTOU: false at all 3 calculateAnnualSavings() call sites
+- Added hasTOU/peakRate fields to LocationIntel type in wizardState.ts
+- utilityRateService already had hasTOU/peakRate per state, wired through:
+  wizardAPI.fetchUtility() now returns hasTOU + peakRate from rate table
+  Both PATCH_INTEL dispatches in useWizardV8.ts forward those fields
+  All 3 call sites in step4Logic.ts now read intel?.hasTOU ?? false
+
+Bug 3 - Export demand savings proxy 3x wrong
+- buildV8ExportData.ts used annualSavings * 0.25 approximately $3,004
+- Now uses bessKW x demandCharge x 12 x 0.75 = actual $8,910
+
+Net impact for reference config (396 kWh BESS, 42 kW solar, NV):
+  Payback: 18.8 yr -> 13.3 yr
+  NPV(25yr): -$56,832 -> +$12,181
+  10-yr ROI: -47% -> -25%
