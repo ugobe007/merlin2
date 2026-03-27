@@ -824,7 +824,8 @@ function SolarCard({
   }, [pendingExternalKW]);
 
   const pct = peakLoadKW > 0 ? Math.min(100, Math.round((sliderKW / peakLoadKW) * 100)) : null;
-  const savingsK = Math.round((sliderKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
+  // NREL methodology: kW × PSH × 365 × PR(0.77) × rate — matches pricingServiceV45
+  const savingsK = Math.round((sliderKW * peakSunHours * 365 * 0.77 * utilityRate) / 1000);
   const isOptimal = safeRec > 0 && Math.abs(sliderKW - safeRec) / safeRec < 0.12;
   const recPct = safeMax > solarMin ? ((safeRec - solarMin) / (safeMax - solarMin)) * 100 : 50;
 
@@ -1431,7 +1432,7 @@ function BackupGeneratorCard({
   fuelType,
   onFuelChange,
   gridReliability,
-  utilityRate,
+  utilityRate: _utilityRate,
   onConfig,
 }: {
   peakLoadKW: number;
@@ -1456,7 +1457,8 @@ function BackupGeneratorCard({
   const [confirmed, setConfirmed] = useState(false);
 
   const criticalKW = Math.round(peakLoadKW * (criticalLoadPct || 0.5));
-  const savingsK = Math.round((sliderKW * utilityRate * 8760 * 0.015 * 6.0) / 1000);
+  // Generator backup value is qualitative (avoided downtime) — not monetized per pricingServiceV45
+  const savingsK = 0;
   const coveragePct = peakLoadKW > 0 ? Math.round((sliderKW / peakLoadKW) * 100) : 0;
   const isFullBackup = peakLoadKW > 0 && sliderKW >= peakLoadKW * 1.1;
 
@@ -1813,7 +1815,7 @@ function RoiIntelBanner({
 
   // 1. Car wash: vacuum station / carport solar opportunity
   if (isCarWash && canopyPotentialKW > 0 && canopyInterest !== "yes") {
-    const extraK = Math.round((canopyPotentialKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
+    const extraK = Math.round((canopyPotentialKW * peakSunHours * 365 * 0.77 * utilityRate) / 1000);
     hints.push({
       id: "carport_vacuum",
       icon: "☀️",
@@ -1824,7 +1826,7 @@ function RoiIntelBanner({
 
   // 2. Non-car-wash: parking canopy opportunity
   if (!isCarWash && canopyPotentialKW > 0 && canopyInterest !== "yes") {
-    const extraK = Math.round((canopyPotentialKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
+    const extraK = Math.round((canopyPotentialKW * peakSunHours * 365 * 0.77 * utilityRate) / 1000);
     hints.push({
       id: "canopy_general",
       icon: "🏗️",
@@ -1836,7 +1838,7 @@ function RoiIntelBanner({
   // 3. Solar set below recommended — show before headroom hint so it takes priority
   if (solarFeasible && solarRecKW > 0 && liveSolarKW < solarRecKW * 0.85) {
     const deltaKW = Math.round(solarRecKW - liveSolarKW);
-    const deltaK = Math.round((deltaKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
+    const deltaK = Math.round((deltaKW * peakSunHours * 365 * 0.77 * utilityRate) / 1000);
     if (deltaK > 0) {
       hints.push({
         id: "solar_below_rec",
@@ -2107,12 +2109,14 @@ export default function Step3_5V8({ state, actions }: Props) {
   const liveL2 = state.level2Chargers || 0;
   const liveDcfc = state.dcfcChargers || 0;
   const liveHpc = state.hpcChargers || 0;
-  const liveTotalEVKW = liveL2 * 11 + liveDcfc * 100 + liveHpc * 300;
   const totalPorts = liveL2 + liveDcfc + liveHpc;
 
-  const solarSavingsK = Math.round((liveSolarKW * peakSunHours * 365 * utilityRate * 6.0) / 1000);
-  const genSavingsK = Math.round((liveGenKW * utilityRate * 8760 * 0.015 * 5.0) / 1000);
-  const evRevenueK = Math.round((liveTotalEVKW * 0.12 * 8760 * 0.25) / 1000);
+  // NREL methodology: kW × PSH × 365 × PR(0.77) × rate — matches pricingServiceV45
+  const solarSavingsK = Math.round((liveSolarKW * peakSunHours * 365 * 0.77 * utilityRate) / 1000);
+  // Generator backup value is qualitative (avoided downtime) — not monetized per pricingServiceV45
+  const genSavingsK = 0;
+  // DOE/EVI benchmarks: L2=$1,350/yr, DCFC=$18,000/yr, HPC=$60,000/yr — matches pricingServiceV45
+  const evRevenueK = Math.round((liveL2 * 1350 + liveDcfc * 18000 + liveHpc * 60000) / 1000);
   const genCostPerKW = fuelType === "diesel" ? 690 : 500;
   const totalInvestmentK =
     Math.round((liveSolarKW * 1400) / 1000) +
