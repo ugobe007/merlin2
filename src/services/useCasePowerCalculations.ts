@@ -7,6 +7,8 @@
  * @param panelEfficiency - Panel efficiency (%)
  * @param region - Solar resource region (e.g., 'southwest', 'california', 'midwest', etc.)
  * @param targetAnnualKWh - Optional: target annual kWh (for reverse sizing)
+ * @param panelWattageOverride - Optional: override default 400W panel wattage (from supplier DB)
+ * @param panelAreaSqFtOverride - Optional: override default 21.5 sq ft panel area (from supplier DB)
  * @returns Sizing result with area, panel count, annual kWh, and source/citation
  */
 import { getSolarILRWithSource } from "@/services/benchmarkSources";
@@ -17,16 +19,22 @@ export function calculateSolarSizing({
   panelEfficiency = 20.5,
   region = "midwest",
   targetAnnualKWh,
+  panelWattageOverride,
+  panelAreaSqFtOverride,
 }: {
   solarCapacityKW: number;
   panelType?: string;
   panelEfficiency?: number;
   region?: string;
   targetAnnualKWh?: number;
+  /** Override from supplier DB — e.g. 500 for a 500W panel */
+  panelWattageOverride?: number;
+  /** Override from supplier DB — e.g. 21.5 sq ft for standard 60-cell */
+  panelAreaSqFtOverride?: number;
 }) {
-  // Panel specs (modern default: 400W, 20.5% eff, 21.5 sq ft)
-  const panelWattage = 400;
-  const panelAreaSqFt = 21.5; // 400W panel typical
+  // Panel specs — use supplier DB values when available, else SSOT defaults (400W / 21.5 sqft)
+  const panelWattage = panelWattageOverride ?? 400;
+  const panelAreaSqFt = panelAreaSqFtOverride ?? 21.5;
   const eff = panelEfficiency || 20.5;
   // Regional sun-hours/year (NREL ATB/benchmarkSources)
 
@@ -6916,14 +6924,14 @@ export const CANOPY_WATTS_PER_SQFT = 12; // 12 W/sqft (carport/canopy, slightly 
 
 export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstraint> = {
   car_wash: {
-    typicalFootprintSqFt: 8000,   // Express tunnel 4,500-8,000; flex/full-service 10,000-15,000
+    typicalFootprintSqFt: 8000, // Express tunnel 4,500-8,000; flex/full-service 10,000-15,000
     footprintRange: [2800, 15000], // self-serve → full-service flex
-    usableRoofPercent: 0.65,       // Default pre-selection (conservative); opaque=0.70, mixed=0.55, poly=0.40
-    maxRooftopSolarKW: 70,         // 8,000 sqft × 0.65 / 100 = 52 kW; flex at 15K = 105 kW → 70 typical
+    usableRoofPercent: 0.65, // Default pre-selection (conservative); opaque=0.70, mixed=0.55, poly=0.40
+    maxRooftopSolarKW: 70, // 8,000 sqft × 0.65 / 100 = 52 kW; flex at 15K = 105 kW → 70 typical
     canopyApplicable: true,
-    typicalCanopyAreaSqFt: 4000,   // Vacuum canopy (flat metal, best surface; 90% usable) + small carport
-    canopyPotentialKW: 54,         // 3,000 vacuum sqft × 0.90/100 + 1,000 carport × 0.95/100 ≈ 37+10
-    totalRealisticSolarKW: 120,    // 70 kW roof + 50 kW canopy (with carport); dynamic via getCarWashSolarCapacity()
+    typicalCanopyAreaSqFt: 4000, // Vacuum canopy (flat metal, best surface; 90% usable) + small carport
+    canopyPotentialKW: 54, // 3,000 vacuum sqft × 0.90/100 + 1,000 carport × 0.95/100 ≈ 37+10
+    totalRealisticSolarKW: 120, // 70 kW roof + 50 kW canopy (with carport); dynamic via getCarWashSolarCapacity()
     sources: [
       "ICA 2024 Industry Study",
       "Vineet carWashSolarModule.js — top-15 operator dimension data",
@@ -7221,12 +7229,12 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
   fitness_center: {
     typicalFootprintSqFt: 10000,
     footprintRange: [5000, 20000],
-    usableRoofPercent: 0.55,     // Flat commercial roof; HVAC units reduce usable area
-    maxRooftopSolarKW: 83,        // 15,000 sqft × 0.55 / 100
+    usableRoofPercent: 0.55, // Flat commercial roof; HVAC units reduce usable area
+    maxRooftopSolarKW: 83, // 15,000 sqft × 0.55 / 100
     canopyApplicable: true,
-    typicalCanopyAreaSqFt: 8000,  // Parking lot canopy (20-40 spaces typical)
-    canopyPotentialKW: 96,        // 8,000 × 0.95 / 100 (flat, unobstructed)
-    totalRealisticSolarKW: 150,   // Roof + canopy; scales up with roofArea input
+    typicalCanopyAreaSqFt: 8000, // Parking lot canopy (20-40 spaces typical)
+    canopyPotentialKW: 96, // 8,000 × 0.95 / 100 (flat, unobstructed)
+    totalRealisticSolarKW: 150, // Roof + canopy; scales up with roofArea input
     sources: [
       "CBECS 2018 Commercial Buildings Energy Survey",
       "IHRSA 2024 Health & Fitness Industry Report",
@@ -7377,53 +7385,61 @@ export function getFacilityConstraints(industry: string): FacilitySolarConstrain
  *
  * Source: VineetK2004/Merlin-Wizard-2.0 carWashSolarModule.js, Feb 2026
  */
-export function getCarWashSolarCapacity(step3Answers: Record<string, unknown>): number {
+export function getCarWashSolarCapacity(
+  step3Answers: Record<string, unknown>,
+  panelSpec?: { wattPeak: number; areaSqft: number }
+): number {
   // ── 1. Facility type → building roof area (Vineet tier data) ──────────────
   const facilityType = String(step3Answers?.facilityType ?? "express_tunnel");
   const FACILITY_ROOF_SF: Record<string, number> = {
-    mini_tunnel:       2800,  // 22,000 sqft site; 2,800 sqft roof
-    express_tunnel:    6500,  // 38,000 sqft site; 4,500-8,000 sqft roof (standard)
-    flex_service:     12000,  // Full-service with customer lounge, detail bays
-    full_service:     15000,  // Large full-service with multiple bays
-    in_bay_automatic:  2000,  // smaller building footprint
-    self_serve:        1500,  // mostly open bays, minimal building
+    mini_tunnel: 2800, // 22,000 sqft site; 2,800 sqft roof
+    express_tunnel: 6500, // 38,000 sqft site; 4,500-8,000 sqft roof (standard)
+    flex_service: 12000, // Full-service with customer lounge, detail bays
+    full_service: 15000, // Large full-service with multiple bays
+    in_bay_automatic: 2000, // smaller building footprint
+    self_serve: 1500, // mostly open bays, minimal building
   };
 
   // ── 2. Roof type → usable fraction ────────────────────────────────────────
   const roofType = String(step3Answers?.roofType ?? "default");
   const ROOF_TYPE_FACTORS: Record<string, number> = {
-    opaque:        0.70,  // Standard metal/concrete (50-60% of installed base)
-    mixed:         0.55,  // Partial skylights / polycarbonate strips
-    polycarbonate: 0.40,  // Heavy polycarbonate daylight roof (Tommy's, Quick Quack)
-    default:       0.65,  // Conservative pre-selection middle ground
+    opaque: 0.7, // Standard metal/concrete (50-60% of installed base)
+    mixed: 0.55, // Partial skylights / polycarbonate strips
+    polycarbonate: 0.4, // Heavy polycarbonate daylight roof (Tommy's, Quick Quack)
+    default: 0.65, // Conservative pre-selection middle ground
   };
 
   // If user provided an explicit roof area, trust it; otherwise use tier default
   const userRoofArea = Number(step3Answers?.roofArea ?? 0);
-  const buildingRoofSf = userRoofArea > 0
-    ? userRoofArea
-    : (FACILITY_ROOF_SF[facilityType] ?? 4500);
+  const buildingRoofSf = userRoofArea > 0 ? userRoofArea : (FACILITY_ROOF_SF[facilityType] ?? 4500);
 
   const roofFactor = ROOF_TYPE_FACTORS[roofType] ?? 0.65;
-  // 100 sqft per kW (= 10 W/sqft AC — industry standard after losses/spacing/DC-AC ratio)
-  const buildingRoofKW = Math.round(buildingRoofSf * roofFactor / 100);
+
+  // sqft/kW AC — derived from panel watt_peak and physical area per panel.
+  // DC-AC ratio 0.625 (ILR 1.6, standard C&I rooftop).
+  // SSOT default: 400W @ 21.5 sqft → 53.75 sqft/kW DC → 86 sqft/kW AC → ≈100 with tilt/spacing
+  // 500W @ 21.5 sqft → 43.0 sqft/kW DC → 69 sqft/kW AC → ~85 (15% more capacity same roof)
+  const DC_AC_RATIO = 0.625;
+  const panelWp = panelSpec?.wattPeak ?? 400;
+  const panelSqft = panelSpec?.areaSqft ?? 21.5;
+  // Add 20% spacing/tilt loss factor on top of DC-AC derate
+  const sqftPerKWac = (panelSqft * 1000) / (panelWp * DC_AC_RATIO * 0.8);
+  const buildingRoofKW = Math.round((buildingRoofSf * roofFactor) / sqftPerKWac);
 
   // ── 3. Vacuum canopy (flat metal, 90% usable — best solar surface on site) ─
   const vacuumCount = Number(step3Answers?.vacuumStations ?? 0);
   // ~65 sqft canopy coverage per vacuum station; minimum 800 sqft if any vacuums present
   const vacuumSf = vacuumCount > 0 ? Math.max(vacuumCount * 65, 800) : 0;
-  const vacuumKW = Math.round(vacuumSf * 0.90 / 100);
+  const vacuumKW = Math.round((vacuumSf * 0.9) / sqftPerKWac);
 
   // ── 4. Carport solar (queue lane / vacuum carport structure) ──────────────
   const carportInterest = String(step3Answers?.carportInterest ?? "no");
   const carportArea = Number(step3Answers?.carportArea ?? 0);
   // yes=100%, learn_more=50% credit (to show upside), no=0%
-  const carportFactor = carportInterest === "yes" ? 1.0
-    : carportInterest === "learn_more" ? 0.5
-    : 0.0;
-  const carportKW = carportArea > 0
-    ? Math.round(carportArea * carportFactor * 0.95 / 100)
-    : 0;
+  const carportFactor =
+    carportInterest === "yes" ? 1.0 : carportInterest === "learn_more" ? 0.5 : 0.0;
+  const carportKW =
+    carportArea > 0 ? Math.round((carportArea * carportFactor * 0.95) / sqftPerKWac) : 0;
 
   return buildingRoofKW + vacuumKW + carportKW;
 }
