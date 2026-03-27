@@ -48,6 +48,7 @@ import {
   getFacilityConstraints,
   getCarWashSolarCapacity,
 } from "@/services/useCasePowerCalculations";
+import { getLastSelectedPanelSync } from "@/services/solarPanelSelectionService";
 import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
 import { buildTiers } from "./step4Logic";
@@ -864,10 +865,12 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
     if (isCarWash) {
       // Base = building roof + vacuum canopy (no carport override)
-      const baseCapKW = getCarWashSolarCapacity({
-        ...(state.step3Answers ?? {}),
-        carportInterest: "no",
-      });
+      // Pass cached panel spec so density uses actual Wp/sqft from supplier DB.
+      const cachedPanel = getLastSelectedPanelSync();
+      const baseCapKW = getCarWashSolarCapacity(
+        { ...(state.step3Answers ?? {}), carportInterest: "no" },
+        cachedPanel ?? undefined
+      );
       const staticCap = getFacilityConstraints(state.industry)?.totalRealisticSolarKW ?? 60;
       const baseKW = baseCapKW > 0 ? baseCapKW : staticCap;
       // carportInterest='yes' but carportArea not entered → getCarWashSolarCapacity returns 0
