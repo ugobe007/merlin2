@@ -802,9 +802,11 @@ function SolarCard({
 
   // External force-update from banner actions ("Add solar carport →", "Apply X kW →").
   // Fires even when recKW/safeMax haven't changed (e.g. canopyInterest already 'yes').
+  // NOTE: Do NOT clamp to safeMax here — safeMax is stale (old cap) on the same render as the
+  // carport toggle. The parent already bounds targetKW to the post-toggle cap. Floor at solarMin only.
   useEffect(() => {
     if (pendingExternalKW == null) return;
-    const clamped = Math.max(solarMin, Math.min(safeMax, pendingExternalKW));
+    const clamped = Math.max(solarMin, pendingExternalKW);
     setSliderKW(clamped);
     setConfirmed(false);
     onPendingConsumed?.();
@@ -2083,12 +2085,18 @@ export default function Step3_5V8({ state, actions }: Props) {
   // withCanopyCapKW, roofOnlyCapKW (no stale closure risk inside SolarCard).
   // targetKW is always ADDITIVE: rooftop-only cap → rooftop+carport cap (never subtract).
   const handleCarportToggle = (nextVal: string) => {
-    // Use the physical cap that applies AFTER the toggle (not the current stale state cap).
-    // Adding carport:  withCanopyCapKW  = roofOnlyCapKW + canopyPotentialKW  (e.g. 60+54=114)
-    // Removing carport: roofOnlyCapKW   (e.g. 60)
-    const targetCapKW = nextVal === "yes" ? withCanopyCapKW : roofOnlyCapKW;
+    // Additive toggle: preserve the user's current kW setting, just add/remove the carport kW.
+    // Adding carport:   currentKW + canopyPotentialKW  (e.g. 75 + 54 = 129)
+    // Removing carport: currentKW - canopyPotentialKW  (e.g. 129 - 54 = 75), floored at roofOnlyRec
+    const currentKW = state.solarKW > 0 ? state.solarKW : solarEffectiveRecKW;
+    const delta = canopyPotentialKW > 0 ? canopyPotentialKW : withCanopyCapKW - roofOnlyCapKW;
+    const postToggleCap = nextVal === "yes" ? withCanopyCapKW : roofOnlyCapKW;
     const sf = sunFactor > 0 ? sunFactor : 1;
-    const targetKW = targetCapKW > 0 ? Math.max(1, Math.round(targetCapKW * sf * 0.8)) : 0;
+    const roofRec = Math.max(1, Math.round(roofOnlyCapKW * sf * 0.8));
+    const targetKW =
+      nextVal === "yes"
+        ? Math.min(withCanopyCapKW, Math.max(1, currentKW + delta)) // add carport kW
+        : Math.max(roofRec, Math.min(postToggleCap, currentKW - delta)); // remove: floor at roof rec
     handleSolarConfig(targetKW);
     setPendingSolarKW(targetKW); // drives slider via pendingExternalKW path
     handleCanopyChange(nextVal);
