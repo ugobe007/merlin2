@@ -1033,8 +1033,16 @@ function SolarCard({
         <>
           <style>{`
             @keyframes carportGlow {
-              0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); border-color: rgba(251,191,36,0.35); }
-              50%      { box-shadow: 0 0 12px 3px rgba(251,191,36,0.22); border-color: rgba(251,191,36,0.85); }
+              0%,100% {
+                box-shadow: 0 0 0 0 rgba(251,191,36,0), inset 0 0 0 0 rgba(251,191,36,0);
+                border-color: rgba(251,191,36,0.6);
+                background: rgba(251,191,36,0.07);
+              }
+              50% {
+                box-shadow: 0 0 0 3px rgba(251,191,36,0.25), 0 0 20px 4px rgba(251,191,36,0.2);
+                border-color: rgba(251,191,36,1.0);
+                background: rgba(251,191,36,0.14);
+              }
             }
           `}</style>
           <div
@@ -1056,25 +1064,25 @@ function SolarCard({
               {isCarWash ? "☀️ Solar Coverage" : "☀️ Solar Coverage"}
             </div>
 
-            <div style={{ display: "flex", gap: 6 }}>
-              {/* ── Rooftop — always included, static badge ── */}
+            <div style={{ display: "flex", gap: 8 }}>
+              {/* ── Rooftop — always included, active-confirmed badge ── */}
               <div
                 style={{
                   flex: 1,
-                  padding: "10px 4px 8px",
+                  padding: "12px 6px 10px",
                   borderRadius: 10,
-                  border: "2px solid rgba(100,116,139,0.45)",
-                  background: "rgba(100,116,139,0.10)",
+                  border: "2px solid rgba(52,211,153,0.65)",
+                  background: "rgba(52,211,153,0.09)",
                   textAlign: "center",
                   userSelect: "none",
                 }}
               >
-                <div style={{ fontSize: 20, lineHeight: 1 }}>🏠</div>
+                <div style={{ fontSize: 22, lineHeight: 1 }}>🏠</div>
                 <div
                   style={{
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 700,
-                    color: "rgba(148,163,184,0.9)",
+                    color: "rgba(52,211,153,0.95)",
                     marginTop: 5,
                     lineHeight: 1.2,
                   }}
@@ -1083,10 +1091,10 @@ function SolarCard({
                 </div>
                 <div
                   style={{
-                    fontSize: 13,
-                    fontWeight: 800,
-                    color: "rgba(203,213,225,0.85)",
-                    marginTop: 2,
+                    fontSize: 15,
+                    fontWeight: 900,
+                    color: "#fff",
+                    marginTop: 3,
                     fontVariantNumeric: "tabular-nums",
                   }}
                 >
@@ -1095,27 +1103,29 @@ function SolarCard({
                 <div
                   style={{
                     fontSize: 10,
-                    color: "#3ECF8E",
+                    color: "#34d399",
                     fontWeight: 700,
-                    marginTop: 3,
+                    marginTop: 4,
+                    background: "rgba(52,211,153,0.15)",
+                    borderRadius: 4,
+                    padding: "2px 6px",
+                    display: "inline-block",
                   }}
                 >
-                  ✓ Always included
+                  ✓ Included
                 </div>
               </div>
 
               {/* ── Carport — optional add-on toggle ── */}
               {(() => {
                 const carportActive = canopyInterest === "yes";
-                const additiveKW = withCanopyKW - roofOnlyKW; // e.g. 54 kW
+                const additiveKW = withCanopyKW - roofOnlyKW;
                 return (
                   <button
                     onClick={() => {
                       const nextVal = carportActive ? "no" : "yes";
                       if (onCarportToggle) {
-                        // Parent pre-computes correct targetKW from its own sunFactor/caps
-                        // then pushes it via pendingExternalKW — no stale closure risk
-                        onCarportToggle(nextVal, 0); // targetKW ignored; parent uses its own calc
+                        onCarportToggle(nextVal, 0);
                       } else {
                         onCanopyChange?.(nextVal);
                       }
@@ -1123,25 +1133,27 @@ function SolarCard({
                     }}
                     style={{
                       flex: 1,
-                      padding: "10px 4px 8px",
+                      padding: "12px 6px 10px",
                       borderRadius: 10,
                       border: carportActive
-                        ? "2px solid rgba(251,191,36,0.85)"
-                        : "1.5px solid rgba(251,191,36,0.35)",
-                      background: carportActive ? "rgba(251,191,36,0.14)" : "rgba(251,191,36,0.04)",
+                        ? "2px solid rgba(251,191,36,0.95)"
+                        : "2px solid rgba(251,191,36,0.6)",
+                      background: carportActive ? "rgba(251,191,36,0.18)" : "rgba(251,191,36,0.07)",
                       cursor: "pointer",
                       textAlign: "center",
                       transition: "border-color 0.15s, background 0.15s, box-shadow 0.15s",
-                      animation: carportActive ? "none" : "carportGlow 2s ease-in-out infinite",
-                      boxShadow: carportActive ? "0 0 0 3px rgba(251,191,36,0.12)" : undefined,
+                      animation: carportActive ? "none" : "carportGlow 1.8s ease-in-out infinite",
+                      boxShadow: carportActive
+                        ? "0 0 0 3px rgba(251,191,36,0.2), 0 0 16px 2px rgba(251,191,36,0.15)"
+                        : undefined,
                     }}
                   >
-                    <div style={{ fontSize: 20, lineHeight: 1 }}>🏗️</div>
+                    <div style={{ fontSize: 22, lineHeight: 1 }}>🏗️</div>
                     <div
                       style={{
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: 700,
-                        color: carportActive ? "#fbbf24" : "rgba(251,191,36,0.8)",
+                        color: carportActive ? "#fbbf24" : "rgba(251,191,36,0.95)",
                         marginTop: 5,
                         lineHeight: 1.2,
                       }}
@@ -1152,26 +1164,31 @@ function SolarCard({
                     </div>
                     <div
                       style={{
-                        fontSize: 13,
-                        fontWeight: 800,
-                        color: carportActive ? "#fbbf24" : "rgba(251,191,36,0.65)",
-                        marginTop: 2,
+                        fontSize: 15,
+                        fontWeight: 900,
+                        color: carportActive ? "#fbbf24" : "#fbbf24",
+                        marginTop: 3,
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
                       {additiveKW > 0 ? `+${additiveKW.toLocaleString()} kW` : "—"}
                     </div>
-                    {carportActive && (
-                      <div
-                        style={{
-                          fontSize: 10,
-                          color: "rgba(251,191,36,0.6)",
-                          marginTop: 3,
-                        }}
-                      >
-                        {withCanopyKW.toLocaleString()} kW total
-                      </div>
-                    )}
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        marginTop: 4,
+                        background: carportActive
+                          ? "rgba(251,191,36,0.2)"
+                          : "rgba(251,191,36,0.15)",
+                        borderRadius: 4,
+                        padding: "2px 6px",
+                        display: "inline-block",
+                        color: carportActive ? "rgba(251,191,36,0.85)" : "rgba(251,191,36,0.9)",
+                      }}
+                    >
+                      {carportActive ? `${withCanopyKW.toLocaleString()} kW total` : "Tap to add →"}
+                    </div>
                   </button>
                 );
               })()}
