@@ -128,7 +128,7 @@ const GOAL_GUIDANCE: Record<GoalChoice, GoalGuidance> = {
     // Smaller, cheaper, faster payback. Solar at moderate penetration.
     // Generator only if Step 3 asked for it (adds cost, slows payback).
     solarPenetration: { starter: 0.4, recommended: 0.7, complete: 1.0 },
-    durationHours: { starter: 2, recommended: 3, complete: 4 },
+    durationHours: { starter: 2, recommended: 2, complete: 3 },
     generatorPolicy: "if_requested",
     auditNote: "Goal: Save More — bias toward smaller system and fast payback.",
   },
@@ -136,14 +136,14 @@ const GOAL_GUIDANCE: Record<GoalChoice, GoalGuidance> = {
     // Balanced for optimal NPV. Solar at high penetration (best ROI driver).
     // Generator when critical loads are substantial (≥ 50%).
     solarPenetration: { starter: 0.5, recommended: 0.85, complete: 1.0 },
-    durationHours: { starter: 2, recommended: 4, complete: 6 },
+    durationHours: { starter: 2, recommended: 2, complete: 4 },
     generatorPolicy: "if_critical",
     auditNote: "Goal: Save Most — bias toward optimal NPV and return on investment.",
   },
   full_power: {
     // Maximum resilience. Solar maxed out. Generator always. Long duration.
     solarPenetration: { starter: 0.6, recommended: 1.0, complete: 1.0 },
-    durationHours: { starter: 4, recommended: 6, complete: 8 },
+    durationHours: { starter: 2, recommended: 4, complete: 6 },
     generatorPolicy: "always",
     auditNote: "Goal: Full Power — bias toward maximum coverage and grid independence.",
   },

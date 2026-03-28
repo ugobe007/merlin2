@@ -36,7 +36,7 @@ export interface QuoteDocument {
     usedTemplate: boolean; // Whether they used a template or custom
 
     // User-provided data (Step 2)
-    inputs: Record<string, any>; // e.g., { rooms: 150, evChargers: 10 }
+    inputs: Record<string, unknown>; // e.g., { rooms: 150, evChargers: 10 }
 
     // Calculated baseline from database
     baseline: {
@@ -192,8 +192,8 @@ export interface QuoteDocument {
   changeLog: {
     timestamp: Date;
     field: string; // What changed
-    oldValue: any;
-    newValue: any;
+    oldValue: unknown;
+    newValue: unknown;
     source: "user" | "ai" | "system"; // Who made the change
   }[];
 
@@ -339,7 +339,7 @@ export function createEmptyQuote(): QuoteDocument {
           baseLoadKw: 0,
           loadFactor: 0,
           profileType: "",
-          recommendedDurationHours: 4,
+          recommendedDurationHours: 2,
         },
       },
     },
@@ -347,7 +347,7 @@ export function createEmptyQuote(): QuoteDocument {
     configuration: {
       battery: {
         powerMW: 0,
-        durationHours: 4,
+        durationHours: 2,
         capacityMWh: 0,
         chemistry: "LFP",
         efficiency: 90,

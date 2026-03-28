@@ -54,7 +54,7 @@ export function buildV8ExportData(state: WizardState): QuoteExportData {
   const bessKWh = tier.bessKWh ?? 0;
   const solarKW = tier.solarKW ?? 0;
   const generatorKW = tier.generatorKW ?? 0;
-  const durationHours = tier.durationHours ?? 4;
+  const durationHours = tier.durationHours ?? 2;
 
   // Financial metrics
   const grossCost = tier.grossCost ?? 0;
