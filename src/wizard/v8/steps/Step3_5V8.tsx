@@ -2081,12 +2081,14 @@ export default function Step3_5V8({ state, actions }: Props) {
 
   // Carport toggle handler — lives in parent so it uses parent-scope sunFactor,
   // withCanopyCapKW, roofOnlyCapKW (no stale closure risk inside SolarCard).
+  // targetKW is always ADDITIVE: rooftop-only cap → rooftop+carport cap (never subtract).
   const handleCarportToggle = (nextVal: string) => {
+    // Use the physical cap that applies AFTER the toggle (not the current stale state cap).
+    // Adding carport:  withCanopyCapKW  = roofOnlyCapKW + canopyPotentialKW  (e.g. 60+54=114)
+    // Removing carport: roofOnlyCapKW   (e.g. 60)
     const targetCapKW = nextVal === "yes" ? withCanopyCapKW : roofOnlyCapKW;
-    const targetKW =
-      targetCapKW > 0 && sunFactor > 0
-        ? Math.max(1, Math.round(targetCapKW * sunFactor * 0.8))
-        : targetCapKW;
+    const sf = sunFactor > 0 ? sunFactor : 1;
+    const targetKW = targetCapKW > 0 ? Math.max(1, Math.round(targetCapKW * sf * 0.8)) : 0;
     handleSolarConfig(targetKW);
     setPendingSolarKW(targetKW); // drives slider via pendingExternalKW path
     handleCanopyChange(nextVal);
