@@ -27,49 +27,49 @@ import { calculateSystemCosts, EQUIPMENT_UNIT_COSTS } from "@/services/pricingSe
 // ============================================================================
 const TIER_CONFIG = {
   0: {
-    // ESSENTIAL
-    name: "ESSENTIAL",
-    tagline: "Core system, right-sized",
+    // STARTER
+    name: "STARTER",
+    tagline: "Fast payback, solid foundation",
     headlineClass: "headline-starter",
-    cardBorder: "border-slate-700/60",
+    cardBorder: "border-slate-700/50",
     cardBg: "bg-gradient-to-b from-slate-900 to-slate-950",
     cardHover: "card-starter",
     accentColor: "text-emerald-400",
     chipBg: "bg-white/5 border-white/10",
     chipText: "text-slate-300",
     buttonClass:
-      "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
+      "text-emerald-400 bg-transparent border-emerald-500/70 hover:bg-emerald-500/10 font-bold",
     metricBg: "bg-white/5",
   },
   1: {
-    // OPTIMIZED
-    name: "OPTIMIZED",
-    tagline: "Most popular configuration",
+    // BEST VALUE
+    name: "BEST VALUE",
+    tagline: "Most popular · Best ROI",
     headlineClass: "headline-perfect",
-    cardBorder: "border-emerald-500/35",
-    cardBg: "bg-gradient-to-b from-emerald-950/40 via-slate-900 to-slate-950",
-    cardHover: "card-perfect",
-    accentColor: "text-emerald-400",
-    chipBg: "bg-emerald-500/10 border-emerald-500/30",
-    chipText: "text-emerald-200",
+    cardBorder: "border-emerald-400/70",
+    cardBg: "bg-gradient-to-b from-emerald-900/70 via-slate-900/90 to-slate-950",
+    cardHover: "card-perfect card-recommended",
+    accentColor: "text-emerald-300",
+    chipBg: "bg-emerald-500/15 border-emerald-400/50",
+    chipText: "text-emerald-100",
     buttonClass:
-      "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
+      "text-emerald-300 bg-transparent border-emerald-400 hover:bg-emerald-500/15 font-bold",
     metricBg: "bg-emerald-500/10",
   },
   2: {
-    // PREMIUM
-    name: "PREMIUM",
-    tagline: "Maximum performance",
+    // MAX POWER
+    name: "MAX POWER",
+    tagline: "Maximum resilience & coverage",
     headlineClass: "headline-beast",
-    cardBorder: "border-slate-700/60",
-    cardBg: "bg-gradient-to-b from-slate-900 to-slate-950",
+    cardBorder: "border-amber-500/50",
+    cardBg: "bg-gradient-to-b from-amber-950/40 via-slate-900 to-slate-950",
     cardHover: "card-beast",
     accentColor: "text-amber-400",
-    chipBg: "bg-white/5 border-white/10",
-    chipText: "text-slate-300",
+    chipBg: "bg-amber-500/10 border-amber-500/30",
+    chipText: "text-amber-200",
     buttonClass:
-      "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
-    metricBg: "bg-white/5",
+      "text-amber-400 bg-transparent border-amber-500/70 hover:bg-amber-500/10 font-bold",
+    metricBg: "bg-amber-500/10",
   },
 } as const;
 
@@ -81,119 +81,98 @@ const customStyles = `
   .card-starter, .card-perfect, .card-beast {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   .card-starter:hover {
     transform: translateY(-3px);
     box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.18);
   }
-  
   .card-starter:active {
     transform: translateY(-1px) scale(0.99);
-    box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.25);
   }
-  
+
   .card-perfect:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.22);
+    transform: translateY(-5px);
+    box-shadow: 0 0 0 2px rgba(52,211,153,0.6), 0 35px 70px -12px rgba(52,211,153,0.5);
+    animation: none;
   }
-  
   .card-perfect:active {
-    transform: translateY(-1px) scale(0.99);
-    box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.28);
+    transform: translateY(-2px) scale(0.99);
   }
-  
+
   .card-beast:hover {
     transform: translateY(-3px);
-    box-shadow: 0 20px 40px -15px rgba(249, 115, 22, 0.18);
+    box-shadow: 0 20px 40px -15px rgba(245, 158, 11, 0.28);
   }
-  
   .card-beast:active {
     transform: translateY(-1px) scale(0.99);
-    box-shadow: 0 10px 20px -10px rgba(249, 115, 22, 0.25);
   }
-  
-  /* SELECTED STATE GLOW — static, no pulse */
+
+  /* BEST VALUE — persistent breathing glow */
+  @keyframes recommendedGlow {
+    0%, 100% {
+      box-shadow: 0 0 0 2px rgba(52,211,153,0.25), 0 20px 50px -12px rgba(52,211,153,0.25);
+    }
+    50% {
+      box-shadow: 0 0 0 2px rgba(52,211,153,0.55), 0 28px 65px -12px rgba(52,211,153,0.42);
+    }
+  }
+  .card-recommended {
+    animation: recommendedGlow 2.8s ease-in-out infinite;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* SELECTED STATE — override any animation */
   .card-selected {
-    box-shadow: 0 0 28px 0px rgba(16, 185, 129, 0.22);
+    box-shadow: 0 0 0 2px rgba(52,211,153,0.6), 0 0 40px 0px rgba(52,211,153,0.25) !important;
+    animation: none !important;
   }
-  
-  /* CHECKMARK ANIMATION — gentle fade in */
-  .checkmark-appear {
-    animation: checkmarkFade 0.25s ease-out;
-  }
-  
+
+  /* CHECKMARK ANIMATION */
+  .checkmark-appear { animation: checkmarkFade 0.25s ease-out; }
   @keyframes checkmarkFade {
-    0% { transform: scale(0.7); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0%   { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1);   opacity: 1; }
   }
-  
-  /* SAVINGS NUMBER — simple fade in */
+
+  /* SAVINGS NUMBER */
   @keyframes savingsFade {
-    0% { opacity: 0; }
+    0%   { opacity: 0; }
     100% { opacity: 1; }
   }
-  
-  .savings-number {
-    animation: savingsFade 0.4s ease-out;
-  }
-  
+  .savings-number { animation: savingsFade 0.4s ease-out; }
+
   /* STARTER */
   .headline-starter {
     background: linear-gradient(135deg, #3ECF8E 0%, #2aad70 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-  
-  /* OPTIMIZED */
+  /* BEST VALUE */
   .headline-perfect {
-    background: linear-gradient(135deg, #3ECF8E 0%, #3ECF8E 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: linear-gradient(135deg, #6ee7b7 0%, #34d399 45%, #059669 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-  
-  /* PREMIUM */
+  /* MAX POWER */
   .headline-beast {
-    background: linear-gradient(135deg, #F59E0B 0%, #d97706 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 55%, #d97706 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-  
-  /* Savings glow effects */
-  .savings-glow-starter {
-    text-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
-  }
-  
-  .savings-glow-perfect {
-    text-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
-  }
-  
-  .savings-glow-beast {
-    text-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
-  }
-  
-  /* Equipment chip styling - PROMINENT */
+
+  /* Savings glow */
+  .savings-glow-starter { text-shadow: 0 0 20px rgba(16,185,129,0.2); }
+  .savings-glow-perfect { text-shadow: 0 0 28px rgba(52,211,153,0.4); }
+  .savings-glow-beast   { text-shadow: 0 0 20px rgba(245,158,11,0.25); }
+
+  /* Equipment chips */
   .equipment-chip {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-    border-width: 2px !important;
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: 10px;
+    font-size: 12px; font-weight: 700;
+    white-space: nowrap; border-width: 2px !important;
   }
-  
-  .equipment-chip span:first-child {
-    font-size: 16px;
-  }
-  
-  .recommended-glow {
-    opacity: 0.85;
-  }
+  .equipment-chip span:first-child { font-size: 15px; }
+
+  .recommended-glow { opacity: 1; }
 `;
 
 // ============================================================================
@@ -275,7 +254,7 @@ function GoalRankingsPanel({ tiers }: GoalRankingsPanelProps) {
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
           What Merlin Optimized For
         </span>
-        <span className="text-[10px] text-slate-600">— based on your OPTIMIZED tier</span>
+        <span className="text-[10px] text-slate-600">— based on your BEST VALUE tier</span>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
         {scored.map((g, i) => (
@@ -570,6 +549,9 @@ export default function Step4V8({ state, actions }: Props) {
         )}
       </div>
 
+      {/* Goal Rankings - context before choices */}
+      <GoalRankingsPanel tiers={tiers} />
+
       {/* Cards Grid - Horizontal layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 w-full px-2 md:px-4">
         {tiers.map((tier, index) => {
@@ -594,7 +576,6 @@ export default function Step4V8({ state, actions }: Props) {
                 relative rounded-2xl overflow-hidden cursor-pointer
                 ${config.cardBg} border-2 ${config.cardHover}
                 ${isSelected ? "border-emerald-500/60 card-selected" : config.cardBorder}
-                ${isPerfectFit && !isSelected ? "shadow-[0_0_30px_-10px_rgba(168,85,247,0.2)]" : ""}
                 transition-all duration-300
               `}
             >
@@ -621,10 +602,10 @@ export default function Step4V8({ state, actions }: Props) {
               {/* BEST VALUE Banner (Perfect Fit only) */}
               {isPerfectFit && (
                 <>
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500/70 recommended-glow" />
+                  <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400" />
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
-                    <div className="bg-emerald-600 text-white px-4 py-1.5 rounded-b-lg text-[10px] font-bold tracking-wider shadow-sm">
-                      RECOMMENDED
+                    <div className="bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 px-5 py-1.5 rounded-b-lg text-[11px] font-black tracking-[0.15em] shadow-lg">
+                      ⭐ RECOMMENDED
                     </div>
                   </div>
                 </>
@@ -641,7 +622,7 @@ export default function Step4V8({ state, actions }: Props) {
                     {config.name}
                   </h2>
                   <p
-                    className={`text-xs uppercase tracking-widest mt-1 ${isPerfectFit ? "text-emerald-300/50" : "text-slate-500"}`}
+                    className={`text-xs uppercase tracking-widest mt-1 ${isPerfectFit ? "text-emerald-300/90" : "text-slate-500"}`}
                   >
                     {config.tagline}
                   </p>
@@ -675,9 +656,9 @@ export default function Step4V8({ state, actions }: Props) {
                       <span>🔋</span>
                       <span className={config.chipText}>
                         {tier.bessKWh >= 1000
-                          ? `${Math.round(tier.bessKWh / 1000)} MWh`
-                          : `${Math.round(tier.bessKWh)} kWh`}{" "}
-                        BESS
+                          ? `${(tier.bessKWh / 1000).toFixed(1)} MWh`
+                          : `${Math.round(tier.bessKWh)} kWh`}
+                        {` / ${tier.durationHours ?? 2}hr`}
                       </span>
                     </div>
 
@@ -715,7 +696,7 @@ export default function Step4V8({ state, actions }: Props) {
 
               {/* Financial Summary - Responsive padding and spacing */}
               <div
-                className={`border-t p-3 md:p-4 ${isPerfectFit ? "bg-slate-950/60 border-emerald-500/20" : "bg-slate-950/80 border-slate-800"}`}
+                className={`border-t p-3 md:p-4 ${isPerfectFit ? "bg-slate-950/60 border-emerald-400/35" : "bg-slate-950/80 border-slate-800"}`}
               >
                 <p
                   className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-emerald-400/50" : "text-slate-500"}`}
@@ -1065,7 +1046,6 @@ export default function Step4V8({ state, actions }: Props) {
           );
         })}
       </div>
-      <GoalRankingsPanel tiers={tiers} />
     </div>
   );
 }
