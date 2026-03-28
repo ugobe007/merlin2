@@ -282,14 +282,16 @@ function ConfirmBtn({
       el.textContent = `
         @keyframes confirmGlow {
           0%, 100% {
-            box-shadow: 0 0 6px 0 rgba(62,207,142,0.5), 0 0 0 0 rgba(62,207,142,0.3);
-            border-color: rgba(62,207,142,0.8);
-            background: rgba(62,207,142,0.10);
+            box-shadow: none;
+            border-color: rgba(52,211,153,0.55);
+            color: rgba(52,211,153,0.7);
+            text-shadow: none;
           }
           50% {
-            box-shadow: 0 0 24px 8px rgba(62,207,142,0.45), 0 0 4px 2px rgba(62,207,142,0.7);
-            border-color: rgba(62,207,142,1.0);
-            background: rgba(62,207,142,0.20);
+            box-shadow: 0 0 0 2px rgba(52,211,153,0.25), 0 0 18px 4px rgba(52,211,153,0.35);
+            border-color: rgba(52,211,153,1.0);
+            color: #34d399;
+            text-shadow: 0 0 8px rgba(52,211,153,0.6);
           }
         }
       `;
@@ -361,30 +363,32 @@ function ConfirmBtn({
         padding: needsConfirm ? "13px 16px" : "11px 16px",
         borderRadius: 10,
         border: needsConfirm
-          ? "2px solid rgba(62,207,142,0.95)"
-          : "1.5px solid rgba(62,207,142,0.4)",
-        background: needsConfirm ? "rgba(62,207,142,0.12)" : "transparent",
+          ? "2px solid rgba(52,211,153,0.55)"
+          : "1.5px solid rgba(52,211,153,0.3)",
+        background: "transparent",
         cursor: "pointer",
         fontSize: needsConfirm ? 14 : 13,
         fontWeight: 800,
         letterSpacing: "0.06em",
         textTransform: "uppercase" as const,
-        color: needsConfirm ? "#fff" : "#3ECF8E",
-        transition: "border-color 0.15s, background 0.15s, box-shadow 0.15s",
-        animation: needsConfirm ? "confirmGlow 1.6s ease-in-out infinite" : "none",
+        color: needsConfirm ? "rgba(52,211,153,0.7)" : "#34d399",
+        transition: "border-color 0.2s, color 0.2s, box-shadow 0.2s, text-shadow 0.2s",
+        animation: needsConfirm ? "confirmGlow 1.8s ease-in-out infinite" : "none",
         position: "relative" as const,
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "rgba(62,207,142,0.22)";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(62,207,142,1.0)";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(52,211,153,1.0)";
+        (e.currentTarget as HTMLButtonElement).style.color = "#34d399";
+        (e.currentTarget as HTMLButtonElement).style.textShadow = "0 0 10px rgba(52,211,153,0.5)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = needsConfirm
-          ? "rgba(62,207,142,0.12)"
-          : "transparent";
         (e.currentTarget as HTMLButtonElement).style.borderColor = needsConfirm
-          ? "rgba(62,207,142,0.95)"
-          : "rgba(62,207,142,0.4)";
+          ? "rgba(52,211,153,0.55)"
+          : "rgba(52,211,153,0.3)";
+        (e.currentTarget as HTMLButtonElement).style.color = needsConfirm
+          ? "rgba(52,211,153,0.7)"
+          : "#34d399";
+        (e.currentTarget as HTMLButtonElement).style.textShadow = "";
       }}
     >
       {needsConfirm ? `✓ ${label}` : label}
