@@ -277,10 +277,10 @@ describe("B. BESS calculation chain", () => {
     expect(rec.bessKWh).toBe(rec.bessKW * rec.durationHours);
   });
 
-  it("Recommended duration = 4h for save_most goal (peak_shaving app)", async () => {
+  it("Recommended duration = 2h for save_most goal (C2 industry standard — extended coverage via hybrid algorithm)", async () => {
     const state = makeState({ peakLoadKW: 250, baseLoadKW: 150 });
     const [, rec] = await buildTiers(state);
-    expect(rec.durationHours).toBe(4);
+    expect(rec.durationHours).toBe(2);
   });
 
   it("Starter duration = 2h for save_most goal", async () => {
@@ -289,10 +289,10 @@ describe("B. BESS calculation chain", () => {
     expect(starter.durationHours).toBe(2);
   });
 
-  it("Complete duration = 6h for save_most goal", async () => {
+  it("Complete duration = 2h for save_most goal (C2 spec — same as rec; upgrade to 4h requires full_power goal)", async () => {
     const state = makeState({ peakLoadKW: 250, baseLoadKW: 150 });
     const [, , complete] = await buildTiers(state);
-    expect(complete.durationHours).toBe(6);
+    expect(complete.durationHours).toBe(2);
   });
 
   it("resilience app: BESS Recommended = max(75, round(peak × 0.70))", async () => {

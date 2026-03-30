@@ -26,8 +26,11 @@ import {
   Download,
   FileText,
   Bookmark,
+  Check,
   X,
   Mail,
+  ClipboardList,
+  ChevronDown,
 } from "lucide-react";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import TrueQuoteFinancialModal from "@/components/wizard/v7/shared/TrueQuoteFinancialModal";
@@ -39,9 +42,12 @@ import {
   trackQuoteGenerated,
 } from "@/services/subscriptionService";
 import { supabase } from "@/services/supabaseClient";
+import type { Json } from "@/types/database.types";
+import AuthModal from "@/components/AuthModal";
 import { formatCurrency } from "@/services/internationalService";
 import { getRecommendedInstallers, type RecommendedInstaller } from "@/services/installerService";
 import { panelCount } from "@/services/solarPanelSelectionService";
+import BessSpecSheet from "@/components/BessSpecSheet";
 
 // Removed unused DARK color constants
 
@@ -244,6 +250,7 @@ export default function Step5V8({ state, actions }: Props) {
 
   // Modal states
   const [showFinancialModal, setShowFinancialModal] = useState(false);
+  const [showDataSourcesModal, setShowDataSourcesModal] = useState(false);
   const [showProQuoteModal, setShowProQuoteModal] = useState(false);
   const [exportingFormat, setExportingFormat] = useState<"pdf" | "word" | "excel" | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -251,6 +258,7 @@ export default function Step5V8({ state, actions }: Props) {
   // Installer recommendations
   const [installers, setInstallers] = useState<RecommendedInstaller[]>([]);
   const [loadingInstallers, setLoadingInstallers] = useState(false);
+  const [showTechSpecs, setShowTechSpecs] = useState(false);
 
   // ── LEAD CAPTURE GATE ────────────────────────────────────────────
   const [showLeadGate, setShowLeadGate] = useState(false);
@@ -260,6 +268,13 @@ export default function Step5V8({ state, actions }: Props) {
   });
   const [leadForm, setLeadForm] = useState({ name: "", email: "", company: "" });
   const [leadSubmitting, setLeadSubmitting] = useState(false);
+
+  // ── SAVE QUOTE STATE ───────────────────────────────────────────────────
+  const [isAuthenticated, setIsAuthenticated] = useState(() => isUserAuthenticated());
+  const [quoteSaved, setQuoteSaved] = useState(false);
+  const [savingQuote, setSavingQuote] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // ── ALL CALLBACKS AND EFFECTS (MUST BE BEFORE EARLY RETURN) ────
   const handleLeadSubmit = useCallback(async () => {
@@ -338,6 +353,89 @@ export default function Step5V8({ state, actions }: Props) {
     },
     [state, leadCaptured]
   );
+
+  // ── SAVE QUOTE TO ACCOUNT ──────────────────────────────────────────────
+  const saveQuoteToAccount = useCallback(async () => {
+    if (quoteSaved || savingQuote) return;
+    setSavingQuote(true);
+    setSaveError(null);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setSaveError("Sign in to save quotes to your account");
+        return;
+      }
+      const exportData = buildV8ExportData(state);
+      const tierData =
+        state.tiers && state.selectedTierIndex !== null
+          ? state.tiers[state.selectedTierIndex]
+          : null;
+      const cityState = [state.location?.city, state.location?.state].filter(Boolean).join(", ");
+      const quoteName = [
+        state.industry?.replace(/_/g, " "),
+        cityState || null,
+        new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      const { error } = await supabase.from("saved_quotes").insert({
+        user_id: user.id,
+        quote_name: quoteName,
+        system_configuration: exportData as unknown as Json,
+        annual_savings: tierData?.annualSavings ?? null,
+        payback_years: tierData?.paybackYears ?? null,
+        duration_hours: tierData?.durationHours ?? null,
+        solar_mw: tierData?.solarKW ? tierData.solarKW / 1000 : null,
+        storage_mw: tierData?.bessKW ? tierData.bessKW / 1000 : null,
+        total_cost: tierData?.grossCost ?? null,
+        location: cityState || null,
+      });
+      if (error) throw error;
+      setQuoteSaved(true);
+    } catch (err) {
+      setSaveError((err as Error).message || "Failed to save quote");
+    } finally {
+      setSavingQuote(false);
+    }
+  }, [state, quoteSaved, savingQuote]);
+
+  // ── NAVIGATE TO RFP PAGE ────────────────────────────────────────────
+  // Serialises quote context into sessionStorage and navigates to /build-rfp.
+  // The BuildRFPPage reads this context and prefills all form fields — no
+  // upload or re-entry needed.
+  const openRfpPage = useCallback(() => {
+    const tierData =
+      state.tiers && state.selectedTierIndex !== null ? state.tiers[state.selectedTierIndex] : null;
+    const ctx = {
+      industry: state.industry ?? "unknown",
+      location: {
+        city: state.location?.city ?? undefined,
+        state: state.location?.state ?? undefined,
+        country: state.countryCode ?? "US",
+      },
+      countryCode: state.countryCode ?? "US",
+      tier: {
+        bessKW: tierData?.bessKW ?? 0,
+        bessKWh: tierData?.bessKWh ?? 0,
+        durationHours: tierData?.durationHours ?? 2,
+        solarKW: tierData?.solarKW ?? 0,
+        generatorKW: tierData?.generatorKW ?? 0,
+        selectedBESS: tierData?.selectedBESS
+          ? {
+              chemistry: tierData.selectedBESS.chemistry ?? undefined,
+              make: tierData.selectedBESS.manufacturer ?? undefined,
+              model: tierData.selectedBESS.model ?? undefined,
+            }
+          : undefined,
+        netCost: tierData?.netCost ?? 0,
+        paybackYears: tierData?.paybackYears ?? undefined,
+      },
+    };
+    sessionStorage.setItem("merlin_rfp_context", JSON.stringify(ctx));
+    window.location.href = "/build-rfp";
+  }, [state]);
 
   // ── SOCIAL MEDIA SHARING (needs tier data from below, so this will be moved after validation) ────
   // This will be moved after tier validation
@@ -495,8 +593,12 @@ export default function Step5V8({ state, actions }: Props) {
             <span className="text-[10px] text-slate-500">{quoteDate}</span>
           </div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <span className="capitalize">
-              {industry?.replace(/_/g, " ") || "Facility"} Energy System
+            <span>
+              {(industry?.replace(/_/g, " ") || "Facility")
+                .split(" ")
+                .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(" ")}{" "}
+              Energy System
             </span>
           </h1>
           <div className="flex items-center gap-1.5 mt-1 text-slate-400">
@@ -506,7 +608,7 @@ export default function Step5V8({ state, actions }: Props) {
         </div>
         <div className="shrink-0 flex items-center gap-2">
           <button
-            onClick={() => setShowFinancialModal(true)}
+            onClick={() => setShowDataSourcesModal(true)}
             style={{
               display: "flex",
               flexDirection: "column",
@@ -776,7 +878,11 @@ export default function Step5V8({ state, actions }: Props) {
         <StatItem
           icon={<Zap className="w-3.5 h-3.5" />}
           label="Duration"
-          value={`${fmtNum(tier.durationHours)} hrs`}
+          value={`${fmtNum(tier.durationHours)}h spec${
+            tier.hybridCoverage && tier.hybridCoverage.dailyPeakCoverageHours > 2
+              ? ` · ${tier.hybridCoverage.dailyPeakCoverageHours}h effective`
+              : ""
+          }`}
           accent="text-blue-400"
         />
         {tier.solarKW > 0 && (
@@ -847,11 +953,16 @@ export default function Step5V8({ state, actions }: Props) {
               <Zap className="w-3.5 h-3.5 text-blue-400" />
               <div className="flex flex-col">
                 <span className="text-[10px] text-slate-400 uppercase tracking-wider">
-                  Duration
+                  Battery Spec
                 </span>
                 <span className="text-xs font-bold text-white tabular-nums">
-                  {fmtNum(tier.durationHours)} hrs
+                  {fmtNum(tier.durationHours)}h C2 spec
                 </span>
+                {tier.hybridCoverage && tier.hybridCoverage.strategy !== "bess_only" && (
+                  <span className="text-[10px] text-emerald-400 leading-tight mt-0.5">
+                    {tier.hybridCoverage.dailyPeakCoverageHours}h effective daily
+                  </span>
+                )}
               </div>
             </div>
 
@@ -934,6 +1045,98 @@ export default function Step5V8({ state, actions }: Props) {
           </div>
         </div>
 
+        {/* ── MERLIN HYBRID ADVANTAGE ─────────────────────────────────────
+            Shows how BESS + Solar + Generator combine for extended coverage.
+            Only visible when system has solar or generator (not BESS-only).
+        ──────────────────────────────────────────────────────────────────── */}
+        {tier.hybridCoverage && tier.hybridCoverage.strategy !== "bess_only" && (
+          <div className="p-4 border-b border-white/[0.06] bg-gradient-to-r from-emerald-950/40 to-slate-900/30">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center">
+                <span className="text-xs">⚡</span>
+              </div>
+              <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
+                Merlin Hybrid Advantage
+              </span>
+              <span className="ml-auto text-[10px] text-slate-500">
+                2h C2 spec · extended via hybridization
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              {/* BESS spec */}
+              <div className="rounded-lg bg-violet-500/10 border border-violet-500/20 p-2.5 text-center">
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                  Battery
+                </div>
+                <div className="text-sm font-bold text-white">2h spec</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">C2 industry std</div>
+              </div>
+
+              {/* Daily peak coverage */}
+              <div
+                className={`rounded-lg border p-2.5 text-center ${
+                  tier.hybridCoverage.handlesBothDailyPeaks
+                    ? "bg-emerald-500/10 border-emerald-500/30"
+                    : "bg-slate-800/40 border-white/[0.06]"
+                }`}
+              >
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                  Daily Peaks
+                </div>
+                <div
+                  className={`text-sm font-bold ${tier.hybridCoverage.handlesBothDailyPeaks ? "text-emerald-300" : "text-white"}`}
+                >
+                  {tier.hybridCoverage.dailyPeakCoverageHours}h covered
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  {tier.hybridCoverage.handlesBothDailyPeaks
+                    ? "☀️ solar recharges midday"
+                    : "morning peak only"}
+                </div>
+              </div>
+
+              {/* Outage bridge */}
+              <div
+                className={`rounded-lg border p-2.5 text-center ${
+                  tier.hybridCoverage.outageBridgeHours >= 24
+                    ? "bg-amber-500/10 border-amber-500/30"
+                    : "bg-slate-800/40 border-white/[0.06]"
+                }`}
+              >
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
+                  Outage Bridge
+                </div>
+                <div
+                  className={`text-sm font-bold ${tier.hybridCoverage.outageBridgeHours >= 24 ? "text-amber-300" : "text-white"}`}
+                >
+                  {tier.hybridCoverage.outageBridgeHours}h
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  {tier.hybridCoverage.outageBridgeHours >= 24
+                    ? "🔌 gen bridges after BESS"
+                    : "battery only"}
+                </div>
+              </div>
+            </div>
+
+            {/* Coverage summary */}
+            <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2">
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                {tier.hybridCoverage.coverageSummary}
+                {tier.hybridCoverage.totalRechargePercent > 0 && (
+                  <span className="text-slate-500">
+                    {" "}
+                    · Combined recharge: {tier.hybridCoverage.totalRechargePercent}% of battery
+                    capacity/day ({tier.hybridCoverage.totalDailyRechargeKWh} kWh from{" "}
+                    {tier.hybridCoverage.activeSources.map((s) => s.label).join(" + ")})
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Financial — tighter grouped layout */}
         <div className="p-4 bg-gradient-to-br from-slate-800/30 to-slate-900/30">
           <div className="flex items-center justify-between mb-3">
@@ -999,7 +1202,47 @@ export default function Step5V8({ state, actions }: Props) {
                     −{fmt$(tier.itcAmount, countryCode)}
                   </div>
                   <div className="mt-1 text-xs text-emerald-200/70">
-                    {Math.round(tier.itcRate * 100)}% tax credit applied
+                    {tier.itcBasisBreakdown ? (
+                      <>
+                        <span className="font-medium">
+                          {Math.round(tier.itcRate * 100)}% ×{" "}
+                          {fmt$(tier.itcBasisBreakdown.totalEligible, countryCode)} eligible basis
+                        </span>
+                        <div className="mt-2 space-y-0.5 text-[11px] text-emerald-200/60">
+                          {tier.itcBasisBreakdown.solarEligible > 0 && (
+                            <div className="flex justify-between">
+                              <span>Solar (equip + labor)</span>
+                              <span>{fmt$(tier.itcBasisBreakdown.solarEligible, countryCode)}</span>
+                            </div>
+                          )}
+                          {tier.itcBasisBreakdown.bessEligible > 0 && (
+                            <div className="flex justify-between">
+                              <span>BESS</span>
+                              <span>{fmt$(tier.itcBasisBreakdown.bessEligible, countryCode)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span>Site / Installation</span>
+                            <span>{fmt$(tier.itcBasisBreakdown.siteEligible, countryCode)}</span>
+                          </div>
+                          {(tier.itcBasisBreakdown.generatorCost > 0 ||
+                            tier.itcBasisBreakdown.evChargingCost > 0) && (
+                            <div className="mt-1.5 pt-1.5 border-t border-emerald-500/20 text-[10px] text-emerald-300/40">
+                              Not §48-eligible:
+                              {tier.itcBasisBreakdown.generatorCost > 0 &&
+                                ` Generator ${fmt$(tier.itcBasisBreakdown.generatorCost, countryCode)}`}
+                              {tier.itcBasisBreakdown.generatorCost > 0 &&
+                                tier.itcBasisBreakdown.evChargingCost > 0 &&
+                                " · "}
+                              {tier.itcBasisBreakdown.evChargingCost > 0 &&
+                                `EV chargers ${fmt$(tier.itcBasisBreakdown.evChargingCost, countryCode)}`}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <span>{Math.round(tier.itcRate * 100)}% tax credit applied</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1095,6 +1338,38 @@ export default function Step5V8({ state, actions }: Props) {
                       }}
                     />
                   </div>
+                  {/* Payback drivers — shown when payback > 8 yrs to explain what's adding cost */}
+                  {tier.paybackYears > 8 && (
+                    <div className="mt-3 space-y-1.5">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600 mb-1">
+                        What's driving payback
+                      </div>
+                      {tier.generatorKW > 0 && (
+                        <div className="flex items-start gap-1.5 text-[11px] text-slate-400">
+                          <span className="text-amber-400 mt-0.5 shrink-0">🔥</span>
+                          <span>
+                            <strong className="text-amber-300">
+                              Generator ({tier.generatorKW} kW)
+                            </strong>{" "}
+                            adds resilience but no direct savings — it extends payback by est.{" "}
+                            {Math.round(
+                              ((tier.generatorKW * 700) / Math.max(1, tier.annualSavings)) * 10
+                            ) / 10}{" "}
+                            yrs. Remove in Step 3.5 to shorten payback.
+                          </span>
+                        </div>
+                      )}
+                      {tier.paybackYears > 10 && tier.solarKW < 50 && (
+                        <div className="flex items-start gap-1.5 text-[11px] text-slate-400">
+                          <span className="text-yellow-400 mt-0.5 shrink-0">☀️</span>
+                          <span>
+                            <strong className="text-yellow-300">More solar</strong> = lower payback.
+                            Try increasing solar in Step 3.5 to boost annual savings.
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
@@ -1113,7 +1388,7 @@ export default function Step5V8({ state, actions }: Props) {
 
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
                   <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
-                    25-Year NPV
+                    25-Year NPV (Project)
                   </div>
                   <div
                     className={`mt-2 text-3xl font-black tabular-nums ${tier.npv >= 0 ? "text-emerald-400" : "text-red-400"}`}
@@ -1121,7 +1396,7 @@ export default function Step5V8({ state, actions }: Props) {
                     {fmt$(tier.npv, countryCode)}
                   </div>
                   <div className="mt-1 text-sm text-slate-400">
-                    Long-term value after discounting future savings
+                    Unlevered · long-term value after discounting future savings
                   </div>
                 </div>
               </div>
@@ -1337,6 +1612,123 @@ export default function Step5V8({ state, actions }: Props) {
             {exportError}
           </div>
         )}
+
+        {/* ── SAVE QUOTE ROW ── */}
+        <div className="mt-4 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {isAuthenticated ? (
+            <>
+              <div className="flex-1 min-w-0">
+                {quoteSaved ? (
+                  <div className="flex items-center gap-2 text-sm text-emerald-400 font-semibold">
+                    <Check className="w-4 h-4" />
+                    Quote saved to your account
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400">
+                    Save this quote to your account to access it anytime.
+                  </p>
+                )}
+                {saveError && <p className="text-xs text-red-400 mt-1">{saveError}</p>}
+              </div>
+              {!quoteSaved && (
+                <button
+                  type="button"
+                  onClick={saveQuoteToAccount}
+                  disabled={savingQuote}
+                  className="flex-shrink-0 flex items-center justify-center gap-2 h-10 px-4 rounded-xl border-2 border-emerald-500/30 bg-emerald-500/[0.06] hover:border-emerald-500/50 hover:bg-emerald-500/[0.10] transition-all disabled:opacity-50 text-emerald-400 font-semibold text-sm"
+                >
+                  {savingQuote ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="w-3.5 h-3.5" />
+                      Save Quote
+                    </>
+                  )}
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-slate-400">
+                <span className="text-slate-300 font-medium">Sign up free</span> to save this quote
+                and access it from your dashboard anytime.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                className="flex-shrink-0 flex items-center gap-2 h-9 px-4 rounded-xl border border-[#3ECF8E]/30 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/50 hover:bg-[#3ECF8E]/[0.10] transition-all text-[#3ECF8E] font-semibold text-sm"
+              >
+                <Bookmark className="w-3.5 h-3.5" />
+                Save Quote →
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* ── BUILD AN RFP CTA ── */}
+        <div className="mt-4 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-amber-500/[0.12] border border-amber-500/25 flex items-center justify-center flex-shrink-0">
+              <ClipboardList className="w-4.5 h-4.5 text-amber-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-200 leading-snug">
+                Turn this quote into a live RFP
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Receive competing bids from certified vendors — no upload needed.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={openRfpPage}
+            className="flex-shrink-0 flex items-center gap-2 h-9 px-4 rounded-xl border border-amber-500/40 text-amber-400 hover:border-amber-400 hover:text-amber-300 transition-colors text-sm font-semibold"
+          >
+            <ClipboardList className="w-3.5 h-3.5" />
+            Build RFP →
+          </button>
+        </div>
+
+        {/* ── TECHNICAL SPECS TOGGLE ── */}
+        <div className="pt-3 border-t border-white/[0.04]">
+          <button
+            type="button"
+            onClick={() => setShowTechSpecs((v) => !v)}
+            className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors w-full py-1"
+          >
+            <ChevronDown
+              className="w-3.5 h-3.5 transition-transform"
+              style={{ transform: showTechSpecs ? "rotate(180deg)" : "none" }}
+            />
+            {showTechSpecs ? "Hide" : "View"} Technical Specifications
+          </button>
+          {showTechSpecs && tier && (
+            <div className="mt-3">
+              <BessSpecSheet
+                bessKW={tier.bessKW ?? 0}
+                bessKWh={tier.bessKWh ?? 0}
+                durationHours={tier.durationHours ?? 2}
+                chemistry={tier.selectedBESS?.chemistry ?? "LFP"}
+                manufacturer={tier.selectedBESS?.manufacturer}
+                model={tier.selectedBESS?.model}
+                moduleKwh={tier.selectedBESS?.capacityKwh}
+                roundtripEfficiencyPct={tier.selectedBESS?.roundtripEfficiencyPct}
+                warrantyYears={tier.selectedBESS?.warrantyYears}
+                cycleLife={tier.selectedBESS?.cycleLife}
+                solarKW={tier.solarKW ?? 0}
+                generatorKW={tier.generatorKW ?? 0}
+                baseLoadKW={state.baseLoadKW || undefined}
+                peakLoadKW={state.peakLoadKW || undefined}
+                compact
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ================================================================
@@ -1456,8 +1848,8 @@ export default function Step5V8({ state, actions }: Props) {
         isOpen={showFinancialModal}
         onClose={() => setShowFinancialModal(false)}
         totalInvestment={tier.grossCost}
-        federalITC={tier.grossCost - tier.netCost}
-        netInvestment={tier.netCost}
+        federalITC={tier.itcAmount}
+        netInvestment={tier.grossCost - tier.itcAmount}
         annualSavings={tier.annualSavings}
         bessKWh={tier.bessKWh}
         solarKW={tier.solarKW}
@@ -1472,6 +1864,23 @@ export default function Step5V8({ state, actions }: Props) {
       {/* ================================================================
           PROQUOTE™ MODAL (placeholder)
       ================================================================ */}
+      {/* ================================================================
+          AUTH MODAL — Sign up / Sign in to save quote
+      ================================================================ */}
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          defaultMode="signup"
+          onLoginSuccess={() => {
+            setShowAuthModal(false);
+            setIsAuthenticated(true);
+            // After sign-in, proceed to save the quote
+            setTimeout(() => saveQuoteToAccount(), 300);
+          }}
+        />
+      )}
+
       {showProQuoteModal && (
         <div
           className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
@@ -1526,6 +1935,108 @@ export default function Step5V8({ state, actions }: Props) {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── DATA SOURCES MODAL ───────────────────────────────────────────── */}
+      {showDataSourcesModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.72)" }}
+          onClick={() => setShowDataSourcesModal(false)}
+        >
+          <div
+            className="relative w-full max-w-lg rounded-2xl border border-amber-500/30 bg-slate-950 p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close */}
+            <button
+              onClick={() => setShowDataSourcesModal(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+              aria-label="Close"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Title */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/40 flex items-center justify-center">
+                <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M16.403 12.652a3 3 0 000-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-amber-400 uppercase tracking-widest">
+                  TrueQuote™ Verified
+                </p>
+                <h3 className="text-base font-bold text-white">Pricing Data Sources</h3>
+              </div>
+            </div>
+
+            {/* Sources */}
+            <div className="space-y-3 mb-5">
+              {[
+                {
+                  label: "Solar equipment costs",
+                  source: "NREL ATB 2024",
+                  url: "https://atb.nrel.gov",
+                },
+                {
+                  label: "Battery storage pricing",
+                  source: "BloombergNEF BNEF 2024",
+                  url: "https://about.bnef.com",
+                },
+                {
+                  label: "Electricity rates",
+                  source: "U.S. EIA Form EIA-861",
+                  url: "https://www.eia.gov",
+                },
+                {
+                  label: "Equipment & installation",
+                  source: "StoreFAST Supplier Index",
+                  url: "https://storefast.energy",
+                },
+                {
+                  label: "Federal ITC (30%)",
+                  source: "IRS Section 48 / Inflation Reduction Act",
+                  url: "https://www.irs.gov/credits-deductions/businesses/energy-incentives-for-businesses",
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between gap-4 py-2 border-b border-white/[0.05]"
+                >
+                  <span className="text-sm text-slate-400">{item.label}</span>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-amber-300 hover:text-amber-200 underline underline-offset-2 shrink-0"
+                  >
+                    {item.source}
+                  </a>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Pricing estimates reflect regional averages for similar facility profiles. Actual
+              costs may vary based on site conditions, permitting, and final equipment selection.
+              All incentives subject to eligibility verification.
+            </p>
           </div>
         </div>
       )}

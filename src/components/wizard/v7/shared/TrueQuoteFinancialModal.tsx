@@ -252,7 +252,7 @@ export default function TrueQuoteFinancialModal({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               {[
                 ["Electricity Escalation", "3%/year"],
-                ["Discount Rate", "8%"],
+                ["Discount Rate", "6%"],
                 ["Battery Degradation", "2%/year"],
                 ["Solar Degradation", "0.5%/year"],
               ].map(([label, value]) => (

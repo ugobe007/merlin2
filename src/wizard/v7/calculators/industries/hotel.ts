@@ -36,10 +36,10 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
     // ✅ FIX (Feb 14, 2026): Map button string values → occupancy %
     // Curated buttons: 'high'/'medium'/'seasonal'/'low' (NOT numbers)
     const OCC_MAP: Record<string, number> = {
-      high: 85,      // 75-100% → midpoint 85
-      medium: 65,    // 50-75% → midpoint 65
-      seasonal: 55,  // Variable → conservative estimate
-      low: 40,       // < 50% → 40%
+      high: 85, // 75-100% → midpoint 85
+      medium: 65, // 50-75% → midpoint 65
+      seasonal: 55, // Variable → conservative estimate
+      low: 40, // < 50% → 40%
     };
     const rawOcc = inputs.occupancyRate;
     const occupancyRate =
@@ -57,37 +57,29 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
     } else {
       // Pool: curated sends "indoor"/"outdoor"/"both"/"none"; template sends boolean
       const poolVal = inputs.pool_on_site ?? inputs.poolOnSite;
-      if (poolVal && poolVal !== "none" && poolVal !== "no")
-        hotelAmenities.push("pool");
+      if (poolVal && poolVal !== "none" && poolVal !== "no") hotelAmenities.push("pool");
       // Spa: curated sends "full-spa"/"fitness-only"/"both"/"none"; template sends boolean
       const spaVal = inputs.spa_on_site ?? inputs.spaOnSite;
-      if (spaVal && spaVal !== "none" && spaVal !== "no")
-        hotelAmenities.push("spa");
+      if (spaVal && spaVal !== "none" && spaVal !== "no") hotelAmenities.push("spa");
       // Restaurant: curated sends "full-service"/"breakfast-only"/"bar-lounge"/"none"
       const restVal = inputs.restaurant_on_site ?? inputs.restaurantOnSite;
-      if (restVal && restVal !== "none" && restVal !== "no")
-        hotelAmenities.push("restaurant");
+      if (restVal && restVal !== "none" && restVal !== "no") hotelAmenities.push("restaurant");
       // Bar: curated restaurantOnSite="bar-lounge" also implies bar
       const barVal = inputs.bar_on_site ?? inputs.barOnSite;
       if (barVal || restVal === "bar-lounge") hotelAmenities.push("bar");
       // Laundry: curated sends "full"/"partial"/"outsourced"
       const laundryVal = inputs.laundry_on_site ?? inputs.laundryOnSite;
-      if (
-        laundryVal &&
-        laundryVal !== "outsourced" &&
-        laundryVal !== "none" &&
-        laundryVal !== "no"
-      )
+      if (laundryVal && laundryVal !== "outsourced" && laundryVal !== "none" && laundryVal !== "no")
         hotelAmenities.push("laundry");
     }
 
-    // 2. Map to SSOT parameters
-    const useCaseData = {
+    // 2. Map to SSOT parameters via buildSSOTInput (field-name safe)
+    const useCaseData = buildSSOTInput("hotel", {
       roomCount,
       hotelClass,
       occupancyRate,
       hotelAmenities,
-    };
+    });
 
     assumptions.push(`${roomCount} rooms (${hotelClass})`);
     assumptions.push(`Occupancy: ${occupancyRate}%`);

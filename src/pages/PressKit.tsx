@@ -9,9 +9,17 @@
 import React, { useState } from "react";
 import { MerlinBatteryLogo } from "@/components/shared/MerlinBatteryLogo";
 import {
-  Copy, Check, Zap, ArrowRight, Globe, Twitter,
-  Linkedin, Mail, MessageSquare, Search, Star,
-  ExternalLink, Users, ChevronDown, ChevronRight,
+  Copy,
+  Check,
+  ArrowRight,
+  Globe,
+  Twitter,
+  Linkedin,
+  Mail,
+  MessageSquare,
+  Star,
+  ExternalLink,
+  Users,
 } from "lucide-react";
 
 // ─── Copy helper ─────────────────────────────────────────────────────────────
@@ -552,8 +560,16 @@ Free forever tier. 90 seconds. No consultants.`,
 
 // ─── Section component ────────────────────────────────────────────────────────
 function Section({
-  title, icon, children, id,
-}: { title: string; icon: React.ReactNode; children: React.ReactNode; id: string }) {
+  title,
+  icon,
+  children,
+  id,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  id: string;
+}) {
   return (
     <section id={id} className="scroll-mt-20 mb-12">
       <div className="flex items-center gap-3 mb-5 pb-3 border-b border-white/[0.06]">
@@ -569,8 +585,6 @@ function Section({
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function PressKit() {
-  const { copy, isCopied } = useCopy();
-
   const nav = [
     { label: "Blurbs", href: "#blurbs" },
     { label: "Directories", href: "#directories" },
@@ -586,8 +600,10 @@ export default function PressKit() {
       style={{ background: "#0c0c0c", fontFamily: "'Inter', system-ui, sans-serif" }}
     >
       {/* Sticky nav */}
-      <nav className="sticky top-0 z-50 border-b border-white/[0.06] backdrop-blur-xl"
-        style={{ background: "rgba(12,12,12,0.92)" }}>
+      <nav
+        className="sticky top-0 z-50 border-b border-white/[0.06] backdrop-blur-xl"
+        style={{ background: "rgba(12,12,12,0.92)" }}
+      >
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MerlinBatteryLogo size={28} />
@@ -596,21 +612,25 @@ export default function PressKit() {
           </div>
           <div className="hidden sm:flex items-center gap-5">
             {nav.map((n) => (
-              <a key={n.href} href={n.href}
-                className="text-xs text-white/40 hover:text-white/80 transition-colors">
+              <a
+                key={n.href}
+                href={n.href}
+                className="text-xs text-white/40 hover:text-white/80 transition-colors"
+              >
                 {n.label}
               </a>
             ))}
           </div>
-          <a href="/wizard"
-            className="h-7 px-3 rounded-lg bg-[#3ECF8E] hover:bg-[#3ECF8E]/90 text-black font-semibold text-xs flex items-center gap-1 transition-colors">
+          <a
+            href="/wizard"
+            className="h-7 px-3 rounded-lg bg-[#3ECF8E] hover:bg-[#3ECF8E]/90 text-black font-semibold text-xs flex items-center gap-1 transition-colors"
+          >
             Try Free <ArrowRight className="w-3 h-3" />
           </a>
         </div>
       </nav>
 
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-2">
-
         {/* Header */}
         <div className="mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#3ECF8E]/25 bg-[#3ECF8E]/5 mb-4">
@@ -628,12 +648,18 @@ export default function PressKit() {
         </div>
 
         {/* ── BLURBS ── */}
-        <Section id="blurbs" title="About Merlin — Copy Blurbs" icon={<MessageSquare className="w-4 h-4 text-[#3ECF8E]" />}>
+        <Section
+          id="blurbs"
+          title="About Merlin — Copy Blurbs"
+          icon={<MessageSquare className="w-4 h-4 text-[#3ECF8E]" />}
+        >
           <div className="space-y-3">
             {/* Tagline */}
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">Tagline (1 line)</span>
+                <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">
+                  Tagline (1 line)
+                </span>
                 <CopyBtn id="tagline" text={TAGLINE} />
               </div>
               <p className="text-sm text-white/80 leading-relaxed">{TAGLINE}</p>
@@ -642,7 +668,9 @@ export default function PressKit() {
             {/* Short */}
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">Short description (~50 words)</span>
+                <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">
+                  Short description (~50 words)
+                </span>
                 <CopyBtn id="blurb-short" text={ABOUT_BLURB_SHORT} />
               </div>
               <p className="text-sm text-white/80 leading-relaxed">{ABOUT_BLURB_SHORT}</p>
@@ -651,7 +679,9 @@ export default function PressKit() {
             {/* Long */}
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">Long description (~100 words)</span>
+                <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">
+                  Long description (~100 words)
+                </span>
                 <CopyBtn id="blurb-long" text={ABOUT_BLURB_LONG} />
               </div>
               <p className="text-sm text-white/80 leading-relaxed">{ABOUT_BLURB_LONG}</p>
@@ -660,10 +690,17 @@ export default function PressKit() {
         </Section>
 
         {/* ── DIRECTORIES ── */}
-        <Section id="directories" title="Directory Submissions" icon={<Globe className="w-4 h-4 text-[#3ECF8E]" />}>
+        <Section
+          id="directories"
+          title="Directory Submissions"
+          icon={<Globe className="w-4 h-4 text-[#3ECF8E]" />}
+        >
           <div className="grid sm:grid-cols-2 gap-3">
             {DIRECTORIES.map((d) => (
-              <div key={d.id} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 flex flex-col gap-3">
+              <div
+                key={d.id}
+                className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 flex flex-col gap-3"
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-semibold text-sm text-white">{d.name}</div>
@@ -681,15 +718,27 @@ export default function PressKit() {
                 <div className="text-xs text-white/30 bg-white/[0.02] rounded-lg p-2 border border-white/[0.05]">
                   {d.instructions}
                 </div>
-                <CopyBtn id={`dir-${d.id}`} text={`${ABOUT_BLURB_SHORT}\n\nWebsite: https://merlinenergy.net\nCategory: ${d.category}`} label="Copy description" />
+                <CopyBtn
+                  id={`dir-${d.id}`}
+                  text={`${ABOUT_BLURB_SHORT}\n\nWebsite: https://merlinenergy.net\nCategory: ${d.category}`}
+                  label="Copy description"
+                />
               </div>
             ))}
           </div>
           {/* Categories reference */}
           <div className="mt-4 rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">Categories reference (copy for any listing)</span>
-              <CopyBtn id="categories" text={Object.entries(CATEGORIES).map(([k,v]) => `${k}: ${v}`).join('\n')} label="Copy all" />
+              <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">
+                Categories reference (copy for any listing)
+              </span>
+              <CopyBtn
+                id="categories"
+                text={Object.entries(CATEGORIES)
+                  .map(([k, v]) => `${k}: ${v}`)
+                  .join("\n")}
+                label="Copy all"
+              />
             </div>
             <div className="space-y-1">
               {Object.entries(CATEGORIES).map(([k, v]) => (
@@ -703,7 +752,11 @@ export default function PressKit() {
         </Section>
 
         {/* ── LINKEDIN ── */}
-        <Section id="linkedin" title="LinkedIn Posts (5 ready to post)" icon={<Linkedin className="w-4 h-4 text-[#3ECF8E]" />}>
+        <Section
+          id="linkedin"
+          title="LinkedIn Posts (5 ready to post)"
+          icon={<Linkedin className="w-4 h-4 text-[#3ECF8E]" />}
+        >
           <div className="space-y-3">
             {LINKEDIN_POSTS.map((p) => (
               <div key={p.id} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
@@ -711,16 +764,26 @@ export default function PressKit() {
                   <span className="text-xs font-semibold text-white/40">{p.label}</span>
                   <CopyBtn id={p.id} text={p.text} />
                 </div>
-                <pre className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap font-[inherit]">{p.text}</pre>
+                <pre className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap font-[inherit]">
+                  {p.text}
+                </pre>
               </div>
             ))}
           </div>
         </Section>
 
         {/* ── TWITTER / X ── */}
-        <Section id="twitter" title="Twitter / X Posts (5 ready to post)" icon={<Twitter className="w-4 h-4 text-[#3ECF8E]" />}>
+        <Section
+          id="twitter"
+          title="Twitter / X Posts (5 ready to post)"
+          icon={<Twitter className="w-4 h-4 text-[#3ECF8E]" />}
+        >
           <div className="mb-3 rounded-lg border border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.04] px-4 py-2.5 text-xs text-[#3ECF8E]">
-            💡 Your handle: <span className="font-bold">@Merlin_Energy</span> — tag relevant accounts: <span className="font-mono">@NRELnews @EnergyStoNews @SEIA @DOEnergy @CleanEnergyOrg</span>
+            💡 Your handle: <span className="font-bold">@Merlin_Energy</span> — tag relevant
+            accounts:{" "}
+            <span className="font-mono">
+              @NRELnews @EnergyStoNews @SEIA @DOEnergy @CleanEnergyOrg
+            </span>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             {TWEETS.map((t) => (
@@ -728,20 +791,28 @@ export default function PressKit() {
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-white/40">{t.label}</span>
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] ${t.text.length > 280 ? 'text-amber-400' : 'text-white/30'}`}>
+                    <span
+                      className={`text-[10px] ${t.text.length > 280 ? "text-amber-400" : "text-white/30"}`}
+                    >
                       {t.text.length} chars
                     </span>
                     <CopyBtn id={t.id} text={t.text} />
                   </div>
                 </div>
-                <pre className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap font-[inherit]">{t.text}</pre>
+                <pre className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap font-[inherit]">
+                  {t.text}
+                </pre>
               </div>
             ))}
           </div>
         </Section>
 
         {/* ── PRODUCT HUNT ── */}
-        <Section id="ph" title="Product Hunt Listing" icon={<Star className="w-4 h-4 text-[#3ECF8E]" />}>
+        <Section
+          id="ph"
+          title="Product Hunt Listing"
+          icon={<Star className="w-4 h-4 text-[#3ECF8E]" />}
+        >
           <div className="space-y-3">
             <div className="grid sm:grid-cols-2 gap-3">
               <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
@@ -753,7 +824,9 @@ export default function PressKit() {
               </div>
               <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-white/40">Tagline (under 60 chars)</span>
+                  <span className="text-xs font-semibold text-white/40">
+                    Tagline (under 60 chars)
+                  </span>
                   <CopyBtn id="ph-tagline" text={PH_LISTING.tagline} />
                 </div>
                 <p className="text-sm text-white/80">{PH_LISTING.tagline}</p>
@@ -764,7 +837,9 @@ export default function PressKit() {
                 <span className="text-xs font-semibold text-white/40">Full description</span>
                 <CopyBtn id="ph-desc" text={PH_LISTING.description} />
               </div>
-              <pre className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap font-[inherit]">{PH_LISTING.description}</pre>
+              <pre className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap font-[inherit]">
+                {PH_LISTING.description}
+              </pre>
             </div>
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
               <div className="flex items-center justify-between mb-2">
@@ -786,32 +861,52 @@ export default function PressKit() {
         </Section>
 
         {/* ── COLD EMAIL ── */}
-        <Section id="email" title="Cold Email Sequence (3-touch)" icon={<Mail className="w-4 h-4 text-[#3ECF8E]" />}>
+        <Section
+          id="email"
+          title="Cold Email Sequence (3-touch)"
+          icon={<Mail className="w-4 h-4 text-[#3ECF8E]" />}
+        >
           <div className="mb-3 text-xs text-white/30 bg-white/[0.02] border border-white/[0.05] rounded-lg px-4 py-2.5">
-            <strong className="text-white/50">Target audience:</strong> EPC firms, solar+storage developers, commercial energy consultants, facilities managers at hospitals / hotels / data centers / warehouses. Find on LinkedIn, ZoomInfo, or Apollo.io.
+            <strong className="text-white/50">Target audience:</strong> EPC firms, solar+storage
+            developers, commercial energy consultants, facilities managers at hospitals / hotels /
+            data centers / warehouses. Find on LinkedIn, ZoomInfo, or Apollo.io.
           </div>
           <div className="space-y-3">
             {EMAILS.map((e) => (
               <div key={e.id} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-white/50">{e.label}</span>
-                  <CopyBtn id={e.id} text={`Subject: ${e.subject}\n\n${e.body}`} label="Copy full email" />
+                  <CopyBtn
+                    id={e.id}
+                    text={`Subject: ${e.subject}\n\n${e.body}`}
+                    label="Copy full email"
+                  />
                 </div>
                 <div className="mb-2 text-xs text-white/30">
                   <span className="text-white/50 font-medium">Subject:</span> {e.subject}
                 </div>
-                <pre className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap font-[inherit]">{e.body}</pre>
+                <pre className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap font-[inherit]">
+                  {e.body}
+                </pre>
               </div>
             ))}
           </div>
         </Section>
 
         {/* ── REFERRAL ── */}
-        <Section id="referral" title="Referral Links" icon={<Users className="w-4 h-4 text-[#3ECF8E]" />}>
+        <Section
+          id="referral"
+          title="Referral Links"
+          icon={<Users className="w-4 h-4 text-[#3ECF8E]" />}
+        >
           <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
             <p className="text-sm text-white/60 mb-4">
               Send people your personal referral link. When they sign up, you both get credits.
-              Replace <code className="bg-white/[0.06] px-1.5 py-0.5 rounded text-[#3ECF8E] text-xs">yourhandle</code> with your name or company.
+              Replace{" "}
+              <code className="bg-white/[0.06] px-1.5 py-0.5 rounded text-[#3ECF8E] text-xs">
+                yourhandle
+              </code>{" "}
+              with your name or company.
             </p>
             <div className="space-y-2">
               {["yourname", "yourcompany", "acmecorp"].map((handle) => (
@@ -828,17 +923,19 @@ export default function PressKit() {
               ))}
             </div>
             <p className="mt-3 text-xs text-white/30">
-              Referral page lives at <code className="text-white/50">/r/[handle]</code> — share with your network, include in email signatures, or add to LinkedIn profile.
+              Referral page lives at <code className="text-white/50">/r/[handle]</code> — share with
+              your network, include in email signatures, or add to LinkedIn profile.
             </p>
           </div>
         </Section>
-
       </div>
 
       {/* Footer */}
       <footer className="border-t border-white/[0.05] mt-8">
         <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="text-xs text-slate-700">© {new Date().getFullYear()} Merlin Energy — merlinenergy.net</span>
+          <span className="text-xs text-slate-700">
+            © {new Date().getFullYear()} Merlin Energy — merlinenergy.net
+          </span>
           <div className="flex gap-5">
             {[
               { label: "Home", href: "/home" },
@@ -846,7 +943,11 @@ export default function PressKit() {
               { label: "Pricing", href: "/pricing" },
               { label: "Launch", href: "/launch" },
             ].map((l) => (
-              <a key={l.label} href={l.href} className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
+              <a
+                key={l.label}
+                href={l.href}
+                className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
+              >
                 {l.label}
               </a>
             ))}

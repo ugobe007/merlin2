@@ -574,6 +574,14 @@ export default function WizardShellV7({
               from { transform: rotate(0deg); }
               to   { transform: rotate(360deg); }
             }
+            @keyframes nextBtnPulse {
+              0%, 100% {
+                box-shadow: 0 0 32px rgba(62, 207, 142, 0.45), 0 4px 16px rgba(0,0,0,0.3);
+              }
+              50% {
+                box-shadow: 0 0 56px rgba(62, 207, 142, 0.85), 0 0 22px rgba(62, 207, 142, 0.55), 0 4px 20px rgba(0,0,0,0.35);
+              }
+            }
             
             /* Mobile: collapse to single column, hide rail, compact progress */
             @media (max-width: 900px) {
@@ -697,12 +705,12 @@ export default function WizardShellV7({
         <div
           className="merlin-shell-bottomnav"
           style={{
-            padding: "0 32px 28px",
+            padding: "0 32px 12px",
             width: "100%",
           }}
         >
           {/* Separator */}
-          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", marginBottom: 20 }} />
+          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", marginBottom: 10 }} />
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             {/* Back */}
@@ -832,6 +840,7 @@ export default function WizardShellV7({
                     boxShadow: isFilled
                       ? "0 0 32px rgba(62, 207, 142, 0.45), 0 4px 16px rgba(0,0,0,0.3)"
                       : "none",
+                    animation: isFilled ? "nextBtnPulse 2s ease-in-out infinite" : "none",
                     transition: "all 0.18s ease",
                   }}
                   onMouseEnter={(e) => {

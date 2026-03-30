@@ -9,14 +9,11 @@ import React, { useState } from "react";
 import { MerlinBatteryLogo } from "@/components/shared/MerlinBatteryLogo";
 import {
   Zap,
-  TrendingUp,
   Shield,
   ArrowRight,
   Battery,
-  Sun,
   ChevronRight,
   Star,
-  CheckCircle,
   BarChart3,
   Globe,
 } from "lucide-react";
@@ -102,7 +99,7 @@ const STATS = [
 
 export default function HomePage() {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [_submitted, _setSubmitted] = useState(false);
 
   const handleEmailCTA = (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,8 +114,10 @@ export default function HomePage() {
       style={{ background: "#080B10", fontFamily: "'Inter', system-ui, sans-serif" }}
     >
       {/* ── Top Nav ─────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-white/[0.06] backdrop-blur-xl"
-        style={{ background: "rgba(12,12,12,0.85)" }}>
+      <nav
+        className="sticky top-0 z-50 border-b border-white/[0.06] backdrop-blur-xl"
+        style={{ background: "rgba(12,12,12,0.85)" }}
+      >
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MerlinBatteryLogo size={28} />
@@ -128,12 +127,16 @@ export default function HomePage() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <a href="/pricing"
-              className="text-sm text-slate-400 hover:text-white transition-colors hidden sm:block">
+            <a
+              href="/pricing"
+              className="text-sm text-slate-400 hover:text-white transition-colors hidden sm:block"
+            >
               Pricing
             </a>
-            <a href="/wizard"
-              className="h-8 px-4 rounded-lg bg-[#3ECF8E] hover:bg-[#3ECF8E]/90 text-black font-semibold text-sm flex items-center gap-1.5 transition-colors">
+            <a
+              href="/wizard"
+              className="h-8 px-4 rounded-lg bg-[#3ECF8E] hover:bg-[#3ECF8E]/90 text-black font-semibold text-sm flex items-center gap-1.5 transition-colors"
+            >
               Free Quote
               <ArrowRight className="w-3.5 h-3.5" />
             </a>
@@ -143,14 +146,13 @@ export default function HomePage() {
 
       {/* ── Hero ────────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 pt-20 pb-16 text-center">
-        <div
-          className="relative inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#3ECF8E]/30 bg-[#3ECF8E]/5 mb-8 overflow-hidden truequote-glow"
-        >
+        <div className="relative inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#3ECF8E]/30 bg-[#3ECF8E]/5 mb-8 overflow-hidden truequote-glow">
           {/* shimmer sweep */}
           <span
             className="truequote-shimmer pointer-events-none absolute inset-0"
             style={{
-              background: "linear-gradient(90deg, transparent 0%, rgba(62,207,142,0.22) 50%, transparent 100%)",
+              background:
+                "linear-gradient(90deg, transparent 0%, rgba(62,207,142,0.22) 50%, transparent 100%)",
             }}
           />
           {/* live dot */}
@@ -165,10 +167,7 @@ export default function HomePage() {
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.1] mb-6">
           BESS quotes in{" "}
-          <span
-            className="text-[#3ECF8E]"
-            style={{ textShadow: "0 0 40px rgba(62,207,142,0.35)" }}
-          >
+          <span className="text-[#3ECF8E]" style={{ textShadow: "0 0 40px rgba(62,207,142,0.35)" }}>
             60 seconds
           </span>
           <br />
@@ -176,8 +175,8 @@ export default function HomePage() {
         </h1>
 
         <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-          Instant battery energy storage quotes for commercial facilities — powered by NREL ATB 2024,
-          IRA 2022 tax credits, and live utility rates. No spreadsheets. No consultants. Free.
+          Instant battery energy storage quotes for commercial facilities — powered by NREL ATB
+          2024, IRA 2022 tax credits, and live utility rates. No spreadsheets. No consultants. Free.
         </p>
 
         {/* Email CTA */}
@@ -216,11 +215,21 @@ export default function HomePage() {
       </section>
 
       {/* ── TrueQuote™ Data Sources Marquee ──────────────────────── */}
-      <div className="border-y border-white/[0.05] overflow-hidden" style={{ background: "rgba(255,255,255,0.01)" }}>
+      <div
+        className="border-y border-white/[0.05] overflow-hidden"
+        style={{ background: "rgba(255,255,255,0.01)" }}
+      >
         {/* top label */}
         <div className="flex items-center gap-2 px-4 pt-2.5 pb-1">
-          <span className="text-[9px] font-bold tracking-[0.12em] uppercase text-[#3ECF8E]/40">Verified data sources</span>
-          <span className="h-px flex-1" style={{ background: "linear-gradient(90deg, rgba(62,207,142,0.12) 0%, transparent 100%)" }} />
+          <span className="text-[9px] font-bold tracking-[0.12em] uppercase text-[#3ECF8E]/40">
+            Verified data sources
+          </span>
+          <span
+            className="h-px flex-1"
+            style={{
+              background: "linear-gradient(90deg, rgba(62,207,142,0.12) 0%, transparent 100%)",
+            }}
+          />
         </div>
         {/* scrolling strip */}
         <div className="flex whitespace-nowrap pb-2.5 animate-marquee-scroll">
@@ -240,7 +249,9 @@ export default function HomePage() {
       {/* ── Industries Grid ─────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="mb-8 text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Built for every commercial facility</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">
+            Built for every commercial facility
+          </h2>
           <p className="text-slate-500 text-sm">
             Each vertical uses industry-specific power profiles from ASHRAE, IEEE, and CBECS
           </p>
@@ -270,12 +281,13 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 py-16">
           <div className="mb-10 text-center">
             <h2 className="text-2xl font-bold text-white mb-2">How it works</h2>
-            <p className="text-slate-500 text-sm">From zero to bankable BESS quote in under 2 minutes</p>
+            <p className="text-slate-500 text-sm">
+              From zero to bankable BESS quote in under 2 minutes
+            </p>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {HOW_IT_WORKS.map((step) => (
-              <div key={step.step}
-                className={`p-6 rounded-xl border ${step.border} ${step.bg}`}>
+              <div key={step.step} className={`p-6 rounded-xl border ${step.border} ${step.bg}`}>
                 <div className={`text-4xl font-black tabular-nums mb-4 ${step.color}`}>
                   {step.step}
                 </div>
@@ -313,8 +325,10 @@ export default function HomePage() {
                 desc: "IEEE 446-1995, NREL ATB 2024 sizing ratios with confidence intervals",
               },
             ].map((f) => (
-              <div key={f.title}
-                className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+              <div
+                key={f.title}
+                className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]"
+              >
                 <div className="mb-3">{f.icon}</div>
                 <div className="font-semibold text-white text-sm mb-1">{f.title}</div>
                 <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
@@ -335,21 +349,21 @@ export default function HomePage() {
             <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
             <span className="text-slate-500 text-xs ml-1">Trusted by commercial operators</span>
           </div>
-          <h2 className="text-3xl font-black text-white mb-4">
-            Ready to see your BESS ROI?
-          </h2>
-          <p className="text-slate-400 mb-8">
-            Free. Takes 90 seconds. No consultant required.
-          </p>
+          <h2 className="text-3xl font-black text-white mb-4">Ready to see your BESS ROI?</h2>
+          <p className="text-slate-400 mb-8">Free. Takes 90 seconds. No consultant required.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="/wizard"
+            <a
+              href="/wizard"
               className="h-12 px-8 rounded-xl bg-[#3ECF8E] hover:bg-[#3ECF8E]/90 text-black font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-              style={{ boxShadow: "0 0 30px rgba(62,207,142,0.25)" }}>
+              style={{ boxShadow: "0 0 30px rgba(62,207,142,0.25)" }}
+            >
               <Zap className="w-4 h-4" />
               Start Free Quote
             </a>
-            <a href="/pricing"
-              className="h-12 px-8 rounded-xl border border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.06] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors">
+            <a
+              href="/pricing"
+              className="h-12 px-8 rounded-xl border border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.06] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+            >
               View Pricing
               <ChevronRight className="w-4 h-4" />
             </a>
@@ -373,8 +387,11 @@ export default function HomePage() {
               { label: "Launch", href: "/launch" },
               { label: "Support", href: "/support" },
             ].map((l) => (
-              <a key={l.label} href={l.href}
-                className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
+              <a
+                key={l.label}
+                href={l.href}
+                className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
+              >
                 {l.label}
               </a>
             ))}

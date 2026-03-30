@@ -1,9 +1,9 @@
 /**
  * Vendor Admin Dashboard
  * ======================
- * 
+ *
  * Admin interface for managing vendor submissions, approvals, and analytics.
- * 
+ *
  * Features:
  * - Product approval queue
  * - Vendor management
@@ -11,35 +11,31 @@
  * - Analytics & reporting
  */
 
-import React, { useState, useEffect } from 'react';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  TrendingUp, 
-  Package, 
-  DollarSign,
-  Filter,
+import React, { useState, useEffect } from "react";
+import {
+  CheckCircle,
+  XCircle,
+  Clock,
+  Package,
   Search,
   RefreshCw,
   AlertTriangle,
   Building2,
-  BarChart3
-} from 'lucide-react';
-import { 
+} from "lucide-react";
+import {
   getVendorProducts,
   approveVendorProduct,
   rejectVendorProduct,
-  autoApproveVendorProduct
-} from '@/services/vendorService';
-import { syncApprovedVendorProducts } from '@/services/vendorPricingIntegrationService';
-import type { VendorProduct } from '@/services/supabaseClient';
-import { supabase } from '@/services/supabaseClient';
-import type { Database } from '@/types/database.types';
+  autoApproveVendorProduct,
+} from "@/services/vendorService";
+import { syncApprovedVendorProducts } from "@/services/vendorPricingIntegrationService";
+import type { VendorProduct } from "@/services/supabaseClient";
+import { supabase } from "@/services/supabaseClient";
+import type { Database } from "@/types/database.types";
 
-type Vendor = Database['public']['Tables']['vendors']['Row'];
-type FilterStatus = 'all' | 'pending' | 'approved' | 'rejected';
-type FilterCategory = 'all' | 'battery' | 'inverter' | 'ems' | 'bos' | 'container';
+type Vendor = Database["public"]["Tables"]["vendors"]["Row"];
+type FilterStatus = "all" | "pending" | "approved" | "rejected";
+type FilterCategory = "all" | "battery" | "inverter" | "ems" | "bos" | "container";
 
 interface VendorStats {
   totalVendors: number;
@@ -52,17 +48,18 @@ interface VendorStats {
 
 export default function VendorAdminDashboard() {
   const [products, setProducts] = useState<VendorProduct[]>([]);
-  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [_vendors, setVendors] = useState<Vendor[]>([]);
   const [stats, setStats] = useState<VendorStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('pending');
-  const [filterCategory, setFilterCategory] = useState<FilterCategory>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("pending");
+  const [filterCategory, setFilterCategory] = useState<FilterCategory>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<VendorProduct | null>(null);
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -70,10 +67,10 @@ export default function VendorAdminDashboard() {
     try {
       // Load vendors
       const { data: vendorData } = await supabase
-        .from('vendors')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
+        .from("vendors")
+        .select("*")
+        .order("created_at", { ascending: false });
+
       if (vendorData) setVendors(vendorData as Vendor[]);
 
       // Load products
@@ -84,7 +81,7 @@ export default function VendorAdminDashboard() {
       const statsData = calculateStats(vendorData || [], productsData);
       setStats(statsData);
     } catch (error) {
-      console.error('Failed to load vendor data:', error);
+      console.error("Failed to load vendor data:", error);
     } finally {
       setLoading(false);
     }
@@ -93,45 +90,47 @@ export default function VendorAdminDashboard() {
   const calculateStats = (vendorList: Vendor[], productList: VendorProduct[]): VendorStats => {
     return {
       totalVendors: vendorList.length,
-      activeVendors: vendorList.filter(v => v.status === 'approved').length,
-      pendingProducts: productList.filter(p => p.status === 'pending').length,
-      approvedProducts: productList.filter(p => p.status === 'approved').length,
-      rejectedProducts: productList.filter(p => p.status === 'rejected').length,
+      activeVendors: vendorList.filter((v) => v.status === "approved").length,
+      pendingProducts: productList.filter((p) => p.status === "pending").length,
+      approvedProducts: productList.filter((p) => p.status === "approved").length,
+      rejectedProducts: productList.filter((p) => p.status === "rejected").length,
       totalSubmissions: productList.length,
     };
   };
 
   const handleApprove = async (productId: string) => {
     try {
-      const result = await approveVendorProduct(productId, 'admin-id'); // TODO: Get real admin ID
+      const result = await approveVendorProduct(productId, "admin-id"); // TODO: Get real admin ID
       if (result.success) {
         await loadData();
       }
     } catch (error) {
-      console.error('Failed to approve product:', error);
+      console.error("Failed to approve product:", error);
     }
   };
 
   const handleReject = async (productId: string) => {
-    const reason = prompt('Reason for rejection:');
+    const reason = prompt("Reason for rejection:");
     if (!reason) return;
 
     try {
-      const result = await rejectVendorProduct(productId, 'admin-id', reason);
+      const result = await rejectVendorProduct(productId, "admin-id", reason);
       if (result.success) {
         await loadData();
       }
     } catch (error) {
-      console.error('Failed to reject product:', error);
+      console.error("Failed to reject product:", error);
     }
   };
 
   const handleAutoApprove = async (productId: string) => {
     try {
       // Get current admin user ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const result = await autoApproveVendorProduct(productId, user.id);
       if (result.success) {
         await loadData();
@@ -139,7 +138,7 @@ export default function VendorAdminDashboard() {
         alert(`Auto-approval failed: ${result.message}`);
       }
     } catch (error) {
-      console.error('Failed to auto-approve product:', error);
+      console.error("Failed to auto-approve product:", error);
     }
   };
 
@@ -147,19 +146,19 @@ export default function VendorAdminDashboard() {
     setSyncing(true);
     try {
       await syncApprovedVendorProducts();
-      alert('Successfully synced approved vendor products to pricing database');
+      alert("Successfully synced approved vendor products to pricing database");
       await loadData();
     } catch (error) {
-      console.error('Failed to sync products:', error);
-      alert('Failed to sync products');
+      console.error("Failed to sync products:", error);
+      alert("Failed to sync products");
     } finally {
       setSyncing(false);
     }
   };
 
-  const filteredProducts = products.filter(p => {
-    if (filterStatus !== 'all' && p.status !== filterStatus) return false;
-    if (filterCategory !== 'all' && p.product_category !== filterCategory) return false;
+  const filteredProducts = products.filter((p) => {
+    if (filterStatus !== "all" && p.status !== filterStatus) return false;
+    if (filterCategory !== "all" && p.product_category !== filterCategory) return false;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
@@ -194,8 +193,8 @@ export default function VendorAdminDashboard() {
               disabled={syncing}
               className="flex items-center gap-2 px-4 py-2 bg-[#3ECF8E] text-white rounded-lg font-semibold hover:bg-[#35b87d] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing...' : 'Sync Pricing'}
+              <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Syncing..." : "Sync Pricing"}
             </button>
           </div>
 
@@ -285,7 +284,7 @@ export default function VendorAdminDashboard() {
           </select>
 
           <div className="text-sm text-slate-400">
-            {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+            {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
           </div>
         </div>
 
@@ -295,12 +294,24 @@ export default function VendorAdminDashboard() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/[0.06]">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Product</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Vendor</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Pricing</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Product
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Vendor
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Category
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Pricing
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.06]">
@@ -311,7 +322,7 @@ export default function VendorAdminDashboard() {
                     </td>
                   </tr>
                 ) : (
-                  filteredProducts.map(product => (
+                  filteredProducts.map((product) => (
                     <ProductRow
                       key={product.id}
                       product={product}
@@ -347,7 +358,17 @@ export default function VendorAdminDashboard() {
   );
 }
 
-function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) {
+function StatCard({
+  icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  color: string;
+}) {
   return (
     <div className="bg-[#1a1c23] border border-white/[0.06] rounded-xl p-4">
       <div className={`${color} mb-2`}>{icon}</div>
@@ -357,31 +378,35 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
   );
 }
 
-function ProductRow({ 
-  product, 
-  onApprove, 
-  onReject, 
+function ProductRow({
+  product,
+  onApprove,
+  onReject,
   onAutoApprove,
-  onView 
-}: { 
-  product: VendorProduct; 
-  onApprove: () => void; 
+  onView,
+}: {
+  product: VendorProduct;
+  onApprove: () => void;
   onReject: () => void;
   onAutoApprove: () => void;
   onView: () => void;
 }) {
   const statusColors: Record<string, string> = {
-    pending: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    approved: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    rejected: 'bg-red-500/20 text-red-400 border-red-500/30',
+    pending: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+    approved: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+    rejected: "bg-red-500/20 text-red-400 border-red-500/30",
   };
 
   return (
     <tr className="hover:bg-white/[0.02] transition-colors">
       <td className="px-6 py-4">
         <div>
-          <div className="font-medium text-white">{product.manufacturer} {product.model}</div>
-          <div className="text-xs text-slate-400">{product.capacity_kwh}kWh / {product.power_kw}kW</div>
+          <div className="font-medium text-white">
+            {product.manufacturer} {product.model}
+          </div>
+          <div className="text-xs text-slate-400">
+            {product.capacity_kwh}kWh / {product.power_kw}kW
+          </div>
         </div>
       </td>
       <td className="px-6 py-4">
@@ -391,21 +416,21 @@ function ProductRow({
         <div className="text-sm text-slate-300 capitalize">{product.product_category}</div>
       </td>
       <td className="px-6 py-4">
-        <div className="text-sm text-slate-300">
-          ${product.price_per_kwh || 0}/kWh
-        </div>
+        <div className="text-sm text-slate-300">${product.price_per_kwh || 0}/kWh</div>
       </td>
       <td className="px-6 py-4">
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${statusColors[product.status || 'pending']}`}>
-          {product.status === 'pending' && <Clock className="w-3 h-3" />}
-          {product.status === 'approved' && <CheckCircle className="w-3 h-3" />}
-          {product.status === 'rejected' && <XCircle className="w-3 h-3" />}
-          {product.status || 'pending'}
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${statusColors[product.status || "pending"]}`}
+        >
+          {product.status === "pending" && <Clock className="w-3 h-3" />}
+          {product.status === "approved" && <CheckCircle className="w-3 h-3" />}
+          {product.status === "rejected" && <XCircle className="w-3 h-3" />}
+          {product.status || "pending"}
         </span>
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-2">
-          {product.status === 'pending' && (
+          {product.status === "pending" && (
             <>
               <button
                 onClick={onAutoApprove}
@@ -430,10 +455,7 @@ function ProductRow({
               </button>
             </>
           )}
-          <button
-            onClick={onView}
-            className="text-xs text-[#3ECF8E] hover:underline"
-          >
+          <button onClick={onView} className="text-xs text-[#3ECF8E] hover:underline">
             View
           </button>
         </div>
@@ -442,24 +464,32 @@ function ProductRow({
   );
 }
 
-function ProductDetailModal({ 
-  product, 
-  onClose, 
-  onApprove, 
-  onReject 
-}: { 
-  product: VendorProduct; 
-  onClose: () => void; 
-  onApprove: () => void; 
+function ProductDetailModal({
+  product,
+  onClose,
+  onApprove,
+  onReject,
+}: {
+  product: VendorProduct;
+  onClose: () => void;
+  onApprove: () => void;
   onReject: () => void;
 }) {
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-[#1a1c23] border border-white/[0.06] rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#1a1c23] border border-white/[0.06] rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h2 className="text-xl font-bold text-white mb-1">{product.manufacturer} {product.model}</h2>
+              <h2 className="text-xl font-bold text-white mb-1">
+                {product.manufacturer} {product.model}
+              </h2>
               <p className="text-sm text-slate-400">Product ID: {product.id}</p>
             </div>
             <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
@@ -470,26 +500,28 @@ function ProductDetailModal({
           <div className="space-y-6">
             {/* Specs Grid */}
             <div className="grid grid-cols-2 gap-4">
-              <DetailItem label="Category" value={product.product_category || '—'} />
+              <DetailItem label="Category" value={product.product_category || "—"} />
               <DetailItem label="Capacity" value={`${product.capacity_kwh || 0} kWh`} />
               <DetailItem label="Power" value={`${product.power_kw || 0} kW`} />
               <DetailItem label="Price/kWh" value={`$${product.price_per_kwh || 0}`} />
               <DetailItem label="Price/kW" value={`$${product.price_per_kw || 0}`} />
               <DetailItem label="Lead Time" value={`${product.lead_time_weeks || 0} weeks`} />
               <DetailItem label="Warranty" value={`${product.warranty_years || 0} years`} />
-              <DetailItem label="Status" value={product.status || 'pending'} />
+              <DetailItem label="Status" value={product.status || "pending"} />
             </div>
 
             {/* Certifications */}
             {product.certifications && (
               <div>
-                <div className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Certifications</div>
+                <div className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Certifications
+                </div>
                 <div className="text-white">{product.certifications}</div>
               </div>
             )}
 
             {/* Actions */}
-            {product.status === 'pending' && (
+            {product.status === "pending" && (
               <div className="flex gap-3 pt-4 border-t border-white/[0.06]">
                 <button
                   onClick={onApprove}

@@ -44,7 +44,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ isOpen, onClose, 
   // These are the defaults - users can adjust with sliders for "what-if" analysis
   // ═══════════════════════════════════════════════════════════════════════════
   const [batteryLifeYears, setBatteryLifeYears] = useState(projectData.batteryLifeYears || 15);
-  const [discountRate, setDiscountRate] = useState(projectData.discountRate || 0.08);
+  const [discountRate, setDiscountRate] = useState(projectData.discountRate || 0.06);
   const [degradationRate, setDegradationRate] = useState(0.02);
   const [inflationRate, setInflationRate] = useState(0.03);
   const [operatingCostsPercent, setOperatingCostsPercent] = useState(0.025);

@@ -70,12 +70,14 @@ function AddonSlider({
   max,
   color,
   onChange,
+  isAtRec = false,
 }: {
   value: number;
   min: number;
   max: number;
   color: string;
   onChange: (v: number) => void;
+  isAtRec?: boolean;
 }) {
   const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
   return (
@@ -120,14 +122,24 @@ function AddonSlider({
           height: 22,
           borderRadius: "50%",
           background: color,
-          boxShadow: `0 0 12px ${color}99, 0 0 4px ${color}55`,
+          boxShadow: isAtRec
+            ? `0 0 0 3px ${color}55, 0 0 18px ${color}cc, 0 0 4px ${color}55`
+            : `0 0 12px ${color}99, 0 0 4px ${color}55`,
           transition: "left 0.06s",
           pointerEvents: "none",
           zIndex: 1,
           top: "50%",
           transform: "translateY(-50%)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 10,
+          fontWeight: 900,
+          color: "#0D1117",
         }}
-      />
+      >
+        {isAtRec && "✓"}
+      </div>
       <input
         type="range"
         min={min}
@@ -150,8 +162,8 @@ function AddonSlider({
   );
 }
 
-// ── EV Slider Row ─────────────────────────────────────────────────────────────
-function EVSliderRow({
+// ── EV Slider Row — kept for potential future use ─────────────────────────────
+function _EVSliderRow({
   label,
   value,
   max,
@@ -311,7 +323,8 @@ function ConfirmBtn({
           padding: "9px 14px",
           borderRadius: 8,
           background: "rgba(62,207,142,0.10)",
-          border: "1.5px solid rgba(62,207,142,0.35)",
+          border: "2px solid #3ECF8E",
+          boxShadow: "0 0 0 3px rgba(62,207,142,0.12), 0 0 14px rgba(62,207,142,0.28)",
           fontSize: 13,
           fontWeight: 700,
           color: "#3ECF8E",
@@ -979,6 +992,7 @@ function SolarCard({
           max={safeMax}
           color="#fbbf24"
           onChange={handleChange}
+          isAtRec={isOptimal}
         />
         <div
           style={{
@@ -1014,18 +1028,6 @@ function SolarCard({
             </div>
           </div>
         )}
-      </div>
-      <div style={{ padding: "0 16px 14px" }}>
-        <ConfirmBtn
-          confirmed={confirmed}
-          needsConfirm={!confirmed}
-          label="Confirm Solar Capacity"
-          confirmedLabel={`${sliderKW.toLocaleString()} kW confirmed`}
-          onClick={() => {
-            onConfig(sliderKW);
-            setConfirmed(true);
-          }}
-        />
       </div>
 
       {/* ── Carport / Canopy Toggle ── */}
@@ -1089,6 +1091,7 @@ function SolarCard({
                 >
                   Rooftop
                 </div>
+                {/* Show the slider's current value (what gets quoted), not the roof capacity cap */}
                 <div
                   style={{
                     fontSize: 15,
@@ -1098,8 +1101,20 @@ function SolarCard({
                     fontVariantNumeric: "tabular-nums",
                   }}
                 >
-                  {roofOnlyKW > 0 ? `${roofOnlyKW.toLocaleString()} kW` : "—"}
+                  {canopyInterest === "yes"
+                    ? roofOnlyKW > 0
+                      ? `${roofOnlyKW.toLocaleString()} kW`
+                      : "—"
+                    : sliderKW > 0
+                      ? `${sliderKW.toLocaleString()} kW`
+                      : "—"}
                 </div>
+                {/* When no carport: show roof max as subtext so user knows the ceiling */}
+                {canopyInterest !== "yes" && roofOnlyKW > 0 && sliderKW < roofOnlyKW && (
+                  <div style={{ fontSize: 10, color: "rgba(52,211,153,0.5)", marginTop: 1 }}>
+                    of {roofOnlyKW.toLocaleString()} kW max
+                  </div>
+                )}
                 <div
                   style={{
                     fontSize: 10,
@@ -1203,12 +1218,31 @@ function SolarCard({
               }}
             >
               {canopyInterest === "yes"
-                ? `${roofOnlyKW.toLocaleString()} kW rooftop + ${(withCanopyKW - roofOnlyKW).toLocaleString()} kW ${isCarWash ? "carport canopy" : "parking canopy"} = ${withCanopyKW.toLocaleString()} kW total. Tap carport to remove it.`
+                ? (() => {
+                    const roofPortion = Math.min(sliderKW, roofOnlyKW);
+                    const canopyPortion = Math.max(0, sliderKW - roofOnlyKW);
+                    return canopyPortion > 0
+                      ? `${roofPortion.toLocaleString()} kW rooftop + ${canopyPortion.toLocaleString()} kW ${isCarWash ? "carport canopy" : "parking canopy"} = ${sliderKW.toLocaleString()} kW configured. Tap carport to remove it.`
+                      : `${roofPortion.toLocaleString()} kW rooftop (carport not yet needed at this size). Tap carport to remove it.`;
+                  })()
                 : `Rooftop solar is always included. Tap "+ Add ${isCarWash ? "Carport" : "Canopy"}" to also cover your ${isCarWash ? "vacuum station canopies" : "parking area"} for +${(withCanopyKW - roofOnlyKW).toLocaleString()} kW more capacity.`}
             </div>
           </div>
         </>
       )}
+
+      <div style={{ padding: "0 16px 14px" }}>
+        <ConfirmBtn
+          confirmed={confirmed}
+          needsConfirm={!confirmed}
+          label="Confirm Solar Capacity"
+          confirmedLabel={`${sliderKW.toLocaleString()} kW confirmed`}
+          onClick={() => {
+            onConfig(sliderKW);
+            setConfirmed(true);
+          }}
+        />
+      </div>
 
       <div
         style={{
@@ -1244,180 +1278,909 @@ function SolarCard({
   );
 }
 
+// ── Panel Assessment Modal ────────────────────────────────────────────────────
+type ServiceType = "single-phase-208" | "three-phase-208" | "three-phase-480" | "unknown";
+type UpgradeType =
+  | "none"
+  | "circuit_breakers"
+  | "service_upgrade"
+  | "transformer"
+  | "standalone_panel";
+
+interface PanelAssessment {
+  upgradeType: UpgradeType;
+  upgradeCost: number;
+  canHandle: boolean;
+  headline: string;
+  detail: string;
+}
+
+function assessElectricalPanel(
+  dcfcCount: number,
+  serviceType: ServiceType,
+  panelAmps: number
+): PanelAssessment {
+  // NEC 125% continuous load rule at 480V 3-phase
+  // Each 50 kW DCFC draws 50,000 / (480 × 1.732) × 1.25 ≈ 75.4 A
+  const ampsPerDCFC = Math.ceil((50000 / (480 * 1.732)) * 1.25);
+  const totalDCFCAmps = dcfcCount * ampsPerDCFC;
+
+  if (serviceType === "single-phase-208" || serviceType === "unknown") {
+    // Needs a brand-new 3-phase service entry — biggest upgrade
+    const cost = 25000 + dcfcCount * 4000;
+    return {
+      upgradeType: "standalone_panel",
+      upgradeCost: cost,
+      canHandle: false,
+      headline: "New 3-phase service required",
+      detail: `DC Fast Chargers require 480V 3-phase power. Your current single-phase service cannot support DCFC. A dedicated standalone 3-phase service panel is needed (~$${(cost / 1000).toFixed(0)}K). Alternatively, L2 chargers work on your existing single-phase 208/240V service.`,
+    };
+  }
+
+  if (serviceType === "three-phase-208") {
+    // Has 3-phase but wrong voltage — needs transformer to step up to 480V
+    const cost = 18000 + dcfcCount * 3000;
+    return {
+      upgradeType: "transformer",
+      upgradeCost: cost,
+      canHandle: false,
+      headline: "Transformer needed (208V → 480V)",
+      detail: `You have 3-phase power but at 208V. DCFC needs 480V 3-phase. A step-up transformer is required (~$${(cost / 1000).toFixed(0)}K). OR: DCFC units can be connected to a new standalone 480V service from the utility.`,
+    };
+  }
+
+  // three-phase-480V: check if existing panel has capacity
+  if (serviceType === "three-phase-480") {
+    const knownAmps = panelAmps > 0 ? panelAmps : 400; // conservative default if unknown
+    const availableAmps = Math.floor(knownAmps * 0.8); // 80% rule for available capacity
+
+    if (totalDCFCAmps <= availableAmps) {
+      // Panel can handle it — just needs DCFC circuit breakers
+      const cost = dcfcCount * 1200; // $1,200/DCFC for breaker + termination
+      return {
+        upgradeType: "circuit_breakers",
+        upgradeCost: cost,
+        canHandle: true,
+        headline: "✓ Panel can handle DCFC",
+        detail: `Your ${panelAmps > 0 ? panelAmps + "A" : "existing"} 480V 3-phase panel has sufficient capacity for ${dcfcCount} DCFC charger${dcfcCount > 1 ? "s" : ""} (${totalDCFCAmps}A required, ${availableAmps}A available). Dedicated breaker(s) and termination needed (~$${(cost / 1000).toFixed(0)}K).`,
+      };
+    } else if (totalDCFCAmps <= availableAmps * 1.5) {
+      // Panel is tight — service upgrade recommended
+      const cost = 12000 + dcfcCount * 2000;
+      return {
+        upgradeType: "service_upgrade",
+        upgradeCost: cost,
+        canHandle: false,
+        headline: "Panel upgrade recommended",
+        detail: `Your panel needs ${totalDCFCAmps}A for DCFC but only ~${availableAmps}A is available. A service upgrade (larger main breaker + new sub-panel) is recommended (~$${(cost / 1000).toFixed(0)}K). Alternatively, add a separate standalone 480V DCFC panel.`,
+      };
+    } else {
+      // Panel is maxed — standalone 3-phase panel for DCFC
+      const cost = 20000 + dcfcCount * 4000;
+      return {
+        upgradeType: "standalone_panel",
+        upgradeCost: cost,
+        canHandle: false,
+        headline: "Standalone DCFC panel needed",
+        detail: `Your current panel is at capacity (${totalDCFCAmps}A needed, only ${availableAmps}A available). Best path: add a new dedicated 480V 3-phase panel fed directly from the utility transformer for DCFC (~$${(cost / 1000).toFixed(0)}K). This is the most scalable solution.`,
+      };
+    }
+  }
+
+  return {
+    upgradeType: "none",
+    upgradeCost: 0,
+    canHandle: true,
+    headline: "Assessment pending",
+    detail: "",
+  };
+}
+
+function PanelAssessmentModal({
+  dcfcCount,
+  onDone,
+  onCancel,
+}: {
+  dcfcCount: number;
+  onDone: (serviceType: ServiceType, panelAmps: number, assessment: PanelAssessment) => void;
+  onCancel: () => void;
+}) {
+  const [step, setStep] = useState<"service" | "amps" | "result">("service");
+  const [serviceType, setServiceType] = useState<ServiceType | null>(null);
+  const [panelAmps, setPanelAmps] = useState<number>(0);
+  const [assessment, setAssessment] = useState<PanelAssessment | null>(null);
+
+  const doAssess = (svc: ServiceType, amps: number) => {
+    const result = assessElectricalPanel(dcfcCount, svc, amps);
+    setAssessment(result);
+    setStep("result");
+  };
+
+  const SERVICE_OPTIONS: { value: ServiceType; label: string; sub: string; icon: string }[] = [
+    {
+      value: "single-phase-208",
+      label: "Single-phase",
+      sub: "120/208V or 120/240V — most small commercial",
+      icon: "🔌",
+    },
+    {
+      value: "three-phase-208",
+      label: "3-phase 208V",
+      sub: "208Y/120V 3-phase — common in urban buildings",
+      icon: "⚡",
+    },
+    {
+      value: "three-phase-480",
+      label: "3-phase 480V",
+      sub: "480Y/277V 3-phase — ideal for DCFC",
+      icon: "🏭",
+    },
+    {
+      value: "unknown",
+      label: "Not sure",
+      sub: "Merlin will assume worst-case for budget accuracy",
+      icon: "❓",
+    },
+  ];
+
+  const AMP_OPTIONS = [200, 400, 600, 800, 1200];
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "rgba(0,0,0,0.80)",
+        backdropFilter: "blur(6px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 480,
+          background: "#0f1923",
+          border: "1px solid rgba(167,139,250,0.30)",
+          borderRadius: 16,
+          boxShadow: "0 0 60px rgba(167,139,250,0.20)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 22 }}>⚡</span>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>
+                Electrical Panel Check
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(148,163,184,0.65)", marginTop: 2 }}>
+                DCFC requires 480V 3-phase — let's verify your service
+              </div>
+            </div>
+          </div>
+          {/* Progress dots */}
+          <div style={{ display: "flex", gap: 6, marginTop: 14 }}>
+            {["service", "amps", "result"].map((s) => (
+              <div
+                key={s}
+                style={{
+                  height: 3,
+                  flex: 1,
+                  borderRadius: 2,
+                  background:
+                    step === s
+                      ? "#a78bfa"
+                      : (["result"].includes(step) && s === "amps") || step === "result"
+                        ? "rgba(167,139,250,0.40)"
+                        : "rgba(255,255,255,0.10)",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div style={{ padding: 20 }}>
+          {step === "service" && (
+            <div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "rgba(203,213,225,0.9)",
+                  marginBottom: 14,
+                }}
+              >
+                What electrical service does your facility have?
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {SERVICE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => {
+                      setServiceType(opt.value);
+                      setStep("amps");
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "12px 14px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(167,139,250,0.20)",
+                      background: "rgba(167,139,250,0.06)",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "border-color 0.15s, background 0.15s",
+                    }}
+                    onMouseOver={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.55)";
+                      (e.currentTarget as HTMLElement).style.background = "rgba(167,139,250,0.12)";
+                    }}
+                    onMouseOut={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.20)";
+                      (e.currentTarget as HTMLElement).style.background = "rgba(167,139,250,0.06)";
+                    }}
+                  >
+                    <span style={{ fontSize: 22, flexShrink: 0 }}>{opt.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>
+                        {opt.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: "rgba(148,163,184,0.60)", marginTop: 2 }}>
+                        {opt.sub}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === "amps" && serviceType && (
+            <div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "rgba(203,213,225,0.9)",
+                  marginBottom: 6,
+                }}
+              >
+                What is your main panel amperage rating?
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(148,163,184,0.50)", marginBottom: 14 }}>
+                Found on the main breaker label or utility meter paperwork.
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+                {AMP_OPTIONS.map((a) => (
+                  <button
+                    key={a}
+                    onClick={() => {
+                      setPanelAmps(a);
+                      doAssess(serviceType, a);
+                    }}
+                    style={{
+                      padding: "10px 18px",
+                      borderRadius: 8,
+                      border: "1px solid rgba(167,139,250,0.25)",
+                      background: "rgba(167,139,250,0.07)",
+                      cursor: "pointer",
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: "#e2e8f0",
+                    }}
+                  >
+                    {a}A
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    setPanelAmps(0);
+                    doAssess(serviceType, 0);
+                  }}
+                  style={{
+                    padding: "10px 18px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(148,163,184,0.20)",
+                    background: "rgba(255,255,255,0.04)",
+                    cursor: "pointer",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "rgba(148,163,184,0.70)",
+                  }}
+                >
+                  Not sure
+                </button>
+              </div>
+              <button
+                onClick={() => setStep("service")}
+                style={{
+                  fontSize: 12,
+                  color: "rgba(148,163,184,0.50)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                ← Back
+              </button>
+            </div>
+          )}
+
+          {step === "result" && assessment && serviceType && (
+            <div>
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: 10,
+                  marginBottom: 14,
+                  background: assessment.canHandle
+                    ? "rgba(52,211,153,0.08)"
+                    : "rgba(251,191,36,0.08)",
+                  border: `1px solid ${assessment.canHandle ? "rgba(52,211,153,0.30)" : "rgba(251,191,36,0.30)"}`,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: assessment.canHandle ? "#34d399" : "#fbbf24",
+                    marginBottom: 6,
+                  }}
+                >
+                  {assessment.headline}
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(203,213,225,0.80)", lineHeight: 1.6 }}>
+                  {assessment.detail}
+                </div>
+              </div>
+
+              {assessment.upgradeCost > 0 && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    background: "rgba(255,255,255,0.04)",
+                    marginBottom: 14,
+                  }}
+                >
+                  <span style={{ fontSize: 13, color: "rgba(148,163,184,0.75)" }}>
+                    Electrical upgrade est.
+                  </span>
+                  <span style={{ fontSize: 16, fontWeight: 800, color: "#fbbf24" }}>
+                    +${Math.round(assessment.upgradeCost / 1000)}K
+                  </span>
+                </div>
+              )}
+
+              {!assessment.canHandle && assessment.upgradeType === "standalone_panel" && (
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "rgba(148,163,184,0.55)",
+                    lineHeight: 1.5,
+                    marginBottom: 14,
+                    padding: "0 2px",
+                  }}
+                >
+                  💡{" "}
+                  <strong style={{ color: "rgba(203,213,225,0.7)" }}>
+                    Standalone panel advantage:
+                  </strong>{" "}
+                  A separate 3-phase panel for DCFC keeps it independent from your facility's main
+                  electrical system, making it easier to scale EV charging later without touching
+                  your main service.
+                </div>
+              )}
+
+              <button
+                onClick={() => onDone(serviceType, panelAmps, assessment)}
+                style={{
+                  width: "100%",
+                  padding: "14px",
+                  borderRadius: 10,
+                  background: "linear-gradient(135deg, #a78bfa, #7c3aed)",
+                  border: "none",
+                  color: "#fff",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Got it — add to my quote
+              </button>
+              <button
+                onClick={onCancel}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: 8,
+                  background: "none",
+                  border: "none",
+                  color: "rgba(148,163,184,0.50)",
+                  fontSize: 13,
+                  cursor: "pointer",
+                  marginTop: 6,
+                }}
+              >
+                Cancel — keep L2 only
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── EV Charging Card ──────────────────────────────────────────────────────────
 function EVChargingCard({
   peakLoadKW,
   initialL2,
   initialDcfc,
   initialHpc,
+  initialPanelAmps,
+  initialServiceType,
   onConfig,
+  onPanelAssessed,
 }: {
   peakLoadKW: number;
   initialL2: number;
   initialDcfc: number;
   initialHpc: number;
+  initialPanelAmps: number;
+  initialServiceType: ServiceType;
   onConfig: (l2: number, dcfc: number, hpc: number) => void;
+  onPanelAssessed: (svc: ServiceType, amps: number, assessment: PanelAssessment) => void;
 }) {
-  const recL2 = Math.min(12, Math.max(4, peakLoadKW > 0 ? Math.round(peakLoadKW / 150) : 6));
-  const recDcfc = Math.min(8, Math.max(0, peakLoadKW > 0 ? Math.round(peakLoadKW / 600) : 2));
-  const recHpc = Math.min(4, Math.max(0, peakLoadKW > 0 ? Math.round(peakLoadKW / 1200) : 0));
+  const recL2 = Math.min(12, Math.max(2, peakLoadKW > 0 ? Math.round(peakLoadKW / 150) : 4));
   const [l2, setL2] = useState(initialL2 > 0 ? initialL2 : recL2);
-  const [dcfc, setDcfc] = useState(initialDcfc > 0 ? initialDcfc : recDcfc);
-  const [hpc, setHpc] = useState(initialHpc > 0 ? initialHpc : recHpc);
+  const [dcfc, setDcfc] = useState(initialDcfc > 0 ? initialDcfc : 0);
+  const [hpc, setHpc] = useState(initialHpc > 0 ? initialHpc : 0);
   const [confirmed, setConfirmed] = useState(false);
-  const totalKW = l2 * 11 + dcfc * 100 + hpc * 300;
+  const [showDCFC, setShowDCFC] = useState(initialDcfc > 0 || initialHpc > 0);
+  const [showPanel, setShowPanel] = useState(false);
+  const [panelAssessed, setPanelAssessed] = useState(
+    initialPanelAmps > 0 || initialServiceType !== "unknown"
+  );
+  const [panelResult, setPanelResult] = useState<PanelAssessment | null>(
+    initialPanelAmps > 0 && initialServiceType !== "unknown"
+      ? assessElectricalPanel(initialDcfc, initialServiceType, initialPanelAmps)
+      : null
+  );
+  // pending DCFC count when panel modal is triggered
+  const [pendingDcfc, setPendingDcfc] = useState(0);
 
-  const handleChange = (nl2: number, nd: number, nh: number) => {
+  const totalKW = l2 * 7.2 + dcfc * 50 + hpc * 250;
+
+  const bump = (which: "l2" | "dcfc" | "hpc", dir: 1 | -1, max: number) => {
     setConfirmed(false);
-    onConfig(nl2, nd, nh);
+    if (which === "l2") {
+      const nv = Math.max(0, Math.min(max, l2 + dir));
+      setL2(nv);
+      onConfig(nv, dcfc, hpc);
+    } else if (which === "dcfc") {
+      const nv = Math.max(0, Math.min(max, dcfc + dir));
+      if (dir > 0 && dcfc === 0 && !panelAssessed) {
+        // First DCFC added — trigger panel check
+        setPendingDcfc(nv);
+        setShowPanel(true);
+      } else {
+        setDcfc(nv);
+        onConfig(l2, nv, hpc);
+      }
+    } else {
+      const nv = Math.max(0, Math.min(max, hpc + dir));
+      setHpc(nv);
+      onConfig(l2, dcfc, nv);
+    }
   };
 
-  return (
-    <Card>
+  const handlePanelDone = (svc: ServiceType, amps: number, result: PanelAssessment) => {
+    setPanelAssessed(true);
+    setPanelResult(result);
+    setShowPanel(false);
+    setDcfc(pendingDcfc);
+    onConfig(l2, pendingDcfc, hpc);
+    onPanelAssessed(svc, amps, result);
+  };
+
+  const handlePanelCancel = () => {
+    setShowPanel(false);
+    setPendingDcfc(0);
+    // Revert DCFC to 0 if cancelled
+    setDcfc(0);
+    onConfig(l2, 0, hpc);
+  };
+
+  // Stepper row helper
+  const StepperRow = ({
+    label,
+    sub,
+    color,
+    icon,
+    value,
+    max,
+    which,
+  }: {
+    label: string;
+    sub: string;
+    color: string;
+    icon: string;
+    value: number;
+    max: number;
+    which: "l2" | "dcfc" | "hpc";
+  }) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        padding: "12px 16px",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+      }}
+    >
       <div
         style={{
+          width: 36,
+          height: 36,
+          borderRadius: 8,
+          background: `${color}18`,
           display: "flex",
           alignItems: "center",
-          gap: 12,
-          padding: "16px 16px 14px",
+          justifyContent: "center",
+          fontSize: 18,
+          flexShrink: 0,
+          marginRight: 12,
         }}
       >
-        <div
+        {icon}
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>{label}</div>
+        <div style={{ fontSize: 11, color: "rgba(148,163,184,0.55)", marginTop: 1 }}>{sub}</div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+        <button
+          onClick={() => bump(which, -1, max)}
           style={{
-            width: 42,
-            height: 42,
-            borderRadius: 10,
-            background: "rgba(56,189,248,0.12)",
+            width: 32,
+            height: 32,
+            borderRadius: "8px 0 0 8px",
+            border: `1px solid ${color}40`,
+            background: `${color}12`,
+            color: value > 0 ? color : "rgba(255,255,255,0.15)",
+            fontSize: 18,
+            fontWeight: 700,
+            cursor: value > 0 ? "pointer" : "default",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 21,
-            flexShrink: 0,
           }}
         >
-          ⚡
-        </div>
-        <div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>EV Charging</div>
-          <div
-            style={{
-              fontSize: 14,
-              color: "rgba(148,163,184,0.6)",
-              marginTop: 2,
-            }}
-          >
-            Employee &amp; customer charging
-          </div>
-        </div>
-      </div>
-      <div
-        style={{
-          margin: "0 16px 14px",
-          padding: "9px 12px",
-          borderRadius: 8,
-          background: "rgba(56,189,248,0.07)",
-          border: "1px solid rgba(56,189,248,0.18)",
-          display: "flex",
-          gap: 7,
-          alignItems: "flex-start",
-        }}
-      >
-        <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
+          −
+        </button>
         <div
           style={{
+            width: 36,
+            height: 32,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: `1px solid ${color}30`,
+            borderLeft: "none",
+            borderRight: "none",
+            background: `${color}08`,
             fontSize: 16,
-            color: "rgba(203,213,225,0.9)",
-            lineHeight: 1.6,
+            fontWeight: 800,
+            color: value > 0 ? "#fff" : "rgba(255,255,255,0.25)",
+            fontVariantNumeric: "tabular-nums",
           }}
         >
-          <span style={{ fontSize: 18 }}>🧙 </span>
-          <strong style={{ color: "#38bdf8", fontWeight: 700 }}>
-            Merlin: {recL2} L2 chargers recommended
-            {recDcfc > 0 ? ` + ${recDcfc} DC Fast` : ""}
-          </strong>{" "}
-          for employee daily charging.
+          {value}
         </div>
+        <button
+          onClick={() => bump(which, 1, max)}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "0 8px 8px 0",
+            border: `1px solid ${color}40`,
+            background: `${color}12`,
+            color,
+            fontSize: 18,
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          +
+        </button>
       </div>
-      <div style={{ padding: "0 16px" }}>
-        <EVSliderRow
-          label="Level 2 (7–22 kW)"
+    </div>
+  );
+
+  return (
+    <>
+      {showPanel && (
+        <PanelAssessmentModal
+          dcfcCount={pendingDcfc}
+          onDone={handlePanelDone}
+          onCancel={handlePanelCancel}
+        />
+      )}
+      <Card>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 16px 14px" }}>
+          <div
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 10,
+              background: "rgba(56,189,248,0.12)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 21,
+              flexShrink: 0,
+            }}
+          >
+            ⚡
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>EV Charging</div>
+            <div style={{ fontSize: 14, color: "rgba(148,163,184,0.6)", marginTop: 2 }}>
+              Employee &amp; customer charging
+            </div>
+          </div>
+          {totalKW > 0 && (
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 900,
+                color: "#38bdf8",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {Math.round(totalKW)} kW
+            </div>
+          )}
+        </div>
+
+        {/* Merlin recommendation pill */}
+        <div
+          style={{
+            margin: "0 16px 14px",
+            padding: "9px 12px",
+            borderRadius: 8,
+            background: "rgba(56,189,248,0.07)",
+            border: "1px solid rgba(56,189,248,0.18)",
+            display: "flex",
+            gap: 7,
+            alignItems: "flex-start",
+          }}
+        >
+          <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>🧙</span>
+          <div style={{ fontSize: 13, color: "rgba(203,213,225,0.85)", lineHeight: 1.55 }}>
+            <strong style={{ color: "#38bdf8" }}>Merlin recommends {recL2} Level 2</strong> for your
+            facility. DCFC adds $18K/yr revenue per charger but requires 480V 3-phase power.
+          </div>
+        </div>
+
+        {/* L2 section */}
+        <StepperRow
+          which="l2"
+          label="Level 2"
+          sub="7–22 kW each · works on existing 240V service"
+          color="#22d3ee"
+          icon="🔌"
           value={l2}
           max={12}
-          color="#22d3ee"
-          onChange={(v) => {
-            setL2(v);
-            handleChange(v, dcfc, hpc);
-          }}
         />
-        <EVSliderRow
-          label="DC Fast (50–150 kW)"
-          value={dcfc}
-          max={8}
-          color="#a78bfa"
-          onChange={(v) => {
-            setDcfc(v);
-            handleChange(l2, v, hpc);
-          }}
-        />
-        <EVSliderRow
-          label="High Power (250–350 kW)"
-          value={hpc}
-          max={4}
-          color="#c084fc"
-          onChange={(v) => {
-            setHpc(v);
-            handleChange(l2, dcfc, v);
-          }}
-        />
-      </div>
-      <div
-        style={{
-          margin: "0 16px 14px",
-          padding: "11px 14px",
-          borderRadius: 8,
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <span
-          style={{
-            fontSize: 15,
-            color: "rgba(203,213,225,0.75)",
-            fontWeight: 600,
-          }}
-        >
-          Total Capacity:
-        </span>
-        <span
-          style={{
-            fontSize: 24,
-            fontWeight: 800,
-            color: "#38bdf8",
-            fontVariantNumeric: "tabular-nums",
-            letterSpacing: "-0.3px",
-          }}
-        >
-          {totalKW.toLocaleString()} kW
-        </span>
-      </div>
-      <div style={{ padding: "0 16px 16px" }}>
-        <ConfirmBtn
-          confirmed={confirmed}
-          needsConfirm={!confirmed}
-          label="Confirm EV Charging"
-          confirmedLabel={`${l2 + dcfc + hpc} ports confirmed`}
-          onClick={() => {
-            onConfig(l2, dcfc, hpc);
-            setConfirmed(true);
-          }}
-        />
-      </div>
-    </Card>
+
+        {/* DCFC toggle + section */}
+        {!showDCFC ? (
+          <button
+            onClick={() => setShowDCFC(true)}
+            style={{
+              width: "100%",
+              padding: "11px 16px",
+              background: "rgba(167,139,250,0.05)",
+              border: "none",
+              borderBottom: "1px solid rgba(255,255,255,0.05)",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
+            <span style={{ fontSize: 18, color: "#a78bfa" }}>⚡</span>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#a78bfa" }}>
+                + Add DC Fast Charging (DCFC)
+              </span>
+              <span style={{ fontSize: 12, color: "rgba(148,163,184,0.45)", marginLeft: 8 }}>
+                $18K/yr revenue per unit
+              </span>
+            </div>
+            <span style={{ fontSize: 12, color: "rgba(167,139,250,0.50)" }}>Tap →</span>
+          </button>
+        ) : (
+          <>
+            <StepperRow
+              which="dcfc"
+              label="DC Fast Charge (DCFC)"
+              sub="50 kW each · needs 480V 3-phase · $18K/yr revenue"
+              color="#a78bfa"
+              icon="🔋"
+              value={dcfc}
+              max={8}
+            />
+            {/* Panel assessment status */}
+            {dcfc > 0 && panelResult && (
+              <div
+                style={{
+                  margin: "0 16px 8px",
+                  padding: "10px 12px",
+                  borderRadius: 8,
+                  marginTop: 8,
+                  background: panelResult.canHandle
+                    ? "rgba(52,211,153,0.07)"
+                    : "rgba(251,191,36,0.07)",
+                  border: `1px solid ${panelResult.canHandle ? "rgba(52,211,153,0.25)" : "rgba(251,191,36,0.25)"}`,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: panelResult.canHandle ? "#34d399" : "#fbbf24",
+                    }}
+                  >
+                    {panelResult.headline}
+                  </div>
+                  {panelResult.upgradeCost > 0 && (
+                    <div style={{ fontSize: 12, color: "rgba(148,163,184,0.60)", marginTop: 2 }}>
+                      Electrical upgrade: +${Math.round(panelResult.upgradeCost / 1000)}K added to
+                      quote
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowPanel(true)}
+                  style={{
+                    fontSize: 11,
+                    color: "rgba(167,139,250,0.70)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                    marginLeft: 8,
+                  }}
+                >
+                  Re-assess →
+                </button>
+              </div>
+            )}
+            {dcfc > 0 && !panelResult && (
+              <button
+                onClick={() => {
+                  setPendingDcfc(dcfc);
+                  setShowPanel(true);
+                }}
+                style={{
+                  width: "100%",
+                  margin: "8px 0 0",
+                  padding: "10px 16px",
+                  background: "rgba(251,191,36,0.08)",
+                  border: "none",
+                  borderTop: "1px solid rgba(251,191,36,0.20)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  cursor: "pointer",
+                }}
+              >
+                <span style={{ fontSize: 16 }}>⚠️</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#fbbf24" }}>
+                  Panel check required for DCFC — tap to assess
+                </span>
+              </button>
+            )}
+          </>
+        )}
+
+        {/* HPC section (advanced, always collapsed behind accordion) */}
+        <details style={{ margin: "8px 16px 8px" }}>
+          <summary
+            style={{
+              fontSize: 12,
+              color: "rgba(148,163,184,0.40)",
+              cursor: "pointer",
+              listStyle: "none",
+              padding: "4px 0",
+            }}
+          >
+            ▸ High-Power Charging (HPC 250+ kW) — advanced
+          </summary>
+          <div style={{ marginTop: 8 }}>
+            <StepperRow
+              which="hpc"
+              label="High Power (HPC)"
+              sub="250 kW+ each · dedicated transformer req. · $60K/yr revenue"
+              color="#f59e0b"
+              icon="🚀"
+              value={hpc}
+              max={4}
+            />
+          </div>
+        </details>
+
+        {/* Revenue summary */}
+        {(l2 > 0 || dcfc > 0 || hpc > 0) && (
+          <div
+            style={{
+              margin: "4px 16px 12px",
+              padding: "10px 12px",
+              borderRadius: 8,
+              background: "rgba(56,189,248,0.05)",
+              border: "1px solid rgba(56,189,248,0.12)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <span style={{ fontSize: 13, color: "rgba(148,163,184,0.70)" }}>
+              Est. annual revenue
+            </span>
+            <span
+              style={{
+                fontSize: 16,
+                fontWeight: 800,
+                color: "#38bdf8",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              ${Math.round((l2 * 1350 + dcfc * 18000 + hpc * 60000) / 1000)}K/yr
+            </span>
+          </div>
+        )}
+
+        <div style={{ padding: "0 16px 16px" }}>
+          <ConfirmBtn
+            confirmed={confirmed}
+            needsConfirm={!confirmed}
+            label="Confirm EV Charging"
+            confirmedLabel={`${Math.round(totalKW).toLocaleString()} kW · ${l2 + dcfc + hpc} ports confirmed`}
+            onClick={() => {
+              onConfig(l2, dcfc, hpc);
+              setConfirmed(true);
+            }}
+          />
+        </div>
+      </Card>
+    </>
   );
 }
+
+// ── Backup Generator Card ─────────────────────────────────────────────────────
 
 // ── Backup Generator Card ─────────────────────────────────────────────────────
 function BackupGeneratorCard({
@@ -2007,6 +2770,11 @@ export default function Step3_5V8({ state, actions }: Props) {
       hpcChargers: hpc,
     });
   };
+  const handlePanelAssessed = (svc: ServiceType, amps: number, assessment: PanelAssessment) => {
+    if (actions.setPanelInfo) {
+      actions.setPanelInfo(amps, svc, assessment.upgradeCost, assessment.upgradeType);
+    }
+  };
   const handleFuelType = (fuel: FuelType) => {
     setFuelType(fuel);
     actions.setAddonConfig({ generatorFuelType: fuel });
@@ -2030,15 +2798,8 @@ export default function Step3_5V8({ state, actions }: Props) {
       12,
       Math.max(2, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 150) : 4)
     );
-    const rdcfc = Math.min(
-      8,
-      Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 600) : 1)
-    );
-    const rhpc = Math.min(
-      4,
-      Math.max(0, state.peakLoadKW > 0 ? Math.round(state.peakLoadKW / 1200) : 0)
-    );
-    actions.setAddonConfig({ level2Chargers: rl2, dcfcChargers: rdcfc, hpcChargers: rhpc });
+    // Default to L2-only — DCFC requires explicit panel assessment first
+    actions.setAddonConfig({ level2Chargers: rl2, dcfcChargers: 0, hpcChargers: 0 });
   };
   const handleRemoveEV = () => {
     setWantsEV(false);
@@ -2259,7 +3020,12 @@ export default function Step3_5V8({ state, actions }: Props) {
             initialL2={state.level2Chargers}
             initialDcfc={state.dcfcChargers}
             initialHpc={state.hpcChargers}
+            initialPanelAmps={(state as { electricalPanelAmps?: number }).electricalPanelAmps ?? 0}
+            initialServiceType={
+              (state as { electricalServiceType?: ServiceType }).electricalServiceType ?? "unknown"
+            }
             onConfig={handleEVConfig}
+            onPanelAssessed={handlePanelAssessed}
           />
         </>
       ) : (

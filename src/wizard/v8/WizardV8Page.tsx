@@ -594,6 +594,7 @@ export default function WizardV8Page() {
         stepLabels={STEP_LABELS}
         canGoBack={step > 0}
         canGoNext={resolveCanGoNext(step, state)}
+        isNextLoading={step === 4 && state.tiersStatus === "fetching"}
         onBack={actions.goBack}
         onNext={() => {
           if (step === 4) {

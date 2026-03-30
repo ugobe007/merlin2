@@ -12,7 +12,6 @@ import { useState, useEffect } from "react";
 import { Copy, Check, Zap, Shield, Code2, Play } from "lucide-react";
 import merlinWizardImage from "@/assets/images/merlin_wizard_new.png";
 import merlinWizardIcon from "@/assets/images/NEW_Wizard_icon.png";
-import merlinBatteryIcon from "@/assets/images/Merlin_Battery_Icon.png";
 import trueQuoteBadge from "@/assets/images/badge_gold_icon.jpg";
 import WizardV8Page from "@/wizard/v8/WizardV8Page";
 
@@ -334,9 +333,7 @@ export default function WidgetDemo() {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-[#3ecf8e]/10 rounded-2xl mb-4">
                   <Play className="w-8 h-8 text-[#3ecf8e]" />
                 </div>
-                <h3 className="text-3xl font-bold text-white mb-3">
-                  See How Merlin Works
-                </h3>
+                <h3 className="text-3xl font-bold text-white mb-3">See How Merlin Works</h3>
                 <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-6">
                   Watch the key moments in action. From problem to quote in under 3 minutes.
                 </p>
@@ -365,7 +362,9 @@ export default function WidgetDemo() {
                               <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-2 h-5 bg-gray-600/60 rounded-r"></div>
                               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg"></div>
                             </div>
-                            <div className="text-sm font-mono text-gray-400 tracking-wider">DEPLETING</div>
+                            <div className="text-sm font-mono text-gray-400 tracking-wider">
+                              DEPLETING
+                            </div>
                           </div>
                           <div className="text-5xl font-bold mb-5 leading-tight">
                             <span className="text-white">Energy quotes take </span>
@@ -389,14 +388,18 @@ export default function WidgetDemo() {
                             <div className="space-y-4">
                               <div className="flex justify-between items-center pb-3 border-b border-gray-700/50">
                                 <span className="text-gray-400 text-base">System Size</span>
-                                <span className="text-white font-semibold text-lg">2 MW / 8 MWh</span>
+                                <span className="text-white font-semibold text-lg">
+                                  2 MW / 8 MWh
+                                </span>
                               </div>
                               <div className="flex justify-between items-center pb-3 border-b border-gray-700/50">
                                 <span className="text-gray-400 text-base">Investment</span>
                                 <span className="text-white font-semibold text-lg">$2.4M</span>
                               </div>
                               <div className="flex justify-between items-center pb-3 border-b border-gray-700/50 bg-[#3ecf8e]/5 -mx-6 px-6 py-2">
-                                <span className="text-gray-300 text-base font-medium">Annual Savings</span>
+                                <span className="text-gray-300 text-base font-medium">
+                                  Annual Savings
+                                </span>
                                 <span className="text-[#3ecf8e] font-bold text-2xl">$485K</span>
                               </div>
                               <div className="flex justify-between items-center pb-3 border-b border-gray-700/50">
@@ -410,7 +413,9 @@ export default function WidgetDemo() {
                             </div>
                             <div className="mt-5 pt-4 border-t border-gray-700/50 flex items-center gap-3">
                               <div className="w-2.5 h-2.5 rounded-full bg-[#3ecf8e] animate-pulse shadow-lg shadow-[#3ecf8e]/50"></div>
-                              <span className="text-sm text-gray-400 font-medium">TrueQuote™ Verified</span>
+                              <span className="text-sm text-gray-400 font-medium">
+                                TrueQuote™ Verified
+                              </span>
                             </div>
                           </div>
                         </div>

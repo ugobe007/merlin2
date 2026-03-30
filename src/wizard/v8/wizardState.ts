@@ -180,6 +180,99 @@ export interface LocationIntel {
   avgTempF: number; // 75
 }
 
+// ── Hybrid BESS Coverage — Dynamic Power Source Architecture ─────────────────
+//
+// PRINCIPLE: BESS is always the anchor. Power sources are configured dynamically.
+// No source is assumed — each is evaluated on its merits for the specific site.
+// New sources (wind, nuclear, hydrogen) slot in without changing the algorithm.
+//
+// INDUSTRY STANDARD: C2 (2-hour) is the commercial BESS spec (Tesla Powerpack,
+// Fluence, Powin, CATL, BYD). Extended coverage comes from hybridization:
+//   · Variable sources (solar): recharge BESS between demand peaks
+//   · Dispatchable sources (generator): bridge extended outages on-demand
+//   · Continuous sources (linear generator): keep BESS topped up 24/7
+
+/** Power source types — extensible for future Merlin Network additions */
+export type PowerSourceType =
+  | "solar" // Variable, daytime — best for midday recharge
+  | "generator" // Rotary diesel/NG/dual-fuel — outage bridge
+  | "linear_generator" // Continuous linear gen — trickle-charge BESS, ~20% more fuel-efficient
+  | "wind" // Future: intermittent, site-dependent
+  | "nuclear" // Future: baseload, zero-carbon
+  | "grid"; // Utility grid (always available but not an asset)
+
+/** Operating profile for each power source type */
+export type PowerSourceProfile =
+  | "variable_daytime" // Solar: predictable but weather/time dependent
+  | "dispatchable" // Generator: on-demand, fuel-limited
+  | "continuous_baseload" // Linear gen, nuclear: runs 24/7
+  | "intermittent"; // Wind: variable, not time-predictable
+
+/**
+ * PowerSourceDescriptor — self-describing power source.
+ * Built from wizard state; one per active technology in the system.
+ * The hybrid algorithm aggregates across these — no siloed if/else logic.
+ */
+export interface PowerSourceDescriptor {
+  type: PowerSourceType;
+  profile: PowerSourceProfile;
+  /** Rated capacity in kW */
+  kW: number;
+  /** Human-readable label, e.g. "75 kW Solar" or "100 kW Natural Gas Generator" */
+  label: string;
+  /**
+   * Can this source recharge the BESS during off-peak windows?
+   * Solar: midday window; Linear gen: overnight; Rotary gen: partial load overnight
+   */
+  canRechargeBESS: boolean;
+  /** kWh net available for BESS recharge per day (after serving base load) */
+  dailyRechargeKWh: number;
+  /** Hours per day this source can contribute to BESS recharge */
+  dailyRechargeWindowHours: number;
+  /**
+   * Can this source bridge a grid outage (run for hours to power critical loads)?
+   * Solar: no (weather-dependent, no guaranteed dispatch)
+   * Generator/Linear gen: yes
+   */
+  canBridgeOutage: boolean;
+  /** Hours of outage coverage before refuel/resource constraint */
+  outageBridgeHours: number;
+  /** Optional fuel type for combustion sources */
+  fuelType?: "diesel" | "natural-gas" | "dual-fuel";
+}
+
+export type HybridStrategy = "bess_only" | "solar_boost" | "gen_extend" | "full_hybrid";
+
+export interface HybridCoverage {
+  /** Battery spec — always 2h (C2 commercial standard) */
+  bessSpecHours: 2;
+  /** Active power sources contributing to hybrid coverage */
+  activeSources: PowerSourceDescriptor[];
+  /**
+   * Total net kWh available for BESS recharge per day, across all sources.
+   * Solar midday + linear gen overnight + rotary gen off-peak trickle.
+   */
+  totalDailyRechargeKWh: number;
+  /**
+   * % of bessKWh recharged per day from all sources combined.
+   * ≥ 50% means the 2h battery can effectively cover BOTH daily demand peaks.
+   */
+  totalRechargePercent: number;
+  /** Can the combined sources recharge BESS enough for the evening demand peak? */
+  handlesBothDailyPeaks: boolean;
+  /** 2h (morning only) or 4h (morning + evening when recharge ≥ 50%) */
+  dailyPeakCoverageHours: 2 | 4;
+  /**
+   * Grid outage coverage: hours critical loads stay on.
+   * BESS alone: 2h. With any bridge source: up to 24-72h.
+   */
+  outageBridgeHours: number;
+  /** Strategy label — emerges from active source set, not hardcoded */
+  strategy: HybridStrategy;
+  /** One-line customer-facing coverage summary */
+  coverageSummary: string;
+}
+
 // ── Quote tier ───────────────────────────────────────────────────────────────
 
 export interface QuoteTier {
@@ -190,13 +283,34 @@ export interface QuoteTier {
   solarKW: number; // 0 when not feasible or goal doesn't include solar
   generatorKW: number; // always > 0 (all tiers include generator)
   generatorFuelType?: "diesel" | "natural-gas" | "dual-fuel"; // Fuel type from Step 3.5
+  linearGeneratorKW?: number; // Linear generator — continuous baseload, ~20% more fuel-efficient
   evChargerKW: number; // 0 if no EV configured
-  durationHours: number;
+  durationHours: number; // Battery spec hours — always 2 (C2 industry standard)
+  /**
+   * Hybrid coverage model: shows how BESS + Solar + Generator combine for
+   * effective extended coverage beyond the 2h battery spec.
+   * This is the Merlin Hybrid Advantage display data.
+   */
+  hybridCoverage?: HybridCoverage;
   // Costs (sell prices — margin already applied via Margin Policy Engine)
   grossCost: number; // before ITC
   itcRate: number; // IRA 2022 dynamic (0.06 – 0.70)
   itcAmount: number;
   netCost: number; // grossCost − itcAmount
+  /**
+   * ITC basis breakdown — answers "what is the 30% applied to?"
+   * Displayed in Step 5 ITC card so users understand the eligible cost.
+   * Per IRA 2022 §48: solar (equip+labor) + BESS + site engineering + contingency + installation labor.
+   * Generator and EV charging hardware are NOT §48-eligible.
+   */
+  itcBasisBreakdown?: {
+    solarEligible: number; // solar equipment + field labor
+    bessEligible: number; // BESS equipment cost
+    siteEligible: number; // site engineering + contingency + installation labor
+    totalEligible: number; // sum of the above (itcAmount = totalEligible × itcRate)
+    generatorCost: number; // for display only — NOT included in basis
+    evChargingCost: number; // for display only — NOT included in basis
+  };
   // Financial outcomes (V4.5 honest TCO)
   grossAnnualSavings: number; // before reserves deduction
   annualReserves: number; // insurance, inverter replacement, degradation (V4.5)
@@ -311,9 +425,21 @@ export interface WizardState {
   solarKW: number; // Solar array size in kW
   generatorKW: number; // Generator capacity in kW
   generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+  linearGeneratorKW: number; // Linear generator — continuous baseload, ~20% more fuel-efficient
   level2Chargers: number; // Count of Level 2 EV chargers (7-22 kW)
   dcfcChargers: number; // Count of DC Fast Chargers (50-150 kW)
   hpcChargers: number; // Count of High Power Chargers (250-350 kW)
+
+  // ── Electrical Panel Assessment (triggered by DCFC selection) ────────────
+  electricalPanelAmps: number; // 0 = unknown, 200/400/600/800/1200
+  electricalServiceType: "single-phase-208" | "three-phase-208" | "three-phase-480" | "unknown";
+  panelUpgradeCost: number; // Additional electrical infra cost beyond standard conduit
+  panelUpgradeType:
+    | "none"
+    | "circuit_breakers"
+    | "service_upgrade"
+    | "transformer"
+    | "standalone_panel";
 
   // ── Step 4: MagicFit Tiers ───────────────────────────────────────────────
   // 3 configurations optimized for savings (STARTER/PERFECT FIT/BEAST MODE)
@@ -379,6 +505,19 @@ export type WizardIntent =
       criticalLoadKW?: number; // For non-critical facilities (car wash, retail, office)
       evRevenuePerYear?: number;
     }
+  // Electrical panel
+  | {
+      type: "SET_PANEL_INFO";
+      panelAmps: number;
+      serviceType: "single-phase-208" | "three-phase-208" | "three-phase-480" | "unknown";
+      upgradeCost: number;
+      upgradeType:
+        | "none"
+        | "circuit_breakers"
+        | "service_upgrade"
+        | "transformer"
+        | "standalone_panel";
+    }
   // Step 4: MagicFit
   | { type: "SET_TIERS_STATUS"; status: FetchStatus }
   | { type: "SET_TIERS"; tiers: [QuoteTier, QuoteTier, QuoteTier] }
@@ -423,9 +562,14 @@ export function initialState(): WizardState {
     solarKW: 0,
     generatorKW: 0,
     generatorFuelType: "diesel",
+    linearGeneratorKW: 0,
     level2Chargers: 0,
     dcfcChargers: 0,
     hpcChargers: 0,
+    electricalPanelAmps: 0,
+    electricalServiceType: "unknown",
+    panelUpgradeCost: 0,
+    panelUpgradeType: "none",
     tiersStatus: "idle",
     tiers: null,
     selectedTierIndex: null, // No pre-selection - user must choose
@@ -464,9 +608,14 @@ function resetEnergyProfileState(): Pick<
   | "solarKW"
   | "generatorKW"
   | "generatorFuelType"
+  | "linearGeneratorKW"
   | "level2Chargers"
   | "dcfcChargers"
   | "hpcChargers"
+  | "electricalPanelAmps"
+  | "electricalServiceType"
+  | "panelUpgradeCost"
+  | "panelUpgradeType"
   | "tiersStatus"
   | "tiers"
   | "selectedTierIndex"
@@ -481,9 +630,14 @@ function resetEnergyProfileState(): Pick<
     solarKW: 0,
     generatorKW: 0,
     generatorFuelType: "diesel",
+    linearGeneratorKW: 0,
     level2Chargers: 0,
     dcfcChargers: 0,
     hpcChargers: 0,
+    electricalPanelAmps: 0,
+    electricalServiceType: "unknown" as const,
+    panelUpgradeCost: 0,
+    panelUpgradeType: "none" as const,
     tiersStatus: "idle",
     tiers: null,
     selectedTierIndex: null,
@@ -622,6 +776,15 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
         evRevenuePerYear: intent.evRevenuePerYear ?? state.evRevenuePerYear,
       };
 
+    case "SET_PANEL_INFO":
+      return {
+        ...state,
+        electricalPanelAmps: intent.panelAmps,
+        electricalServiceType: intent.serviceType,
+        panelUpgradeCost: intent.upgradeCost,
+        panelUpgradeType: intent.upgradeType,
+      };
+
     // ── Step 4: MagicFit ─────────────────────────────────────────────────
 
     case "SET_TIERS_STATUS":
@@ -675,7 +838,11 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
                     : state.step === 1
                       ? 0
                       : 0;
-      return { ...state, step: prev };
+      // When navigating back to before Step 4 (quote tiers), reset tiersStatus
+      // so tiers are rebuilt with fresh data when the user moves forward again.
+      // This prevents stale quotes if the user modifies profile/add-on data.
+      const resetTiers = prev < 4 ? { tiersStatus: "idle" as const, tiers: [] } : {};
+      return { ...state, step: prev, ...resetTiers };
     }
 
     // ── System ───────────────────────────────────────────────────────────
@@ -744,6 +911,17 @@ export interface WizardActions {
       dcfcChargers: number;
       hpcChargers: number;
     }>
+  ) => void;
+  setPanelInfo: (
+    panelAmps: number,
+    serviceType: "single-phase-208" | "three-phase-208" | "three-phase-480" | "unknown",
+    upgradeCost: number,
+    upgradeType:
+      | "none"
+      | "circuit_breakers"
+      | "service_upgrade"
+      | "transformer"
+      | "standalone_panel"
   ) => void;
   setEVChargers: (chargers: WizardState["evChargers"]) => void;
   setBaseLoad: (baseLoadKW: number, peakLoadKW: number, evRevenuePerYear?: number) => void;

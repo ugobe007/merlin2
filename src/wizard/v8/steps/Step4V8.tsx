@@ -42,9 +42,9 @@ const TIER_CONFIG = {
     metricBg: "bg-white/5",
   },
   1: {
-    // BEST VALUE
-    name: "BEST VALUE",
-    tagline: "Most popular · Best ROI",
+    // RECOMMENDED
+    name: "Recommended",
+    tagline: "Best ROI · Most popular",
     headlineClass: "headline-perfect",
     cardBorder: "border-emerald-400/70",
     cardBg: "bg-gradient-to-b from-emerald-900/70 via-slate-900/90 to-slate-950",
@@ -57,8 +57,8 @@ const TIER_CONFIG = {
     metricBg: "bg-emerald-500/10",
   },
   2: {
-    // MAX POWER
-    name: "MAX POWER",
+    // COMPLETE
+    name: "Complete",
     tagline: "Maximum resilience & coverage",
     headlineClass: "headline-beast",
     cardBorder: "border-amber-500/50",
@@ -254,7 +254,7 @@ function GoalRankingsPanel({ tiers }: GoalRankingsPanelProps) {
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
           What Merlin Optimized For
         </span>
-        <span className="text-[10px] text-slate-600">— based on your BEST VALUE tier</span>
+        <span className="text-[10px] text-slate-600">— based on your Recommended tier</span>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
         {scored.map((g, i) => (
@@ -336,14 +336,15 @@ export default function Step4V8({ state, actions }: Props) {
 
       if (e.key === "ArrowLeft") {
         e.preventDefault();
-        if (selectedTierIndex === null || selectedTierIndex === 0) {
-          actions.selectTier(0);
+        // Skip STARTER (0) — only navigate between 1 and 2
+        if (selectedTierIndex === null || selectedTierIndex <= 1) {
+          actions.selectTier(1);
         } else {
           actions.selectTier((selectedTierIndex - 1) as 0 | 1 | 2);
         }
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        if (selectedTierIndex === null || selectedTierIndex === 2) {
+        if (selectedTierIndex === null || selectedTierIndex >= 2) {
           actions.selectTier(2);
         } else {
           actions.selectTier((selectedTierIndex + 1) as 0 | 1 | 2);
@@ -353,13 +354,10 @@ export default function Step4V8({ state, actions }: Props) {
         actions.goToStep(6);
       } else if (e.key === "1") {
         e.preventDefault();
-        actions.selectTier(0);
+        actions.selectTier(1); // Recommended
       } else if (e.key === "2") {
         e.preventDefault();
-        actions.selectTier(1);
-      } else if (e.key === "3") {
-        e.preventDefault();
-        actions.selectTier(2);
+        actions.selectTier(2); // Complete
       }
     };
 
@@ -374,7 +372,7 @@ export default function Step4V8({ state, actions }: Props) {
     "Calculating equipment costs...",
     "Applying ITC tax credits...",
     "Running 25-year financial model...",
-    "Generating 3 optimized tiers...",
+    "Generating 2 optimized configurations...",
   ];
   const loadingStepCount = loadingSteps.length;
 
@@ -436,7 +434,7 @@ export default function Step4V8({ state, actions }: Props) {
 
         {/* Main message */}
         <h3 className="text-xl font-semibold text-white mb-2">Generating Your MagicFit Options</h3>
-        <p className="text-slate-400 mb-8">Building 3 optimized configurations for your facility</p>
+        <p className="text-slate-400 mb-8">Building 2 optimized configurations for your facility</p>
 
         {/* Progress bar */}
         <div className="w-full space-y-3">
@@ -502,10 +500,43 @@ export default function Step4V8({ state, actions }: Props) {
       {/* Inject custom styles */}
       <style dangerouslySetInnerHTML={{ __html: customStyles }} />
 
+      {/* Mobile sticky selected-tier summary bar */}
+      {selectedTierIndex !== null &&
+        tiers &&
+        (() => {
+          const sel = tiers[selectedTierIndex];
+          const cfg = TIER_CONFIG[selectedTierIndex];
+          return (
+            <div
+              className="sticky top-0 z-30 lg:hidden -mx-4 px-4 py-2.5 backdrop-blur-md border-b border-white/[0.07]"
+              style={{ background: "rgba(10,16,38,0.92)" }}
+            >
+              <div className="flex items-center justify-between max-w-sm mx-auto">
+                <span className={`text-xs font-bold uppercase tracking-wider ${cfg.accentColor}`}>
+                  {cfg.name}
+                </span>
+                <span className="text-sm font-extrabold text-white">
+                  {formatCurrency(sel.netCost)}
+                </span>
+                <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Selected
+                </span>
+              </div>
+            </div>
+          );
+        })()}
+
       {/* Header */}
       <div className="text-center">
         <p className="text-emerald-500/60 uppercase tracking-[0.3em] text-xs font-medium mb-3">
-          MagicFit™ — 3 Configurations
+          MagicFit™ — 2 Configurations
         </p>
         <h1
           className="text-2xl md:text-3xl font-bold text-white mb-3"
@@ -552,10 +583,12 @@ export default function Step4V8({ state, actions }: Props) {
       {/* Goal Rankings - context before choices */}
       <GoalRankingsPanel tiers={tiers} />
 
-      {/* Cards Grid - Horizontal layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 w-full px-2 md:px-4">
+      {/* Cards Grid — 2 options: Recommended + Complete (Starter reserved for future) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 w-full px-2 md:px-4 max-w-4xl mx-auto">
         {tiers.map((tier, index) => {
           const tierIndex = index as 0 | 1 | 2;
+          // 2-tier policy — Starter reserved for future release
+          if (tierIndex === 0) return null;
           const config = TIER_CONFIG[tierIndex];
           const isSelected = selectedTierIndex === tierIndex;
           const isPerfectFit = tierIndex === 1;
@@ -662,6 +695,28 @@ export default function Step4V8({ state, actions }: Props) {
                       </span>
                     </div>
 
+                    {/* Hybrid coverage badge — shows effective coverage beyond 2h spec */}
+                    {tier.hybridCoverage && tier.hybridCoverage.strategy !== "bess_only" && (
+                      <div
+                        className={`equipment-chip ${config.chipBg} border border-emerald-500/30`}
+                      >
+                        <span>
+                          {tier.hybridCoverage.strategy === "full_hybrid"
+                            ? "⚡"
+                            : tier.hybridCoverage.strategy === "solar_boost"
+                              ? "☀️"
+                              : "🔌"}
+                        </span>
+                        <span className={`${config.chipText} text-emerald-400`}>
+                          {tier.hybridCoverage.strategy === "full_hybrid"
+                            ? `Hybrid · ${tier.hybridCoverage.dailyPeakCoverageHours}h daily peaks · 24h outage`
+                            : tier.hybridCoverage.strategy === "solar_boost"
+                              ? `Solar recharge · ${tier.hybridCoverage.dailyPeakCoverageHours}h daily peaks`
+                              : `Gen bridge · 24h outage`}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Solar */}
                     {tier.solarKW >= 1 && (
                       <div className={`equipment-chip ${config.chipBg} border`}>
@@ -706,7 +761,15 @@ export default function Step4V8({ state, actions }: Props) {
 
                 <div className="space-y-1.5 text-xs md:text-sm mb-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500">Equipment Quote</span>
+                    <span className="text-slate-500 flex items-center gap-1">
+                      Merlin Procurement Cost
+                      <span
+                        title="AI-optimized equipment pricing vs. traditional EPC markup. Calibrated to NREL ATB 2024."
+                        className="cursor-help opacity-40 hover:opacity-70 text-[10px]"
+                      >
+                        ⓘ
+                      </span>
+                    </span>
                     <span className="text-slate-300 font-medium">
                       {formatCurrency(totalInvestment)}
                     </span>
@@ -749,6 +812,32 @@ export default function Step4V8({ state, actions }: Props) {
                   </div>
                 </div>
 
+                {/* Merlin vs Traditional EPC savings */}
+                {(() => {
+                  // Base on gross total project cost (EPC quotes pre-ITC, includes install)
+                  const epcBase = tier.totalProjectCost ?? totalInvestment;
+                  const epcNetLow = Math.round((epcBase * 1.35 * 0.7) / 1000);
+                  const epcNetHigh = Math.round((epcBase * 1.6 * 0.7) / 1000);
+                  const epcNetMid = epcBase * 1.475 * 0.7;
+                  const savingsPct = Math.round(((epcNetMid - netCost) / epcNetMid) * 100);
+                  return (
+                    <div className="mt-1 mb-3 px-3 py-2 rounded-lg bg-emerald-500/[0.06] border border-emerald-500/20 flex items-center justify-between text-xs">
+                      <div className="leading-snug">
+                        <p className="text-slate-400 font-medium">vs. Traditional EPC</p>
+                        <p className="text-slate-500 text-[10px]">
+                          est. ${epcNetLow}K–${epcNetHigh}K after ITC
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-emerald-400 font-bold text-sm">
+                          {savingsPct > 0 ? savingsPct : 0}% less
+                        </p>
+                        <p className="text-slate-500 text-[10px]">Merlin advantage</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* ROI Metrics - Responsive grid */}
                 <div className="grid grid-cols-3 gap-1.5 md:gap-2 mb-3">
                   <div className={`text-center p-1.5 md:p-2 rounded-lg ${config.metricBg}`}>
@@ -777,6 +866,25 @@ export default function Step4V8({ state, actions }: Props) {
                       {formatCurrency(tier.npv)}
                     </p>
                   </div>
+                </div>
+
+                {/* EPC / full cost stack CTA */}
+                <div className="mb-3 text-center">
+                  <p className="text-[11px] text-slate-500">
+                    EPC or contractor?{" "}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedCostBreakdown(
+                          expandedCostBreakdown === tierIndex ? null : tierIndex
+                        );
+                      }}
+                      className="text-slate-400 underline underline-offset-2 hover:text-slate-200 transition-colors"
+                    >
+                      See full cost stack →
+                    </button>
+                  </p>
                 </div>
 
                 {/* ROI Guardrail notice */}
@@ -818,14 +926,25 @@ export default function Step4V8({ state, actions }: Props) {
                       }}
                     >
                       <span className="text-amber-400 mt-0.5 shrink-0">⚡</span>
-                      <span className="text-slate-400">
+                      <div className="text-slate-400">
                         <span className="font-semibold text-amber-300">Extended payback</span> —{" "}
                         {tier.guardrail.originalPaybackYears.toFixed(0)}-yr est. at this location's
                         rates.{" "}
                         {tier.solarKW > 0
                           ? "Increase solar capacity in Step 3.5 or verify demand charges with your utility to improve ROI."
                           : "Add solar in Step 3.5 to improve ROI."}
-                      </span>
+                        {tier.generatorKW > 0 && (
+                          <span className="block mt-1 text-slate-500">
+                            💡 Generator ($
+                            {Math.round((tier as { generatorKW: number }).generatorKW / 100) * 100 >
+                            0
+                              ? "included"
+                              : ""}
+                            {tier.generatorKW} kW) adds resilience but extends payback — it doesn't
+                            generate direct savings. Remove it in Step 3.5 to reduce net cost.
+                          </span>
+                        )}
+                      </div>
                     </div>
                   )}
 

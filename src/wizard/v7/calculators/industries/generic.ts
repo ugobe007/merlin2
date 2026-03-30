@@ -1,6 +1,5 @@
-import type { CalculatorContract, CalcInputs, CalcRunResult, CalcValidation } from "../contract";
+import type { CalculatorContract, CalcInputs, CalcRunResult } from "../contract";
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
-import { buildSSOTInput } from "../ssotInputAliases";
 
 export const GENERIC_SSOT_ADAPTER: CalculatorContract = {
   id: "generic_ssot_v1",

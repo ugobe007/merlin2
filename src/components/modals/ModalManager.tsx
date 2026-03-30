@@ -545,7 +545,7 @@ export default function ModalManager(props: ModalManagerProps) {
               electricityRate: valueKwh || 0.12,
               location: location || "United States",
               batteryLifeYears: 25,
-              discountRate: 0.08,
+              discountRate: 0.06,
             }}
             userTier="free"
             onUpgradeClick={() => {
