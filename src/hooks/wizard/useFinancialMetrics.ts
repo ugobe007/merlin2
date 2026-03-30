@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { calculateFinancialMetrics } from '../../services/centralizedCalculations';
+import { useState, useEffect } from "react";
+import { calculateFinancialMetrics } from "../../services/centralizedCalculations";
 
 /**
  * Custom hook for financial calculations in StreamlinedWizard
@@ -38,7 +38,7 @@ export const useFinancialMetrics = ({
   windMW,
   location,
   electricityRate,
-  costs
+  costs,
 }: UseFinancialMetricsProps): FinancialMetrics => {
   const [metrics, setMetrics] = useState<FinancialMetrics>({
     npv: 0,
@@ -47,7 +47,7 @@ export const useFinancialMetrics = ({
     annualSavings: 0,
     lifetimeSavings: 0,
     roi: 0,
-    isCalculating: false
+    isCalculating: false,
   });
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export const useFinancialMetrics = ({
         return;
       }
 
-      setMetrics(prev => ({ ...prev, isCalculating: true }));
+      setMetrics((prev) => ({ ...prev, isCalculating: true }));
 
       try {
         // Calculate annual savings based on storage and renewables
@@ -67,17 +67,9 @@ export const useFinancialMetrics = ({
           location
         );
 
-        const solarAnnualSavings = calculateSolarAnnualSavings(
-          solarMW,
-          electricityRate,
-          location
-        );
+        const solarAnnualSavings = calculateSolarAnnualSavings(solarMW, electricityRate, location);
 
-        const windAnnualSavings = calculateWindAnnualSavings(
-          windMW,
-          electricityRate,
-          location
-        );
+        const windAnnualSavings = calculateWindAnnualSavings(windMW, electricityRate, location);
 
         const _totalAnnualSavings = bessAnnualSavings + solarAnnualSavings + windAnnualSavings;
 
@@ -92,8 +84,8 @@ export const useFinancialMetrics = ({
           equipmentCost: costs.equipmentCost,
           installationCost: costs.installationCost,
           shippingCost: costs.shippingCost,
-          discountRate: 0.08,
-          projectLifetimeYears: 25
+          discountRate: 0.06,
+          projectLifetimeYears: 25,
         });
 
         // ✅ USE CENTRALIZED RESULTS - Single source of truth
@@ -105,12 +97,11 @@ export const useFinancialMetrics = ({
           annualSavings: financialMetrics.annualSavings,
           lifetimeSavings: financialMetrics.annualSavings * 25,
           roi: Math.round(financialMetrics.roi25Year || 0),
-          isCalculating: false
+          isCalculating: false,
         });
-
       } catch (error) {
-        console.error('❌ [useFinancialMetrics] Error calculating metrics:', error);
-        setMetrics(prev => ({ ...prev, isCalculating: false }));
+        console.error("❌ [useFinancialMetrics] Error calculating metrics:", error);
+        setMetrics((prev) => ({ ...prev, isCalculating: false }));
       }
     };
 
@@ -130,18 +121,18 @@ const calculateBESSAnnualSavings = (
   _location: string
 ): number => {
   const energyMWh = storageMW * durationHrs;
-  
+
   // Peak shaving value: ~2 cycles/day average
   const peakShavingCycles = 730; // 365 days * 2 cycles
   const peakShavingValue = energyMWh * peakShavingCycles * electricityRate * 0.6; // 60% efficiency
-  
+
   // Demand charge reduction: ~$15/kW-month average
   const demandChargeSavings = storageMW * 1000 * 15 * 12; // kW * $/kW-month * months
-  
+
   // Arbitrage value: ~1 cycle/day, $0.10/kWh spread
   const arbitrageCycles = 365;
-  const arbitrageValue = energyMWh * 1000 * arbitrageCycles * 0.10 * 0.85; // 85% efficiency
-  
+  const arbitrageValue = energyMWh * 1000 * arbitrageCycles * 0.1 * 0.85; // 85% efficiency
+
   return peakShavingValue + demandChargeSavings + arbitrageValue;
 };
 
@@ -154,11 +145,11 @@ const calculateSolarAnnualSavings = (
   location: string
 ): number => {
   if (solarMW === 0) return 0;
-  
+
   // Capacity factor varies by location (15-25%)
-  const capacityFactor = location.toLowerCase().includes('california') ? 0.22 : 0.18;
+  const capacityFactor = location.toLowerCase().includes("california") ? 0.22 : 0.18;
   const annualGeneration = solarMW * 8760 * capacityFactor * 1000; // kWh/year
-  
+
   return annualGeneration * electricityRate;
 };
 
@@ -171,10 +162,10 @@ const calculateWindAnnualSavings = (
   _location: string
 ): number => {
   if (windMW === 0) return 0;
-  
+
   // Capacity factor varies by location (25-40%)
-  const capacityFactor = 0.30; // Average
+  const capacityFactor = 0.3; // Average
   const annualGeneration = windMW * 8760 * capacityFactor * 1000; // kWh/year
-  
+
   return annualGeneration * electricityRate;
 };

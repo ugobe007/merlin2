@@ -6,12 +6,9 @@
  * Feb 25, 2026
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { MerlinBatteryLogo } from "@/components/shared/MerlinBatteryLogo";
-import {
-  Zap, ArrowRight, Battery, BarChart3, Shield,
-  Check, Star, Users, Gift,
-} from "lucide-react";
+import { Zap, ArrowRight, Battery, Check, Users, Gift } from "lucide-react";
 
 const FEATURES = [
   "BESS quotes in 90 seconds — free",
@@ -61,7 +58,6 @@ export default function ReferralPage() {
       </nav>
 
       <div className="max-w-5xl mx-auto px-4 py-16 space-y-14">
-
         {/* ── Referral banner ── */}
         <div
           className="rounded-2xl border border-[#3ECF8E]/20 p-5 flex items-center gap-4"
@@ -108,9 +104,10 @@ export default function ReferralPage() {
           </h1>
 
           <p className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Merlin is an instant BESS financial analysis tool for commercial facilities.
-            Every quote is <span className="text-white font-semibold">TrueQuote™ verified</span> — every number
-            traces to a published source. No consultants. No spreadsheets. <span className="text-[#3ECF8E]">Free.</span>
+            Merlin is an instant BESS financial analysis tool for commercial facilities. Every quote
+            is <span className="text-white font-semibold">TrueQuote™ verified</span> — every number
+            traces to a published source. No consultants. No spreadsheets.{" "}
+            <span className="text-[#3ECF8E]">Free.</span>
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
@@ -141,7 +138,9 @@ export default function ReferralPage() {
           ].map((m) => (
             <div key={m.label} className="text-center">
               <div className="text-2xl font-black text-white tabular-nums">{m.value}</div>
-              <div className="text-xs text-slate-500 font-medium uppercase tracking-wider mt-0.5">{m.label}</div>
+              <div className="text-xs text-slate-500 font-medium uppercase tracking-wider mt-0.5">
+                {m.label}
+              </div>
             </div>
           ))}
         </div>
@@ -162,7 +161,9 @@ export default function ReferralPage() {
         {/* ── Referral CTA ── */}
         <div
           className="rounded-2xl border border-[#3ECF8E]/20 p-8 text-center"
-          style={{ background: "linear-gradient(135deg, rgba(62,207,142,0.05) 0%, rgba(12,12,12,0) 100%)" }}
+          style={{
+            background: "linear-gradient(135deg, rgba(62,207,142,0.05) 0%, rgba(12,12,12,0) 100%)",
+          }}
         >
           <div className="w-12 h-12 rounded-2xl bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 flex items-center justify-center mx-auto mb-4">
             <Users className="w-6 h-6 text-[#3ECF8E]" />
@@ -200,7 +201,6 @@ export default function ReferralPage() {
             </button>
           </div>
         </div>
-
       </div>
 
       {/* Footer */}
@@ -214,7 +214,11 @@ export default function ReferralPage() {
               { label: "Wizard", href: "/wizard" },
               { label: "Support", href: "/support" },
             ].map((l) => (
-              <a key={l.label} href={l.href} className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
+              <a
+                key={l.label}
+                href={l.href}
+                className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
+              >
                 {l.label}
               </a>
             ))}

@@ -1,6 +1,6 @@
 /**
  * Share Quote Modal
- * 
+ *
  * Generate shareable public URLs for quotes.
  * Features:
  * - Copy link to clipboard
@@ -10,10 +10,10 @@
  * - View analytics
  */
 
-import React, { useState } from 'react';
-import { X, Link2, Copy, Check, Lock, Calendar, Eye, QrCode } from 'lucide-react';
-import { supabase } from '@/services/supabaseClient';
-import { nanoid } from 'nanoid';
+import React, { useState } from "react";
+import { X, Link2, Copy, Check, Lock, Calendar, Eye } from "lucide-react";
+import { supabase } from "@/services/supabaseClient";
+import { nanoid } from "nanoid";
 
 interface ShareQuoteModalProps {
   quote: {
@@ -31,20 +31,20 @@ interface ShareQuoteModalProps {
 }
 
 export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
-  const [shareUrl, setShareUrl] = useState<string>('');
-  const [shortCode, setShortCode] = useState<string>('');
+  const [shareUrl, setShareUrl] = useState<string>("");
+  const [shortCode, setShortCode] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [expiryDays, setExpiryDays] = useState(30);
   const [requirePassword, setRequirePassword] = useState(false);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
 
   const generateShareLink = async () => {
     setIsGenerating(true);
     try {
       // Generate short code
       const code = nanoid(8);
-      
+
       // Calculate expiry
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + expiryDays);
@@ -53,20 +53,18 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
       const quoteData = {
         ...quote,
         sharedAt: new Date().toISOString(),
-        version: 'v7.1',
+        version: "v7.1",
       };
 
       // Insert into database
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
-        .from('shared_quotes')
-        .insert({
-          short_code: code,
-          quote_data: quoteData,
-          expires_at: expiresAt.toISOString(),
-          is_public: true,
-          password_hash: requirePassword && password ? await hashPassword(password) : null,
-        });
+      const { error } = await (supabase as any).from("shared_quotes").insert({
+        short_code: code,
+        quote_data: quoteData,
+        expires_at: expiresAt.toISOString(),
+        is_public: true,
+        password_hash: requirePassword && password ? await hashPassword(password) : null,
+      });
 
       if (error) throw error;
 
@@ -77,8 +75,8 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
       setShareUrl(url);
       setShortCode(code);
     } catch (error) {
-      console.error('[ShareQuote] Failed to generate link:', error);
-      alert('Failed to generate share link. Please try again.');
+      console.error("[ShareQuote] Failed to generate link:", error);
+      alert("Failed to generate share link. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -90,7 +88,7 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('[ShareQuote] Failed to copy:', error);
+      console.error("[ShareQuote] Failed to copy:", error);
     }
   };
 
@@ -106,18 +104,11 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
               <Link2 className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">
-                Share Quote
-              </h2>
-              <p className="text-sm text-slate-600">
-                Generate a public link to share your quote
-              </p>
+              <h2 className="text-xl font-semibold text-slate-900">Share Quote</h2>
+              <p className="text-sm text-slate-600">Generate a public link to share your quote</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
@@ -128,9 +119,7 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
             <>
               {/* Quote Summary */}
               <div className="bg-slate-50 rounded-lg p-4 space-y-2">
-                <h3 className="text-sm font-medium text-slate-900">
-                  Quote Summary
-                </h3>
+                <h3 className="text-sm font-medium text-slate-900">Quote Summary</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-slate-600">System Size:</span>
@@ -238,9 +227,7 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
 
               {/* Copy Link */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-900">
-                  Share Link
-                </label>
+                <label className="text-sm font-medium text-slate-900">Share Link</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -270,7 +257,8 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
               {/* Short Code */}
               <div className="text-center py-4 border-t border-slate-200">
                 <p className="text-sm text-slate-600">
-                  Short code: <span className="font-mono font-medium text-slate-900">{shortCode}</span>
+                  Short code:{" "}
+                  <span className="font-mono font-medium text-slate-900">{shortCode}</span>
                 </p>
               </div>
 
@@ -283,8 +271,8 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
                       Share with colleagues or clients
                     </div>
                     <p className="text-xs text-emerald-700 leading-snug">
-                      Anyone with this link can view the full TrueQuote™ — savings,
-                      IRR, payback timeline, and source attribution.
+                      Anyone with this link can view the full TrueQuote™ — savings, IRR, payback
+                      timeline, and source attribution.
                     </p>
                     <div className="flex gap-2 mt-3">
                       <a
@@ -335,7 +323,7 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }

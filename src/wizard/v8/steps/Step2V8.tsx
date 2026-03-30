@@ -72,7 +72,7 @@ const DISPLAY_ORDER = [
   "warehouse",
   "manufacturing",
   "office",
-  "healthcare",
+  "hospital",
   "data_center",
   "gas_station",
   "airport",
@@ -150,13 +150,13 @@ export function Step2V8({ state, actions }: Props) {
                 }}
                 className="rounded-xl text-left overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                 style={{
-                  border: `${isSelected ? "1.5px" : "1px"} solid ${
-                    isSelected ? "rgba(62,207,142,0.65)" : DARK.cardBorder
+                  border: `${isSelected ? "2px" : "1px"} solid ${
+                    isSelected ? "#3ECF8E" : DARK.cardBorder
                   }`,
                   padding: 0,
-                  background: isSelected ? "rgba(62,207,142,0.08)" : DARK.cardBg,
+                  background: isSelected ? "rgba(62,207,142,0.10)" : DARK.cardBg,
                   boxShadow: isSelected
-                    ? "0 0 0 1px rgba(62,207,142,0.12), 0 0 28px rgba(62,207,142,0.14)"
+                    ? "0 0 0 3px rgba(62,207,142,0.18), 0 0 36px rgba(62,207,142,0.30)"
                     : "none",
                   cursor: "pointer",
                   position: "relative",

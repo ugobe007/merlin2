@@ -1,6 +1,5 @@
 import type { CalculatorContract, CalcInputs, CalcRunResult, CalcValidation } from "../contract";
-import { calculateUseCasePower, calculateHospitalPower } from "@/services/useCasePowerCalculations";
-import { buildSSOTInput } from "../ssotInputAliases";
+import { calculateHospitalPower } from "@/services/useCasePowerCalculations";
 
 export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
   id: "hospital_load_v1",
@@ -11,7 +10,7 @@ export const HOSPITAL_LOAD_V1_SSOT: CalculatorContract = {
     const assumptions: string[] = [];
 
     // --- Core inputs (bridge curated config IDs → calculator field names) ---
-    const bedCount = inputs.bedCount != null ? (Number(inputs.bedCount) || 200) : 200;
+    const bedCount = inputs.bedCount != null ? Number(inputs.bedCount) || 200 : 200;
     // Curated config: facilityType (community-hospital/regional-medical/academic/specialty)
     // Calculator expects: hospitalType (community/regional/academic/specialty)
     const rawHospType = String(inputs.hospitalType || inputs.facilityType || "regional");

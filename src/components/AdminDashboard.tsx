@@ -5,6 +5,7 @@ import {
   Settings,
   TrendingUp,
   Database,
+  Megaphone,
   Zap,
   Shield,
   BarChart3,
@@ -38,6 +39,7 @@ import AdminMatchingTab from "./admin/tabs/AdminMatchingTab";
 import AdminPremiumTab from "./admin/tabs/AdminPremiumTab";
 import AdminRealtimeTab from "./admin/tabs/AdminRealtimeTab";
 import AdminSettingsTab from "./admin/tabs/AdminSettingsTab";
+import AdminMarketingTab from "./admin/tabs/AdminMarketingTab";
 
 /**
  * System Administrator Dashboard
@@ -86,6 +88,7 @@ const AdminDashboard: React.FC = () => {
     | "cache"
     | "migration"
     | "aiData"
+    | "marketing"
   >("dashboard");
   // const [refreshInterval, setRefreshInterval] = useState<number>(30); // Unused
   const [showPricingAdmin, setShowPricingAdmin] = useState(false);
@@ -225,6 +228,12 @@ const AdminDashboard: React.FC = () => {
           description: "System-level settings",
         },
         { key: "settings", label: "Settings", icon: Settings, description: "General settings" },
+        {
+          key: "marketing",
+          label: "Marketing Kit",
+          icon: Megaphone,
+          description: "Email, LinkedIn & SMS outreach templates",
+        },
       ],
     },
   ];
@@ -612,6 +621,8 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {activeTab === "settings" && <AdminSettingsTab />}
+
+        {activeTab === "marketing" && <AdminMarketingTab />}
       </div>
 
       {/* Pricing Admin Dashboard Modal */}

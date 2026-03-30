@@ -297,9 +297,9 @@ describe("Scenario 1 — Phoenix AZ car wash (excellent sun, peak_shaving)", () 
     }
   });
 
-  it("Recommended BESS duration is 4h (save_most goal)", async () => {
+  it("Recommended BESS duration is 2h (C2 industry standard)", async () => {
     if (!tiers) tiers = await buildTiers(state);
-    expect(tiers[1].durationHours).toBe(4);
+    expect(tiers[1].durationHours).toBe(2);
   });
 });
 
@@ -392,9 +392,9 @@ describe("Scenario 2 — Chicago IL car wash (moderate sun, resilience BESS)", (
     }
   });
 
-  it("BESS Recommended duration is 4h", async () => {
+  it("BESS Recommended duration is 2h (C2 industry standard)", async () => {
     if (!tiers) tiers = await buildTiers(state);
-    expect(tiers[1].durationHours).toBe(4);
+    expect(tiers[1].durationHours).toBe(2);
   });
 });
 
@@ -717,9 +717,9 @@ describe("Scenario 4 — Phoenix AZ car wash + pkg_pro EV (6 L2 + 2 DCFC)", () =
     expect(tiers[1].grossCost).toBeLessThan(tiers[2].grossCost);
   });
 
-  it("Recommended BESS duration is 4h", async () => {
+  it("Recommended BESS duration is 2h (C2 industry standard)", async () => {
     if (!tiers) tiers = await buildTiers(state);
-    expect(tiers[1].durationHours).toBe(4);
+    expect(tiers[1].durationHours).toBe(2);
   });
 });
 
@@ -830,9 +830,9 @@ describe("Scenario 5 — Chicago IL car wash + pkg_basic EV (4 L2, no DCFC)", ()
     }
   });
 
-  it("Recommended BESS duration is 4h", async () => {
+  it("Recommended BESS duration is 2h (C2 industry standard)", async () => {
     if (!tiers) tiers = await buildTiers(state);
-    expect(tiers[1].durationHours).toBe(4);
+    expect(tiers[1].durationHours).toBe(2);
   });
 });
 
@@ -934,16 +934,17 @@ describe("Scenario 6 — WOW Car Wash (1 tunnel + 24 vacuums, solar + EV + gener
     expect(tiers[2].label).toBe("Complete");
   });
 
-  it("solar cap = 60 kW (getCarWashSolarCapacity for express_tunnel with opaque roof)", () => {
-    // Note: getCarWashSolarCapacity returns 60 kW for express_tunnel + opaque roof
-    // (vacuum canopy contribution uses internal defaults, not the vacuumStations field)
-    expect(solarCapKW).toBe(60);
+  it("solar cap = 55 kW (getCarWashSolarCapacity for express_tunnel with opaque roof)", () => {
+    // Note: getCarWashSolarCapacity returns 55 kW for express_tunnel + opaque roof
+    // Computed: round(6500 × 0.70 / 107.5) + round(24×65×0.90 / 107.5) = 42 + 13 = 55 kW
+    // (107.5 sqft/kW AC from 400W panel @ 21.5 sqft, DC/AC ratio 0.625, 20% tilt/spacing)
+    expect(solarCapKW).toBe(55);
   });
 
-  it("solar kW = 60 kW for Recommended (PSH 6.5, sunFactor 1.0, maximum scope, cap 60 kW)", async () => {
+  it("solar kW = 55 kW for Recommended (PSH 6.5, sunFactor 1.0, maximum scope, cap 55 kW)", async () => {
     if (!tiers) tiers = await buildTiers(state);
-    // maximum scope × sunFactor 1.0 × cap 60 kW = 60 kW exactly
-    expect(tiers[1].solarKW).toBe(60);
+    // maximum scope × sunFactor 1.0 × cap 55 kW = 55 kW exactly
+    expect(tiers[1].solarKW).toBe(55);
   });
 
   it("evChargerKW = 143 kW for all tiers (6×7.2 + 2×50 = 143.2 → 143)", async () => {
@@ -976,9 +977,9 @@ describe("Scenario 6 — WOW Car Wash (1 tunnel + 24 vacuums, solar + EV + gener
     }
   });
 
-  it("Recommended BESS duration is 4h", async () => {
+  it("Recommended BESS duration is 2h (C2 industry standard)", async () => {
     if (!tiers) tiers = await buildTiers(state);
-    expect(tiers[1].durationHours).toBe(4);
+    expect(tiers[1].durationHours).toBe(2);
   });
 
   it("Starter < Recommended < Complete for gross cost", async () => {

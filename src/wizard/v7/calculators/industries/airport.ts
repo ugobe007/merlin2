@@ -12,7 +12,8 @@ export const AIRPORT_LOAD_V1_SSOT: CalculatorContract = {
 
     // ── Bridge curated → SSOT fields ───────────────────────────────
     const _rawPassengersVal = inputs.annualPassengers ?? inputs.annual_passengers;
-    const rawPassengers = _rawPassengersVal != null ? (Number(_rawPassengersVal) || 1000000) : 1000000;
+    const rawPassengers =
+      _rawPassengersVal != null ? Number(_rawPassengersVal) || 1000000 : 1000000;
     const annualPassengersMillions =
       rawPassengers >= 1000 ? rawPassengers / 1000000 : rawPassengers;
     const terminalSqFt = Number(inputs.terminalSqFt) || 500000;
@@ -36,7 +37,19 @@ export const AIRPORT_LOAD_V1_SSOT: CalculatorContract = {
       assumptions.push(`EV chargers: ${inputs.evChargers}`);
 
     // ── Delegate to SSOT ───────────────────────────────────────────
-    const result = calculateUseCasePower("airport", { annualPassengers: rawPassengers });
+    const result = calculateUseCasePower(
+      "airport",
+      buildSSOTInput("airport", {
+        annualPassengers: rawPassengers,
+        airportClass: rawClass,
+        terminalSqFt: terminalSqFt > 0 ? terminalSqFt : undefined,
+        jetBridges: jetBridges > 0 ? jetBridges : undefined,
+        cargoFacility:
+          inputs.cargoFacility && inputs.cargoFacility !== "none"
+            ? inputs.cargoFacility
+            : undefined,
+      })
+    );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // ── TrueQuote kW contributor breakdown ─────────────────────────

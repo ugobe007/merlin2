@@ -44,7 +44,12 @@ import { useQuoteExport } from "@/hooks/useQuoteExport";
 import { QuotePreviewModal } from "./ProQuote/Export/QuotePreviewModal";
 import { UploadFirstView } from "./ProQuote/Views/UploadFirstView";
 import { LandingView } from "./ProQuote/Views/LandingView";
-import { ProfessionalModelView } from "./ProQuote/Views/ProfessionalModelView";
+// I2: Lazy-load — only loads when "Bank Model" tab is opened
+const ProfessionalModelView = React.lazy(() =>
+  import("./ProQuote/Views/ProfessionalModelView").then((m) => ({
+    default: m.ProfessionalModelView,
+  }))
+);
 import { useSystemCalculation } from "@/hooks/useSystemCalculation";
 import { useWizardConfig } from "@/hooks/useWizardConfig";
 import { useProQuoteState } from "@/hooks/useProQuoteState";
@@ -1005,29 +1010,47 @@ export default function AdvancedQuoteBuilder({
           localSystemCost={localSystemCost}
         />
 
-        {/* Professional Financial Model View */}
+        {/* Professional Financial Model View — lazy-loaded on first Bank Model click */}
         {viewMode === "professional-model" && (
-          <ProfessionalModelView
-            projectInfo={projectInfo}
-            professionalModel={professionalModel}
-            setProfessionalModel={setProfessionalModel}
-            isGeneratingModel={isGeneratingModel}
-            setIsGeneratingModel={setIsGeneratingModel}
-            storageSizeMW={storageSizeMW}
-            durationHours={durationHours}
-            selectedISORegion={selectedISORegion}
-            setSelectedISORegion={setSelectedISORegion}
-            projectLeverage={projectLeverage}
-            setProjectLeverage={setProjectLeverage}
-            interestRate={interestRate}
-            setInterestRate={setInterestRate}
-            loanTermYears={loanTermYears}
-            location={location}
-            utilityRate={utilityRate}
-            demandCharge={demandCharge}
-            onClose={onClose}
-            onNavigateToLanding={() => setViewMode("landing")}
-          />
+          <React.Suspense
+            fallback={
+              <div className="flex items-center justify-center py-24 text-slate-400 text-sm">
+                <svg className="w-5 h-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeDasharray="30 10"
+                  />
+                </svg>
+                Loading Bank Model…
+              </div>
+            }
+          >
+            <ProfessionalModelView
+              projectInfo={projectInfo}
+              professionalModel={professionalModel}
+              setProfessionalModel={setProfessionalModel}
+              isGeneratingModel={isGeneratingModel}
+              setIsGeneratingModel={setIsGeneratingModel}
+              storageSizeMW={storageSizeMW}
+              durationHours={durationHours}
+              selectedISORegion={selectedISORegion}
+              setSelectedISORegion={setSelectedISORegion}
+              projectLeverage={projectLeverage}
+              setProjectLeverage={setProjectLeverage}
+              interestRate={interestRate}
+              setInterestRate={setInterestRate}
+              loanTermYears={loanTermYears}
+              location={location}
+              utilityRate={utilityRate}
+              demandCharge={demandCharge}
+              onClose={onClose}
+              onNavigateToLanding={() => setViewMode("landing")}
+            />
+          </React.Suspense>
         )}
 
         {/* ═══ PROQUOTE MODALS ═══ */}

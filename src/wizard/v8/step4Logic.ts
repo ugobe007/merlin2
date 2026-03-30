@@ -92,6 +92,7 @@ import { selectOptimalPanel } from "@/services/solarPanelSelectionService";
 import { selectOptimalBESS, type BESSSpec } from "@/services/bessSelectionService";
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
 import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
+import type { HybridCoverage, HybridStrategy, PowerSourceDescriptor } from "./wizardState";
 
 // Dev-only logging helper — compiled away in production bundles
 
@@ -128,22 +129,25 @@ const GOAL_GUIDANCE: Record<GoalChoice, GoalGuidance> = {
     // Smaller, cheaper, faster payback. Solar at moderate penetration.
     // Generator only if Step 3 asked for it (adds cost, slows payback).
     solarPenetration: { starter: 0.4, recommended: 0.7, complete: 1.0 },
-    durationHours: { starter: 2, recommended: 2, complete: 3 },
+    durationHours: { starter: 2, recommended: 2, complete: 2 },
     generatorPolicy: "if_requested",
     auditNote: "Goal: Save More — bias toward smaller system and fast payback.",
   },
   save_most: {
     // Balanced for optimal NPV. Solar at high penetration (best ROI driver).
     // Generator when critical loads are substantial (≥ 50%).
+    // INDUSTRY NOTE: C2 (2h) is the commercial BESS standard. Extended coverage
+    // comes from solar recharge between peaks + generator bridge — not raw battery hours.
     solarPenetration: { starter: 0.5, recommended: 0.85, complete: 1.0 },
-    durationHours: { starter: 2, recommended: 2, complete: 4 },
+    durationHours: { starter: 2, recommended: 2, complete: 2 },
     generatorPolicy: "if_critical",
     auditNote: "Goal: Save Most — bias toward optimal NPV and return on investment.",
   },
   full_power: {
     // Maximum resilience. Solar maxed out. Generator always. Long duration.
+    // Complete tier gets 4h ONLY for explicit microgrid/island-mode use cases.
     solarPenetration: { starter: 0.6, recommended: 1.0, complete: 1.0 },
-    durationHours: { starter: 2, recommended: 4, complete: 6 },
+    durationHours: { starter: 2, recommended: 2, complete: 4 },
     generatorPolicy: "always",
     auditNote: "Goal: Full Power — bias toward maximum coverage and grid independence.",
   },
@@ -315,10 +319,236 @@ function inferApplicationFromGoal(goal: GoalChoice): string {
   return "peak_shaving"; // save_more and save_most both default to peak shaving
 }
 
+// =============================================================================
+// HYBRID COVERAGE ALGORITHM — Dynamic Power Source Architecture
+// =============================================================================
+//
+// PRINCIPLE: BESS is always the anchor. Power sources are enumerated dynamically.
+// No source is assumed or preferred — each self-describes its contribution.
+// New sources (wind, nuclear, hydrogen) extend PowerSourceDescriptor without
+// changing the algorithm.
+//
+// RECHARGE THRESHOLD: ≥ 50% of bessKWh recharged between AM and PM demand peaks
+// → 2h battery covers BOTH daily demand windows (4h effective coverage)
+//
+// OUTAGE BRIDGE: whichever source has the longest outageBridgeHours wins.
+//   Solar:          0h  (weather-dependent, not dispatchable)
+//   Rotary gen:     24h (standard diesel/NG fuel tank before refuel decision)
+//   Linear gen:     72h (smaller, efficient, more fuel-friendly; 3-day endurance)
+// =============================================================================
+
+const NREL_PR = 0.77; // NREL performance ratio for solar production
+const MIDDAY_FRACTION = 0.6; // ~60% of daily solar falls in 10am–4pm window
+const OVERNIGHT_HOURS = 8; // Off-peak recharge window: 10pm–6am
+
+/**
+ * Build the list of active power sources from sized system components.
+ * Each descriptor is self-contained — the coverage algorithm never special-cases
+ * a specific technology; it aggregates descriptors generically.
+ */
+function buildPowerSources(
+  solarKW: number,
+  generatorKW: number,
+  generatorFuelType: string,
+  linearGeneratorKW: number,
+  bessKWh: number,
+  baseLoadKW: number,
+  peakSunHours: number
+): PowerSourceDescriptor[] {
+  const sources: PowerSourceDescriptor[] = [];
+
+  // ── Solar ────────────────────────────────────────────────────────────────
+  // Variable daytime source. Best for midday BESS recharge between demand peaks.
+  // Cannot guarantee outage coverage (weather + day/night constraint).
+  if (solarKW > 0) {
+    const dailyKWh = solarKW * peakSunHours * NREL_PR;
+    const middayKWh = dailyKWh * MIDDAY_FRACTION;
+    const middayWindowHours = Math.min(peakSunHours * MIDDAY_FRACTION, 5.0); // 3–5h
+    const baseLoadMiddayKWh = baseLoadKW * middayWindowHours;
+    const netRechargeKWh = Math.max(0, Math.round(middayKWh - baseLoadMiddayKWh));
+
+    sources.push({
+      type: "solar",
+      profile: "variable_daytime",
+      kW: solarKW,
+      label: `${solarKW} kW Solar`,
+      canRechargeBESS: netRechargeKWh > 0,
+      dailyRechargeKWh: netRechargeKWh,
+      dailyRechargeWindowHours: middayWindowHours,
+      canBridgeOutage: false, // Weather-dependent; can't guarantee dispatch
+      outageBridgeHours: 0,
+    });
+  }
+
+  // ── Rotary Generator (diesel / natural-gas / dual-fuel) ─────────────────
+  // Dispatchable, fuel-limited. Primary role: outage bridge after BESS depletes.
+  // Secondary role: off-peak trickle charge (30% load, overnight) when site has
+  // high critical load requirement and no linear gen.
+  if (generatorKW > 0) {
+    // Off-peak trickle: 30% rated power during overnight window (before AM peak)
+    const trickleKW = generatorKW * 0.3;
+    const genRechargeKWh = Math.min(Math.round(trickleKW * OVERNIGHT_HOURS), bessKWh);
+
+    sources.push({
+      type: "generator",
+      profile: "dispatchable",
+      kW: generatorKW,
+      label: `${generatorKW} kW ${fuelLabel(generatorFuelType)} Generator`,
+      canRechargeBESS: true, // Can run off-peak at partial load to top up BESS
+      dailyRechargeKWh: genRechargeKWh,
+      dailyRechargeWindowHours: OVERNIGHT_HOURS,
+      canBridgeOutage: true,
+      outageBridgeHours: 24, // Standard fuel endurance (before refuel decision)
+      fuelType: generatorFuelType as PowerSourceDescriptor["fuelType"],
+    });
+  }
+
+  // ── Linear Generator ─────────────────────────────────────────────────────
+  // Continuous baseload operation — no rotational losses, ~20% more fuel-efficient
+  // than rotary at partial load. Ideal role: keep BESS topped up 24/7.
+  // Smaller unit (5–100 kW); not sized for full facility peak, sized for BESS charging.
+  // Extended fuel endurance: 72h (3 days) before refuel — better than rotary.
+  if (linearGeneratorKW > 0) {
+    // Runs at rated capacity; serves base load first, remainder charges BESS
+    const dailyOutputKWh = Math.round(linearGeneratorKW * 24 * 0.9); // 90% uptime
+    const baseLoadDailyKWh = baseLoadKW * 24;
+    const netLinearChargeKWh = Math.max(
+      0,
+      Math.min(Math.round(dailyOutputKWh - baseLoadDailyKWh), bessKWh)
+    );
+
+    sources.push({
+      type: "linear_generator",
+      profile: "continuous_baseload",
+      kW: linearGeneratorKW,
+      label: `${linearGeneratorKW} kW Linear Generator`,
+      canRechargeBESS: true,
+      dailyRechargeKWh: netLinearChargeKWh,
+      dailyRechargeWindowHours: 24, // Runs continuously
+      canBridgeOutage: true,
+      outageBridgeHours: 72, // 3-day fuel endurance (efficient partial-load)
+    });
+  }
+
+  // Future slots: wind, nuclear, hydrogen — implement PowerSourceDescriptor and push here.
+  // The coverage algorithm below requires no changes.
+
+  return sources;
+}
+
+/** Human-readable fuel type label */
+function fuelLabel(fuelType: string): string {
+  if (fuelType === "natural-gas") return "Natural Gas";
+  if (fuelType === "dual-fuel") return "Dual-Fuel";
+  return "Diesel";
+}
+
+/**
+ * Compute hybrid BESS coverage dynamically across all active power sources.
+ *
+ * Does NOT special-case any technology. Coverage aggregates across whatever
+ * sources are present. Strategy label emerges from the active source set.
+ *
+ * Algorithm:
+ *   1. Build PowerSourceDescriptor[] from sized components
+ *   2. Sum daily recharge kWh across all sources → recharge %
+ *   3. If ≥ 50% recharge: BESS covers both daily peaks → 4h effective
+ *   4. Outage bridge = max(outageBridgeHours) across bridge-capable sources
+ *   5. Strategy label from source type set (not hardcoded rules)
+ */
+function computeHybridCoverage(
+  bessKW: number,
+  bessKWh: number,
+  solarKW: number,
+  generatorKW: number,
+  generatorFuelType: string,
+  linearGeneratorKW: number,
+  baseLoadKW: number,
+  criticalLoadKW: number,
+  peakSunHours: number
+): HybridCoverage {
+  const bessSpecHours = 2 as const;
+  void bessKW; // power rating already used in upstream BESS sizing
+  void criticalLoadKW; // reserved for future fuel consumption model
+
+  // ── Step 1: enumerate active power sources ────────────────────────────────
+  const activeSources = buildPowerSources(
+    solarKW,
+    generatorKW,
+    generatorFuelType,
+    linearGeneratorKW,
+    bessKWh,
+    baseLoadKW,
+    peakSunHours
+  );
+
+  // ── Step 2: aggregate recharge capacity ───────────────────────────────────
+  const totalDailyRechargeKWh = activeSources.reduce(
+    (sum, s) => sum + (s.canRechargeBESS ? s.dailyRechargeKWh : 0),
+    0
+  );
+  const totalRechargePercent =
+    bessKWh > 0 ? Math.min(100, Math.round((totalDailyRechargeKWh / bessKWh) * 100)) : 0;
+
+  // ── Step 3: can we cover both daily demand peaks? ─────────────────────────
+  // ≥ 50% recharge between peaks enables the evening discharge cycle
+  const handlesBothDailyPeaks = activeSources.length > 0 && totalRechargePercent >= 50;
+  const dailyPeakCoverageHours: 2 | 4 = handlesBothDailyPeaks ? 4 : 2;
+
+  // ── Step 4: outage bridge ─────────────────────────────────────────────────
+  // BESS provides 2h; best bridge-capable source extends beyond that
+  const bridgeSources = activeSources.filter((s) => s.canBridgeOutage);
+  const outageBridgeHours =
+    bridgeSources.length > 0
+      ? Math.max(...bridgeSources.map((s) => s.outageBridgeHours))
+      : bessSpecHours;
+
+  // ── Step 5: strategy emerges from active source types ────────────────────
+  const activeTypes = new Set(activeSources.map((s) => s.type));
+  const hasSolar = activeTypes.has("solar");
+  const hasAnyGen = activeTypes.has("generator") || activeTypes.has("linear_generator");
+  const strategy: HybridStrategy =
+    activeSources.length === 0
+      ? "bess_only"
+      : hasSolar && hasAnyGen
+        ? "full_hybrid"
+        : hasSolar
+          ? "solar_boost"
+          : "gen_extend";
+
+  // ── Step 6: plain-language summary ───────────────────────────────────────
+  const sourceNames = activeSources.map((s) => s.label).join(" + ");
+  let coverageSummary: string;
+  if (strategy === "bess_only") {
+    coverageSummary = `2h on-demand battery — optimized for demand charge reduction`;
+  } else if (strategy === "full_hybrid") {
+    coverageSummary = handlesBothDailyPeaks
+      ? `${sourceNames} recharges battery between peaks — covers AM & PM demand + ${outageBridgeHours}h outage bridge`
+      : `${sourceNames} — ${totalRechargePercent}% daily recharge + ${outageBridgeHours}h outage bridge`;
+  } else if (strategy === "solar_boost") {
+    coverageSummary = handlesBothDailyPeaks
+      ? `${sourceNames} recharges battery midday — covers morning AND evening demand peaks`
+      : `${sourceNames} offset (${totalRechargePercent}% midday recharge) + 2h battery`;
+  } else {
+    // gen_extend
+    coverageSummary = `2h battery → ${sourceNames} bridges for ${outageBridgeHours}h outage coverage`;
+  }
+
+  return {
+    bessSpecHours,
+    activeSources,
+    totalDailyRechargeKWh: Math.round(totalDailyRechargeKWh),
+    totalRechargePercent,
+    handlesBothDailyPeaks,
+    dailyPeakCoverageHours,
+    outageBridgeHours,
+    strategy,
+    coverageSummary,
+  };
+}
+
 /**
  * Compute BESS power (kW) and energy (kWh) for a given tier.
- *
- * BESS is ALWAYS included — it is the core product.
  * Ratio source: getBESSSizingRatioWithSource() → IEEE/MDPI benchmarks.
  */
 function computeBESSSizing(
@@ -482,6 +712,21 @@ function buildOneTier(
   );
   const evChargerKW = computeEVChargerKW(state);
 
+  // ── Hybrid Coverage ──────────────────────────────────────────────────────
+  // Always computed — data is available once BESS + solar + gen are sized.
+  const stateWithLinearGen = state as WizardState & { linearGeneratorKW?: number };
+  const hybridCoverage = computeHybridCoverage(
+    bessKW,
+    bessKWh,
+    finalSolarKW,
+    finalGenKW,
+    state.generatorFuelType ?? "diesel",
+    stateWithLinearGen.linearGeneratorKW ?? 0,
+    state.baseLoadKW,
+    state.peakLoadKW * state.criticalLoadPct,
+    intel?.peakSunHours ?? 5.0
+  );
+
   // Build EV charger details for notes
   const stateWithEV = state as WizardState & {
     level2Chargers?: number;
@@ -515,6 +760,10 @@ function buildOneTier(
     else if (t === "hpc") costHpc = state.evChargers!.count;
     else costLevel2 = state.evChargers!.count; // fallback to L2
   }
+
+  // Panel upgrade cost from electrical assessment (from PanelAssessmentModal in Step 3.5)
+  const stateWithPanel = state as WizardState & { panelUpgradeCost?: number };
+  const panelUpgradeCost = stateWithPanel.panelUpgradeCost ?? 0;
 
   const v45Costs = calculateSystemCosts({
     solarKW: finalSolarKW,
@@ -569,9 +818,10 @@ function buildOneTier(
 
   // ── Assemble QuoteTier ──────────────────────────────────────────────────
   const itcRate = 0.3; // Federal ITC base rate (IRA 2022); applied to solar+BESS only
-  const grossCost = v45Costs.totalInvestment; // equipment + site + contingency + Merlin fee
+  // Panel upgrade cost: added to gross cost (not ITC-eligible — electrical service work)
+  const grossCost = v45Costs.totalInvestment + panelUpgradeCost;
   const itcAmount = v45Costs.federalITC; // 30% of full §48 basis: solar+labor, BESS, site engineering, contingency, installation labor
-  const netCost = v45Costs.netInvestment; // totalProjectCost − itcAmount (totalProjectCost includes installation labor)
+  const netCost = v45Costs.netInvestment + panelUpgradeCost; // totalProjectCost − itcAmount + panel upgrade (not ITC eligible)
 
   // ── Addon guardrails: sizing checks + audit notes for TrueQuote ────────
   // validateAddonConfig runs all three guardrails (solar NREL, EV NEC/SAE, generator IEEE 446)
@@ -621,7 +871,7 @@ function buildOneTier(
     ...baseNotes,
     GOAL_GUIDANCE[goal].auditNote,
     `Tier: ${tierLabel} (BESS scale ${TIER_BESS_SCALE[tierLabel]}×)`,
-    `BESS: ${bessKW} kW / ${bessKWh} kWh (${durationHours}h duration)`,
+    `BESS: ${bessKW} kW / ${bessKWh} kWh (${durationHours}h C2 spec — hybrid coverage: ${hybridCoverage.coverageSummary})`,
     finalSolarKW > 0
       ? `Solar: ${finalSolarKW} kW AC${userConfiguredSolar ? ` (user selected ${solarKW} kW, scaled ${Math.round(tierAddonScale * 100)}% for ${tierLabel})` : ` (${intel?.peakSunHours.toFixed(1)} PSH × ${finalSolarKW}/${state.solarPhysicalCapKW} kW cap)`}`
       : `Solar: excluded (${intel?.solarFeasible ? "physical cap = 0" : `grade ${intel?.solarGrade ?? "unknown"} < B-`})`,
@@ -644,6 +894,10 @@ function buildOneTier(
           `⚡ EV infrastructure: $${v45Costs.evInfrastructureCost.toLocaleString()} (480V service, conduit, transformer — NEC Art. 625/230)`,
         ]
       : []),
+    // Panel upgrade from electrical assessment
+    ...(panelUpgradeCost > 0
+      ? [`🔌 Panel upgrade (assessed): $${panelUpgradeCost.toLocaleString()} — not ITC-eligible`]
+      : []),
     // Warnings from all guardrails
     ...addonValidation.allWarnings.map((w) => `⚠️  ${w}`),
   ];
@@ -656,10 +910,24 @@ function buildOneTier(
     generatorKW: finalGenKW,
     evChargerKW,
     durationHours,
+    hybridCoverage,
     grossCost,
     itcRate,
     itcAmount,
     netCost,
+    // ITC basis breakdown — explains what the 30% applies to (§48 eligible costs only)
+    itcBasisBreakdown: {
+      solarEligible: Math.round(v45Costs.solarCost + v45Costs.solarLaborCost),
+      bessEligible: Math.round(v45Costs.bessCost),
+      siteEligible: Math.round(
+        v45Costs.siteEngineering +
+          v45Costs.constructionContingency +
+          (v45Costs.installationLaborCost - v45Costs.solarLaborCost) // non-solar field labor
+      ),
+      totalEligible: Math.round(itcAmount / itcRate), // back-calculated from itcAmount for exact match
+      generatorCost: Math.round(v45Costs.generatorCost),
+      evChargingCost: Math.round(v45Costs.evChargingCost + v45Costs.evInfrastructureCost),
+    },
     // V4.5 honest TCO: persist both gross and net savings
     grossAnnualSavings,
     annualReserves,

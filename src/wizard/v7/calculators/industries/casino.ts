@@ -24,10 +24,10 @@ export const CASINO_LOAD_V1_SSOT: CalculatorContract = {
     // Curated buttons: 'none'/'small'/'medium'/'large'/'mega' (NOT numbers)
     const HOTEL_ROOM_MAP: Record<string, number> = {
       none: 0,
-      small: 250,    // < 500 rooms → midpoint
-      medium: 1000,  // 500-1,500 rooms → midpoint
-      large: 2250,   // 1,500-3,000 rooms → midpoint
-      mega: 4000,    // 3,000+ rooms
+      small: 250, // < 500 rooms → midpoint
+      medium: 1000, // 500-1,500 rooms → midpoint
+      large: 2250, // 1,500-3,000 rooms → midpoint
+      mega: 4000, // 3,000+ rooms
     };
     const rawRooms = inputs.hotelRooms;
     const hotelRooms =
@@ -62,7 +62,16 @@ export const CASINO_LOAD_V1_SSOT: CalculatorContract = {
       assumptions.push(`Entertainment: ${inputs.entertainmentVenues}`);
 
     // ── Delegate to SSOT ───────────────────────────────────────────
-    const result = calculateUseCasePower("casino", { gamingFloorSqFt: gamingFloorSqft });
+    const result = calculateUseCasePower(
+      "casino",
+      buildSSOTInput("casino", {
+        gamingFloorSqft,
+        totalPropertySqFt: totalPropertySqFt > gamingFloorSqft ? totalPropertySqFt : undefined,
+        hotelRooms: hotelRooms > 0 ? hotelRooms : undefined,
+        restaurants: restaurants > 0 ? restaurants : undefined,
+        casinoType,
+      })
+    );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // ── TrueQuote kW contributor breakdown ─────────────────────────

@@ -1,6 +1,5 @@
 import type { CalculatorContract, CalcInputs, CalcRunResult, CalcValidation } from "../contract";
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
-import { buildSSOTInput } from "../ssotInputAliases";
 
 export const COLD_STORAGE_LOAD_V1_SSOT: CalculatorContract = {
   id: "cold_storage_load_v1",
@@ -17,10 +16,10 @@ export const COLD_STORAGE_LOAD_V1_SSOT: CalculatorContract = {
     // ✅ FIX (Feb 14, 2026): Map button string values → numeric dock door count
     // Curated buttons: 'small'(1-5)/'medium'(6-15)/'large'(15-30)/'mega'(30+)
     const DOCK_MAP: Record<string, number> = {
-      small: 3,    // midpoint of 1-5
-      medium: 10,  // midpoint of 6-15
-      large: 22,   // midpoint of 15-30
-      mega: 40,    // conservative estimate for 30+
+      small: 3, // midpoint of 1-5
+      medium: 10, // midpoint of 6-15
+      large: 22, // midpoint of 15-30
+      mega: 40, // conservative estimate for 30+
     };
     const rawDocks = inputs.dockDoors;
     const dockDoors =

@@ -1008,6 +1008,23 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     dispatch({ type: "SET_EV_CHARGERS", chargers });
   }, []);
 
+  const setPanelInfo = useCallback(
+    (
+      panelAmps: number,
+      serviceType: "single-phase-208" | "three-phase-208" | "three-phase-480" | "unknown",
+      upgradeCost: number,
+      upgradeType:
+        | "none"
+        | "circuit_breakers"
+        | "service_upgrade"
+        | "transformer"
+        | "standalone_panel"
+    ) => {
+      dispatch({ type: "SET_PANEL_INFO", panelAmps, serviceType, upgradeCost, upgradeType });
+    },
+    []
+  );
+
   const setBaseLoad = useCallback(
     (baseLoadKW: number, peakLoadKW: number, evRevenuePerYear?: number) => {
       dispatch({
@@ -1111,13 +1128,27 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
     dispatch({ type: "SET_TIERS_STATUS", status: "fetching" });
 
+    // E5 MagicFit watchdog: if buildTiers hangs (e.g. Supabase stall) for
+    // more than 15 s, force-reset to error so the UI doesn't freeze forever.
+    const buildKey = createTierBuildKey(state);
+    const watchdog = setTimeout(() => {
+      // Only reset if still waiting on the same build key
+      if (tierBuildRef.current?.key === buildKey) {
+        console.warn("[useWizardV8] ⏱ Tier build watchdog fired — forcing error state");
+        dispatch({ type: "SET_TIERS_STATUS", status: "error" });
+        tierBuildRef.current = null;
+      }
+    }, 15_000);
+
     void getOrStartTierBuild(state)
       .then((tiers) => {
+        clearTimeout(watchdog);
         devLog("[useWizardV8] ✅ Background tier build complete", tiers.length);
         dispatch({ type: "SET_TIERS", tiers });
         dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
       })
       .catch((error) => {
+        clearTimeout(watchdog);
         console.error("[useWizardV8] ❌ Tier build failed:", error);
         dispatch({ type: "SET_TIERS_STATUS", status: "error" });
         if (tierBuildRef.current?.key === createTierBuildKey(state)) {
@@ -1179,6 +1210,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       setAddonPreference,
       setAddonConfig,
       setEVChargers,
+      setPanelInfo,
       setBaseLoad,
       setTiers,
       setTiersStatus,
@@ -1201,6 +1233,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       setAddonPreference,
       setAddonConfig,
       setEVChargers,
+      setPanelInfo,
       setBaseLoad,
       setTiers,
       setTiersStatus,

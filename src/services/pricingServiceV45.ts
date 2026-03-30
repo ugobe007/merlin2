@@ -319,6 +319,8 @@ export interface CostBreakdown {
   federalITC: number;
   netInvestment: number;
 
+  // Solar field installation labor (subset of installationLaborCost — ITC-eligible per §48)
+  solarLaborCost: number;
   // Installation & field labor (ADDITIONAL COSTS — NOT in equipment quote, shown separately)
   installationLaborCost: number;
   // Total project cost (equipment quote + installation labor) — true ROI/NPV investment basis
@@ -451,6 +453,7 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
     totalInvestment: Math.round(totalInvestment),
     federalITC: Math.round(federalITC),
     netInvestment: Math.round(netInvestment),
+    solarLaborCost: Math.round(solarLaborCost),
     installationLaborCost: Math.round(installationLaborCost),
     totalProjectCost: Math.round(totalProjectCost),
     annualReserves: Math.round(annualReserves),

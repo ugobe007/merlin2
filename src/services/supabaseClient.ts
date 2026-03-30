@@ -2,8 +2,10 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 
 // Supabase configuration
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+
+const _env = (typeof import.meta !== "undefined" && (import.meta as any).env) || {};
+const supabaseUrl = _env.VITE_SUPABASE_URL || "";
+const supabaseAnonKey = _env.VITE_SUPABASE_ANON_KEY || "";
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn("⚠️ Supabase credentials not found. Please add them to your .env file.");
@@ -15,7 +17,9 @@ let _supabaseInstance: SupabaseClient<Database> | null = null;
 
 export const supabase = (() => {
   if (!_supabaseInstance) {
-    _supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    const url = supabaseUrl || "https://placeholder.supabase.co";
+    const key = supabaseAnonKey || "placeholder-key";
+    _supabaseInstance = createClient<Database>(url, key, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,

@@ -45,6 +45,8 @@ const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard"));
 const EnergyNews = lazy(() => import("./pages/EnergyNews"));
 const ElCarWashLanding = lazy(() => import("./pages/ElCarWashLanding"));
 const OpportunitiesDashboard = lazy(() => import("./pages/OpportunitiesDashboard"));
+const BuildRFPPage = lazy(() => import("./pages/BuildRFPPage"));
+const UploadQuotePage = lazy(() => import("./pages/UploadQuotePage"));
 // const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
 import { trackPageView } from "./services/analyticsService";
 
@@ -563,6 +565,24 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <TwitterBanner />
+      </Suspense>
+    );
+  }
+
+  // Access via /upload-quote — Smart Upload™ (upload utility bills → pre-fill ProQuote)
+  if (pathname === "/upload-quote") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <UploadQuotePage />
+      </Suspense>
+    );
+  }
+
+  // Access via /build-rfp — RFP Builder (prefilled from TrueQuote wizard)
+  if (pathname === "/build-rfp") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <BuildRFPPage />
       </Suspense>
     );
   }

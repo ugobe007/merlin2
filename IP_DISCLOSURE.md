@@ -1482,6 +1482,152 @@ _Issues the patent attorney should investigate before filing._
 
 ---
 
+## Brief Description of the Drawings
+
+**FIG. 1** is a layered system architecture diagram of the Merlin Energy platform, illustrating five hierarchical functional layers flowing from user-visible interface down to external data authorities: a User Interface Layer containing six client-side application modules; a Wizard and Orchestration Layer containing the state machine, reducer, and tier-building engine; a Quote and Pricing Engine Layer containing the quote authentication, optimization, and pricing services; an Intelligence and Data Layer containing geographic, market, and financial analysis services; and an External Data Sources Layer identifying the authoritative external data providers. Directed arrows between layers indicate data flow and dependency relationships.
+
+**FIG. 2** is a flowchart illustrating the end-to-end operational workflow of the Merlin Energy wizard, beginning at a user-initiated START node and proceeding through: business name entry with client-side industry classification; a confidence-gated decision node that eliminates an intermediate step and atomically populates facility constraints when confidence meets or exceeds 0.75; ZIP code entry with three-tier fallback geographic resolution and parallel progressive intel reveal; an optional industry selection step; load profile and equipment data collection with selective memoization and proactive background tier computation; add-on and configuration selection with reducer-level generator auto-enablement; three-tier MagicFit optimization; TrueQuote™-authenticated quote results display; and a format-branching export decision node. Back-navigation state reset behavior is annotated on the diagram.
+
+**FIG. 3** is a three-panel diagram illustrating the core computation and compliance pipeline. The left panel depicts the Four-Layer Energy System Sizing Engine (Patent 1) with its location-to-solar-grade conversion, industry-specific facility constraints, operational demand profile inputs, goal-weighted penetration adjustments, and double-gated solar sizing formula. The center panel depicts the MagicFit Three-Tier Optimizer (Patent 2) with its four-scenario BESS upsize matrix, single-base-calculation three-tier derivation, and the Content-Addressable Proactive Synthesis Cache (Patent 9). The right panel depicts the TrueQuote™ Compliance Architecture (Patents 3, 4, and 28), including the typed authoritative source registry, per-value citation schema, quote audit metadata, three-layer margin policy stack, and Forbidden UI computation enforcement.
+
+**FIG. 4** is a wireframe diagram of the Merlin Energy wizard user interface, depicting five sequential screen panels rendered side by side with connecting directional flow arrows: Screen 1 shows business name entry with industry auto-detection at 90% confidence and atomic constraint population; Screen 2 shows ZIP code entry with progressive solar grade, utility rate, and grid reliability reveal; Screen 3 shows load profile collection with live peak demand computation; Screen 4 shows add-on selection with MagicFit upsize matrix status and automatic generator enablement; Screen 5 shows the TrueQuote™-authenticated three-tier quote result with BESS and solar system sizing, total installed cost, annual savings, payback period, 25-year NPV, 25-year ROI, and export options.
+
+---
+
+## Detailed Description of the Drawings
+
+### FIG. 1 — System Architecture
+
+Referring to FIG. 1, the Merlin Energy platform is organized into five stacked horizontal functional layers, each bounded by a labeled zone. Data flows downward through directed arrows between layers.
+
+**User Interface Layer (100)** comprises six client-side modules rendered in browser. Wizard V8 (101) is the primary five-step guided configuration interface, the primary subject of Patents 9–15. ProQuote Builder (102) is an advanced manual configuration tool. Results / Step 5 (103) is the tier-presentation display presenting TrueQuote™-authenticated quotes. Deep Dive Panel (104) is the bank-grade and professional financial model view. Market Intelligence Dashboard (105) aggregates live equipment price trends, utility benchmarks, ITC scenarios, and battery degradation data (Patent 22). Vendor Portal (106) provides the RFQ receipt and product submission interface (Patent 21).
+
+**Wizard and Orchestration Layer (110)** comprises four modules. `useWizardV8` (111) serves as the primary state orchestrator implementing the content-addressable promise cache, proactive background synthesis, and stale-while-rebuilding pattern (Patent 9). `wizardState.ts` (112) is the pure reducer implementing the `UX_POLICY` design constraint object (Patent 15), all step transition logic, the confidence-gated CONFIRM_BUSINESS reducer (Patent 11), the SET_GRID_RELIABILITY reducer (Patent 14), and the GO_BACK tier reset. `step4Logic.ts` (113) implements the `buildTiers()` function that executes the four-layer sizing engine (Patent 1) and invokes the MagicFit optimizer. `MerlinOrchestrator` (114) applies TrueQuote™ authentication and routes MagicFit three-tier outputs to the customer-facing result set (Patents 2 and 3).
+
+**Quote and Pricing Engine Layer (120)** comprises six computational services. `TrueQuoteV2` (121) is the quote engine and authentication gateway that validates every generated quote against the source registry before results are released. `MagicFit.ts` (122) is the three-tier optimizer implementing the four-scenario upsize matrices (Patent 2). `MarginPolicy` (123) is the three-layer pricing stack (market base cost / procurement buffer / sell price) with Forbidden UI method injection (Patents 4 and 28). `benchmarkSources` (124) is the typed `AUTHORITATIVE_SOURCES` registry implementing per-value citation and deviation logging for TrueQuote™ compliance (Patent 3). `unifiedPricing` (125) implements the five-priority pricing waterfall with market-confidence blend function (Patent 25). `8760 Simulator` (126) is the full-year hourly energy dispatch simulation engine (Patent 5).
+
+**Intelligence and Data Layer (130)** comprises six analytical services. `geoIntelligence` (131) implements solar grade letter computation, composite grid reliability scoring, state incentive stacking, and ISO/RTO state-to-operator mapping (Patents 7 and 20). `marketDataParser` (132) implements dual-pattern per-equipment-class RSS price extraction with zero-dependency dual-runtime architecture (Patent 16). `rssAutoFetch` (133) implements the dual-pipeline scheduled fetch service routing each ingested article simultaneously to the AI training database and the price alert engine (Patent 27). `priceAlert` (134) implements three-pattern price extraction, context-inferred baseline tier selection, and five-tier deal classification (Patent 23). `monteCarlo` (135) implements P10/P50/P90 Latin Hypercube sampling with ITC binary risk modeling (Patent 6). `specExtraction` (136) implements the hybrid AI+regex dual-track extraction pipeline for unstructured RFP documents (Patent 19).
+
+**External Data Sources Layer (140)** identifies six external data authorities consulted by the Intelligence layer. NREL ATB 2024 (141) provides battery and solar equipment cost benchmarks. EIA CBECS (142) provides commercial building energy consumption data. Supabase Database (143) is the application's primary relational datastore. GPT-4 AI (144) provides high-accuracy structured extraction for the hybrid document parser and speculative configuration suggestions. ISO/RTO Feeds (145) provide ancillary service price data for the revenue projection engine. Vendor API (146) represents the supply-side vendor pricing submission channel.
+
+Directed arrows (150) between adjacent layers indicate the direction of primary data flow. Each arrow represents one or more asynchronous API calls, database queries, or Promise-based fetches traversing the layer boundary in the direction shown. Arrows between the Intelligence layer and External Sources layer represent outbound queries; return data flows upward through the same boundaries.
+
+---
+
+### FIG. 2 — Wizard Workflow
+
+Referring to FIG. 2, the end-to-end operational flow of the Merlin Energy wizard is illustrated as a top-to-bottom flowchart with rectangular process nodes, diamond decision nodes, and annotated side notes.
+
+Process initiates at **START (200)** when a user opens the Merlin Energy application in a browser.
+
+**Step 0 — Business Name Entry (201):** The user enters a business or facility name. The system immediately applies `detectIndustryFromName()` (202), a client-side confidence-weighted natural language classifier that applies word-boundary regex matching across 30+ industry categories with tiered confidence values (0.70 for generic terms, 0.85 for specialty terms, 0.90–0.95 for recognized brand names). No backend call is made; classification occurs entirely in the browser.
+
+**Confidence Gate Decision Node (203):** A diamond node evaluates whether the returned confidence value is greater than or equal to 0.75. If YES (204), two simultaneous actions occur in the same event loop tick: (a) the wizard navigator advances from Step 1 directly to Step 3, eliminating Step 2 from the user's session; and (b) `getFacilityConstraints()` (205) is called to atomically populate `solarPhysicalCapKW` and `criticalLoadPct` before Step 3 renders, preventing the null-state window described in Patent 11. If NO (206), the wizard proceeds normally through Step 2.
+
+**Step 1 — ZIP Code Entry (207):** The user enters a five-digit postal code. Input is debounced at 350 milliseconds, normalized to digits only, and clamped to five characters before triggering API calls. The system initiates a three-tier fallback geographic resolution chain (208): primary external geocoder API (zippopotam.us), secondary local EIA utility rate table (state derived from rate data), and tertiary identity fallback (ZIP used as location with full intel proceeding). Simultaneously, three independent parallel API fetches are initiated for utility rate, solar irradiance, and weather data (209).
+
+**Progressive Intel Reveal (210):** Each of the three parallel fetches resolves independently and dispatches a `PATCH_INTEL` action immediately upon completion, using `Promise.allSettled()` rather than `Promise.all()`. Three interface panels transition from skeleton loading state to populated state independently. A failure in any single API call causes only that panel to show an error state; the remaining panels and the wizard flow are unaffected (Patent 10).
+
+**Step 2 — Industry Selector (211):** This step is rendered only when the confidence gate at node (203) returned NO. The user manually selects from twelve industry categories. Facility constraints are populated from this selection.
+
+**Step 3 — Load Profile and Equipment (212):** The user provides physics-affecting operational parameters such as room count, square footage, and operating hours. The system applies selective memoization (213) using the `NON_POWER_ANSWER_KEYS` exclusion set: only parameters that affect power demand computations trigger `calculateUseCasePower()`; intent and scope toggles (solar interest, generator scope, etc.) do not trigger recalculation (Patent 12). A side note (214) identifies that background `buildTiers()` computation initiates at this step — two full steps before the results page — enabling zero user-perceived wait time at Step 5 under normal flow (Patent 9).
+
+**Step 3.5 — Add-Ons and Configuration (215):** The user selects optional system components including solar PV, backup generator, and EV charging, and specifies a system goal. Grid reliability input (216) triggers the `SET_GRID_RELIABILITY` reducer: when reliability is reported as "unreliable" or "frequent-outages," `wantsGenerator` is set to `true` at the reducer level using a one-directional enable guard that prevents subsequent reliable-grid inputs from disabling a manually-selected generator (Patent 14). Add-on and goal changes invalidate the content-addressable cache key, causing a silent background rebuild of tiers.
+
+**Step 4 — System Configuration (217):** The MagicFit three-tier optimizer applies the upsize matrix (218) corresponding to the user's generation combination scenario (Full / Solar Only / Generator Only / UPS Mode) and produces three distinct BESS configurations (Starter, Recommended, Complete) from a single base financial model calculation.
+
+**Step 5 — Quote Results (219):** Three TrueQuote™-authenticated tier configurations are presented with NPV, IRR, payback period, and 25-year ROI metrics. Because computation began at Step 3, results are typically available before the user reaches this step, resulting in zero or near-zero loading time.
+
+**Export Decision Node (220):** A diamond node branches on the selected export format. If Word (.docx) is selected (221), an authentication check is performed and a fully structured Word document including the project configuration, financial tables, and cover letter is generated server-side. If Excel (.xlsx) or PDF is selected (222), no authentication is required; both formats are generated entirely client-side without a server call, enabling offline-capable export (Phase 5 C4 implementation).
+
+**TrueQuote™ Compliance Audit (223):** All quote outputs pass through a compliance check verifying source citation completeness, deviation log integrity, and benchmark version currency. Process concludes at **QUOTE DELIVERED (224)**.
+
+**Back Navigation Reset (225):** A side-note annotation on the left margin indicates that if the user navigates backward to any step before Step 4, `tiersStatus` is reset to `"idle"` and the `tiers` array is cleared, preventing stale configuration results from being presented after upstream state changes (Phase 7 B5 implementation).
+
+---
+
+### FIG. 3 — Optimization Engine
+
+Referring to FIG. 3, the diagram is organized into three vertically-oriented zone panels bounded by labeled regions, illustrating the Three-Patent computation and compliance core of the Merlin Energy platform.
+
+#### Left Panel — Four-Layer Sizing Engine (300) [Patent 1]
+
+**Layer 1 — Location (301)** accepts a ZIP code input and resolves it to a `peakSunHours` value via the geographic intelligence service. This continuous value is converted to a solar viability coefficient using the formula:
+
+```text
+sunFactor = clamp((peakSunHours − 3.0) / 2.5,  0,  1)
+```
+
+A `sunFactor` of 1.0 corresponds to PSH ≥ 5.5 (Grade A−); a value of 0.32 corresponds to PSH = 3.8 (Ann Arbor, Michigan); and the coefficient reaches 0.0 below PSH = 3.0. The coefficient is further discretized to a letter-grade system (A, A−, B+, B, B−, C+, C, D) for display purposes. Grade B− (PSH ≥ 3.5) is a hard eligibility gate: solar is excluded from all generated configurations when this threshold is not met.
+
+**Layer 2 — Industry / Facility (302)** receives the industry classification slug and populates two facility-specific constraints: `solarPhysicalCapKW`, representing the maximum solar capacity the physical structure of the facility can host (examples: car_wash = 60 kW; hotel = 225 kW; warehouse = 819 kW; hospital = 150 kW); and `criticalLoadPct`, the minimum load percentage that must remain energized during a grid outage, derived from IEEE 446-1995 and NEC 517 standards.
+
+**Layer 3 — Operational Profile (303)** incorporates measured power demand values: `baseLoadKW` (steady-state consumption), `peakLoadKW` (maximum demand), and EV charger load, which is pre-merged into the demand baseline at this layer rather than added as a post-calculation increment, ensuring that BESS sizing accounts for EV demand from the first computation.
+
+**Layer 4 — Goal (304)** applies goal-weighted penetration adjustments to the sizing formula. Three goal categories are supported: `save_more` (conservative BESS, moderate solar, shorter duration, faster payback); `save_most` (balanced sizing for optimal 25-year NPV, the default Recommended configuration); and `full_power` (maximum BESS and solar capacity, generator always included, longest duration, maximum resilience). Goals adjust sizing weights proportionally; they do not set absolute values. Market and geographic data determine the actual sizing; goals guide the proportionality.
+
+**Solar Sizing Formula with Double Gate (305)** combines all four layer outputs:
+
+```text
+solarOptimalKW = solarPhysicalCapKW × sunFactor × goalPenetration
+solarFinalKW   = min(solarOptimalKW, solarPhysicalCapKW)
+```
+
+Solar is included in a configuration only when both eligibility gates are satisfied simultaneously: Gate A (geographic) requires `solarGrade ≥ B−` (PSH ≥ 3.5); Gate B (facility) requires `solarPhysicalCapKW > 0`. Either gate alone is insufficient.
+
+#### Center Panel — MagicFit Optimizer (310) [Patents 2 and 9]
+
+An arrow from the Four-Layer panel delivers the base calculated BESS size to the MagicFit Optimizer at module boundary (310a).
+
+**Upsize Matrix (311)** specifies BESS capacity multipliers for each of four generation combination scenarios. When the Full generation scenario is selected (both solar and generator present), no upsize is applied (1.0× across all tiers). When Solar Only is selected (generator declined), BESS is upsized to 1.15×, 1.25×, or 1.35× for Starter, Recommended, and Complete tiers respectively, with a 1.5× duration multiplier to extend storage sufficiency in the absence of a generator. When Generator Only is selected (solar declined), a modest upsize of 1.0×, 1.1×, 1.2× is applied with 1.0× duration. When UPS Mode is active (both solar and generator declined), BESS is upsized to 1.35×, 1.50×, or 1.65× with a 2.0× duration multiplier, compensating for the complete absence of on-site generation by maximizing self-sufficiency from stored energy alone (Patent 2).
+
+**Single Base Calculation (312)** establishes that the three tiers are derived from a single financial model invocation, not from three independent calculations. This architectural decision ensures that NPV, IRR, and payback values across the Starter, Recommended, and Complete tiers share a consistent financial basis and cannot produce contradictory results.
+
+**Three Tiers Output (313)** produces the Starter configuration (conservative sizing, faster payback), the Recommended configuration (optimal 25-year NPV, the MagicFit default), and the Complete configuration (maximum resilience, longest warranty coverage).
+
+**Content-Addressable Cache (314)** stores the in-flight computation Promise keyed on a deterministic JSON fingerprint (`createTierBuildKey`) derived from 20+ state parameters including ZIP code, state, industry slug, baseLoadKW, peakLoadKW, criticalLoadPct, solarPhysicalCapKW, all add-on selections, all equipment sizes, and all geographic intelligence values. If an identical fingerprint is requested while computation is in progress, the existing Promise is returned — no duplicate computation is initiated. When any input parameter changes, the cached Promise is discarded and a new build begins immediately. Existing results remain visible and usable during the rebuild (stale-while-rebuilding). Computation is initiated at Step 3, enabling zero user-perceived wait time at Step 5 in the typical flow (Patent 9).
+
+Authenticated tier outputs (315) flow to the TrueQuote™ compliance layer before any results are presented to the user.
+
+#### Right Panel — TrueQuote™ Compliance Architecture (320) [Patents 3, 4, and 28]
+
+**Source Registry (321)** is the typed `AUTHORITATIVE_SOURCES` constant object in which every external data authority consumed by the platform is described as a structured record containing: `id`, `name`, `organization`, `type` (primary / secondary / certification / utility), `publicationDate`, `retrievalDate`, `vintage`, `lastVerified`, `url`, and `notes`. Enumerated authorities include NREL ATB 2024, NREL StoreFAST, NREL Cost Benchmark Q1 2024, EIA CBECS 2018, IEEE 446-1995, SEIA, BNEF, and ASHRAE. No value used in a customer-facing quote may reference a data source that is not registered in this object.
+
+**Per-Value Citation (322)** enforces that every return value from a benchmark service function includes a structured citation object: `{ value, unit, sourceId, citation, confidence, validFrom, validUntil }`. The `sourceId` field links the value to its entry in the Source Registry. The `validFrom` and `validUntil` fields enable detection of stale benchmark data.
+
+**Audit Metadata (323)** is attached to every generated quote as a `QuoteAuditMetadata` object containing: `generatedAt` timestamp, `benchmarkVersion`, `sourcesUsed[]` array, `methodologyVersion`, and a `deviations[]` array. Each entry in `deviations[]` records a specific instance where an applied value differs from the national benchmark, with fields: `lineItem`, `benchmarkValue`, `appliedValue`, and `reason`. This enables post-hoc audit of any quote's pricing derivation.
+
+**Margin Policy (324) [Patent 4]** implements the formally separated three-layer pricing stack. Layer A is the market base cost (the SSOT, sourced from external benchmark data and never modified by the pricing engine). Layer B is the obtainable reality buffer (accounting for procurement uncertainty and regional variance). Layer C is the sell price (the customer-visible number, produced by applying the commercial margin policy to Layer A + Layer B). The strict separation ensures that price drift between market truth and sell price is always auditable. The deal-size discount curve, product-class margin tiers, and automated ReviewEvent triggers described in Patent 4 all operate within this layer stack.
+
+**Forbidden UI Methods (325) [Patent 28]** are two runtime-exception-throwing functions attached to every `MarginRenderEnvelope` result object: `_FORBIDDEN_computeMarginInUI()` and `_FORBIDDEN_computeNetCostInUI()`. If any user interface code invokes either function, an exception is thrown before any computation can complete. This makes it structurally impossible — not merely discouraged — for the UI layer to independently compute margin or net cost. Because all sell prices are therefore guaranteed to originate from the margin policy engine with full ClampEvent and ReviewEvent audit trail, the separation between base cost and sell price described in Layer C above is architecturally enforced rather than convention-enforced.
+
+---
+
+### FIG. 4 — Wizard User Interface
+
+Referring to FIG. 4, five sequential wizard screen panels (400–440) are depicted in a horizontal row with connecting directional arrows (450) between adjacent panels, representing the primary user-facing interface flow of the Merlin Energy platform from initial input through quote delivery.
+
+Each screen panel comprises: an outer rounded-rectangle bezel (401a) with a color-coded border indicating the step's primary theme; a solid color title bar (401b) showing the step name and a circular step number badge; and a scrollable content area containing four element types — label annotations (gray, supplementary text), input fields (dark background, placeholder text), data cards (mid-tone background, populated system-derived values), and highlighted cards (color-matched to the step theme, representing primary actionable information).
+
+**Screen 1 — Step 0: Enter Business Name (400):**
+A text input field (401) accepts a business or facility name. Upon input, the industry classifier executes client-side and, when confidence reaches or exceeds 0.75, a highlighted detection card (402) displays the detected industry type and confidence percentage. Supporting data cards (403) show the industry-inferred solar physical capacity cap (225 kW for the hotel example) and critical load percentage (45%). Label annotations (404) confirm that Step 2 has been eliminated from the session navigation path and that facility constraints have been atomically populated via `getFacilityConstraints()`. A call-to-action button (405) advances to Step 1.
+
+**Screen 2 — Step 1: ZIP Code and Location Intelligence (410):**
+A text input field (411) accepts a five-digit ZIP code. Two highlighted data cards (412, 413) display, respectively: the resolved solar grade letter and peak sun hours value (e.g., Grade A at 5.8 PSH) and the grid reliability classification (e.g., Reliable). Supporting data cards (414) show utility rate per kWh, peak demand rate per kW, applicable state ITC bonus percentage, and SREC availability. Each card populates independently as its corresponding API call resolves, implementing the progressive reveal mechanism of Patent 10. A label annotation (415) identifies this mechanism. A call-to-action button (416) initiates location analysis.
+
+**Screen 3 — Step 3: Load Profile and Equipment (420):**
+Two text input fields (421, 422) collect physics-affecting operational parameters — for the hotel example, room count (150 rooms) and gross square footage (45,000 sqft). A highlighted demand card (423) displays the computed peak demand in kW (432 kW for the example), updated reactively each time a physics-affecting parameter changes. Supporting data cards (424) show the steady-state base load (220 kW), EV charger load contribution pre-merged into the demand baseline (+18 kW), estimated solar-eligible roof area (30,000 sqft), and the resulting solar physical capacity cap (225 kW). A label annotation (425) identifies the selective memoization mechanism of Patent 12. Background tier computation has initiated at this step, though no indication is shown in the UI. A call-to-action button (426) proceeds to Step 3.5.
+
+**Screen 4 — Step 3.5/4: Add-Ons and Configuration (430):**
+Highlighted selection cards (431, 432) confirm Solar PV (225 kW) and Backup Generator as enabled add-ons for the current session. A supporting card (433) indicates that the generator was automatically enabled by the `SET_GRID_RELIABILITY` reducer in response to a reported unreliable grid condition, referencing Patent 14's reducer-level auto-enablement mechanism. A goal selection annotation (434) identifies the user's chosen optimization objective (Save the Most). A highlighted status card (435) shows MagicFit optimization in progress, indicating that the content-addressable cache is building tiers. Supporting cards (436) identify the applicable generation combination scenario (Solar Only), the upsize matrix being applied (1.15× / 1.25× / 1.35×), and the duration multiplier (1.5×). A call-to-action button (437) navigates to Step 5.
+
+**Screen 5 — Step 5: Quote Results (440):**
+A TrueQuote™ authentication label (441) confirms that all presented values have passed source citation verification and the compliance audit. A highlighted recommendation card (442) identifies the Recommended tier as the MagicFit-selected optimal configuration. Supporting data cards (443) display the full system specification: BESS capacity (1.4 MW / 5.6 MWh), solar system size (225 kW), and total installed cost ($2,847,000 for the example). A highlighted financial metrics card (444) displays annual savings ($312,000). Additional data cards (445) show the simple payback period (9.1 years), the 25-year unlevered net present value ($1.84M), and the 25-year return on investment (187%). A label annotation (446) identifies the three available export formats: Word document (requires authentication), Excel workbook (client-side, no authentication), and PDF (client-side print, no authentication). A call-to-action button (447) initiates the selected export.
+
+Directional arrows (450) between adjacent screen panels indicate the primary sequential navigation direction from Step 0 through Step 5. The arrowed path represents the happy-path flow for a high-confidence industry detection scenario in which Step 2 is eliminated. In sessions where the confidence gate is not met, Step 2 would appear between Screens 1 and 3 as an additional screen panel.
+
+---
+
 _Last updated: April 2026_
 _Document version: 3.0 — Added Patents 23–29 (Pricing & Intelligence Architecture layer), 9 new Trade Secrets, 4 new Prior Art notes_
 _Prior version: 2.0 — Added Patents 16–22 (Intelligence & Vendor Platform layer)_

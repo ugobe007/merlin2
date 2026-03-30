@@ -9,7 +9,7 @@ import { validateStep3Contract } from "./step3/validateStep3Contract";
 import { validateStep3Dynamic, validateStep3Sync } from "./step3/validateStep3Dynamic"; // V7 architecture
 
 // Feature flag for database-driven validation (Jan 26, 2026)
-const USE_DATABASE_VALIDATOR = import.meta.env.VITE_USE_DATABASE_VALIDATOR === 'true' || false;
+const USE_DATABASE_VALIDATOR = import.meta.env.VITE_USE_DATABASE_VALIDATOR === "true" || false;
 
 // MerlinAdvisor Rail System (Phase 1 - Jan 16, 2026)
 import { AdvisorPublisher } from "./advisor/AdvisorPublisher";
@@ -42,7 +42,7 @@ import { calculateModelConfidence } from "./types";
 // DEEP MERGE HELPER - Prevents nested state corruption
 // ============================================================================
 
-import { isPlainObject, deepMerge } from "./wizardV6Utils";
+import { deepMerge } from "./wizardV6Utils";
 
 import RequestQuoteModal from "@/components/modals/RequestQuoteModal";
 
@@ -77,9 +77,11 @@ export default function WizardV6() {
       if (!isLegacyRoute) {
         console.error(
           "🚨 [V6 TRIPWIRE] WizardV6 mounted outside /wizard-v6!\n" +
-          "   Current path: " + window.location.pathname + "\n" +
-          "   V6 is RETIRED. All CTAs should open V7.\n" +
-          "   Check ModalManager.tsx or ModalRenderer.tsx for regressions."
+            "   Current path: " +
+            window.location.pathname +
+            "\n" +
+            "   V6 is RETIRED. All CTAs should open V7.\n" +
+            "   Check ModalManager.tsx or ModalRenderer.tsx for regressions."
         );
       } else {
         console.warn("[V6] WizardV6 mounted via /wizard-v6 (legacy route - OK)");
@@ -148,7 +150,8 @@ export default function WizardV6() {
       if (!hasStep6) step = Math.min(step, 5);
 
       const calculatedStep = Math.max(1, Math.min(step, 6));
-      if (import.meta.env.DEV) console.log("📊 Restored wizard state - starting at Step", calculatedStep);
+      if (import.meta.env.DEV)
+        console.log("📊 Restored wizard state - starting at Step", calculatedStep);
       return calculatedStep;
     }
 
@@ -209,6 +212,7 @@ export default function WizardV6() {
 
   const estimatedPowerMetrics = useMemo(
     () => computeEstimatedPowerMetrics(state),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       state.industry,
       state.detectedIndustry,
@@ -346,12 +350,13 @@ export default function WizardV6() {
       return;
     }
 
-    if (import.meta.env.DEV) console.log("[Intelligence] Orchestrating intelligence layer:", {
-      zipCode,
-      stateCode,
-      industrySlug,
-      weatherRisk,
-    });
+    if (import.meta.env.DEV)
+      console.log("[Intelligence] Orchestrating intelligence layer:", {
+        zipCode,
+        stateCode,
+        industrySlug,
+        weatherRisk,
+      });
 
     // Run all intelligence services in parallel (non-blocking)
     Promise.all([
@@ -382,12 +387,13 @@ export default function WizardV6() {
       }),
     ])
       .then(([industryResult, goalsResult, weatherImpact, valueTeaserResult]) => {
-        if (import.meta.env.DEV) console.log("[Intelligence] Results:", {
-          industry: industryResult.data,
-          goals: goalsResult.data,
-          weatherImpact,
-          valueTeaser: valueTeaserResult.data,
-        });
+        if (import.meta.env.DEV)
+          console.log("[Intelligence] Results:", {
+            industry: industryResult.data,
+            goals: goalsResult.data,
+            weatherImpact,
+            valueTeaser: valueTeaserResult.data,
+          });
 
         // Update intelligence context for AdvisorRail
         setIntelligence({
@@ -430,7 +436,8 @@ export default function WizardV6() {
     // If we don't have industry yet, use quick estimate
     if (!industrySlug) {
       const quickScore = estimateSiteScore(stateCode, "office"); // Default to office
-      if (import.meta.env.DEV) console.log("[SiteScore™] Quick estimate (no industry):", quickScore);
+      if (import.meta.env.DEV)
+        console.log("[SiteScore™] Quick estimate (no industry):", quickScore);
       setSiteScore({
         totalScore: quickScore.estimatedScore,
         scoreLabel: quickScore.estimatedLabel,
@@ -484,11 +491,12 @@ export default function WizardV6() {
         estimatedPeakKW: state.calculations?.base?.peakDemandKW,
       });
 
-      if (import.meta.env.DEV) console.log("[SiteScore™] Full calculation:", {
-        totalScore: result.totalScore,
-        label: result.scoreLabel,
-        merlinSays: result.merlinSays,
-      });
+      if (import.meta.env.DEV)
+        console.log("[SiteScore™] Full calculation:", {
+          totalScore: result.totalScore,
+          label: result.scoreLabel,
+          merlinSays: result.merlinSays,
+        });
 
       setSiteScore(result);
     } catch (err) {
@@ -531,7 +539,8 @@ export default function WizardV6() {
 
       // ✅ CONTRACT (Jan 24, 2026): Step 3 validation uses contract validator
       if (prev === 3 && !step3Contract.ok) {
-        if (import.meta.env.DEV) console.log("⚠️ Step 3 not valid - cannot advance. Missing:", step3Contract.missing);
+        if (import.meta.env.DEV)
+          console.log("⚠️ Step 3 not valid - cannot advance. Missing:", step3Contract.missing);
         setShowBlockedFeedback(true);
         setTimeout(() => setShowBlockedFeedback(false), 3000);
         return prev;
@@ -540,7 +549,11 @@ export default function WizardV6() {
       // Skip Step 2 (Industry Selection) if industry was auto-detected from business lookup
       // ✅ FIX 3 (Jan 24, 2026): Use hasIndustry for deterministic skip
       if (prev === 1 && hasIndustry) {
-        if (import.meta.env.DEV) console.log("🧙 Skipping Step 2 - Industry detected:", state.industry || state.detectedIndustry);
+        if (import.meta.env.DEV)
+          console.log(
+            "🧙 Skipping Step 2 - Industry detected:",
+            state.industry || state.detectedIndustry
+          );
         return 3; // Go directly to Step 3 (Details)
       }
 
@@ -657,11 +670,16 @@ export default function WizardV6() {
   // ✅ FIX 5 (Jan 24, 2026): Step-specific blocked feedback messages
   const blockedMessage = useMemo(() => {
     switch (currentStep) {
-      case 1: return "Add your ZIP + state and choose at least 2 goals.";
-      case 2: return "Select your industry and business size.";
-      case 3: return "Complete the required questions to continue.";
-      case 5: return "Pick a power level to generate your quote.";
-      default: return "Please complete the required fields before continuing.";
+      case 1:
+        return "Add your ZIP + state and choose at least 2 goals.";
+      case 2:
+        return "Select your industry and business size.";
+      case 3:
+        return "Complete the required questions to continue.";
+      case 5:
+        return "Pick a power level to generate your quote.";
+      default:
+        return "Please complete the required fields before continuing.";
     }
   }, [currentStep]);
 
@@ -670,18 +688,18 @@ export default function WizardV6() {
   // V7: Database-driven validator (validateStep3Dynamic)
   // Toggle via VITE_USE_DATABASE_VALIDATOR=true
   const [step3Contract, setStep3Contract] = useState(() => validateStep3Sync(state));
-  
+
   useEffect(() => {
     if (USE_DATABASE_VALIDATOR) {
       // Async database-driven validation
-      validateStep3Dynamic(state).then(result => {
+      validateStep3Dynamic(state).then((result) => {
         setStep3Contract(result);
-        
+
         if (import.meta.env.DEV) {
-          console.log('📋 Step 3 Contract (V7 Database):', {
+          console.log("📋 Step 3 Contract (V7 Database):", {
             ok: result.ok,
-            completeness: result.completenessPct + '%',
-            confidence: result.confidencePct + '%',
+            completeness: result.completenessPct + "%",
+            confidence: result.confidencePct + "%",
             hasLoadAnchor: result.hasLoadAnchor,
             missingRequired: result.missingRequired,
             industry: result.industry,
@@ -692,23 +710,23 @@ export default function WizardV6() {
       // Synchronous hardcoded validation (V6)
       const result = validateStep3Contract(state);
       setStep3Contract(result);
-      
+
       if (import.meta.env.DEV) {
         // ✅ ENHANCED DEBUG (Jan 26, 2026 evening): Show WHY validation fails
         const inputsCount = Object.keys(state.useCaseData?.inputs || {}).length;
-        console.group('📋 Step 3 Contract (V6 Hardcoded)');
-        console.log('OK:', result.ok);
-        console.log('Completeness:', result.completenessPct + '%');
-        console.log('Confidence:', result.confidencePct + '%');
-        console.log('Has Load Anchor:', result.hasLoadAnchor);
-        console.log('Missing Required:', result.missingRequired);
-        console.log('Industry:', state.industry || state.detectedIndustry);
-        console.log('Inputs Count:', inputsCount);
-        console.log('Inputs:', state.useCaseData?.inputs);
+        console.group("📋 Step 3 Contract (V6 Hardcoded)");
+        console.log("OK:", result.ok);
+        console.log("Completeness:", result.completenessPct + "%");
+        console.log("Confidence:", result.confidencePct + "%");
+        console.log("Has Load Anchor:", result.hasLoadAnchor);
+        console.log("Missing Required:", result.missingRequired);
+        console.log("Industry:", state.industry || state.detectedIndustry);
+        console.log("Inputs Count:", inputsCount);
+        console.log("Inputs:", state.useCaseData?.inputs);
         console.groupEnd();
       }
     }
-  }, [state, USE_DATABASE_VALIDATOR]);
+  }, [state]); // USE_DATABASE_VALIDATOR is a module-level constant, not a reactive dependency
 
   const _canProceed = (): boolean => {
     switch (currentStep) {
@@ -726,16 +744,16 @@ export default function WizardV6() {
         const can = step3Contract.ok;
         // ✅ DEBUG (Jan 25, 2026): Log when Continue is blocked
         if (!can && import.meta.env.DEV) {
-          console.warn('⛔ Continue BLOCKED at Step 3:', {
+          console.warn("⛔ Continue BLOCKED at Step 3:", {
             contractOk: step3Contract.ok,
             missingRequired: step3Contract.missingRequired,
-            completeness: step3Contract.completenessPct + '%',
+            completeness: step3Contract.completenessPct + "%",
             inputsInState: Object.keys(state.useCaseData?.inputs || {}).length,
           });
         } else if (can && import.meta.env.DEV) {
-          console.log('✅ Continue ENABLED at Step 3:', {
+          console.log("✅ Continue ENABLED at Step 3:", {
             contractOk: step3Contract.ok,
-            completeness: step3Contract.completenessPct + '%',
+            completeness: step3Contract.completenessPct + "%",
           });
         }
         return can;
@@ -755,25 +773,28 @@ export default function WizardV6() {
 
   // ✅ GATING FIX (Jan 24, 2026): Wire _canProceed to actual navigation
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const canProceed = useMemo(() => _canProceed(), [currentStep, step3Contract.ok, state, hasValidCalcs]);
+  const canProceed = useMemo(
+    () => _canProceed(),
+    [currentStep, step3Contract.ok, state, hasValidCalcs]
+  );
 
   // ✅ DIAGNOSTIC (Feb 1, 2026): Compute WHY Next is disabled - ROOT CAUSE PRECEDENCE
   // Returns ONLY the first/root blocking condition for clean diagnostics
   // This makes Playwright tests stable and errors actionable
   const nextDisabledReason = useMemo((): string | null => {
-    if (currentStep === 6) return 'final-step'; // Not really "disabled", just hidden
+    if (currentStep === 6) return "final-step"; // Not really "disabled", just hidden
 
     switch (currentStep) {
       case 1: {
         // Root-cause precedence: ZIP → goals (state resolves async, don't gate on it)
-        if (!/^\d{5}$/.test(state.zipCode)) return 'zip-incomplete';
-        if (state.goals.length < 2) return 'goals-need-2';
+        if (!/^\d{5}$/.test(state.zipCode)) return "zip-incomplete";
+        if (state.goals.length < 2) return "goals-need-2";
         return null;
       }
       case 2: {
         // Root-cause precedence: industry → size tier
-        if (state.industry === '') return 'industry-missing';
-        if (state.businessSizeTier === undefined) return 'size-tier-missing';
+        if (state.industry === "") return "industry-missing";
+        if (state.businessSizeTier === undefined) return "size-tier-missing";
         return null;
       }
       case 3: {
@@ -782,7 +803,7 @@ export default function WizardV6() {
           if (step3Contract.missingRequired?.length > 0) {
             return `missing:${step3Contract.missingRequired[0]}`; // First missing field
           }
-          return 'step3-contract-failed';
+          return "step3-contract-failed";
         }
         return null;
       }
@@ -791,15 +812,23 @@ export default function WizardV6() {
         return null;
       case 5: {
         // Root-cause precedence: power level → calcs
-        if (state.selectedPowerLevel === null) return 'power-level-not-selected';
-        if (!hasValidCalcs) return 'calcs-invalid';
+        if (state.selectedPowerLevel === null) return "power-level-not-selected";
+        if (!hasValidCalcs) return "calcs-invalid";
         return null;
       }
       default:
-        return 'unknown-step';
+        return "unknown-step";
     }
-  }, [currentStep, state.zipCode, state.state, state.goals.length, state.industry, 
-      state.businessSizeTier, step3Contract, state.selectedPowerLevel, hasValidCalcs]);
+  }, [
+    currentStep,
+    state.zipCode,
+    state.goals.length,
+    state.industry,
+    state.businessSizeTier,
+    step3Contract,
+    state.selectedPowerLevel,
+    hasValidCalcs,
+  ]);
 
   // ✅ DIAGNOSTIC (Jan 28, 2026): Log when Next stays disabled for > 2s after user activity
   // Helps debug Playwright tests that timeout waiting for Next to enable
@@ -817,14 +846,24 @@ export default function WizardV6() {
         industry: state.industry,
         businessSizeTier: state.businessSizeTier,
         selectedPowerLevel: state.selectedPowerLevel,
-        step3Contract: step3Contract.ok ? 'OK' : step3Contract.missingRequired,
+        step3Contract: step3Contract.ok ? "OK" : step3Contract.missingRequired,
         hasValidCalcs,
       });
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [nextDisabledReason, currentStep, state.zipCode, state.state, state.goals.length,
-      state.industry, state.businessSizeTier, state.selectedPowerLevel, step3Contract, hasValidCalcs]);
+  }, [
+    nextDisabledReason,
+    currentStep,
+    state.zipCode,
+    state.state,
+    state.goals.length,
+    state.industry,
+    state.businessSizeTier,
+    state.selectedPowerLevel,
+    step3Contract,
+    hasValidCalcs,
+  ]);
 
   // ✅ FIX (Jan 25, 2026): flashBlocked removed - feedback now shown via canProceed check
   // setShowBlockedFeedback controlled directly in goNext()
@@ -864,7 +903,8 @@ export default function WizardV6() {
             onNext={() => {
               // ✅ CONTRACT (Jan 24, 2026): Use contract validator for hard gating
               if (!step3Contract.ok) {
-                if (import.meta.env.DEV) console.log("⚠️ Step 3 onNext blocked - missing:", step3Contract.missing);
+                if (import.meta.env.DEV)
+                  console.log("⚠️ Step 3 onNext blocked - missing:", step3Contract.missing);
                 return;
               }
               goToStep(4);
@@ -897,7 +937,10 @@ export default function WizardV6() {
       currentStep={currentStep}
       options={{ clearOnStepChange: true, enableWarnings: true }}
     >
-      <div data-wizard-version="v6" className="fixed inset-0 bg-gradient-to-br from-[#050B16] via-[#071226] to-[#050B16]">
+      <div
+        data-wizard-version="v6"
+        className="fixed inset-0 bg-gradient-to-br from-[#050B16] via-[#071226] to-[#050B16]"
+      >
         {/* INTEGRATED GLASS SHELL: AdvisorRail + Step content - FULL WIDTH */}
         <div className={`w-full px-6 ${currentStep === 1 ? "py-3" : "py-6"}`}>
           <div className="relative rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-2xl overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.55)]">

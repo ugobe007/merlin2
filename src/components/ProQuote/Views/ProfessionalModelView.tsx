@@ -468,17 +468,19 @@ export const ProfessionalModelView: React.FC<ProfessionalModelViewProps> = ({
                 <div className="bg-slate-800/50 rounded-xl p-4 text-center">
                   <p className="text-xs text-slate-400 uppercase tracking-wide">Levered IRR</p>
                   <p className="text-2xl font-bold text-emerald-300">
-                    {(professionalModel.summary.leveredIRR * 100).toFixed(1)}%
+                    {professionalModel.summary.leveredIRR.toFixed(1)}%
                   </p>
                 </div>
                 <div className="bg-slate-800/50 rounded-xl p-4 text-center">
                   <p className="text-xs text-slate-400 uppercase tracking-wide">Unlevered IRR</p>
                   <p className="text-2xl font-bold text-blue-300">
-                    {(professionalModel.summary.unleveredIRR * 100).toFixed(1)}%
+                    {professionalModel.summary.unleveredIRR.toFixed(1)}%
                   </p>
                 </div>
                 <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-                  <p className="text-xs text-slate-400 uppercase tracking-wide">NPV (25yr)</p>
+                  <p className="text-xs text-slate-400 uppercase tracking-wide">
+                    Unlevered NPV (25yr)
+                  </p>
                   <p className="text-2xl font-bold text-emerald-300">
                     ${(professionalModel.summary.npv / 1000000).toFixed(2)}M
                   </p>
@@ -798,20 +800,26 @@ export const ProfessionalModelView: React.FC<ProfessionalModelViewProps> = ({
                   <tbody>
                     <tr className="text-white">
                       <td className="py-2 font-medium">DSCR</td>
-                      {[0, 1, 2, 3, 4, 9, 14, 19, 24].map((i, idx) => (
-                        <td
-                          key={idx}
-                          className={`text-right py-2 font-mono ${
-                            (professionalModel.debtSchedule?.[i]?.dscr || 0) >= 1.25
-                              ? "text-emerald-400"
-                              : (professionalModel.debtSchedule?.[i]?.dscr || 0) >= 1.0
-                                ? "text-yellow-400"
-                                : "text-red-400"
-                          }`}
-                        >
-                          {(professionalModel.debtSchedule?.[i]?.dscr || 0).toFixed(2)}x
-                        </td>
-                      ))}
+                      {[0, 1, 2, 3, 4, 9, 14, 19, 24].map((i, idx) => {
+                        const dscr = professionalModel.debtSchedule?.[i]?.dscr ?? 0;
+                        const isSentinel = dscr >= 100; // 999 = debt fully paid off
+                        return (
+                          <td
+                            key={idx}
+                            className={`text-right py-2 font-mono ${
+                              isSentinel
+                                ? "text-slate-500"
+                                : dscr >= 1.25
+                                  ? "text-emerald-400"
+                                  : dscr >= 1.0
+                                    ? "text-yellow-400"
+                                    : "text-red-400"
+                            }`}
+                          >
+                            {isSentinel ? "N/A" : `${dscr.toFixed(2)}x`}
+                          </td>
+                        );
+                      })}
                     </tr>
                   </tbody>
                 </table>

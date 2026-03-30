@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM node:20-alpine AS builder
 
@@ -8,27 +9,6 @@ ARG BUILD_DATE
 ARG BUILD_VERSION=1.0.0
 ENV BUILD_DATE=${BUILD_DATE}
 ENV BUILD_VERSION=${BUILD_VERSION}
-
-# Vite env vars — must be available at build time (baked into JS bundle)
-# These are PUBLIC keys (shipped to browser), safe as build args
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
-ARG VITE_STRIPE_PUBLISHABLE_KEY
-ARG VITE_RESEND_API_KEY
-ARG VITE_OPENAI_API_KEY
-ARG VITE_ENABLE_AI_ANALYSIS
-ARG VITE_GOOGLE_MAPS_API_KEY
-ARG VITE_NREL_API_KEY
-ARG VITE_VISUAL_CROSSING_API_KEY
-ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
-ENV VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY}
-ENV VITE_RESEND_API_KEY=${VITE_RESEND_API_KEY}
-ENV VITE_OPENAI_API_KEY=${VITE_OPENAI_API_KEY}
-ENV VITE_ENABLE_AI_ANALYSIS=${VITE_ENABLE_AI_ANALYSIS}
-ENV VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
-ENV VITE_NREL_API_KEY=${VITE_NREL_API_KEY}
-ENV VITE_VISUAL_CROSSING_API_KEY=${VITE_VISUAL_CROSSING_API_KEY}
 
 # Copy package files
 COPY package*.json ./
@@ -45,17 +25,25 @@ COPY . .
 # Clear any existing build artifacts
 RUN rm -rf dist node_modules/.vite
 
-# Build the app with explicit env vars passed to Vite
-# Vite needs these as environment variables during the build process
-RUN VITE_SUPABASE_URL=${VITE_SUPABASE_URL} \
-    VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY} \
-    VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY} \
-    VITE_RESEND_API_KEY=${VITE_RESEND_API_KEY} \
-    VITE_OPENAI_API_KEY=${VITE_OPENAI_API_KEY} \
-    VITE_ENABLE_AI_ANALYSIS=${VITE_ENABLE_AI_ANALYSIS} \
-    VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY} \
-    VITE_NREL_API_KEY=${VITE_NREL_API_KEY} \
-    VITE_VISUAL_CROSSING_API_KEY=${VITE_VISUAL_CROSSING_API_KEY} \
+# Build the app — all VITE_ keys are injected from Fly.io secrets at build time
+# via Docker BuildKit secret mounts. They are never stored in image layers.
+# Secrets are declared in fly.toml [build.secrets] and accessed here read-only.
+RUN --mount=type=secret,id=VITE_SUPABASE_URL \
+    --mount=type=secret,id=VITE_SUPABASE_ANON_KEY \
+    --mount=type=secret,id=VITE_RESEND_API_KEY \
+    --mount=type=secret,id=VITE_OPENAI_API_KEY \
+    --mount=type=secret,id=VITE_ENABLE_AI_ANALYSIS \
+    --mount=type=secret,id=VITE_GOOGLE_MAPS_API_KEY \
+    --mount=type=secret,id=VITE_NREL_API_KEY \
+    --mount=type=secret,id=VITE_VISUAL_CROSSING_API_KEY \
+    VITE_SUPABASE_URL=$(cat /run/secrets/VITE_SUPABASE_URL 2>/dev/null || echo '') \
+    VITE_SUPABASE_ANON_KEY=$(cat /run/secrets/VITE_SUPABASE_ANON_KEY 2>/dev/null || echo '') \
+    VITE_RESEND_API_KEY=$(cat /run/secrets/VITE_RESEND_API_KEY 2>/dev/null || echo '') \
+    VITE_OPENAI_API_KEY=$(cat /run/secrets/VITE_OPENAI_API_KEY 2>/dev/null || echo '') \
+    VITE_ENABLE_AI_ANALYSIS=$(cat /run/secrets/VITE_ENABLE_AI_ANALYSIS 2>/dev/null || echo 'false') \
+    VITE_GOOGLE_MAPS_API_KEY=$(cat /run/secrets/VITE_GOOGLE_MAPS_API_KEY 2>/dev/null || echo '') \
+    VITE_NREL_API_KEY=$(cat /run/secrets/VITE_NREL_API_KEY 2>/dev/null || echo '') \
+    VITE_VISUAL_CROSSING_API_KEY=$(cat /run/secrets/VITE_VISUAL_CROSSING_API_KEY 2>/dev/null || echo '') \
     npm run build:prod
 
 # Production stage - Multi-service (nginx + Node.js API)

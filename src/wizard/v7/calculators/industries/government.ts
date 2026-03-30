@@ -31,11 +31,17 @@ export const GOVERNMENT_LOAD_V1_SSOT: CalculatorContract = {
     if (hasEVFleet) assumptions.push(`EV fleet: ${inputs.evFleet}`);
 
     // ── Delegate to SSOT ───────────────────────────────────────────
-    const result = calculateUseCasePower("government", {
-      squareFeet: squareFootage,
-      buildingSqFt: squareFootage,
-      sqFt: squareFootage,
-    });
+    const result = calculateUseCasePower(
+      "government",
+      buildSSOTInput("government", {
+        squareFootage,
+        facilityType,
+        campusOrStandalone,
+        criticalOperations: hasCriticalOps ? inputs.criticalOperations : undefined,
+        dataCenter: hasDataCenter ? inputs.dataCenter : undefined,
+        evFleet: hasEVFleet ? inputs.evFleet : undefined,
+      })
+    );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // ── TrueQuote kW contributor breakdown ─────────────────────────

@@ -41,12 +41,16 @@ export const AGRICULTURE_LOAD_V1_SSOT: CalculatorContract = {
     if (hasDairy) assumptions.push(`Dairy: ${inputs.dairyMilking}`);
 
     // ── Delegate to SSOT ───────────────────────────────────────────
-    const result = calculateUseCasePower("agriculture", {
-      acreage,
-      farmSize: acreage,
-      irrigationLoad: irrigationKW,
-      farmType,
-    });
+    const buildingsSqFt = Number(inputs.buildingsSqFt) || 0;
+    const result = calculateUseCasePower(
+      "agriculture",
+      buildSSOTInput("agriculture", {
+        acreage,
+        farmType,
+        irrigationType,
+        buildingsSqFt: buildingsSqFt > 0 ? buildingsSqFt : undefined,
+      })
+    );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // ── TrueQuote kW contributor breakdown ─────────────────────────

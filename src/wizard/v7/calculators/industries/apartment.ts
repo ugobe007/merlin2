@@ -12,15 +12,15 @@ export const APARTMENT_LOAD_V1_SSOT: CalculatorContract = {
 
     // ── Bridge curated → SSOT fields ───────────────────────────────
     const _rawUnitCount = inputs.unitCount ?? inputs.numUnits ?? inputs.units;
-    const unitCount = _rawUnitCount != null ? (Number(_rawUnitCount) || 400) : 400;
+    const unitCount = _rawUnitCount != null ? Number(_rawUnitCount) || 400 : 400;
 
     // ✅ FIX (Feb 14, 2026): Map button string values → numeric sq ft
     // Curated buttons: 'studio'(<600)/'1br'(600-900)/'2br'(900-1200)/'large'(1200+)
     const UNIT_SIZE_MAP: Record<string, number> = {
-      studio: 450,   // midpoint of <600
-      "1br": 750,    // midpoint of 600-900
-      "2br": 1050,   // midpoint of 900-1200
-      large: 1400,   // conservative estimate for 1200+
+      studio: 450, // midpoint of <600
+      "1br": 750, // midpoint of 600-900
+      "2br": 1050, // midpoint of 900-1200
+      large: 1400, // conservative estimate for 1200+
     };
     const rawUnitSize = inputs.avgUnitSize;
     const avgUnitSize =
@@ -39,7 +39,15 @@ export const APARTMENT_LOAD_V1_SSOT: CalculatorContract = {
     if (inputs.hvacType) assumptions.push(`HVAC: ${inputs.hvacType}`);
 
     // ── Delegate to SSOT ───────────────────────────────────────────
-    const result = calculateUseCasePower("apartment", { unitCount, numUnits: unitCount });
+    const result = calculateUseCasePower(
+      "apartment",
+      buildSSOTInput("apartment", {
+        unitCount,
+        avgUnitSize,
+        propertyType,
+        elevators: hasElevators ? inputs.elevators : undefined,
+      })
+    );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // ── TrueQuote kW contributor breakdown ─────────────────────────

@@ -12,7 +12,7 @@ export const COLLEGE_LOAD_V1_SSOT: CalculatorContract = {
 
     // ── Bridge curated → SSOT fields ───────────────────────────────
     const _rawEnrollment = inputs.enrollment ?? inputs.studentCount ?? inputs.students;
-    const enrollment = _rawEnrollment != null ? (Number(_rawEnrollment) || 15000) : 15000;
+    const enrollment = _rawEnrollment != null ? Number(_rawEnrollment) || 15000 : 15000;
     const campusSqFt = Number(inputs.campusSqFt) || 0;
     const institutionType = String(inputs.institutionType ?? "university").toLowerCase();
     const hasResearchLabs =
@@ -29,7 +29,17 @@ export const COLLEGE_LOAD_V1_SSOT: CalculatorContract = {
     if (hasDataCenter) assumptions.push(`Data center/HPC: ${inputs.dataCenterHPC}`);
 
     // ── Delegate to SSOT ───────────────────────────────────────────
-    const result = calculateUseCasePower("college", { studentCount: enrollment, enrollment });
+    const result = calculateUseCasePower(
+      "college",
+      buildSSOTInput("college", {
+        enrollment,
+        campusSqFt,
+        institutionType,
+        researchLabs: hasResearchLabs ? inputs.researchLabs : undefined,
+        studentHousing: hasStudentHousing ? inputs.studentHousing : undefined,
+        dataCenterHPC: hasDataCenter ? inputs.dataCenterHPC : undefined,
+      })
+    );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // ── TrueQuote kW contributor breakdown ─────────────────────────
