@@ -652,8 +652,9 @@ export async function generateProfessionalModel(
   const capacityMWh = input.storageSizeMW * input.durationHours;
   const capacityKWh = capacityMWh * 1000;
 
-  // Calculate ITC benefit
-  const itcBenefit = totalCapex * config.itcRate;
+  // ITC benefit — use the pre-computed value from calculateQuote which already
+  // applies Section 48 eligible-basis rules (solar+BESS only, generator excluded).
+  const itcBenefit = quote.costs.taxCredit;
 
   // Capital structure
   const debtAmount = totalCapex * config.debtEquityRatio;
