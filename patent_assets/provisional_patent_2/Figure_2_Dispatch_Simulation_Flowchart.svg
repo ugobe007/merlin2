@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1060" viewBox="0 0 1400 1060">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1f2937" />
+    </marker>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #0f172a; }
+      .label { font: 700 17px Arial, sans-serif; fill: #0f172a; }
+      .text  { font: 14px Arial, sans-serif; fill: #334155; }
+      .small { font: 13px Arial, sans-serif; fill: #334155; }
+      .arrow { stroke: #1f2937; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1400" height="1060" fill="#ffffff" />
+  <text x="700" y="48" text-anchor="middle" class="title">FIG. 2 — Dispatch Simulation Flowchart</text>
+
+  <!-- Box 1: Initialize -->
+  <rect x="460" y="78" width="480" height="76" rx="18" ry="18" fill="#dbeafe" stroke="#1f2937" stroke-width="2.5"/>
+  <text x="700" y="122" text-anchor="middle" class="label">Initialize project inputs and battery constraints</text>
+
+  <!-- Arrow 1 → 2 -->
+  <line x1="700" y1="154" x2="700" y2="200" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Box 2: Set interval -->
+  <rect x="460" y="200" width="480" height="86" rx="18" ry="18" fill="#dcfce7" stroke="#1f2937" stroke-width="2.5"/>
+  <text x="700" y="242" text-anchor="middle" class="label">Set interval = 1 and load full-year profile</text>
+  <text x="700" y="268" text-anchor="middle" class="text">Example horizon: 8,760 hourly intervals</text>
+
+  <!-- Arrow 2 → 3 -->
+  <line x1="700" y1="286" x2="700" y2="332" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Box 3: Determine conditions -->
+  <rect x="460" y="332" width="480" height="86" rx="18" ry="18" fill="#fef3c7" stroke="#1f2937" stroke-width="2.5"/>
+  <text x="700" y="374" text-anchor="middle" class="label">Determine current interval conditions</text>
+  <text x="700" y="400" text-anchor="middle" class="text">Load · Solar · Tariff · Peak window · SOC</text>
+
+  <!-- Arrow 3 → 4 -->
+  <line x1="700" y1="418" x2="700" y2="464" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Box 4: Select dispatch -->
+  <rect x="460" y="464" width="480" height="86" rx="18" ry="18" fill="#e0e7ff" stroke="#1f2937" stroke-width="2.5"/>
+  <text x="700" y="506" text-anchor="middle" class="label">Select dispatch action</text>
+  <text x="700" y="532" text-anchor="middle" class="text">Charge · discharge · hold · reserve backup</text>
+
+  <!-- Arrow 4 → 5 -->
+  <line x1="700" y1="550" x2="700" y2="596" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Box 5: Update battery -->
+  <rect x="460" y="596" width="480" height="86" rx="18" ry="18" fill="#fae8ff" stroke="#1f2937" stroke-width="2.5"/>
+  <text x="700" y="638" text-anchor="middle" class="label">Update battery state and grid interaction</text>
+  <text x="700" y="664" text-anchor="middle" class="text">SOC, import/export, throughput, curtailment</text>
+
+  <!-- Arrow 5 → 6 -->
+  <line x1="700" y1="682" x2="700" y2="728" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Box 6: Record value streams -->
+  <rect x="460" y="728" width="480" height="86" rx="18" ry="18" fill="#fee2e2" stroke="#1f2937" stroke-width="2.5"/>
+  <text x="700" y="770" text-anchor="middle" class="label">Record value streams</text>
+  <text x="700" y="796" text-anchor="middle" class="text">Demand reduction · arbitrage · backup value · DR revenue</text>
+
+  <!-- Arrow 6 → diamond -->
+  <line x1="700" y1="814" x2="700" y2="858" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Diamond: More intervals? center=(700,930), halfW=160, halfH=72 -->
+  <polygon points="700,858 860,930 700,1002 540,930" fill="#ecfccb" stroke="#1f2937" stroke-width="2.5"/>
+  <text x="700" y="938" text-anchor="middle" class="label">More intervals?</text>
+
+  <!-- No → Aggregate (right) -->
+  <line x1="860" y1="930" x2="1020" y2="930" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="900" y="918" text-anchor="middle" class="small">No</text>
+
+  <!-- Aggregate box -->
+  <rect x="1020" y="895" width="290" height="70" rx="18" ry="18" fill="#e2e8f0" stroke="#1f2937" stroke-width="2.5"/>
+  <text x="1165" y="936" text-anchor="middle" class="label">Aggregate annual results</text>
+
+  <!-- Arrow Aggregate → Outputs (up) -->
+  <line x1="1165" y1="895" x2="1165" y2="838" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Outputs box -->
+  <rect x="1020" y="748" width="290" height="90" rx="18" ry="18" fill="#f8fafc" stroke="#1f2937" stroke-width="2.5"/>
+  <text x="1165" y="790" text-anchor="middle" class="label">Outputs</text>
+  <text x="1165" y="814" text-anchor="middle" class="text">Schedule · SOC profile ·</text>
+  <text x="1165" y="832" text-anchor="middle" class="text">Savings and revenue totals</text>
+
+  <!-- YES loop: left vertex (540,930) → hard left → up → right to box 2 left edge -->
+  <path d="M540,930 L290,930 L290,243 L460,243" stroke="#1f2937" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Yes label rotated along vertical segment -->
+  <text transform="translate(255,590) rotate(-90)" text-anchor="middle" class="small">Yes — advance interval and repeat</text>
+</svg>

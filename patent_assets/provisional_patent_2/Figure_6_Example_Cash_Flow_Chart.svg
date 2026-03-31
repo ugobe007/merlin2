@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850">
+  <defs>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #0f172a; }
+      .axis { stroke: #334155; stroke-width: 2; }
+      .grid { stroke: #cbd5e1; stroke-width: 1; }
+      .label { font: 700 18px Arial, sans-serif; fill: #0f172a; }
+      .text { font: 14px Arial, sans-serif; fill: #334155; }
+      .legend { font: 15px Arial, sans-serif; fill: #0f172a; }
+    </style>
+  </defs>
+  <rect width="1400" height="850" fill="#ffffff" />
+  <text x="700" y="48" text-anchor="middle" class="title">FIG. 6 — Example Cash Flow Chart</text>
+
+  <g transform="translate(130,120)">
+    <rect x="0" y="0" width="1120" height="560" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+    <line x1="0" y1="280" x2="1120" y2="280" class="axis" />
+    <line x1="0" y1="0" x2="0" y2="560" class="axis" />
+    <line x1="0" y1="80" x2="1120" y2="80" class="grid" />
+    <line x1="0" y1="180" x2="1120" y2="180" class="grid" />
+    <line x1="0" y1="380" x2="1120" y2="380" class="grid" />
+    <line x1="0" y1="480" x2="1120" y2="480" class="grid" />
+
+    <rect x="35" y="280" width="70" height="220" fill="#94a3b8" />
+    <rect x="135" y="210" width="70" height="70" fill="#cbd5e1" />
+    <rect x="235" y="195" width="70" height="85" fill="#cbd5e1" />
+    <rect x="335" y="180" width="70" height="100" fill="#cbd5e1" />
+    <rect x="435" y="165" width="70" height="115" fill="#cbd5e1" />
+    <rect x="535" y="150" width="70" height="130" fill="#cbd5e1" />
+    <rect x="635" y="145" width="70" height="135" fill="#cbd5e1" />
+    <rect x="735" y="140" width="70" height="140" fill="#cbd5e1" />
+    <rect x="835" y="138" width="70" height="142" fill="#cbd5e1" />
+    <rect x="935" y="136" width="70" height="144" fill="#cbd5e1" />
+    <rect x="1035" y="134" width="70" height="146" fill="#cbd5e1" />
+
+    <path d="M70 500 L170 255 L270 245 L370 230 L470 215 L570 200 L670 195 L770 190 L870 188 L970 186 L1070 184" fill="none" stroke="#dc2626" stroke-width="5" />
+    <path d="M70 500 L170 225 L270 210 L370 195 L470 180 L570 165 L670 160 L770 155 L870 153 L970 151 L1070 149" fill="none" stroke="#2563eb" stroke-width="5" />
+    <path d="M70 500 L170 195 L270 180 L370 165 L470 150 L570 135 L670 128 L770 123 L870 121 L970 119 L1070 117" fill="none" stroke="#16a34a" stroke-width="5" />
+
+    <text x="560" y="620" text-anchor="middle" class="label">Project Year</text>
+    <text x="-78" y="280" transform="rotate(-90 -78 280)" text-anchor="middle" class="label">Cash Flow ($)</text>
+
+    <g class="text">
+      <text x="58" y="595">0</text><text x="158" y="595">1</text><text x="258" y="595">2</text><text x="358" y="595">3</text>
+      <text x="458" y="595">4</text><text x="558" y="595">5</text><text x="658" y="595">6</text><text x="758" y="595">7</text>
+      <text x="858" y="595">8</text><text x="958" y="595">9</text><text x="1048" y="595">10</text>
+    </g>
+
+    <g class="text">
+      <text x="-78" y="85">+200k</text>
+      <text x="-78" y="185">+100k</text>
+      <text x="-48" y="285">0</text>
+      <text x="-70" y="385">-100k</text>
+      <text x="-70" y="485">-200k</text>
+    </g>
+  </g>
+
+  <g transform="translate(250,740)">
+    <rect x="0" y="-12" width="28" height="28" fill="#cbd5e1" />
+    <text x="42" y="8" class="legend">Annual base-case cash flow bars</text>
+    <line x1="360" y1="2" x2="420" y2="2" stroke="#dc2626" stroke-width="5" />
+    <text x="435" y="8" class="legend">Downside path</text>
+    <line x1="610" y1="2" x2="670" y2="2" stroke="#2563eb" stroke-width="5" />
+    <text x="685" y="8" class="legend">Median path</text>
+    <line x1="850" y1="2" x2="910" y2="2" stroke="#16a34a" stroke-width="5" />
+    <text x="925" y="8" class="legend">Upside path</text>
+  </g>
+</svg>
