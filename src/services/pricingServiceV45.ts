@@ -416,18 +416,30 @@ export function calculateSystemCosts(config: EquipmentConfig): CostBreakdown {
   // Installation & field labor — ADDITIONAL COSTS (not in equipment quote)
   const installationLaborCost = solarLaborCost + INSTALLATION_COSTS.total;
 
-  // Federal ITC basis — full installed cost per IRA 2022 Section 48:
-  // solar equipment + solar labor + BESS + soft costs + contingency + site labor.
-  // ITC requires qualifying energy property (solar or BESS) to be present.
-  // A generator-only project has no qualifying property and receives no ITC.
+  // Federal ITC basis — IRA 2022 Section 48 / 48E:
+  // Only "qualified energy property" costs are eligible: solar (equip + labor),
+  // BESS, and the share of soft costs / contingency attributable to those assets.
+  // Generator costs (fossil fuel) and EV charging infrastructure are NOT eligible.
+  // Merlin fees are also excluded from the ITC basis.
+  //
+  // Soft cost proration: siteEngineering and constructionContingency are split
+  // proportionally between ITC-eligible (solar+BESS) and non-eligible (gen+EV)
+  // hard costs per standard cost-segregation practice.
   const hasQualifyingEquipment = solarCost + bessCost > 0;
+  const itcEligibleHardCosts = solarCost + solarLaborCost + bessCost;
+  const totalHardCosts = equipmentSubtotal + solarLaborCost; // all equip + solar labor
+  const itcEligibleFraction = totalHardCosts > 0 ? itcEligibleHardCosts / totalHardCosts : 0;
+  const proratedSiteEngineering = siteEngineering * itcEligibleFraction;
+  const proratedContingency = constructionContingency * itcEligibleFraction;
+  const proratedInstallLabor = INSTALLATION_COSTS.total * itcEligibleFraction;
+
   const federalITC = hasQualifyingEquipment
     ? calculateFederalITC({
-        solar: solarCost + solarLaborCost, // full solar installed cost (equip + labor)
+        solar: solarCost + solarLaborCost,
         bess: bessCost,
-        siteEngineering,
-        constructionContingency,
-        installationLabor: INSTALLATION_COSTS.total,
+        siteEngineering: proratedSiteEngineering,
+        constructionContingency: proratedContingency,
+        installationLabor: proratedInstallLabor,
       })
     : 0;
 
