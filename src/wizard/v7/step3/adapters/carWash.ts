@@ -9,10 +9,18 @@
  *
  * QUESTION IDs consumed (from carwash-questions-complete.config.ts):
  *   facilityType, tunnelOrBayCount, operatingHours, daysPerWeek, dailyVehicles,
- *   naturalGasLine, waterHeaterType, pumpConfiguration, waterReclamation,
- *   dryerConfiguration, vacuumStations, evCharging, paymentKiosks,
- *   conveyorMotorSize, brushMotorCount, blowerCount, heatedDryers,
- *   centralVacuumHP, highPressurePumpCount, roSystemPump
+ *   waterHeaterType, pumpConfiguration, waterReclamation,
+ *   dryerConfiguration, vacuumStations, evCharging, evChargingType, paymentKiosks,
+ *   conveyorMotorSize, brushMotorCount, centralVacuumHP, highPressurePumpCount, roSystemPump,
+ *   airCompressor, tunnelLighting, exteriorSignage, officeFacilities
+ *
+ * NOT consumed (UI-conditional gate only, does not affect load):
+ *   naturalGasLine  ← only drives waterHeaterType option visibility in Step 3 UI
+ *
+ * DERIVED (not direct schema questions):
+ *   blowerCount   ← derived from dryerConfiguration (blowers=6, heated=4, hybrid=5, none=0)
+ *   heatedDryers  ← derived from dryerConfiguration (heated|hybrid → true)
+ *   kWPerPump     ← derived from pumpConfiguration  (vfd=5.6, high_pressure=11.2, multiple=9.3, standard=7.5)
  *
  * CALCULATOR: car_wash_load_v1 (reads: bayTunnelCount, averageWashesPerDay,
  *             operatingHours, carWashType, primaryEquipment)
@@ -30,8 +38,8 @@ import { registerAdapter } from "../step3Compute";
 
 /** Car wash type → typical operating profile */
 const WASH_TYPE_SCHEDULE: Record<string, { hoursPerDay: number; daysPerWeek: number }> = {
-  tunnel:      { hoursPerDay: 12, daysPerWeek: 7 },
-  automatic:   { hoursPerDay: 14, daysPerWeek: 7 },
+  tunnel: { hoursPerDay: 12, daysPerWeek: 7 },
+  automatic: { hoursPerDay: 14, daysPerWeek: 7 },
   self_service: { hoursPerDay: 16, daysPerWeek: 7 },
   "self-service": { hoursPerDay: 16, daysPerWeek: 7 },
   full_service: { hoursPerDay: 10, daysPerWeek: 6 },
@@ -45,53 +53,64 @@ const CONSUMED_KEYS = [
   "operatingHours",
   "daysPerWeek",
   "dailyVehicles",
-  "naturalGasLine",
   "waterHeaterType",
   "pumpConfiguration",
   "waterReclamation",
   "dryerConfiguration",
   "vacuumStations",
   "evCharging",
+  "evChargingType",
   "paymentKiosks",
   "conveyorMotorSize",
   "brushMotorCount",
-  "blowerCount",
-  "heatedDryers",
   "centralVacuumHP",
   "highPressurePumpCount",
   "roSystemPump",
+  "airCompressor",
+  "tunnelLighting",
+  "exteriorSignage",
+  "officeFacilities",
 ] as const;
 
 // ============================================================================
 // ADAPTER IMPLEMENTATION
 // ============================================================================
 
-function mapAnswers(
-  answers: Record<string, unknown>,
-  _schemaKey: string
-): NormalizedLoadInputs {
+function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): NormalizedLoadInputs {
   // ── Scale ──
-  const bayCount = answers.tunnelOrBayCount != null
-    ? Number(answers.tunnelOrBayCount)
-    : 4;
+  const bayCount = answers.tunnelOrBayCount != null ? Number(answers.tunnelOrBayCount) : 4;
   const washType = String(answers.facilityType || "tunnel").toLowerCase();
 
   // ── Schedule ──
   const defaultSchedule = WASH_TYPE_SCHEDULE[washType] ?? { hoursPerDay: 12, daysPerWeek: 7 };
-  const hoursPerDay = answers.operatingHours != null
-    ? Number(answers.operatingHours)
-    : defaultSchedule.hoursPerDay;
-  const daysPerWeek = answers.daysPerWeek != null
-    ? Number(answers.daysPerWeek)
-    : defaultSchedule.daysPerWeek;
+  const hoursPerDay =
+    answers.operatingHours != null ? Number(answers.operatingHours) : defaultSchedule.hoursPerDay;
+  const daysPerWeek =
+    answers.daysPerWeek != null ? Number(answers.daysPerWeek) : defaultSchedule.daysPerWeek;
 
   // ── Process Loads ──
   // Car wash has very detailed equipment questions — map each to a ProcessLoad
   const processLoads: ProcessLoad[] = [];
 
   // Blowers / Dryers (dominant load: 62.5% of total per industry standard)
-  const blowerCount = answers.blowerCount != null ? Number(answers.blowerCount) : 6;
-  const heatedDryers = toBool(answers.heatedDryers);
+  // Derive from dryerConfiguration (schema question) → blowerCount + heatedDryers
+  const dryerConfig = String(answers.dryerConfiguration || "blowers");
+  const blowerCount =
+    answers.blowerCount != null
+      ? Number(answers.blowerCount)
+      : dryerConfig === "blowers"
+        ? 6
+        : dryerConfig === "heated"
+          ? 4
+          : dryerConfig === "hybrid"
+            ? 5
+            : dryerConfig === "none"
+              ? 0
+              : 6;
+  const heatedDryers =
+    answers.heatedDryers != null
+      ? toBool(answers.heatedDryers)
+      : dryerConfig === "heated" || dryerConfig === "hybrid";
   const kWPerBlower = heatedDryers ? 25 : 15; // Heated = 25kW, ambient = 15kW
   processLoads.push({
     category: "process",
@@ -103,10 +122,18 @@ function mapAnswers(
   });
 
   // High-pressure pumps
-  const hpPumpCount = answers.highPressurePumpCount != null
-    ? Number(answers.highPressurePumpCount)
-    : bayCount * 2;
-  const kWPerPump = 7.5; // Typical HP wash pump
+  // pumpConfiguration drives kW-per-pump: VFD = 25% savings, high_pressure = 15HP, standard = 10HP
+  const pumpConfig = String(answers.pumpConfiguration || "standard");
+  const kWPerPump =
+    pumpConfig === "vfd"
+      ? 5.6 // 10HP × 0.746 × 0.75 (VFD 25% savings)
+      : pumpConfig === "high_pressure"
+        ? 11.2 // 15HP × 0.746
+        : pumpConfig === "multiple"
+          ? 9.3 // 12.5HP × 0.746 (staged system)
+          : 7.5; // standard 10HP × 0.746
+  const hpPumpCount =
+    answers.highPressurePumpCount != null ? Number(answers.highPressurePumpCount) : bayCount * 2;
   processLoads.push({
     category: "process",
     label: "High-Pressure Wash Pumps",
@@ -118,9 +145,7 @@ function mapAnswers(
 
   // Conveyor motor (tunnel only)
   if (washType === "tunnel") {
-    const conveyorKW = answers.conveyorMotorSize != null
-      ? Number(answers.conveyorMotorSize)
-      : 10;
+    const conveyorKW = answers.conveyorMotorSize != null ? Number(answers.conveyorMotorSize) : 10;
     processLoads.push({
       category: "process",
       label: "Conveyor Motor",
@@ -132,9 +157,8 @@ function mapAnswers(
   }
 
   // Brush motors
-  const brushCount = answers.brushMotorCount != null
-    ? Number(answers.brushMotorCount)
-    : bayCount * 2;
+  const brushCount =
+    answers.brushMotorCount != null ? Number(answers.brushMotorCount) : bayCount * 2;
   if (brushCount > 0) {
     processLoads.push({
       category: "process",
@@ -181,14 +205,6 @@ function mapAnswers(
     });
   }
 
-  // Lighting (always present, minimal for outdoor)
-  processLoads.push({
-    category: "lighting",
-    label: "Facility Lighting",
-    kW: 5 + bayCount * 2, // Base 5kW + 2kW per bay
-    dutyCycle: 0.5,
-  });
-
   // Controls / POS
   const kiosks = answers.paymentKiosks != null ? Number(answers.paymentKiosks) : bayCount;
   processLoads.push({
@@ -198,22 +214,85 @@ function mapAnswers(
     dutyCycle: 1.0,
   });
 
-  // EV charging (if present at car wash)
-  const hasEV = toBool(answers.evCharging);
-  if (hasEV) {
+  // Air compressor — option value is HP as string ("5"/"10"/"15")
+  const compressorHP = answers.airCompressor != null ? Number(answers.airCompressor) : 10;
+  processLoads.push({
+    category: "process",
+    label: "Air Compressor",
+    kW: compressorHP * 0.746,
+    dutyCycle: 0.5,
+    quantity: 1,
+    kWPerUnit: compressorHP * 0.746,
+  });
+
+  // Tunnel lighting — option value is "basic"/"enhanced"/"premium"
+  const lightingKW =
+    answers.tunnelLighting === "basic" ? 5 : answers.tunnelLighting === "premium" ? 15 : 8; // "enhanced" default
+  processLoads.push({
+    category: "lighting",
+    label: "Tunnel Lighting",
+    kW: lightingKW,
+    dutyCycle: 1.0,
+  });
+
+  // Exterior signage — option value is "basic"/"premium"/"signature"
+  const signageKW =
+    answers.exteriorSignage === "basic" ? 5 : answers.exteriorSignage === "signature" ? 20 : 10; // "premium" default
+  processLoads.push({
+    category: "lighting",
+    label: "Exterior Signage",
+    kW: signageKW,
+    dutyCycle: 0.8,
+  });
+
+  // Office facilities — multiselect array
+  const officeItems = Array.isArray(answers.officeFacilities)
+    ? (answers.officeFacilities as string[])
+    : [];
+  const officeFacilitiesKW: Record<string, number> = {
+    office: 2,
+    break_room: 3,
+    bathrooms: 1,
+    security: 0.5,
+  };
+  const officeKW = officeItems.reduce((sum, item) => sum + (officeFacilitiesKW[item] ?? 0), 0);
+  if (officeKW > 0) {
+    processLoads.push({
+      category: "controls",
+      label: "Office Facilities",
+      kW: officeKW,
+      dutyCycle: 0.8,
+    });
+  }
+
+  // EV charging — evCharging is a count (stepper), evChargingType drives kW per port
+  const evChargerCount = answers.evCharging != null ? Number(answers.evCharging) : 0;
+  if (evChargerCount > 0) {
+    const evType = String(answers.evChargingType || "level2");
+    const kWPerCharger =
+      evType === "dcfast"
+        ? 50 // DC Fast: 50–150 kW (use conservative 50)
+        : evType === "both"
+          ? 28.6 // Mixed fleet: avg of L2 (7.2) and DCFC (50)
+          : 7.2; // Level 2: 7.2 kW (standard J1772)
     processLoads.push({
       category: "charging",
-      label: "EV Chargers",
-      kW: 20, // ~2-3 Level 2 chargers
+      label: `EV Chargers (${evType}, ${evChargerCount} ports)`,
+      kW: evChargerCount * kWPerCharger,
       dutyCycle: 0.3,
+      quantity: evChargerCount,
+      kWPerUnit: kWPerCharger,
     });
   }
 
   // ── Architecture ──
   const gridRaw = String(answers.gridConnection || "on-grid");
-  const gridConnection = gridRaw === "off-grid"
-    ? "off-grid" as const
-    : gridRaw === "limited" ? "limited" as const : "on-grid" as const;
+  const gridConnection =
+    gridRaw === "off-grid"
+      ? ("off-grid" as const)
+      : gridRaw === "limited"
+        ? ("limited" as const)
+        : ("on-grid" as const);
 
   return {
     industrySlug: "car_wash",
@@ -245,21 +324,24 @@ function mapAnswers(
 }
 
 function getDefaultInputs(): NormalizedLoadInputs {
-  return mapAnswers({
-    facilityType: "tunnel",
-    tunnelOrBayCount: 4,
-    operatingHours: 12,
-    daysPerWeek: 7,
-    dailyVehicles: 200,
-    blowerCount: 6,
-    heatedDryers: "no",
-    highPressurePumpCount: 8,
-    brushMotorCount: 8,
-    vacuumStations: 4,
-    centralVacuumHP: 15,
-    waterHeaterType: "gas",
-    gridConnection: "on-grid",
-  }, "car-wash");
+  return mapAnswers(
+    {
+      facilityType: "tunnel",
+      tunnelOrBayCount: 4,
+      operatingHours: 12,
+      daysPerWeek: 7,
+      dailyVehicles: 200,
+      blowerCount: 6,
+      heatedDryers: "no",
+      highPressurePumpCount: 8,
+      brushMotorCount: 8,
+      vacuumStations: 4,
+      centralVacuumHP: 15,
+      waterHeaterType: "gas",
+      gridConnection: "on-grid",
+    },
+    "car-wash"
+  );
 }
 
 // ============================================================================

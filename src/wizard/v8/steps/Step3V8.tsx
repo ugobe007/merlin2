@@ -331,29 +331,7 @@ export function Step3V8({ state, actions }: Props) {
           >
             {indexInSection + 1}
           </div>
-          {/* Show badge when value is still the auto-filled default */}
-          {qAny.smartDefault !== undefined &&
-            qAny.smartDefault !== null &&
-            qAny.smartDefault !== "" &&
-            defaultFilledIds.has(q.id) && (
-              <div
-                style={{
-                  marginLeft: "auto",
-                  background: "rgba(34, 197, 94, 0.15)",
-                  border: "1px solid rgba(34, 197, 94, 0.3)",
-                  color: "#3ECF8E",
-                  padding: "3px 8px",
-                  borderRadius: 5,
-                  fontSize: 9,
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 3,
-                }}
-              >
-                <span>✨</span> Industry default
-              </div>
-            )}
+
           {/* Restore button when user changed a smart-defaulted field */}
           {qAny.smartDefault !== undefined &&
             qAny.smartDefault !== null &&
@@ -487,13 +465,6 @@ export function Step3V8({ state, actions }: Props) {
                           marginBottom: opt.description ? 4 : 0,
                         }}
                       >
-                        {opt.icon && (
-                          <span style={{ fontSize: 16 }}>
-                            {typeof opt.icon === "string"
-                              ? opt.icon
-                              : opt.label.match(/[⭐🌟🎨🏢]/u)?.[0]}
-                          </span>
-                        )}
                         <span
                           style={{
                             fontSize: 13,
@@ -501,7 +472,7 @@ export function Step3V8({ state, actions }: Props) {
                             color: isSelected ? "#6EE7B7" : "white",
                           }}
                         >
-                          {opt.label.replace(/[⭐🌟🎨🏢]/gu, "").trim()}
+                          {opt.label}
                         </span>
                       </div>
                       {opt.description && (
@@ -790,7 +761,7 @@ export function Step3V8({ state, actions }: Props) {
                         borderRadius: 10,
                       }}
                     >
-                      Section {clampedIdx + 1} of {orderedSections.length}
+                      {currentSection.label}
                     </span>
                   )}
                 </div>
