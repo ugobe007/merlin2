@@ -2,8 +2,10 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 
 // Supabase configuration
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+
+const _env = (typeof import.meta !== "undefined" && (import.meta as any).env) || {};
+const supabaseUrl = _env.VITE_SUPABASE_URL || "";
+const supabaseAnonKey = _env.VITE_SUPABASE_ANON_KEY || "";
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn("⚠️ Supabase credentials not found. Please add them to your .env file.");
@@ -15,12 +17,14 @@ let _supabaseInstance: SupabaseClient<Database> | null = null;
 
 export const supabase = (() => {
   if (!_supabaseInstance) {
-    _supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    const url = supabaseUrl || "https://placeholder.supabase.co";
+    const key = supabaseAnonKey || "placeholder-key";
+    _supabaseInstance = createClient<Database>(url, key, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
-        storageKey: 'merlin-auth', // Unique key to avoid conflicts
+        storageKey: "merlin-auth", // Unique key to avoid conflicts
       },
     });
   }
@@ -360,7 +364,11 @@ export class PricingClient {
   async createPricingAlert(
     alert: Omit<PricingAlert, "id" | "created_at" | "triggered_at">
   ): Promise<PricingAlert | null> {
-    const { data, error } = await supabase.from("pricing_alerts").insert(alert as any).select().single();
+    const { data, error } = await supabase
+      .from("pricing_alerts")
+      .insert(alert as any)
+      .select()
+      .single();
 
     if (error) {
       console.error("Error creating pricing alert:", error);
@@ -449,7 +457,15 @@ export interface Vendor {
 export interface VendorProduct {
   id: string;
   vendor_id: string;
-  product_category: "battery" | "inverter" | "ems" | "bos" | "container";
+  product_category:
+    | "battery"
+    | "inverter"
+    | "ems"
+    | "bos"
+    | "container"
+    | "solar"
+    | "generator"
+    | "ev_charger";
   manufacturer: string;
   model: string;
   capacity_kwh?: number;
@@ -459,6 +475,75 @@ export interface VendorProduct {
   efficiency_percent?: number;
   price_per_kwh?: number;
   price_per_kw?: number;
+  // ── BESS-specific fields (product_category === 'battery') ────────────────
+  /** Computed: price_per_kwh × (1 + tariff_adder_pct/100). Used instead of hardcoded $350/kWh. */
+  effective_price_per_kwh?: number;
+  /** Rated cycle life to 80% SoH (e.g. 4000, 6000) */
+  cycle_life?: number;
+  /** AC-AC round-trip efficiency (%) — e.g. 85.0, 88.5 */
+  roundtrip_efficiency_pct?: number;
+  /** Usable depth of discharge (%) — typical LFP = 90% */
+  depth_of_discharge_pct?: number;
+  /** Continuous C-rate (e.g. 0.25 for 4-hr, 0.5 for 2-hr) */
+  c_rate_continuous?: number;
+  /** Annual capacity degradation (%/yr) — affects lifetime yield scoring */
+  annual_degradation_pct?: number;
+  /** Cycle warranty (separate from calendar warranty_years) */
+  warranty_cycles?: number;
+  /** Physical footprint per container (sq ft) — site planning */
+  container_footprint_sqft?: number;
+  // ── Generator-specific fields (product_category === 'generator') ─────────
+  /** 'diesel' | 'natural_gas' | 'dual_fuel' | 'propane' | 'biogas' */
+  fuel_type?: string;
+  /** Prime/continuous kW rating */
+  prime_rating_kw?: number;
+  /** Standby kW rating (peak, short-term) */
+  standby_rating_kw?: number;
+  /** Fuel consumption at 100% load (gal/hr or scfm) */
+  fuel_consumption_gph?: number;
+  /** 'Tier 4 Final' | 'Tier 3' | 'EPA Tier 2' */
+  emissions_tier?: string;
+  /** 'open' | 'sound-attenuated' | 'weather-protected' */
+  enclosure_type?: string;
+  /** Automatic transfer switch included */
+  ats_included?: boolean;
+  // ── EV charger-specific fields (product_category === 'ev_charger') ────────
+  /** 'L1' | 'L2' | 'DCFC' | 'HPC' */
+  charger_level?: string;
+  /** Maximum output per port (kW) */
+  output_kw_max?: number;
+  /** Number of simultaneous charging ports */
+  simultaneous_charges?: number;
+  /** Connector types: ['J1772', 'CCS', 'CHAdeMO', 'NACS', 'Type2'] */
+  connector_types?: string[];
+  /** OCPP network: 'ChargePoint' | 'OCPP 2.0' | 'Proprietary' etc. */
+  network_provider?: string;
+  /** Dynamic load management capable */
+  power_management?: boolean;
+  /** AC-DC charging efficiency (%) */
+  charger_efficiency_pct?: number;
+  // ── Solar panel-specific fields ──────────────────────────────────────────
+  /** Rated DC power at STC (Wp) — e.g. 400, 500 */
+  watt_peak?: number;
+  /** Module efficiency at STC (%) — e.g. 22.3 */
+  panel_efficiency_pct?: number;
+  /** Physical area per panel (sq ft) — e.g. 21.5 */
+  panel_area_sqft?: number;
+  /** monocrystalline | bifacial | perc | topcon | thin-film */
+  panel_type?: string;
+  /** ISO 3166-1 alpha-2 country of manufacture — e.g. 'US', 'CN' */
+  country_of_origin?: string;
+  /** Import tariff adder (%) — Section 301 CN panels = 25 */
+  tariff_adder_pct?: number;
+  /** Computed: price_per_watt × (1 + tariff_adder_pct/100) */
+  effective_price_per_watt?: number;
+  /** Base equipment price ($/Wp, excl. tariff) */
+  price_per_watt?: number;
+  /** Power temperature coefficient (%/°C) */
+  temp_coeff_pct?: number;
+  /** Annual degradation (%/yr) — default 0.5% */
+  degradation_pct_yr?: number;
+  // ─────────────────────────────────────────────────────────────────────────
   currency: string;
   lead_time_weeks: number;
   warranty_years: number;

@@ -24,8 +24,9 @@ import { supabase } from "@/services/supabaseClient";
 
 export const ALERT_CONFIG = {
   // Score thresholds that trigger alerts
-  criticalThreshold: 50, // Immediate alert (email + SMS)
-  warningThreshold: 70, // Warning alert (email only)
+  // 90+ = valid (SSOT Certified). <90 = all pricing reviewed. <70 = critical failure.
+  criticalThreshold: 70, // Immediate alert (email + SMS) — serious calculation error
+  warningThreshold: 90, // Pricing review alert — any quote scoring below 90 triggers review
 
   // Cooldown to prevent alert spam (minutes)
   alertCooldownMinutes: 15,
@@ -101,8 +102,10 @@ export async function checkAndAlert(payload: AlertPayload): Promise<{
   const isCritical = score < ALERT_CONFIG.criticalThreshold;
   const alertType = isCritical ? "critical" : "warning";
 
-  // Log alert to database first
-  await logAlertToDatabase(alertType, payload);
+  // Log to database — fire and forget, never block on a DB error
+  logAlertToDatabase(alertType, payload).catch((err) => {
+    console.warn("[alertNotificationService] DB log failed (non-fatal):", err);
+  });
 
   // Send notifications based on severity
   if (isCritical) {
@@ -134,7 +137,10 @@ export async function checkAndAlert(payload: AlertPayload): Promise<{
     }
   }
 
-  if (import.meta.env.DEV) console.log(`🚨 SSOT Alert sent via: ${channels.join(", ") || "none (no channels configured)"}`);
+  if (import.meta.env.DEV)
+    console.log(
+      `🚨 SSOT Alert sent via: ${channels.join(", ") || "none (no channels configured)"}`
+    );
 
   return { alertSent: channels.length > 0, channels };
 }
@@ -336,11 +342,15 @@ async function logAlertToDatabase(
   try {
     const { error } = await supabase.from("ssot_alerts").insert({
       alert_type: alertType,
-      score: payload.score,
-      use_case: payload.useCase,
-      location: payload.location,
-      errors: payload.errors,
-      session_id: payload.sessionId,
+      severity: alertType === "critical" ? "critical" : "warning",
+      message: `Score: ${payload.score}% | Use case: ${payload.useCase} | Errors: ${payload.errors.length}`,
+      details: {
+        score: payload.score,
+        useCase: payload.useCase,
+        location: payload.location,
+        errors: payload.errors,
+        sessionId: payload.sessionId,
+      },
     });
 
     if (error) {

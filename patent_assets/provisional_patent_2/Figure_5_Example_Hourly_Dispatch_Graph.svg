@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850">
+  <defs>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #0f172a; }
+      .axis { stroke: #334155; stroke-width: 2; }
+      .grid { stroke: #cbd5e1; stroke-width: 1; }
+      .label { font: 700 18px Arial, sans-serif; fill: #0f172a; }
+      .text { font: 14px Arial, sans-serif; fill: #334155; }
+      .legend { font: 15px Arial, sans-serif; fill: #0f172a; }
+    </style>
+  </defs>
+  <rect width="1400" height="850" fill="#ffffff" />
+  <text x="700" y="48" text-anchor="middle" class="title">FIG. 5 — Example Hourly Dispatch Graph</text>
+
+  <g transform="translate(120,110)">
+    <rect x="0" y="0" width="1120" height="580" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+    <g>
+      <line x1="0" y1="80" x2="1120" y2="80" class="grid" />
+      <line x1="0" y1="160" x2="1120" y2="160" class="grid" />
+      <line x1="0" y1="240" x2="1120" y2="240" class="grid" />
+      <line x1="0" y1="320" x2="1120" y2="320" class="grid" />
+      <line x1="0" y1="400" x2="1120" y2="400" class="grid" />
+      <line x1="0" y1="480" x2="1120" y2="480" class="grid" />
+      <line x1="0" y1="560" x2="1120" y2="560" class="grid" />
+    </g>
+    <g>
+      <line x1="0" y1="580" x2="1120" y2="580" class="axis" />
+      <line x1="0" y1="0" x2="0" y2="580" class="axis" />
+    </g>
+
+    <path d="M0 420 L47 420 L94 420 L141 420 L188 420 L235 395 L282 340 L329 260 L376 190 L423 155 L470 170 L517 210 L564 250 L611 240 L658 230 L705 215 L752 180 L799 140 L846 120 L893 125 L940 155 L987 220 L1034 320 L1081 380 L1120 420" fill="none" stroke="#2563eb" stroke-width="5" />
+
+    <path d="M0 580 L47 580 L94 580 L141 580 L188 580 L235 575 L282 545 L329 470 L376 370 L423 240 L470 145 L517 95 L564 70 L611 90 L658 145 L705 230 L752 355 L799 470 L846 545 L893 575 L940 580 L987 580 L1034 580 L1081 580 L1120 580" fill="none" stroke="#f59e0b" stroke-width="5" />
+
+    <path d="M0 580 L47 580 L94 580 L141 560 L188 530 L235 500 L282 470 L329 440 L376 430 L423 460 L470 520 L517 560 L564 570 L611 560 L658 520 L705 460 L752 350 L799 250 L846 200 L893 230 L940 320 L987 430 L1034 510 L1081 560 L1120 580" fill="none" stroke="#16a34a" stroke-width="5" stroke-dasharray="12 8" />
+
+    <text x="560" y="635" text-anchor="middle" class="label">Hour of Day</text>
+    <text x="-70" y="290" transform="rotate(-90 -70 290)" text-anchor="middle" class="label">Power / Relative Output</text>
+
+    <g class="text">
+      <text x="0" y="610">0</text><text x="92" y="610">2</text><text x="186" y="610">4</text>
+      <text x="280" y="610">6</text><text x="374" y="610">8</text><text x="460" y="610">10</text>
+      <text x="554" y="610">12</text><text x="648" y="610">14</text><text x="742" y="610">16</text>
+      <text x="836" y="610">18</text><text x="930" y="610">20</text><text x="1024" y="610">22</text><text x="1108" y="610">24</text>
+    </g>
+
+    <g class="text">
+      <text x="-38" y="565">0</text>
+      <text x="-52" y="485">20</text>
+      <text x="-52" y="405">40</text>
+      <text x="-52" y="325">60</text>
+      <text x="-52" y="245">80</text>
+      <text x="-62" y="165">100</text>
+      <text x="-62" y="85">120</text>
+    </g>
+  </g>
+
+  <g transform="translate(300,735)">
+    <line x1="0" y1="0" x2="60" y2="0" stroke="#2563eb" stroke-width="5" />
+    <text x="75" y="5" class="legend">Facility load</text>
+    <line x1="240" y1="0" x2="300" y2="0" stroke="#f59e0b" stroke-width="5" />
+    <text x="315" y="5" class="legend">Solar generation</text>
+    <line x1="520" y1="0" x2="580" y2="0" stroke="#16a34a" stroke-width="5" stroke-dasharray="12 8" />
+    <text x="595" y="5" class="legend">Battery dispatch</text>
+  </g>
+</svg>

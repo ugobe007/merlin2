@@ -1,11 +1,11 @@
 /**
  * Country Selector Component
- * 
+ *
  * Dropdown for selecting country/region for international quotes
  */
 
-import React from 'react';
-import { SUPPORTED_COUNTRIES, type Country } from '@/services/internationalService';
+import React from "react";
+import { SUPPORTED_COUNTRIES } from "@/services/internationalService";
 
 interface CountrySelectorProps {
   selectedCountry: string;
@@ -17,19 +17,15 @@ interface CountrySelectorProps {
 export default function CountrySelector({
   selectedCountry,
   onChange,
-  label = 'Location',
-  className = '',
+  label = "Location",
+  className = "",
 }: CountrySelectorProps) {
   const selected = SUPPORTED_COUNTRIES.find((c) => c.code === selectedCountry);
 
   return (
     <div className={`space-y-2 ${className}`}>
-      {label && (
-        <label className="block text-sm font-medium text-gray-300">
-          {label}
-        </label>
-      )}
-      
+      {label && <label className="block text-sm font-medium text-gray-300">{label}</label>}
+
       <div className="relative">
         <select
           value={selectedCountry}
@@ -44,10 +40,15 @@ export default function CountrySelector({
             </option>
           ))}
         </select>
-        
+
         {/* Dropdown arrow */}
         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
@@ -69,8 +70,8 @@ export default function CountrySelector({
 export function CountrySelectorCompact({
   selectedCountry,
   onChange,
-  className = '',
-}: Omit<CountrySelectorProps, 'label'>) {
+  className = "",
+}: Omit<CountrySelectorProps, "label">) {
   const selected = SUPPORTED_COUNTRIES.find((c) => c.code === selectedCountry);
 
   return (
@@ -89,11 +90,7 @@ export function CountrySelectorCompact({
           </option>
         ))}
       </select>
-      {selected && (
-        <span className="text-sm text-gray-500">
-          ({selected.currencySymbol})
-        </span>
-      )}
+      {selected && <span className="text-sm text-gray-500">({selected.currencySymbol})</span>}
     </div>
   );
 }

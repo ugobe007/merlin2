@@ -150,7 +150,7 @@ const DEFAULT_BESS_LIMITS: BESSUILimits = {
   },
   solarMW: { min: 0, max: 50, default: 0, step: 0.1, label: "Solar Capacity (MW)" },
   projectLifeYears: { min: 10, max: 30, default: 25, step: 5, label: "Project Life (Years)" },
-  discountRate: { min: 0.04, max: 0.15, default: 0.08, step: 0.01, label: "Discount Rate" },
+  discountRate: { min: 0.04, max: 0.15, default: 0.06, step: 0.01, label: "Discount Rate" },
 };
 
 // ============================================================================
@@ -189,7 +189,8 @@ export async function getUILimits<T = Record<string, UIFieldLimit>>(configKey: s
 
     // Cache the result
     uiLimitsCache.set(configKey, { data: data.config_data, timestamp: Date.now() });
-    if (import.meta.env.DEV) console.log(`✅ [UIConfigService] Loaded '${configKey}' from database`);
+    if (import.meta.env.DEV)
+      console.log(`✅ [UIConfigService] Loaded '${configKey}' from database`);
 
     return data.config_data as T;
   } catch (error) {

@@ -28,6 +28,8 @@ interface WizardShellV7Props {
   isVerified?: boolean;
   /** Advisor narration + intel rendered in left rail below progress steps */
   advisorContent?: React.ReactNode;
+  /** Width of the Merlin advisor rail in px. Default 520. Increase for data-heavy steps. */
+  railWidth?: number;
   children: React.ReactNode;
 }
 
@@ -40,6 +42,33 @@ interface WizardShellV7Props {
  * CHANGE Feb 11, 2026: Progress steps moved from left rail to horizontal bar
  * at the top of the content panel. Freed ~280px for Merlin's cross-slot insights.
  */
+
+// Live clock — signals the engine is running in real-time (from merlin-energy design system)
+function LiveClock() {
+  const [time, setTime] = React.useState(() =>
+    new Date().toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    })
+  );
+  React.useEffect(() => {
+    const id = setInterval(() => {
+      setTime(
+        new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        })
+      );
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return <span style={{ fontFamily: "'JetBrains Mono', 'Courier New', monospace" }}>{time}</span>;
+}
+
 export default function WizardShellV7({
   currentStep,
   stepLabels,
@@ -51,12 +80,15 @@ export default function WizardShellV7({
   onBack,
   onNext,
   advisorContent,
+  railWidth: _railWidth = 520,
   children,
 }: WizardShellV7Props) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   const shellRef = useRef<HTMLDivElement>(null);
+  const stepContentRef = useRef<HTMLDivElement>(null);
+  const prevStepRef = useRef(currentStep);
 
-  // ✅ SCROLL-TO-TOP on every step transition
+  // ✅ SCROLL-TO-TOP + flash-free step transition animation
   useEffect(() => {
     // 1) Try scrolling the wizard's own scroll container (modal path)
     const scrollContainer = shellRef.current?.closest("[data-wizard-scroll]") as HTMLElement | null;
@@ -65,6 +97,18 @@ export default function WizardShellV7({
     }
     // 2) Always also scroll window (direct /v7 route path)
     window.scrollTo({ top: 0, behavior: "instant" });
+
+    // 3) Re-trigger step-fadein animation without unmount/remount (prevents flash)
+    if (prevStepRef.current !== currentStep) {
+      prevStepRef.current = currentStep;
+      const el = stepContentRef.current;
+      if (el) {
+        el.style.animation = "none";
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        el.offsetHeight; // force reflow so animation restarts
+        el.style.animation = "";
+      }
+    }
   }, [currentStep]);
 
   const totalSteps = stepLabels?.length ?? 0;
@@ -103,11 +147,14 @@ export default function WizardShellV7({
           style={{
             flex: 1,
             display: "grid",
-            gridTemplateColumns: "360px 1fr",
-            gap: 28,
-            /* No maxWidth cap — fill the full browser landscape width */
+            // 1fr:2fr = 33%/67% — advisor panel is visible but not dominant.
+            // minmax(260px, 1fr) prevents collapse on narrow desktops.
+            // maxWidth + margin center the layout on ultra-wide screens.
+            gridTemplateColumns: "minmax(260px, 1fr) 2fr",
+            gap: 32,
             width: "100%",
-            maxWidth: "100%",
+            maxWidth: 1440,
+            margin: "0 auto",
             padding: "24px 32px",
           }}
         >
@@ -157,10 +204,179 @@ export default function WizardShellV7({
 
               <div>
                 <div style={{ fontSize: 16, fontWeight: 600, color: "#fff" }}>Merlin AI</div>
-                <div style={{ fontSize: 12, color: "rgba(62, 207, 142, 0.8)", fontWeight: 500 }}>
-                  ● Active — Step {safeStep + 1} of {totalSteps}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "relative",
+                      display: "inline-flex",
+                      width: 8,
+                      height: 8,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: "50%",
+                        background: "rgba(62,207,142,0.35)",
+                        animation: "merlin-pulse 1.5s ease-in-out infinite",
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: "relative",
+                        borderRadius: "50%",
+                        width: "100%",
+                        height: "100%",
+                        background: "#3ECF8E",
+                      }}
+                    />
+                  </span>
+                  <span style={{ color: "rgba(62,207,142,0.85)", letterSpacing: "0.04em" }}>
+                    LIVE
+                  </span>
+                  <span style={{ color: "rgba(255,255,255,0.18)" }}>·</span>
+                  <span
+                    style={{
+                      color: "rgba(255,255,255,0.32)",
+                      fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                    }}
+                  >
+                    <LiveClock />
+                  </span>
                 </div>
               </div>
+            </div>
+
+            {/* TrueQuote™ Badge — top of rail, always visible */}
+            <div style={{ padding: "0 0 12px" }}>
+              <button
+                type="button"
+                onClick={() => setShowTrueQuoteModal(true)}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "14px 16px",
+                  borderRadius: 14,
+                  background:
+                    "linear-gradient(145deg, rgba(28,18,4,0.92) 0%, rgba(18,12,2,0.96) 100%)",
+                  border: "1.5px solid rgba(245,158,11,0.45)",
+                  boxShadow: "0 0 28px rgba(245,158,11,0.10), inset 0 1px 0 rgba(245,158,11,0.08)",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  WebkitFontSmoothing: "antialiased",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(245,158,11,0.70)";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 36px rgba(245,158,11,0.20), inset 0 1px 0 rgba(245,158,11,0.14)";
+                  e.currentTarget.style.background =
+                    "linear-gradient(145deg, rgba(36,23,5,0.95) 0%, rgba(22,15,3,0.98) 100%)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(245,158,11,0.45)";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 28px rgba(245,158,11,0.10), inset 0 1px 0 rgba(245,158,11,0.08)";
+                  e.currentTarget.style.background =
+                    "linear-gradient(145deg, rgba(28,18,4,0.92) 0%, rgba(18,12,2,0.96) 100%)";
+                }}
+                aria-label="Learn about TrueQuote verification"
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                  <svg
+                    width="20"
+                    height="22"
+                    viewBox="0 0 20 22"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <path
+                      d="M10 1L2 4.5V10C2 14.97 5.42 19.6 10 21C14.58 19.6 18 14.97 18 10V4.5L10 1Z"
+                      fill="rgba(245,158,11,0.15)"
+                      stroke="#F2C14F"
+                      strokeWidth="1.4"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M7 11L9.5 13.5L14 8.5"
+                      stroke="#3ECF8E"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 800,
+                      color: "#F5F0E8",
+                      letterSpacing: "0.01em",
+                    }}
+                  >
+                    TrueQuote™
+                  </span>
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background:
+                        "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
+                      boxShadow: "0 0 8px rgba(242,193,79,0.55)",
+                      flexShrink: 0,
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="6"
+                      cy="6"
+                      r="5.5"
+                      fill="rgba(62,207,142,0.15)"
+                      stroke="#3ECF8E"
+                      strokeWidth="1"
+                    />
+                    <path
+                      d="M3.5 6L5.5 8L8.5 4"
+                      stroke="#3ECF8E"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 600,
+                      color: "rgba(255,255,255,0.45)",
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Verified Pricing Sources
+                  </span>
+                </div>
+              </button>
             </div>
 
             {/* Unified Merlin Advisor — full rail height (Feb 11, 2026) */}
@@ -204,64 +420,6 @@ export default function WizardShellV7({
                   </div>
                 </>
               )}
-            </div>
-
-            {/* Spacer to push TrueQuote badge to bottom */}
-            <div style={{ marginTop: "auto" }} />
-
-            {/* TrueQuote Badge — Always visible, clickable to open modal */}
-            <div
-              style={{
-                padding: "12px 0",
-                borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-                display: "flex",
-                justifyContent: "center",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setShowTrueQuoteModal(true)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  height: 28,
-                  padding: "0 12px",
-                  borderRadius: 14,
-                  background: "rgba(30, 32, 48, 0.6)",
-                  border: "1px solid rgba(99, 102, 241, 0.4)",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  fontSize: 12,
-                  letterSpacing: "0.04em",
-                  WebkitFontSmoothing: "antialiased",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.6)";
-                  e.currentTarget.style.background = "rgba(30, 32, 48, 0.8)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.4)";
-                  e.currentTarget.style.background = "rgba(30, 32, 48, 0.6)";
-                }}
-                aria-label="Learn about TrueQuote verification"
-              >
-                <span style={{ color: "#F1F5F9", fontWeight: 700, letterSpacing: "0.02em" }}>
-                  TrueQuote™
-                </span>
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background:
-                      "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
-                    boxShadow: "0 0 6px rgba(242, 193, 79, 0.4)",
-                    flexShrink: 0,
-                  }}
-                />
-                <span style={{ color: "#94A3B8", fontWeight: 600 }}>Verified</span>
-              </button>
             </div>
           </div>
 
@@ -378,9 +536,9 @@ export default function WizardShellV7({
               })}
             </div>
 
-            {/* Step Content */}
+            {/* Step Content — ref-based animation restart prevents flash on step change */}
             <div
-              key={`step-${safeStep}`}
+              ref={stepContentRef}
               className="merlin-step merlin-step-enter"
               style={{
                 background: "rgba(255, 255, 255, 0.02)",
@@ -389,7 +547,9 @@ export default function WizardShellV7({
                 border: "1px solid rgba(255, 255, 255, 0.05)",
                 borderTop: "none",
                 minHeight: 400,
-                animation: "merlin-step-fadein 0.3s ease-out",
+                willChange: "transform, opacity",
+                animation:
+                  "merlin-step-fadein 0.28s ease-out, heartbeatBorder 4s ease-in-out 0.4s infinite",
               }}
             >
               {children}
@@ -398,13 +558,29 @@ export default function WizardShellV7({
 
           {/* Step transition animation + responsive */}
           <style>{`
+            @keyframes heartbeatBorder {
+              0%, 100% { box-shadow: 0 0 0 0 transparent; }
+              50%       { box-shadow: 0 0 0 1px rgba(245,158,11,0.09), 0 24px 48px rgba(0,0,0,0.22); }
+            }
+            @keyframes merlin-pulse {
+              0%, 100% { transform: scale(1); opacity: 0.75; }
+              50%       { transform: scale(1.9); opacity: 0; }
+            }
             @keyframes merlin-step-fadein {
-              from { opacity: 0; transform: translateY(12px); }
+              from { opacity: 0.1; transform: translateY(10px); }
               to   { opacity: 1; transform: translateY(0); }
             }
             @keyframes merlin-spin {
               from { transform: rotate(0deg); }
               to   { transform: rotate(360deg); }
+            }
+            @keyframes nextBtnPulse {
+              0%, 100% {
+                box-shadow: 0 0 32px rgba(62, 207, 142, 0.45), 0 4px 16px rgba(0,0,0,0.3);
+              }
+              50% {
+                box-shadow: 0 0 56px rgba(62, 207, 142, 0.85), 0 0 22px rgba(62, 207, 142, 0.55), 0 4px 20px rgba(0,0,0,0.35);
+              }
             }
             
             /* Mobile: collapse to single column, hide rail, compact progress */
@@ -449,10 +625,10 @@ export default function WizardShellV7({
               }
             }
             
-            /* Tablet: narrower rail, compact progress labels */
+            /* Tablet: tighten spacing, fix left rail at 260px to match reduced proportion */
             @media (min-width: 901px) and (max-width: 1200px) {
               .merlin-shell-grid {
-                grid-template-columns: 280px 1fr !important;
+                grid-template-columns: 260px 1fr !important;
                 gap: 20px !important;
                 padding: 20px 24px !important;
               }
@@ -504,10 +680,13 @@ export default function WizardShellV7({
             }
 
             /* ── LANDSCAPE TABLET (iPad, 521-900px height, landscape) ─────────
-               Handles iPad mini/Air in landscape. Show narrow rail. */
-            @media (orientation: landscape) and (min-height: 521px) and (max-height: 900px) and (min-width: 901px) {
+               Handles iPad mini/Air in landscape. Show narrow rail.
+               (pointer: coarse) ensures this ONLY targets touch tablets,
+               NOT laptops — 1366×768 and 1440×900 laptops were being caught
+               by the height range and wrongly capped the advisor at 240px. */
+            @media (orientation: landscape) and (min-height: 521px) and (max-height: 900px) and (min-width: 901px) and (pointer: coarse) {
               .merlin-shell-grid {
-                grid-template-columns: 220px 1fr !important;
+                grid-template-columns: 240px 1fr !important;
                 gap: 16px !important;
                 padding: 16px 20px !important;
               }
@@ -526,12 +705,12 @@ export default function WizardShellV7({
         <div
           className="merlin-shell-bottomnav"
           style={{
-            padding: "0 32px 28px",
+            padding: "0 32px 12px",
             width: "100%",
           }}
         >
           {/* Separator */}
-          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", marginBottom: 20 }} />
+          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", marginBottom: 10 }} />
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             {/* Back */}
@@ -636,9 +815,9 @@ export default function WizardShellV7({
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
-                    padding: "11px 22px",
-                    borderRadius: 10,
-                    minHeight: 46,
+                    padding: isFilled ? "14px 28px" : "11px 22px",
+                    borderRadius: isFilled ? 12 : 10,
+                    minHeight: isFilled ? 54 : 46,
                     background: isFilled
                       ? "#3ECF8E"
                       : isActive
@@ -655,17 +834,21 @@ export default function WizardShellV7({
                         ? "#3ECF8E"
                         : "rgba(232, 235, 243, 0.28)",
                     cursor: isActive ? "pointer" : "not-allowed",
-                    fontSize: 14,
+                    fontSize: isFilled ? 16 : 14,
                     fontWeight: 700,
                     letterSpacing: "0.01em",
-                    boxShadow: isFilled ? "0 0 20px rgba(62, 207, 142, 0.25)" : "none",
+                    boxShadow: isFilled
+                      ? "0 0 32px rgba(62, 207, 142, 0.45), 0 4px 16px rgba(0,0,0,0.3)"
+                      : "none",
+                    animation: isFilled ? "nextBtnPulse 2s ease-in-out infinite" : "none",
                     transition: "all 0.18s ease",
                   }}
                   onMouseEnter={(e) => {
                     if (isActive) {
                       if (isFilled) {
                         e.currentTarget.style.background = "#4DDBA0";
-                        e.currentTarget.style.boxShadow = "0 0 28px rgba(62, 207, 142, 0.40)";
+                        e.currentTarget.style.boxShadow =
+                          "0 0 44px rgba(62, 207, 142, 0.60), 0 4px 20px rgba(0,0,0,0.35)";
                         e.currentTarget.style.transform = "translateY(-1px)";
                       } else {
                         e.currentTarget.style.background = "rgba(62, 207, 142, 0.10)";
@@ -680,7 +863,7 @@ export default function WizardShellV7({
                         ? "transparent"
                         : "rgba(255,255,255,0.03)";
                     e.currentTarget.style.boxShadow = isFilled
-                      ? "0 0 20px rgba(62, 207, 142, 0.25)"
+                      ? "0 0 32px rgba(62, 207, 142, 0.45), 0 4px 16px rgba(0,0,0,0.3)"
                       : "none";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}

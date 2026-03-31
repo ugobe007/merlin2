@@ -26,13 +26,17 @@ export const RESIDENTIAL_LOAD_V1_SSOT: CalculatorContract = {
     if (hasPool) assumptions.push(`Pool: ${inputs.pool}`);
 
     // ── Delegate to SSOT ───────────────────────────────────────────
-    const result = calculateUseCasePower("residential", {
-      squareFeet: squareFootage,
-      sqFt: squareFootage,
-      homeSize: squareFootage,
-      homeCount: 1,
-      units: 1,
-    });
+    const result = calculateUseCasePower(
+      "residential",
+      buildSSOTInput("residential", {
+        squareFootage,
+        occupants,
+        homeType,
+        hvacType,
+        evCharging: hasEV ? inputs.evCharging : undefined,
+        pool: hasPool ? inputs.pool : undefined,
+      })
+    );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // ── TrueQuote kW contributor breakdown ─────────────────────────

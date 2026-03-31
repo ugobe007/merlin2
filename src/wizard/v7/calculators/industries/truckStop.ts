@@ -1,5 +1,4 @@
 import type { CalculatorContract, CalcInputs, CalcRunResult, CalcValidation } from "../contract";
-import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
 import { buildSSOTInput } from "../ssotInputAliases";
 
 export const TRUCK_STOP_LOAD_V1_SSOT: CalculatorContract = {
@@ -13,16 +12,18 @@ export const TRUCK_STOP_LOAD_V1_SSOT: CalculatorContract = {
     // Core sizing inputs (from curated config button values or direct numbers)
     // fuelPumps comes as 'small'|'medium'|'large'|'mega' from buttons
     const PUMP_MAP: Record<string, number> = {
-      small: 6,    // Small truck stop
-      medium: 12,  // Standard truck stop
-      large: 20,   // Large travel center
-      mega: 30,    // Major travel plaza
+      small: 6, // Small truck stop
+      medium: 12, // Standard truck stop
+      large: 20, // Large travel center
+      mega: 30, // Major travel plaza
     };
     const rawPumpsInput = inputs.fuelPumps;
     const rawDieselLanes =
       typeof rawPumpsInput === "string" && rawPumpsInput in PUMP_MAP
         ? PUMP_MAP[rawPumpsInput]
-        : rawPumpsInput != null && Number.isFinite(Number(rawPumpsInput)) && Number(rawPumpsInput) > 0
+        : rawPumpsInput != null &&
+            Number.isFinite(Number(rawPumpsInput)) &&
+            Number(rawPumpsInput) > 0
           ? Number(rawPumpsInput)
           : 12;
     const dieselLanes = rawDieselLanes;
@@ -35,16 +36,34 @@ export const TRUCK_STOP_LOAD_V1_SSOT: CalculatorContract = {
     const stationType = String(inputs.stationType || "truck-stop");
 
     // Bridge curated button values for boolean fields
-    const hasShowers = inputs.hasShowers !== false && inputs.hasShowers !== "false" && inputs.hasShowers !== "no" && inputs.hasShowers !== "none";
-    const hasLaundry = inputs.hasLaundry !== false && inputs.hasLaundry !== "false" && inputs.hasLaundry !== "no" && inputs.hasLaundry !== "none";
-    const hasRestaurant = inputs.hasRestaurant !== false && inputs.hasRestaurant !== "false" && inputs.hasRestaurant !== "no" && inputs.hasRestaurant !== "none";
+    const hasShowers =
+      inputs.hasShowers !== false &&
+      inputs.hasShowers !== "false" &&
+      inputs.hasShowers !== "no" &&
+      inputs.hasShowers !== "none";
+    const hasLaundry =
+      inputs.hasLaundry !== false &&
+      inputs.hasLaundry !== "false" &&
+      inputs.hasLaundry !== "no" &&
+      inputs.hasLaundry !== "none";
+    const hasRestaurant =
+      inputs.hasRestaurant !== false &&
+      inputs.hasRestaurant !== "false" &&
+      inputs.hasRestaurant !== "no" &&
+      inputs.hasRestaurant !== "none";
     // carWash: curated buttons are 'tunnel'|'automatic'|'self-service'|'none'
     const cwVal = inputs.carWash ?? inputs.hasCarWash;
-    const hasCarWash = cwVal != null
-      ? cwVal !== "none" && cwVal !== "no" && cwVal !== false && cwVal !== "false"
-      : false;
+    const hasCarWash =
+      cwVal != null
+        ? cwVal !== "none" && cwVal !== "no" && cwVal !== false && cwVal !== "false"
+        : false;
 
-    if (!inputs.fuelPumps || (typeof rawPumpsInput === "string" && !(rawPumpsInput in PUMP_MAP) && !Number.isFinite(Number(rawPumpsInput)))) {
+    if (
+      !inputs.fuelPumps ||
+      (typeof rawPumpsInput === "string" &&
+        !(rawPumpsInput in PUMP_MAP) &&
+        !Number.isFinite(Number(rawPumpsInput)))
+    ) {
       assumptions.push("Default: 12 diesel lanes (no user input)");
     }
 
@@ -113,6 +132,20 @@ export const TRUCK_STOP_LOAD_V1_SSOT: CalculatorContract = {
       restaurantKW +
       carWashKW +
       controlsKW;
+
+    // NOTE: No generic SSOT handler exists for "truck-stop" — this bottom-up
+    // engineering model IS the SSOT for this industry. Use buildSSOTInput to
+    // document field mappings so the alias manifest remains consistent.
+    buildSSOTInput("truck_stop", {
+      fuelPumps: dieselLanes,
+      cStoreSqFt,
+      squareFootage: cStoreSqFt,
+      truckParkingSpots: parkingSpots,
+      stationType,
+      convenienceStore: "yes",
+      foodService: hasRestaurant ? "full-restaurant" : "none",
+      carWash: hasCarWash ? "tunnel" : "no",
+    });
 
     // Apply diversity factor: not all loads peak simultaneously
     const diversityFactor = 0.85;

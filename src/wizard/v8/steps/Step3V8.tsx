@@ -54,24 +54,28 @@ export function Step3V8({ state, actions }: Props) {
 
   // Normalize questions
   const questions: CuratedField[] = useMemo(() => {
-    const raw = (curatedSchema as unknown as Record<string, unknown>)?.questions ?? 
-                (curatedSchema as unknown as Record<string, unknown>)?.fields ?? [];
-    return (raw as Array<Record<string, unknown>>).map((q: Record<string, unknown>, idx: number) => {
-      const rawId = q?.id ?? q?.key ?? q?.fieldId ?? q?.name;
-      const id = rawId && String(rawId) !== "undefined" ? rawId : `${industry}_${idx}`;
-      const title = q?.title ?? q?.label ?? q?.prompt ?? q?.question;
-      const optionsRaw = q?.options ?? q?.choices ?? q?.values ?? q?.items;
-      
-      return {
-        ...q,
-        id: String(id),
-        title,
-        label: q?.label ?? title,
-        type: q?.type ?? q?.inputType ?? q?.kind ?? "text",
-        required: Boolean(q?.required ?? q?.isRequired ?? false),
-        options: optionsRaw,
-      } as CuratedField;
-    });
+    const raw =
+      (curatedSchema as unknown as Record<string, unknown>)?.questions ??
+      (curatedSchema as unknown as Record<string, unknown>)?.fields ??
+      [];
+    return (raw as Array<Record<string, unknown>>).map(
+      (q: Record<string, unknown>, idx: number) => {
+        const rawId = q?.id ?? q?.key ?? q?.fieldId ?? q?.name;
+        const id = rawId && String(rawId) !== "undefined" ? rawId : `${industry}_${idx}`;
+        const title = q?.title ?? q?.label ?? q?.prompt ?? q?.question;
+        const optionsRaw = q?.options ?? q?.choices ?? q?.values ?? q?.items;
+
+        return {
+          ...q,
+          id: String(id),
+          title,
+          label: q?.label ?? title,
+          type: q?.type ?? q?.inputType ?? q?.kind ?? "text",
+          required: Boolean(q?.required ?? q?.isRequired ?? false),
+          options: optionsRaw,
+        } as CuratedField;
+      }
+    );
   }, [curatedSchema, industry]);
 
   // Track auto-filled defaults
@@ -142,7 +146,7 @@ export function Step3V8({ state, actions }: Props) {
       if (!c?.dependsOn || typeof c.showIf !== "function") return true;
       try {
         const depKey = String(c.dependsOn);
-        return !!(c.showIf as ((val: unknown) => boolean))(answers[depKey]);
+        return !!(c.showIf as (val: unknown) => boolean)(answers[depKey]);
       } catch {
         return true; // Fail-open
       }
@@ -165,8 +169,8 @@ export function Step3V8({ state, actions }: Props) {
       if (!c?.modifyOptions || !c.dependsOn) return base;
       try {
         const depKey = String(c.dependsOn);
-        const next = (c.modifyOptions as ((val: unknown) => unknown))(answers[depKey]);
-        return Array.isArray(next) ? next as (string | number | Record<string, unknown>)[] : base;
+        const next = (c.modifyOptions as (val: unknown) => unknown)(answers[depKey]);
+        return Array.isArray(next) ? (next as (string | number | Record<string, unknown>)[]) : base;
       } catch {
         return base;
       }
@@ -255,15 +259,12 @@ export function Step3V8({ state, actions }: Props) {
   // Scroll sentinel for section-top
   const sectionTopRef = useRef<HTMLDivElement>(null);
 
-  const goToSection = useCallback(
-    (idx: number) => {
-      setActiveSectionIdx(idx);
-      setTimeout(() => {
-        sectionTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 50);
-    },
-    []
-  );
+  const goToSection = useCallback((idx: number) => {
+    setActiveSectionIdx(idx);
+    setTimeout(() => {
+      sectionTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }, []);
 
   const isLastSection = clampedIdx === orderedSections.length - 1;
   const isFirstSection = clampedIdx === 0;
@@ -272,6 +273,22 @@ export function Step3V8({ state, actions }: Props) {
   const renderQuestion = (q: CuratedField, indexInSection: number) => {
     const qAny = q as unknown as Record<string, unknown>;
     const merlinTip = qAny.merlinTip as string | undefined;
+
+    // Non-inline types: QuestionCard handles its own header, title, and tip — render standalone
+    if (!["buttons", "number_input", "toggle"].includes(q.type)) {
+      return (
+        <div key={q.id} id={`question-${q.id}`} style={{ marginBottom: 12 }}>
+          <QuestionCard
+            q={q}
+            index={indexInSection}
+            answers={answers}
+            defaultFilledIds={defaultFilledIds}
+            onAnswer={setAnswerWithTracking}
+            getOptions={getOptions}
+          />
+        </div>
+      );
+    }
 
     return (
       <div
@@ -286,75 +303,70 @@ export function Step3V8({ state, actions }: Props) {
         }}
       >
         {/* Question Header */}
-        <div style={{
-          background: "rgba(51, 65, 85, 0.6)",
-          padding: "10px 16px",
-          borderTopLeftRadius: 12,
-          borderTopRightRadius: 12,
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-        }}>
-          <div style={{
-            background: "rgba(99, 102, 241, 0.2)",
-            color: "#94a3b8",
-            width: 24,
-            height: 24,
-            borderRadius: "50%",
+        <div
+          style={{
+            background: "rgba(51, 65, 85, 0.6)",
+            padding: "10px 16px",
+            borderTopLeftRadius: 12,
+            borderTopRightRadius: 12,
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            fontSize: 12,
-            fontWeight: 700,
-            flexShrink: 0,
-          }}>
-            {indexInSection + 1}
-          </div>
-          {/* Show badge when value is still the auto-filled default */}
-          {qAny.smartDefault !== undefined && qAny.smartDefault !== null && qAny.smartDefault !== "" && defaultFilledIds.has(q.id) && (
-            <div style={{
-              marginLeft: "auto",
-              background: "rgba(34, 197, 94, 0.15)",
-              border: "1px solid rgba(34, 197, 94, 0.3)",
-              color: "#3ECF8E",
-              padding: "3px 8px",
-              borderRadius: 5,
-              fontSize: 9,
-              fontWeight: 600,
+            gap: 10,
+          }}
+        >
+          <div
+            style={{
+              background: "rgba(99, 102, 241, 0.2)",
+              color: "#94a3b8",
+              width: 24,
+              height: 24,
+              borderRadius: "50%",
               display: "flex",
               alignItems: "center",
-              gap: 3,
-            }}>
-              <span>✨</span> Industry default
-            </div>
-          )}
+              justifyContent: "center",
+              fontSize: 12,
+              fontWeight: 700,
+              flexShrink: 0,
+            }}
+          >
+            {indexInSection + 1}
+          </div>
+
           {/* Restore button when user changed a smart-defaulted field */}
-          {qAny.smartDefault !== undefined && qAny.smartDefault !== null && qAny.smartDefault !== "" && !defaultFilledIds.has(q.id) && isAnswered(answers[q.id]) && (
-            <button
-              type="button"
-              onClick={() => resetToDefault(q.id)}
-              title="Restore industry default"
-              style={{
-                marginLeft: "auto",
-                background: "transparent",
-                border: "none",
-                color: "rgba(148,163,184,0.5)",
-                padding: "3px 6px",
-                borderRadius: 5,
-                fontSize: 9,
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 3,
-                lineHeight: 1,
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(148,163,184,0.85)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(148,163,184,0.5)"; }}
-            >
-              ↩ restore
-            </button>
-          )}
+          {qAny.smartDefault !== undefined &&
+            qAny.smartDefault !== null &&
+            qAny.smartDefault !== "" &&
+            !defaultFilledIds.has(q.id) &&
+            isAnswered(answers[q.id]) && (
+              <button
+                type="button"
+                onClick={() => resetToDefault(q.id)}
+                title="Restore industry default"
+                style={{
+                  marginLeft: "auto",
+                  background: "transparent",
+                  border: "none",
+                  color: "rgba(148,163,184,0.5)",
+                  padding: "3px 6px",
+                  borderRadius: 5,
+                  fontSize: 9,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 3,
+                  lineHeight: 1,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "rgba(148,163,184,0.85)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "rgba(148,163,184,0.5)";
+                }}
+              >
+                ↩ restore
+              </button>
+            )}
         </div>
 
         {/* Question Content */}
@@ -363,22 +375,26 @@ export function Step3V8({ state, actions }: Props) {
             {q.title || q.label}
           </div>
 
-          {qAny.description && (
+          {!!qAny.description && (
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>
               {String(qAny.description)}
             </div>
           )}
 
           {merlinTip && (
-            <div style={{
-              background: "rgba(59, 130, 246, 0.08)",
-              border: "1px solid rgba(59, 130, 246, 0.2)",
-              borderRadius: 10,
-              padding: "10px 14px",
-              marginBottom: 14,
-            }}>
+            <div
+              style={{
+                background: "rgba(59, 130, 246, 0.08)",
+                border: "1px solid rgba(59, 130, 246, 0.2)",
+                borderRadius: 10,
+                padding: "10px 14px",
+                marginBottom: 14,
+              }}
+            >
               <div style={{ display: "flex", alignItems: "start", gap: 8 }}>
-                <div style={{ color: "#94a3b8", fontSize: 14, flexShrink: 0, marginTop: 1 }}>💡</div>
+                <div style={{ color: "#94a3b8", fontSize: 14, flexShrink: 0, marginTop: 1 }}>
+                  💡
+                </div>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", marginBottom: 3 }}>
                     Merlin's Tip
@@ -392,15 +408,20 @@ export function Step3V8({ state, actions }: Props) {
           )}
 
           {/* Answer Options */}
-          {q.type === "buttons" && qAny.options && (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: q.options && q.options.length <= 3
-                ? "repeat(auto-fit, minmax(200px, 1fr))"
-                : "repeat(2, 1fr)",
-              gap: 8,
-            }}>
-              {q.options.map((opt) => {
+          {q.type === "buttons" && !!qAny.options && (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  q.options && q.options.length <= 3
+                    ? "repeat(auto-fit, minmax(200px, 1fr))"
+                    : q.options && q.options.length <= 6
+                      ? "repeat(3, 1fr)"
+                      : "repeat(auto-fill, minmax(220px, 1fr))",
+                gap: 8,
+              }}
+            >
+              {(q.options ?? []).map((opt) => {
                 const isSelected = answers[q.id] === opt.value;
                 return (
                   <button
@@ -409,7 +430,9 @@ export function Step3V8({ state, actions }: Props) {
                     onClick={() => setAnswerWithTracking(q.id, opt.value)}
                     style={{
                       background: isSelected ? "rgba(16,185,129,0.10)" : "rgba(51, 65, 85, 0.5)",
-                      border: isSelected ? "1.5px solid rgba(16,185,129,0.50)" : "1px solid rgba(255,255,255,0.08)",
+                      border: isSelected
+                        ? "1.5px solid rgba(16,185,129,0.50)"
+                        : "1px solid rgba(255,255,255,0.08)",
                       borderRadius: 10,
                       padding: "12px 14px",
                       textAlign: "left",
@@ -434,14 +457,22 @@ export function Step3V8({ state, actions }: Props) {
                     }}
                   >
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: opt.description ? 4 : 0 }}>
-                        {opt.icon && (
-                          <span style={{ fontSize: 16 }}>
-                            {typeof opt.icon === "string" ? opt.icon : opt.label.match(/[⭐🌟🎨🏢]/u)?.[0]}
-                          </span>
-                        )}
-                        <span style={{ fontSize: 13, fontWeight: 600, color: isSelected ? "#6EE7B7" : "white" }}>
-                          {opt.label.replace(/[⭐🌟🎨🏢]/gu, "").trim()}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: opt.description ? 4 : 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: isSelected ? "#6EE7B7" : "white",
+                          }}
+                        >
+                          {opt.label}
                         </span>
                       </div>
                       {opt.description && (
@@ -451,22 +482,24 @@ export function Step3V8({ state, actions }: Props) {
                       )}
                     </div>
                     {/* Circle checkmark indicator */}
-                    <div style={{
-                      flexShrink: 0,
-                      width: 22,
-                      height: 22,
-                      borderRadius: "50%",
-                      border: isSelected ? "none" : "1.5px solid rgba(255,255,255,0.25)",
-                      background: isSelected ? "#3ECF8E" : "transparent",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: "#0D1117",
-                      transition: "all 0.15s ease",
-                      boxShadow: isSelected ? "0 0 8px rgba(16,185,129,0.5)" : "none",
-                    }}>
+                    <div
+                      style={{
+                        flexShrink: 0,
+                        width: 22,
+                        height: 22,
+                        borderRadius: "50%",
+                        border: isSelected ? "none" : "1.5px solid rgba(255,255,255,0.25)",
+                        background: isSelected ? "#3ECF8E" : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: "#0D1117",
+                        transition: "all 0.15s ease",
+                        boxShadow: isSelected ? "0 0 8px rgba(16,185,129,0.5)" : "none",
+                      }}
+                    >
                       {isSelected && "✓"}
                     </div>
                   </button>
@@ -495,7 +528,10 @@ export function Step3V8({ state, actions }: Props) {
 
           {q.type === "toggle" && (
             <div style={{ display: "flex", gap: 8 }}>
-              {[{ value: "yes", label: "Yes" }, { value: "no", label: "No" }].map((opt) => {
+              {[
+                { value: "yes", label: "Yes" },
+                { value: "no", label: "No" },
+              ].map((opt) => {
                 const isSelected = answers[q.id] === opt.value;
                 return (
                   <button
@@ -505,7 +541,9 @@ export function Step3V8({ state, actions }: Props) {
                     style={{
                       flex: 1,
                       background: isSelected ? "rgba(16,185,129,0.10)" : "rgba(51, 65, 85, 0.5)",
-                      border: isSelected ? "1.5px solid rgba(16,185,129,0.50)" : "1px solid rgba(255,255,255,0.08)",
+                      border: isSelected
+                        ? "1.5px solid rgba(16,185,129,0.50)"
+                        : "1px solid rgba(255,255,255,0.08)",
                       borderRadius: 10,
                       padding: "12px",
                       color: isSelected ? "#6EE7B7" : "white",
@@ -520,38 +558,29 @@ export function Step3V8({ state, actions }: Props) {
                     }}
                   >
                     {opt.label}
-                    <div style={{
-                      width: 18,
-                      height: 18,
-                      borderRadius: "50%",
-                      border: isSelected ? "none" : "1.5px solid rgba(255,255,255,0.25)",
-                      background: isSelected ? "#3ECF8E" : "transparent",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: "#0D1117",
-                      transition: "all 0.15s ease",
-                      flexShrink: 0,
-                    }}>
+                    <div
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: "50%",
+                        border: isSelected ? "none" : "1.5px solid rgba(255,255,255,0.25)",
+                        background: isSelected ? "#3ECF8E" : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: "#0D1117",
+                        transition: "all 0.15s ease",
+                        flexShrink: 0,
+                      }}
+                    >
                       {isSelected && "✓"}
                     </div>
                   </button>
                 );
               })}
             </div>
-          )}
-
-          {!["buttons", "number_input", "toggle"].includes(q.type) && (
-            <QuestionCard
-              q={q}
-              index={indexInSection}
-              answers={answers}
-              defaultFilledIds={defaultFilledIds}
-              onAnswer={setAnswerWithTracking}
-              getOptions={getOptions}
-            />
           )}
         </div>
       </div>
@@ -562,18 +591,35 @@ export function Step3V8({ state, actions }: Props) {
   // No-questions fallback
   if (visibleQuestions.length === 0) {
     return (
-      <div style={{ background: "#0D1117", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{
-          maxWidth: 480,
-          padding: 32,
-          borderRadius: 12,
-          background: "rgba(251,191,36,0.08)",
-          border: "1px solid rgba(251,191,36,0.20)",
-          textAlign: "center",
-          color: "white",
-        }}>
+      <div
+        style={{
+          background: "#0D1117",
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 480,
+            padding: 32,
+            borderRadius: 12,
+            background: "rgba(251,191,36,0.08)",
+            border: "1px solid rgba(251,191,36,0.20)",
+            textAlign: "center",
+            color: "white",
+          }}
+        >
           <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: "rgba(251,191,36,0.95)", marginBottom: 8 }}>
+          <div
+            style={{
+              fontSize: 16,
+              fontWeight: 600,
+              color: "rgba(251,191,36,0.95)",
+              marginBottom: 8,
+            }}
+          >
             No questions found for {displayName}
           </div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.60)", marginBottom: 20 }}>
@@ -602,16 +648,20 @@ export function Step3V8({ state, actions }: Props) {
 
   return (
     <div style={{ background: "#0D1117", minHeight: "100vh" }}>
-      <div ref={sectionTopRef} style={{ maxWidth: 720, margin: "0 auto", padding: "16px 20px 40px" }}>
-
+      <div
+        ref={sectionTopRef}
+        style={{ maxWidth: 920, margin: "0 auto", padding: "16px 24px 40px" }}
+      >
         {/* ── Section pill nav (only when multi-section) ── */}
         {orderedSections.length > 1 && (
-          <div style={{
-            display: "flex",
-            gap: 6,
-            flexWrap: "wrap",
-            marginBottom: 20,
-          }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              flexWrap: "wrap",
+              marginBottom: 20,
+            }}
+          >
             {orderedSections.map((sec, idx) => {
               const isActive = idx === clampedIdx;
               const answered = getSectionAnswered(sec.id);
@@ -648,17 +698,29 @@ export function Step3V8({ state, actions }: Props) {
                   {sec.icon && <span style={{ fontSize: 13 }}>{sec.icon}</span>}
                   <span>{sec.label}</span>
                   {complete ? (
-                    <span style={{
-                      width: 16, height: 16, borderRadius: "50%",
-                      background: "#3ECF8E",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 9, fontWeight: 800, color: "#080B10",
-                    }}>✓</span>
+                    <span
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        background: "#3ECF8E",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 9,
+                        fontWeight: 800,
+                        color: "#080B10",
+                      }}
+                    >
+                      ✓
+                    </span>
                   ) : (
-                    <span style={{
-                      fontSize: 10,
-                      color: isActive ? "rgba(62,207,142,0.70)" : "rgba(255,255,255,0.30)",
-                    }}>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        color: isActive ? "rgba(62,207,142,0.70)" : "rgba(255,255,255,0.30)",
+                      }}
+                    >
                       {answered}/{total}
                     </span>
                   )}
@@ -670,33 +732,36 @@ export function Step3V8({ state, actions }: Props) {
 
         {/* ── Current section header ── */}
         {currentSection && (
-          <div style={{
-            marginBottom: 20,
-            padding: "16px 20px",
-            borderRadius: 14,
-            background: "linear-gradient(135deg, rgba(62,207,142,0.08) 0%, rgba(62,207,142,0.02) 100%)",
-            border: "1px solid rgba(62,207,142,0.15)",
-          }}>
+          <div
+            style={{
+              marginBottom: 20,
+              padding: "16px 20px",
+              borderRadius: 14,
+              background:
+                "linear-gradient(135deg, rgba(62,207,142,0.08) 0%, rgba(62,207,142,0.02) 100%)",
+              border: "1px solid rgba(62,207,142,0.15)",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {currentSection.icon && (
-                <span style={{ fontSize: 28 }}>{currentSection.icon}</span>
-              )}
+              {currentSection.icon && <span style={{ fontSize: 28 }}>{currentSection.icon}</span>}
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
                   <span style={{ fontSize: 17, fontWeight: 800, color: "white" }}>
                     {currentSection.label}
                   </span>
                   {orderedSections.length > 1 && (
-                    <span style={{
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: "rgba(62,207,142,0.70)",
-                      background: "rgba(62,207,142,0.08)",
-                      border: "1px solid rgba(62,207,142,0.20)",
-                      padding: "2px 8px",
-                      borderRadius: 10,
-                    }}>
-                      Section {clampedIdx + 1} of {orderedSections.length}
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 600,
+                        color: "rgba(62,207,142,0.70)",
+                        background: "rgba(62,207,142,0.08)",
+                        border: "1px solid rgba(62,207,142,0.20)",
+                        padding: "2px 8px",
+                        borderRadius: 10,
+                      }}
+                    >
+                      {currentSection.label}
                     </span>
                   )}
                 </div>
@@ -707,26 +772,35 @@ export function Step3V8({ state, actions }: Props) {
                 )}
                 {/* Per-section progress */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{
-                    flex: 1,
-                    height: 3,
-                    borderRadius: 2,
-                    background: "rgba(255,255,255,0.08)",
-                    overflow: "hidden",
-                    maxWidth: 160,
-                  }}>
-                    <div style={{
-                      height: "100%",
+                  <div
+                    style={{
+                      flex: 1,
+                      height: 3,
                       borderRadius: 2,
-                      background: "#3ECF8E",
-                      width: `${currentSectionQuestions.length > 0
-                        ? (getSectionAnswered(currentSection.id) / currentSectionQuestions.length) * 100
-                        : 0}%`,
-                      transition: "width 0.3s ease",
-                    }} />
+                      background: "rgba(255,255,255,0.08)",
+                      overflow: "hidden",
+                      maxWidth: 160,
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: "100%",
+                        borderRadius: 2,
+                        background: "#3ECF8E",
+                        width: `${
+                          currentSectionQuestions.length > 0
+                            ? (getSectionAnswered(currentSection.id) /
+                                currentSectionQuestions.length) *
+                              100
+                            : 0
+                        }%`,
+                        transition: "width 0.3s ease",
+                      }}
+                    />
                   </div>
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.40)" }}>
-                    {getSectionAnswered(currentSection.id)} of {currentSectionQuestions.length} answered
+                    {getSectionAnswered(currentSection.id)} of {currentSectionQuestions.length}{" "}
+                    answered
                   </span>
                 </div>
               </div>
@@ -739,17 +813,22 @@ export function Step3V8({ state, actions }: Props) {
 
         {/* ── Section navigation ── */}
         {orderedSections.length > 1 && (
-          <div style={{
-            marginTop: 24,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-          }}>
+          <div
+            style={{
+              marginTop: 24,
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
             {/* Back */}
             <button
               type="button"
-              disabled={isFirstSection}
-              onClick={() => goToSection(clampedIdx - 1)}
+              onClick={() =>
+                isFirstSection
+                  ? actions.goToStep(2 as import("../wizardState").WizardStep)
+                  : goToSection(clampedIdx - 1)
+              }
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -757,37 +836,35 @@ export function Step3V8({ state, actions }: Props) {
                 padding: "11px 18px",
                 borderRadius: 10,
                 border: "1px solid rgba(255,255,255,0.10)",
-                background: isFirstSection ? "transparent" : "rgba(255,255,255,0.04)",
-                color: isFirstSection ? "rgba(255,255,255,0.20)" : "rgba(255,255,255,0.65)",
+                background: "rgba(255,255,255,0.04)",
+                color: "rgba(255,255,255,0.65)",
                 fontSize: 13,
                 fontWeight: 600,
-                cursor: isFirstSection ? "default" : "pointer",
+                cursor: "pointer",
                 transition: "all 0.15s ease",
               }}
               onMouseEnter={(e) => {
-                if (!isFirstSection) {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-                  e.currentTarget.style.color = "white";
-                }
+                e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                e.currentTarget.style.color = "white";
               }}
               onMouseLeave={(e) => {
-                if (!isFirstSection) {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                  e.currentTarget.style.color = "rgba(255,255,255,0.65)";
-                }
+                e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                e.currentTarget.style.color = "rgba(255,255,255,0.65)";
               }}
             >
               <ChevronLeft size={16} />
-              {isFirstSection ? "Start" : orderedSections[clampedIdx - 1]?.label ?? "Back"}
+              {isFirstSection ? "← Industry" : (orderedSections[clampedIdx - 1]?.label ?? "← Back")}
             </button>
 
             {/* Overall progress pill */}
-            <div style={{
-              flex: 1,
-              textAlign: "center",
-              fontSize: 11,
-              color: "rgba(255,255,255,0.35)",
-            }}>
+            <div
+              style={{
+                flex: 1,
+                textAlign: "center",
+                fontSize: 11,
+                color: "rgba(255,255,255,0.35)",
+              }}
+            >
               {answeredCount} / {visibleQuestions.length} total answered
             </div>
 
@@ -835,20 +912,21 @@ export function Step3V8({ state, actions }: Props) {
                   padding: "13px 22px",
                   borderRadius: 10,
                   border: "none",
-                  background: "linear-gradient(135deg, #F59E0B 0%, #d97706 100%)",
-                  color: "white",
+                  background: "linear-gradient(135deg, #3ECF8E 0%, #2aad70 100%)",
+                  color: "#080B10",
                   fontSize: 14,
-                  fontWeight: 800,
+                  fontWeight: 900,
                   cursor: "pointer",
                   transition: "all 0.15s ease",
-                  boxShadow: "0 4px 14px rgba(59,130,246,0.35)",
+                  boxShadow: "0 4px 16px rgba(16,185,129,0.35)",
+                  letterSpacing: "0.01em",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(59,130,246,0.50)";
+                  e.currentTarget.style.boxShadow = "0 6px 24px rgba(16,185,129,0.50)";
                   e.currentTarget.style.transform = "translateY(-1px)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(59,130,246,0.35)";
+                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(16,185,129,0.35)";
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
               >

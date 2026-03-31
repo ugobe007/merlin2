@@ -10,7 +10,7 @@ import { calculateTruckStopLoad } from "../industries/truckStopIndustry";
 
 export interface LoadCalculationInput {
   industry: Industry;
-   
+
   useCaseData: Record<string, any>;
 }
 
@@ -107,8 +107,7 @@ const INDUSTRY_LOAD_FACTORS: Record<
     profile: "seasonal",
   },
   ev_charging: {
-    method: "fixed",
-    baseKW: 500, // Will be overridden by charger count
+    method: "custom", // Calculated from charger counts, not fixed
     loadFactor: 0.25,
     profile: "peaky",
   },
@@ -159,6 +158,13 @@ const INDUSTRY_LOAD_FACTORS: Record<
   agricultural: {
     method: "per_sqft",
     wattsPerSqft: 10, // Processing, irrigation pumps
+    loadFactor: 0.35,
+    profile: "seasonal",
+  },
+  // Slug alias: 'agriculture' → same config as 'agricultural'
+  agriculture: {
+    method: "per_sqft",
+    wattsPerSqft: 10,
     loadFactor: 0.35,
     profile: "seasonal",
   },
@@ -213,7 +219,6 @@ const INDUSTRY_LOAD_FACTORS: Record<
  * Based on actual equipment power ratings, not generic per-sqft
  */
 function calculateCarWashLoad(
-   
   useCaseData: Record<string, any>,
   breakdown: LoadCalculationResult["breakdown"]
 ): number {
@@ -251,7 +256,15 @@ function calculateCarWashLoad(
   let totalKW = 0;
 
   // Base tunnel/bay equipment
-  const bayCount = parseInt(useCaseData.bayCount || useCaseData.washBays || "1") || 1;
+  // V8 wizard uses 'tunnelOrBayCount'; legacy/DB uses 'bayCount'
+  const bayCount =
+    parseInt(
+      useCaseData.tunnelOrBayCount ||
+        useCaseData.bayCount ||
+        useCaseData.washBays ||
+        useCaseData.numBays ||
+        "1"
+    ) || 1;
   const washType = useCaseData.washType || useCaseData.facilitySubtype || "tunnel";
 
   // Base equipment (always present)
@@ -272,10 +285,28 @@ function calculateCarWashLoad(
   totalKW += washKW;
   breakdown.push({ category: "Wash Equipment", kW: washKW, percentage: 0 });
 
-  // Drying - based on blower count
-  const blowerCount = parseInt(useCaseData.blowerCount || useCaseData.dryerCount || "4") || 4;
-  const blowerType = useCaseData.blowerType || useCaseData.dryerType || "standard";
-  const blowerMultiplier = blowerType === "premium" || blowerCount >= 6 ? 1.5 : 1;
+  // Drying - derive from dryerConfiguration (schema) or legacy blowerCount
+  const dryerConfig = String(useCaseData.dryerConfiguration || "blowers");
+  const blowerCount =
+    useCaseData.blowerCount != null
+      ? parseInt(String(useCaseData.blowerCount))
+      : dryerConfig === "blowers"
+        ? 6
+        : dryerConfig === "heated"
+          ? 4
+          : dryerConfig === "hybrid"
+            ? 5
+            : dryerConfig === "none"
+              ? 0
+              : parseInt(useCaseData.dryerCount || "4") || 4;
+  const isHeated =
+    useCaseData.heatedDryers != null
+      ? Boolean(useCaseData.heatedDryers)
+      : dryerConfig === "heated" || dryerConfig === "hybrid";
+  const blowerType =
+    useCaseData.blowerType || useCaseData.dryerType || (isHeated ? "heated" : "standard");
+  const blowerMultiplier =
+    blowerType === "premium" || blowerType === "heated" || blowerCount >= 6 ? 1.5 : 1;
   const dryingKW = blowerCount * EQUIPMENT_KW.blowerMotor * blowerMultiplier;
   totalKW += dryingKW;
   breakdown.push({ category: "Drying System", kW: dryingKW, percentage: 0 });
@@ -316,17 +347,18 @@ function calculateCarWashLoad(
   const peakFactor = 0.75;
   const peakDemandKW = Math.round(totalKW * peakFactor);
 
-  if (import.meta.env.DEV) console.log("🚗 [loadCalculator] Car Wash Equipment Calculation:", {
-    bayCount,
-    washType,
-    blowerCount,
-    vacuumCount,
-    waterHeaterType,
-    hasReclaim,
-    totalConnectedKW: totalKW,
-    peakFactor,
-    peakDemandKW,
-  });
+  if (import.meta.env.DEV)
+    console.log("🚗 [loadCalculator] Car Wash Equipment Calculation:", {
+      bayCount,
+      washType,
+      blowerCount,
+      vacuumCount,
+      waterHeaterType,
+      hasReclaim,
+      totalConnectedKW: totalKW,
+      peakFactor,
+      peakDemandKW,
+    });
 
   // Sanity check: Car wash peak should be 50-200 kW typically
   return Math.max(50, Math.min(250, peakDemandKW));
@@ -336,12 +368,16 @@ function calculateCarWashLoad(
  * Calculate facility load based on industry and facility data
  */
 export function calculateLoad(input: LoadCalculationInput): LoadCalculationResult {
-  const config = INDUSTRY_LOAD_FACTORS[input.industry] || {
-    method: "per_sqft",
-    wattsPerSqft: 15,
-    loadFactor: 0.4,
-    profile: "flat" as const,
-  };
+  // Normalise slug: wizard/scripts may pass hyphenated slugs (e.g. 'data-center')
+  // but INDUSTRY_LOAD_FACTORS keys use underscores ('data_center').
+  const normSlug = (input.industry as string).replace(/-/g, "_");
+  const config = INDUSTRY_LOAD_FACTORS[normSlug] ||
+    INDUSTRY_LOAD_FACTORS[input.industry] || {
+      method: "per_sqft",
+      wattsPerSqft: 15,
+      loadFactor: 0.4,
+      profile: "flat" as const,
+    };
 
   let peakDemandKW = 0;
   let calculationMethod = "";
@@ -350,7 +386,7 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
   // Calculate base load based on method
   switch (config.method) {
     case "per_unit": {
-      const units = extractUnitCount(input.industry, input.useCaseData);
+      const units = extractUnitCount(normSlug as Industry, input.useCaseData);
       peakDemandKW = (units * (config.wattsPerUnit || 2500)) / 1000;
       calculationMethod = `${units} ${config.unitName} × ${config.wattsPerUnit} W`;
       breakdown.push({
@@ -365,19 +401,19 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
       // Priority order: industry-specific → generic → fallback
       const sqft =
         // Industry-specific sqft field names (from DB custom_questions)
-        parseFloat(input.useCaseData.warehouseSqFt || "0") ||      // warehouse
-        parseFloat(input.useCaseData.manufacturingSqFt || "0") ||  // manufacturing
-        parseFloat(input.useCaseData.officeSqFt || "0") ||         // office
-        parseFloat(input.useCaseData.retailSqFt || "0") ||         // retail
-        parseFloat(input.useCaseData.storeSqFt || "0") ||          // retail
-        parseFloat(input.useCaseData.mallSqFt || "0") ||           // shopping-center
-        parseFloat(input.useCaseData.governmentSqFt || "0") ||     // government
-        parseFloat(input.useCaseData.terminalSqFt || "0") ||       // airport
-        parseFloat(input.useCaseData.gamingFloorSqFt || "0") ||    // casino
-        parseFloat(input.useCaseData.growingAreaSqFt || "0") ||    // indoor-farm
-        parseFloat(input.useCaseData.buildingSqFt || "0") ||       // generic
-        parseFloat(input.useCaseData.facilitySqFt || "0") ||       // generic
-        parseFloat(input.useCaseData.totalFacilitySqFt || "0") ||  // generic
+        parseFloat(input.useCaseData.warehouseSqFt || "0") || // warehouse
+        parseFloat(input.useCaseData.manufacturingSqFt || "0") || // manufacturing
+        parseFloat(input.useCaseData.officeSqFt || "0") || // office
+        parseFloat(input.useCaseData.retailSqFt || "0") || // retail
+        parseFloat(input.useCaseData.storeSqFt || "0") || // retail
+        parseFloat(input.useCaseData.mallSqFt || "0") || // shopping-center
+        parseFloat(input.useCaseData.governmentSqFt || "0") || // government
+        parseFloat(input.useCaseData.terminalSqFt || "0") || // airport
+        parseFloat(input.useCaseData.gamingFloorSqFt || "0") || // casino
+        parseFloat(input.useCaseData.growingAreaSqFt || "0") || // indoor-farm
+        parseFloat(input.useCaseData.buildingSqFt || "0") || // generic
+        parseFloat(input.useCaseData.facilitySqFt || "0") || // generic
+        parseFloat(input.useCaseData.totalFacilitySqFt || "0") || // generic
         // Legacy/generic field names
         parseFloat(input.useCaseData.squareFootage || "0") ||
         parseFloat(input.useCaseData.squareFeet || "0") ||
@@ -404,21 +440,80 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
     }
     case "custom": {
       // Industry-specific custom calculations
-      if (input.industry === "car_wash") {
+      // NOTE: all checks use normSlug so hyphenated slugs ('car-wash') work too
+      if (normSlug === "car_wash") {
         peakDemandKW = calculateCarWashLoad(input.useCaseData, breakdown);
         calculationMethod = "Equipment-based car wash calculation";
-      } else if (input.industry === "data_center") {
-        // Data centers use IT load directly (kW), not sqft
-        // Field priority: totalITLoad > powerCapacity (MW) > squareFootage fallback
+      } else if (normSlug === "ev_charging") {
+        // Calculate from actual charger counts
+        // Field aliases: dcFastCount / numberOfDCFastChargers / dcfc
+        //                level2Count / numberOfLevel2Chargers / l2Count
+        const dcFast =
+          parseInt(
+            input.useCaseData.dcFastCount ??
+              input.useCaseData.numberOfDCFastChargers ??
+              input.useCaseData.dcfc ??
+              input.useCaseData.dcFastChargers ??
+              "8"
+          ) || 8; // DB default
+        const level2 =
+          parseInt(
+            input.useCaseData.level2Count ??
+              input.useCaseData.numberOfLevel2Chargers ??
+              input.useCaseData.l2Count ??
+              input.useCaseData.level2Chargers ??
+              "12"
+          ) || 12; // DB default
+        const ultraFast =
+          parseInt(input.useCaseData.ultraFastCount ?? input.useCaseData.hpcCount ?? "0") || 0;
+        // Power: DCFC@150kW, Level2@19kW, Ultra-fast/HPC@350kW
+        const rawKW = dcFast * 150 + level2 * 19 + ultraFast * 350;
+        // Peak concurrency factor: ~70% of all chargers active simultaneously
+        const concurrency = parseFloat(input.useCaseData.peakConcurrency || "0.7") || 0.7;
+        peakDemandKW = Math.round(rawKW * concurrency);
+        calculationMethod = `EV: ${dcFast} DCFC×150kW + ${level2} L2×19kW${ultraFast > 0 ? ` + ${ultraFast} HPC×350kW` : ""} @ ${Math.round(concurrency * 100)}% concurrency`;
+        breakdown.push({
+          category: "DC Fast Chargers",
+          kW: dcFast * 150 * concurrency,
+          percentage: 0,
+        });
+        breakdown.push({
+          category: "Level 2 Chargers",
+          kW: level2 * 19 * concurrency,
+          percentage: 0,
+        });
+        if (ultraFast > 0)
+          breakdown.push({
+            category: "HPC Chargers",
+            kW: ultraFast * 350 * concurrency,
+            percentage: 0,
+          });
+        if (import.meta.env.DEV)
+          console.log("🔌 [loadCalculator] EV Charging Calculation:", {
+            dcFast,
+            level2,
+            ultraFast,
+            rawKW,
+            concurrency,
+            peakDemandKW,
+          });
+      } else if (normSlug === "data_center") {
+        // Data centers: field priority — totalITLoad → itLoadKW → rackCount → squareFootage fallback
         const itLoadKW =
           parseFloat(input.useCaseData.totalITLoad || "0") ||
+          parseFloat(input.useCaseData.itLoadKW || "0") || // TrueQuoteEngineV2 field
           parseFloat(input.useCaseData.powerCapacity || "0") * 1000 || // MW to kW
           0;
 
         if (itLoadKW > 0) {
           // PUE (Power Usage Effectiveness) adds cooling/overhead
-          // Check both pue and pueTarget field names (DB uses pueTarget)
-          const pue = parseFloat(input.useCaseData.pue || input.useCaseData.pueTarget || "1.5") || 1.5;
+          const pue =
+            parseFloat(
+              input.useCaseData.pue ||
+                input.useCaseData.pueTarget ||
+                input.useCaseData.powerUsageEffectiveness ||
+                "1.5"
+            ) || 1.5;
           peakDemandKW = Math.round(itLoadKW * pue);
           calculationMethod = `IT Load: ${itLoadKW} kW × PUE ${pue} = ${peakDemandKW} kW`;
           breakdown.push({ category: "IT Equipment", kW: itLoadKW, percentage: 0 });
@@ -428,24 +523,64 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
             percentage: 0,
           });
         } else {
-          // Fallback to sqft-based calculation
-          const sqft =
-            parseFloat(
-              input.useCaseData.squareFootage || input.useCaseData.facilitySize || "50000"
-            ) || 50000;
-          peakDemandKW = Math.round((sqft * 150) / 1000); // 150 W/sqft typical DC
-          calculationMethod = `Square footage fallback: ${sqft.toLocaleString()} sqft × 150 W/sqft`;
-          breakdown.push({ category: "Base (sqft estimate)", kW: peakDemandKW, percentage: 100 });
+          // Rack-count path: rackCount × rackDensityKW × PUE
+          const rackCount =
+            parseInt(
+              input.useCaseData.rackCount ||
+                input.useCaseData.racks ||
+                input.useCaseData.numberOfRacks ||
+                "0"
+            ) || 0;
+          if (rackCount > 0) {
+            const rackDensityKW =
+              parseFloat(
+                input.useCaseData.rackDensityKW || input.useCaseData.averageRackDensity || "8"
+              ) || 8;
+            const pue =
+              parseFloat(
+                input.useCaseData.pue ||
+                  input.useCaseData.pueTarget ||
+                  input.useCaseData.powerUsageEffectiveness ||
+                  "1.5"
+              ) || 1.5;
+            const itPower = rackCount * rackDensityKW;
+            peakDemandKW = Math.round(itPower * pue);
+            calculationMethod = `${rackCount} racks × ${rackDensityKW}kW × PUE ${pue} = ${peakDemandKW} kW`;
+            breakdown.push({
+              category: "IT Equipment (racks)",
+              kW: Math.round(itPower),
+              percentage: 0,
+            });
+            breakdown.push({
+              category: "Cooling/PUE overhead",
+              kW: peakDemandKW - Math.round(itPower),
+              percentage: 0,
+            });
+          } else {
+            // Final fallback: sqft-based
+            const sqft =
+              parseFloat(
+                input.useCaseData.squareFootage || input.useCaseData.facilitySize || "50000"
+              ) || 50000;
+            peakDemandKW = Math.round((sqft * 150) / 1000);
+            calculationMethod = `Square footage fallback: ${sqft.toLocaleString()} sqft × 150 W/sqft`;
+            breakdown.push({ category: "Base (sqft estimate)", kW: peakDemandKW, percentage: 100 });
+          }
         }
 
-        if (import.meta.env.DEV) console.log("🖥️ [loadCalculator] Data Center Calculation:", {
-          totalITLoad: input.useCaseData.totalITLoad,
-          powerCapacity: input.useCaseData.powerCapacity,
-          squareFootage: input.useCaseData.squareFootage,
-          pue: input.useCaseData.pue,
-          peakDemandKW,
-        });
-      } else if (input.industry === "heavy_duty_truck_stop") {
+        if (import.meta.env.DEV)
+          console.log("🖥️ [loadCalculator] Data Center Calculation:", {
+            totalITLoad: input.useCaseData.totalITLoad,
+            itLoadKW: input.useCaseData.itLoadKW,
+            rackCount: input.useCaseData.rackCount,
+            powerCapacity: input.useCaseData.powerCapacity,
+            pue: input.useCaseData.pue || input.useCaseData.powerUsageEffectiveness,
+            peakDemandKW,
+          });
+      } else if (
+        normSlug === "heavy_duty_truck_stop" ||
+        input.industry === "heavy_duty_truck_stop"
+      ) {
         const truckStopResult = calculateTruckStopLoad({
           mcsChargers: parseInt(input.useCaseData.mcsChargers || "0") || 0,
           dcfc350:
@@ -508,15 +643,29 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
  * Extract unit count based on industry
  * Handles ALL field name variations from 23 industries
  */
- 
+
 function extractUnitCount(industry: Industry, data: Record<string, any>): number {
   switch (industry) {
     case "hotel":
-      return parseInt(data.roomCount || data.numberOfRooms || data.rooms || data.guestRooms || "100") || 100;
+      // V8 wizard uses 'numRooms'; legacy/DB uses 'roomCount'
+      return (
+        parseInt(
+          data.numRooms ||
+            data.roomCount ||
+            data.numberOfRooms ||
+            data.rooms ||
+            data.guestRooms ||
+            "100"
+        ) || 100
+      );
     case "hospital":
       return parseInt(data.bedCount || data.beds || data.licensedBeds || "200") || 200;
     case "college":
-      return parseInt(data.studentCount || data.studentEnrollment || data.students || data.enrollment || "5000") || 5000;
+      return (
+        parseInt(
+          data.studentCount || data.studentEnrollment || data.students || data.enrollment || "5000"
+        ) || 5000
+      );
     case "apartment":
       return parseInt(data.unitCount || data.units || data.apartments || "100") || 100;
     case "airport":
@@ -540,7 +689,7 @@ function extractUnitCount(industry: Industry, data: Record<string, any>): number
 function applyModifiers(
   baseKW: number,
   industry: Industry,
-   
+
   data: Record<string, any>,
   breakdown: LoadCalculationResult["breakdown"]
 ): number {
