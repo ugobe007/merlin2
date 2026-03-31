@@ -464,11 +464,17 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   // Default to PWA compliance for commercial/utility projects (most common)
   const defaultPWA = storageSizeMW >= 1;
 
-  // Calculate ITC only for US projects
+  // Calculate ITC only for US projects.
+  // ITC basis = ITC-eligible costs only (solar + BESS + proportional soft costs).
+  // Generators (fossil fuel) and EV charging infrastructure are NOT ITC-eligible
+  // per IRA 2022 Section 48 / 48E. Apply generator exclusion before passing to estimateITC.
+  const generatorCost = equipment.generators?.totalCost ?? 0;
+  const itcEligibleProjectCost = Math.max(0, totalProjectCost - generatorCost);
+
   const itcResult = isUSProject
     ? estimateITC(
         projectType,
-        totalProjectCost,
+        itcEligibleProjectCost, // §48 eligible basis only — excludes generator
         Math.max(storageSizeMW, solarMW, 0.1), // Use largest MW for ITC sizing
         itcConfig?.prevailingWage ?? defaultPWA,
         {
